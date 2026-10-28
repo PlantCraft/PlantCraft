@@ -1,0 +1,36 @@
+{
+  "name": "generic_control_loop_demo",
+  "display_name": "Generic demo — Flow loop",
+  "description": "Self-contained scenario for developing, testing and demonstrating the platform.",
+  "source": {
+    "type": "csv",
+    "path": "demo/data/FIC-101.csv",
+    "timezone": "America/Sao_Paulo"
+  },
+  "storage": {
+    "sqlite_path": "var/generic_demo.sqlite3"
+  },
+  "analysis": {
+    "interval_minutes": 10,
+    "resample_seconds": 10
+  },
+  "loops": [
+    {
+      "loop_id": "FIC-101",
+      "name": "Feed flow",
+      "area": "Demo unit",
+      "service": "Feed flow control",
+      "unit": "U-DEMO",
+      "signals": {
+        "pv": "pv",
+        "sp": "sp",
+        "op": "op",
+        "mode": "mode",
+        "secondary": "neighbor_pv"
+      },
+      "metadata": {
+        "impact": "Unit stability and capacity"
+      }
+    }
+  ]
+}

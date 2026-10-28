@@ -1,0 +1,186 @@
+{
+ "about": "Demo documents of the PlantCraft Simulator's refinery (deploy/demo/plantcraft-50-loops-map.json). Invented from public engineering knowledge; values follow the training simulator.",
+ "documents": [
+  {
+   "number": "DOC-U100-OM-001",
+   "title": "Crude distillation unit (U-100) operating manual",
+   "kind": "Operating manual",
+   "unit": "U-100",
+   "revision": "D",
+   "date": "2025-06-30",
+   "language": "en",
+   "file": "DOC-U100-OM-001 Crude distillation unit operating manual.pdf",
+   "assets": [
+    "U-100"
+   ]
+  },
+  {
+   "number": "DOC-U200-OM-001",
+   "title": "Hydrotreating unit (U-200) operating manual",
+   "kind": "Operating manual",
+   "unit": "U-200",
+   "revision": "C",
+   "date": "2025-09-08",
+   "language": "en",
+   "file": "DOC-U200-OM-001 Hydrotreating unit operating manual.pdf",
+   "assets": [
+    "U-200"
+   ]
+  },
+  {
+   "number": "DOC-U300-OM-001",
+   "title": "Treating and sulfur recovery (U-300) operating manual",
+   "kind": "Operating manual",
+   "unit": "U-300",
+   "revision": "B",
+   "date": "2025-04-14",
+   "language": "en",
+   "file": "DOC-U300-OM-001 Treating and sulfur recovery operating manual.docx",
+   "assets": [
+    "U-300"
+   ]
+  },
+  {
+   "number": "DOC-U900-OM-001",
+   "title": "Utilities and offsites (U-900) operating manual",
+   "kind": "Operating manual",
+   "unit": "U-900",
+   "revision": "C",
+   "date": "2025-08-22",
+   "language": "en",
+   "file": "DOC-U900-OM-001 Utilities and offsites operating manual.pdf",
+   "assets": [
+    "U-900"
+   ]
+  },
+  {
+   "number": "DOC-CN-001",
+   "title": "Control narratives, all units",
+   "kind": "Control narrative",
+   "unit": "",
+   "revision": "C",
+   "date": "2026-03-02",
+   "language": "en",
+   "file": "DOC-CN-001 Control narratives.docx",
+   "assets": [
+    "U-100",
+    "U-200",
+    "U-300",
+    "U-900"
+   ]
+  },
+  {
+   "number": "DOC-PID-001",
+   "title": "P&ID index and line descriptions",
+   "kind": "P&ID",
+   "unit": "",
+   "revision": "B",
+   "date": "2025-11-20",
+   "language": "en",
+   "file": "DOC-PID-001 PID index.pdf",
+   "assets": [
+    "U-100",
+    "U-200",
+    "U-300",
+    "U-900"
+   ]
+  },
+  {
+   "number": "DOC-DS-001",
+   "title": "Equipment, instrument and control valve datasheets",
+   "kind": "Datasheet",
+   "unit": "",
+   "revision": "B",
+   "date": "2025-11-20",
+   "language": "en",
+   "file": "DOC-DS-001 Equipment datasheets.xlsx",
+   "assets": [
+    "U-100",
+    "U-200",
+    "U-300",
+    "U-900"
+   ]
+  },
+  {
+   "number": "DOC-TG-001",
+   "title": "Control loop troubleshooting guide",
+   "kind": "Troubleshooting guide",
+   "unit": "",
+   "revision": "D",
+   "date": "2026-01-15",
+   "language": "en",
+   "file": "DOC-TG-001 Control loop troubleshooting guide.pdf",
+   "assets": [
+    "U-100",
+    "U-200",
+    "U-300",
+    "U-900"
+   ]
+  },
+  {
+   "number": "DOC-MH-001",
+   "title": "Instrument and control valve maintenance history",
+   "kind": "Maintenance record",
+   "unit": "",
+   "revision": "2026-09",
+   "date": "2026-09-30",
+   "language": "en",
+   "file": "DOC-MH-001 Instrument and valve maintenance history.pdf",
+   "assets": [
+    "FV-1003",
+    "FV-1102",
+    "FV-1206",
+    "FV-1214",
+    "TT-1209",
+    "LV-1004",
+    "AT-1224",
+    "PT-1008",
+    "AT-1205"
+   ]
+  },
+  {
+   "number": "INC-2026-007",
+   "title": "Incident report: oscillation of the product separator pressure PIC-1002",
+   "kind": "Incident report",
+   "unit": "U-200",
+   "revision": "A",
+   "date": "2026-02-12",
+   "language": "en",
+   "file": "INC-2026-007 PIC-1002 separator pressure oscillation.pdf",
+   "assets": [
+    "V-1004",
+    "PIC-1002"
+   ]
+  },
+  {
+   "number": "INC-2025-031",
+   "title": "Incident report: reactor temperature overshoot on TIC-1005",
+   "kind": "Incident report",
+   "unit": "U-200",
+   "revision": "A",
+   "date": "2025-07-30",
+   "language": "en",
+   "file": "INC-2025-031 TIC-1005 reactor temperature overshoot.pdf",
+   "assets": [
+    "R-1005",
+    "TIC-1005"
+   ]
+  },
+  {
+   "number": "PRO-U200-012",
+   "title": "Procedimento de teste de curso de válvula de controle em operação",
+   "kind": "Procedure",
+   "unit": "U-200",
+   "revision": "A",
+   "date": "2026-03-10",
+   "language": "pt-BR",
+   "file": "PRO-U200-012 Procedimento de teste de válvula de controle.docx",
+   "assets": [
+    "FV-1003",
+    "FV-1206",
+    "FV-1102",
+    "FV-1214"
+   ]
+  }
+ ]
+}

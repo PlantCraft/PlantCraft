@@ -1,0 +1,252 @@
+name: CI
+
+# The platform, the SDK and the shared ui: everything outside apps/, simulator/ and templates/,
+# which have their own workflows. CI budget and cadence: ci/macmini/README.md. Pull requests run no
+# tests here: the Lint and Security workflows check every pull request, and contributors run the
+# platform's `make ci` locally before merging. The tests and browser journeys run on main four times
+# a day (the schedule below) when these files changed since the last green run, and by hand (Actions
+# > this workflow > Run workflow). A push to main redeploys the platform on the Mac mini's local
+# suite (repository variable MACMINI_DEPLOY) without waiting for them. The container jobs run by
+# hand with "hosted" ticked, or on main while the Mac mini is off. Documentation-only changes run
+# nothing.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**/*.md", "docs/**", "LICENSE", "NOTICE", ".claude/**", "apps/**", "simulator/**", "templates/**",
+                   ".github/workflows/link.yml", ".github/workflows/historian.yml", ".github/workflows/view.yml",
+                   ".github/workflows/alarms.yml", ".github/workflows/models.yml", ".github/workflows/simulator.yml",
+                   ".github/workflows/template.yml"]
+  pull_request:
+    paths-ignore: ["**/*.md", "docs/**", "LICENSE", "NOTICE", ".claude/**", "apps/**", "simulator/**", "templates/**",
+                   ".github/workflows/link.yml", ".github/workflows/historian.yml", ".github/workflows/view.yml",
+                   ".github/workflows/alarms.yml", ".github/workflows/models.yml", ".github/workflows/simulator.yml",
+                   ".github/workflows/template.yml"]
+  # The tests of main at about 09:00, 13:00, 17:00 and 21:00 Brasília (UTC-3; cron is UTC).
+  schedule:
+    - cron: "7 0,12,16,20 * * *"
+  workflow_dispatch:
+    inputs:
+      hosted:
+        description: "Also the jobs on GitHub's runners (containers, macOS, Windows): paid minutes"
+        type: boolean
+        default: false
+
+# A newer push to a pull request cancels its older run; runs on main are grouped by event and
+# commit, so a merge's deploy and a scheduled test run never wait on each other.
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Read-only token: no job here writes to the repository.
+permissions:
+  contents: read
+
+jobs:
+  # Scheduled runs only: test only if this workflow's folder changed since its last green run.
+  changes:
+    if: github.event_name == 'schedule'
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: ci
+      - id: gate
+        run: python3 ci/since-green
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  # The platform's tests split over three jobs that run at once (each takes every third test file),
+  # so the slowest job of a run takes a third of the time; lint and the SDK in the first.
+  backend:
+    name: backend (${{ matrix.shard }}/3)
+    needs: [changes]
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      # One runner serves every folder: each job gets a Python environment of its own, so nothing
+      # an earlier job installed (another folder's SDK of the same version) stands in for this one's.
+      - run: rm -rf "$RUNNER_TEMP/venv" && python -m venv "$RUNNER_TEMP/venv" && echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+      - run: python -m pip install -e sdk/python -e ".[server,opcua,dev]"
+      - if: matrix.shard == 1
+        run: ruff check .
+      - if: matrix.shard == 1
+        run: ruff format --check .
+      - name: pytest (every third test file)
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          find tests -name 'test_*.py' -not -path 'tests/e2e/*' -not -path 'tests/e2e_suite/*' | sort \
+            | awk -v k="$SHARD" 'NR % 3 == k % 3' > "$RUNNER_TEMP/shard.txt"
+          wc -l < "$RUNNER_TEMP/shard.txt"
+          xargs pytest -q < "$RUNNER_TEMP/shard.txt"
+      - if: matrix.shard == 1
+        run: pytest -q sdk/python/tests
+      # Apps still on another SDK or ui than this tree's (a warning, not a failure).
+      - if: matrix.shard == 1
+        run: dev/vendor-drift
+
+  frontend:
+    needs: [changes]
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      # The vendored suite frame must be what ui/ builds (make ui-check).
+      - run: cd .. && make ui-check
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  e2e:
+    needs: [changes]
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      # One runner serves every folder: each job gets a Python environment of its own, so nothing
+      # an earlier job installed (another folder's SDK of the same version) stands in for this one's.
+      - run: rm -rf "$RUNNER_TEMP/venv" && python -m venv "$RUNNER_TEMP/venv" && echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci && npm run build
+        working-directory: frontend
+      - run: python -m pip install -e sdk/python -e ".[server,opcua,dev,e2e]"
+      - run: python -m playwright install --with-deps chromium
+      # JupyterLite for the notebooks journey (tests/e2e/test_notebooks.py).
+      - run: make notebooks
+      - run: pytest -q tests/e2e
+
+  docker:
+    if: inputs.hosted || (github.event_name == 'push' && vars.MACMINI_DEPLOY != 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: docker build -t processcraft:ci .
+
+  # Offline deployment (deploy/, docs/install-offline.md): builds the images, brings the stack
+  # up and proves the isolation (tests/test_isolation.py), audits the shipped dependencies and
+  # writes the CycloneDX SBOMs. The Simulator's image comes from the private plantcraft repository,
+  # which CI cannot reach: a stand-in takes its place on the plant network, and the bundle
+  # built here ships without it.
+  #
+  # Audit policy:
+  # - pip-audit fails on any known vulnerability in deploy/requirements.lock: that file is
+  #   exactly what the image ships, and every pin is ours to bump (`make lock`). A finding
+  #   without a fix is accepted only with `--ignore-vuln <id>` and a comment saying why.
+  # - npm audit fails on high or critical findings in our direct production dependencies, and
+  #   only reports the rest: transitive versions are set by upstream packages (for example
+  #   plotly.js -> maplibre-gl, which the cartesian bundle we ship does not include), and dev
+  #   dependencies never reach the bundle.
+  isolation:
+    if: inputs.hosted || (github.event_name == 'push' && vars.MACMINI_DEPLOY != 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
+      # One runner serves every folder: each job gets a Python environment of its own, so nothing
+      # an earlier job installed (another folder's SDK of the same version) stands in for this one's.
+      - run: rm -rf "$RUNNER_TEMP/venv" && python -m venv "$RUNNER_TEMP/venv" && echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: python -m pip install "pytest>=8" "pyyaml>=6" "pip-audit==2.10.1" "cyclonedx-bom==7.5.0"
+      - name: pip-audit (Python packages of the image)
+        run: pip-audit --strict --disable-pip -r deploy/requirements.lock
+      - name: npm audit (web interface)
+        working-directory: frontend
+        run: |
+          npm audit --omit=dev || true
+          npm audit --omit=dev --json > "$RUNNER_TEMP/npm-audit.json" || true
+          node -e '
+            const report = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+            const bad = Object.values(report.vulnerabilities || {})
+              .filter((v) => v.isDirect && ["high", "critical"].includes(v.severity));
+            if (bad.length) {
+              console.error("High or critical vulnerabilities in direct dependencies: " +
+                bad.map((v) => v.name).join(", "));
+              process.exit(1);
+            }
+          ' "$RUNNER_TEMP/npm-audit.json"
+      - name: Build the images
+        run: make image
+      - name: Isolation tests against the running stack
+        run: PLANTCRAFT_ISOLATION=live python -m pytest -q -rs tests/test_isolation.py
+      - name: Bundle with SBOMs and SHA-256 sums
+        run: |
+          (cd frontend && npm ci --no-audit --no-fund)
+          make bundle
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: bundle-sbom-and-sums
+          path: |
+            dist/*-bundle/sbom/
+            dist/*-bundle/SHA256SUMS
+            dist/*-bundle/bundle.env
+            dist/*.tar.gz.sha256
+
+  # The Mac mini's local suite follows main: the image is rebuilt there and only a container whose
+  # content changed is recreated, data kept (ci/macmini/suite-deploy, run from this checkout so a
+  # change to it applies without rebuilding the runner). Deploys of this app run one at a time, and
+  # a newer one waiting replaces an older one waiting (the job's concurrency).
+  deploy:
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && vars.MACMINI_DEPLOY == 'true'
+    runs-on: [self-hosted, macmini]
+    concurrency:
+      group: deploy-ci
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: make image
+      - run: ci/macmini/suite-deploy processcraft=processcraft proxy=processcraft-proxy
+      # The Notebooks kits of this commit, built only when what makes them changed.
+      - run: ci/macmini/notebook-kits

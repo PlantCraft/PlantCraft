@@ -1,0 +1,181 @@
+/* View › Diagrams: the canvas, its symbols and lines coloured by state, the time bar and the editor.
+   Colours come only from the suite's tokens, so a diagram reads the same in light and dark. */
+
+.dg-canvas { display: block; width: 100%; height: 100%; user-select: none; touch-action: none; color: var(--pc-text); font-family: var(--pc-font-sans); }
+.dg-background { fill: var(--pc-surface); }
+.dg-grid-dot { fill: var(--pc-border); }
+
+/* Symbols: the body takes the symbol fill, strokes the text colour; classes of the drawing
+   (pc-state, pc-run, pc-level) take the binding's colours. */
+.dg-drawing { fill: var(--pc-surface-2); stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dg-drawing * { vector-effect: non-scaling-stroke; }
+.dg-drawing .pc-level { fill: none; stroke: none; }
+.dg-sym[data-state="ok"] .pc-state { fill: var(--pc-good-soft); stroke: var(--pc-good-border); }
+.dg-sym[data-state="warning"] .pc-state { fill: var(--pc-attention-soft); stroke: var(--pc-attention-border); }
+.dg-sym[data-state="alarm"] .pc-state { fill: var(--pc-problem-soft); stroke: var(--pc-problem-border); }
+.dg-sym[data-state="alarm"] .dg-drawing { animation: dg-blink 1.2s steps(2, start) infinite; }
+.dg-sym[data-state="unknown"] .pc-state { fill: var(--pc-inactive-soft); stroke: var(--pc-inactive-border); }
+.dg-sym[data-on="true"] .pc-run { fill: var(--pc-good-fill); }
+.dg-sym[data-on="false"] .pc-run { fill: var(--pc-inactive-soft); }
+.dg-level rect { fill: var(--pc-info-fill); opacity: 0.55; }
+.dg-level-surface { stroke: var(--pc-info-text); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.dg-failed .dg-drawing { stroke-dasharray: 4 3; }
+.dg-missing { fill: var(--pc-surface-2); stroke: var(--pc-border-strong); stroke-dasharray: 4 3; }
+.dg-missing-text { fill: var(--pc-text-3); font-size: 10px; }
+.dg-label { fill: var(--pc-text-2); font-size: 15px; font-weight: 600; pointer-events: none; }
+/* Inside a vessel the label reads over the liquid too: a halo of the canvas colour round it. */
+.dg-label-inside { fill: var(--pc-text); paint-order: stroke; stroke: var(--pc-surface); stroke-width: 4px; stroke-linejoin: round; }
+.dg-line-label { font-size: 13px; font-weight: 500; paint-order: stroke; stroke: var(--pc-surface); stroke-width: 4px; stroke-linejoin: round; }
+.dg-clickable { cursor: pointer; }
+.dg-clickable:hover .dg-drawing { stroke: var(--pc-primary); }
+@keyframes dg-blink { 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .dg-sym[data-state="alarm"] .dg-drawing, .dg-line-flow { animation: none; } }
+
+/* Values: the number in its state's colour on a soft box. */
+.dg-value-box { fill: var(--pc-surface); stroke: var(--pc-border); }
+.dg-value text { fill: var(--pc-text); font-family: var(--pc-font-mono); }
+.dg-value-label, .dg-value-unit { fill: var(--pc-text-3); }
+.dg-value[data-state="warning"] .dg-value-box { fill: var(--pc-attention-soft); stroke: var(--pc-attention-border); }
+.dg-value[data-state="alarm"] .dg-value-box { fill: var(--pc-problem-soft); stroke: var(--pc-problem-border); }
+.dg-value[data-state="unknown"] .dg-value-number { fill: var(--pc-inactive-text); }
+
+/* Lines: process piping solid (coloured by medium), signals dashed, utilities dotted; flow as moving dashes. */
+.dg-line { color: var(--pc-text-2); }
+.dg-line-path { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linejoin: round; }
+.dg-line-signal { color: var(--pc-text-3); }
+.dg-line-signal .dg-line-path { stroke-width: 1.5; stroke-dasharray: 6 4; }
+.dg-line-utility .dg-line-path { stroke-width: 2; stroke-dasharray: 2 4; stroke-linecap: round; }
+.dg-line-hit { fill: none; stroke: transparent; stroke-width: 12; }
+.dg-line-flow { fill: none; stroke: var(--pc-surface); stroke-width: 1.5; stroke-dasharray: 4 12; animation: dg-flow 1s linear infinite; pointer-events: none; }
+.dg-line[data-on="false"] .dg-line-path { opacity: 0.55; }
+/* Arrowheads and flow arrows are filled in the line's own colour. */
+.dg-arrowhead, .dg-flow-arrow { fill: currentColor; stroke: none; pointer-events: none; }
+.dg-selected .dg-arrowhead, .dg-selected .dg-flow-arrow { fill: var(--pc-primary); }
+
+/* Off-page connectors: a button to the next diagram, its label inside and a chevron the way the line goes. */
+.dg-nav { fill: var(--pc-primary-soft); stroke: var(--pc-primary-border); stroke-width: 1.5; }
+.dg-nav-label { fill: var(--pc-primary-text); font-size: 13px; font-weight: 600; pointer-events: none; }
+.dg-nav-icon { fill: none; stroke: var(--pc-primary-text); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.dg-sym-nav.dg-clickable:hover .dg-nav { fill: var(--pc-primary-soft-2); stroke: var(--pc-primary); }
+.dg-sym-nav.dg-clickable:focus-visible .dg-nav { stroke: var(--pc-focus); stroke-width: 2.5; }
+@keyframes dg-flow { to { stroke-dashoffset: -16; } }
+
+.dg-text text { fill: var(--pc-text); }
+
+/* The editor: selection, ports to join lines, guides. */
+.dg-selection { fill: none; stroke: var(--pc-primary); stroke-width: 1.5; stroke-dasharray: 4 3; pointer-events: none; }
+.dg-selected .dg-line-path { stroke: var(--pc-primary); }
+.dg-port { fill: var(--pc-surface); stroke: var(--pc-primary); stroke-width: 1.5; cursor: crosshair; opacity: 0.85; }
+.dg-port:hover { fill: var(--pc-primary); r: 7; }
+.dg-port-signal { stroke: var(--pc-text-3); }
+.dg-draft-line { fill: none; stroke: var(--pc-primary); stroke-width: 2; stroke-dasharray: 5 4; pointer-events: none; }
+.dg-handle { fill: var(--pc-surface); stroke: var(--pc-primary); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.dg-handle-nw, .dg-handle-se { cursor: nwse-resize; }
+.dg-handle-ne, .dg-handle-sw { cursor: nesw-resize; }
+.dg-handle-ns { cursor: ns-resize; }
+.dg-handle-ew { cursor: ew-resize; }
+.dg-marquee { fill: var(--pc-primary-soft); stroke: var(--pc-primary); stroke-width: 1; pointer-events: none; }
+
+/* Pages. */
+.dg-stage { position: relative; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); overflow: hidden; height: min(72vh, 900px); }
+.dg-stage-full { position: fixed; inset: 0; z-index: var(--pc-z-modal); border-radius: 0; height: auto; border: 0; }
+/* The viewer's zoom: the canvas fills the stage; a zoomed drawing is dragged with the pointer. */
+.dg-zoom-stage { position: absolute; inset: 0; }
+/* The asset panel: over the right of the stage, so it stays on the display (full screen too). */
+.dg-asset-panel { position: absolute; top: 8px; right: 8px; max-height: calc(100% - 64px); z-index: 2; width: min(340px, calc(100% - 16px)); display: flex; flex-direction: column; gap: var(--pc-space-3, 12px); padding: 14px 16px; overflow: auto; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); box-shadow: var(--pc-shadow-4, 0 8px 24px rgb(0 0 0 / 0.18)); }
+.dg-asset-panel header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.dg-asset-panel h2 { margin: 2px 0 0; font-size: var(--pc-fs-lg, 1.05rem); }
+.dg-asset-panel h3 { margin: 0 0 4px; font-size: var(--pc-fs-xs); font-weight: 600; color: var(--pc-text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.dg-asset-kind { font-size: var(--pc-fs-xs); color: var(--pc-text-2); }
+.dg-asset-description { margin: 0; color: var(--pc-text-2); font-size: var(--pc-fs-sm); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.dg-asset-rows, .dg-asset-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.dg-asset-rows button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 5px 8px; border: 0; border-radius: var(--pc-radius-sm, 6px); background: none; color: inherit; font: inherit; font-size: var(--pc-fs-sm); text-align: left; cursor: pointer; }
+.dg-asset-rows button:hover { background: var(--pc-surface-2); }
+.dg-asset-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dg-asset-value { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.dg-asset-signal { color: var(--pc-text-2); font-size: var(--pc-fs-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dg-asset-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--pc-inactive-border); }
+.dg-asset-rows [data-state="ok"] .dg-asset-dot { background: var(--pc-good-border); }
+.dg-asset-rows [data-state="warning"] .dg-asset-dot { background: var(--pc-attention-border); }
+.dg-asset-rows [data-state="alarm"] .dg-asset-dot { background: var(--pc-problem-border); }
+.dg-asset-links a { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: var(--pc-radius-sm, 6px); font-size: var(--pc-fs-sm); }
+.dg-asset-links a:hover { background: var(--pc-surface-2); }
+.dg-asset-panel footer { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+.dg-zoomed { cursor: grab; }
+.dg-zoomed:active { cursor: grabbing; }
+.dg-zoom { position: absolute; right: 8px; bottom: 8px; z-index: 1; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md, 8px); box-shadow: var(--pc-shadow-sm, none); }
+.dg-zoom-level { min-width: 46px; text-align: center; font-size: var(--pc-fs-xs); color: var(--pc-text-2); font-variant-numeric: tabular-nums; }
+.dg-timebar { display: flex; flex-direction: column; gap: var(--pc-space-2); padding: var(--pc-space-2) 0; }
+.dg-timebar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pc-space-2); }
+.dg-timebar-label { font-size: var(--pc-fs-sm); color: var(--pc-text-2); }
+.dg-segmented { display: inline-flex; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); overflow: hidden; background: var(--pc-surface); }
+.dg-segmented button { border: 0; background: none; padding: 5px 10px; font: inherit; font-size: var(--pc-fs-sm); color: var(--pc-text-2); cursor: pointer; }
+.dg-segmented button + button { border-left: 1px solid var(--pc-border); }
+.dg-segmented button:hover { background: var(--pc-surface-2); color: var(--pc-text); }
+.dg-segmented button.dg-on { background: var(--pc-primary-soft); color: var(--pc-primary); font-weight: 600; }
+.dg-timebar input[type="range"] { flex: 1 1 240px; min-width: 160px; accent-color: var(--pc-primary); }
+.dg-timebar time { font-family: var(--pc-font-mono); font-size: var(--pc-fs-sm); color: var(--pc-text-2); min-width: 11ch; }
+.dg-timebar .dg-live { color: var(--pc-good-text); font-weight: 600; }
+.dg-legend { display: flex; flex-wrap: wrap; gap: var(--pc-space-3); font-size: var(--pc-fs-xs); color: var(--pc-text-2); padding-top: var(--pc-space-2); }
+.dg-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dg-legend i { display: inline-block; width: 18px; height: 3px; background: currentColor; border-radius: 2px; }
+.dg-legend .dg-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; }
+.dg-problems { font-size: var(--pc-fs-sm); color: var(--pc-text-2); }
+.dg-list-preview { height: 120px; background: var(--pc-surface-2); border-radius: var(--pc-radius-md); overflow: hidden; pointer-events: none; }
+/* Kiosk (full screen, a public link's ?screen=1): the canvas only; its name small in a corner. */
+/* The parts' tabs in full screen: over the top of the drawing, in the middle. */
+.dg-full-tabs { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); z-index: 2; max-width: calc(100% - 320px); padding: 2px 8px; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md, 8px); box-shadow: var(--pc-shadow-sm, none); }
+.dg-full-tabs .pcs-tabs { margin: 0; border-bottom: 0; }
+.dg-kiosk-name { position: absolute; left: 12px; top: 8px; z-index: 1; font-size: var(--pc-fs-sm); color: var(--pc-text-3); pointer-events: none; }
+
+/* A dashboard's diagram card: the diagram scaled to the panel; a click opens its page. */
+.dg-card { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.dg-card-stage { flex: 1; min-height: 0; border-radius: var(--pc-radius-md); overflow: hidden; }
+.dg-card-stage .dg-canvas { touch-action: auto; }
+.dg-card-open .dg-card-stage { cursor: pointer; }
+.dg-card-open .dg-card-stage:hover { outline: 1px solid var(--pc-primary); }
+.dg-card-open .dg-card-stage:focus-visible { outline: 2px solid var(--pc-primary); }
+.dg-card-note { color: var(--pc-text-3); }
+.dg-card-missing { flex: 1; display: flex; align-items: center; justify-content: center; gap: var(--pc-space-2); color: var(--pc-text-3); font-size: var(--pc-fs-sm); text-align: center; }
+
+/* The editor: toolbar on top, library at the left, canvas in the middle, properties at the right. */
+.dg-editor { display: flex; flex-direction: column; gap: var(--pc-space-2); height: calc(100vh - 120px); min-height: 520px; }
+.dg-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pc-space-1); padding: var(--pc-space-2); background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); }
+.dg-toolbar-name { font-family: var(--pc-font-display); margin-right: var(--pc-space-2); max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dg-sep { width: 1px; height: 22px; background: var(--pc-border); margin: 0 var(--pc-space-1); }
+.dg-grow { flex: 1; }
+.dg-zoom { font-family: var(--pc-font-mono); font-size: var(--pc-fs-xs); color: var(--pc-text-2); min-width: 5ch; text-align: center; }
+.dg-workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: 220px minmax(0, 1fr) 300px; gap: var(--pc-space-2); }
+.dg-palette, .dg-inspector { background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); padding: var(--pc-space-2); overflow: auto; }
+.dg-palette details { margin-top: var(--pc-space-2); }
+.dg-palette summary { cursor: pointer; font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); }
+.dg-palette summary small { color: var(--pc-text-3); font-weight: 400; }
+.dg-palette-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 6px; }
+.dg-palette-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); background: var(--pc-surface); cursor: grab; color: var(--pc-text); }
+.dg-palette-item:hover { border-color: var(--pc-primary); background: var(--pc-primary-soft); }
+.dg-palette-item svg { width: 100%; height: 44px; }
+.dg-palette-item span { font-size: var(--pc-fs-2xs); color: var(--pc-text-2); text-align: center; line-height: 1.15; }
+.dg-editor-stage { position: relative; overflow: auto; background: var(--pc-surface-2); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); padding: 12px; }
+.dg-editor-stage > div { box-shadow: var(--pc-shadow-1); }
+.dg-editing .dg-el { cursor: move; }
+.dg-inspector h3 { margin: 0 0 var(--pc-space-2); font-size: var(--pc-fs-md); }
+.dg-inspector h4 { margin: var(--pc-space-3) 0 var(--pc-space-1); font-size: var(--pc-fs-sm); color: var(--pc-text-2); }
+.dg-field { display: flex; flex-direction: column; gap: 3px; margin-bottom: var(--pc-space-2); font-size: var(--pc-fs-xs); color: var(--pc-text-2); }
+.dg-field input, .dg-field select, .dg-field textarea { width: 100%; }
+.dg-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--pc-space-2); }
+.dg-limits { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--pc-space-2); }
+.dg-check { display: flex; align-items: center; gap: 6px; font-size: var(--pc-fs-sm); margin-bottom: var(--pc-space-1); }
+.dg-hint { font-size: var(--pc-fs-xs); color: var(--pc-text-3); }
+.dg-binding-state { list-style: none; padding: var(--pc-space-2); margin: var(--pc-space-2) 0; background: var(--pc-surface-2); border-radius: var(--pc-radius-md); font-size: var(--pc-fs-xs); }
+.dg-binding-state li[data-state="unknown"] { color: var(--pc-inactive-text); }
+.dg-binding-state li[data-state="alarm"] { color: var(--pc-problem-text); }
+.dg-binding-state li[data-state="warning"] { color: var(--pc-attention-text); }
+.dg-notes { display: flex; align-items: flex-start; gap: var(--pc-space-2); padding: var(--pc-space-2) var(--pc-space-3); background: var(--pc-info-soft); border: 1px solid var(--pc-info-border); border-radius: var(--pc-radius-md); font-size: var(--pc-fs-sm); }
+.dg-notes ul { flex: 1; margin: 0; padding-left: 1.1em; }
+@media (max-width: 1700px) { .dg-toolbar .dg-wide { display: none; } }
+@media (max-width: 900px) {
+  .dg-editor { height: auto; }
+  .dg-workspace { grid-template-columns: 1fr; }
+  .dg-editor-stage { height: 60vh; }
+  .dg-palette { max-height: 220px; }
+}

@@ -1,0 +1,10 @@
+/* StarterCraft's styles on the suite's fonts, tokens and frame (@plantcraft/ui). */
+@import "@plantcraft/ui/fonts.css";
+@import "@plantcraft/ui/tokens.css";
+@import "@plantcraft/ui/shell.css";
+@import "@plantcraft/ui/base.css";
+
+
+/* The note form: the text takes the whole row, the button sits under the fields. */
+.form-wide { grid-column: 1 / -1; }
+.form-actions { margin-top: 14px; }

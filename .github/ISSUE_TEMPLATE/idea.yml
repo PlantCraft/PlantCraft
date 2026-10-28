@@ -1,0 +1,20 @@
+name: Idea
+description: Something the suite should do, or do differently
+labels: [idea]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What you need to get done
+      description: The task in the plant or the study, not the feature yet
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How you do it today
+  - type: input
+    id: app
+    attributes:
+      label: Which app
+      description: Desk, Link, Historian, View, Alarms, Models, the platform, or "not sure"

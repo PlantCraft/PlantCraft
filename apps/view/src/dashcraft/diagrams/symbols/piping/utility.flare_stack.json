@@ -1,0 +1,52 @@
+{
+  "id": "utility.flare_stack",
+  "title": "Flare stack",
+  "category": "piping",
+  "w": 60,
+  "h": 140,
+  "svg": "<rect class=\"pc-state\" x=\"24\" y=\"30\" width=\"12\" height=\"100\" stroke-width=\"2\" stroke-linejoin=\"round\"/><path class=\"pc-run\" d=\"M30,28 C18,18 26,8 30,0 C34,8 42,18 30,28 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 24,
+      "y": 120,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 30.0,
+      "y": 144,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 30.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 60,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "run"
+  ],
+  "keywords": [
+    "flare",
+    "stack",
+    "relief header",
+    "burn"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

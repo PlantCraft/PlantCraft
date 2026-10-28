@@ -1,0 +1,39 @@
+# A test company directory (OpenLDAP) and sign-in provider (Keycloak), for the live tests of
+# corporate sign-in: dev/corporate-login/README.md. Never for production.
+name: processcraft-corporate-login
+services:
+  ldap:
+    image: ${OPENLDAP_IMAGE:-osixia/openldap:1.5.0}
+    command: --copy-service
+    hostname: ldap.plant.test
+    environment:
+      LDAP_ORGANISATION: Test Company
+      LDAP_DOMAIN: plant.test
+      LDAP_ADMIN_PASSWORD: admin-test-only
+      LDAP_TLS_CRT_FILENAME: server.crt
+      LDAP_TLS_KEY_FILENAME: server.key
+      LDAP_TLS_CA_CRT_FILENAME: ca.crt
+      LDAP_TLS_VERIFY_CLIENT: never
+    volumes:
+      - ./certs:/container/service/slapd/assets/certs:ro
+      - ./acl.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/40-acl.ldif:ro
+      - ./seed.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/50-seed.ldif:ro
+    ports:
+      - "127.0.0.1:1389:389"
+      - "127.0.0.1:1636:636"
+  keycloak:
+    image: ${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak:26.0}
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin-test-only
+      KC_HTTPS_CERTIFICATE_FILE: /certs/server.crt
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /certs/server.key
+      KC_HTTPS_PORT: "8443"
+      KC_HOSTNAME: https://sso.plant.test:8443
+      KC_HTTP_ENABLED: "false"
+    volumes:
+      - ./certs:/certs:ro
+      - ./realm.json:/opt/keycloak/data/import/realm.json:ro
+    ports:
+      - "127.0.0.1:8443:8443"

@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# suite-dev: quick previews of interface changes on the Mac mini's suite (dev/README.md).
+#
+#   suite-dev on [APP ...]   build the apps' interfaces from the repository's `preview` branch
+#                            (main when there is none) and serve them from the running suite; all apps the
+#                            suite runs when none is named
+#   suite-dev status         what each app shows now
+#   suite-dev logs           the builds, live
+#   suite-dev off            back to the interfaces inside the images
+#
+# For the Mac mini only, never a client's server: the processcraft-dev container reads GitHub.
+# Needs Docker Desktop and the GitHub CLI signed in (gh auth login). SUITE_DIR: the installed
+# suite (default ~/PlantCraft). Works with the bash 3.2 macOS ships.
+set -euo pipefail
+
+SUITE_DIR="${SUITE_DIR:-$HOME/PlantCraft}"
+OWNER="${OWNER:-PlantCraft}"
+REMOTE="${REMOTE:-https://github.com/$OWNER}"
+BRANCH="${BRANCH:-preview}"
+INTERVAL="${INTERVAL:-3}"
+NODE_IMAGE="${NODE_IMAGE:-node:22-bookworm}"
+CONTAINER=processcraft-dev
+DEV="$SUITE_DIR/dev"
+OVERRIDE="$SUITE_DIR/dev.compose.yaml"
+# The suite's apps with an interface, as compose services, and where each image serves it from.
+ALL_APPS="processcraft linkcraft histcraft dashcraft alarmcraft modelcraft doccraft"
+ui_target() { if [ "$1" = processcraft ]; then echo /app/frontend/dist; else echo /app/ui; fi; }
+# Where each app's interface is in the repository's checkout (the same list as dev/follow.sh).
+front_of() {
+    case "$1" in
+        processcraft) echo frontend ;;
+        linkcraft) echo apps/link/frontend ;;
+        histcraft) echo apps/historian/frontend ;;
+        dashcraft) echo apps/view/frontend ;;
+        alarmcraft) echo apps/alarms/frontend ;;
+        modelcraft) echo apps/models/frontend ;;
+        doccraft) echo apps/documents/frontend ;;
+    esac
+}
+
+die() { echo "suite-dev: $*" >&2; exit 1; }
+[ -f "$SUITE_DIR/compose.yaml" ] || die "no suite installed in $SUITE_DIR (set SUITE_DIR)"
+command -v docker >/dev/null || die "Docker Desktop is not running or not installed"
+
+# The same files suite-deploy and install.sh pass, plus this override when it exists.
+compose() {
+    local files="-f $SUITE_DIR/compose.yaml" extra
+    for extra in "$SUITE_DIR"/data/installer/apps/*/compose.json "$OVERRIDE"; do
+        [ -f "$extra" ] && files="$files -f $extra"
+    done
+    # shellcheck disable=SC2086 # the paths have no spaces (install.sh --prefix)
+    docker compose --project-directory "$SUITE_DIR" $files --env-file "$SUITE_DIR/.env" "$@"
+}
+
+running_apps() {
+    local services app
+    services=" $(compose config --services | tr '\n' ' ') "
+    for app in $ALL_APPS; do
+        case "$services" in *" $app "*) echo "$app" ;; esac
+    done
+}
+
+write_override() {
+    local app
+    {
+        echo "# Written by suite-dev on; removed by suite-dev off (processcraft dev/README.md)."
+        echo "services:"
+        for app in "$@"; do
+            echo "  $app:"
+            echo "    volumes:"
+            echo "      - ./dev/src/processcraft/$(front_of "$app")/dist:$(ui_target "$app"):ro"
+        done
+    } >"$OVERRIDE"
+}
+
+cmd_on() {
+    command -v gh >/dev/null || die "install the GitHub CLI first: brew install gh && gh auth login"
+    local token apps app waited
+    token="$(gh auth token)" || die "sign in first: gh auth login"
+    apps="${*:-$(running_apps | tr '\n' ' ')}"
+    for app in $apps; do
+        case " $ALL_APPS " in *" $app "*) ;; *) die "$app: not an app with an interface ($ALL_APPS)" ;; esac
+    done
+    [ -n "${apps// /}" ] || die "the suite runs none of: $ALL_APPS"
+    mkdir -p "$DEV/src" "$DEV/state"
+    rm -f "$DEV"/state/*
+
+    docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+    local volumes="" app
+    for app in $apps; do
+        volumes="$volumes -v processcraft-dev-modules-$app:/work/src/processcraft/$(front_of "$app")/node_modules"
+    done
+    echo "Starting $CONTAINER (following $BRANCH, else main, of: $apps)..."
+    # The tools come from the processcraft checkout the container keeps itself, so a merged
+    # change to dev/ reaches it without running this script again (it restarts on its own).
+    # shellcheck disable=SC2086
+    docker run -d --name "$CONTAINER" --restart unless-stopped \
+        -e GH_TOKEN="$token" -e APPS="$apps" -e OWNER="$OWNER" -e REMOTE="$REMOTE" -e BRANCH="$BRANCH" -e INTERVAL="$INTERVAL" \
+        -v "$DEV:/work" $volumes ${DOCKER_RUN_ARGS:-} --entrypoint bash "$NODE_IMAGE" -c '
+            set -e; src=/work/src/processcraft; git config --global --add safe.directory "*"
+            # Fetched in place: the folder already holds the node_modules volume, and on the
+            # Mac file sharing a copy cannot overwrite the read-only files git leaves behind.
+            if [ ! -f "$src/dev/follow.sh" ]; then
+                mkdir -p "$src" && rm -rf "$src/.git" "$src.boot" && git init -q "$src"
+                git -C "$src" remote add origin "$REMOTE/processcraft.git"
+                git -C "$src" -c credential.helper="!f() { echo username=x-access-token; echo password=\$GH_TOKEN; }; f" \
+                    fetch -q --depth=1 origin main
+                git -C "$src" -c advice.detachedHead=false checkout -q -f FETCH_HEAD
+            fi
+            cp "$src/dev/follow.sh" /tmp/follow.sh && exec bash /tmp/follow.sh' >/dev/null
+
+    echo "Waiting for the first builds (a few minutes the first time: npm ci for each app)..."
+    waited=0
+    for app in $apps; do
+        while [ ! -f "$DEV/state/$app" ]; do
+            docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null | grep -q true ||
+                { docker logs --tail 40 "$CONTAINER"; die "$CONTAINER stopped"; }
+            waited=$((waited + 2))
+            [ "$waited" -lt 900 ] || { docker logs --tail 40 "$CONTAINER"; die "no build of $app after 15 minutes"; }
+            sleep 2
+        done
+        echo "  $app: $(cat "$DEV/state/$app")"
+    done
+    # shellcheck disable=SC2086
+    write_override $apps
+    # shellcheck disable=SC2086
+    compose up -d --no-deps $apps
+    echo
+    echo "Preview on. Push to the '$BRANCH' branch of an app and its pages reload by themselves"
+    echo "a few seconds later. Back to the images: $0 off"
+}
+
+cmd_off() {
+    docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+    if [ -f "$OVERRIDE" ]; then
+        local apps
+        apps="$(sed -n 's/^  \([a-z]*\):$/\1/p' "$OVERRIDE" | tr '\n' ' ')"
+        rm -f "$OVERRIDE"
+        # shellcheck disable=SC2086
+        [ -z "${apps// /}" ] || compose up -d --no-deps $apps
+    fi
+    echo "Preview off: every app serves the interface of its image again."
+}
+
+cmd_status() {
+    local state app
+    state="$(docker inspect -f '{{.State.Status}}' "$CONTAINER" 2>/dev/null || echo "not running")"
+    echo "$CONTAINER: $state"
+    [ -f "$OVERRIDE" ] || { echo "Preview off (no $OVERRIDE)."; return 0; }
+    for app in $(sed -n 's/^  \([a-z]*\):$/\1/p' "$OVERRIDE"); do
+        if [ -f "$DEV/state/$app" ]; then
+            echo "  $app: built $(cat "$DEV/state/$app")"
+        else
+            echo "  $app: no build yet"
+        fi
+    done
+}
+
+case "${1:-}" in
+    on) shift; cmd_on "$@" ;;
+    off) cmd_off ;;
+    status) cmd_status ;;
+    logs) docker logs -f --tail 100 "$CONTAINER" ;;
+    *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+esac

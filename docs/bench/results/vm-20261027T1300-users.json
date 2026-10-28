@@ -1,0 +1,588 @@
+{
+ "started": "2026-10-27 13:00 UTC",
+ "machine": {
+  "host": "vm",
+  "system": "Linux 6.18.44-fc-v165 x86_64",
+  "cpus": 4,
+  "memory_gib": 15.7,
+  "docker": "4 CPUs 16872812544 x86_64"
+ },
+ "think_s": [
+  5.0,
+  15.0
+ ],
+ "visitor": true,
+ "heavy": 0.3,
+ "pages_known": 119,
+ "calls_per_page": 19.1,
+ "seeded": null,
+ "steps": [
+  {
+   "users": 10,
+   "seconds": 206,
+   "pages": 127,
+   "pages_per_s": 0.62,
+   "calls_per_s": 12.9,
+   "page_p50_s": 0.2,
+   "page_p95_s": 0.958,
+   "page_max_s": 1.917,
+   "call_p50_s": 0.04,
+   "call_p95_s": 0.222,
+   "failed_share": 0.0004,
+   "failures": {
+    "403 /dash/api/signals": 1
+   },
+   "queries": {
+    "dashboard 30d": {
+     "n": 2,
+     "p50_s": 1.148,
+     "p95_s": 1.827,
+     "max_s": 1.827
+    },
+    "dashboard 7d": {
+     "n": 3,
+     "p50_s": 1.524,
+     "p95_s": 1.936,
+     "max_s": 1.936
+    },
+    "history 1d raw": {
+     "n": 6,
+     "p50_s": 0.024,
+     "p95_s": 0.223,
+     "max_s": 0.223
+    },
+    "history 30d": {
+     "n": 3,
+     "p50_s": 0.031,
+     "p95_s": 0.056,
+     "max_s": 0.056
+    },
+    "history 90d": {
+     "n": 3,
+     "p50_s": 0.056,
+     "p95_s": 0.131,
+     "max_s": 0.131
+    },
+    "report 30d": {
+     "n": 9,
+     "p50_s": 0.564,
+     "p95_s": 2.221,
+     "max_s": 2.221
+    },
+    "trend 30d": {
+     "n": 4,
+     "p50_s": 0.134,
+     "p95_s": 0.179,
+     "max_s": 0.179
+    },
+    "trend 7d": {
+     "n": 1,
+     "p50_s": 0.093,
+     "p95_s": 0.093,
+     "max_s": 0.093
+    },
+    "trend 90d": {
+     "n": 2,
+     "p50_s": 0.354,
+     "p95_s": 0.379,
+     "max_s": 0.379
+    }
+   },
+   "slowest_routes": [
+    {
+     "route": "GET /dash/api/reports/<id>/sections/<id>",
+     "calls": 131,
+     "total_s": 24.9,
+     "p95_s": 0.538
+    },
+    {
+     "route": "GET /link/api/queue",
+     "calls": 130,
+     "total_s": 10.6,
+     "p95_s": 0.276
+    },
+    {
+     "route": "GET /api/home",
+     "calls": 116,
+     "total_s": 9.2,
+     "p95_s": 0.149
+    },
+    {
+     "route": "GET /api/notebooks",
+     "calls": 116,
+     "total_s": 8.6,
+     "p95_s": 0.277
+    },
+    {
+     "route": "GET /hist/api/queue",
+     "calls": 127,
+     "total_s": 7.5,
+     "p95_s": 0.127
+    },
+    {
+     "route": "GET /api/<id>/inbox",
+     "calls": 127,
+     "total_s": 6.3,
+     "p95_s": 0.093
+    },
+    {
+     "route": "GET /doc/api/queue",
+     "calls": 129,
+     "total_s": 5.6,
+     "p95_s": 0.087
+    },
+    {
+     "route": "GET /model/api/queue",
+     "calls": 127,
+     "total_s": 5.2,
+     "p95_s": 0.071
+    },
+    {
+     "route": "GET /dash/api/dashboards/<id>/cards/table-up",
+     "calls": 3,
+     "total_s": 5.1,
+     "p95_s": 1.812
+    },
+    {
+     "route": "GET /api/session",
+     "calls": 116,
+     "total_s": 5.1,
+     "p95_s": 0.085
+    },
+    {
+     "route": "GET /api/desk/team-page",
+     "calls": 116,
+     "total_s": 5.1,
+     "p95_s": 0.083
+    },
+    {
+     "route": "GET /api/me/preferences",
+     "calls": 116,
+     "total_s": 4.9,
+     "p95_s": 0.078
+    }
+   ]
+  },
+  {
+   "users": 50,
+   "seconds": 203,
+   "pages": 617,
+   "pages_per_s": 3.03,
+   "calls_per_s": 63.9,
+   "page_p50_s": 0.279,
+   "page_p95_s": 1.627,
+   "page_max_s": 4.899,
+   "call_p50_s": 0.051,
+   "call_p95_s": 0.346,
+   "failed_share": 0.0006,
+   "failures": {
+    "403 /dash/api/signals": 8
+   },
+   "queries": {
+    "dashboard 30d": {
+     "n": 29,
+     "p50_s": 0.197,
+     "p95_s": 3.559,
+     "max_s": 17.951
+    },
+    "dashboard 7d": {
+     "n": 21,
+     "p50_s": 0.382,
+     "p95_s": 2.084,
+     "max_s": 2.668
+    },
+    "history 1d raw": {
+     "n": 16,
+     "p50_s": 0.031,
+     "p95_s": 0.317,
+     "max_s": 0.317
+    },
+    "history 30d": {
+     "n": 7,
+     "p50_s": 0.081,
+     "p95_s": 0.158,
+     "max_s": 0.158
+    },
+    "history 90d": {
+     "n": 15,
+     "p50_s": 0.071,
+     "p95_s": 0.742,
+     "max_s": 0.742
+    },
+    "report 30d": {
+     "n": 41,
+     "p50_s": 0.308,
+     "p95_s": 6.539,
+     "max_s": 9.044
+    },
+    "trend 30d": {
+     "n": 23,
+     "p50_s": 0.161,
+     "p95_s": 0.461,
+     "max_s": 0.462
+    },
+    "trend 7d": {
+     "n": 12,
+     "p50_s": 0.113,
+     "p95_s": 3.405,
+     "max_s": 3.405
+    },
+    "trend 90d": {
+     "n": 20,
+     "p50_s": 0.259,
+     "p95_s": 4.07,
+     "max_s": 4.07
+    }
+   },
+   "slowest_routes": [
+    {
+     "route": "GET /dash/api/reports/<id>/sections/<id>",
+     "calls": 576,
+     "total_s": 129.3,
+     "p95_s": 0.503
+    },
+    {
+     "route": "GET /hist/api/queue",
+     "calls": 617,
+     "total_s": 89.8,
+     "p95_s": 0.63
+    },
+    {
+     "route": "GET /api/home",
+     "calls": 575,
+     "total_s": 76.6,
+     "p95_s": 0.328
+    },
+    {
+     "route": "GET /dash/api/dashboards/<id>/cards/<id>",
+     "calls": 514,
+     "total_s": 71.1,
+     "p95_s": 0.422
+    },
+    {
+     "route": "GET /api/notebooks",
+     "calls": 575,
+     "total_s": 65.1,
+     "p95_s": 0.301
+    },
+    {
+     "route": "GET /link/api/queue",
+     "calls": 622,
+     "total_s": 59.7,
+     "p95_s": 0.391
+    },
+    {
+     "route": "GET /api/<id>/inbox",
+     "calls": 617,
+     "total_s": 58.1,
+     "p95_s": 0.266
+    },
+    {
+     "route": "GET /api/desk/team-page",
+     "calls": 575,
+     "total_s": 52.7,
+     "p95_s": 0.267
+    },
+    {
+     "route": "GET /api/me/preferences",
+     "calls": 575,
+     "total_s": 51.7,
+     "p95_s": 0.242
+    },
+    {
+     "route": "GET /api/session",
+     "calls": 575,
+     "total_s": 50.3,
+     "p95_s": 0.225
+    },
+    {
+     "route": "GET /api/assistant",
+     "calls": 617,
+     "total_s": 49.3,
+     "p95_s": 0.235
+    },
+    {
+     "route": "GET /api/<id>/queue",
+     "calls": 617,
+     "total_s": 43.6,
+     "p95_s": 0.201
+    }
+   ]
+  },
+  {
+   "users": 100,
+   "seconds": 211,
+   "pages": 1170,
+   "pages_per_s": 5.56,
+   "calls_per_s": 120.1,
+   "page_p50_s": 0.702,
+   "page_p95_s": 2.604,
+   "page_max_s": 8.885,
+   "call_p50_s": 0.115,
+   "call_p95_s": 0.789,
+   "failed_share": 0.0002,
+   "failures": {
+    "403 /dash/api/signals": 5
+   },
+   "queries": {
+    "dashboard 30d": {
+     "n": 57,
+     "p50_s": 0.564,
+     "p95_s": 5.467,
+     "max_s": 11.033
+    },
+    "dashboard 7d": {
+     "n": 43,
+     "p50_s": 1.125,
+     "p95_s": 10.45,
+     "max_s": 17.01
+    },
+    "history 1d raw": {
+     "n": 38,
+     "p50_s": 0.151,
+     "p95_s": 0.659,
+     "max_s": 0.691
+    },
+    "history 30d": {
+     "n": 34,
+     "p50_s": 0.173,
+     "p95_s": 0.651,
+     "max_s": 0.99
+    },
+    "history 90d": {
+     "n": 42,
+     "p50_s": 0.204,
+     "p95_s": 0.734,
+     "max_s": 1.402
+    },
+    "report 30d": {
+     "n": 97,
+     "p50_s": 0.551,
+     "p95_s": 5.972,
+     "max_s": 10.264
+    },
+    "trend 30d": {
+     "n": 39,
+     "p50_s": 0.451,
+     "p95_s": 2.177,
+     "max_s": 2.227
+    },
+    "trend 7d": {
+     "n": 25,
+     "p50_s": 0.416,
+     "p95_s": 2.446,
+     "max_s": 4.106
+    },
+    "trend 90d": {
+     "n": 17,
+     "p50_s": 0.673,
+     "p95_s": 3.645,
+     "max_s": 3.645
+    }
+   },
+   "slowest_routes": [
+    {
+     "route": "GET /dash/api/reports/<id>/sections/<id>",
+     "calls": 1326,
+     "total_s": 376.3,
+     "p95_s": 0.798
+    },
+    {
+     "route": "GET /api/home",
+     "calls": 1079,
+     "total_s": 341.8,
+     "p95_s": 0.944
+    },
+    {
+     "route": "GET /link/api/queue",
+     "calls": 1181,
+     "total_s": 299.2,
+     "p95_s": 1.049
+    },
+    {
+     "route": "GET /api/notebooks",
+     "calls": 1079,
+     "total_s": 290.9,
+     "p95_s": 0.87
+    },
+    {
+     "route": "GET /api/<id>/inbox",
+     "calls": 1170,
+     "total_s": 280.6,
+     "p95_s": 0.742
+    },
+    {
+     "route": "GET /api/desk/team-page",
+     "calls": 1079,
+     "total_s": 260.9,
+     "p95_s": 0.76
+    },
+    {
+     "route": "GET /api/assistant",
+     "calls": 1170,
+     "total_s": 259.5,
+     "p95_s": 0.728
+    },
+    {
+     "route": "GET /hist/api/queue",
+     "calls": 1170,
+     "total_s": 255.8,
+     "p95_s": 0.605
+    },
+    {
+     "route": "GET /api/me/preferences",
+     "calls": 1079,
+     "total_s": 253.4,
+     "p95_s": 0.736
+    },
+    {
+     "route": "GET /api/<id>/queue",
+     "calls": 1170,
+     "total_s": 247.8,
+     "p95_s": 0.692
+    },
+    {
+     "route": "GET /api/queue",
+     "calls": 1170,
+     "total_s": 238.7,
+     "p95_s": 0.659
+    },
+    {
+     "route": "GET /api/session",
+     "calls": 1079,
+     "total_s": 236.2,
+     "p95_s": 0.694
+    }
+   ]
+  }
+ ],
+ "peak": {
+  "linkcraft": {
+   "cpu_percent": 108.78,
+   "mem_mib": 882.3
+  },
+  "processcraft": {
+   "cpu_percent": 196.32,
+   "mem_mib": 851.5
+  },
+  "histcraft": {
+   "cpu_percent": 91.69,
+   "mem_mib": 791.8
+  },
+  "histcraft-db": {
+   "cpu_percent": 82.99,
+   "mem_mib": 476.8
+  },
+  "histcraft-gateway": {
+   "cpu_percent": 3.68,
+   "mem_mib": 38.2
+  },
+  "histcraft-collector": {
+   "cpu_percent": 114.1,
+   "mem_mib": 176.0
+  },
+  "alarmcraft": {
+   "cpu_percent": 105.89,
+   "mem_mib": 439.0
+  },
+  "proxy": {
+   "cpu_percent": 31.3,
+   "mem_mib": 36.6
+  },
+  "doccraft": {
+   "cpu_percent": 43.7,
+   "mem_mib": 240.7
+  },
+  "dashcraft": {
+   "cpu_percent": 57.34,
+   "mem_mib": 267.0
+  },
+  "compute-gateway": {
+   "cpu_percent": 16.38,
+   "mem_mib": 64.2
+  },
+  "modelcraft": {
+   "cpu_percent": 85.19,
+   "mem_mib": 286.2
+  },
+  "plantcraft": {
+   "cpu_percent": 97.4,
+   "mem_mib": 317.2
+  },
+  "llm-egress": {
+   "cpu_percent": 52.35,
+   "mem_mib": 37.0
+  },
+  "linkcraft-executor": {
+   "cpu_percent": 119.62,
+   "mem_mib": 461.8
+  },
+  "installer": {
+   "cpu_percent": 48.65,
+   "mem_mib": 53.7
+  },
+  "modelcraft-executor": {
+   "cpu_percent": 6.74,
+   "mem_mib": 22.3
+  }
+ },
+ "cpu_by_step": {
+  "10 people": {
+   "linkcraft": 25.41,
+   "processcraft": 115.9,
+   "histcraft": 83.65,
+   "histcraft-db": 66.55,
+   "histcraft-gateway": 3.68,
+   "histcraft-collector": 105.62,
+   "alarmcraft": 72.4,
+   "proxy": 10.25,
+   "doccraft": 43.7,
+   "dashcraft": 57.34,
+   "compute-gateway": 14.81,
+   "modelcraft": 26.44,
+   "plantcraft": 97.4,
+   "llm-egress": 52.35,
+   "linkcraft-executor": 14.28,
+   "installer": 48.65,
+   "modelcraft-executor": 6.74
+  },
+  "50 people": {
+   "linkcraft": 108.78,
+   "processcraft": 150.39,
+   "histcraft": 91.69,
+   "histcraft-db": 68.24,
+   "histcraft-gateway": 0.56,
+   "histcraft-collector": 114.1,
+   "alarmcraft": 105.89,
+   "proxy": 20.56,
+   "doccraft": 17.12,
+   "dashcraft": 34.36,
+   "compute-gateway": 16.36,
+   "modelcraft": 85.19,
+   "plantcraft": 64.68,
+   "llm-egress": 27.28,
+   "linkcraft-executor": 96.66,
+   "installer": 27.47,
+   "modelcraft-executor": 5.98
+  },
+  "100 people": {
+   "linkcraft": 80.62,
+   "processcraft": 196.32,
+   "histcraft": 85.12,
+   "histcraft-db": 82.99,
+   "histcraft-gateway": 0.62,
+   "histcraft-collector": 69.17,
+   "alarmcraft": 57.16,
+   "proxy": 31.3,
+   "doccraft": 33.86,
+   "dashcraft": 46.4,
+   "compute-gateway": 16.38,
+   "modelcraft": 45.2,
+   "plantcraft": 77.46,
+   "llm-egress": 25.89,
+   "linkcraft-executor": 119.62,
+   "installer": 43.99,
+   "modelcraft-executor": 6.34
+  }
+ }
+}

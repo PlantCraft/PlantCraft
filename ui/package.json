@@ -1,0 +1,124 @@
+{
+  "name": "@plantcraft/ui",
+  "version": "0.85.0",
+  "description": "The suite's shared interface: page styles and grid, sidebar, app switcher, user menu, guided tour, theme, help browser, brand marks, the app API client, Help page, source picker and recipient picker, the block diagram editor (`@plantcraft/ui/blockEditor`), the Python code editor (`@plantcraft/ui/codeEditor`), the time chart and Plotly build (`@plantcraft/ui/plot`), the folder column and Move to folder (`FolderColumn`), the Explorer of values and events (`Explorer`), the period picker, the Copy as prompt button, and the helpers every app uses (navigation, session, colours, formats).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./appMarks": {
+      "types": "./dist/appMarks.d.ts",
+      "default": "./dist/appMarks.js"
+    },
+    "./blockEditor": {
+      "types": "./dist/BlockEditor.d.ts",
+      "default": "./dist/BlockEditor.js"
+    },
+    "./codeEditor": {
+      "types": "./dist/CodeEditor.d.ts",
+      "default": "./dist/CodeEditor.js"
+    },
+    "./plot": {
+      "types": "./dist/Plot.d.ts",
+      "default": "./dist/Plot.js"
+    },
+    "./tokens.css": "./dist/tokens.css",
+    "./fonts.css": "./dist/fonts.css",
+    "./shell.css": "./dist/shell.css",
+    "./base.css": "./dist/base.css",
+    "./blockEditor.css": "./dist/blockEditor.css",
+    "./codeEditor.css": "./dist/codeEditor.css",
+    "./fonts/*": "./dist/fonts/*"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json && cp src/*.css dist/ && cp -r src/fonts dist/fonts",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/lint": "^6.9.7",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "@lezer/highlight": "^1.2.5",
+    "@xyflow/react": "^12.12.0",
+    "lucide-react": ">=0.468.0",
+    "plotly.js-cartesian-dist-min": "^3.7.0",
+    "react": "^19.1.1",
+    "react-plotly.js": "^4.1.0"
+  },
+  "devDependencies": {
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/lint": "^6.9.7",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "@lezer/highlight": "^1.2.5",
+    "@types/plotly.js": "^3.0.10",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@types/react-plotly.js": "^2.6.4",
+    "@xyflow/react": "^12.12.0",
+    "jsdom": "^26.1.0",
+    "lucide-react": "^0.468.0",
+    "plotly.js-cartesian-dist-min": "^3.7.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-plotly.js": "^4.1.0",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "peerDependenciesMeta": {
+    "@codemirror/commands": {
+      "optional": true
+    },
+    "@codemirror/lang-python": {
+      "optional": true
+    },
+    "@codemirror/language": {
+      "optional": true
+    },
+    "@codemirror/lint": {
+      "optional": true
+    },
+    "@codemirror/search": {
+      "optional": true
+    },
+    "@codemirror/state": {
+      "optional": true
+    },
+    "@codemirror/view": {
+      "optional": true
+    },
+    "@lezer/highlight": {
+      "optional": true
+    },
+    "@xyflow/react": {
+      "optional": true
+    },
+    "plotly.js-cartesian-dist-min": {
+      "optional": true
+    },
+    "react-plotly.js": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "react-grid-layout": "2.2.4"
+  }
+}

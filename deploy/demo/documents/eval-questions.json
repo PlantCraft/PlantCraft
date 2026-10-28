@@ -1,0 +1,400 @@
+[
+ {
+  "id": "q01",
+  "question": "Why does the recycle flow FIC-1003 cycle with a saw-tooth output?",
+  "document": "DOC-TG-001",
+  "section": "4.1",
+  "facts": [
+   "stiction",
+   "FV-1003",
+   "graphite packing"
+  ]
+ },
+ {
+  "id": "q02",
+  "question": "What should be checked in the field for FIC-1003's oscillation?",
+  "document": "DOC-TG-001",
+  "section": "4.1",
+  "facts": [
+   "manual",
+   "0.5 %",
+   "positioner"
+  ]
+ },
+ {
+  "id": "q03",
+  "question": "When was the packing of FV-1003 last tightened, and why?",
+  "document": "DOC-MH-001",
+  "section": "FV-1003",
+  "facts": [
+   "WO-25-1182",
+   "stem leak",
+   "2025-05-20"
+  ]
+ },
+ {
+  "id": "q04",
+  "question": "What dead band was measured on FV-1003?",
+  "document": "DOC-MH-001",
+  "section": "FV-1003",
+  "facts": [
+   "2.8 %"
+  ]
+ },
+ {
+  "id": "q05",
+  "question": "Which packing is proposed to replace the graphite packing of FV-1003?",
+  "document": "DOC-MH-001",
+  "section": "FV-1003",
+  "facts": [
+   "PTFE V-ring"
+  ]
+ },
+ {
+  "id": "q06",
+  "question": "Why does the product separator pressure PIC-1002 oscillate?",
+  "document": "INC-2026-007",
+  "section": "Causes",
+  "facts": [
+   "gain",
+   "1.6 to 2.4",
+   "turnaround"
+  ]
+ },
+ {
+  "id": "q07",
+  "question": "Was valve stiction ruled out for PIC-1002?",
+  "document": "INC-2026-007",
+  "section": "Causes",
+  "facts": [
+   "0.3 %",
+   "ruled out"
+  ]
+ },
+ {
+  "id": "q08",
+  "question": "What action is open for PIC-1002?",
+  "document": "INC-2026-007",
+  "section": "Actions",
+  "facts": [
+   "reduce",
+   "30 %",
+   "step test"
+  ]
+ },
+ {
+  "id": "q09",
+  "question": "Why do operators keep TIC-1005 in manual?",
+  "document": "INC-2025-031",
+  "section": "Summary",
+  "facts": [
+   "overshoot",
+   "feed change",
+   "2025"
+  ]
+ },
+ {
+  "id": "q10",
+  "question": "What is the high alarm of the catalyst bed temperature TIC-1203?",
+  "document": "DOC-U200-OM-001",
+  "section": "Operating limits",
+  "facts": [
+   "72 °C"
+  ]
+ },
+ {
+  "id": "q11",
+  "question": "What must the operator do if the catalyst bed temperature keeps rising above 72 °C?",
+  "document": "DOC-U200-OM-001",
+  "section": "8.1",
+  "facts": [
+   "quench",
+   "cut the charge",
+   "78 °C"
+  ]
+ },
+ {
+  "id": "q12",
+  "question": "In what steps should the hydrotreater charge be raised?",
+  "document": "DOC-U200-OM-001",
+  "section": "Control philosophy",
+  "facts": [
+   "5 m³/h"
+  ]
+ },
+ {
+  "id": "q13",
+  "question": "Why is the product separator level LIC-1004 always high?",
+  "document": "DOC-U200-OM-001",
+  "section": "9.3",
+  "facts": [
+   "LV-1004",
+   "upper limit",
+   "original capacity"
+  ]
+ },
+ {
+  "id": "q14",
+  "question": "Is there a plan to fix the LV-1004 valve?",
+  "document": "DOC-MH-001",
+  "section": "LV-1004",
+  "facts": [
+   "ER-25-044",
+   "larger trim"
+  ]
+ },
+ {
+  "id": "q15",
+  "question": "What is the most common cause of a recycle gas compressor K-1103 trip?",
+  "document": "DOC-U200-OM-001",
+  "section": "8.2",
+  "facts": [
+   "suction drum",
+   "liquid carry-over",
+   "LIC-1208"
+  ]
+ },
+ {
+  "id": "q16",
+  "question": "How often is the furnace outlet thermocouple TT-1209 calibrated?",
+  "document": "DOC-DS-001",
+  "section": "Instruments",
+  "facts": [
+   "6"
+  ]
+ },
+ {
+  "id": "q17",
+  "question": "Why might TIC-1209 read at setpoint while the column is colder than usual?",
+  "document": "DOC-U100-OM-001",
+  "section": "7.1",
+  "facts": [
+   "drift",
+   "TT-1209",
+   "portable"
+  ]
+ },
+ {
+  "id": "q18",
+  "question": "What thermocouple type is proposed for TT-1209?",
+  "document": "DOC-MH-001",
+  "section": "TT-1209",
+  "facts": [
+   "type N"
+  ]
+ },
+ {
+  "id": "q19",
+  "question": "What is the furnace low-flow trip and why does it exist?",
+  "document": "DOC-U100-OM-001",
+  "section": "Operating limits",
+  "facts": [
+   "30 m³/h",
+   "tubes"
+  ]
+ },
+ {
+  "id": "q20",
+  "question": "What causes foaming in the amine absorber C-1216 and what should be done?",
+  "document": "DOC-U300-OM-001",
+  "section": "Foaming",
+  "facts": [
+   "lean amine too cold",
+   "TIC-1114",
+   "antifoam"
+  ]
+ },
+ {
+  "id": "q21",
+  "question": "Why should the U-200 shift inform U-300 of charge changes?",
+  "document": "DOC-U300-OM-001",
+  "section": "Sulfur recovery",
+  "facts": [
+   "TIC-1226",
+   "acid gas"
+  ]
+ },
+ {
+  "id": "q22",
+  "question": "What is the legal pH range for the treated effluent?",
+  "document": "DOC-U900-OM-001",
+  "section": "Water treatment",
+  "facts": [
+   "6.0",
+   "9.0"
+  ]
+ },
+ {
+  "id": "q23",
+  "question": "Why does the cooling water return temperature TIC-1220 oscillate?",
+  "document": "DOC-U900-OM-001",
+  "section": "Cooling water",
+  "facts": [
+   "consumers"
+  ]
+ },
+ {
+  "id": "q24",
+  "question": "What should be done before retuning TIC-1220?",
+  "document": "DOC-CN-001",
+  "section": "TIC-1220",
+  "facts": [
+   "consumers"
+  ]
+ },
+ {
+  "id": "q25",
+  "question": "What does FIC-1109 saturation mean for the steam header?",
+  "document": "DOC-U900-OM-001",
+  "section": "Steam",
+  "facts": [
+   "no longer controlled",
+   "lower priority"
+  ]
+ },
+ {
+  "id": "q26",
+  "question": "Which loops have known valve stiction?",
+  "document": "DOC-TG-001",
+  "section": "4.1",
+  "facts": [
+   "FIC-1003",
+   "FIC-1102",
+   "FIC-1206",
+   "FIC-1214"
+  ]
+ },
+ {
+  "id": "q27",
+  "question": "How do I tell stiction from aggressive tuning on a plot?",
+  "document": "DOC-TG-001",
+  "section": "3",
+  "facts": [
+   "saw-tooth",
+   "sinusoidal"
+  ]
+ },
+ {
+  "id": "q28",
+  "question": "What PV filter is recommended for noisy analyzer loops?",
+  "document": "DOC-TG-001",
+  "section": "4.5",
+  "facts": [
+   "5 to 10 seconds",
+   "sample"
+  ]
+ },
+ {
+  "id": "q29",
+  "question": "Why is the hydrogen purity AIC-1205 noisy?",
+  "document": "DOC-MH-001",
+  "section": "AT-1205",
+  "facts": [
+   "heat tracing",
+   "condensation"
+  ]
+ },
+ {
+  "id": "q30",
+  "question": "What is the normal setpoint and range of FIC-1003?",
+  "document": "DOC-CN-001",
+  "section": "FIC-1003",
+  "facts": [
+   "58 m³/h",
+   "0 to 200"
+  ]
+ },
+ {
+  "id": "q31",
+  "question": "Which equipment does LIC-1010 interact with?",
+  "document": "DOC-CN-001",
+  "section": "LIC-1010",
+  "facts": [
+   "SECONDARY"
+  ]
+ },
+ {
+  "id": "q32",
+  "question": "What instruments and valves are on the product separator V-1004?",
+  "document": "DOC-PID-001",
+  "section": "V-1004",
+  "facts": [
+   "PT-1002",
+   "PV-1002",
+   "LT-1004"
+  ]
+ },
+ {
+  "id": "q33",
+  "question": "What is the design pressure of the hydrotreating reactor R-1203?",
+  "document": "DOC-DS-001",
+  "section": "Equipment",
+  "facts": [
+   "110"
+  ]
+ },
+ {
+  "id": "q34",
+  "question": "Como fazer o teste de agarramento da FV-1003?",
+  "document": "PRO-U200-012",
+  "section": "Passos",
+  "facts": [
+   "0,5 %",
+   "30 segundos",
+   "manual"
+  ]
+ },
+ {
+  "id": "q35",
+  "question": "Quando interromper o teste de válvula da FIC-1003?",
+  "document": "PRO-U200-012",
+  "section": "Segurança",
+  "facts": [
+   "40 m³/h"
+  ]
+ },
+ {
+  "id": "q36",
+  "question": "How do I test a valve for stiction with the unit running?",
+  "document": "PRO-U200-012",
+  "section": "Passos",
+  "facts": [
+   "0,5 %"
+  ]
+ },
+ {
+  "id": "q37",
+  "question": "Why is the reflux flow FIC-1102 cycling and what does it do to the column?",
+  "document": "DOC-U100-OM-001",
+  "section": "7.3",
+  "facts": [
+   "FV-1102",
+   "TIC-1213"
+  ]
+ },
+ {
+  "id": "q38",
+  "question": "What happened on 2026-02-03 in U-200?",
+  "document": "INC-2026-007",
+  "section": "Summary",
+  "facts": [
+   "PIC-1002",
+   "LIC-1004",
+   "manual"
+  ]
+ },
+ {
+  "id": "q39",
+  "question": "What is the warranty period of the recycle gas compressor K-1103?",
+  "document": null,
+  "section": null,
+  "facts": []
+ },
+ {
+  "id": "q40",
+  "question": "Who is the vendor of the FV-1003 valve?",
+  "document": null,
+  "section": null,
+  "facts": []
+ }
+]

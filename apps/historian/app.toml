@@ -1,0 +1,249 @@
+# PlantCraft Historian's manifest: the single source of its metadata (PlantCraft docs/app-standard.md,
+# section 4). The launcher, the Apps page, the package, the image labels and /api/meta read it.
+
+[app]
+id = "histcraft"
+name = "PlantCraft Historian"
+version = "0.5.0"
+category = "Process historian"
+summary = "The suite's data layer: every plant connection and every history, read-only toward the plant."
+description = """PlantCraft Historian holds the suite's connections to PI Web API, OPC UA and CSV files, \
+read-only, and serves their history to every app through PlantCraft. Per signal it reads \
+history from the source, or collects and archives it with swinging-door compression where the \
+plant server keeps none, or both. It also keeps the series apps compute. For process and \
+automation engineers who need trends of PI tags, PLCs, small DCSs and simulators."""
+publisher = "PlantCraft"
+license = "Apache-2.0"
+homepage = ""
+mark = "histcraft"
+
+[runtime]
+prefix = "/hist/"
+port = 8100
+uid = 10008
+health = "/healthz"
+image = "histcraft"
+
+[requires]
+processcraft_api = ">=1.0"
+sdk = "0.77.0"
+asset_types = []
+roles = {}
+
+[permissions]
+read = ["signals"]
+write = ["audit"]
+plant_write = false
+outbound = []
+
+[publishes]
+results = []
+
+# The events of the Historian (PlantCraft docs/app-standard.md, section 6). It has no app key and
+# never calls the suite: it names its open conditions in GET /api/ops/metrics
+# (histcraft.conditions) and PlantCraft's monitor writes them, start and end, in its name.
+[[publishes.events]]
+name = "collector.stalled"
+title = "Collector stalled"
+description = "The collector wrote no heartbeat for two minutes: nothing is archived. Its container may still run."
+severity = "critical"
+category = "system"
+phase = "interval"
+payload = { heartbeat_ms = "Last heartbeat (ms since 1970, UTC)" }
+rule = { when = "open", minutes = 5, priority = "critical", notify = "admins", enabled = true }
+
+[[publishes.events]]
+name = "source.disconnected"
+title = "Source disconnected"
+description = "The collector cannot read a live source (OPC UA, CSV, gateway). Key: source:<id>. Its signals' alarms of no data are this one condition."
+severity = "critical"
+category = "data"
+phase = "interval"
+payload = { source = "Source id", detail = "Why, as the source answered", since_ms = "Since (ms since 1970, UTC)" }
+rule = { when = "open", minutes = 10, priority = "high", notify = "admins" }
+
+[[publishes.events]]
+name = "point.no_data"
+title = "Signal without data"
+description = "An archived signal of a connected source whose last value is bad, or older than ten of its scans (at least 10 min). Key: point:<id>; said when it starts and when it ends, never repeated; the oldest first."
+severity = "warning"
+category = "data"
+phase = "interval"
+payload = { point = "Signal id", source = "Source id" }
+rule = { when = "open", minutes = 30, priority = "medium", notify = "owner" }
+
+[[publishes.events]]
+name = "archive.disk_low"
+title = "Disk full soon"
+description = "At the archive's growth of the last 24 h, with each signal's retention, the disk that holds it fills in fewer than 90 days (round 8 D4). Shorten a retention, compress more or add disk."
+severity = "warning"
+category = "system"
+phase = "interval"
+payload = { days_to_full = "Days until the disk is full", free_bytes = "Free bytes on the disk", bytes_per_day = "Bytes the archive grows a day" }
+rule = { when = "open", minutes = 60, priority = "high", notify = "admins", enabled = true }
+
+# The assistant's works on the Historian's pages (PlantCraft docs/assistant.md, "What each page
+# offers"): each page names itself in useAssistantPage({page: "histcraft:<id>"}).
+[[contributes.assistant.works]]
+id = "points-attention"
+pages = ["points"]
+title = "Which signals need attention?"
+hint = "Stale, bad quality, out of range, not archiving"
+instructions = """Say which of the Historian's signals need attention (the view section lists those on screen that are not ok, with their status): why each one, most serious first, and what to check at its source. Read a signal's recent history with read_series when its status alone does not explain it."""
+
+[[contributes.assistant.works]]
+id = "find-point"
+pages = ["points"]
+title = "Find a signal"
+hint = "By tag, name or what it measures"
+ask = "Which signal? (a tag, a name, what it measures)"
+instructions = """Find the signals the person describes with search_signals (and get_signal for the best matches): list each with its tag, description, unit, source and whether it is collected now, best match first."""
+
+[[contributes.assistant.works]]
+id = "point-behaviour"
+pages = ["point"]
+title = "Explain this signal's behaviour"
+hint = "Its last day against the week before"
+instructions = """Explain how this signal (the subject section) behaves: read it with get_signal, its history over the last day and the week before with read_series, and draw the last day with show_chart. Describe its usual range, trend, cycles and steps, compare the last day with the week before, and name anything that changed and when. If the person names another period, use it."""
+
+[[contributes.assistant.works]]
+id = "point-average"
+pages = ["point"]
+title = "What was its average yesterday?"
+hint = "Average, minimum and maximum of a day"
+context = ["status", "source"]
+instructions = """Read this signal (the subject section) over yesterday, midnight to midnight in the plant's time zone, with read_series, and give its average, minimum and maximum with their times and its unit. If the person names another day or period, use it. Say how many values it took and whether there were gaps."""
+
+[[contributes.assistant.works]]
+id = "point-range"
+pages = ["point"]
+title = "When was it last out of range?"
+hint = "The last time it left its usual range"
+instructions = """Read this signal's history (read_series, the last week first, further back if needed) and find the last time it left its usual range: when, how far, for how long, and draw that moment with show_chart."""
+
+[[contributes.assistant.works]]
+id = "point-compare"
+pages = ["point"]
+title = "Compare with another signal"
+hint = "Both on one chart, and how they relate"
+ask = "Which signal? (tag)"
+instructions = """Draw this signal and the one the person names (find it with search_signals) together with show_chart over the last day and say how they relate: one following the other, a delay, opposite moves."""
+
+[[contributes.assistant.works]]
+id = "point-quality"
+pages = ["point"]
+title = "Check its quality"
+hint = "Frozen, noisy, out of range, gaps, bad quality"
+instructions = """Check this signal's data quality (the subject section; the page's facts say how it is collected and archived): read its history with read_series and Link's signal quality results about it with latest_results. Look for frozen values, noise, spikes, values out of its limits, gaps in the archive and values the source marked bad, and say for each whether it happens and since when. End with what to check at the source, if anything."""
+
+[[contributes.assistant.works]]
+id = "about-sources"
+pages = ["sources"]
+title = "Are all sources connected?"
+hint = "Which fail, since when, and why"
+instructions = """Answer about the Historian's sources (the view section lists them with their state and number of signals): which are connected, which are failing and why, and what each one provides (search_signals). Most serious problems first; the Historian only reads from plant systems."""
+
+[[contributes.assistant.works]]
+id = "source-signals"
+pages = ["sources"]
+title = "What does each source provide?"
+hint = "Its signals and how often they are read"
+instructions = """For each of the Historian's sources (the view section lists them), say what it provides: how many signals, of which assets (search_signals, search_assets), how often it is read, and the ones whose values stopped."""
+
+[[contributes.assistant.offers]]
+work = "new-action"
+pages = ["point"]
+
+[consumes]
+results = []
+
+[suggests]
+asset_types = []
+
+[backup]                            # its data folder in the suite's backup (PlantCraft docs/operations.md)
+sqlite = ["config.sqlite3", "archive.sqlite3", "queue.sqlite3"]   # settings, without PostgreSQL the archive, the queue's history
+skip = ["logs/"]
+
+# The widgets of the Historian's Overview and of Desk's Today (PlantCraft docs/widgets.md),
+# served by api/routers/widgets.py. "Historian: " is dropped on the Historian's own Overview.
+[[contributes.widgets]]
+id = "points"
+title = "Historian: signals collected"
+description = "How many signals are collected now, and how many are not."
+size = "s"
+kind = "number"
+default = true
+
+[[contributes.widgets]]
+id = "statuses"
+title = "Historian: signals by status"
+description = "Every signal by how its collection goes: collecting, uncertain, bad, waiting."
+size = "s"
+kind = "split"
+sizes = [{ w = 3, h = 1 }, { w = 4, h = 2 }, { w = 8, h = 2 }]
+
+[[contributes.widgets]]
+id = "trend"
+title = "Historian: signal trend"
+description = "One signal over the last hour, with its last value."
+size = "m"
+kind = "series"
+sizes = [{ w = 3, h = 2 }, { w = 4, h = 2 }, { w = 6, h = 3 }]
+pick = "Signal"
+
+[[contributes.widgets]]
+id = "collector"
+title = "Historian: collector"
+description = "Whether the collector runs, how fast it reads and which sources it reaches."
+size = "s"
+kind = "list"
+sizes = [{ w = 3, h = 2 }, { w = 4, h = 2 }, { w = 6, h = 2 }]
+
+[[contributes.widgets]]
+id = "archive"
+title = "Historian: archive"
+description = "The archive's size on disk, how fast it grows and when the disk fills."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "stored"
+title = "Historian: values stored"
+description = "The values stored per hour over the last 24 hours, and their total."
+size = "m"
+kind = "columns"
+sizes = [{ w = 4, h = 2 }, { w = 6, h = 2 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "source-map"
+title = "Historian: source map"
+description = "Every enabled signal as a square, by source, coloured by how its collection goes."
+size = "m"
+kind = "tiles"
+sizes = [{ w = 4, h = 2 }, { w = 6, h = 3 }, { w = 12, h = 3 }]
+
+[[contributes.widgets]]
+id = "sources"
+title = "Historian: sources"
+description = "Each source and whether the collector is connected to it."
+size = "m"
+kind = "list"
+
+[[contributes.widgets]]
+id = "not-collecting"
+title = "Historian: signals not collecting"
+description = "The signals with a bad value, disconnected or waiting."
+size = "m"
+kind = "list"
+
+# Its examples in Notebooks (PlantCraft docs/en/notebooks.md): Examples/Historian.
+[[contributes.start]]
+# A new plant's first step (Assets › Import, once an import is applied): POST api/start/<id>.
+id = "collect-signals"
+title = "Collect the signals"
+description = "Collects every signal the import bound, from the sources the Historian holds, with each source's own description."
+open = "/hist/points"
+
+[contributes.notebooks]
+examples = true

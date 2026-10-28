@@ -1,0 +1,87 @@
+{
+  "id": "instrument.panel",
+  "title": "Instrument, control room",
+  "category": "instruments",
+  "w": 60,
+  "h": 60,
+  "svg": "<circle class=\"pc-state\" cx=\"30\" cy=\"30\" r=\"20\" stroke-width=\"2\" stroke-linejoin=\"round\"/><line x1=\"10\" y1=\"31\" x2=\"50\" y2=\"31\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "left",
+      "x": 10,
+      "y": 30,
+      "dir": "w",
+      "kind": "signal"
+    },
+    {
+      "id": "right",
+      "x": 50,
+      "y": 30,
+      "dir": "e",
+      "kind": "signal"
+    },
+    {
+      "id": "top",
+      "x": 30,
+      "y": 10,
+      "dir": "n",
+      "kind": "signal"
+    },
+    {
+      "id": "bottom",
+      "x": 30,
+      "y": 50,
+      "dir": "s",
+      "kind": "signal"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "function",
+      "x": 30,
+      "y": 25,
+      "align": "middle",
+      "baseline": "middle"
+    },
+    {
+      "id": "loop",
+      "x": 30,
+      "y": 38,
+      "align": "middle",
+      "baseline": "middle"
+    },
+    {
+      "id": "tag",
+      "x": 30,
+      "y": 54,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 54,
+      "y": 30,
+      "align": "start",
+      "baseline": "middle"
+    },
+    {
+      "id": "alarm",
+      "x": 52,
+      "y": 8,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "instrument",
+    "ISA-5.1",
+    "bubble",
+    "tag",
+    "controller",
+    "transmitter",
+    "indicator"
+  ],
+  "standard": "ISA-5.1",
+  "description": "Discrete instrument on the main panel, the operator reaches it."
+}

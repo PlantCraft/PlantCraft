@@ -1,0 +1,3 @@
+# Inputs of requirements.lock (make lock): the first-party packages with the extras the image runs.
+-e .[server,opcua]
+-e ./sdk/python

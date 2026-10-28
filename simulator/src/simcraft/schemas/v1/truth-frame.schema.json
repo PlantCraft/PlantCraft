@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/truth-frame.schema.json",
+  "title": "Process Plant hidden truth frame v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "timestamp", "state_digest", "loops", "transitions"],
+  "properties": {
+    "schema": {"const": "process-plant-opcua/truth-frame/v1"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "state_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "loops": {"type": "object", "minProperties": 50, "maxProperties": 50, "additionalProperties": {"type": "object"}},
+    "transitions": {"type": "array", "items": {"type": "object"}}
+  }
+}

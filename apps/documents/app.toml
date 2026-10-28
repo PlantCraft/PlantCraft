@@ -1,0 +1,185 @@
+# PlantCraft Documents' manifest: the single source of its metadata (the suite's app standard, section 4).
+# The launcher card, the Apps page, the package manifest, the image labels and /api/meta read it.
+
+[app]
+id = "doccraft"
+name = "PlantCraft Documents"
+version = "0.5.0"
+category = "Knowledge"
+summary = "The plant's manuals, narratives, datasheets and guides, searched offline and cited by the assistant."
+description = """\
+A library of the plant's documents: operating manuals, control narratives, P&IDs, datasheets, \
+procedures, troubleshooting guides and incident reports, in folders that say who reads and who \
+changes them. Each file (PDF, Word, Excel, PowerPoint, text, Markdown, CSV, HTML) is read into \
+passages that keep their page and section, the plant's tags found in them link them to the assets, \
+and a search by words and by meaning finds them, fully offline (the embedding model is in the \
+image). The assistant searches and reads them as the person who asks, and cites the document, \
+revision and page of each fact. The original files stay in the app's own data folder, never in \
+PlantCraft."""
+publisher = "PlantCraft"
+license = "Apache-2.0"
+homepage = ""
+mark = "doccraft"
+
+[runtime]
+prefix = "/doc/"
+port = 8150
+uid = 10015
+health = "/healthz"
+image = "doccraft"
+
+[requires]
+processcraft_api = ">=1.0"
+sdk = "0.77.0"
+asset_types = []        # any asset can have documents
+roles = {}
+
+[permissions]
+read = ["assets", "people"]
+write = ["audit"]
+plant_write = false
+outbound = []
+
+[publishes]
+results = []
+
+[consumes]
+results = []
+
+[suggests]
+asset_types = []
+
+[backup]                            # its data folder in the suite's backup (PlantCraft docs/operations.md)
+sqlite = ["doccraft.sqlite3"]       # folders, documents, revisions, passages and vectors
+skip = ["logs/"]                    # files/ (the originals) is kept with the rest of the folder
+
+[contributes]
+queue = true                        # the files being read, in the suite's Queue (api/routers/library.py)
+
+[contributes.search]                # Ctrl+K: api/routers/search.py
+types = ["Document", "Passage"]
+
+[[contributes.refs]]                # #doc:<id> in messages, actions, notes and the assistant's citations
+kind = "doc"
+title = "Document"
+url = "/doc/documents/{id}"
+
+# The assistant's tools (PlantCraft docs/assistant.md, "Tools the apps add"): PlantCraft calls
+# POST /doc/api/assistant/tools/<id> as the person who asks (api/routers/tools.py).
+[[contributes.assistant.tools]]
+id = "search_documents"
+title = "Search the plant documents"
+description = """The plant's documents: operating manuals, control narratives, P&ID descriptions, datasheets, procedures, troubleshooting guides, maintenance records, incident reports. Search them first for why something happens or is done, how to do or test something, limits, design data, past events and the actions they left open. Give the asset (asset:<id> or a tag) when there is one. Cite each passage as [n] with document, revision and page; say when the documents do not answer."""
+reads = "Passages of the documents the person may open; never documents marked not for the assistant."
+prefetch = "query"                  # PlantCraft searches with each question before the model answers
+[[contributes.assistant.tools.args]]
+key = "query"
+type = "text"
+title = "What to find, in words"
+required = true
+[[contributes.assistant.tools.args]]
+key = "asset"
+type = "ref"
+title = "The asset it is about (asset:<id>, or a tag such as FIC-1003)"
+[[contributes.assistant.tools.args]]
+key = "kind"
+type = "text"
+title = "Only one kind of document (Operating manual, Troubleshooting guide, ...)"
+[[contributes.assistant.tools.args]]
+key = "limit"
+type = "integer"
+title = "How many passages (1 to 12, 6 by default)"
+
+[[contributes.assistant.tools]]
+id = "read_document"
+title = "Read a plant document"
+description = """Reads one of the plant's documents, or one page or section of it, when a passage found by search_documents is not enough (the whole procedure, the full table of limits). Give the document as doc:<id> or its number (DOC-U200-OM-001)."""
+reads = "One document the person may open, up to about 12,000 characters at a time."
+[[contributes.assistant.tools.args]]
+key = "document"
+type = "ref"
+title = "The document: doc:<id> or its number"
+required = true
+[[contributes.assistant.tools.args]]
+key = "page"
+type = "integer"
+title = "Only this page"
+[[contributes.assistant.tools.args]]
+key = "section"
+type = "text"
+title = "Only the sections whose heading holds these words"
+
+[[contributes.assistant.tools]]
+id = "find_tags"
+title = "Where the documents name these tags"
+description = """For each tag (FIC-1003, P-1003, TK-1001), the passages of the plant's documents that name it: its own section first (a control narrative, a datasheet row, a P&ID sheet), then the passages that mention it, with the text around the mention. PlantCraft's plant draft (Assets › Import) reads it to place loops and equipment in their unit and area; use it to find which unit, area or equipment a tag belongs to. Cite the document, revision and page of what you use."""
+reads = "Passages of the documents the person may open that name the tags; never documents marked not for the assistant."
+[[contributes.assistant.tools.args]]
+key = "tags"
+type = "text"
+title = "The tags, separated by commas (up to 60)"
+required = true
+
+# The assistant's works on Documents' pages (PlantCraft docs/assistant.md, "What each page offers").
+[[contributes.assistant.works]]
+id = "documents-find"
+pages = ["documents", "search"]
+title = "Find it in the documents"
+hint = "A question about the plant; the answer cites the pages"
+ask = "What do you want to find out?"
+instructions = """Answer the person's question from the plant's documents: search them (doccraft_search_documents), read more of a document when a passage is not enough (doccraft_read_document), and cite each fact as [n] with the document's number, revision and page. Say plainly when the documents do not answer."""
+
+[[contributes.assistant.works]]
+id = "document-summary"
+pages = ["document"]
+title = "Summarize this document"
+hint = "What it covers, section by section"
+instructions = """Read the document on this page (the subject section names it; read it with doccraft_read_document) and summarize what it covers, section by section, with the page of each part. Name the assets and loops it is about."""
+
+[[contributes.assistant.works]]
+id = "document-ask"
+pages = ["document"]
+title = "What does it say about…"
+hint = "A question answered from this document only"
+ask = "What do you want to know from this document?"
+instructions = """Answer from the document on this page only (read it with doccraft_read_document, its pages or sections as needed) and cite the page of each fact. Say when it does not answer."""
+
+[[contributes.assistant.works]]
+id = "asset-documents"
+pages = ["asset"]
+title = "Which documents cover this asset?"
+hint = "Manuals, narratives, records and incidents about it"
+instructions = """List the documents about the asset on this page (doccraft_search_documents with its asset) and what each says about it, with the page."""
+
+[[contributes.widgets]]
+id = "count"
+title = "Documents: documents"
+description = "How many documents the library holds: how many are ready for search and how many are being read."
+size = "s"
+kind = "number"
+sizes = [{ w = 3, h = 2 }, { w = 4, h = 2 }, { w = 6, h = 2 }]
+default = true
+
+[[contributes.widgets]]
+id = "latest"
+title = "Documents: latest documents"
+description = "The documents sent or changed last, with when, each one click away."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 3 }, { w = 6, h = 3 }, { w = 12, h = 3 }]
+default = true
+
+[[contributes.widgets]]
+id = "reading"
+title = "Documents: reading"
+description = "Passages indexed, files waiting to be read and files that could not be read."
+size = "s"
+kind = "list"
+
+[[contributes.widgets]]
+id = "unlinked"
+title = "Documents: not linked to assets"
+description = "Documents no one has linked to the plant's assets yet, with the tags found in them."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 3 }, { w = 6, h = 3 }, { w = 12, h = 3 }]

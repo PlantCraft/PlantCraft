@@ -1,0 +1,93 @@
+name: Security
+
+# Every pull request, whatever folder it touches, and main once a day
+# (docs/contributing-safety.md). It reads the code and runs none of it. A fork's pull request runs
+# on GitHub's runners, never the Mac mini; the repository's own ones follow TEST_RUNNER like the rest.
+# - gitleaks: no secret in the tree, nor in any commit of the pull request (removed later or not);
+# - bandit: no high-severity finding in the Python that ships (shell=True, pickle, yaml.load, ...);
+# - zizmor: no workflow open to template injection, credential leaks or dangerous triggers;
+# - pip-audit: no known vulnerability in the pinned packages every image installs.
+# A pull request can edit this file too: these checks catch mistakes, while the owner's review
+# of everything under .github/ (CODEOWNERS and the main branch's ruleset) stops a hostile edit.
+on:
+  pull_request:
+  # main at about 06:00 Brasília (UTC-3); every change reached it through a checked pull request.
+  schedule:
+    - cron: "52 9 * * *"
+  workflow_dispatch:
+
+# A newer push to a pull request cancels its older run; a run on main is grouped by its commit.
+concurrency:
+  group: security-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Read-only token: no job here writes to the repository.
+permissions:
+  contents: read
+
+env:
+  GITLEAKS_VERSION: 8.28.0
+  GITLEAKS_SHA256_X64: a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb
+  GITLEAKS_SHA256_ARM64: eff65261156100e5d94a6b3dec313d532fddfe19ae1590bf7a2b4f2699128356
+
+jobs:
+  secrets:
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: gitleaks (pinned release, checked against its SHA-256)
+        run: |
+          case "$(uname -m)" in
+            x86_64) arch=x64 sum="$GITLEAKS_SHA256_X64" ;;
+            aarch64 | arm64) arch=arm64 sum="$GITLEAKS_SHA256_ARM64" ;;
+            *) echo "no gitleaks for $(uname -m)" >&2; exit 1 ;;
+          esac
+          curl -sSfL -o "$RUNNER_TEMP/gitleaks.tgz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${arch}.tar.gz"
+          echo "${sum}  $RUNNER_TEMP/gitleaks.tgz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tgz" -C "$RUNNER_TEMP" gitleaks
+      - name: The tree
+        run: |
+          mkdir -p "$RUNNER_TEMP/tree" && git archive HEAD | tar -x -C "$RUNNER_TEMP/tree"
+          "$RUNNER_TEMP/gitleaks" dir "$RUNNER_TEMP/tree" --no-banner --redact -c .gitleaks.toml
+      - name: The pull request's commits
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: '"$RUNNER_TEMP/gitleaks" git . --no-banner --redact -c .gitleaks.toml --log-opts="$BASE..$HEAD"'
+      # The daily and by-hand runs read every commit: the private history is kept, so a key
+      # committed and removed later is still found (docs/publishing.md).
+      - name: The whole history
+        if: github.event_name != 'pull_request'
+        run: '"$RUNNER_TEMP/gitleaks" git . --no-banner --redact -c .gitleaks.toml'
+
+  code:
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
+      # One runner serves every folder: a Python environment of this job's own.
+      - run: rm -rf "$RUNNER_TEMP/venv" && python -m venv "$RUNNER_TEMP/venv" && echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+      - run: python -m pip install "bandit==1.9.4" "pip-audit==2.10.1" "zizmor==1.31.1"
+      - name: bandit (high severity, high confidence)
+        run: >-
+          bandit -q -r -lll -iii processcraft sdk/python/plantcraft_sdk apps/*/src simulator/src
+          templates/app/src
+      - name: zizmor (the workflows themselves, for injections, credentials and triggers)
+        run: zizmor --offline .github/workflows/
+      - name: pip-audit (every image's pinned packages)
+        run: |
+          for lock in deploy/requirements.lock apps/*/deploy/requirements.lock \
+                      simulator/deploy/requirements.lock templates/app/deploy/requirements.lock; do
+            echo "::group::$lock"
+            pip-audit --strict --disable-pip -r "$lock"
+            echo "::endgroup::"
+          done

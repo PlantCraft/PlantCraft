@@ -1,0 +1,155 @@
+# PlantCraft compute worker on another machine (docs/compute.md): `install.sh --worker` copies
+# this file to the worker's folder as compose.yaml, next to `.env`, `certs/` and `data/`.
+#
+# The worker takes the apps' calculations from PlantCraft and opens no port:
+#   compute-gateway  asks PlantCraft for tasks over HTTPS (the proxy's address, port 443), with
+#                    the worker's own credential (data/worker/credential, from a one-time code
+#                    made in PlantCraft › Settings › Compute). Its network `out` reaches
+#                    PlantCraft; nothing else listens on it.
+#   <app>-executor   runs that app's tasks, from the app's own image (one profile per app):
+#                    no network at all, no secret, read-only, CPU, memory and process limits,
+#                    and a time and memory limit per task. It shares only its jobs folder with
+#                    the gateway.
+# Every image is loaded from the bundle (`pull_policy: never`): nothing is downloaded.
+name: processcraft-worker
+
+x-hardening: &hardening
+  init: true
+  restart: unless-stopped
+  read_only: true
+  pull_policy: never
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  tmpfs:
+    - /tmp:size=64m,mode=1777,noexec,nosuid,nodev
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  compute-gateway:
+    <<: *hardening
+    image: processcraft:${PLANTCRAFT_VERSION:-0.5.0}
+    user: "10020:10020"
+    entrypoint: ["python", "-m", "plantcraft_sdk.compute", "gateway"]
+    command:
+      - --platform
+      - "${PLANTCRAFT_PLATFORM_URL:?PlantCraft's address: install.sh --worker --platform URL}"
+      - --jobs
+      - /jobs
+      - --credential-file
+      - /worker/credential
+    environment:
+      # Only until the worker enrolled: install.sh takes it out of .env afterwards.
+      PLANTCRAFT_COMPUTE_CODE: "${PLANTCRAFT_COMPUTE_CODE:-}"
+      # PlantCraft's certificate authority when its HTTPS certificate is the local CA's
+      # (install.sh --worker --ca FILE copies it to certs/platform-ca.crt).
+      PLANTCRAFT_CA_FILE: "${PLANTCRAFT_CA_FILE:-}"
+      PLANTCRAFT_COMPUTE_MAX_MB: "${PLANTCRAFT_COMPUTE_MAX_MB:-64}"
+    volumes:
+      - ./data/compute-jobs:/jobs
+      - ./data/worker:/worker
+      - ./certs:/certs:ro
+    # PlantCraft's name resolves through this machine's own DNS servers (Docker forwards them).
+    networks:
+      - out
+    healthcheck:
+      # The gateway writes this file each time PlantCraft answers its heartbeat (every 10 s).
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json, time; s = json.load(open('/jobs/gateway.json')); assert time.time() - s['at'] < 60"
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+          pids: 64
+
+  linkcraft-executor:
+    <<: *hardening
+    profiles: ["linkcraft"]
+    image: linkcraft:${LINKCRAFT_VERSION:-0.5.0}
+    user: "10020:10020"
+    network_mode: none
+    entrypoint: ["python", "-m", "plantcraft_sdk.compute", "executor"]
+    command:
+      - --app
+      - linkcraft
+      - --jobs
+      - /jobs
+      - --handler
+      - linkcraft.api.compute:answer
+      - --workers
+      - "${LINKCRAFT_EXECUTOR_SLOTS:-4}"
+      - --memory-mb
+      - "${LINKCRAFT_TASK_MEMORY_MB:-2048}"
+    tmpfs:
+      - /tmp:size=256m,mode=1777,noexec,nosuid,nodev
+    volumes:
+      - ./data/compute-jobs/linkcraft:/jobs
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json, time; s = json.load(open('/jobs/runner.json')); assert time.time() - s['at'] < 60"
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${LINKCRAFT_EXECUTOR_CPUS:-4}"
+          memory: "${LINKCRAFT_EXECUTOR_MEMORY:-8g}"
+          pids: 512
+
+  modelcraft-executor:
+    <<: *hardening
+    profiles: ["modelcraft"]
+    # PlantCraft Models' Modelica runner (OpenModelica's image): it compiles and simulates models.
+    image: modelcraft-runner:${MODELCRAFT_VERSION:-0.5.0}
+    user: "10020:10020"
+    network_mode: none
+    command: ["python3", "/opt/runner/runner.py", "--jobs", "/jobs", "--workers", "${MODELCRAFT_EXECUTOR_SLOTS:-2}"]
+    tmpfs:
+      # The C compiler's scratch files.
+      - /tmp:size=512m,mode=1777,noexec,nosuid,nodev
+    volumes:
+      - ./data/compute-jobs/modelcraft:/jobs
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import json, time; s = json.load(open('/jobs/runner.json')); assert time.time() - s['at'] < 60"
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "${MODELCRAFT_EXECUTOR_CPUS:-2}"
+          memory: "${MODELCRAFT_EXECUTOR_MEMORY:-4g}"
+          pids: 512
+
+networks:
+  out:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "${PLANTCRAFT_WORKER_SUBNET:-172.30.18.0/24}"

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/loop.schema.json",
+  "title": "Process Plant control loop v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["loop_id", "display_name", "area_code", "area_name", "loop_kind", "control_structure", "controlled_variable", "pv_unit", "manipulated_variable", "primary_scenario", "scenario_description", "process_purpose"],
+  "properties": {
+    "loop_id": {"type": "string", "pattern": "^[A-Z]+-[0-9]+$"},
+    "display_name": {"type": "string", "minLength": 1},
+    "area_code": {"type": "string", "pattern": "^[A-Z0-9]+$"},
+    "area_name": {"type": "string", "minLength": 1},
+    "loop_kind": {"enum": ["flow", "pressure", "temperature", "level", "analyzer", "ratio", "speed"]},
+    "control_structure": {"type": "string", "minLength": 1},
+    "controlled_variable": {"type": "string", "minLength": 1},
+    "pv_unit": {"type": "string"},
+    "manipulated_variable": {"type": "string", "minLength": 1},
+    "primary_scenario": {"type": "string", "minLength": 1},
+    "scenario_description": {"type": "string", "minLength": 1},
+    "process_purpose": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# ship: the slow half of a batch of quick changes (dev/README.md). Runs `make ci` in every part of
+# the repository (the platform at the root, each apps/<app>, simulator) that has work not on main
+# yet, stopping at the first failure, then lists them.
+#
+#   dev/ship [FOLDER ...]
+#
+# Without FOLDER it takes the parts with uncommitted changes or commits main does not have. After
+# a green run: commit, push the branch, open and merge the pull request (the Mac mini deploys the
+# new images), then `dev/preview --clear`.
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+if [ "$#" -eq 0 ]; then
+    git -C "$root" fetch -q origin main 2>/dev/null || true
+    changed="$( { git -C "$root" diff --name-only origin/main...HEAD; git -C "$root" status --porcelain | cut -c4-; } | sort -u)"
+    [ -n "$changed" ] || { echo "ship: nothing differs from main"; exit 0; }
+    for dir in "$root"/apps/*/ "$root/simulator/"; do
+        rel="${dir#"$root"/}"
+        grep -q "^$rel" <<<"$changed" && set -- "$@" "${dir%/}"
+    done
+    # Anything outside apps/ and simulator/ is the platform's, the SDK's or the shared ui's.
+    grep -qv '^\(apps\|simulator\)/' <<<"$changed" && set -- "$root" "$@"
+fi
+
+# A branch that changes sdk/python or ui/ needs versions above main's (dev/sdk-version).
+git -C "$root" fetch -q origin main 2>/dev/null || true
+"$root/dev/sdk-version" --check
+
+for dir in "$@"; do
+    name="$(basename "$(cd "$dir" && pwd)")"
+    echo "== $name: make ci"
+    started=$SECONDS
+    make -C "$dir" ci
+    echo "== $name: green in $((SECONDS - started)) s"
+done
+echo
+echo "Green: $*"
+echo "Next: commit, push, pull request and merge; then dev/preview --clear"

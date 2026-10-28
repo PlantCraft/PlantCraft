@@ -1,0 +1,269 @@
+{
+ "started": "2026-10-27 12:20 UTC",
+ "machine": {
+  "host": "vm",
+  "system": "Linux 6.18.44-fc-v165 x86_64",
+  "cpus": 4,
+  "memory_gib": 15.7,
+  "docker": "4 CPUs 16872812544 x86_64"
+ },
+ "think_s": [
+  5.0,
+  15.0
+ ],
+ "visitor": true,
+ "heavy": 0.3,
+ "pages_known": 119,
+ "calls_per_page": 19.1,
+ "seeded": null,
+ "steps": [
+  {
+   "users": 10,
+   "seconds": 192,
+   "pages": 119,
+   "pages_per_s": 0.62,
+   "calls_per_s": 14.0,
+   "page_p50_s": 0.347,
+   "page_p95_s": 0.788,
+   "page_max_s": 1.343,
+   "call_p50_s": 0.061,
+   "call_p95_s": 0.294,
+   "failed_share": 0.0004,
+   "failures": {
+    "403 /dash/api/signals": 1
+   },
+   "queries": {
+    "dashboard 30d": {
+     "n": 6,
+     "p50_s": 0.319,
+     "p95_s": 1.567,
+     "max_s": 1.567
+    },
+    "dashboard 7d": {
+     "n": 5,
+     "p50_s": 0.331,
+     "p95_s": 1.245,
+     "max_s": 1.245
+    },
+    "history 1d raw": {
+     "n": 3,
+     "p50_s": 0.023,
+     "p95_s": 0.038,
+     "max_s": 0.038
+    },
+    "history 90d": {
+     "n": 2,
+     "p50_s": 0.041,
+     "p95_s": 0.043,
+     "max_s": 0.043
+    },
+    "report 30d": {
+     "n": 14,
+     "p50_s": 0.277,
+     "p95_s": 1.511,
+     "max_s": 1.511
+    },
+    "trend 30d": {
+     "n": 5,
+     "p50_s": 0.149,
+     "p95_s": 0.246,
+     "max_s": 0.246
+    },
+    "trend 7d": {
+     "n": 4,
+     "p50_s": 0.072,
+     "p95_s": 0.201,
+     "max_s": 0.201
+    },
+    "trend 90d": {
+     "n": 2,
+     "p50_s": 0.237,
+     "p95_s": 0.367,
+     "max_s": 0.367
+    }
+   }
+  },
+  {
+   "users": 50,
+   "seconds": 210,
+   "pages": 534,
+   "pages_per_s": 2.55,
+   "calls_per_s": 54.8,
+   "page_p50_s": 2.489,
+   "page_p95_s": 8.529,
+   "page_max_s": 13.293,
+   "call_p50_s": 0.194,
+   "call_p95_s": 2.912,
+   "failed_share": 0.0001,
+   "failures": {
+    "403 /dash/api/signals": 1
+   },
+   "queries": {
+    "dashboard 30d": {
+     "n": 23,
+     "p50_s": 0.95,
+     "p95_s": 3.955,
+     "max_s": 11.398
+    },
+    "dashboard 7d": {
+     "n": 23,
+     "p50_s": 0.575,
+     "p95_s": 5.105,
+     "max_s": 6.379
+    },
+    "history 1d raw": {
+     "n": 11,
+     "p50_s": 0.051,
+     "p95_s": 0.279,
+     "max_s": 0.279
+    },
+    "history 30d": {
+     "n": 15,
+     "p50_s": 0.066,
+     "p95_s": 1.626,
+     "max_s": 1.626
+    },
+    "history 90d": {
+     "n": 11,
+     "p50_s": 0.101,
+     "p95_s": 0.232,
+     "max_s": 0.232
+    },
+    "report 30d": {
+     "n": 39,
+     "p50_s": 0.772,
+     "p95_s": 4.405,
+     "max_s": 5.184
+    },
+    "trend 30d": {
+     "n": 16,
+     "p50_s": 0.299,
+     "p95_s": 1.313,
+     "max_s": 1.313
+    },
+    "trend 7d": {
+     "n": 10,
+     "p50_s": 0.249,
+     "p95_s": 1.06,
+     "max_s": 1.06
+    },
+    "trend 90d": {
+     "n": 9,
+     "p50_s": 0.231,
+     "p95_s": 0.791,
+     "max_s": 0.791
+    }
+   }
+  }
+ ],
+ "peak": {
+  "histcraft": {
+   "cpu_percent": 92.8,
+   "mem_mib": 1322.0
+  },
+  "histcraft-db": {
+   "cpu_percent": 51.47,
+   "mem_mib": 306.3
+  },
+  "processcraft": {
+   "cpu_percent": 176.19,
+   "mem_mib": 2491.4
+  },
+  "histcraft-gateway": {
+   "cpu_percent": 3.81,
+   "mem_mib": 38.2
+  },
+  "histcraft-collector": {
+   "cpu_percent": 116.02,
+   "mem_mib": 178.1
+  },
+  "alarmcraft": {
+   "cpu_percent": 70.07,
+   "mem_mib": 422.1
+  },
+  "proxy": {
+   "cpu_percent": 16.11,
+   "mem_mib": 40.6
+  },
+  "doccraft": {
+   "cpu_percent": 38.36,
+   "mem_mib": 210.6
+  },
+  "dashcraft": {
+   "cpu_percent": 53.4,
+   "mem_mib": 205.2
+  },
+  "linkcraft": {
+   "cpu_percent": 95.31,
+   "mem_mib": 1321.0
+  },
+  "compute-gateway": {
+   "cpu_percent": 14.53,
+   "mem_mib": 62.9
+  },
+  "modelcraft": {
+   "cpu_percent": 41.24,
+   "mem_mib": 276.6
+  },
+  "plantcraft": {
+   "cpu_percent": 101.04,
+   "mem_mib": 304.7
+  },
+  "llm-egress": {
+   "cpu_percent": 39.12,
+   "mem_mib": 36.9
+  },
+  "linkcraft-executor": {
+   "cpu_percent": 131.82,
+   "mem_mib": 445.5
+  },
+  "installer": {
+   "cpu_percent": 52.35,
+   "mem_mib": 51.7
+  },
+  "modelcraft-executor": {
+   "cpu_percent": 6.96,
+   "mem_mib": 19.9
+  }
+ },
+ "cpu_by_step": {
+  "10 people": {
+   "histcraft": 36.68,
+   "histcraft-db": 51.47,
+   "processcraft": 172.07,
+   "histcraft-gateway": 3.81,
+   "histcraft-collector": 116.02,
+   "alarmcraft": 41.59,
+   "proxy": 10.37,
+   "doccraft": 33.71,
+   "dashcraft": 28.94,
+   "linkcraft": 63.59,
+   "compute-gateway": 14.14,
+   "modelcraft": 18.32,
+   "plantcraft": 82.88,
+   "llm-egress": 0.01,
+   "linkcraft-executor": 11.99,
+   "installer": 45.18,
+   "modelcraft-executor": 6.96
+  },
+  "50 people": {
+   "histcraft": 92.8,
+   "histcraft-db": 23.89,
+   "processcraft": 176.19,
+   "histcraft-gateway": 2.95,
+   "histcraft-collector": 101.13,
+   "alarmcraft": 70.07,
+   "proxy": 16.11,
+   "doccraft": 38.36,
+   "dashcraft": 53.4,
+   "linkcraft": 95.31,
+   "compute-gateway": 14.53,
+   "modelcraft": 41.24,
+   "plantcraft": 101.04,
+   "llm-egress": 39.12,
+   "linkcraft-executor": 131.82,
+   "installer": 52.35,
+   "modelcraft-executor": 6.37
+  }
+ }
+}

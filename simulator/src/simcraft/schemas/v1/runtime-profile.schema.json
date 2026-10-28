@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/runtime-profile.schema.json",
+  "title": "Process Plant runtime profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "profile_id", "description", "duration_seconds", "integration_step_seconds", "observation_frame_seconds", "scenario_cycle_seconds", "history_seconds", "max_history_values_per_node"],
+  "properties": {
+    "schema": {"const": "process-plant-opcua/runtime-profile/v1"},
+    "profile_id": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "duration_seconds": {"type": "integer", "minimum": 1},
+    "integration_step_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "observation_frame_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "scenario_cycle_seconds": {"type": "number", "minimum": 600},
+    "history_seconds": {"type": "integer", "minimum": 1},
+    "max_history_values_per_node": {"type": "integer", "minimum": 1}
+  }
+}

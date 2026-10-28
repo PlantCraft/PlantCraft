@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plantcraft-sdk"
+version = "0.77.0"
+description = "Build apps for the PlantCraft suite: token verification, API v1 client, the @method SDK and a fake PlantCraft for tests"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11"
+dependencies = [
+    "cryptography>=42",
+    # API v1 client; its MockTransport/ASGI transport also backs the test fake.
+    "httpx>=0.27,<1",
+    "numpy",
+    "pandas",
+    "pydantic>=2",
+    # Signs and checks the tokens between PlantCraft and the apps (plantcraft_sdk.jwt).
+    "PyJWT>=2.10,<3",
+]
+
+[project.optional-dependencies]
+# Token middleware (plantcraft_sdk.auth) and the fake server (plantcraft_sdk.testing).
+server = [
+    "fastapi>=0.116,<1",
+]
+dev = [
+    "fastapi>=0.116,<1",
+    "pytest>=8",
+]
+
+[project.scripts]
+# Validates an app repository against docs/app-standard.md (app.toml and its layout).
+plantcraft-app = "plantcraft_sdk.app_cli:main"
+
+# The test time budget (plantcraft_sdk.pytest_budget), active where pyproject.toml asks for it.
+[project.entry-points.pytest11]
+plantcraft-budget = "plantcraft_sdk.pytest_budget"
+
+[project.urls]
+Homepage = "https://github.com/PlantCraft/PlantCraft"
+Repository = "https://github.com/PlantCraft/PlantCraft"
+
+[tool.setuptools.packages.find]
+include = ["plantcraft_sdk*", "processcraft_sdk*"]  # the former import (rename-plantcraft: keep)
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,101 @@
+{
+  "id": "column.packed",
+  "title": "Packed column",
+  "category": "columns",
+  "w": 80,
+  "h": 260,
+  "svg": "<path d=\"M20,40 A20,10 0 0 1 60,40 V220 A20,10 0 0 1 20,220 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect class=\"pc-level\" x=\"21\" y=\"200\" width=\"38\" height=\"20\" stroke=\"none\"/><path class=\"pc-state\" d=\"M20,40 A20,10 0 0 1 60,40 V220 A20,10 0 0 1 20,220 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect x=\"20\" y=\"66\" width=\"40\" height=\"50\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M20,66 L60,116 M60,66 L20,116\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"24\" y1=\"60\" x2=\"56\" y2=\"60\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><rect x=\"20\" y=\"140\" width=\"40\" height=\"50\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M20,140 L60,190 M60,140 L20,190\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"24\" y1=\"134\" x2=\"56\" y2=\"134\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/>",
+  "ports": [
+    {
+      "id": "overhead",
+      "x": 40,
+      "y": 30,
+      "dir": "n",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "bottoms",
+      "x": 40,
+      "y": 230,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "feed",
+      "x": 20,
+      "y": 130,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "reflux",
+      "x": 60,
+      "y": 50,
+      "dir": "e",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "side_draw",
+      "x": 60,
+      "y": 130,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "reboiler_return",
+      "x": 20,
+      "y": 200,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 264,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 80,
+      "y": 130,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 60,
+      "y": 30,
+      "align": "middle",
+      "baseline": "middle"
+    },
+    {
+      "id": "level",
+      "x": 64,
+      "y": 214,
+      "align": "start",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "level"
+  ],
+  "keywords": [
+    "column",
+    "packed",
+    "absorber",
+    "scrubber",
+    "tower",
+    "packing"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

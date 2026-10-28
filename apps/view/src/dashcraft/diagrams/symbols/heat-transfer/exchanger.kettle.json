@@ -1,0 +1,84 @@
+{
+  "id": "exchanger.kettle",
+  "title": "Kettle reboiler",
+  "category": "heat-transfer",
+  "w": 180,
+  "h": 100,
+  "svg": "<path d=\"M30,30 H60 L80,10 H150 V90 H80 L60,70 H30 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect class=\"pc-level\" x=\"81\" y=\"50\" width=\"68\" height=\"40\" stroke=\"none\"/><path class=\"pc-state\" d=\"M30,30 H60 L80,10 H150 V90 H80 L60,70 H30 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect x=\"10\" y=\"30\" width=\"20\" height=\"40\" stroke-width=\"2\" stroke-linejoin=\"round\"/><line x1=\"10\" y1=\"50\" x2=\"30\" y2=\"50\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M30,40 H120 A10,10 0 0 1 120,60 H30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"134\" y1=\"90\" x2=\"134\" y2=\"62\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "tube_in",
+      "x": 20,
+      "y": 30,
+      "dir": "n",
+      "kind": "utility",
+      "flow": "in"
+    },
+    {
+      "id": "tube_out",
+      "x": 20,
+      "y": 70,
+      "dir": "s",
+      "kind": "utility",
+      "flow": "out"
+    },
+    {
+      "id": "vapour",
+      "x": 110,
+      "y": 10,
+      "dir": "n",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "liquid_in",
+      "x": 100,
+      "y": 90,
+      "dir": "s",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "liquid_out",
+      "x": 150,
+      "y": 80,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 90.0,
+      "y": 104,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 90.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 150,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "level"
+  ],
+  "keywords": [
+    "reboiler",
+    "kettle",
+    "vaporiser",
+    "chiller"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

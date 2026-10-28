@@ -1,0 +1,400 @@
+/*
+ * PlantCraft design tokens: the one place colors, type, radii, spacing,
+ * elevation and motion are defined. Every other stylesheet uses these
+ * variables; no component hard-codes a color or a font. See docs/brand.md.
+ *
+ * Themes: light by default, dark when the OS asks for it, and an explicit
+ * override with <html data-theme="light|dark">. Any subtree can also force a
+ * theme with data-theme (the wall-screen dashboard uses .ac-screen-dark).
+ *
+ * Colour philosophy (ISA-101 "high performance HMI"): surfaces stay calm
+ * neutral greys (near-black in dark); PlantCraft Blue marks what is
+ * interactive; the status hues are reserved for state and never used as
+ * decoration. The navigation rail is graphite in both themes.
+ */
+
+/* ---------------------------------------------------------------- light */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Neutral scale: near-neutral greys. */
+  --pc-neutral-0: #ffffff;
+  --pc-neutral-25: #fbfbfd;
+  --pc-neutral-50: #f5f5f7;
+  --pc-neutral-100: #ececf0;
+  --pc-neutral-150: #e3e3e8;
+  --pc-neutral-200: #d2d2d7;
+  --pc-neutral-300: #c7c7cc;
+  --pc-neutral-400: #aeaeb2;
+  --pc-neutral-500: #8e8e93;
+  --pc-neutral-600: #6e6e73;
+  --pc-neutral-700: #48484a;
+  --pc-neutral-800: #2c2c2e;
+  --pc-neutral-900: #1d1d1f;
+  --pc-neutral-950: #111113;
+
+  /* PlantCraft Blue: the brand colour. */
+  --pc-blue-50: #eef5fe;
+  --pc-blue-100: #d9e9fc;
+  --pc-blue-200: #b5d3f9;
+  --pc-blue-300: #86b6f3;
+  --pc-blue-400: #5294ea;
+  --pc-blue-500: #2477dc;
+  --pc-blue-600: #0a66d0;
+  --pc-blue-700: #0853ab;
+  --pc-blue-800: #0a4285;
+  --pc-blue-900: #0b2f5c;
+
+  /* Surfaces, lines and ink */
+  --pc-bg: #f5f5f7;            /* app canvas */
+  --pc-surface: #ffffff;       /* cards, panels, inputs */
+  --pc-surface-2: #fafafc;     /* table heads, row hover, insets */
+  --pc-surface-3: #f0f0f3;     /* tracks, chips, quiet fills */
+  --pc-surface-4: #e3e3e8;     /* strong fills: toggles off, counters */
+  --pc-border-subtle: #e8e8ed; /* row dividers, card outlines */
+  --pc-border: #d2d2d7;        /* inputs, controls */
+  --pc-border-strong: #b8b8bf; /* hover outlines, dashed drop zones */
+  --pc-text: #1d1d1f;          /* headings, key values */
+  --pc-text-2: #424245;        /* body text */
+  --pc-text-3: #636368;        /* secondary text, captions (5.6:1 on the canvas) */
+  --pc-text-4: #6e6e73;        /* quiet text, placeholders, icons (4.5:1 on every surface but tracks) */
+  --pc-on-accent: #ffffff;     /* text on primary / status fills */
+
+  /* Interactive */
+  --pc-primary: #0a66d0;
+  --pc-primary-hover: #0853ab;
+  --pc-primary-text: #0a5fc2;
+  --pc-primary-soft: #e8f1fc;
+  --pc-primary-soft-2: #d6e7fb;
+  --pc-primary-border: #a9c9f0;
+  --pc-focus: #2477dc;
+
+  /* Loop health. fill = dots, bars, markers; text = AA on soft and surface. */
+  --pc-good-fill: #34c759;
+  --pc-good-text: #1f7a36;
+  --pc-good-soft: #e9f8ed;
+  --pc-good-border: #b5e6c2;
+  --pc-attention-fill: #ff9f0a;
+  --pc-attention-text: #935000;
+  --pc-attention-soft: #fff4e0;
+  --pc-attention-border: #ffd8a0;
+  --pc-serious-fill: #f2690d;   /* high priority: between attention and problem */
+  --pc-serious-text: #a3440a;
+  --pc-serious-soft: #ffeee3;
+  --pc-serious-border: #fcc8a8;
+  --pc-problem-fill: #ff3b30;
+  --pc-problem-text: #c4111f;
+  --pc-problem-soft: #ffeceb;
+  --pc-problem-border: #ffc4c0;
+  --pc-inactive-fill: #8e8e93;
+  --pc-inactive-text: #636366;
+  --pc-inactive-soft: #f0f0f3;
+  --pc-inactive-border: #d2d2d7;
+  --pc-unusable-fill: #af52de;   /* data the quality gate rejected */
+  --pc-unusable-text: #8a2fb8;
+  --pc-unusable-soft: #f7edfc;
+  --pc-unusable-border: #e3c4f3;
+  --pc-info-fill: #32ade6;
+  --pc-info-text: #0b6a94;
+  --pc-info-soft: #e6f6fd;
+  --pc-info-border: #a6dcf5;
+  /* Non-status accent (block categories, tags): series violet. */
+  --pc-violet-fill: #654db6;
+  --pc-violet-text: #54409b;
+  --pc-violet-soft: #f1eefb;
+  --pc-violet-border: #d4cbf1;
+
+  /* Chart series: 8 hues, validated for colour-vision deficiency in this
+     order (adjacent CVD dE >= 10.7, normal-vision dE >= 18.9). */
+  --pc-series-1: #1762b6; /* blue    */
+  --pc-series-2: #e06d00; /* orange  */
+  --pc-series-3: #00958f; /* teal    */
+  --pc-series-4: #654db6; /* violet  */
+  --pc-series-5: #cfa529; /* gold    */
+  --pc-series-6: #913e20; /* rust    */
+  --pc-series-7: #ca488f; /* magenta */
+  --pc-series-8: #438f31; /* green   */
+  --pc-chart-grid: #e8e8ed;
+  --pc-chart-axis: #d2d2d7;
+
+  /* App family tiles (white glyph on top; mirrored in appMarks.ts).
+     Never use them for status or chart series. */
+  --pc-app-processcraft: #0a66d0;
+  --pc-app-desk: #6a3d9a;
+  --pc-app-linkcraft: #00726b;
+  --pc-app-dashcraft: #3442a6;
+  --pc-app-simcraft: #56661a;
+  --pc-app-alarmcraft: #9c2b4f;
+  --pc-app-histcraft: #80591a;
+  --pc-app-modelcraft: #9c4419;
+  --pc-app-doccraft: #3d5a73;
+
+  /* Elevation */
+  --pc-shadow-color: #000000;
+  --pc-scrim: #000000;
+}
+
+/* ----------------------------------------------------------------- dark */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --pc-bg: #000000;
+    --pc-surface: #1c1c1e;
+    --pc-surface-2: #232326;
+    --pc-surface-3: #2c2c2e;
+    --pc-surface-4: #3a3a3c;
+    --pc-border-subtle: #2c2c2e;
+    --pc-border: #38383a;
+    --pc-border-strong: #48484a;
+    --pc-text: #f5f5f7;
+    --pc-text-2: #d2d2d7;
+    --pc-text-3: #98989d;
+    --pc-text-4: #8e8e93;
+    --pc-on-accent: #ffffff;
+    --pc-primary: #1f74d8;
+    --pc-primary-hover: #3385ee;
+    --pc-primary-text: #6aa8ff;
+    --pc-primary-soft: #10243f;
+    --pc-primary-soft-2: #163256;
+    --pc-primary-border: #24508a;
+    --pc-focus: #3d8bfd;
+    --pc-good-fill: #30d158;
+    --pc-good-text: #63e07f;
+    --pc-good-soft: #12291a;
+    --pc-good-border: #1f5a2f;
+    --pc-attention-fill: #ff9f0a;
+    --pc-attention-text: #ffb84d;
+    --pc-attention-soft: #2e2210;
+    --pc-attention-border: #66450f;
+    --pc-serious-fill: #ff7a2e;
+    --pc-serious-text: #ff9d66;
+    --pc-serious-soft: #3a2214;
+    --pc-serious-border: #6e3a1c;
+    --pc-problem-fill: #ff453a;
+    --pc-problem-text: #ff7b72;
+    --pc-problem-soft: #3a1716;
+    --pc-problem-border: #74302b;
+    --pc-inactive-fill: #8e8e93;
+    --pc-inactive-text: #a1a1a6;
+    --pc-inactive-soft: #2c2c2e;
+    --pc-inactive-border: #3a3a3c;
+    --pc-unusable-fill: #bf5af2;
+    --pc-unusable-text: #d38cf7;
+    --pc-unusable-soft: #2e1a38;
+    --pc-unusable-border: #5d3275;
+    --pc-info-fill: #64d2ff;
+    --pc-info-text: #7fd8ff;
+    --pc-info-soft: #0f2a38;
+    --pc-info-border: #155571;
+    --pc-violet-fill: #8a74e2;
+    --pc-violet-text: #b3a5f0;
+    --pc-violet-soft: #221d3a;
+    --pc-violet-border: #463a7a;
+    --pc-series-1: #4087de;
+    --pc-series-2: #e06d00;
+    --pc-series-3: #04a19b;
+    --pc-series-4: #8a74e2;
+    --pc-series-5: #b48a00;
+    --pc-series-6: #a95436;
+    --pc-series-7: #d14e95;
+    --pc-series-8: #499537;
+    --pc-chart-grid: #2c2c2e;
+    --pc-chart-axis: #38383a;
+    --pc-app-processcraft: #1f74d8;
+    --pc-app-desk: #7b4cad;
+    --pc-app-linkcraft: #08857d;
+  --pc-app-dashcraft: #3f52b8;
+    --pc-app-simcraft: #647722;
+    --pc-app-alarmcraft: #b0395f;
+    --pc-app-histcraft: #926722;
+    --pc-app-modelcraft: #ae5023;
+  --pc-app-doccraft: #4a6a86;
+    --pc-app-doccraft: #4a6a86;
+    --pc-shadow-color: #000000;
+    --pc-scrim: #000000;
+  }
+}
+
+[data-theme="dark"],
+.ac-screen-dark {
+  color-scheme: dark;
+  --pc-bg: #000000;
+  --pc-surface: #1c1c1e;
+  --pc-surface-2: #232326;
+  --pc-surface-3: #2c2c2e;
+  --pc-surface-4: #3a3a3c;
+  --pc-border-subtle: #2c2c2e;
+  --pc-border: #38383a;
+  --pc-border-strong: #48484a;
+  --pc-text: #f5f5f7;
+  --pc-text-2: #d2d2d7;
+  --pc-text-3: #98989d;
+  --pc-text-4: #8e8e93;
+  --pc-on-accent: #ffffff;
+  --pc-primary: #1f74d8;
+  --pc-primary-hover: #3385ee;
+  --pc-primary-text: #6aa8ff;
+  --pc-primary-soft: #10243f;
+  --pc-primary-soft-2: #163256;
+  --pc-primary-border: #24508a;
+  --pc-focus: #3d8bfd;
+  --pc-good-fill: #30d158;
+  --pc-good-text: #63e07f;
+  --pc-good-soft: #12291a;
+  --pc-good-border: #1f5a2f;
+  --pc-attention-fill: #ff9f0a;
+  --pc-attention-text: #ffb84d;
+  --pc-attention-soft: #2e2210;
+  --pc-attention-border: #66450f;
+  --pc-serious-fill: #ff7a2e;
+  --pc-serious-text: #ff9d66;
+  --pc-serious-soft: #3a2214;
+  --pc-serious-border: #6e3a1c;
+  --pc-problem-fill: #ff453a;
+  --pc-problem-text: #ff7b72;
+  --pc-problem-soft: #3a1716;
+  --pc-problem-border: #74302b;
+  --pc-inactive-fill: #8e8e93;
+  --pc-inactive-text: #a1a1a6;
+  --pc-inactive-soft: #2c2c2e;
+  --pc-inactive-border: #3a3a3c;
+  --pc-unusable-fill: #bf5af2;
+  --pc-unusable-text: #d38cf7;
+  --pc-unusable-soft: #2e1a38;
+  --pc-unusable-border: #5d3275;
+  --pc-info-fill: #64d2ff;
+  --pc-info-text: #7fd8ff;
+  --pc-info-soft: #0f2a38;
+  --pc-info-border: #155571;
+  --pc-violet-fill: #8a74e2;
+  --pc-violet-text: #b3a5f0;
+  --pc-violet-soft: #221d3a;
+  --pc-violet-border: #463a7a;
+  --pc-series-1: #4087de;
+  --pc-series-2: #e06d00;
+  --pc-series-3: #04a19b;
+  --pc-series-4: #8a74e2;
+  --pc-series-5: #b48a00;
+  --pc-series-6: #a95436;
+  --pc-series-7: #d14e95;
+  --pc-series-8: #499537;
+  --pc-chart-grid: #2c2c2e;
+  --pc-chart-axis: #38383a;
+  --pc-app-processcraft: #1f74d8;
+  --pc-app-linkcraft: #08857d;
+  --pc-app-dashcraft: #3f52b8;
+  --pc-app-simcraft: #647722;
+  --pc-app-alarmcraft: #b0395f;
+  --pc-app-histcraft: #926722;
+  --pc-app-modelcraft: #ae5023;
+  --pc-app-desk: #7b4cad;
+  --pc-shadow-color: #000000;
+  --pc-scrim: #000000;
+}
+
+/* ------------------------------------------- theme-independent tokens */
+:root {
+  /* Chrome: the navigation rail and other dark "control room" islands
+     (tooltips, toasts, code). Dark in both themes. */
+  --pc-chrome-bg: #1c1c1e;
+  --pc-chrome-bg-2: #161618;
+  --pc-chrome-surface: #2c2c2e;
+  --pc-chrome-surface-2: #3a3a3c;
+  --pc-chrome-border: #38383a;
+  --pc-chrome-text-4: #8a8a8f;
+  --pc-chrome-text-3: #98989d;
+  --pc-chrome-text-2: #c7c7cc;
+  --pc-chrome-text: #ececf0;
+  --pc-chrome-text-strong: #ffffff;
+  --pc-chrome-accent: #3d8bfd;
+  --pc-chrome-accent-strong: #1f74d8;
+  --pc-chrome-accent-text: #a9cdff;
+
+  /* Typography. Inter: a screen face with optical sizing (tighter in titles, open in body) and
+     true tabular figures; JetBrains Mono for tags, values and code. Both self-hosted inside this
+     package (fonts.css), so nothing is fetched from the internet. One scale, one use per step:
+     page title 4xl/700, section xl/600, highlight lg/600, card label sm/500, KPI 3xl/600, body md. */
+  --pc-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pc-font-display: var(--pc-font-sans);
+  --pc-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --pc-fs-2xs: 11px;    /* micro labels, axis ticks */
+  --pc-fs-xs: 12px;     /* captions, table heads and meta */
+  --pc-fs-sm: 13px;     /* dense UI text, buttons, card labels */
+  --pc-fs-md: 14px;     /* body */
+  --pc-fs-base: 15px;   /* panel titles, comfortable body */
+  --pc-fs-lg: 16px;     /* highlight */
+  --pc-fs-xl: 20px;     /* section titles */
+  --pc-fs-2xl: 22px;
+  --pc-fs-3xl: 28px;    /* KPI values */
+  --pc-fs-4xl: 28px;    /* page titles */
+  --pc-fw-regular: 400;
+  --pc-fw-medium: 500;
+  --pc-fw-semibold: 600;
+  --pc-fw-bold: 700;
+  --pc-lh-tight: 1.2;
+  --pc-lh-normal: 1.5;
+  --pc-lh-relaxed: 1.7;
+  --pc-tracking-title: -.022em;  /* page titles and KPI values */
+  --pc-tracking-heading: -.012em; /* section titles */
+  --pc-tracking-overline: 0;      /* labels are sentence case: no uppercase tracking */
+
+  /* Shape: calm, slightly rounder corners; flat surfaces, no gloss. */
+  --pc-radius-xs: 4px;
+  --pc-radius-sm: 6px;
+  --pc-radius-md: 8px;
+  --pc-radius-lg: 10px;
+  --pc-radius-xl: 14px;
+  --pc-radius-pill: 999px;
+
+  /* Spacing: 4px grid */
+  --pc-space-0-5: 2px;
+  --pc-space-1: 4px;
+  --pc-space-2: 8px;
+  --pc-space-3: 12px;
+  --pc-space-4: 16px;
+  --pc-space-5: 20px;
+  --pc-space-6: 24px;
+  --pc-space-8: 32px;
+  --pc-space-10: 40px;
+  --pc-space-12: 48px;
+
+  /* Motion: short and functional. */
+  --pc-ease: cubic-bezier(.2, 0, 0, 1);
+  --pc-duration-fast: 120ms;
+  --pc-duration: 180ms;
+  --pc-duration-slow: 260ms;
+
+  --pc-z-sticky: 30;
+  --pc-z-nav: 50;
+  --pc-z-modal: 100;
+  --pc-z-toast: 120;
+  --pc-z-tooltip: 300;
+}
+
+/* Tokens composed from others are declared wherever a theme is set, so a
+   [data-theme] subtree resolves them against its own palette. */
+:root,
+[data-theme],
+.ac-screen-dark {
+  --pc-shadow-1: 0 1px 2px color-mix(in srgb, var(--pc-shadow-color) 6%, transparent), 0 1px 3px color-mix(in srgb, var(--pc-shadow-color) 4%, transparent);
+  --pc-shadow-2: 0 2px 4px color-mix(in srgb, var(--pc-shadow-color) 6%, transparent), 0 6px 16px color-mix(in srgb, var(--pc-shadow-color) 8%, transparent);
+  --pc-shadow-3: 0 12px 32px color-mix(in srgb, var(--pc-shadow-color) 16%, transparent);
+  --pc-shadow-4: 0 24px 64px color-mix(in srgb, var(--pc-shadow-color) 26%, transparent);
+  --pc-focus-ring: 0 0 0 3px color-mix(in srgb, var(--pc-focus) 30%, transparent);
+
+  /* Legacy names kept for existing components and inline styles. */
+  --ink: var(--pc-text);
+  --muted: var(--pc-text-3);
+  --line: var(--pc-border-subtle);
+  --teal: var(--pc-primary-text);
+  --teal-bright: var(--pc-primary);
+  --navy: var(--pc-chrome-bg);
+  --panel: var(--pc-surface);
+  --shadow: var(--pc-shadow-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --pc-duration-fast: 0ms; --pc-duration: 0ms; --pc-duration-slow: 0ms; }
+  *, *::before, *::after { transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

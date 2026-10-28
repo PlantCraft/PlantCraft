@@ -1,0 +1,75 @@
+{
+  "id": "heater.boiler",
+  "title": "Boiler",
+  "category": "heat-transfer",
+  "w": 120,
+  "h": 150,
+  "svg": "<rect class=\"pc-state\" x=\"30\" y=\"20\" width=\"60\" height=\"24\" rx=\"12\" stroke-width=\"2\" stroke-linejoin=\"round\"/><line x1=\"46\" y1=\"44\" x2=\"46\" y2=\"50\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"74\" y1=\"44\" x2=\"74\" y2=\"50\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state\" x=\"20\" y=\"50\" width=\"80\" height=\"90\" stroke-width=\"2\" stroke-linejoin=\"round\"/><path class=\"pc-run\" d=\"M60,136 C48,124 54,110 60,96 C66,110 72,124 60,136 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "steam",
+      "x": 60,
+      "y": 20,
+      "dir": "n",
+      "kind": "utility",
+      "flow": "out"
+    },
+    {
+      "id": "feedwater",
+      "x": 20,
+      "y": 70,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "fuel",
+      "x": 60,
+      "y": 140,
+      "dir": "s",
+      "kind": "utility",
+      "flow": "in"
+    },
+    {
+      "id": "flue",
+      "x": 100,
+      "y": 60,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 60.0,
+      "y": 154,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 60.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 100,
+      "y": 40,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "run"
+  ],
+  "keywords": [
+    "boiler",
+    "steam generator",
+    "HRSG"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

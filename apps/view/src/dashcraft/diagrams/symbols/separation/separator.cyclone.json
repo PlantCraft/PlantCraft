@@ -1,0 +1,66 @@
+{
+  "id": "separator.cyclone",
+  "title": "Cyclone",
+  "category": "separation",
+  "w": 80,
+  "h": 140,
+  "svg": "<line x1=\"0\" y1=\"30\" x2=\"20\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"40\" y1=\"120\" x2=\"40\" y2=\"140\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"pc-state\" d=\"M20,20 H60 V60 L44,120 H36 L20,60 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect x=\"32\" y=\"10\" width=\"16\" height=\"34\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 30,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "gas",
+      "x": 40,
+      "y": 10,
+      "dir": "n",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "solids",
+      "x": 40,
+      "y": 140,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 144,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "cyclone",
+    "hydrocyclone",
+    "separator",
+    "dust"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

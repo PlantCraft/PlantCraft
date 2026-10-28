@@ -1,0 +1,838 @@
+{
+  "name": "opcua_control_loops_demo",
+  "display_name": "Simulated refinery",
+  "description": "Live demo with the Simulator's 50 loops, 48 hours of OPC UA history and real-time continuity.",
+  "source": {
+    "type": "opcua",
+    "endpoint_url": "opc.tcp://127.0.0.1:4840/plantcraft/",
+    "namespace_uri": "urn:processcraft:plantcraft",
+    "auth_type": "anonymous",
+    "timezone": "America/Sao_Paulo",
+    "timeout_seconds": 30,
+    "history_boundary_minutes": 1440
+  },
+  "analysis": {
+    "interval_minutes": 1,
+    "resample_seconds": 30
+  },
+  "storage": {
+    "sqlite_path": "var/opcua_demo.sqlite3"
+  },
+  "loops": [
+    {
+      "loop_id": "FIC-1001",
+      "name": "Feed flow",
+      "area": "Feed",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1001.PV",
+        "sp": "CPM.Loops.FIC-1001.SP",
+        "op": "CPM.Loops.FIC-1001.OP",
+        "mode": "CPM.Loops.FIC-1001.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stability of the unit throughput"
+      }
+    },
+    {
+      "loop_id": "PIC-1002",
+      "name": "Vessel pressure",
+      "area": "Separation",
+      "service": "Persistent oscillation from aggressive tuning",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1002.PV",
+        "sp": "CPM.Loops.PIC-1002.SP",
+        "op": "CPM.Loops.PIC-1002.OP",
+        "mode": "CPM.Loops.PIC-1002.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Vessel stability and separation capacity"
+      }
+    },
+    {
+      "loop_id": "FIC-1003",
+      "name": "Recycle flow",
+      "area": "Recycle",
+      "service": "Valve with static friction and jumpy movement",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1003.PV",
+        "sp": "CPM.Loops.FIC-1003.SP",
+        "op": "CPM.Loops.FIC-1003.OP",
+        "mode": "CPM.Loops.FIC-1003.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Recycle inventory and stability"
+      }
+    },
+    {
+      "loop_id": "LIC-1004",
+      "name": "Separator level",
+      "area": "Separation",
+      "service": "Undersized actuator with output at the upper limit",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1004.PV",
+        "sp": "CPM.Loops.LIC-1004.SP",
+        "op": "CPM.Loops.LIC-1004.OP",
+        "mode": "CPM.Loops.LIC-1004.MODE"
+      },
+      "metadata": {
+        "loop_type": "level",
+        "impact": "Separator capacity and protection"
+      }
+    },
+    {
+      "loop_id": "TIC-1005",
+      "name": "Reactor temperature",
+      "area": "Reaction",
+      "service": "Long periods in manual mode",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1005.PV",
+        "sp": "CPM.Loops.TIC-1005.SP",
+        "op": "CPM.Loops.TIC-1005.OP",
+        "mode": "CPM.Loops.TIC-1005.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Quality, safety and conversion"
+      }
+    },
+    {
+      "loop_id": "AIC-1006",
+      "name": "Product composition",
+      "area": "Quality",
+      "service": "Measurement with high-frequency noise",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.AIC-1006.PV",
+        "sp": "CPM.Loops.AIC-1006.SP",
+        "op": "CPM.Loops.AIC-1006.OP",
+        "mode": "CPM.Loops.AIC-1006.MODE"
+      },
+      "metadata": {
+        "loop_type": "composition",
+        "impact": "Product quality and valve travel"
+      }
+    },
+    {
+      "loop_id": "FIC-1007",
+      "name": "Charge flow",
+      "area": "Feed",
+      "service": "Frequent setpoint changes by campaign",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1007.PV",
+        "sp": "CPM.Loops.FIC-1007.SP",
+        "op": "CPM.Loops.FIC-1007.OP",
+        "mode": "CPM.Loops.FIC-1007.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Production and coordination with planning"
+      }
+    },
+    {
+      "loop_id": "PIC-1008",
+      "name": "Header pressure",
+      "area": "Utilities",
+      "service": "Slow drift of the pressure sensor",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1008.PV",
+        "sp": "CPM.Loops.PIC-1008.SP",
+        "op": "CPM.Loops.PIC-1008.OP",
+        "mode": "CPM.Loops.PIC-1008.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Utility network balance"
+      }
+    },
+    {
+      "loop_id": "TIC-1009",
+      "name": "Outlet temperature",
+      "area": "Heat exchange",
+      "service": "Recurring load disturbances",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1009.PV",
+        "sp": "CPM.Loops.TIC-1009.SP",
+        "op": "CPM.Loops.TIC-1009.OP",
+        "mode": "CPM.Loops.TIC-1009.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Energy efficiency and thermal limit"
+      }
+    },
+    {
+      "loop_id": "LIC-1010",
+      "name": "Interface level",
+      "area": "Separation",
+      "service": "Interaction with the light-phase flow",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1010.PV",
+        "sp": "CPM.Loops.LIC-1010.SP",
+        "op": "CPM.Loops.LIC-1010.OP",
+        "mode": "CPM.Loops.LIC-1010.MODE",
+        "secondary": "CPM.Loops.LIC-1010.SECONDARY"
+      },
+      "metadata": {
+        "loop_type": "level",
+        "impact": "Quality of the phase separation"
+      }
+    },
+    {
+      "loop_id": "FIC-1101",
+      "name": "Column charge flow",
+      "area": "Distillation",
+      "service": "Stable charge tracking",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1101.PV",
+        "sp": "CPM.Loops.FIC-1101.SP",
+        "op": "CPM.Loops.FIC-1101.OP",
+        "mode": "CPM.Loops.FIC-1101.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "FIC-1102",
+      "name": "Reflux flow",
+      "area": "Distillation",
+      "service": "Stepwise valve movement",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1102.PV",
+        "sp": "CPM.Loops.FIC-1102.SP",
+        "op": "CPM.Loops.FIC-1102.OP",
+        "mode": "CPM.Loops.FIC-1102.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "PIC-1103",
+      "name": "Suction pressure",
+      "area": "Compression",
+      "service": "Persistent pressure oscillation",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1103.PV",
+        "sp": "CPM.Loops.PIC-1103.SP",
+        "op": "CPM.Loops.PIC-1103.OP",
+        "mode": "CPM.Loops.PIC-1103.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure"
+      }
+    },
+    {
+      "loop_id": "TIC-1104",
+      "name": "Furnace temperature",
+      "area": "Furnaces",
+      "service": "Recovery after load disturbances",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1104.PV",
+        "sp": "CPM.Loops.TIC-1104.SP",
+        "op": "CPM.Loops.TIC-1104.OP",
+        "mode": "CPM.Loops.TIC-1104.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature"
+      }
+    },
+    {
+      "loop_id": "LIC-1105",
+      "name": "Surge drum level",
+      "area": "Separation",
+      "service": "Attenuation of feed variations",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1105.PV",
+        "sp": "CPM.Loops.LIC-1105.SP",
+        "op": "CPM.Loops.LIC-1105.OP",
+        "mode": "CPM.Loops.LIC-1105.MODE"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "LIC-1106",
+      "name": "Accumulator level",
+      "area": "Distillation",
+      "service": "Inventory within the operating range",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1106.PV",
+        "sp": "CPM.Loops.LIC-1106.SP",
+        "op": "CPM.Loops.LIC-1106.OP",
+        "mode": "CPM.Loops.LIC-1106.MODE"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "LIC-1107",
+      "name": "Interface level (treating)",
+      "area": "Treating",
+      "service": "Attenuation with a correlated disturbance",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1107.PV",
+        "sp": "CPM.Loops.LIC-1107.SP",
+        "op": "CPM.Loops.LIC-1107.OP",
+        "mode": "CPM.Loops.LIC-1107.MODE",
+        "secondary": "CPM.Loops.LIC-1107.SECONDARY"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "AIC-1108",
+      "name": "Stream composition",
+      "area": "Quality",
+      "service": "Analyzer with high noise",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.AIC-1108.PV",
+        "sp": "CPM.Loops.AIC-1108.SP",
+        "op": "CPM.Loops.AIC-1108.OP",
+        "mode": "CPM.Loops.AIC-1108.MODE"
+      },
+      "metadata": {
+        "loop_type": "composition"
+      }
+    },
+    {
+      "loop_id": "FIC-1109",
+      "name": "Steam flow",
+      "area": "Utilities",
+      "service": "Actuator restriction and saturation",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1109.PV",
+        "sp": "CPM.Loops.FIC-1109.SP",
+        "op": "CPM.Loops.FIC-1109.OP",
+        "mode": "CPM.Loops.FIC-1109.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "PIC-1110",
+      "name": "Network pressure",
+      "area": "Utilities",
+      "service": "Recurring manual operation",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1110.PV",
+        "sp": "CPM.Loops.PIC-1110.SP",
+        "op": "CPM.Loops.PIC-1110.OP",
+        "mode": "CPM.Loops.PIC-1110.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure"
+      }
+    },
+    {
+      "loop_id": "TIC-1111",
+      "name": "Product temperature",
+      "area": "Heat exchange",
+      "service": "Slow measurement drift",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1111.PV",
+        "sp": "CPM.Loops.TIC-1111.SP",
+        "op": "CPM.Loops.TIC-1111.OP",
+        "mode": "CPM.Loops.TIC-1111.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature"
+      }
+    },
+    {
+      "loop_id": "FIC-1112",
+      "name": "Production flow",
+      "area": "Feed",
+      "service": "Frequent setpoint interventions",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1112.PV",
+        "sp": "CPM.Loops.FIC-1112.SP",
+        "op": "CPM.Loops.FIC-1112.OP",
+        "mode": "CPM.Loops.FIC-1112.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "LIC-1113",
+      "name": "Reflux drum level",
+      "area": "Distillation",
+      "service": "Operating range compromised by saturation",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1113.PV",
+        "sp": "CPM.Loops.LIC-1113.SP",
+        "op": "CPM.Loops.LIC-1113.OP",
+        "mode": "CPM.Loops.LIC-1113.MODE"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "TIC-1114",
+      "name": "Stabilizer temperature",
+      "area": "Treating",
+      "service": "Stable tracking reference",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1114.PV",
+        "sp": "CPM.Loops.TIC-1114.SP",
+        "op": "CPM.Loops.TIC-1114.OP",
+        "mode": "CPM.Loops.TIC-1114.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature"
+      }
+    },
+    {
+      "loop_id": "FIC-1201",
+      "name": "Hydrotreater charge flow",
+      "area": "Hydrotreating",
+      "service": "Stable tracking of the unit's charge",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1201.PV",
+        "sp": "CPM.Loops.FIC-1201.SP",
+        "op": "CPM.Loops.FIC-1201.OP",
+        "mode": "CPM.Loops.FIC-1201.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "PIC-1202",
+      "name": "Reactor inlet pressure",
+      "area": "Hydrotreating",
+      "service": "Oscillation tied to aggressive tuning",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1202.PV",
+        "sp": "CPM.Loops.PIC-1202.SP",
+        "op": "CPM.Loops.PIC-1202.OP",
+        "mode": "CPM.Loops.PIC-1202.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure"
+      }
+    },
+    {
+      "loop_id": "TIC-1203",
+      "name": "Catalyst bed temperature",
+      "area": "Hydrotreating",
+      "service": "Response to thermal load variations",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1203.PV",
+        "sp": "CPM.Loops.TIC-1203.SP",
+        "op": "CPM.Loops.TIC-1203.OP",
+        "mode": "CPM.Loops.TIC-1203.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature"
+      }
+    },
+    {
+      "loop_id": "LIC-1204",
+      "name": "High-pressure separator level",
+      "area": "Hydrotreating",
+      "service": "Stable inventory in the operating range",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1204.PV",
+        "sp": "CPM.Loops.LIC-1204.SP",
+        "op": "CPM.Loops.LIC-1204.OP",
+        "mode": "CPM.Loops.LIC-1204.MODE"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "AIC-1205",
+      "name": "Hydrogen purity",
+      "area": "Hydrotreating",
+      "service": "Analyzer with measurement noise",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.AIC-1205.PV",
+        "sp": "CPM.Loops.AIC-1205.SP",
+        "op": "CPM.Loops.AIC-1205.OP",
+        "mode": "CPM.Loops.AIC-1205.MODE"
+      },
+      "metadata": {
+        "loop_type": "composition"
+      }
+    },
+    {
+      "loop_id": "FIC-1206",
+      "name": "Quench flow",
+      "area": "Hydrotreating",
+      "service": "Valve with friction and stepwise movement",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1206.PV",
+        "sp": "CPM.Loops.FIC-1206.SP",
+        "op": "CPM.Loops.FIC-1206.OP",
+        "mode": "CPM.Loops.FIC-1206.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "PIC-1207",
+      "name": "Compressor discharge pressure",
+      "area": "Compression",
+      "service": "Output limited during high demand",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1207.PV",
+        "sp": "CPM.Loops.PIC-1207.SP",
+        "op": "CPM.Loops.PIC-1207.OP",
+        "mode": "CPM.Loops.PIC-1207.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure"
+      }
+    },
+    {
+      "loop_id": "LIC-1208",
+      "name": "Suction drum level",
+      "area": "Compression",
+      "service": "Level influenced by the compressor load",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1208.PV",
+        "sp": "CPM.Loops.LIC-1208.SP",
+        "op": "CPM.Loops.LIC-1208.OP",
+        "mode": "CPM.Loops.LIC-1208.MODE",
+        "secondary": "CPM.Loops.LIC-1208.SECONDARY"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "TIC-1209",
+      "name": "Furnace outlet temperature",
+      "area": "Furnaces",
+      "service": "Slow drift of the temperature element",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1209.PV",
+        "sp": "CPM.Loops.TIC-1209.SP",
+        "op": "CPM.Loops.TIC-1209.OP",
+        "mode": "CPM.Loops.TIC-1209.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature"
+      }
+    },
+    {
+      "loop_id": "FIC-1210",
+      "name": "Fuel gas flow",
+      "area": "Furnaces",
+      "service": "Setpoint changes per operating campaign",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1210.PV",
+        "sp": "CPM.Loops.FIC-1210.SP",
+        "op": "CPM.Loops.FIC-1210.OP",
+        "mode": "CPM.Loops.FIC-1210.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "LIC-1211",
+      "name": "Flash drum level",
+      "area": "Distillation",
+      "service": "Attenuation of feed disturbances",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1211.PV",
+        "sp": "CPM.Loops.LIC-1211.SP",
+        "op": "CPM.Loops.LIC-1211.OP",
+        "mode": "CPM.Loops.LIC-1211.MODE"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "PIC-1212",
+      "name": "Flare header pressure",
+      "area": "Utilities",
+      "service": "Recurring manual operation during transients",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1212.PV",
+        "sp": "CPM.Loops.PIC-1212.SP",
+        "op": "CPM.Loops.PIC-1212.OP",
+        "mode": "CPM.Loops.PIC-1212.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure"
+      }
+    },
+    {
+      "loop_id": "TIC-1213",
+      "name": "Column top temperature",
+      "area": "Distillation",
+      "service": "Stable tracking of the specification",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1213.PV",
+        "sp": "CPM.Loops.TIC-1213.SP",
+        "op": "CPM.Loops.TIC-1213.OP",
+        "mode": "CPM.Loops.TIC-1213.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature"
+      }
+    },
+    {
+      "loop_id": "FIC-1214",
+      "name": "Side draw flow",
+      "area": "Distillation",
+      "service": "Static friction in the product valve",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1214.PV",
+        "sp": "CPM.Loops.FIC-1214.SP",
+        "op": "CPM.Loops.FIC-1214.OP",
+        "mode": "CPM.Loops.FIC-1214.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "AIC-1215",
+      "name": "Sulfur content in product",
+      "area": "Quality",
+      "service": "Analyzer subject to high-frequency noise",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.AIC-1215.PV",
+        "sp": "CPM.Loops.AIC-1215.SP",
+        "op": "CPM.Loops.AIC-1215.OP",
+        "mode": "CPM.Loops.AIC-1215.MODE"
+      },
+      "metadata": {
+        "loop_type": "composition"
+      }
+    },
+    {
+      "loop_id": "LIC-1216",
+      "name": "Amine absorber level",
+      "area": "Treating",
+      "service": "Stable inventory with good attenuation",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1216.PV",
+        "sp": "CPM.Loops.LIC-1216.SP",
+        "op": "CPM.Loops.LIC-1216.OP",
+        "mode": "CPM.Loops.LIC-1216.MODE"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "PIC-1217",
+      "name": "Medium-pressure steam pressure",
+      "area": "Utilities",
+      "service": "Disturbances from varying consumers",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1217.PV",
+        "sp": "CPM.Loops.PIC-1217.SP",
+        "op": "CPM.Loops.PIC-1217.OP",
+        "mode": "CPM.Loops.PIC-1217.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure"
+      }
+    },
+    {
+      "loop_id": "LIC-1218",
+      "name": "Condensate drum level",
+      "area": "Utilities",
+      "service": "Interaction with the steam network demand",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1218.PV",
+        "sp": "CPM.Loops.LIC-1218.SP",
+        "op": "CPM.Loops.LIC-1218.OP",
+        "mode": "CPM.Loops.LIC-1218.MODE",
+        "secondary": "CPM.Loops.LIC-1218.SECONDARY"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "FIC-1219",
+      "name": "Cooling water flow",
+      "area": "Utilities",
+      "service": "Capacity restriction in the actuator",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1219.PV",
+        "sp": "CPM.Loops.FIC-1219.SP",
+        "op": "CPM.Loops.FIC-1219.OP",
+        "mode": "CPM.Loops.FIC-1219.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "TIC-1220",
+      "name": "Water return temperature",
+      "area": "Utilities",
+      "service": "Oscillation caused by interaction with consumers",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1220.PV",
+        "sp": "CPM.Loops.TIC-1220.SP",
+        "op": "CPM.Loops.TIC-1220.OP",
+        "mode": "CPM.Loops.TIC-1220.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature"
+      }
+    },
+    {
+      "loop_id": "PIC-1221",
+      "name": "Nitrogen network pressure",
+      "area": "Utilities",
+      "service": "Stable pressure reference",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1221.PV",
+        "sp": "CPM.Loops.PIC-1221.SP",
+        "op": "CPM.Loops.PIC-1221.OP",
+        "mode": "CPM.Loops.PIC-1221.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure"
+      }
+    },
+    {
+      "loop_id": "FIC-1222",
+      "name": "Effluent flow to treatment",
+      "area": "Water treatment",
+      "service": "Frequent setpoint interventions",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1222.PV",
+        "sp": "CPM.Loops.FIC-1222.SP",
+        "op": "CPM.Loops.FIC-1222.OP",
+        "mode": "CPM.Loops.FIC-1222.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow"
+      }
+    },
+    {
+      "loop_id": "LIC-1223",
+      "name": "Equalization tank level",
+      "area": "Water treatment",
+      "service": "Long periods in manual mode",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1223.PV",
+        "sp": "CPM.Loops.LIC-1223.SP",
+        "op": "CPM.Loops.LIC-1223.OP",
+        "mode": "CPM.Loops.LIC-1223.MODE"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "AIC-1224",
+      "name": "Treated effluent pH",
+      "area": "Water treatment",
+      "service": "Gradual drift of the analytical sensor",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.AIC-1224.PV",
+        "sp": "CPM.Loops.AIC-1224.SP",
+        "op": "CPM.Loops.AIC-1224.OP",
+        "mode": "CPM.Loops.AIC-1224.MODE"
+      },
+      "metadata": {
+        "loop_type": "composition"
+      }
+    },
+    {
+      "loop_id": "LIC-1225",
+      "name": "Slop tank level",
+      "area": "Water treatment",
+      "service": "Inventory influenced by the unit's load",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1225.PV",
+        "sp": "CPM.Loops.LIC-1225.SP",
+        "op": "CPM.Loops.LIC-1225.OP",
+        "mode": "CPM.Loops.LIC-1225.MODE",
+        "secondary": "CPM.Loops.LIC-1225.SECONDARY"
+      },
+      "metadata": {
+        "loop_type": "level"
+      }
+    },
+    {
+      "loop_id": "TIC-1226",
+      "name": "Sulfur reactor temperature",
+      "area": "Sulfur recovery",
+      "service": "Thermal disturbances during load changes",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1226.PV",
+        "sp": "CPM.Loops.TIC-1226.SP",
+        "op": "CPM.Loops.TIC-1226.OP",
+        "mode": "CPM.Loops.TIC-1226.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature"
+      }
+    }
+  ]
+}

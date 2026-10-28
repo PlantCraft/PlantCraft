@@ -1,0 +1,334 @@
+# PlantCraft Alarms' manifest: the single source of its metadata (the suite's app standard, section 4).
+# The launcher card, the Apps page, the package manifest, the image labels and /api/meta read it.
+
+[app]
+id = "alarmcraft"
+name = "PlantCraft Alarms"
+version = "0.5.0"
+category = "Alarm management"
+summary = "Rules that turn plant values and what the apps report into alarms, sent once to the right person, against ISA-18.2."
+description = """\
+Rules decide what becomes an alarm, from the plant's values, the series the apps compute (a \
+Analytics algorithm's health, one value per run) and the events the apps report (a source down, a \
+signal without data, a run that failed). A rule is written as a sentence (Simple: health below \
+50 for 5 runs in a row), as blocks (and, or, rate of change, deviation from setpoint, values \
+of several assets) or in Python, and is tested on the last days before it is saved. It covers \
+assets, a branch of the plant, an asset type or an Analytics monitor, with one alarm per asset. \
+Events lists what the apps reported and starts a rule from it. Each rule says who hears in \
+PlantCraft's Messages and by email, gathered into one message, with hours, escalation and \
+silences. Alarms is every alarm in one table, where operators acknowledge and shelve, each with \
+its history and the messages sent; alarm performance against ISA-18.2 and EEMUA 191 is on the \
+Overview."""
+publisher = "PlantCraft"
+license = "Apache-2.0"
+homepage = ""
+mark = "alarmcraft"
+
+[runtime]
+prefix = "/alarm/"
+port = 8110
+uid = 10009
+health = "/healthz"
+image = "alarmcraft"
+
+[requires]
+processcraft_api = ">=1.0"
+sdk = "0.77.0"
+asset_types = []        # any signal, of any asset, can carry alarms
+roles = {}
+
+[permissions]
+read = ["assets", "signals", "series", "results", "events", "schedules", "people"]
+write = ["audit", "results", "events", "runs", "schedules", "notifications"]
+plant_write = false
+outbound = []
+
+[publishes]
+results = [
+    { kind = "alarm_state", subject = "asset" },
+    { kind = "alarm_state", subject = "signal" },
+]
+
+# What Alarms writes (PlantCraft docs/app-standard.md, section 6): each alarm's life, for the
+# asset's timeline and the audit. Alarms never judges its own events.
+[[publishes.events]]
+name = "alarm.raised"
+title = "Alarm raised"
+description = "An alarm of a rule became active. Key: alarm:<alarm id>."
+severity = "warning"
+category = "process"
+phase = "interval"
+payload = { alarm = "Alarm id", rule = "Rule id", priority = "critical, high, medium or low", condition = "The rule in words", value = "Value", at = "When (UTC)" }
+
+[[publishes.events]]
+name = "alarm.cleared"
+title = "Alarm cleared"
+description = "The alarm returned to normal. Same key as when it was raised."
+severity = "ok"
+category = "process"
+phase = "interval"
+payload = { alarm = "Alarm id", rule = "Rule id", priority = "Priority", condition = "The rule in words", value = "Value", at = "When (UTC)" }
+
+[[publishes.events]]
+name = "flood.started"
+title = "Alarm flood"
+description = "More alarms reached one person or group than the alarm philosophy allows within its flood window; they got one flood message instead."
+severity = "warning"
+category = "system"
+payload = { recipient = "user:<name> or group:<id>", alarms = "Alarms in the window", minutes = "The flood window" }
+
+# The assistant's works on Alarms' pages (PlantCraft docs/assistant.md, "What each page offers"):
+# each page names itself in useAssistantPage({page: "alarmcraft:<id>"}). Creating an action from
+# an alarm is PlantCraft's work, with its route.
+[[contributes.assistant.works]]
+id = "new-rule"
+pages = ["rules", "active", "alarm", "rule"]
+kind = "create"
+level = "editor"
+title = "Help me create an alarm"
+hint = "Say what to watch; the assistant proposes the rule, you create it"
+instructions = """Help the person create an alarm rule on one signal (a Simple rule; rules over many assets, events, Blocks or Python are written in the rule editor): which signal (find it with search_signals; read its last week with read_series to see its usual range), the kind (high_high, high, low, low_low, or no_data when values stop), the limit in the signal's unit, a deadband and an on-delay that keep it from chattering (from how the signal moves), the priority, and the cause, consequence and corrective action the operator reads. Check on the rules page (the view section) that no rule already watches it, and say so if one does. When the page is about an alarm or a signal, start from it. Then propose it."""
+object = "rule"
+create = "/alarm/api/rules/from-signal"
+open = "/alarm/rules/{id}"
+[[contributes.assistant.works.fields]]
+key = "name"
+title = "Name"
+required = true
+max_length = 120
+[[contributes.assistant.works.fields]]
+key = "signal_id"
+title = "Signal"
+required = true
+max_length = 300
+help = "The signal's id, as search_signals gives it"
+[[contributes.assistant.works.fields]]
+key = "kind"
+title = "Kind"
+type = "choice"
+options = ["high_high", "high", "low", "low_low", "no_data"]
+required = true
+[[contributes.assistant.works.fields]]
+key = "limit"
+title = "Limit"
+type = "number"
+[[contributes.assistant.works.fields]]
+key = "unit"
+title = "Unit"
+max_length = 40
+[[contributes.assistant.works.fields]]
+key = "deadband"
+title = "Deadband"
+type = "number"
+min = 0
+[[contributes.assistant.works.fields]]
+key = "on_delay_seconds"
+title = "On-delay (s)"
+type = "number"
+min = 0
+[[contributes.assistant.works.fields]]
+key = "priority"
+title = "Priority"
+type = "choice"
+options = ["critical", "high", "medium", "low"]
+[[contributes.assistant.works.fields]]
+key = "cause"
+title = "Cause"
+type = "long_text"
+max_length = 2000
+[[contributes.assistant.works.fields]]
+key = "consequence"
+title = "Consequence"
+type = "long_text"
+max_length = 2000
+[[contributes.assistant.works.fields]]
+key = "action"
+title = "Corrective action"
+type = "long_text"
+max_length = 2000
+
+[[contributes.assistant.works]]
+id = "active-first"
+pages = ["active"]
+title = "Which alarms should I handle first?"
+hint = "The active alarms ranked, with what to do"
+instructions = """Rank the active alarms (the view section lists them with priority, condition and whether they are acknowledged): which to handle first and why, which look like one upset seen by several alarms, and what the operator should do for the first ones (read their signals with signal_value when it helps)."""
+
+[[contributes.assistant.works]]
+id = "active-upset"
+pages = ["active"]
+title = "Are these one upset?"
+hint = "Alarms that share a cause"
+instructions = """Look at the active alarms (the view section) and their assets (get_asset): group the ones that look like one upset seen by several alarms, say which alarm came first in each group and what likely started it."""
+
+[[contributes.assistant.works]]
+id = "alarm-why"
+pages = ["alarm"]
+title = "Why did this alarm fire?"
+hint = "What its signal did, and whether the limit fits"
+instructions = """Explain why this alarm (the subject section; the page's facts give its condition, priority, last occurrences and the period shown) fired: read the value its rule reads (the facts' value, when the rule reads one) around the latest occurrence with read_series and draw it with show_chart, and read the events and the apps' latest results about its subject with latest_results. Say what happened before and after the rule's condition held, whether it is noise, a condition too tight or a real change in the process, and how often it fired in the period. End with one check to make. When the plant's documents can be searched (a tool doccraft_search_documents is offered), also search them for this alarm's asset and cite what its control narrative, troubleshooting guide, maintenance history and incident reports say about its known causes, with document and page."""
+
+[[contributes.assistant.works]]
+id = "alarm-plot"
+pages = ["alarm"]
+title = "Plot its value over the last day"
+hint = "With the moments its condition held"
+instructions = """Draw the value the alarm's rule reads (the facts' value) over the last 24 hours with read_series and show_chart, then say when the rule's condition held and for how long. When the rule reads events only, list the events about its subject instead."""
+
+[[contributes.assistant.works]]
+id = "alarm-operator"
+pages = ["alarm"]
+title = "What should the operator do?"
+hint = "Short steps, from its cause and the signal now"
+instructions = """From the alarm's cause, consequence and corrective action (the page's facts and text) and the value its rule reads now (signal_value), say what the operator should do, in short steps."""
+
+[[contributes.assistant.works]]
+id = "alarm-tune"
+pages = ["alarm", "rule"]
+title = "Is it well set?"
+hint = "Its condition, deadband and delays against how the value moves"
+instructions = """Read the value the rule reads over the last weeks (read_series) and how often the alarm fired (the facts, the journal): say whether its condition (limit, deadband, for at least, clear after) fits how the value moves, and suggest values that keep the real events and drop the chatter. The person changes the rule themselves."""
+
+[[contributes.assistant.works]]
+id = "alarm-occurrence"
+pages = ["alarm"]
+title = "Explain one occurrence"
+hint = "What happened before and after"
+ask = "When was it? (date and time)"
+instructions = """Read the value the rule reads and the events about the alarm's subject around the time the person gives (read_series, show_chart) and explain what happened before and after the alarm was raised."""
+
+[[contributes.assistant.works]]
+id = "performance-explain"
+pages = ["performance"]
+title = "How is the alarm load against the targets?"
+hint = "ISA-18.2 and EEMUA 191, the bad actors"
+instructions = """Explain the alarm load of the period (the page's facts and view: totals, the most frequent alarms, chattering and stale ones, the priority mix against its targets) against the ISA-18.2 and EEMUA 191 targets, and name the few alarms whose fix would cut the load most, with the fix to consider for each (a deadband, a delay, a limit, a shelve)."""
+
+[[contributes.assistant.works]]
+id = "performance-fix"
+pages = ["performance"]
+title = "Which alarms should we fix first?"
+hint = "The few that cut the load most"
+context = ["top", "stale", "total", "period"]
+instructions = """From the most frequent, chattering and stale alarms of the period (the view section), name the five whose fix would cut the load most, each with the fix to consider (a deadband, a delay, a limit, a shelve, retire it) and why."""
+
+[[contributes.assistant.works]]
+id = "journal-shift"
+pages = ["journal"]
+title = "What happened in this period?"
+hint = "A short account for the shift handover"
+instructions = """From the journal entries of the period (the view section), write a short account for the shift handover: what was raised and cleared, what is still open, who acknowledged or shelved what, and anything unusual. Most important first."""
+
+[[contributes.assistant.works]]
+id = "journal-find"
+pages = ["journal"]
+title = "Find in the journal"
+hint = "An alarm, a person, a moment"
+ask = "What are you looking for?"
+instructions = """Find in the journal entries on screen (the view section) what the person asks: list the matching entries with time, alarm and who acted, and say how to filter the page for them."""
+
+[[contributes.assistant.works]]
+id = "rules-gaps"
+pages = ["rules"]
+title = "What is not alarmed yet?"
+hint = "Important signals with no rule"
+instructions = """Compare the plant's important signals (search_assets, search_signals: pressures, levels, temperatures of the main equipment) with the rules on the page (the view section): name the ones no rule watches, the most important first, with the kind of alarm each would need."""
+
+[[contributes.assistant.works]]
+id = "rule-explain"
+pages = ["rule"]
+title = "Explain this rule"
+hint = "What it watches, when it raises, who hears"
+instructions = """Explain the rule on this page from its facts: what it watches, when it raises and clears (limit, deadband, delays), its priority, who answers for it and who is told, and how many alarms it has now."""
+
+[[contributes.assistant.offers]]
+work = "new-action"
+pages = ["alarm", "active"]
+
+[consumes]
+results = []
+
+[backup]                            # its data folder in the suite's backup (PlantCraft docs/operations.md)
+sqlite = ["alarmcraft.sqlite3"]     # alarms, occurrences, journal, policies, silences, outbox
+skip = ["logs/"]
+
+[suggests]
+asset_types = []
+
+# The widgets of Alarms' Overview and of Desk's Today (PlantCraft docs/widgets.md), served by
+# api/routers/widgets.py. "Alarms: " is dropped on Alarms' own Overview.
+[[contributes.widgets]]
+id = "active"
+title = "Alarms: active"
+description = "How many alarms are active, and how many still wait for acknowledgement."
+size = "s"
+kind = "number"
+default = true
+
+[[contributes.widgets]]
+id = "priorities"
+title = "Alarms: by priority"
+description = "How many alarms need action (unacknowledged, or acknowledged and still active), by priority."
+size = "s"
+kind = "split"
+sizes = [{ w = 3, h = 1 }, { w = 4, h = 2 }, { w = 6, h = 2 }]
+
+[[contributes.widgets]]
+id = "summary"
+title = "Alarms: alarm summary"
+description = "The alarms that need action, in order: unacknowledged first, then by priority (critical, high, medium, low), then the newest. Click one to open it."
+size = "m"
+kind = "list"
+
+[[contributes.widgets]]
+id = "raised"
+title = "Alarms: raised in 24 h"
+description = "How many alarms were raised in the last 24 hours, against the ISA-18.2 load."
+size = "s"
+kind = "number"
+
+[[contributes.widgets]]
+id = "rate"
+title = "Alarms: alarm rate"
+description = "Alarms raised in each hour of the last 24 hours, stacked by priority. The dashed line is the target per operator (ISA-18.2: about 6 an hour)."
+size = "m"
+kind = "columns"
+sizes = [{ w = 4, h = 2 }, { w = 8, h = 2 }, { w = 12, h = 3 }]
+
+[[contributes.widgets]]
+id = "performance"
+title = "Alarms: performance"
+description = "The last 24 hours against the ISA-18.2 alarm management targets, the ones out of target first. Hover each figure for what it means."
+size = "m"
+kind = "facts"
+sizes = [{ w = 4, h = 3 }, { w = 6, h = 3 }, { w = 12, h = 2 }]
+
+[[contributes.widgets]]
+id = "bad-actors"
+title = "Alarms: most frequent"
+description = "The 10 alarms raised most often in the last 7 days, most raised first, with their share of all alarms: the bad actors to fix first."
+size = "m"
+kind = "bars"
+sizes = [{ w = 4, h = 2 }, { w = 6, h = 3 }]
+
+# What notebooks read with pc.app("alarms") (PlantCraft docs/en/notebooks.md), read only.
+[[contributes.objects]]
+kind = "rule"
+title = "Rules"
+description = "Each rule with its sentence, where it applies and how many of its alarms are active."
+
+[[contributes.objects]]
+kind = "alarm"
+title = "Alarms"
+description = "Each alarm with its status, and its occurrences of the last 30 days."
+
+# Its examples in Notebooks (PlantCraft docs/en/notebooks.md): Examples/Alarms.
+[[contributes.start]]
+# A new plant's first step (Assets › Import, once an import is applied): POST api/start/<id>.
+id = "draft-rules"
+title = "Draft the alarm rules"
+description = "For each unit of the import, a rule for a loop in poor shape and one for a signal without data, both switched off until someone reviews them."
+open = "/alarm/rules"
+
+[contributes.notebooks]
+examples = true

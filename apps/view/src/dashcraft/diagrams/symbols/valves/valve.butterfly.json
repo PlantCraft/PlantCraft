@@ -1,0 +1,62 @@
+{
+  "id": "valve.butterfly",
+  "title": "Butterfly valve",
+  "category": "valves",
+  "w": 80,
+  "h": 40,
+  "svg": "<line x1=\"0\" y1=\"20\" x2=\"20\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"20\" x2=\"80\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"20\" y1=\"6\" x2=\"20\" y2=\"34\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"6\" x2=\"60\" y2=\"34\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><ellipse class=\"pc-state pc-run\" cx=\"40\" cy=\"20\" rx=\"5\" ry=\"14\" transform=\"rotate(35 40 20)\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 20,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 80,
+      "y": 20,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 44,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "open"
+  ],
+  "keywords": [
+    "valve",
+    "manual",
+    "block",
+    "butterfly",
+    "damper",
+    "quarter turn"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

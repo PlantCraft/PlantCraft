@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alarmcraft"
+version = "0.5.0"
+description = "PlantCraft Alarms: alarm limits, the alarm summary and alarm performance (ISA-18.2), for the PlantCraft suite"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11"
+dependencies = [
+    # Not on any index: install it from vendor/ first
+    # (pip install --no-index --find-links vendor plantcraft-sdk==0.77.0).
+    "plantcraft-sdk==0.77.0",
+    "fastapi>=0.116,<1",
+    "httpx>=0.27,<1",
+    "pydantic>=2.7,<3",
+    "uvicorn>=0.35,<1",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff==0.17.1",
+]
+# Browser journeys (tests/e2e, `make e2e`); test-only, never in the image.
+e2e = [
+    "playwright==1.64.0",
+]
+
+[project.urls]
+Repository = "https://github.com/PlantCraft/PlantCraft/tree/main/apps/alarms"
+
+[project.scripts]
+alarmcraft = "alarmcraft.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["alarmcraft*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-p no:cacheprovider"
+filterwarnings = [
+    # The SDK's FakePlantCraft hands out Starlette's TestClient.
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
+
+# The test time budget (PlantCraft docs/testing.md); about twice the measured run.
+[tool.plantcraft.tests]
+test_seconds = 10
+slow_seconds = 120
+suite_seconds = 90  # GitHub's 2-core runners, about 1.5x the Mac mini (2026-10-25)
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "."]
+extend-exclude = ["frontend", "vendor"]
+
+[tool.ruff.lint]
+# Keep the gate small: real errors (pyflakes) and import order.
+select = ["F", "I", "DTZ"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["alarmcraft"]
+known-third-party = ["plantcraft_sdk"]

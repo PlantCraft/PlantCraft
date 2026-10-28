@@ -1,0 +1,51 @@
+{
+  "id": "connector.source",
+  "title": "Stream source",
+  "category": "piping",
+  "w": 60,
+  "h": 40,
+  "svg": "<line x1=\"40\" y1=\"20\" x2=\"60\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state\" x=\"0\" y=\"8\" width=\"40\" height=\"24\" rx=\"12\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "outlet",
+      "x": 60,
+      "y": 20,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "label",
+      "x": 20,
+      "y": 20,
+      "align": "middle",
+      "baseline": "middle"
+    },
+    {
+      "id": "tag",
+      "x": 20,
+      "y": 34,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 20,
+      "y": 6,
+      "align": "middle",
+      "baseline": "bottom"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "source",
+    "battery limit",
+    "feed",
+    "supply",
+    "boundary"
+  ],
+  "standard": "ISO 10628-2",
+  "description": "Where a stream enters the diagram."
+}

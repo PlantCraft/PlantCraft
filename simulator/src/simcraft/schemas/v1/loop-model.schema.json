@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/loop-model.schema.json",
+  "title": "Process Plant loop model v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["loop_id", "control_structure", "controller_action", "default_mode", "setpoint_policy", "final_element_policy", "parameters"],
+  "properties": {
+    "loop_id": {"type": "string", "pattern": "^[A-Z]+-[0-9]+$"},
+    "control_structure": {"type": "string", "minLength": 1},
+    "controller_action": {"const": "reverse"},
+    "default_mode": {"enum": ["AUTO", "CAS", "REMOTE"]},
+    "setpoint_policy": {"enum": ["local", "inventory", "cascade", "supervisory_bias", "ratio", "protective_selector", "plant_master", "three_element"]},
+    "final_element_policy": {"enum": ["single", "split_range"]},
+    "parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["process_gain", "time_constant_seconds", "dead_time_seconds", "controller_gain", "integral_time_seconds", "actuator_time_seconds", "noise_standard_deviation", "actuator_rate_limit_per_second", "integral_lower_limit", "integral_upper_limit", "stiction_band", "backlash_band", "lower_limit", "upper_limit"],
+      "properties": {
+        "process_gain": {"type": "number", "exclusiveMinimum": 0},
+        "time_constant_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "dead_time_seconds": {"type": "number", "minimum": 0},
+        "controller_gain": {"type": "number", "exclusiveMinimum": 0},
+        "integral_time_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "actuator_time_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "noise_standard_deviation": {"type": "number", "minimum": 0},
+        "actuator_rate_limit_per_second": {"type": "number", "exclusiveMinimum": 0},
+        "integral_lower_limit": {"type": "number"},
+        "integral_upper_limit": {"type": "number"},
+        "stiction_band": {"type": "number", "minimum": 0},
+        "backlash_band": {"type": "number", "minimum": 0},
+        "lower_limit": {"type": "number"},
+        "upper_limit": {"type": "number"}
+      }
+    }
+  }
+}

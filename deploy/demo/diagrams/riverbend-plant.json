@@ -1,0 +1,11102 @@
+{
+ "name": "Riverbend plant",
+ "description": "Riverbend Refinery on one page, unit by unit: zoom in with the wheel or a double click, drag to move.",
+ "folder_id": "",
+ "tags": [
+  "demo",
+  "Riverbend Refinery"
+ ],
+ "width": 4800,
+ "height": 2700,
+ "grid": 10,
+ "refresh_seconds": 5,
+ "default_window": "1h",
+ "parts": [
+  {
+   "id": "preheat",
+   "name": "Preheat and furnace",
+   "area": "0,0,1600,900"
+  },
+  {
+   "id": "column",
+   "name": "Column",
+   "area": "1600,0,1600,900"
+  },
+  {
+   "id": "reactor",
+   "name": "Reactor loop",
+   "area": "3200,0,1600,900"
+  },
+  {
+   "id": "separation",
+   "name": "Separation",
+   "area": "0,900,1600,900"
+  },
+  {
+   "id": "amine",
+   "name": "Amine and sulfur",
+   "area": "1600,900,1600,900"
+  },
+  {
+   "id": "effluent",
+   "name": "Effluent",
+   "area": "3200,900,1600,900"
+  },
+  {
+   "id": "utilities",
+   "name": "Utilities",
+   "area": "1600,1800,1600,900"
+  }
+ ],
+ "elements": [
+  {
+   "type": "text",
+   "id": "preh-t-1",
+   "x": 800,
+   "y": 34,
+   "text": "Crude feed, preheat and furnace",
+   "size": 24,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-2",
+   "x": 800,
+   "y": 58,
+   "text": "U-100 Crude distillation unit: Feed, Heat exchange, Furnaces",
+   "size": 13,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "preh-TK-1001",
+   "symbol": "vessel.tank_cone_roof",
+   "x": 135.0,
+   "y": 309.0,
+   "w": 130.0,
+   "h": 182.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "TK-1001 Crude charge tank",
+   "label_position": "above",
+   "asset_id": "TK-1001",
+   "link": {
+    "kind": "asset",
+    "target": "TK-1001"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-SRC-crude",
+   "symbol": "connector.source",
+   "x": 30,
+   "y": 354.0,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "preh-line-1",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "preh-SRC-crude",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-TK-1001",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-3",
+   "x": 119.0,
+   "y": 367.0,
+   "text": "Crude",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "preh-P-1001",
+   "symbol": "pump.centrifugal",
+   "x": 318.0,
+   "y": 468.0,
+   "w": 64.0,
+   "h": 64.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "P-1001 Charge pump",
+   "label_position": "below",
+   "asset_id": "P-1001",
+   "link": {
+    "kind": "asset",
+    "target": "P-1001"
+   }
+  },
+  {
+   "type": "line",
+   "id": "preh-line-2",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     285.0,
+     465.0
+    ],
+    [
+     285.0,
+     500.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "preh-TK-1001",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-P-1001",
+    "port": "suction"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-FV-1001",
+   "symbol": "valve.control",
+   "x": 440,
+   "y": 454.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1001",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1001"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1001",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "preh-line-3",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-P-1001",
+    "port": "discharge"
+   },
+   "end": {
+    "element": "preh-FV-1001",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-ctl-FIC-1001",
+   "symbol": "instrument.bubble",
+   "x": 430.0,
+   "y": 364.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1001",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1001"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1001",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-4",
+   "x": 460,
+   "y": 392.0,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-5",
+   "x": 460,
+   "y": 406.0,
+   "text": "1001",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1001-pv",
+   "x": 488,
+   "y": 356.0,
+   "item": {
+    "asset_id": "FIC-1001",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1001"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1001-sp",
+   "x": 488,
+   "y": 381.0,
+   "item": {
+    "asset_id": "FIC-1001",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1001"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1001-op",
+   "x": 488,
+   "y": 405.0,
+   "item": {
+    "asset_id": "FIC-1001",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1001"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1001-mode",
+   "x": 408,
+   "y": 416.0,
+   "item": {
+    "asset_id": "FIC-1001",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "preh-line-4",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-ctl-FIC-1001",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "preh-FV-1001",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-E-1009",
+   "symbol": "exchanger.generic",
+   "x": 560.0,
+   "y": 428.0,
+   "w": 112.0,
+   "h": 112.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "E-1009",
+   "link": {
+    "kind": "asset",
+    "target": "E-1009"
+   }
+  },
+  {
+   "type": "line",
+   "id": "preh-line-5",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "preh-FV-1001",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-E-1009",
+    "port": "tube_in"
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-6",
+   "x": 632,
+   "y": 528.0,
+   "text": "E-1009",
+   "size": 12,
+   "align": "start",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-7",
+   "x": 632,
+   "y": 544.0,
+   "text": "Feed/product exchanger",
+   "size": 12,
+   "align": "start",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "preh-TT-1009",
+   "symbol": "instrument.thermowell",
+   "x": 740,
+   "y": 454.0,
+   "w": 40,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "preh-line-6",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-E-1009",
+    "port": "tube_out"
+   },
+   "end": {
+    "element": "preh-TT-1009",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-ctl-TIC-1009",
+   "symbol": "instrument.bubble",
+   "x": 730.0,
+   "y": 364.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1009",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1009"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1009",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-8",
+   "x": 760,
+   "y": 392.0,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-9",
+   "x": 760,
+   "y": 406.0,
+   "text": "1009",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1009-pv",
+   "x": 788,
+   "y": 356.0,
+   "item": {
+    "asset_id": "TIC-1009",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1009"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1009-sp",
+   "x": 788,
+   "y": 381.0,
+   "item": {
+    "asset_id": "TIC-1009",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1009"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1009-op",
+   "x": 788,
+   "y": 405.0,
+   "item": {
+    "asset_id": "TIC-1009",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1009"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1009-mode",
+   "x": 708,
+   "y": 416.0,
+   "item": {
+    "asset_id": "TIC-1009",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "preh-line-7",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-ctl-TIC-1009",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "preh-TT-1009",
+    "port": "tap"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-FV-1007",
+   "symbol": "valve.control",
+   "x": 940,
+   "y": 454.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1007",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1007"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1007",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "preh-line-8",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-TT-1009",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-FV-1007",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-ctl-FIC-1007",
+   "symbol": "instrument.bubble",
+   "x": 930.0,
+   "y": 364.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1007",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1007"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1007",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-10",
+   "x": 960,
+   "y": 392.0,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-11",
+   "x": 960,
+   "y": 406.0,
+   "text": "1007",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1007-pv",
+   "x": 988,
+   "y": 356.0,
+   "item": {
+    "asset_id": "FIC-1007",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1007"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1007-sp",
+   "x": 988,
+   "y": 381.0,
+   "item": {
+    "asset_id": "FIC-1007",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1007"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1007-op",
+   "x": 988,
+   "y": 405.0,
+   "item": {
+    "asset_id": "FIC-1007",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1007"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1007-mode",
+   "x": 908,
+   "y": 416.0,
+   "item": {
+    "asset_id": "FIC-1007",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "preh-line-9",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-ctl-FIC-1007",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "preh-FV-1007",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-F-1104",
+   "symbol": "heater.furnace",
+   "x": 1110.0,
+   "y": 304.0,
+   "w": 240.0,
+   "h": 340.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "F-1104 Atmospheric furnace",
+   "label_position": "above",
+   "asset_id": "F-1104",
+   "link": {
+    "kind": "asset",
+    "target": "F-1104"
+   },
+   "running": {
+    "item": {
+     "asset_id": "FIC-1210",
+     "role": "pv"
+    },
+    "above": 1
+   }
+  },
+  {
+   "type": "line",
+   "id": "preh-line-10",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "preh-FV-1007",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-F-1104",
+    "port": "coil_in"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-ctl-TIC-1104",
+   "symbol": "instrument.bubble",
+   "x": 1400.0,
+   "y": 374.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1104",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1104"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1104",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-12",
+   "x": 1430,
+   "y": 402.0,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-13",
+   "x": 1430,
+   "y": 416.0,
+   "text": "1104",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1104-pv",
+   "x": 1458,
+   "y": 366.0,
+   "item": {
+    "asset_id": "TIC-1104",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1104"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1104-sp",
+   "x": 1458,
+   "y": 391.0,
+   "item": {
+    "asset_id": "TIC-1104",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1104"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1104-op",
+   "x": 1458,
+   "y": 415.0,
+   "item": {
+    "asset_id": "TIC-1104",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1104"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1104-mode",
+   "x": 1378,
+   "y": 426.0,
+   "item": {
+    "asset_id": "TIC-1104",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "preh-line-11",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     1283.0,
+     404.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "preh-ctl-TIC-1104",
+    "port": "left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-TT-1209",
+   "symbol": "instrument.thermowell",
+   "x": 1380,
+   "y": 534.0,
+   "w": 40,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "preh-line-12",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-F-1104",
+    "port": "coil_out"
+   },
+   "end": {
+    "element": "preh-TT-1209",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-ctl-TIC-1209",
+   "symbol": "instrument.bubble",
+   "x": 1370.0,
+   "y": 454.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1209",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1209"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1209",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-14",
+   "x": 1400,
+   "y": 482.0,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-15",
+   "x": 1400,
+   "y": 496.0,
+   "text": "1209",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1209-pv",
+   "x": 1428,
+   "y": 446.0,
+   "item": {
+    "asset_id": "TIC-1209",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1209"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1209-sp",
+   "x": 1428,
+   "y": 471.0,
+   "item": {
+    "asset_id": "TIC-1209",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1209"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1209-op",
+   "x": 1428,
+   "y": 495.0,
+   "item": {
+    "asset_id": "TIC-1209",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1209"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1209-mode",
+   "x": 1348,
+   "y": 506.0,
+   "item": {
+    "asset_id": "TIC-1209",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "preh-line-13",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-ctl-TIC-1209",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "preh-TT-1209",
+    "port": "tap"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-go-1",
+   "symbol": "connector.offpage",
+   "x": 1460.0,
+   "y": 534.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Column",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,0,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "preh-line-14",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "preh-TT-1209",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-go-1",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-16",
+   "x": 1520,
+   "y": 614.0,
+   "text": "To C-1101",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "preh-go-2",
+   "symbol": "connector.offpage_in",
+   "x": 1460.0,
+   "y": 730.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "Utilities",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,1800,1600,900"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-FV-1210",
+   "symbol": "valve.control",
+   "x": 1320,
+   "y": 730.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1210",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1210"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1210",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "preh-line-15",
+   "kind": "process",
+   "medium": "fuel gas",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-go-2",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-FV-1210",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-17",
+   "x": 1420,
+   "y": 752,
+   "text": "Fuel gas",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "line",
+   "id": "preh-line-16",
+   "kind": "process",
+   "medium": "fuel gas",
+   "points": [
+    [
+     1230.0,
+     760.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "preh-FV-1210",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-F-1104",
+    "port": "fuel"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-ctl-FIC-1210",
+   "symbol": "instrument.bubble",
+   "x": 1310.0,
+   "y": 640.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1210",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1210"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1210",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-18",
+   "x": 1340,
+   "y": 668,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-19",
+   "x": 1340,
+   "y": 682,
+   "text": "1210",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1210-pv",
+   "x": 1368,
+   "y": 632,
+   "item": {
+    "asset_id": "FIC-1210",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1210"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1210-sp",
+   "x": 1368,
+   "y": 657,
+   "item": {
+    "asset_id": "FIC-1210",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1210"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1210-op",
+   "x": 1368,
+   "y": 681,
+   "item": {
+    "asset_id": "FIC-1210",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1210"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1210-mode",
+   "x": 1288,
+   "y": 692,
+   "item": {
+    "asset_id": "FIC-1210",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "preh-line-17",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-ctl-FIC-1210",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "preh-FV-1210",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-go-3",
+   "symbol": "connector.offpage_in",
+   "x": 1460.0,
+   "y": 170.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "Column",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,0,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "preh-line-18",
+   "kind": "process",
+   "medium": "product",
+   "points": [
+    [
+     616.0,
+     200.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "preh-go-3",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-E-1009",
+    "port": "shell_in"
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-20",
+   "x": 1060,
+   "y": 192,
+   "text": "Hot product from flash drum D-1211",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "preh-TT-1111",
+   "symbol": "instrument.thermowell",
+   "x": 500,
+   "y": 710,
+   "w": 40,
+   "h": 40,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "preh-line-19",
+   "kind": "process",
+   "medium": "product",
+   "points": [
+    [
+     616.0,
+     740
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "preh-E-1009",
+    "port": "shell_out"
+   },
+   "end": {
+    "element": "preh-TT-1111",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-ctl-TIC-1111",
+   "symbol": "instrument.bubble",
+   "x": 490.0,
+   "y": 620.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1111",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1111"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1111",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-21",
+   "x": 520,
+   "y": 648,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-22",
+   "x": 520,
+   "y": 662,
+   "text": "1111",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1111-pv",
+   "x": 548,
+   "y": 612,
+   "item": {
+    "asset_id": "TIC-1111",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1111"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1111-sp",
+   "x": 548,
+   "y": 637,
+   "item": {
+    "asset_id": "TIC-1111",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1111"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1111-op",
+   "x": 548,
+   "y": 661,
+   "item": {
+    "asset_id": "TIC-1111",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1111"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-TIC-1111-mode",
+   "x": 468,
+   "y": 672,
+   "item": {
+    "asset_id": "TIC-1111",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "preh-line-20",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-ctl-TIC-1111",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "preh-TT-1111",
+    "port": "tap"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-FV-1112",
+   "symbol": "valve.control",
+   "x": 280,
+   "y": 710.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1112",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1112"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1112",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "preh-line-21",
+   "kind": "process",
+   "medium": "product",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-TT-1111",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-FV-1112",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-ctl-FIC-1112",
+   "symbol": "instrument.bubble",
+   "x": 270.0,
+   "y": 620.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1112",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1112"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1112",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-23",
+   "x": 300,
+   "y": 648,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "preh-t-24",
+   "x": 300,
+   "y": 662,
+   "text": "1112",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1112-pv",
+   "x": 328,
+   "y": 612,
+   "item": {
+    "asset_id": "FIC-1112",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1112"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1112-sp",
+   "x": 328,
+   "y": 637,
+   "item": {
+    "asset_id": "FIC-1112",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1112"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1112-op",
+   "x": 328,
+   "y": 661,
+   "item": {
+    "asset_id": "FIC-1112",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1112"
+   }
+  },
+  {
+   "type": "value",
+   "id": "preh-FIC-1112-mode",
+   "x": 248,
+   "y": 672,
+   "item": {
+    "asset_id": "FIC-1112",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "preh-line-22",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "preh-ctl-FIC-1112",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "preh-FV-1112",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "preh-SNK-rundown",
+   "symbol": "connector.sink",
+   "x": 0,
+   "y": 720,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "preh-line-23",
+   "kind": "process",
+   "medium": "product",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "preh-FV-1112",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "preh-SNK-rundown",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "preh-t-25",
+   "x": 160,
+   "y": 732,
+   "text": "Product to storage",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "text",
+   "id": "colu-t-1",
+   "x": 2400,
+   "y": 34,
+   "text": "Atmospheric column",
+   "size": 24,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-2",
+   "x": 2400,
+   "y": 58,
+   "text": "U-100 Crude distillation unit: Distillation",
+   "size": 13,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "colu-C-1101",
+   "symbol": "column.distillation",
+   "x": 2144.0,
+   "y": 100.0,
+   "w": 192.0,
+   "h": 624.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "C-1101",
+   "link": {
+    "kind": "asset",
+    "target": "C-1101"
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-3",
+   "x": 2308,
+   "y": 160,
+   "text": "C-1101",
+   "size": 12,
+   "align": "start",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-4",
+   "x": 2308,
+   "y": 176,
+   "text": "Atmospheric column",
+   "size": 12,
+   "align": "start",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "colu-go-1",
+   "symbol": "connector.offpage_in",
+   "x": 1640.0,
+   "y": 382.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Furnace",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "0,0,1600,900"
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-5",
+   "x": 1700,
+   "y": 458.0,
+   "text": "From F-1104",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "colu-FV-1101",
+   "symbol": "valve.control",
+   "x": 1940,
+   "y": 382.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1101",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1101"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1101",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-1",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "colu-go-1",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "colu-FV-1101",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-2",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "colu-FV-1101",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "colu-C-1101",
+    "port": "feed"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-ctl-FIC-1101",
+   "symbol": "instrument.bubble",
+   "x": 1930.0,
+   "y": 292.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1101",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1101"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1101",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-6",
+   "x": 1960,
+   "y": 320.0,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-7",
+   "x": 1960,
+   "y": 334.0,
+   "text": "1101",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1101-pv",
+   "x": 1988,
+   "y": 284.0,
+   "item": {
+    "asset_id": "FIC-1101",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1101"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1101-sp",
+   "x": 1988,
+   "y": 309.0,
+   "item": {
+    "asset_id": "FIC-1101",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1101"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1101-op",
+   "x": 1988,
+   "y": 333.0,
+   "item": {
+    "asset_id": "FIC-1101",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1101"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1101-mode",
+   "x": 1908,
+   "y": 344.0,
+   "item": {
+    "asset_id": "FIC-1101",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "colu-line-3",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "colu-ctl-FIC-1101",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "colu-FV-1101",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-ctl-TIC-1213",
+   "symbol": "instrument.bubble",
+   "x": 2040.0,
+   "y": 170.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1213",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1213"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1213",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-8",
+   "x": 2070,
+   "y": 198,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-9",
+   "x": 2070,
+   "y": 212,
+   "text": "1213",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "colu-TIC-1213-pv",
+   "x": 1944.2,
+   "y": 162,
+   "item": {
+    "asset_id": "TIC-1213",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1213"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-TIC-1213-sp",
+   "x": 1957.4,
+   "y": 187,
+   "item": {
+    "asset_id": "TIC-1213",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1213"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-TIC-1213-op",
+   "x": 1964.0,
+   "y": 211,
+   "item": {
+    "asset_id": "TIC-1213",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1213"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-TIC-1213-mode",
+   "x": 2086,
+   "y": 222,
+   "item": {
+    "asset_id": "TIC-1213",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "colu-line-4",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     2192,
+     200
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "colu-ctl-TIC-1213",
+    "port": "right"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-E-1101C",
+   "symbol": "exchanger.air_cooler",
+   "x": 2420.0,
+   "y": 96.0,
+   "w": 192.0,
+   "h": 108.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Overhead condenser",
+   "label_position": "below"
+  },
+  {
+   "type": "line",
+   "id": "colu-line-5",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     2240.0,
+     120.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "colu-C-1101",
+    "port": "overhead"
+   },
+   "end": {
+    "element": "colu-E-1101C",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-10",
+   "x": 2330,
+   "y": 112,
+   "text": "Overhead vapour",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "colu-D-1106",
+   "symbol": "vessel.horizontal",
+   "x": 2640.0,
+   "y": 220.0,
+   "w": 288.0,
+   "h": 144.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "D-1106",
+   "link": {
+    "kind": "asset",
+    "target": "D-1106"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1106",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-11",
+   "x": 2770,
+   "y": 384,
+   "text": "D-1106",
+   "size": 12,
+   "align": "start",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-12",
+   "x": 2770,
+   "y": 400,
+   "text": "Overhead accumulator",
+   "size": 12,
+   "align": "start",
+   "bold": false
+  },
+  {
+   "type": "line",
+   "id": "colu-line-6",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     2748.0,
+     120.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "colu-E-1101C",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "colu-D-1106",
+    "port": "top_left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-ctl-LIC-1113",
+   "symbol": "instrument.bubble",
+   "x": 2990.0,
+   "y": 240.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1113",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1113"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1113",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-13",
+   "x": 3020,
+   "y": 268,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-14",
+   "x": 3020,
+   "y": 282,
+   "text": "1113",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1113-pv",
+   "x": 3048,
+   "y": 232,
+   "item": {
+    "asset_id": "LIC-1113",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1113"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1113-sp",
+   "x": 3048,
+   "y": 257,
+   "item": {
+    "asset_id": "LIC-1113",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1113"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1113-op",
+   "x": 3048,
+   "y": 281,
+   "item": {
+    "asset_id": "LIC-1113",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1113"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1113-mode",
+   "x": 2968,
+   "y": 292,
+   "item": {
+    "asset_id": "LIC-1113",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "colu-line-7",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     2900,
+     270
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "colu-ctl-LIC-1113",
+    "port": "left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-P-1102",
+   "symbol": "pump.centrifugal",
+   "x": 2528.0,
+   "y": 418.0,
+   "w": 64.0,
+   "h": 64.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "P-1102 Reflux pump",
+   "label_position": "above",
+   "asset_id": "P-1102",
+   "link": {
+    "kind": "asset",
+    "target": "P-1102"
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-8",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     2748.0,
+     450.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "colu-D-1106",
+    "port": "bottom_left"
+   },
+   "end": {
+    "element": "colu-P-1102",
+    "port": "suction"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-FV-1102",
+   "symbol": "valve.control",
+   "x": 2420,
+   "y": 404.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1102",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1102"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1102",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-9",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "colu-P-1102",
+    "port": "discharge"
+   },
+   "end": {
+    "element": "colu-FV-1102",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-10",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     2354.0,
+     434.0
+    ],
+    [
+     2354.0,
+     220.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "colu-FV-1102",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "colu-C-1101",
+    "port": "reflux"
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-15",
+   "x": 2324,
+   "y": 212,
+   "text": "Reflux",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "colu-ctl-FIC-1102",
+   "symbol": "instrument.bubble",
+   "x": 2410.0,
+   "y": 314.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1102",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1102"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1102",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-16",
+   "x": 2440,
+   "y": 342.0,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-17",
+   "x": 2440,
+   "y": 356.0,
+   "text": "1102",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1102-pv",
+   "x": 2468,
+   "y": 306.0,
+   "item": {
+    "asset_id": "FIC-1102",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1102"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1102-sp",
+   "x": 2468,
+   "y": 331.0,
+   "item": {
+    "asset_id": "FIC-1102",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1102"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1102-op",
+   "x": 2468,
+   "y": 355.0,
+   "item": {
+    "asset_id": "FIC-1102",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1102"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1102-mode",
+   "x": 2388,
+   "y": 366.0,
+   "item": {
+    "asset_id": "FIC-1102",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "colu-line-11",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "colu-ctl-FIC-1102",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "colu-FV-1102",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-LV-1106",
+   "symbol": "valve.control",
+   "x": 2940,
+   "y": 490.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1106",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1106"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1106",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-12",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     2500,
+     434.0
+    ],
+    [
+     2500,
+     520
+    ]
+   ],
+   "arrow": "none",
+   "end": {
+    "element": "colu-LV-1106",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-ctl-LIC-1106",
+   "symbol": "instrument.bubble",
+   "x": 2930.0,
+   "y": 400.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1106",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1106"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1106",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-18",
+   "x": 2960,
+   "y": 428,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-19",
+   "x": 2960,
+   "y": 442,
+   "text": "1106",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1106-pv",
+   "x": 2988,
+   "y": 392,
+   "item": {
+    "asset_id": "LIC-1106",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1106"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1106-sp",
+   "x": 2988,
+   "y": 417,
+   "item": {
+    "asset_id": "LIC-1106",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1106"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1106-op",
+   "x": 2988,
+   "y": 441,
+   "item": {
+    "asset_id": "LIC-1106",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1106"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1106-mode",
+   "x": 2908,
+   "y": 452,
+   "item": {
+    "asset_id": "LIC-1106",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "colu-line-13",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "colu-ctl-LIC-1106",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "colu-LV-1106",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-14",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     2960,
+     300
+    ],
+    [
+     2910,
+     300
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "colu-ctl-LIC-1106",
+    "port": "top"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-go-2",
+   "symbol": "connector.offpage",
+   "x": 3060.0,
+   "y": 490.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Reactor",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "3200,0,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-15",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "colu-LV-1106",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "colu-go-2",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-20",
+   "x": 3020,
+   "y": 512,
+   "text": "Naphtha",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "text",
+   "id": "colu-t-21",
+   "x": 3120,
+   "y": 566,
+   "text": "To R-1203",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "colu-FV-1214",
+   "symbol": "valve.control",
+   "x": 2480,
+   "y": 670.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1214",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1214"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1214",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-16",
+   "kind": "process",
+   "medium": "product",
+   "points": [
+    [
+     2320,
+     412
+    ],
+    [
+     2320,
+     700
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "colu-C-1101",
+    "port": "side_draw"
+   },
+   "end": {
+    "element": "colu-FV-1214",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-ctl-FIC-1214",
+   "symbol": "instrument.bubble",
+   "x": 2470.0,
+   "y": 580.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1214",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1214"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1214",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-22",
+   "x": 2500,
+   "y": 608,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-23",
+   "x": 2500,
+   "y": 622,
+   "text": "1214",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1214-pv",
+   "x": 2528,
+   "y": 572,
+   "item": {
+    "asset_id": "FIC-1214",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1214"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1214-sp",
+   "x": 2528,
+   "y": 597,
+   "item": {
+    "asset_id": "FIC-1214",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1214"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1214-op",
+   "x": 2528,
+   "y": 621,
+   "item": {
+    "asset_id": "FIC-1214",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1214"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-FIC-1214-mode",
+   "x": 2448,
+   "y": 632,
+   "item": {
+    "asset_id": "FIC-1214",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "colu-line-17",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "colu-ctl-FIC-1214",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "colu-FV-1214",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-SNK-diesel",
+   "symbol": "connector.sink",
+   "x": 3100,
+   "y": 680,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "colu-line-18",
+   "kind": "process",
+   "medium": "product",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "colu-FV-1214",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "colu-SNK-diesel",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-24",
+   "x": 2800,
+   "y": 692,
+   "text": "Side draw (diesel) to storage",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "colu-D-1211",
+   "symbol": "vessel.vertical",
+   "x": 1940.0,
+   "y": 600.0,
+   "w": 96.0,
+   "h": 192.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "level": {
+    "item": {
+     "asset_id": "LIC-1211",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-25",
+   "x": 2004,
+   "y": 812,
+   "text": "D-1211 Flash drum",
+   "size": 12,
+   "align": "start",
+   "bold": true
+  },
+  {
+   "type": "line",
+   "id": "colu-line-19",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     2240.0,
+     732.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "colu-C-1101",
+    "port": "bottoms"
+   },
+   "end": {
+    "element": "colu-D-1211",
+    "port": "right_lower"
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-26",
+   "x": 2120,
+   "y": 724,
+   "text": "Bottoms",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "line",
+   "id": "colu-line-20",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     1988.0,
+     580.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "colu-D-1211",
+    "port": "top"
+   },
+   "end": {
+    "element": "colu-C-1101",
+    "port": "reboiler_return"
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-27",
+   "x": 2090,
+   "y": 572,
+   "text": "Flashed vapour",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "colu-go-3",
+   "symbol": "connector.offpage",
+   "x": 1640.0,
+   "y": 830.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "Preheat",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "0,0,1600,900"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-LV-1211",
+   "symbol": "valve.control",
+   "x": 1850,
+   "y": 830.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1211",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1211"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1211",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-21",
+   "kind": "process",
+   "medium": "product",
+   "points": [
+    [
+     1988.0,
+     860.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "colu-D-1211",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "colu-LV-1211",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-22",
+   "kind": "process",
+   "medium": "product",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "colu-LV-1211",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "colu-go-3",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "colu-ctl-LIC-1211",
+   "symbol": "instrument.bubble",
+   "x": 1840.0,
+   "y": 730.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1211",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1211"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1211",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "colu-t-28",
+   "x": 1870,
+   "y": 758,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "colu-t-29",
+   "x": 1870,
+   "y": 772,
+   "text": "1211",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1211-pv",
+   "x": 1752.0,
+   "y": 722,
+   "item": {
+    "asset_id": "LIC-1211",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1211"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1211-sp",
+   "x": 1764.0,
+   "y": 747,
+   "item": {
+    "asset_id": "LIC-1211",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1211"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1211-op",
+   "x": 1764.0,
+   "y": 771,
+   "item": {
+    "asset_id": "LIC-1211",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1211"
+   }
+  },
+  {
+   "type": "value",
+   "id": "colu-LIC-1211-mode",
+   "x": 1886,
+   "y": 782,
+   "item": {
+    "asset_id": "LIC-1211",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "colu-line-23",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "colu-ctl-LIC-1211",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "colu-LV-1211",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "line",
+   "id": "colu-line-24",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     1964,
+     760
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "colu-ctl-LIC-1211",
+    "port": "right"
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-1",
+   "x": 4000,
+   "y": 34,
+   "text": "Hydrotreater reactor loop",
+   "size": 24,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-2",
+   "x": 4000,
+   "y": 58,
+   "text": "U-200 Hydrotreating unit: Hydrotreating, Compression, Quality",
+   "size": 13,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "reac-R-1203",
+   "symbol": "reactor.fixed_bed",
+   "x": 3720.0,
+   "y": 220.0,
+   "w": 208.0,
+   "h": 520.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "R-1203",
+   "link": {
+    "kind": "asset",
+    "target": "R-1203"
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-3",
+   "x": 3844,
+   "y": 690,
+   "text": "R-1203",
+   "size": 12,
+   "align": "start",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-4",
+   "x": 3844,
+   "y": 706,
+   "text": "Hydrotreating reactor",
+   "size": 12,
+   "align": "start",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "reac-go-1",
+   "symbol": "connector.offpage_in",
+   "x": 3240.0,
+   "y": 160.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Column",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,0,1600,900"
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-5",
+   "x": 3300,
+   "y": 236,
+   "text": "Naphtha from C-1101",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "reac-FV-1201",
+   "symbol": "valve.control",
+   "x": 3480,
+   "y": 160.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1201",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1201"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1201",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-1",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "reac-go-1",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "reac-FV-1201",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-2",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     3824.0,
+     190.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "reac-FV-1201",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "reac-R-1203",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-ctl-FIC-1201",
+   "symbol": "instrument.bubble",
+   "x": 3470.0,
+   "y": 70.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1201",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1201"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1201",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-6",
+   "x": 3500,
+   "y": 98,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-7",
+   "x": 3500,
+   "y": 112,
+   "text": "1201",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "reac-FIC-1201-pv",
+   "x": 3528,
+   "y": 62,
+   "item": {
+    "asset_id": "FIC-1201",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1201"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-FIC-1201-sp",
+   "x": 3528,
+   "y": 87,
+   "item": {
+    "asset_id": "FIC-1201",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1201"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-FIC-1201-op",
+   "x": 3528,
+   "y": 111,
+   "item": {
+    "asset_id": "FIC-1201",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1201"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-FIC-1201-mode",
+   "x": 3448,
+   "y": 122,
+   "item": {
+    "asset_id": "FIC-1201",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "reac-line-3",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "reac-ctl-FIC-1201",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "reac-FV-1201",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-ctl-PIC-1202",
+   "symbol": "instrument.bubble",
+   "x": 3590.0,
+   "y": 310.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PIC-1202",
+   "link": {
+    "kind": "asset",
+    "target": "PIC-1202"
+   },
+   "state": {
+    "item": {
+     "asset_id": "PIC-1202",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-8",
+   "x": 3620,
+   "y": 338.0,
+   "text": "PIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-9",
+   "x": 3620,
+   "y": 352.0,
+   "text": "1202",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1202-pv",
+   "x": 3486.4,
+   "y": 302.0,
+   "item": {
+    "asset_id": "PIC-1202",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1202"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1202-sp",
+   "x": 3500.8,
+   "y": 327.0,
+   "item": {
+    "asset_id": "PIC-1202",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1202"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1202-op",
+   "x": 3514.0,
+   "y": 351.0,
+   "item": {
+    "asset_id": "PIC-1202",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1202"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1202-mode",
+   "x": 3636,
+   "y": 362.0,
+   "item": {
+    "asset_id": "PIC-1202",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "reac-line-4",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     3772.0,
+     340.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "reac-ctl-PIC-1202",
+    "port": "right"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-ctl-TIC-1203",
+   "symbol": "instrument.bubble",
+   "x": 3590.0,
+   "y": 470.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1203",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1203"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1203",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-10",
+   "x": 3620,
+   "y": 498.0,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-11",
+   "x": 3620,
+   "y": 512.0,
+   "text": "1203",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "reac-TIC-1203-pv",
+   "x": 3494.2,
+   "y": 462.0,
+   "item": {
+    "asset_id": "TIC-1203",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1203"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-TIC-1203-sp",
+   "x": 3507.4,
+   "y": 487.0,
+   "item": {
+    "asset_id": "TIC-1203",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1203"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-TIC-1203-op",
+   "x": 3514.0,
+   "y": 511.0,
+   "item": {
+    "asset_id": "TIC-1203",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1203"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-TIC-1203-mode",
+   "x": 3636,
+   "y": 522.0,
+   "item": {
+    "asset_id": "TIC-1203",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "reac-line-5",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     3772.0,
+     500.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "reac-ctl-TIC-1203",
+    "port": "right"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-V-1208",
+   "symbol": "vessel.vertical",
+   "x": 4300.0,
+   "y": 300.0,
+   "w": 96.0,
+   "h": 192.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "V-1208",
+   "link": {
+    "kind": "asset",
+    "target": "V-1208"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1208",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-12",
+   "x": 4348,
+   "y": 516,
+   "text": "V-1208 Suction drum",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "symbol",
+   "id": "reac-K-1103",
+   "symbol": "compressor.centrifugal",
+   "x": 4212.0,
+   "y": 192.0,
+   "w": 96.0,
+   "h": 96.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "K-1103 Recycle compressor",
+   "label_position": "above",
+   "asset_id": "K-1103",
+   "link": {
+    "kind": "asset",
+    "target": "K-1103"
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-6",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     4348.0,
+     240.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "reac-V-1208",
+    "port": "top"
+   },
+   "end": {
+    "element": "reac-K-1103",
+    "port": "suction"
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-7",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     3824,
+     240
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "reac-K-1103",
+    "port": "discharge"
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-13",
+   "x": 3960,
+   "y": 232,
+   "text": "Recycle hydrogen",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "reac-ctl-PIC-1207",
+   "symbol": "instrument.bubble",
+   "x": 3990.0,
+   "y": 120.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PIC-1207",
+   "link": {
+    "kind": "asset",
+    "target": "PIC-1207"
+   },
+   "state": {
+    "item": {
+     "asset_id": "PIC-1207",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-14",
+   "x": 4020,
+   "y": 148,
+   "text": "PIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-15",
+   "x": 4020,
+   "y": 162,
+   "text": "1207",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1207-pv",
+   "x": 4048,
+   "y": 112,
+   "item": {
+    "asset_id": "PIC-1207",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1207"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1207-sp",
+   "x": 4048,
+   "y": 137,
+   "item": {
+    "asset_id": "PIC-1207",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1207"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1207-op",
+   "x": 4048,
+   "y": 161,
+   "item": {
+    "asset_id": "PIC-1207",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1207"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1207-mode",
+   "x": 3968,
+   "y": 172,
+   "item": {
+    "asset_id": "PIC-1207",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "reac-line-8",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     4020,
+     240
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "reac-ctl-PIC-1207",
+    "port": "bottom"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-ctl-PIC-1103",
+   "symbol": "instrument.bubble",
+   "x": 4410.0,
+   "y": 270.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PIC-1103",
+   "link": {
+    "kind": "asset",
+    "target": "PIC-1103"
+   },
+   "state": {
+    "item": {
+     "asset_id": "PIC-1103",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-16",
+   "x": 4440,
+   "y": 298,
+   "text": "PIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-17",
+   "x": 4440,
+   "y": 312,
+   "text": "1103",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1103-pv",
+   "x": 4468,
+   "y": 262,
+   "item": {
+    "asset_id": "PIC-1103",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1103"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1103-sp",
+   "x": 4468,
+   "y": 287,
+   "item": {
+    "asset_id": "PIC-1103",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1103"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1103-op",
+   "x": 4468,
+   "y": 311,
+   "item": {
+    "asset_id": "PIC-1103",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1103"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-PIC-1103-mode",
+   "x": 4388,
+   "y": 322,
+   "item": {
+    "asset_id": "PIC-1103",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "reac-line-9",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     4348,
+     300
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "reac-ctl-PIC-1103",
+    "port": "left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-ctl-LIC-1208",
+   "symbol": "instrument.bubble",
+   "x": 4410.0,
+   "y": 380.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1208",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1208"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1208",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-18",
+   "x": 4440,
+   "y": 408,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-19",
+   "x": 4440,
+   "y": 422,
+   "text": "1208",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "reac-LIC-1208-pv",
+   "x": 4468,
+   "y": 372,
+   "item": {
+    "asset_id": "LIC-1208",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1208"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-LIC-1208-sp",
+   "x": 4468,
+   "y": 397,
+   "item": {
+    "asset_id": "LIC-1208",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1208"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-LIC-1208-op",
+   "x": 4468,
+   "y": 421,
+   "item": {
+    "asset_id": "LIC-1208",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1208"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-LIC-1208-mode",
+   "x": 4388,
+   "y": 432,
+   "item": {
+    "asset_id": "LIC-1208",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "reac-line-10",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     4372,
+     410
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "reac-ctl-LIC-1208",
+    "port": "left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-go-2",
+   "symbol": "connector.offpage_in",
+   "x": 4660.0,
+   "y": 210.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "Utilities",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,1800,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-11",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     4348,
+     240
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "reac-go-2",
+    "port": "outlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-20",
+   "x": 4560,
+   "y": 232,
+   "text": "Make-up hydrogen",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "reac-FV-1206",
+   "symbol": "valve.control",
+   "x": 3960,
+   "y": 490.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1206",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1206"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1206",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-12",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     4180,
+     240
+    ],
+    [
+     4180,
+     520.0
+    ]
+   ],
+   "arrow": "none",
+   "end": {
+    "element": "reac-FV-1206",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-13",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     3918.0,
+     520.0
+    ],
+    [
+     3918.0,
+     480.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "reac-FV-1206",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "reac-R-1203",
+    "port": "quench"
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-21",
+   "x": 3920,
+   "y": 512.0,
+   "text": "Quench",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "reac-ctl-FIC-1206",
+   "symbol": "instrument.bubble",
+   "x": 3950.0,
+   "y": 400.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1206",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1206"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1206",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-22",
+   "x": 3980,
+   "y": 428.0,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-23",
+   "x": 3980,
+   "y": 442.0,
+   "text": "1206",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "reac-FIC-1206-pv",
+   "x": 4008,
+   "y": 392.0,
+   "item": {
+    "asset_id": "FIC-1206",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1206"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-FIC-1206-sp",
+   "x": 4008,
+   "y": 417.0,
+   "item": {
+    "asset_id": "FIC-1206",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1206"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-FIC-1206-op",
+   "x": 4008,
+   "y": 441.0,
+   "item": {
+    "asset_id": "FIC-1206",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1206"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-FIC-1206-mode",
+   "x": 3928,
+   "y": 452.0,
+   "item": {
+    "asset_id": "FIC-1206",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "reac-line-14",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "reac-ctl-FIC-1206",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "reac-FV-1206",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-E-1203C",
+   "symbol": "exchanger.air_cooler",
+   "x": 3980.0,
+   "y": 766.0,
+   "w": 192.0,
+   "h": 108.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Effluent cooler",
+   "label_position": "below"
+  },
+  {
+   "type": "line",
+   "id": "reac-line-15",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     3824.0,
+     790.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "reac-R-1203",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "reac-E-1203C",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-24",
+   "x": 3900,
+   "y": 782,
+   "text": "Reactor effluent",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "reac-V-1204",
+   "symbol": "vessel.horizontal",
+   "x": 4240.0,
+   "y": 718.0,
+   "w": 288.0,
+   "h": 144.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "V-1204 High-pressure separator",
+   "label_position": "below",
+   "asset_id": "V-1204",
+   "link": {
+    "kind": "asset",
+    "target": "V-1204"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1204",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-16",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "reac-E-1203C",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "reac-V-1204",
+    "port": "left"
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-17",
+   "kind": "process",
+   "medium": "gas",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "reac-V-1204",
+    "port": "top_left"
+   },
+   "end": {
+    "element": "reac-V-1208",
+    "port": "bottom"
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-25",
+   "x": 4340,
+   "y": 680,
+   "text": "Recycle gas",
+   "size": 12,
+   "align": "end",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "reac-ctl-AIC-1205",
+   "symbol": "instrument.bubble",
+   "x": 4410.0,
+   "y": 580.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "AIC-1205",
+   "link": {
+    "kind": "asset",
+    "target": "AIC-1205"
+   },
+   "state": {
+    "item": {
+     "asset_id": "AIC-1205",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-26",
+   "x": 4440,
+   "y": 608,
+   "text": "AIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-27",
+   "x": 4440,
+   "y": 622,
+   "text": "1205",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "reac-AIC-1205-pv",
+   "x": 4468,
+   "y": 572,
+   "item": {
+    "asset_id": "AIC-1205",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1205"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-AIC-1205-sp",
+   "x": 4468,
+   "y": 597,
+   "item": {
+    "asset_id": "AIC-1205",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1205"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-AIC-1205-op",
+   "x": 4468,
+   "y": 621,
+   "item": {
+    "asset_id": "AIC-1205",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1205"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-AIC-1205-mode",
+   "x": 4388,
+   "y": 632,
+   "item": {
+    "asset_id": "AIC-1205",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "reac-line-18",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     4348,
+     610
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "reac-ctl-AIC-1205",
+    "port": "left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-LV-1204",
+   "symbol": "valve.control",
+   "x": 4560,
+   "y": 760.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1204",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1204"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1204",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-19",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "reac-V-1204",
+    "port": "right"
+   },
+   "end": {
+    "element": "reac-LV-1204",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-ctl-LIC-1204",
+   "symbol": "instrument.bubble",
+   "x": 4550.0,
+   "y": 670.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1204",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1204"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1204",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-28",
+   "x": 4580,
+   "y": 698,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "reac-t-29",
+   "x": 4580,
+   "y": 712,
+   "text": "1204",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "reac-LIC-1204-pv",
+   "x": 4608,
+   "y": 662,
+   "item": {
+    "asset_id": "LIC-1204",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1204"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-LIC-1204-sp",
+   "x": 4608,
+   "y": 687,
+   "item": {
+    "asset_id": "LIC-1204",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1204"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-LIC-1204-op",
+   "x": 4608,
+   "y": 711,
+   "item": {
+    "asset_id": "LIC-1204",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1204"
+   }
+  },
+  {
+   "type": "value",
+   "id": "reac-LIC-1204-mode",
+   "x": 4528,
+   "y": 722,
+   "item": {
+    "asset_id": "LIC-1204",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "reac-line-20",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "reac-ctl-LIC-1204",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "reac-LV-1204",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "reac-go-3",
+   "symbol": "connector.offpage",
+   "x": 4660.0,
+   "y": 760.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Separation",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "0,900,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "reac-line-21",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "reac-LV-1204",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "reac-go-3",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "reac-t-30",
+   "x": 4720,
+   "y": 836,
+   "text": "To R-1005",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-1",
+   "x": 800,
+   "y": 934,
+   "text": "Reaction and separation",
+   "size": 24,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-2",
+   "x": 800,
+   "y": 958,
+   "text": "U-200 Hydrotreating unit: Reaction, Recycle, Separation, Quality",
+   "size": 13,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-R-1005",
+   "symbol": "reactor.fixed_bed",
+   "x": 400.0,
+   "y": 1100.0,
+   "w": 176.0,
+   "h": 440.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "R-1005",
+   "link": {
+    "kind": "asset",
+    "target": "R-1005"
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-3",
+   "x": 506,
+   "y": 1540,
+   "text": "R-1005 Reactor",
+   "size": 12,
+   "align": "start",
+   "bold": true
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-go-1",
+   "symbol": "connector.offpage_in",
+   "x": 40.0,
+   "y": 1020.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Reactor",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "3200,0,1600,900"
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-4",
+   "x": 100,
+   "y": 1096,
+   "text": "From V-1204",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-1",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     488.0,
+     1050.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "sepa-go-1",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "sepa-R-1005",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-5",
+   "x": 330,
+   "y": 1042,
+   "text": "Treated liquid",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-ctl-AIC-1215",
+   "symbol": "instrument.bubble",
+   "x": 270.0,
+   "y": 1120.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "AIC-1215",
+   "link": {
+    "kind": "asset",
+    "target": "AIC-1215"
+   },
+   "state": {
+    "item": {
+     "asset_id": "AIC-1215",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-6",
+   "x": 300,
+   "y": 1148,
+   "text": "AIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-7",
+   "x": 300,
+   "y": 1162,
+   "text": "1215",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1215-pv",
+   "x": 328,
+   "y": 1112,
+   "item": {
+    "asset_id": "AIC-1215",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1215"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1215-sp",
+   "x": 328,
+   "y": 1137,
+   "item": {
+    "asset_id": "AIC-1215",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1215"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1215-op",
+   "x": 328,
+   "y": 1161,
+   "item": {
+    "asset_id": "AIC-1215",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1215"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1215-mode",
+   "x": 248,
+   "y": 1172,
+   "item": {
+    "asset_id": "AIC-1215",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-2",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     300,
+     1050
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-ctl-AIC-1215",
+    "port": "top"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-P-1003",
+   "symbol": "pump.centrifugal",
+   "x": 148.0,
+   "y": 1304.0,
+   "w": 64.0,
+   "h": 64.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "P-1003 Recycle pump",
+   "label_position": "below",
+   "asset_id": "P-1003",
+   "link": {
+    "kind": "asset",
+    "target": "P-1003"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-FV-1003",
+   "symbol": "valve.control",
+   "x": 290,
+   "y": 1290.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1003",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1003"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1003",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-3",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-P-1003",
+    "port": "discharge"
+   },
+   "end": {
+    "element": "sepa-FV-1003",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-4",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "sepa-FV-1003",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "sepa-R-1005",
+    "port": "quench"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-ctl-FIC-1003",
+   "symbol": "instrument.bubble",
+   "x": 280.0,
+   "y": 1200.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1003",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1003"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1003",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-8",
+   "x": 310,
+   "y": 1228.0,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-9",
+   "x": 310,
+   "y": 1242.0,
+   "text": "1003",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "sepa-FIC-1003-pv",
+   "x": 338,
+   "y": 1192.0,
+   "item": {
+    "asset_id": "FIC-1003",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1003"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-FIC-1003-sp",
+   "x": 338,
+   "y": 1217.0,
+   "item": {
+    "asset_id": "FIC-1003",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1003"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-FIC-1003-op",
+   "x": 338,
+   "y": 1241.0,
+   "item": {
+    "asset_id": "FIC-1003",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1003"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-FIC-1003-mode",
+   "x": 258,
+   "y": 1252.0,
+   "item": {
+    "asset_id": "FIC-1003",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-5",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-ctl-FIC-1003",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "sepa-FV-1003",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-ctl-TIC-1005",
+   "symbol": "instrument.bubble",
+   "x": 590.0,
+   "y": 1270.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1005",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1005"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1005",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-10",
+   "x": 620,
+   "y": 1298,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-11",
+   "x": 620,
+   "y": 1312,
+   "text": "1005",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "sepa-TIC-1005-pv",
+   "x": 648,
+   "y": 1262,
+   "item": {
+    "asset_id": "TIC-1005",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1005"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-TIC-1005-sp",
+   "x": 648,
+   "y": 1287,
+   "item": {
+    "asset_id": "TIC-1005",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1005"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-TIC-1005-op",
+   "x": 648,
+   "y": 1311,
+   "item": {
+    "asset_id": "TIC-1005",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1005"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-TIC-1005-mode",
+   "x": 568,
+   "y": 1322,
+   "item": {
+    "asset_id": "TIC-1005",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-6",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     532.0,
+     1300
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-ctl-TIC-1005",
+    "port": "left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-V-1004",
+   "symbol": "vessel.separator",
+   "x": 760.0,
+   "y": 1320.0,
+   "w": 320.0,
+   "h": 200.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "V-1004",
+   "link": {
+    "kind": "asset",
+    "target": "V-1004"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1004",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-12",
+   "x": 975,
+   "y": 1542,
+   "text": "V-1004 Product separator",
+   "size": 12,
+   "align": "start",
+   "bold": true
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-7",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     488,
+     1580
+    ],
+    [
+     700,
+     1580
+    ],
+    [
+     700,
+     1400
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "sepa-R-1005",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "sepa-V-1004",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-13",
+   "x": 600,
+   "y": 1572,
+   "text": "Reactor product",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-ctl-AIC-1108",
+   "symbol": "instrument.bubble",
+   "x": 530.0,
+   "y": 1630.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "AIC-1108",
+   "link": {
+    "kind": "asset",
+    "target": "AIC-1108"
+   },
+   "state": {
+    "item": {
+     "asset_id": "AIC-1108",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-14",
+   "x": 560,
+   "y": 1658,
+   "text": "AIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-15",
+   "x": 560,
+   "y": 1672,
+   "text": "1108",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1108-pv",
+   "x": 588,
+   "y": 1622,
+   "item": {
+    "asset_id": "AIC-1108",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1108"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1108-sp",
+   "x": 588,
+   "y": 1647,
+   "item": {
+    "asset_id": "AIC-1108",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1108"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1108-op",
+   "x": 588,
+   "y": 1671,
+   "item": {
+    "asset_id": "AIC-1108",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1108"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1108-mode",
+   "x": 508,
+   "y": 1682,
+   "item": {
+    "asset_id": "AIC-1108",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-8",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     560,
+     1580
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-ctl-AIC-1108",
+    "port": "top"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-PV-1002",
+   "symbol": "valve.control",
+   "x": 1180,
+   "y": 1170.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PV-1002",
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1002"
+   },
+   "level": {
+    "item": {
+     "asset_id": "PIC-1002",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-9",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     920.0,
+     1200.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-V-1004",
+    "port": "gas"
+   },
+   "end": {
+    "element": "sepa-PV-1002",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-ctl-PIC-1002",
+   "symbol": "instrument.bubble",
+   "x": 1170.0,
+   "y": 1080.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PIC-1002",
+   "link": {
+    "kind": "asset",
+    "target": "PIC-1002"
+   },
+   "state": {
+    "item": {
+     "asset_id": "PIC-1002",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-16",
+   "x": 1200,
+   "y": 1108,
+   "text": "PIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-17",
+   "x": 1200,
+   "y": 1122,
+   "text": "1002",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "sepa-PIC-1002-pv",
+   "x": 1228,
+   "y": 1072,
+   "item": {
+    "asset_id": "PIC-1002",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1002"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-PIC-1002-sp",
+   "x": 1228,
+   "y": 1097,
+   "item": {
+    "asset_id": "PIC-1002",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1002"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-PIC-1002-op",
+   "x": 1228,
+   "y": 1121,
+   "item": {
+    "asset_id": "PIC-1002",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1002"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-PIC-1002-mode",
+   "x": 1148,
+   "y": 1132,
+   "item": {
+    "asset_id": "PIC-1002",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-10",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-ctl-PIC-1002",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "sepa-PV-1002",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-go-2",
+   "symbol": "connector.offpage",
+   "x": 1460.0,
+   "y": 1170.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Amine",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,900,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-11",
+   "kind": "process",
+   "medium": "gas",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "sepa-PV-1002",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "sepa-go-2",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-18",
+   "x": 1330,
+   "y": 1192,
+   "text": "Off-gas",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-19",
+   "x": 1520,
+   "y": 1246,
+   "text": "To C-1216",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-LV-1004",
+   "symbol": "valve.control",
+   "x": 1100,
+   "y": 1370.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1004",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1004"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1004",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-12",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-V-1004",
+    "port": "oil"
+   },
+   "end": {
+    "element": "sepa-LV-1004",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-ctl-LIC-1004",
+   "symbol": "instrument.bubble",
+   "x": 1090.0,
+   "y": 1280.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1004",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1004"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1004",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-20",
+   "x": 1120,
+   "y": 1308,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-21",
+   "x": 1120,
+   "y": 1322,
+   "text": "1004",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1004-pv",
+   "x": 1148,
+   "y": 1272,
+   "item": {
+    "asset_id": "LIC-1004",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1004"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1004-sp",
+   "x": 1148,
+   "y": 1297,
+   "item": {
+    "asset_id": "LIC-1004",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1004"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1004-op",
+   "x": 1148,
+   "y": 1321,
+   "item": {
+    "asset_id": "LIC-1004",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1004"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1004-mode",
+   "x": 1068,
+   "y": 1332,
+   "item": {
+    "asset_id": "LIC-1004",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-13",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-ctl-LIC-1004",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "sepa-LV-1004",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-V-1105",
+   "symbol": "vessel.horizontal",
+   "x": 1120.0,
+   "y": 1540.0,
+   "w": 256.0,
+   "h": 128.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "V-1105 Surge drum",
+   "label_position": "below",
+   "asset_id": "V-1105",
+   "link": {
+    "kind": "asset",
+    "target": "V-1105"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1105",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-14",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     1216.0,
+     1400.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "sepa-LV-1004",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "sepa-V-1105",
+    "port": "top_left"
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-22",
+   "x": 1226,
+   "y": 1460,
+   "text": "Light phase",
+   "size": 12,
+   "align": "start",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-LV-1105",
+   "symbol": "valve.control",
+   "x": 1400,
+   "y": 1574.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1105",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1105"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1105",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-15",
+   "kind": "process",
+   "medium": "product",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-V-1105",
+    "port": "right"
+   },
+   "end": {
+    "element": "sepa-LV-1105",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-ctl-LIC-1105",
+   "symbol": "instrument.bubble",
+   "x": 1390.0,
+   "y": 1484.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1105",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1105"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1105",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-23",
+   "x": 1420,
+   "y": 1512,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-24",
+   "x": 1420,
+   "y": 1526,
+   "text": "1105",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1105-pv",
+   "x": 1448,
+   "y": 1476,
+   "item": {
+    "asset_id": "LIC-1105",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1105"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1105-sp",
+   "x": 1448,
+   "y": 1501,
+   "item": {
+    "asset_id": "LIC-1105",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1105"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1105-op",
+   "x": 1448,
+   "y": 1525,
+   "item": {
+    "asset_id": "LIC-1105",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1105"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1105-mode",
+   "x": 1368,
+   "y": 1536,
+   "item": {
+    "asset_id": "LIC-1105",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-16",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-ctl-LIC-1105",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "sepa-LV-1105",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-SNK-product",
+   "symbol": "connector.sink",
+   "x": 1520,
+   "y": 1584,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-17",
+   "kind": "process",
+   "medium": "product",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "sepa-LV-1105",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "sepa-SNK-product",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-25",
+   "x": 1530,
+   "y": 1578,
+   "text": "Product to storage",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-ctl-AIC-1006",
+   "symbol": "instrument.bubble",
+   "x": 1450.0,
+   "y": 1700.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "AIC-1006",
+   "link": {
+    "kind": "asset",
+    "target": "AIC-1006"
+   },
+   "state": {
+    "item": {
+     "asset_id": "AIC-1006",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-26",
+   "x": 1480,
+   "y": 1728,
+   "text": "AIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-27",
+   "x": 1480,
+   "y": 1742,
+   "text": "1006",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1006-pv",
+   "x": 1338.6,
+   "y": 1692,
+   "item": {
+    "asset_id": "AIC-1006",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1006"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1006-sp",
+   "x": 1354.2,
+   "y": 1717,
+   "item": {
+    "asset_id": "AIC-1006",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1006"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1006-op",
+   "x": 1374.0,
+   "y": 1741,
+   "item": {
+    "asset_id": "AIC-1006",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1006"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-AIC-1006-mode",
+   "x": 1496,
+   "y": 1752,
+   "item": {
+    "asset_id": "AIC-1006",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-18",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     1480,
+     1604
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-ctl-AIC-1006",
+    "port": "top"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-LV-1010",
+   "symbol": "valve.control",
+   "x": 780,
+   "y": 1690.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1010",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1010"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1010",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-19",
+   "kind": "process",
+   "medium": "water",
+   "points": [
+    [
+     960.0,
+     1720.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-V-1004",
+    "port": "water"
+   },
+   "end": {
+    "element": "sepa-LV-1010",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-20",
+   "kind": "process",
+   "medium": "water",
+   "points": [
+    [
+     60,
+     1720
+    ],
+    [
+     60,
+     1336
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "sepa-LV-1010",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "sepa-P-1003",
+    "port": "suction"
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-28",
+   "x": 400,
+   "y": 1712,
+   "text": "Heavy phase recycle",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "sepa-ctl-LIC-1010",
+   "symbol": "instrument.bubble",
+   "x": 770.0,
+   "y": 1600.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1010",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1010"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1010",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-29",
+   "x": 800,
+   "y": 1628,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "sepa-t-30",
+   "x": 800,
+   "y": 1642,
+   "text": "1010",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1010-pv",
+   "x": 828,
+   "y": 1592,
+   "item": {
+    "asset_id": "LIC-1010",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1010"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1010-sp",
+   "x": 828,
+   "y": 1617,
+   "item": {
+    "asset_id": "LIC-1010",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1010"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1010-op",
+   "x": 828,
+   "y": 1641,
+   "item": {
+    "asset_id": "LIC-1010",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1010"
+   }
+  },
+  {
+   "type": "value",
+   "id": "sepa-LIC-1010-mode",
+   "x": 748,
+   "y": 1652,
+   "item": {
+    "asset_id": "LIC-1010",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "sepa-line-21",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "sepa-ctl-LIC-1010",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "sepa-LV-1010",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-1",
+   "x": 2400,
+   "y": 934,
+   "text": "Amine treating and sulfur recovery",
+   "size": 24,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "amin-t-2",
+   "x": 2400,
+   "y": 958,
+   "text": "U-300 Treating and sulfur recovery",
+   "size": 13,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "amin-C-1216",
+   "symbol": "column.packed",
+   "x": 1900.0,
+   "y": 1060.0,
+   "w": 176.0,
+   "h": 572.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "C-1216 Amine absorber",
+   "label_position": "none",
+   "asset_id": "C-1216",
+   "link": {
+    "kind": "asset",
+    "target": "C-1216"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1216",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-3",
+   "x": 1850,
+   "y": 1060,
+   "text": "C-1216 Amine absorber",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "symbol",
+   "id": "amin-go-1",
+   "symbol": "connector.offpage_in",
+   "x": 1640.0,
+   "y": 1470.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Separation",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "0,900,1600,900"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-4",
+   "x": 1700,
+   "y": 1546,
+   "text": "Off-gas from V-1004",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "line",
+   "id": "amin-line-1",
+   "kind": "process",
+   "medium": "gas",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "amin-go-1",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "amin-C-1216",
+    "port": "reboiler_return"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-5",
+   "x": 1860,
+   "y": 1492,
+   "text": "Sour gas",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "amin-ctl-LIC-1107",
+   "symbol": "instrument.bubble",
+   "x": 1810.0,
+   "y": 1600.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1107",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1107"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1107",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-6",
+   "x": 1840,
+   "y": 1628,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "amin-t-7",
+   "x": 1840,
+   "y": 1642,
+   "text": "1107",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "amin-LIC-1107-pv",
+   "x": 1722.0,
+   "y": 1592,
+   "item": {
+    "asset_id": "LIC-1107",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1107"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-LIC-1107-sp",
+   "x": 1734.0,
+   "y": 1617,
+   "item": {
+    "asset_id": "LIC-1107",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1107"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-LIC-1107-op",
+   "x": 1734.0,
+   "y": 1641,
+   "item": {
+    "asset_id": "LIC-1107",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1107"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-LIC-1107-mode",
+   "x": 1856,
+   "y": 1652,
+   "item": {
+    "asset_id": "LIC-1107",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "amin-line-2",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     1900,
+     1630
+    ],
+    [
+     1900,
+     1550
+    ],
+    [
+     1944,
+     1550
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "amin-ctl-LIC-1107",
+    "port": "right"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "amin-go-2",
+   "symbol": "connector.offpage",
+   "x": 3060.0,
+   "y": 960.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Fuel gas",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,1800,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "amin-line-3",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     1988.0,
+     990.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "amin-C-1216",
+    "port": "overhead"
+   },
+   "end": {
+    "element": "amin-go-2",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-8",
+   "x": 2600,
+   "y": 982,
+   "text": "Sweet gas",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "text",
+   "id": "amin-t-9",
+   "x": 3120,
+   "y": 1036,
+   "text": "Fuel gas header",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "amin-C-1217",
+   "symbol": "column.distillation",
+   "x": 2300.0,
+   "y": 1130.0,
+   "w": 152.0,
+   "h": 494.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "text",
+   "id": "amin-t-10",
+   "x": 2428,
+   "y": 1540,
+   "text": "Amine regenerator",
+   "size": 12,
+   "align": "start",
+   "bold": true
+  },
+  {
+   "type": "symbol",
+   "id": "amin-LV-1216",
+   "symbol": "valve.control",
+   "x": 2100,
+   "y": 1670.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1216",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1216"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1216",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "amin-line-4",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     1988.0,
+     1700.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "amin-C-1216",
+    "port": "bottoms"
+   },
+   "end": {
+    "element": "amin-LV-1216",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "amin-line-5",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     2560,
+     1700
+    ],
+    [
+     2560,
+     1225
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "amin-LV-1216",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "amin-C-1217",
+    "port": "reflux"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-11",
+   "x": 2340,
+   "y": 1692,
+   "text": "Rich amine",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "amin-ctl-LIC-1216",
+   "symbol": "instrument.bubble",
+   "x": 2090.0,
+   "y": 1580.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1216",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1216"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1216",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-12",
+   "x": 2120,
+   "y": 1608,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "amin-t-13",
+   "x": 2120,
+   "y": 1622,
+   "text": "1216",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "amin-LIC-1216-pv",
+   "x": 2148,
+   "y": 1572,
+   "item": {
+    "asset_id": "LIC-1216",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1216"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-LIC-1216-sp",
+   "x": 2148,
+   "y": 1597,
+   "item": {
+    "asset_id": "LIC-1216",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1216"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-LIC-1216-op",
+   "x": 2148,
+   "y": 1621,
+   "item": {
+    "asset_id": "LIC-1216",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1216"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-LIC-1216-mode",
+   "x": 2068,
+   "y": 1632,
+   "item": {
+    "asset_id": "LIC-1216",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "amin-line-6",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "amin-ctl-LIC-1216",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "amin-LV-1216",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "amin-TT-1114",
+   "symbol": "instrument.thermowell",
+   "x": 2110,
+   "y": 1140,
+   "w": 40,
+   "h": 40,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "amin-line-7",
+   "kind": "process",
+   "medium": "process",
+   "points": [
+    [
+     2376,
+     1640
+    ],
+    [
+     2280,
+     1640
+    ],
+    [
+     2280,
+     1170
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "amin-C-1217",
+    "port": "bottoms"
+   },
+   "end": {
+    "element": "amin-TT-1114",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-14",
+   "x": 2328,
+   "y": 1632,
+   "text": "Lean amine",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "line",
+   "id": "amin-line-8",
+   "kind": "process",
+   "medium": "process",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "amin-TT-1114",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "amin-C-1216",
+    "port": "reflux"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "amin-ctl-TIC-1114",
+   "symbol": "instrument.bubble",
+   "x": 2100.0,
+   "y": 1050.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1114",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1114"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1114",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-15",
+   "x": 2130,
+   "y": 1078,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "amin-t-16",
+   "x": 2130,
+   "y": 1092,
+   "text": "1114",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "amin-TIC-1114-pv",
+   "x": 2158,
+   "y": 1042,
+   "item": {
+    "asset_id": "TIC-1114",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1114"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-TIC-1114-sp",
+   "x": 2158,
+   "y": 1067,
+   "item": {
+    "asset_id": "TIC-1114",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1114"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-TIC-1114-op",
+   "x": 2158,
+   "y": 1091,
+   "item": {
+    "asset_id": "TIC-1114",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1114"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-TIC-1114-mode",
+   "x": 2078,
+   "y": 1102,
+   "item": {
+    "asset_id": "TIC-1114",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "amin-line-9",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "amin-ctl-TIC-1114",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "amin-TT-1114",
+    "port": "tap"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "amin-H-1226",
+   "symbol": "heater.furnace",
+   "x": 2627.0,
+   "y": 1003.0,
+   "w": 156.0,
+   "h": 221.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Reaction furnace",
+   "label_position": "below"
+  },
+  {
+   "type": "line",
+   "id": "amin-line-10",
+   "kind": "process",
+   "medium": "gas",
+   "points": [
+    [
+     2376.0,
+     1120.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "amin-C-1217",
+    "port": "overhead"
+   },
+   "end": {
+    "element": "amin-H-1226",
+    "port": "coil_in"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-17",
+   "x": 2500,
+   "y": 1112,
+   "text": "Acid gas",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "amin-R-1226",
+   "symbol": "vessel.horizontal",
+   "x": 2788.0,
+   "y": 1108.0,
+   "w": 256.0,
+   "h": 128.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "R-1226 Claus reactor",
+   "label_position": "none",
+   "asset_id": "R-1226",
+   "link": {
+    "kind": "asset",
+    "target": "R-1226"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-18",
+   "x": 2900,
+   "y": 1102.0,
+   "text": "R-1226 Claus reactor",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "line",
+   "id": "amin-line-11",
+   "kind": "process",
+   "medium": "gas",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "amin-H-1226",
+    "port": "coil_out"
+   },
+   "end": {
+    "element": "amin-R-1226",
+    "port": "left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "amin-ctl-TIC-1226",
+   "symbol": "instrument.bubble",
+   "x": 2942.0,
+   "y": 1272.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1226",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1226"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1226",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-19",
+   "x": 2972,
+   "y": 1300.0,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "amin-t-20",
+   "x": 2972,
+   "y": 1314.0,
+   "text": "1226",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "amin-TIC-1226-pv",
+   "x": 3000,
+   "y": 1264.0,
+   "item": {
+    "asset_id": "TIC-1226",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1226"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-TIC-1226-sp",
+   "x": 3000,
+   "y": 1289.0,
+   "item": {
+    "asset_id": "TIC-1226",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1226"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-TIC-1226-op",
+   "x": 3000,
+   "y": 1313.0,
+   "item": {
+    "asset_id": "TIC-1226",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1226"
+   }
+  },
+  {
+   "type": "value",
+   "id": "amin-TIC-1226-mode",
+   "x": 2920,
+   "y": 1324.0,
+   "item": {
+    "asset_id": "TIC-1226",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "amin-line-12",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     2972,
+     1204.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "amin-ctl-TIC-1226",
+    "port": "top"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "amin-go-3",
+   "symbol": "connector.offpage",
+   "x": 3060.0,
+   "y": 1142.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Flare",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,1800,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "amin-line-13",
+   "kind": "process",
+   "medium": "gas",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "amin-R-1226",
+    "port": "right"
+   },
+   "end": {
+    "element": "amin-go-3",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-21",
+   "x": 3120,
+   "y": 1218.0,
+   "text": "Tail gas to the flare",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "amin-SP-1226",
+   "symbol": "vessel.basin",
+   "x": 2804.0,
+   "y": 1508.0,
+   "w": 160.0,
+   "h": 160.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Sulfur pit",
+   "label_position": "below"
+  },
+  {
+   "type": "line",
+   "id": "amin-line-14",
+   "kind": "process",
+   "medium": "product",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "amin-R-1226",
+    "port": "bottom_left"
+   },
+   "end": {
+    "element": "amin-SP-1226",
+    "port": "inlet_top"
+   }
+  },
+  {
+   "type": "text",
+   "id": "amin-t-22",
+   "x": 2840,
+   "y": 1460,
+   "text": "Liquid sulfur",
+   "size": 12,
+   "align": "end",
+   "bold": false
+  },
+  {
+   "type": "text",
+   "id": "util-t-1",
+   "x": 2400,
+   "y": 1834,
+   "text": "Steam, cooling water and gases",
+   "size": 24,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-2",
+   "x": 2400,
+   "y": 1858,
+   "text": "U-900 Utilities and offsites: Utilities",
+   "size": 13,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-B-901",
+   "symbol": "heater.boiler",
+   "x": 1678.0,
+   "y": 2040.0,
+   "w": 144.0,
+   "h": 180.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Boilers",
+   "label_position": "below"
+  },
+  {
+   "type": "symbol",
+   "id": "util-FV-1109",
+   "symbol": "valve.control",
+   "x": 1880,
+   "y": 1940.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1109",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1109"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1109",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-1",
+   "kind": "process",
+   "medium": "steam",
+   "points": [
+    [
+     1750.0,
+     1970.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "util-B-901",
+    "port": "steam"
+   },
+   "end": {
+    "element": "util-FV-1109",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-ctl-FIC-1109",
+   "symbol": "instrument.bubble",
+   "x": 1870.0,
+   "y": 1850.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1109",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1109"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1109",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-3",
+   "x": 1900,
+   "y": 1878,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-4",
+   "x": 1900,
+   "y": 1892,
+   "text": "1109",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "util-FIC-1109-pv",
+   "x": 1928,
+   "y": 1842,
+   "item": {
+    "asset_id": "FIC-1109",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1109"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-FIC-1109-sp",
+   "x": 1928,
+   "y": 1867,
+   "item": {
+    "asset_id": "FIC-1109",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1109"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-FIC-1109-op",
+   "x": 1928,
+   "y": 1891,
+   "item": {
+    "asset_id": "FIC-1109",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1109"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-FIC-1109-mode",
+   "x": 1848,
+   "y": 1902,
+   "item": {
+    "asset_id": "FIC-1109",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "util-line-2",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-ctl-FIC-1109",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "util-FV-1109",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-3",
+   "kind": "process",
+   "medium": "steam",
+   "points": [
+    [
+     2600,
+     1970
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "util-FV-1109",
+    "port": "outlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-5",
+   "x": 2400,
+   "y": 1962,
+   "text": "HP steam header",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-PV-1217",
+   "symbol": "valve.control",
+   "x": 2120,
+   "y": 2150.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PV-1217",
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1217"
+   },
+   "level": {
+    "item": {
+     "asset_id": "PIC-1217",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-4",
+   "kind": "process",
+   "medium": "steam",
+   "points": [
+    [
+     2080,
+     1970
+    ],
+    [
+     2080,
+     2180
+    ]
+   ],
+   "arrow": "none",
+   "end": {
+    "element": "util-PV-1217",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-6",
+   "x": 2070,
+   "y": 2100,
+   "text": "Letdown",
+   "size": 12,
+   "align": "end",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-ctl-PIC-1217",
+   "symbol": "instrument.bubble",
+   "x": 2110.0,
+   "y": 2060.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PIC-1217",
+   "link": {
+    "kind": "asset",
+    "target": "PIC-1217"
+   },
+   "state": {
+    "item": {
+     "asset_id": "PIC-1217",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-7",
+   "x": 2140,
+   "y": 2088,
+   "text": "PIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-8",
+   "x": 2140,
+   "y": 2102,
+   "text": "1217",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1217-pv",
+   "x": 2168,
+   "y": 2052,
+   "item": {
+    "asset_id": "PIC-1217",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1217"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1217-sp",
+   "x": 2168,
+   "y": 2077,
+   "item": {
+    "asset_id": "PIC-1217",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1217"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1217-op",
+   "x": 2168,
+   "y": 2101,
+   "item": {
+    "asset_id": "PIC-1217",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1217"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1217-mode",
+   "x": 2088,
+   "y": 2112,
+   "item": {
+    "asset_id": "PIC-1217",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "util-line-5",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-ctl-PIC-1217",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "util-PV-1217",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-V-1218",
+   "symbol": "vessel.horizontal",
+   "x": 2680.0,
+   "y": 2116.0,
+   "w": 256.0,
+   "h": 128.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "V-1218 Condensate drum",
+   "label_position": "right",
+   "asset_id": "V-1218",
+   "link": {
+    "kind": "asset",
+    "target": "V-1218"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1218",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-6",
+   "kind": "process",
+   "medium": "steam",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "util-PV-1217",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-V-1218",
+    "port": "left"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-9",
+   "x": 2550,
+   "y": 2172,
+   "text": "MP steam header",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-ctl-PIC-1110",
+   "symbol": "instrument.bubble",
+   "x": 2370.0,
+   "y": 2060.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PIC-1110",
+   "link": {
+    "kind": "asset",
+    "target": "PIC-1110"
+   },
+   "state": {
+    "item": {
+     "asset_id": "PIC-1110",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-10",
+   "x": 2400,
+   "y": 2088,
+   "text": "PIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-11",
+   "x": 2400,
+   "y": 2102,
+   "text": "1110",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1110-pv",
+   "x": 2428,
+   "y": 2052,
+   "item": {
+    "asset_id": "PIC-1110",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1110"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1110-sp",
+   "x": 2428,
+   "y": 2077,
+   "item": {
+    "asset_id": "PIC-1110",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1110"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1110-op",
+   "x": 2428,
+   "y": 2101,
+   "item": {
+    "asset_id": "PIC-1110",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1110"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1110-mode",
+   "x": 2348,
+   "y": 2112,
+   "item": {
+    "asset_id": "PIC-1110",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "util-line-7",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     2400,
+     2180
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "util-ctl-PIC-1110",
+    "port": "bottom"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-LV-1218",
+   "symbol": "valve.control",
+   "x": 2280,
+   "y": 2290.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1218",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1218"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1218",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-8",
+   "kind": "process",
+   "medium": "water",
+   "points": [
+    [
+     2776.0,
+     2320.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "util-V-1218",
+    "port": "bottom_left"
+   },
+   "end": {
+    "element": "util-LV-1218",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-9",
+   "kind": "process",
+   "medium": "water",
+   "points": [
+    [
+     1640,
+     2320
+    ],
+    [
+     1640,
+     2124.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "util-LV-1218",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-B-901",
+    "port": "feedwater"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-12",
+   "x": 1980,
+   "y": 2312,
+   "text": "Condensate return",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-ctl-LIC-1218",
+   "symbol": "instrument.bubble",
+   "x": 2270.0,
+   "y": 2200.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1218",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1218"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1218",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-13",
+   "x": 2300,
+   "y": 2228,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-14",
+   "x": 2300,
+   "y": 2242,
+   "text": "1218",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "util-LIC-1218-pv",
+   "x": 2328,
+   "y": 2192,
+   "item": {
+    "asset_id": "LIC-1218",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1218"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-LIC-1218-sp",
+   "x": 2328,
+   "y": 2217,
+   "item": {
+    "asset_id": "LIC-1218",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1218"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-LIC-1218-op",
+   "x": 2328,
+   "y": 2241,
+   "item": {
+    "asset_id": "LIC-1218",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1218"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-LIC-1218-mode",
+   "x": 2248,
+   "y": 2252,
+   "item": {
+    "asset_id": "LIC-1218",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "util-line-10",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-ctl-LIC-1218",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "util-LV-1218",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-CT-901",
+   "symbol": "utility.cooling_tower",
+   "x": 1660.0,
+   "y": 2400.0,
+   "w": 168.0,
+   "h": 196.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Cooling tower",
+   "label_position": "above"
+  },
+  {
+   "type": "symbol",
+   "id": "util-P-1219",
+   "symbol": "pump.centrifugal",
+   "x": 1868.0,
+   "y": 2604.0,
+   "w": 64.0,
+   "h": 64.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "P-1219 Cooling water pump",
+   "label_position": "below",
+   "asset_id": "P-1219",
+   "link": {
+    "kind": "asset",
+    "target": "P-1219"
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-11",
+   "kind": "process",
+   "medium": "cooling water",
+   "points": [
+    [
+     1744.0,
+     2636.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "util-CT-901",
+    "port": "water_out"
+   },
+   "end": {
+    "element": "util-P-1219",
+    "port": "suction"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-FV-1219",
+   "symbol": "valve.control",
+   "x": 2140,
+   "y": 2590.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1219",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1219"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1219",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-12",
+   "kind": "process",
+   "medium": "cooling water",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-P-1219",
+    "port": "discharge"
+   },
+   "end": {
+    "element": "util-FV-1219",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-ctl-FIC-1219",
+   "symbol": "instrument.bubble",
+   "x": 2130.0,
+   "y": 2500.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1219",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1219"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1219",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-15",
+   "x": 2160,
+   "y": 2528.0,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-16",
+   "x": 2160,
+   "y": 2542.0,
+   "text": "1219",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "util-FIC-1219-pv",
+   "x": 2188,
+   "y": 2492.0,
+   "item": {
+    "asset_id": "FIC-1219",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1219"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-FIC-1219-sp",
+   "x": 2188,
+   "y": 2517.0,
+   "item": {
+    "asset_id": "FIC-1219",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1219"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-FIC-1219-op",
+   "x": 2188,
+   "y": 2541.0,
+   "item": {
+    "asset_id": "FIC-1219",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1219"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-FIC-1219-mode",
+   "x": 2108,
+   "y": 2552.0,
+   "item": {
+    "asset_id": "FIC-1219",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "util-line-13",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-ctl-FIC-1219",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "util-FV-1219",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-SNK-cw",
+   "symbol": "connector.sink",
+   "x": 2360,
+   "y": 2600.0,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "util-line-14",
+   "kind": "process",
+   "medium": "cooling water",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "util-FV-1219",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-SNK-cw",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-17",
+   "x": 2390,
+   "y": 2660.0,
+   "text": "Supply to the units",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-SRC-cw",
+   "symbol": "connector.source",
+   "x": 2360,
+   "y": 2450,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "text",
+   "id": "util-t-18",
+   "x": 2390,
+   "y": 2510,
+   "text": "Return from the units",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-TT-1220",
+   "symbol": "instrument.thermowell",
+   "x": 2000,
+   "y": 2440,
+   "w": 40,
+   "h": 40,
+   "rotate": 0,
+   "flip": true,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "util-line-15",
+   "kind": "process",
+   "medium": "cooling water",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-SRC-cw",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-TT-1220",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-16",
+   "kind": "process",
+   "medium": "cooling water",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "util-TT-1220",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-CT-901",
+    "port": "water_in"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-ctl-TIC-1220",
+   "symbol": "instrument.bubble",
+   "x": 1990.0,
+   "y": 2350.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "TIC-1220",
+   "link": {
+    "kind": "asset",
+    "target": "TIC-1220"
+   },
+   "state": {
+    "item": {
+     "asset_id": "TIC-1220",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-19",
+   "x": 2020,
+   "y": 2378,
+   "text": "TIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-20",
+   "x": 2020,
+   "y": 2392,
+   "text": "1220",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "util-TIC-1220-pv",
+   "x": 2048,
+   "y": 2342,
+   "item": {
+    "asset_id": "TIC-1220",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1220"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-TIC-1220-sp",
+   "x": 2048,
+   "y": 2367,
+   "item": {
+    "asset_id": "TIC-1220",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1220"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-TIC-1220-op",
+   "x": 2048,
+   "y": 2391,
+   "item": {
+    "asset_id": "TIC-1220",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "TIC-1220"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-TIC-1220-mode",
+   "x": 1968,
+   "y": 2402,
+   "item": {
+    "asset_id": "TIC-1220",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "util-line-17",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-ctl-TIC-1220",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "util-TT-1220",
+    "port": "tap"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-go-1",
+   "symbol": "connector.offpage_in",
+   "x": 2460.0,
+   "y": 2370.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Amine",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,900,1600,900"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-21",
+   "x": 2520,
+   "y": 2446,
+   "text": "Sweet gas from C-1216",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-PV-1008",
+   "symbol": "valve.control",
+   "x": 2840,
+   "y": 2370.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PV-1008",
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1008"
+   },
+   "level": {
+    "item": {
+     "asset_id": "PIC-1008",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-18",
+   "kind": "process",
+   "medium": "fuel gas",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-go-1",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-PV-1008",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-22",
+   "x": 2700,
+   "y": 2392,
+   "text": "Fuel gas header",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-ctl-PIC-1008",
+   "symbol": "instrument.bubble",
+   "x": 2830.0,
+   "y": 2280.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PIC-1008",
+   "link": {
+    "kind": "asset",
+    "target": "PIC-1008"
+   },
+   "state": {
+    "item": {
+     "asset_id": "PIC-1008",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-23",
+   "x": 2860,
+   "y": 2308,
+   "text": "PIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-24",
+   "x": 2860,
+   "y": 2322,
+   "text": "1008",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1008-pv",
+   "x": 2888,
+   "y": 2272,
+   "item": {
+    "asset_id": "PIC-1008",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1008"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1008-sp",
+   "x": 2888,
+   "y": 2297,
+   "item": {
+    "asset_id": "PIC-1008",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1008"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1008-op",
+   "x": 2888,
+   "y": 2321,
+   "item": {
+    "asset_id": "PIC-1008",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1008"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1008-mode",
+   "x": 2808,
+   "y": 2332,
+   "item": {
+    "asset_id": "PIC-1008",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "util-line-19",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-ctl-PIC-1008",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "util-PV-1008",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-go-2",
+   "symbol": "connector.offpage",
+   "x": 3060.0,
+   "y": 2370.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Furnace",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "0,0,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-20",
+   "kind": "process",
+   "medium": "fuel gas",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "util-PV-1008",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-go-2",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-25",
+   "x": 3120,
+   "y": 2446,
+   "text": "To F-1104",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-SRC-h2",
+   "symbol": "connector.source",
+   "x": 2520,
+   "y": 2480,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "text",
+   "id": "util-t-26",
+   "x": 2550,
+   "y": 2540,
+   "text": "Hydrogen supply",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-go-3",
+   "symbol": "connector.offpage",
+   "x": 3060.0,
+   "y": 2470.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Reactor",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "3200,0,1600,900"
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-21",
+   "kind": "process",
+   "medium": "gas",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "util-SRC-h2",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-go-3",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-27",
+   "x": 2820,
+   "y": 2492,
+   "text": "Make-up hydrogen",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "text",
+   "id": "util-t-28",
+   "x": 3120,
+   "y": 2546,
+   "text": "To V-1208",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-SRC-n2",
+   "symbol": "connector.source",
+   "x": 2520,
+   "y": 2630,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "text",
+   "id": "util-t-29",
+   "x": 2550,
+   "y": 2690,
+   "text": "Nitrogen supply",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-PV-1221",
+   "symbol": "valve.control",
+   "x": 2840,
+   "y": 2620.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PV-1221",
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1221"
+   },
+   "level": {
+    "item": {
+     "asset_id": "PIC-1221",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-22",
+   "kind": "process",
+   "medium": "nitrogen",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-SRC-n2",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-PV-1221",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-30",
+   "x": 2700,
+   "y": 2642,
+   "text": "Nitrogen network",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-ctl-PIC-1221",
+   "symbol": "instrument.bubble",
+   "x": 2830.0,
+   "y": 2530.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PIC-1221",
+   "link": {
+    "kind": "asset",
+    "target": "PIC-1221"
+   },
+   "state": {
+    "item": {
+     "asset_id": "PIC-1221",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-31",
+   "x": 2860,
+   "y": 2558,
+   "text": "PIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-32",
+   "x": 2860,
+   "y": 2572,
+   "text": "1221",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1221-pv",
+   "x": 2888,
+   "y": 2522,
+   "item": {
+    "asset_id": "PIC-1221",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1221"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1221-sp",
+   "x": 2888,
+   "y": 2547,
+   "item": {
+    "asset_id": "PIC-1221",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1221"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1221-op",
+   "x": 2888,
+   "y": 2571,
+   "item": {
+    "asset_id": "PIC-1221",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1221"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1221-mode",
+   "x": 2808,
+   "y": 2582,
+   "item": {
+    "asset_id": "PIC-1221",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "util-line-23",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-ctl-PIC-1221",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "util-PV-1221",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-SNK-n2",
+   "symbol": "connector.sink",
+   "x": 3100,
+   "y": 2630,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "util-line-24",
+   "kind": "process",
+   "medium": "nitrogen",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "util-PV-1221",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-SNK-n2",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-33",
+   "x": 3130,
+   "y": 2690,
+   "text": "To the units",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-go-4",
+   "symbol": "connector.offpage_in",
+   "x": 2580.0,
+   "y": 2000.0,
+   "w": 120.0,
+   "h": 60.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Amine",
+   "label_position": "inside",
+   "link": {
+    "kind": "area",
+    "target": "1600,900,1600,900"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-34",
+   "x": 2640,
+   "y": 2076,
+   "text": "Tail gas from R-1226",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "util-PV-1212",
+   "symbol": "valve.control",
+   "x": 2800,
+   "y": 2000.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PV-1212",
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1212"
+   },
+   "level": {
+    "item": {
+     "asset_id": "PIC-1212",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "util-line-25",
+   "kind": "process",
+   "medium": "gas",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-go-4",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-PV-1212",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-ctl-PIC-1212",
+   "symbol": "instrument.bubble",
+   "x": 2790.0,
+   "y": 1910.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "PIC-1212",
+   "link": {
+    "kind": "asset",
+    "target": "PIC-1212"
+   },
+   "state": {
+    "item": {
+     "asset_id": "PIC-1212",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-35",
+   "x": 2820,
+   "y": 1938,
+   "text": "PIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "util-t-36",
+   "x": 2820,
+   "y": 1952,
+   "text": "1212",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1212-pv",
+   "x": 2848,
+   "y": 1902,
+   "item": {
+    "asset_id": "PIC-1212",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1212"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1212-sp",
+   "x": 2848,
+   "y": 1927,
+   "item": {
+    "asset_id": "PIC-1212",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1212"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1212-op",
+   "x": 2848,
+   "y": 1951,
+   "item": {
+    "asset_id": "PIC-1212",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "PIC-1212"
+   }
+  },
+  {
+   "type": "value",
+   "id": "util-PIC-1212-mode",
+   "x": 2768,
+   "y": 1962,
+   "item": {
+    "asset_id": "PIC-1212",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "util-line-26",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "util-ctl-PIC-1212",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "util-PV-1212",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "util-FL-901",
+   "symbol": "utility.flare_stack",
+   "x": 3001.6,
+   "y": 1838.0,
+   "w": 96.0,
+   "h": 224.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Flare",
+   "label_position": "below"
+  },
+  {
+   "type": "line",
+   "id": "util-line-27",
+   "kind": "process",
+   "medium": "gas",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "util-PV-1212",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "util-FL-901",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "util-t-37",
+   "x": 2940,
+   "y": 2022,
+   "text": "Flare header",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "text",
+   "id": "effl-t-1",
+   "x": 4000,
+   "y": 934,
+   "text": "Effluent treatment and slop",
+   "size": 24,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "effl-t-2",
+   "x": 4000,
+   "y": 958,
+   "text": "U-900 Utilities and offsites: Water treatment",
+   "size": 13,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "effl-TK-1225",
+   "symbol": "vessel.tank_cone_roof",
+   "x": 3420.0,
+   "y": 1068.0,
+   "w": 160.0,
+   "h": 224.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "TK-1225 Slop tank",
+   "label_position": "below",
+   "asset_id": "TK-1225",
+   "link": {
+    "kind": "asset",
+    "target": "TK-1225"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1225",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-SRC-drains",
+   "symbol": "connector.source",
+   "x": 3260,
+   "y": 1128.0,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "text",
+   "id": "effl-t-3",
+   "x": 3290,
+   "y": 1188.0,
+   "text": "Drains and skimmed oil",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "line",
+   "id": "effl-line-1",
+   "kind": "process",
+   "medium": "oil",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "effl-SRC-drains",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "effl-TK-1225",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-LV-1225",
+   "symbol": "valve.control",
+   "x": 3800,
+   "y": 1230.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1225",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1225"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1225",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "effl-line-2",
+   "kind": "process",
+   "medium": "oil",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "effl-TK-1225",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "effl-LV-1225",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-ctl-LIC-1225",
+   "symbol": "instrument.bubble",
+   "x": 3790.0,
+   "y": 1140.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1225",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1225"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1225",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "effl-t-4",
+   "x": 3820,
+   "y": 1168.0,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "effl-t-5",
+   "x": 3820,
+   "y": 1182.0,
+   "text": "1225",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "effl-LIC-1225-pv",
+   "x": 3848,
+   "y": 1132.0,
+   "item": {
+    "asset_id": "LIC-1225",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1225"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-LIC-1225-sp",
+   "x": 3848,
+   "y": 1157.0,
+   "item": {
+    "asset_id": "LIC-1225",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1225"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-LIC-1225-op",
+   "x": 3848,
+   "y": 1181.0,
+   "item": {
+    "asset_id": "LIC-1225",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1225"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-LIC-1225-mode",
+   "x": 3768,
+   "y": 1192.0,
+   "item": {
+    "asset_id": "LIC-1225",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "effl-line-3",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "effl-ctl-LIC-1225",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "effl-LV-1225",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "line",
+   "id": "effl-line-4",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     3572,
+     1170.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "effl-ctl-LIC-1225",
+    "port": "left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-SNK-slop",
+   "symbol": "connector.sink",
+   "x": 4700,
+   "y": 1240.0,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "effl-line-5",
+   "kind": "process",
+   "medium": "oil",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "effl-LV-1225",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "effl-SNK-slop",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "effl-t-6",
+   "x": 4260,
+   "y": 1252.0,
+   "text": "Slop oil to rerun",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "effl-TK-1223",
+   "symbol": "vessel.tank",
+   "x": 3740.0,
+   "y": 1380.0,
+   "w": 200.0,
+   "h": 280.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "TK-1223 Equalization tank",
+   "label_position": "below",
+   "asset_id": "TK-1223",
+   "link": {
+    "kind": "asset",
+    "target": "TK-1223"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1223",
+     "role": "pv"
+    }
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-SRC-oily",
+   "symbol": "connector.source",
+   "x": 3260,
+   "y": 1440,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "text",
+   "id": "effl-t-7",
+   "x": 3290,
+   "y": 1500,
+   "text": "Oily water from the units",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "effl-FV-1222",
+   "symbol": "valve.control",
+   "x": 3540,
+   "y": 1430.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FV-1222",
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1222"
+   },
+   "level": {
+    "item": {
+     "asset_id": "FIC-1222",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "effl-line-6",
+   "kind": "process",
+   "medium": "water",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "effl-SRC-oily",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "effl-FV-1222",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "line",
+   "id": "effl-line-7",
+   "kind": "process",
+   "medium": "water",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "effl-FV-1222",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "effl-TK-1223",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-ctl-FIC-1222",
+   "symbol": "instrument.bubble",
+   "x": 3530.0,
+   "y": 1340.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "FIC-1222",
+   "link": {
+    "kind": "asset",
+    "target": "FIC-1222"
+   },
+   "state": {
+    "item": {
+     "asset_id": "FIC-1222",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "effl-t-8",
+   "x": 3560,
+   "y": 1368,
+   "text": "FIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "effl-t-9",
+   "x": 3560,
+   "y": 1382,
+   "text": "1222",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "effl-FIC-1222-pv",
+   "x": 3588,
+   "y": 1332,
+   "item": {
+    "asset_id": "FIC-1222",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1222"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-FIC-1222-sp",
+   "x": 3588,
+   "y": 1357,
+   "item": {
+    "asset_id": "FIC-1222",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1222"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-FIC-1222-op",
+   "x": 3588,
+   "y": 1381,
+   "item": {
+    "asset_id": "FIC-1222",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "FIC-1222"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-FIC-1222-mode",
+   "x": 3508,
+   "y": 1392,
+   "item": {
+    "asset_id": "FIC-1222",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "effl-line-8",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "effl-ctl-FIC-1222",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "effl-FV-1222",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-P-1223",
+   "symbol": "pump.centrifugal",
+   "x": 4018.0,
+   "y": 1604.0,
+   "w": 64.0,
+   "h": 64.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Transfer pump",
+   "label_position": "below"
+  },
+  {
+   "type": "line",
+   "id": "effl-line-9",
+   "kind": "process",
+   "medium": "water",
+   "points": [
+    [
+     3969.0,
+     1620.0
+    ],
+    [
+     3969.0,
+     1636.0
+    ]
+   ],
+   "arrow": "end",
+   "start": {
+    "element": "effl-TK-1223",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "effl-P-1223",
+    "port": "suction"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-LV-1223",
+   "symbol": "valve.control",
+   "x": 4160,
+   "y": 1590.0,
+   "w": 40.0,
+   "h": 40.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LV-1223",
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1223"
+   },
+   "level": {
+    "item": {
+     "asset_id": "LIC-1223",
+     "role": "op"
+    }
+   }
+  },
+  {
+   "type": "line",
+   "id": "effl-line-10",
+   "kind": "process",
+   "medium": "water",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "effl-P-1223",
+    "port": "discharge"
+   },
+   "end": {
+    "element": "effl-LV-1223",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-ctl-LIC-1223",
+   "symbol": "instrument.bubble",
+   "x": 4150.0,
+   "y": 1500.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "LIC-1223",
+   "link": {
+    "kind": "asset",
+    "target": "LIC-1223"
+   },
+   "state": {
+    "item": {
+     "asset_id": "LIC-1223",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "effl-t-10",
+   "x": 4180,
+   "y": 1528.0,
+   "text": "LIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "effl-t-11",
+   "x": 4180,
+   "y": 1542.0,
+   "text": "1223",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "effl-LIC-1223-pv",
+   "x": 4208,
+   "y": 1492.0,
+   "item": {
+    "asset_id": "LIC-1223",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1223"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-LIC-1223-sp",
+   "x": 4208,
+   "y": 1517.0,
+   "item": {
+    "asset_id": "LIC-1223",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1223"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-LIC-1223-op",
+   "x": 4208,
+   "y": 1541.0,
+   "item": {
+    "asset_id": "LIC-1223",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "LIC-1223"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-LIC-1223-mode",
+   "x": 4128,
+   "y": 1552.0,
+   "item": {
+    "asset_id": "LIC-1223",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "effl-line-11",
+   "kind": "signal",
+   "medium": "",
+   "points": [],
+   "arrow": "none",
+   "start": {
+    "element": "effl-ctl-LIC-1223",
+    "port": "bottom"
+   },
+   "end": {
+    "element": "effl-LV-1223",
+    "port": "signal"
+   }
+  },
+  {
+   "type": "line",
+   "id": "effl-line-12",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     3920.0,
+     1530.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "effl-ctl-LIC-1223",
+    "port": "left"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-NT-901",
+   "symbol": "vessel.basin",
+   "x": 4280.0,
+   "y": 1540.0,
+   "w": 200.0,
+   "h": 200.0,
+   "rotate": 0,
+   "flip": false,
+   "label": "Neutralization",
+   "label_position": "below"
+  },
+  {
+   "type": "line",
+   "id": "effl-line-13",
+   "kind": "process",
+   "medium": "water",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "effl-LV-1223",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "effl-NT-901",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "symbol",
+   "id": "effl-SNK-treated",
+   "symbol": "connector.sink",
+   "x": 4700,
+   "y": 1680.0,
+   "w": 60,
+   "h": 40,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none"
+  },
+  {
+   "type": "line",
+   "id": "effl-line-14",
+   "kind": "process",
+   "medium": "water",
+   "points": [],
+   "arrow": "end",
+   "start": {
+    "element": "effl-NT-901",
+    "port": "outlet"
+   },
+   "end": {
+    "element": "effl-SNK-treated",
+    "port": "inlet"
+   }
+  },
+  {
+   "type": "text",
+   "id": "effl-t-12",
+   "x": 4640,
+   "y": 1692.0,
+   "text": "Treated water",
+   "size": 12,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "symbol",
+   "id": "effl-ctl-AIC-1224",
+   "symbol": "instrument.bubble",
+   "x": 4550.0,
+   "y": 1580.0,
+   "w": 60,
+   "h": 60,
+   "rotate": 0,
+   "flip": false,
+   "label": "",
+   "label_position": "none",
+   "asset_id": "AIC-1224",
+   "link": {
+    "kind": "asset",
+    "target": "AIC-1224"
+   },
+   "state": {
+    "item": {
+     "asset_id": "AIC-1224",
+     "result": "linkcraft.loop_health"
+    }
+   }
+  },
+  {
+   "type": "text",
+   "id": "effl-t-13",
+   "x": 4580,
+   "y": 1608.0,
+   "text": "AIC",
+   "size": 12,
+   "align": "middle",
+   "bold": true
+  },
+  {
+   "type": "text",
+   "id": "effl-t-14",
+   "x": 4580,
+   "y": 1622.0,
+   "text": "1224",
+   "size": 10,
+   "align": "middle",
+   "bold": false
+  },
+  {
+   "type": "value",
+   "id": "effl-AIC-1224-pv",
+   "x": 4608,
+   "y": 1572.0,
+   "item": {
+    "asset_id": "AIC-1224",
+    "role": "pv"
+   },
+   "label": "PV",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 13,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1224"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-AIC-1224-sp",
+   "x": 4608,
+   "y": 1597.0,
+   "item": {
+    "asset_id": "AIC-1224",
+    "role": "sp"
+   },
+   "label": "SP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1224"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-AIC-1224-op",
+   "x": 4608,
+   "y": 1621.0,
+   "item": {
+    "asset_id": "AIC-1224",
+    "role": "op"
+   },
+   "label": "OP",
+   "show_label": true,
+   "show_unit": true,
+   "decimals": 1,
+   "size": 11,
+   "link": {
+    "kind": "trend",
+    "target": "AIC-1224"
+   }
+  },
+  {
+   "type": "value",
+   "id": "effl-AIC-1224-mode",
+   "x": 4528,
+   "y": 1632.0,
+   "item": {
+    "asset_id": "AIC-1224",
+    "role": "mode"
+   },
+   "label": "",
+   "show_label": false,
+   "show_unit": false,
+   "decimals": 0,
+   "size": 10
+  },
+  {
+   "type": "line",
+   "id": "effl-line-15",
+   "kind": "signal",
+   "medium": "",
+   "points": [
+    [
+     4580,
+     1700.0
+    ]
+   ],
+   "arrow": "none",
+   "start": {
+    "element": "effl-ctl-AIC-1224",
+    "port": "bottom"
+   }
+  }
+ ]
+}

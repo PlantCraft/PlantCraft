@@ -1,0 +1,76 @@
+/* PlantCraft Documents's styles on the suite's fonts, tokens and frame (@plantcraft/ui). */
+@import "@plantcraft/ui/fonts.css";
+@import "@plantcraft/ui/tokens.css";
+@import "@plantcraft/ui/shell.css";
+@import "@plantcraft/ui/base.css";
+
+.form-wide { grid-column: 1 / -1; }
+.check { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.link-button { background: none; border: 0; padding: 0; color: var(--pc-primary-text); cursor: pointer; font: inherit; display: inline-flex; gap: 4px; align-items: center; }
+.link-button.danger { color: var(--pc-problem-text); }
+.send-failed { color: var(--pc-problem-text); }
+.send-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 4px; max-height: 240px; overflow: auto; }
+.send-list li { display: flex; justify-content: space-between; gap: 12px; }
+.empty { text-align: center; padding: 32px 16px; }
+
+/* The library: folders in the left column (the suite's pc-folder-layout); the page takes dropped files. */
+.drop-target { min-height: 60vh; border-radius: 12px; }
+.drop-target.dragging { outline: 2px dashed var(--pc-app-doccraft); outline-offset: 6px; }
+.folder-line { margin: -4px 0 14px; }
+
+/* A document: facts, then the text beside its assets and revisions. */
+.doc-facts dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px 18px; margin: 0 0 8px; }
+.doc-facts dt { font-size: 12px; color: var(--pc-text-3); }
+.doc-facts dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.document-columns { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 960px) { .document-columns { grid-template-columns: minmax(0, 1fr); } }
+.reader-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.reader { max-height: 78vh; overflow: auto; }
+.passage { padding: 6px 0 10px; border-bottom: 1px solid var(--pc-border-subtle); }
+.passage:last-child { border-bottom: 0; }
+.passage h3 { font-size: 15px; margin: 12px 0 6px; }
+.passage p { margin: 0 0 4px; line-height: 1.55; white-space: pre-wrap; }
+.passage-marked { background: var(--pc-attention-soft); border-radius: 8px; padding: 6px 10px 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 10px; }
+.chip { display: inline-flex; gap: 6px; align-items: center; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--pc-border); background: var(--pc-surface-3); }
+.chip button { background: none; border: 0; cursor: pointer; color: var(--pc-text-3); font: inherit; padding: 0; }
+.chip-suggested { border-style: dashed; }
+.inline-form { display: flex; gap: 8px; }
+
+/* Search: the question on top, each passage a card with its citation. */
+.search-input { width: 100%; font-size: 16px; padding: 10px 12px; }
+.search-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-top: 10px; }
+.search-filters label { display: grid; gap: 4px; font-size: 13px; }
+.search-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 0; font-size: 13px; }
+.search-chips .muted { margin-right: 4px; }
+button.chip { cursor: pointer; font: inherit; color: inherit; }
+.hits { list-style: none; padding: 0; display: grid; gap: 10px; }
+.hit header { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+.hit-section { margin: 4px 0; font-size: 13px; color: var(--pc-text-3); }
+.hit-text { margin: 6px 0; line-height: 1.5; }
+
+/* The Overview's search box (its own widget). */
+.overview-ask { display: grid; gap: 8px; align-content: center; height: 100%; }
+.overview-ask-row { display: flex; gap: 8px; }
+.overview-ask-row .search-input { flex: 1; min-width: 0; }
+.overview-ask p { margin: 0; font-size: 13px; }
+
+/* Final round (2026-10-27): what can be sent, a document's description, search words marked in
+ * the passage (search engine style) and a Word file shown as a page. */
+.send-types { display: flex; align-items: center; gap: 6px; margin: -6px 0 14px; font-size: 13px; }
+.doc-description { display: block; color: var(--pc-text-3); font-size: 12px; margin-top: 2px; max-width: 520px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-about { margin: 0 0 12px; line-height: 1.5; }
+.folder-mark { color: var(--pc-text-3); }
+.hit-snippet { color: inherit; text-decoration: none; }
+.hit-snippet:hover { text-decoration: underline; }
+.hit-text mark, .passage mark { background: var(--pc-attention-soft); color: inherit; font-weight: 700; padding: 0 1px; border-radius: 2px; }
+.doc-page { max-width: 860px; line-height: 1.6; }
+.doc-page h1, .doc-page h2, .doc-page h3, .doc-page h4 { margin: 18px 0 8px; }
+.doc-page p { margin: 0 0 10px; }
+.doc-page table { border-collapse: collapse; margin: 10px 0 16px; width: 100%; font-size: 14px; }
+.doc-page th, .doc-page td { border: 1px solid var(--pc-border-subtle); padding: 4px 8px; text-align: left; vertical-align: top; }
+.doc-page th { background: var(--pc-surface-2); }
+/* A panel's title reads like every app's section title (ui base.css .panel-header h2). */
+.panel > h2, .reader-head h2 { margin: 0 0 12px; font-size: var(--pc-fs-lg); font-weight: 600; }
+.reader-head h2 { margin: 0; }
+.reader-head { margin-bottom: 12px; }

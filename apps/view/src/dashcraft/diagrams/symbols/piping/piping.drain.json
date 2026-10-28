@@ -1,0 +1,50 @@
+{
+  "id": "piping.drain",
+  "title": "Drain / funnel",
+  "category": "piping",
+  "w": 40,
+  "h": 40,
+  "svg": "<polyline points=\"8,20 20,34 32,20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"20\" y1=\"34\" x2=\"20\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"20\" y1=\"0\" x2=\"20\" y2=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 20,
+      "y": 0,
+      "dir": "n",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 20.0,
+      "y": 44,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 20.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 40,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "drain",
+    "funnel",
+    "sewer",
+    "oily water"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

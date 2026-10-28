@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Local state: the database and app key live in the data folder (at the root only: the
+# package src/cpmcraft/data is code)
+/var/
+/data/
+*.sqlite3
+*.sqlite3-*
+.env
+.env.*
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+
+# Oracles are fetched at pinned versions, never committed (tests/oracles holds the cases)
+/oracles/

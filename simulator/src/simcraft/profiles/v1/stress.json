@@ -1,0 +1,11 @@
+{
+  "description": "Thirty-day bounded storage and throughput profile.",
+  "duration_seconds": 2592000,
+  "history_seconds": 86400,
+  "integration_step_seconds": 5.0,
+  "max_history_values_per_node": 50000,
+  "observation_frame_seconds": 30.0,
+  "profile_id": "stress",
+  "scenario_cycle_seconds": 21600.0,
+  "schema": "process-plant-opcua/runtime-profile/v1"
+}

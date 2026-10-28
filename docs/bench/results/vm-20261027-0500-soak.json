@@ -1,0 +1,461 @@
+{
+  "started_at": "2026-10-27T05:00:36Z",
+  "until": "2026-10-27T08:00:36Z",
+  "hours": 3.0,
+  "machine": {
+    "host": "vm",
+    "system": "Linux 6.18.44-fc-v165 x86_64",
+    "cpus": 4,
+    "memory_gib": 15.7,
+    "docker": "4 CPUs 16872812544 x86_64"
+  },
+  "versions": {
+    "linkcraft": {
+      "revision": "4d55afe"
+    },
+    "dashcraft": {
+      "revision": "4d55afe"
+    },
+    "histcraft": {
+      "revision": "4d55afe"
+    }
+  },
+  "hold": false,
+  "report_at": "2026-10-27T08:00:48Z",
+  "hours_run": 3.0,
+  "verdict": "FAIL",
+  "checks": [
+    {
+      "subject": "alarmcraft",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "alarmcraft",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "alarmcraft",
+      "check": "memory",
+      "detail": "298 MiB, +214.8 MiB/day (+72.2 %/day)",
+      "result": "FAIL"
+    },
+    {
+      "subject": "alarmcraft",
+      "check": "p95 latency",
+      "detail": "median 30 ms, max 64 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "alarmcraft",
+      "check": "errors logged",
+      "detail": "about 0",
+      "result": "ok"
+    },
+    {
+      "subject": "compute-gateway",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "compute-gateway",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "compute-gateway",
+      "check": "memory",
+      "detail": "55 MiB, -58.5 MiB/day (-107.0 %/day)",
+      "result": "ok"
+    },
+    {
+      "subject": "dashcraft",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "dashcraft",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "dashcraft",
+      "check": "memory",
+      "detail": "124 MiB, +15.0 MiB/day (+12.2 %/day)",
+      "result": "warn"
+    },
+    {
+      "subject": "dashcraft",
+      "check": "p95 latency",
+      "detail": "median 53 ms, max 158 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "dashcraft",
+      "check": "errors logged",
+      "detail": "about 0",
+      "result": "ok"
+    },
+    {
+      "subject": "doccraft",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "doccraft",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "doccraft",
+      "check": "memory",
+      "detail": "120 MiB, -1.5 MiB/day (-1.2 %/day)",
+      "result": "ok"
+    },
+    {
+      "subject": "doccraft",
+      "check": "p95 latency",
+      "detail": "median 29 ms, max 38 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "doccraft",
+      "check": "errors logged",
+      "detail": "about 0",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft",
+      "check": "memory",
+      "detail": "719 MiB, +101.3 MiB/day (+14.1 %/day)",
+      "result": "warn"
+    },
+    {
+      "subject": "histcraft",
+      "check": "p95 latency",
+      "detail": "median 347 ms, max 515 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft",
+      "check": "errors logged",
+      "detail": "about 0",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft-collector",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft-collector",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft-collector",
+      "check": "memory",
+      "detail": "260 MiB, +1440.5 MiB/day (+554.3 %/day)",
+      "result": "FAIL"
+    },
+    {
+      "subject": "histcraft-db",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft-db",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft-db",
+      "check": "memory",
+      "detail": "798 MiB, +2.2 MiB/day (+0.3 %/day)",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft-gateway",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft-gateway",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "histcraft-gateway",
+      "check": "memory",
+      "detail": "64 MiB, -48.3 MiB/day (-75.4 %/day)",
+      "result": "ok"
+    },
+    {
+      "subject": "installer",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "installer",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "installer",
+      "check": "memory",
+      "detail": "43 MiB, +19.7 MiB/day (+45.4 %/day)",
+      "result": "FAIL"
+    },
+    {
+      "subject": "linkcraft",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "linkcraft",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "linkcraft",
+      "check": "memory",
+      "detail": "2171 MiB, +5982.9 MiB/day (+275.6 %/day)",
+      "result": "FAIL"
+    },
+    {
+      "subject": "linkcraft",
+      "check": "queue wait",
+      "detail": "max 1.7 min",
+      "result": "ok"
+    },
+    {
+      "subject": "linkcraft",
+      "check": "p95 latency",
+      "detail": "median 190 ms, max 221 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "linkcraft",
+      "check": "errors logged",
+      "detail": "about 0",
+      "result": "ok"
+    },
+    {
+      "subject": "linkcraft-executor",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "linkcraft-executor",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "linkcraft-executor",
+      "check": "memory",
+      "detail": "704 MiB, -57.3 MiB/day (-8.1 %/day)",
+      "result": "ok"
+    },
+    {
+      "subject": "llm-egress",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "llm-egress",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "llm-egress",
+      "check": "memory",
+      "detail": "17 MiB, -2.7 MiB/day (-15.8 %/day)",
+      "result": "ok"
+    },
+    {
+      "subject": "modelcraft",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "modelcraft",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "modelcraft",
+      "check": "memory",
+      "detail": "162 MiB, +25.5 MiB/day (+15.7 %/day)",
+      "result": "warn"
+    },
+    {
+      "subject": "modelcraft",
+      "check": "p95 latency",
+      "detail": "median 28 ms, max 70 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "modelcraft",
+      "check": "errors logged",
+      "detail": "about 0",
+      "result": "ok"
+    },
+    {
+      "subject": "modelcraft-executor",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "modelcraft-executor",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "modelcraft-executor",
+      "check": "memory",
+      "detail": "88 MiB, -104.0 MiB/day (-118.0 %/day)",
+      "result": "ok"
+    },
+    {
+      "subject": "plantcraft",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "plantcraft",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "plantcraft",
+      "check": "memory",
+      "detail": "273 MiB, +166.2 MiB/day (+60.8 %/day)",
+      "result": "FAIL"
+    },
+    {
+      "subject": "processcraft",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "processcraft",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "processcraft",
+      "check": "memory",
+      "detail": "1325 MiB, +2066.4 MiB/day (+156.0 %/day)",
+      "result": "FAIL"
+    },
+    {
+      "subject": "processcraft",
+      "check": "p95 latency",
+      "detail": "median 1044 ms, max 1749 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "processcraft",
+      "check": "errors logged",
+      "detail": "about 0",
+      "result": "ok"
+    },
+    {
+      "subject": "proxy",
+      "check": "up",
+      "detail": "100.00 %",
+      "result": "ok"
+    },
+    {
+      "subject": "proxy",
+      "check": "restarts",
+      "detail": "+0",
+      "result": "ok"
+    },
+    {
+      "subject": "proxy",
+      "check": "memory",
+      "detail": "22 MiB, +3.6 MiB/day (+16.5 %/day)",
+      "result": "warn"
+    },
+    {
+      "subject": "host",
+      "check": "disk",
+      "detail": "3.9 GB free, -3.77 GB/day, full in 1 days",
+      "result": "warn"
+    },
+    {
+      "subject": "probe",
+      "check": "batch_read",
+      "detail": "180 probes, 0 failed (0.00 %), p95 834 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "probe",
+      "check": "dashboard_card",
+      "detail": "58 probes, 0 failed (0.00 %), p95 460 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "probe",
+      "check": "latest",
+      "detail": "3600 probes, 0 failed (0.00 %), p95 62 ms",
+      "result": "ok"
+    },
+    {
+      "subject": "probe",
+      "check": "me",
+      "detail": "180 probes, 2 failed (1.11 %), p95 44 ms; last error: GET /api/me: 404 {\"detail\":\"Route not found.\"}",
+      "result": "FAIL"
+    },
+    {
+      "subject": "probe",
+      "check": "freshness",
+      "detail": "oldest live value p95 6 s, max 7 s",
+      "result": "ok"
+    }
+  ]
+}

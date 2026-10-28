@@ -1,0 +1,88 @@
+name: App template
+
+# The app template (templates/app/): tested against this commit's SDK and interface, so a change
+# to sdk/python or ui/ that would break an app made from the template fails here first. The job
+# builds both packages, vendors them into the template (dev/revendor, as at a release) and runs
+# its `make ci`, on main four times a day (the schedule below) when those files changed since the
+# last green run, and by hand. Pull requests and pushes still start a run that tests nothing: a
+# push is how the schedule knows something changed. Documentation-only changes run nothing. CI
+# budget and cadence: ci/macmini/README.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "templates/app/**"
+      - "!templates/app/**/*.md"
+      - "sdk/python/**"
+      - "ui/**"
+      - "dev/revendor"
+      - ".github/workflows/template.yml"
+  pull_request:
+    paths:
+      - "templates/app/**"
+      - "!templates/app/**/*.md"
+      - "sdk/python/**"
+      - "ui/**"
+      - "dev/revendor"
+      - ".github/workflows/template.yml"
+  # The tests of main at about 09:00, 13:00, 17:00 and 21:00 Brasília (UTC-3; cron is UTC).
+  schedule:
+    - cron: "42 0,12,16,20 * * *"
+  workflow_dispatch:
+
+# A newer push to a pull request cancels its older run; runs on main are grouped by event and
+# commit, so a merge's deploy and a scheduled test run never wait on each other.
+concurrency:
+  group: template-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Read-only token: no job here writes to the repository.
+permissions:
+  contents: read
+
+jobs:
+  # Scheduled runs only: test only if this workflow's folder changed since its last green run.
+  changes:
+    if: github.event_name == 'schedule'
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: ci
+      - id: gate
+        run: python3 ci/since-green
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  ci:
+    needs: [changes]
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      # One runner serves every folder: each job gets a Python environment of its own, so nothing
+      # an earlier job installed (another folder's SDK of the same version) stands in for this one's.
+      - run: rm -rf "$RUNNER_TEMP/venv" && python -m venv "$RUNNER_TEMP/venv" && echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: templates/app/frontend/package-lock.json
+      - run: make sdk-wheel ui-package
+      - run: dev/revendor templates/app
+      - run: make -C templates/app ci

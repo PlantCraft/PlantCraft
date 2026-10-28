@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linkcraft"
+version = "0.5.0"
+description = "PlantCraft Analytics: control loop performance monitoring for the PlantCraft suite"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11"
+dependencies = [
+    # Not on any index: install it from vendor/ first
+    # (pip install --no-index --find-links vendor plantcraft-sdk==0.77.0).
+    "plantcraft-sdk==0.77.0",
+    "fastapi>=0.116,<1",
+    "httpx>=0.27,<1",
+    "numpy>=2",
+    "pandas>=2.2",
+    "pydantic>=2.7,<3",
+    "reportlab>=4,<6",
+    "uvicorn>=0.35,<1",
+    # Runs the FMUs of the Models library (FMI 1, 2 and 3). It also declares tools Link never uses
+    # (cmake, jinja2, nbformat: compiling FMUs and notebooks); the image installs only what it
+    # imports (deploy/overrides.txt).
+    "fmpy==0.3.32",
+    "lxml>=5,<7",
+    "attrs>=23",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff==0.17.1",
+]
+# Browser journeys (tests/e2e, `make e2e`); test-only, never in the image.
+e2e = [
+    "playwright==1.64.0",
+]
+
+[project.urls]
+Repository = "https://github.com/PlantCraft/PlantCraft/tree/main/apps/link"
+
+[project.scripts]
+linkcraft = "linkcraft.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["linkcraft*"]
+
+[tool.setuptools.package-data]
+# Method help pages (catalog/help.py).
+linkcraft = ["methods/help/*.md", "methods/help/guides/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-p no:cacheprovider"
+filterwarnings = [
+    # The SDK's FakePlantCraft hands out Starlette's TestClient (see the report to the SDK).
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
+
+# The test time budget (PlantCraft docs/testing.md); about twice the measured run.
+[tool.plantcraft.tests]
+test_seconds = 10
+slow_seconds = 120
+suite_seconds = 360  # about 1.6x a run on the shared Mac mini runner (222 s, 2026-10-26)
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "."]
+extend-exclude = ["frontend", "vendor"]
+
+[tool.ruff.lint]
+# Keep the gate small: real errors (pyflakes) and import order.
+select = ["F", "I", "DTZ"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["linkcraft"]
+known-third-party = ["plantcraft_sdk"]

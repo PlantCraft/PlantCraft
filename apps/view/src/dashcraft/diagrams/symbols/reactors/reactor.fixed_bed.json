@@ -1,0 +1,68 @@
+{
+  "id": "reactor.fixed_bed",
+  "title": "Fixed-bed reactor",
+  "category": "reactors",
+  "w": 80,
+  "h": 200,
+  "svg": "<path class=\"pc-state\" d=\"M20,40 A20,10 0 0 1 60,40 V160 A20,10 0 0 1 20,160 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><line x1=\"20\" y1=\"70\" x2=\"60\" y2=\"70\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"20\" y1=\"140\" x2=\"60\" y2=\"140\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"30\" cy=\"76\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"38\" cy=\"76\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"46\" cy=\"76\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"54\" cy=\"76\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"26\" cy=\"84\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"34\" cy=\"84\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"42\" cy=\"84\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"50\" cy=\"84\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"30\" cy=\"92\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"38\" cy=\"92\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"46\" cy=\"92\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"54\" cy=\"92\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"26\" cy=\"100\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"34\" cy=\"100\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"42\" cy=\"100\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"50\" cy=\"100\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"30\" cy=\"108\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"38\" cy=\"108\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"46\" cy=\"108\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"54\" cy=\"108\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"26\" cy=\"116\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"34\" cy=\"116\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"42\" cy=\"116\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"50\" cy=\"116\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"30\" cy=\"124\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"38\" cy=\"124\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"46\" cy=\"124\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"54\" cy=\"124\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"26\" cy=\"132\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"34\" cy=\"132\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"42\" cy=\"132\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"50\" cy=\"132\" r=\"1.5\" fill=\"currentColor\" stroke=\"none\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 40,
+      "y": 30,
+      "dir": "n",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 40,
+      "y": 170,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "quench",
+      "x": 20,
+      "y": 100,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 204,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 80,
+      "y": 100,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 60,
+      "y": 30,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "reactor",
+    "fixed bed",
+    "catalyst",
+    "packed bed",
+    "hydrotreater",
+    "converter"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

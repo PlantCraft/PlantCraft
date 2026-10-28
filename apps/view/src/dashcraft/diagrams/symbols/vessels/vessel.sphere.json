@@ -1,0 +1,58 @@
+{
+  "id": "vessel.sphere",
+  "title": "Spherical tank",
+  "category": "vessels",
+  "w": 100,
+  "h": 110,
+  "svg": "<line x1=\"22\" y1=\"78\" x2=\"22\" y2=\"100\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"78\" y1=\"78\" x2=\"78\" y2=\"100\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle cx=\"50\" cy=\"50\" r=\"40\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect class=\"pc-level\" x=\"25\" y=\"22\" width=\"50\" height=\"56\" stroke=\"none\"/><circle class=\"pc-state\" cx=\"50\" cy=\"50\" r=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "top",
+      "x": 50,
+      "y": 10,
+      "dir": "n",
+      "kind": "process"
+    },
+    {
+      "id": "bottom",
+      "x": 50,
+      "y": 90,
+      "dir": "s",
+      "kind": "process"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 50.0,
+      "y": 114,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 50,
+      "y": 50,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 90,
+      "y": 10,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "level"
+  ],
+  "keywords": [
+    "sphere",
+    "LPG",
+    "pressurised",
+    "storage"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

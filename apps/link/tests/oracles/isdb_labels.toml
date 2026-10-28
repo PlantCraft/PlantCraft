@@ -1,0 +1,13 @@
+# Published stiction labels of International Stiction Database loops, for
+# tests/oracles/test_isdb_oracle.py. Transcribe them from the loop overview that Jelali and Huang
+# (2010) publish with the database (https://doi.org/10.1007/978-1-84882-775-2), citing the table
+# and page in `source` below and in SPEC.md. Never infer a label from our own methods or from a
+# loop's name. Keys are the loop names fetch_isdb.py writes (oracles/isdb/loops.json); values
+# are "stiction" or "no_stiction". Loops the source marks as uncertain stay out.
+#
+# Empty until the database is pinned (docs/gaps.md, G3): the archive could not be downloaded
+# from this project's environment on 2026-10-19, so nothing could be checked against it.
+
+source = ""
+
+[labels]

@@ -1,0 +1,73 @@
+{
+  "id": "valve.control",
+  "title": "Control valve (diaphragm)",
+  "category": "valves",
+  "w": 80,
+  "h": 80,
+  "svg": "<line x1=\"0\" y1=\"60\" x2=\"20\" y2=\"60\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"60\" x2=\"80\" y2=\"60\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"40\" y1=\"34\" x2=\"40\" y2=\"60\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"pc-state pc-run\" d=\"M20,50 L40,60 L20,70 Z M60,50 L40,60 L60,70 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><path d=\"M24,34 A16,14 0 0 1 56,34 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 60,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 80,
+      "y": 60,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "signal",
+      "x": 40,
+      "y": 20,
+      "dir": "n",
+      "kind": "signal",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40,
+      "y": 76,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 62,
+      "y": 28,
+      "align": "start",
+      "baseline": "middle"
+    },
+    {
+      "id": "alarm",
+      "x": 76,
+      "y": 10,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "open",
+    "position"
+  ],
+  "keywords": [
+    "valve",
+    "control",
+    "diaphragm",
+    "FCV",
+    "PCV",
+    "LCV",
+    "TCV",
+    "modulating"
+  ],
+  "standard": "ISA-5.1",
+  "description": ""
+}

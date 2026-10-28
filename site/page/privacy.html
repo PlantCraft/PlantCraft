@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy · PlantCraft</title>
+%%ROBOTS%%
+<meta name="description" content="What PlantCraft's site and public demo keep about visitors, and what PlantCraft installed at a plant sends out: nothing.">
+<link rel="icon" href="assets/plantcraft.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+%%DRAFT%%
+<div class="wrap">
+  <nav aria-label="Main">
+    <a class="logo" href="./">%%LOGO%% PlantCraft</a>
+  </nav>
+
+  <main id="main">
+  <section aria-labelledby="privacy-h">
+    <p class="eyebrow">Privacy</p>
+    <h2 id="privacy-h">What we keep about you.</h2>
+    <p class="sec-lead">Short version: no cookies on this site, no advertising, no tracking scripts, and nothing is sold. PlantCraft installed at a plant sends nothing to us or to anyone else.</p>
+
+    <h3>This site</h3>
+    <ul>
+      <li><b>No cookies and no analytics script.</b> The page loads nothing from other sites.</li>
+      <li><b>Delivery.</b> The site and the demo are delivered through Cloudflare, which sees your network address and the pages you ask for, as any web host does. We see only aggregate traffic (how many visits, from which countries).</li>
+      <li><b>Questions to the assistant.</b> Your question and the conversation so far are sent to a language model provider (OpenAI) to write the answer. We keep the questions, without your name or address, to learn what people ask and improve the documentation. Your address is held in memory for a day at most, only to limit how many questions one address can ask.</li>
+      <li><b>Contact requests.</b> When you fill in <b>Talk to us</b>, we keep what you wrote (name, e-mail, company, need, and your questions if you agreed) to answer you, and nothing else is done with it.</li>
+    </ul>
+
+    <h3>The public demo</h3>
+    <ul>
+      <li>The demo runs on simulated data only. It is a separate machine: no real plant and no customer installation is connected to it, ever.</li>
+      <li>It uses one cookie, for the visit's sign-in, which ends with the visit.</li>
+      <li>It keeps a record of each visit: when it started, the role you chose (to learn which people the demo interests) and your network address (at most two places per address, so one person cannot take every place). Nothing you type in the demo is saved.</li>
+    </ul>
+
+    <h3>PlantCraft at your plant</h3>
+    <p>An installation runs on your own servers and sends nothing out: no telemetry, no usage data, no updates check. A language model is off until your administrator turns it on and chooses which provider, or a model on your own network.</p>
+
+    <h3>Your rights</h3>
+    <p>To see, correct or delete what we keep about you (LGPD and GDPR), %%WRITE%%. We answer personally.</p>
+  </section>
+  </main>
+
+  <footer>
+    <span>PlantCraft · Apache-2.0</span>
+    <div class="fl"><a href="./">Home</a><a href="%%DOCS%%/docs/security-guide.md">Security</a><a href="%%GH%%">GitHub</a></div>
+  </footer>
+</div>
+</body>
+</html>

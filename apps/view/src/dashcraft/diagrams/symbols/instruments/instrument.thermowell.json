@@ -1,0 +1,66 @@
+{
+  "id": "instrument.thermowell",
+  "title": "Thermowell",
+  "category": "instruments",
+  "w": 40,
+  "h": 40,
+  "svg": "<line x1=\"0\" y1=\"30\" x2=\"40\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"pc-state\" d=\"M17,0 V28 A3,3 0 0 0 23,28 V0\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 30,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 40,
+      "y": 30,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "tap",
+      "x": 20,
+      "y": 0,
+      "dir": "n",
+      "kind": "signal"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 20.0,
+      "y": 44,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 20.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 40,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "thermowell",
+    "temperature",
+    "TE",
+    "RTD",
+    "thermocouple"
+  ],
+  "standard": "ISA-5.1",
+  "description": ""
+}

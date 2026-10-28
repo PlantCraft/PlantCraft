@@ -1,0 +1,60 @@
+{
+  "id": "compressor.reciprocating",
+  "title": "Reciprocating compressor",
+  "category": "machines",
+  "w": 80,
+  "h": 80,
+  "svg": "<line x1=\"30\" y1=\"0\" x2=\"30\" y2=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"30\" y1=\"56\" x2=\"30\" y2=\"80\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state pc-run\" x=\"14\" y=\"24\" width=\"52\" height=\"32\" rx=\"2\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect x=\"38\" y=\"30\" width=\"8\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"46\" y1=\"40\" x2=\"66\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"22\" y1=\"24\" x2=\"22\" y2=\"56\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "suction",
+      "x": 30,
+      "y": 0,
+      "dir": "n",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "discharge",
+      "x": 30,
+      "y": 80,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 84,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "run"
+  ],
+  "keywords": [
+    "compressor",
+    "reciprocating",
+    "piston",
+    "gas"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

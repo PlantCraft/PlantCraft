@@ -1,0 +1,61 @@
+# The test company's directory: two people and three groups (base dc=plant,dc=test).
+dn: ou=people,dc=plant,dc=test
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=plant,dc=test
+objectClass: organizationalUnit
+ou: groups
+
+dn: uid=ana.lima,ou=people,dc=plant,dc=test
+objectClass: inetOrgPerson
+uid: ana.lima
+cn: Ana Lima
+sn: Lima
+givenName: Ana
+mail: ana.lima@plant.test
+title: Process engineer
+ou: Process engineering
+telephoneNumber: +55 11 5555-0101
+o: Test Company
+l: Unit 100
+userPassword: ana-directory-pass
+
+dn: uid=carlos.menezes,ou=people,dc=plant,dc=test
+objectClass: inetOrgPerson
+uid: carlos.menezes
+cn: Carlos Menezes
+sn: Menezes
+mail: carlos.menezes@plant.test
+title: Panel operator
+ou: Operations
+userPassword: carlos-directory-pass
+
+dn: uid=outsider,ou=people,dc=plant,dc=test
+objectClass: inetOrgPerson
+uid: outsider
+cn: Someone Else
+sn: Else
+userPassword: outsider-directory-pass
+
+dn: uid=reader,ou=people,dc=plant,dc=test
+objectClass: inetOrgPerson
+uid: reader
+cn: PlantCraft service account
+sn: Reader
+userPassword: reader-service-pass
+
+dn: cn=pc-engineers,ou=groups,dc=plant,dc=test
+objectClass: groupOfNames
+cn: pc-engineers
+member: uid=ana.lima,ou=people,dc=plant,dc=test
+
+dn: cn=pc-admins,ou=groups,dc=plant,dc=test
+objectClass: groupOfNames
+cn: pc-admins
+member: uid=ana.lima,ou=people,dc=plant,dc=test
+
+dn: cn=pc-operators,ou=groups,dc=plant,dc=test
+objectClass: groupOfNames
+cn: pc-operators
+member: uid=carlos.menezes,ou=people,dc=plant,dc=test

@@ -1,0 +1,195 @@
+# PlantCraft proxy: the only published port of the suite (docs/install-offline.md).
+# The image entrypoint (entrypoint.sh) sets the variables below before Caddy starts:
+#   PLANTCRAFT_SITES        https://<name>:8443 for every name in PLANTCRAFT_HOSTNAME
+#   PLANTCRAFT_DEFAULT_SNI  the first IPv4 address of those names, else the first name (browsers
+#                             send no SNI when they open an IP address)
+#   PLANTCRAFT_TLS          "/certs/cert.pem /certs/key.pem" when the client's certificate is
+#                             in certs/, otherwise "internal" (Caddy's local certificate authority)
+{
+	# No admin API, no saved runtime config, no ACME, no trust-store changes, no OCSP fetches:
+	# the proxy opens no outbound connection.
+	admin off
+	persist_config off
+	auto_https disable_redirects
+	skip_install_trust
+	ocsp_stapling off
+	default_sni {$PLANTCRAFT_DEFAULT_SNI}
+	servers {
+		protocols h1 h2
+		# Behind a tunnel or CDN (PLANTCRAFT_TRUSTED_PROXIES, docs/public-demo.md): the visitor's
+		# address comes from the header that proxy sets, and only when it is the one connecting.
+		# Empty otherwise: the address is the connection's own, as always.
+		{$PLANTCRAFT_TRUSTED_PROXIES_LINE}
+		{$PLANTCRAFT_CLIENT_IP_HEADERS_LINE}
+	}
+	log {
+		output stdout
+		format json
+		level INFO
+	}
+	pki {
+		ca local {
+			name "PlantCraft local CA"
+		}
+	}
+}
+
+# A server being recreated (an update, a restart) refuses connections for a few seconds: the
+# proxy keeps dialling it instead of answering 502, so a page opened meanwhile only loads slower.
+# Only refused or unresolved connections are retried, never a request the server received.
+(upstream) {
+	lb_try_duration {args[0]}
+	lb_try_interval 500ms
+}
+
+# Says to PlantCraft that a request came from outside, through this proxy, whatever the client
+# sent: people's reads count against their limits there (processcraft/api/usage.py); the apps'
+# own requests, inside the internal network, never pass here.
+(edge) {
+	header_up X-PlantCraft-Edge 1
+	# The client's address alone (the servers trust only this proxy, FORWARDED_ALLOW_IPS): the
+	# connection's, or the visitor's that a trusted tunnel or CDN reported (servers above).
+	header_up X-Forwarded-For {client_ip}
+}
+
+{$PLANTCRAFT_SITES} {
+	tls {$PLANTCRAFT_TLS}
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "same-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+	# Every app shares this origin (and PlantCraft's session): scripts only from the suite's
+	# own files, nothing loaded from elsewhere, no plugins, no framing by other sites. Styles
+	# allow inline: React and Plotly set style attributes and inject chart styles.
+	# A report's public link (View, /dash/share/report/*) is one page that holds its own script:
+	# View sends that page a stricter policy of its own, which allows only that script, by hash.
+	@strict not path /notebooks/lite/* /dash/share/report/*
+	header @strict Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+	# Notebooks (JupyterLite, docs/en/notebooks.md) run Python compiled to WebAssembly and
+	# JupyterLab evaluates code it generates: those pages alone also allow eval and WebAssembly.
+	# Still only the suite's own files, and nothing loaded from elsewhere.
+	header /notebooks/lite/* Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+
+	# Built files (PlantCraft's and the suite's apps') carry a hash of their content in their name:
+	# a browser keeps them a year instead of asking again each time the frame opens an app. Only
+	# a file that was there: a 404 met during an update is not remembered.
+	@built path /static/* /link/static/* /dash/static/* /hist/static/* /alarm/static/* /model/static/*
+	header @built {
+		Cache-Control "public, max-age=31536000, immutable"
+		match {
+			status 200
+		}
+	}
+
+	# Request bodies up to 64 MB, except app packages uploaded to the Apps page (PlantCraft
+	# checks their size itself, PLANTCRAFT_APP_MAX_MB) and the files sent to PlantCraft
+	# Documents (it checks their size itself, DOCCRAFT_MAX_FILE_MB, 200 by default).
+	@not_package not path /api/apps/packages /doc/api/documents /doc/api/documents/*
+	request_body @not_package {
+		max_size 64MB
+	}
+	request_body /api/apps/packages {
+		max_size 4GB
+	}
+	@documents_sent path /doc/api/documents /doc/api/documents/*
+	request_body @documents_sent {
+		max_size 210MB
+	}
+
+	log
+
+	# Apps installed from the Apps page: one route per app, written by the installer service
+	# (data/installer/routes, mounted read-only; docs/app-package.md). They come first, so an
+	# installed app takes its prefix from the routes below.
+	import /etc/caddy/apps/*.caddy
+
+	# The suite's frame (owner, 2026-10-24, round 8; ui frame.ts): a page a signed-in person
+	# opens under an app's prefix is PlantCraft's, which keeps the sidebar and loads the app beside
+	# it in an iframe (that request is the app's: Sec-Fetch-Dest iframe). Not the apps' API and
+	# files, not a page asked for on its own (pc-frame=off: an app on an older ui), not a visitor
+	# without a session (View's public links).
+	@frame {
+		path /link/* /dash/* /hist/* /alarm/* /model/*
+		not path /link/api/* /dash/api/* /hist/api/* /alarm/api/* /model/api/*
+		header Sec-Fetch-Dest document
+		header Cookie *processcraft_token=*
+		not query pc-frame=off
+	}
+	handle @frame {
+		reverse_proxy processcraft:8060 {
+			import upstream 60s
+			import edge
+		}
+	}
+
+	# The apps of the suite keep their prefix (docs/app-standard.md, section 7): each serves its
+	# pages and API under it. An app whose profile is off answers with the page below.
+	redir /link /link/ 308
+	handle /link/* {
+		reverse_proxy linkcraft:8140 {
+			import upstream 15s
+		}
+	}
+	redir /dash /dash/ 308
+	handle /dash/* {
+		reverse_proxy dashcraft:8080 {
+			import upstream 15s
+		}
+	}
+	redir /hist /hist/ 308
+	handle /hist/* {
+		reverse_proxy histcraft:8100 {
+			import upstream 15s
+		}
+	}
+	# PlantCraft Twin's twins became algorithms on assets in LinkCraft (2026-10-22): its old
+	# addresses open Link's algorithms.
+	redir /twin /link/algorithms 308
+	redir /twin/* /link/algorithms 308
+	redir /alarm /alarm/ 308
+	handle /alarm/* {
+		reverse_proxy alarmcraft:8110 {
+			import upstream 15s
+		}
+	}
+	redir /model /model/ 308
+	handle /model/* {
+		reverse_proxy modelcraft:8130 {
+			import upstream 15s
+		}
+	}
+	# PlantCraft Documents takes files up to DOCCRAFT_MAX_FILE_MB (200 MB by default).
+	redir /doc /doc/ 308
+	handle /doc/* {
+		reverse_proxy doccraft:8150 {
+			import upstream 15s
+		}
+	}
+
+	# Everything else is PlantCraft (sign-in, launcher, API v1, settings).
+	handle {
+		reverse_proxy processcraft:8060 {
+			import upstream 60s
+			import edge
+		}
+	}
+
+	handle_errors 502 503 504 {
+		header Content-Type "text/plain; charset=utf-8"
+		respond "This application is not running. Ask the administrator to check docker compose ps on the server." {err.status_code}
+	}
+}
+
+# Health of the proxy itself, for the container healthcheck; never published.
+http://127.0.0.1:8081 {
+	bind 127.0.0.1
+	respond /healthz "ok" 200
+	respond 404
+}

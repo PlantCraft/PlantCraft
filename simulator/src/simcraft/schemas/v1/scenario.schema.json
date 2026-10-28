@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/scenario.schema.json",
+  "title": "Process Plant scenario family v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scenario_id", "layer", "display_name", "description", "injection_pattern", "opcua_effect", "primary_loop_ids", "current_analytical_coverage", "future_method_or_protocol_need"],
+  "properties": {
+    "scenario_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$"},
+    "layer": {"enum": ["process", "control", "actuator", "operations", "sensor", "data_transport"]},
+    "display_name": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "injection_pattern": {"type": "string", "minLength": 1},
+    "opcua_effect": {"type": "string", "minLength": 1},
+    "primary_loop_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "current_analytical_coverage": {"type": "string", "minLength": 1},
+    "future_method_or_protocol_need": {"type": "string", "minLength": 1}
+  }
+}

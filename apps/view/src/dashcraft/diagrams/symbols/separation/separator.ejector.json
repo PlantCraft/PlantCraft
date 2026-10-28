@@ -1,0 +1,67 @@
+{
+  "id": "separator.ejector",
+  "title": "Ejector",
+  "category": "separation",
+  "w": 100,
+  "h": 60,
+  "svg": "<line x1=\"0\" y1=\"30\" x2=\"10\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"90\" y1=\"30\" x2=\"100\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"50\" y1=\"34\" x2=\"50\" y2=\"60\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"pc-state\" d=\"M10,20 L44,26 H56 L90,14 V46 L56,34 H44 L10,40 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "motive",
+      "x": 0,
+      "y": 30,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "suction",
+      "x": 50,
+      "y": 60,
+      "dir": "s",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "discharge",
+      "x": 100,
+      "y": 30,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 50.0,
+      "y": 64,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 50.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 100,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "ejector",
+    "eductor",
+    "jet pump",
+    "steam jet",
+    "vacuum"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

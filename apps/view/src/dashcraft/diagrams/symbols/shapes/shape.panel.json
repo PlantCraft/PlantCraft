@@ -1,0 +1,73 @@
+{
+  "id": "shape.panel",
+  "title": "Unit block",
+  "category": "shapes",
+  "w": 160,
+  "h": 80,
+  "stretch": true,
+  "svg": "<rect class=\"pc-state\" x=\"0\" y=\"0\" width=\"160\" height=\"80\" rx=\"8\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "left",
+      "x": 0,
+      "y": 40,
+      "dir": "w",
+      "kind": "process"
+    },
+    {
+      "id": "right",
+      "x": 160,
+      "y": 40,
+      "dir": "e",
+      "kind": "process"
+    },
+    {
+      "id": "top",
+      "x": 80,
+      "y": 0,
+      "dir": "n",
+      "kind": "process"
+    },
+    {
+      "id": "bottom",
+      "x": 80,
+      "y": 80,
+      "dir": "s",
+      "kind": "process"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 80,
+      "y": 30,
+      "align": "middle",
+      "baseline": "middle"
+    },
+    {
+      "id": "value",
+      "x": 80,
+      "y": 54,
+      "align": "middle",
+      "baseline": "middle"
+    },
+    {
+      "id": "alarm",
+      "x": 160,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "unit",
+    "block",
+    "area",
+    "panel",
+    "overview",
+    "box"
+  ],
+  "standard": "",
+  "description": "A unit or area on a plant overview; click it to open that unit's diagram."
+}

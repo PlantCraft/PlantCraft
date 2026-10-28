@@ -1,0 +1,85 @@
+{
+  "id": "vessel.tank_cone_roof",
+  "title": "Storage tank (cone roof)",
+  "category": "vessels",
+  "w": 100,
+  "h": 140,
+  "svg": "<path d=\"M10,30 L50,20 L90,30 V130 H10 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect class=\"pc-level\" x=\"11\" y=\"30\" width=\"78\" height=\"100\" stroke=\"none\"/><path class=\"pc-state\" d=\"M10,30 L50,20 L90,30 V130 H10 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "vent",
+      "x": 50,
+      "y": 20,
+      "dir": "n",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "inlet",
+      "x": 10,
+      "y": 50,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 90,
+      "y": 120,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "drain",
+      "x": 50,
+      "y": 130,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "inlet_top",
+      "x": 90,
+      "y": 40,
+      "dir": "e",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 50.0,
+      "y": 144,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 50,
+      "y": 80,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 90,
+      "y": 20,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "level"
+  ],
+  "keywords": [
+    "tank",
+    "storage",
+    "atmospheric",
+    "cone roof",
+    "API 650"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

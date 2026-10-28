@@ -1,0 +1,16 @@
+# gitleaks: the default rules, less the made-up keys and tokens the tests use (dev/snapshot).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake credentials in tests"
+paths = [
+  '''sdk/python/tests/test_ops\.py''',
+  '''sdk/python/tests/test_prompts\.py''',
+  '''tests/test_app_installer\.py''',
+]
+# A docstring's example call, not a key.
+regexTarget = "line"
+regexes = [
+  '''PlantCraftClient\(url, app="linkcraft", key=key''',
+]

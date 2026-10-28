@@ -1,0 +1,17 @@
+# The kit's Python packages (notebooks/kit/build_kit.py), compiled for the three systems into
+# requirements.txt with hashes: make notebook-kit-lock. The analysis packages match the browser's
+# Pyodide 0.27.6, so a notebook behaves the same in both places.
+jupyterlab>=4.4,<5
+numpy==2.0.2
+pandas==2.2.3
+scipy==1.14.1
+matplotlib==3.8.4
+# The apps' runtimes (pc.app(...).run): Link's blocks are pydantic models, as in the browser.
+pydantic>=2.10,<2.11
+# The access token in the system's own vault (Windows Credential Manager, macOS Keychain,
+# Secret Service on Linux), and HTTPS trusted as the system trusts it (a company's own CA).
+keyring>=25
+truststore>=0.10
+# The macOS app receives plantcraft-notebooks:// links as Apple events (plantcraft_notebook.kit
+# mac_app): a pure-Python bridge to the system's Objective-C runtime, no compiler needed.
+rubicon-objc==0.5.7 ; sys_platform == 'darwin'

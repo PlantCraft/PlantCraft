@@ -1,0 +1,106 @@
+# StarterCraft's manifest: the single source of its metadata (the suite's app standard, section 4).
+# The launcher card, the Apps page, the package manifest, the image labels and /api/meta read it.
+# `make rename NAME=Logbook` makes it LogbookCraft (`logbook`, prefix /logbook/) everywhere.
+
+[app]
+id = "starter"
+name = "StarterCraft"
+version = "0.1.0"
+category = "Example"
+summary = "The smallest app of the PlantCraft suite: a note on any asset of the plant."
+description = """\
+A starting point for an app of one's own: notes on the assets of PlantCraft's asset tree, \
+listed, searched (Ctrl+K) and kept in the app's own database. It shows every part an app of the \
+suite has: the manifest, the server on the SDK, the interface on the suite's frame, the help \
+pages, the tests and the signed package."""
+# "Dev Publisher" matches PlantCraft's development key (`make dev-package`); a real release names
+# the company whose key the stack trusts (prompts/05-package-and-install.md).
+publisher = "Dev Publisher"
+license = "Apache-2.0"
+homepage = ""
+mark = "starter"
+
+[runtime]
+# An app outside the suite table takes a prefix, port and container user that no suite app
+# uses (docs/app-standard.md, section 7, of PlantCraft): a port from 9000 and a user from 20000.
+prefix = "/starter/"
+port = 9100
+uid = 20100
+health = "/healthz"
+image = "starter"
+
+[requires]
+processcraft_api = ">=1.0"
+sdk = "0.77.0"
+asset_types = []
+roles = {}
+
+[permissions]
+read = ["assets"]
+write = ["audit", "events", "llm"]
+plant_write = false
+outbound = []
+
+[publishes]
+results = []
+
+# The events StarterCraft writes (PlantCraft docs/app-standard.md, section 6): declared here,
+# written by name through EventCatalog, judged only by Alarms. Delete it with the notes.
+[[publishes.events]]
+name = "note.written"
+title = "Note written"
+description = "An editor wrote a note on an asset."
+severity = "info"
+category = "user"
+payload = { note = "Note id" }
+
+[consumes]
+results = []
+
+# What StarterCraft adds to PlantCraft (PlantCraft docs/app-standard.md, section 4b): one example
+# of each, all from the notes. PlantCraft draws them without knowing the app; delete what yours
+# does not need, with its module in suite/.
+[contributes.search]                # Ctrl+K: api/routers/search.py
+types = ["Note"]
+
+[[contributes.calendar]]            # Desk's calendar: suite/desk.py sends the feed
+id = "follow-ups"
+title = "Follow-ups"
+description = "The notes that ask for a follow-up, on their day."
+
+[[contributes.todo]]                # Desk's to-do: suite/desk.py gives one per follow-up
+id = "follow-up"
+title = "Follow up a note"
+
+[[contributes.llm]]                 # Setup > Language models: suite/llm.py asks through PlantCraft
+id = "summary"
+title = "Summarise a note"
+reads = "The text of one note."
+default = "off"
+
+[[contributes.refs]]                # #starter_note:<id> in messages: api/routers/refs.py
+kind = "starter_note"
+title = "Note"
+url = "/starter/notes/{id}"
+
+[[contributes.widgets]]             # Overview and Desk's Today: api/routers/widgets.py
+id = "count"
+title = "StarterCraft: notes"
+description = "How many notes there are."
+size = "s"
+kind = "number"
+default = true
+
+[[contributes.widgets]]
+id = "latest"
+title = "StarterCraft: latest notes"
+description = "The newest notes, each one click away."
+size = "m"
+kind = "list"
+
+[backup]                            # its data folder in the suite's backup (PlantCraft docs/operations.md)
+sqlite = ["starter.sqlite3"]
+skip = ["logs/"]
+
+[suggests]
+asset_types = []

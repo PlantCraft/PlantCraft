@@ -1,0 +1,57 @@
+{
+  "id": "flow.venturi",
+  "title": "Venturi tube",
+  "category": "instruments",
+  "w": 60,
+  "h": 40,
+  "svg": "<polyline points=\"0,10 20,10 28,16 32,16 40,10 60,10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"0,30 20,30 28,24 32,24 40,30 60,30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 20,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 60,
+      "y": 20,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 30.0,
+      "y": 44,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 30.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 60,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "venturi",
+    "flow element",
+    "nozzle"
+  ],
+  "standard": "ISA-5.1",
+  "description": ""
+}

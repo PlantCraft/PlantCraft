@@ -1,0 +1,162 @@
+Modelica	package	false	Modelica Standard Library - Version 4.0.0
+Modelica.Blocks	package	false	Library of basic input/output control blocks (continuous, discrete, logical, table blocks)
+Modelica.Blocks.Continuous	package	false	Library of continuous control blocks with internal states
+Modelica.Blocks.Continuous.Integrator	block	false	Output the integral of the input signal with optional reset
+Modelica.Blocks.Continuous.LimIntegrator	block	false	Integrator with limited value of the output and optional reset
+Modelica.Blocks.Continuous.Derivative	block	false	Approximated derivative block
+Modelica.Blocks.Continuous.FirstOrder	block	false	First order transfer function block (= 1 pole)
+Modelica.Blocks.Continuous.SecondOrder	block	false	Second order transfer function block (= 2 poles)
+Modelica.Blocks.Continuous.PI	block	false	Proportional-Integral controller
+Modelica.Blocks.Continuous.PID	block	false	PID-controller in additive description form
+Modelica.Blocks.Continuous.LimPID	block	false	P, PI, PD, and PID controller with limited output, anti-windup compensation, setpoint weighting and optional feed-forward
+Modelica.Blocks.Continuous.TransferFunction	block	false	Linear transfer function
+Modelica.Blocks.Continuous.StateSpace	block	false	Linear state space system
+Modelica.Blocks.Continuous.Der	block	false	Derivative of input (= analytic differentiations)
+Modelica.Blocks.Continuous.LowpassButterworth	block	false	Output the input signal filtered with a low pass Butterworth filter of any order
+Modelica.Blocks.Continuous.CriticalDamping	block	false	Output the input signal filtered with an n-th order filter with critical damping
+Modelica.Blocks.Continuous.Filter	block	false	Continuous low pass, high pass, band pass or band stop IIR-filter of type CriticalDamping, Bessel, Butterworth or ChebyshevI
+Modelica.Blocks.Continuous.Internal	package	false	Internal utility functions and blocks that should not be directly utilized by the user
+Modelica.Blocks.Interfaces	package	false	Library of connectors and partial models for input/output blocks
+Modelica.Blocks.Interfaces.RealInput	connector	false	'input Real' as connector
+Modelica.Blocks.Interfaces.RealOutput	connector	false	'output Real' as connector
+Modelica.Blocks.Interfaces.BooleanInput	connector	false	'input Boolean' as connector
+Modelica.Blocks.Interfaces.BooleanOutput	connector	false	'output Boolean' as connector
+Modelica.Blocks.Interfaces.IntegerInput	connector	false	'input Integer' as connector
+Modelica.Blocks.Interfaces.IntegerOutput	connector	false	'output Integer' as connector
+Modelica.Blocks.Interfaces.RealVectorInput	connector	false	Real input connector used for vector of connectors
+Modelica.Blocks.Interfaces.IntegerVectorInput	connector	false	Integer input connector used for vector of connectors
+Modelica.Blocks.Interfaces.BooleanVectorInput	connector	false	Boolean input connector used for vector of connectors
+Modelica.Blocks.Interfaces.RealVectorOutput	connector	false	Real output connector used for vector of connectors
+Modelica.Blocks.Interfaces.SO	block	true	Single Output continuous control block
+Modelica.Blocks.Interfaces.MO	block	true	Multiple Output continuous control block
+Modelica.Blocks.Interfaces.SISO	block	true	Single Input Single Output continuous control block
+Modelica.Blocks.Interfaces.SI2SO	block	true	2 Single Input / 1 Single Output continuous control block
+Modelica.Blocks.Interfaces.SIMO	block	true	Single Input Multiple Output continuous control block
+Modelica.Blocks.Interfaces.MISO	block	true	Multiple Input Single Output continuous control block
+Modelica.Blocks.Interfaces.PartialRealMISO	block	true	Partial block with a RealVectorInput and a RealOutput signal
+Modelica.Blocks.Interfaces.MIMO	block	true	Multiple Input Multiple Output continuous control block
+Modelica.Blocks.Interfaces.MIMOs	block	true	Multiple Input Multiple Output continuous control block with same number of inputs and outputs
+Modelica.Blocks.Interfaces.MI2MO	block	true	2 Multiple Input / Multiple Output continuous control block
+Modelica.Blocks.Interfaces.SignalSource	block	true	Base class for continuous signal source
+Modelica.Blocks.Interfaces.SVcontrol	block	true	Single-Variable continuous controller
+Modelica.Blocks.Interfaces.MVcontrol	block	true	Multi-Variable continuous controller
+Modelica.Blocks.Interfaces.DiscreteBlock	block	true	Base class of discrete control blocks
+Modelica.Blocks.Interfaces.DiscreteSISO	block	true	Single Input Single Output discrete control block
+Modelica.Blocks.Interfaces.DiscreteMIMO	block	true	Multiple Input Multiple Output discrete control block
+Modelica.Blocks.Interfaces.DiscreteMIMOs	block	true	Multiple Input Multiple Output discrete control block
+Modelica.Blocks.Interfaces.SVdiscrete	block	true	Discrete Single-Variable controller
+Modelica.Blocks.Interfaces.MVdiscrete	block	true	Discrete Multi-Variable controller
+Modelica.Blocks.Interfaces.BooleanSISO	block	true	Single Input Single Output control block with signals of type Boolean
+Modelica.Blocks.Interfaces.BooleanMIMOs	block	true	Multiple Input Multiple Output continuous control block with same number of inputs and outputs of Boolean type
+Modelica.Blocks.Interfaces.MI2BooleanMOs	block	true	2 Multiple Input / Boolean Multiple Output block with same signal lengths
+Modelica.Blocks.Interfaces.SI2BooleanSO	block	true	2 Single Input / Boolean Single Output block
+Modelica.Blocks.Interfaces.BooleanSignalSource	block	true	Base class for Boolean signal sources
+Modelica.Blocks.Interfaces.IntegerSO	block	true	Single Integer Output continuous control block
+Modelica.Blocks.Interfaces.IntegerMO	block	true	Multiple Integer Output continuous control block
+Modelica.Blocks.Interfaces.IntegerSignalSource	block	true	Base class for continuous Integer signal source
+Modelica.Blocks.Interfaces.IntegerSIBooleanSO	block	true	Integer Input Boolean Output continuous control block
+Modelica.Blocks.Interfaces.IntegerMIBooleanMOs	block	true	Multiple Integer Input Multiple Boolean Output continuous control block with same number of inputs and outputs
+Modelica.Blocks.Interfaces.PartialIntegerSISO	block	true	Partial block with a IntegerInput and an IntegerOutput signal
+Modelica.Blocks.Interfaces.PartialIntegerMISO	block	true	Partial block with an IntegerVectorInput and an IntegerOutput signal
+Modelica.Blocks.Interfaces.partialBooleanSISO	block	true	Partial block with 1 input and 1 output Boolean signal
+Modelica.Blocks.Interfaces.partialBooleanSI2SO	block	true	Partial block with 2 input and 1 output Boolean signal
+Modelica.Blocks.Interfaces.partialBooleanSI3SO	block	true	Partial block with 3 input and 1 output Boolean signal
+Modelica.Blocks.Interfaces.partialBooleanSI	block	true	Partial block with 1 input Boolean signal
+Modelica.Blocks.Interfaces.partialBooleanSO	block	true	Partial block with 1 output Boolean signal
+Modelica.Blocks.Interfaces.partialBooleanSource	block	true	Partial source block (has 1 output Boolean signal and an appropriate default icon)
+Modelica.Blocks.Interfaces.partialBooleanThresholdComparison	block	true	Partial block to compare the Real input u with a threshold and provide the result as 1 Boolean output signal
+Modelica.Blocks.Interfaces.partialBooleanComparison	block	true	Partial block with 2 Real input and 1 Boolean output signal (the result of a comparison of the two Real inputs)
+Modelica.Blocks.Interfaces.PartialBooleanSISO_small	block	true	Partial block with a BooleanInput and a BooleanOutput signal and a small block icon
+Modelica.Blocks.Interfaces.PartialBooleanMISO	block	true	Partial block with a BooleanVectorInput and a BooleanOutput signal
+Modelica.Blocks.Interfaces.PartialConversionBlock	block	true	Partial block defining the interface for conversion blocks
+Modelica.Blocks.Interfaces.PartialNoise	block	true	Partial noise generator
+Modelica.Blocks.Interfaces.Adaptors	package	false	Package with adaptors (especially useful for FMUs)
+Modelica.Blocks.Math	package	false	Library of Real mathematical functions as input/output blocks
+Modelica.Blocks.Math.UnitConversions	package	false	Conversion blocks to convert between SI and non-SI unit signals
+Modelica.Blocks.Math.InverseBlockConstraints	block	false	Construct inverse model by requiring that two inputs and two outputs are identical
+Modelica.Blocks.Math.Gain	block	false	Output the product of a gain value with the input signal
+Modelica.Blocks.Math.MatrixGain	block	false	Output the product of a gain matrix with the input signal vector
+Modelica.Blocks.Math.MultiSum	block	false	Sum of Reals: y = k[1]*u[1] + k[2]*u[2] + ... + k[n]*u[n]
+Modelica.Blocks.Math.MultiProduct	block	false	Product of Reals: y = u[1]*u[2]* ... *u[n]
+Modelica.Blocks.Math.MultiSwitch	block	false	Set Real expression that is associated with the first active input signal
+Modelica.Blocks.Math.Sum	block	false	Output the sum of the elements of the input vector
+Modelica.Blocks.Math.Feedback	block	false	Output difference between commanded and feedback input
+Modelica.Blocks.Math.Add	block	false	Output the sum of the two inputs
+Modelica.Blocks.Math.Add3	block	false	Output the sum of the three inputs
+Modelica.Blocks.Math.Product	block	false	Output product of the two inputs
+Modelica.Blocks.Math.Division	block	false	Output first input divided by second input
+Modelica.Blocks.Math.Abs	block	false	Output the absolute value of the input
+Modelica.Blocks.Math.Sign	block	false	Output the sign of the input
+Modelica.Blocks.Math.Sqrt	block	false	Output the square root of the input (input >= 0 required)
+Modelica.Blocks.Math.Sin	block	false	Output the sine of the input
+Modelica.Blocks.Math.Cos	block	false	Output the cosine of the input
+Modelica.Blocks.Math.Tan	block	false	Output the tangent of the input
+Modelica.Blocks.Math.Asin	block	false	Output the arc sine of the input
+Modelica.Blocks.Math.Acos	block	false	Output the arc cosine of the input
+Modelica.Blocks.Math.Atan	block	false	Output the arc tangent of the input
+Modelica.Blocks.Math.Atan2	block	false	Output atan(u1/u2) of the inputs u1 and u2
+Modelica.Blocks.Math.Sinh	block	false	Output the hyperbolic sine of the input
+Modelica.Blocks.Math.Cosh	block	false	Output the hyperbolic cosine of the input
+Modelica.Blocks.Math.Tanh	block	false	Output the hyperbolic tangent of the input
+Modelica.Blocks.Math.Exp	block	false	Output the exponential (base e) of the input
+Modelica.Blocks.Math.Power	block	false	Output the power to a base of the input
+Modelica.Blocks.Math.Log	block	false	Output the logarithm (default base e) of the input (input > 0 required)
+Modelica.Blocks.Math.Log10	block	false	Output the base 10 logarithm of the input (input > 0 required)
+Modelica.Blocks.Math.WrapAngle	block	false	Wrap angle to interval ]-pi,pi] or [0,2*pi[
+Modelica.Blocks.Math.RealToInteger	block	false	Convert Real to Integer signal
+Modelica.Blocks.Math.IntegerToReal	block	false	Convert Integer to Real signals
+Modelica.Blocks.Math.BooleanToReal	block	false	Convert Boolean to Real signal
+Modelica.Blocks.Math.BooleanToInteger	block	false	Convert Boolean to Integer signal
+Modelica.Blocks.Math.RealToBoolean	block	false	Convert Real to Boolean signal
+Modelica.Blocks.Math.IntegerToBoolean	block	false	Convert Integer to Boolean signal
+Modelica.Blocks.Math.RectangularToPolar	block	false	Convert rectangular coordinates to polar coordinates
+Modelica.Blocks.Math.PolarToRectangular	block	false	Convert polar coordinates to rectangular coordinates
+Modelica.Blocks.Math.Mean	block	false	Calculate mean over period 1/f
+Modelica.Blocks.Math.RectifiedMean	block	false	Calculate rectified mean over period 1/f
+Modelica.Blocks.Math.ContinuousMean	block	false	Calculates the empirical expectation (mean) value of its input signal
+Modelica.Blocks.Math.RootMeanSquare	block	false	Calculate root mean square over period 1/f
+Modelica.Blocks.Math.Variance	block	false	Calculates the empirical variance of its input signal
+Modelica.Blocks.Math.StandardDeviation	block	false	Calculates the empirical standard deviation of its input signal
+Modelica.Blocks.Math.Harmonic	block	false	Calculate harmonic over period 1/f
+Modelica.Blocks.Math.TotalHarmonicDistortion	block	false	Output the total harmonic distortion (THD)
+Modelica.Blocks.Math.RealFFT	block	false	Sampling and FFT of input u
+Modelica.Blocks.Math.Pythagoras	block	false	Determine the hypotenuse or leg of a right triangle
+Modelica.Blocks.Math.Max	block	false	Pass through the largest signal
+Modelica.Blocks.Math.Min	block	false	Pass through the smallest signal
+Modelica.Blocks.Math.MinMax	block	false	Output the minimum and the maximum element of the input vector
+Modelica.Blocks.Math.LinearDependency	block	false	Output a linear combination of the two inputs
+Modelica.Blocks.Math.Edge	block	false	Indicates rising edge of Boolean signal
+Modelica.Blocks.Math.BooleanChange	block	false	Indicates Boolean signal changing
+Modelica.Blocks.Math.IntegerChange	block	false	Indicates integer signal changing
+Modelica.Blocks.Sources	package	false	Library of signal source blocks generating Real, Integer and Boolean signals
+Modelica.Blocks.Sources.RealExpression	block	false	Set output signal to a time varying Real expression
+Modelica.Blocks.Sources.IntegerExpression	block	false	Set output signal to a time varying Integer expression
+Modelica.Blocks.Sources.BooleanExpression	block	false	Set output signal to a time varying Boolean expression
+Modelica.Blocks.Sources.ContinuousClock	block	false	Generate current time signal
+Modelica.Blocks.Sources.Constant	block	false	Generate constant signal of type Real
+Modelica.Blocks.Sources.Step	block	false	Generate step signal of type Real
+Modelica.Blocks.Sources.Ramp	block	false	Generate ramp signal
+Modelica.Blocks.Sources.Sine	block	false	Generate sine signal
+Modelica.Blocks.Sources.Cosine	block	false	Generate cosine signal
+Modelica.Blocks.Sources.SineVariableFrequencyAndAmplitude	block	false	Generate sine signal with variable frequency and amplitude
+Modelica.Blocks.Sources.CosineVariableFrequencyAndAmplitude	block	false	Generate cosine signal with variable frequency and amplitude
+Modelica.Blocks.Sources.Sinc	block	false	Generate sinc signal
+Modelica.Blocks.Sources.ExpSine	block	false	Generate exponentially damped sine signal
+Modelica.Blocks.Sources.Exponentials	block	false	Generate a rising and falling exponential signal
+Modelica.Blocks.Sources.Pulse	block	false	Generate pulse signal of type Real
+Modelica.Blocks.Sources.SawTooth	block	false	Generate saw tooth signal
+Modelica.Blocks.Sources.Trapezoid	block	false	Generate trapezoidal signal of type Real
+Modelica.Blocks.Sources.LogFrequencySweep	block	false	Logarithmic frequency sweep
+Modelica.Blocks.Sources.KinematicPTP	block	false	Move as fast as possible along a distance within given kinematic constraints
+Modelica.Blocks.Sources.KinematicPTP2	block	false	Move as fast as possible from start to end position within given kinematic constraints with output signals q, qd=der(q), qdd=der(qd)
+Modelica.Blocks.Sources.TimeTable	block	false	Generate a (possibly discontinuous) signal by linear interpolation in a table
+Modelica.Blocks.Sources.CombiTimeTable	block	false	Table look-up with respect to time and linear/periodic extrapolation methods (data from matrix/file)
+Modelica.Blocks.Sources.BooleanConstant	block	false	Generate constant signal of type Boolean
+Modelica.Blocks.Sources.BooleanStep	block	false	Generate step signal of type Boolean
+Modelica.Blocks.Sources.BooleanPulse	block	false	Generate pulse signal of type Boolean
+Modelica.Blocks.Sources.SampleTrigger	block	false	Generate sample trigger signal
+Modelica.Blocks.Sources.BooleanTable	block	false	Generate a Boolean output signal based on a vector of time instants
+Modelica.Blocks.Sources.RadioButtonSource	block	false	Boolean signal source that mimics a radio button
+Modelica.Blocks.Sources.IntegerConstant	block	false	Generate constant signal of type Integer
+Modelica.Blocks.Sources.IntegerStep	block	false	Generate step signal of type Integer
+Modelica.Blocks.Sources.IntegerTable	block	false	Generate an Integer output signal based on a table matrix with [time, yi] values

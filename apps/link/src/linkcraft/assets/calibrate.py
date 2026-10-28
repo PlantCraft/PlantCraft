@@ -1,0 +1,159 @@
+"""Calibrate: what a deviation block judges by, learned from a period of normal operation.
+
+The algorithm runs on one asset over the period people choose, as its cycle would have run it
+(one run per judged part, end to end), and every residual wired to the deviation block is kept.
+Their mean and covariance (``models.stats.calibrate``) become the block's ``calibration``
+parameter, so the diagram holds everything it judges by. Runs whose residuals could not be
+judged (an output not measured, the unit out of operation, the model failed) are left out and
+counted, with the first reason.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+import pandas as pd
+from plantcraft_sdk.blocks import NoData
+
+from linkcraft.assets.run import AssetTiming, runs_over, segment_ends
+from linkcraft.blocks.models import JUDGED_SECONDS, PREFIX, residual_frame, unjudgeable
+from linkcraft.i18n import t
+from linkcraft.models.stats import calibrate
+
+DEVIATION_BLOCK = "model.deviation"
+# Runs one calibration makes at most: three and a half days of ten-minute parts, a minute or
+# two of simulation while the editor waits.
+MAX_RUNS = 500
+
+
+def wires_into(diagram: dict[str, Any], node_id: str, port: str) -> list[tuple[str, str]]:
+    """The (node, port) wired to ``node_id``'s ``port``, in the diagram's order."""
+
+    return [
+        (str(edge["source"]), str(edge["source_port"]))
+        for edge in diagram.get("edges") or []
+        if edge.get("target") == node_id and edge.get("target_port") == port
+    ]
+
+
+def judged_part(diagram: dict[str, Any], sources: list[tuple[str, str]], timing: AssetTiming):
+    """Seconds between two calibration runs: the shortest judged part of the model blocks that
+    feed the deviation block (each run then adds the residuals of one judged part), else the
+    window."""
+
+    nodes = {str(node.get("id")): node for node in diagram.get("nodes") or []}
+    parts = []
+    for source, _port in sources:
+        node = nodes.get(source) or {}
+        if str(node.get("block") or "").startswith(PREFIX):
+            value = (node.get("parameters") or {}).get("judged_seconds")
+            parts.append(float(value) if value else JUDGED_SECONDS)
+    part = min(parts) if parts else float(timing.window_seconds)
+    return max(min(part, float(timing.window_seconds)), float(timing.step_seconds))
+
+
+def calibrate_on_asset(
+    diagram: dict[str, Any],
+    node_id: str,
+    asset_id: str,
+    *,
+    client: Any,
+    start: pd.Timestamp,
+    end: pd.Timestamp,
+    timing: AssetTiming,
+    models: Any = None,
+) -> dict[str, Any]:
+    """The calibration of deviation block ``node_id`` on ``asset_id`` over ``start``-``end``.
+
+    ``ValueError`` (in words people read) when it cannot calibrate: not a deviation block,
+    nothing wired, a period too short or too long, too few samples; ``LookupError`` when the
+    asset cannot be read.
+    """
+
+    node = next(
+        (item for item in diagram.get("nodes") or [] if str(item.get("id")) == node_id), None
+    )
+    if node is None or node.get("block") != DEVIATION_BLOCK:
+        raise ValueError(t("Calibrate works on a Deviation (T²) block of the diagram."))
+    residuals = wires_into(diagram, node_id, "residuals")
+    if not residuals:
+        raise ValueError(t("Wire the model's residuals into the Deviation block first."))
+    active = wires_into(diagram, node_id, "active")
+    stride = judged_part(diagram, residuals, timing)
+    ends = segment_ends(start, end, stride)
+    if not ends:
+        raise ValueError(
+            t(
+                "The period is shorter than one judged part ({seconds} s): choose a longer one.",
+                seconds=f"{stride:g}",
+            )
+        )
+    if len(ends) > MAX_RUNS:
+        raise ValueError(
+            t("The period needs more than {count} runs: choose a shorter one.", count=MAX_RUNS)
+        )
+    frames: list[pd.DataFrame] = []
+    skipped: list[str] = []
+    for run in runs_over(
+        diagram,
+        asset_id,
+        client=client,
+        ends=ends,
+        window=float(timing.window_seconds),
+        step=float(timing.step_seconds),
+        models=models,
+        keep=residuals + active,
+    ):
+        kept = run["kept"]
+        items = [kept[wire] for wire in residuals]
+        missing = next((item for item in items if isinstance(item, NoData)), None)
+        if missing is not None:
+            skipped.append(missing.reason)
+            continue
+        frame = residual_frame(items)
+        if frame.empty:
+            skipped.append(t("No residual to judge."))
+            continue
+        reason = unjudgeable(frame, kept[active[0]] if active else None)
+        if reason:
+            skipped.append(reason)
+            continue
+        if frames and list(frame.columns) != list(frames[0].columns):
+            raise ValueError(t("The residuals changed during the period: check the wiring."))
+        frames.append(frame)
+    if not frames:
+        raise ValueError(
+            t(
+                "No run in the period could be used: {reason}",
+                reason=skipped[0] if skipped else t("No residual to judge."),
+            )
+        )
+    names = [str(name) for name in frames[0].columns]
+    rows = np.vstack([frame.to_numpy(dtype=float) for frame in frames])
+    try:
+        found = calibrate(rows, names)
+    except ValueError as exc:
+        raise ValueError(t("Too few samples to calibrate: {why}.", why=exc)) from exc
+    return {
+        "node_id": node_id,
+        "asset_id": asset_id,
+        "calibration": {
+            **found.as_dict(),
+            "asset": asset_id,
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        },
+        "outputs": names,
+        "std": found.std,
+        "samples": found.samples,
+        "warnings": list(found.warnings),
+        "runs": len(ends),
+        "used": len(frames),
+        "skipped": len(skipped),
+        "skipped_reason": skipped[0] if skipped else "",
+        "period": {"start": start.isoformat(), "end": end.isoformat(), "every": stride},
+    }
+
+
+__all__ = ["DEVIATION_BLOCK", "calibrate_on_asset", "judged_part", "wires_into"]

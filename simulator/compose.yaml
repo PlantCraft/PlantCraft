@@ -1,0 +1,30 @@
+# PlantCraft Simulator on its own, hardened the same way as the `simcraft` service of PlantCraft's
+# deploy/compose.yaml (read-only root, no capabilities, uid 10004, state in /data).
+# The port is published on host loopback only: the endpoint is anonymous and unencrypted.
+#
+#   docker compose up --build                     the 50-loop portfolio (PlantCraft demo)
+#   SIMCRAFT_COMMAND="simcraft serve --profile smoke --endpoint opc.tcp://0.0.0.0:4840/plantcraft/ --history-db /data/history.sqlite3" \
+#     docker compose up --build                   the 500-signal benchmark instead
+services:
+  simcraft:
+    build: .
+    image: simcraft:${SIMCRAFT_VERSION:-0.4.0}
+    init: true
+    user: "10004:10004"
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    command: ${SIMCRAFT_COMMAND:-simcraft loops serve}
+    environment:
+      SIMCRAFT_LOG_LEVEL: "${SIMCRAFT_LOG_LEVEL:-INFO}"
+    ports:
+      - "127.0.0.1:4840:4840"
+    volumes:
+      - simcraft-data:/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777,noexec,nosuid,nodev
+    stop_grace_period: 20s
+    restart: unless-stopped
+
+volumes:
+  simcraft-data:

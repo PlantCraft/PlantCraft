@@ -1,0 +1,70 @@
+{
+  "realm": "plant",
+  "enabled": true,
+  "sslRequired": "external",
+  "groups": [
+    {"name": "pc-engineers"},
+    {"name": "pc-operators"},
+    {"name": "pc-admins"}
+  ],
+  "users": [
+    {
+      "username": "marina.costa",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Marina",
+      "lastName": "Costa",
+      "email": "marina.costa@plant.test",
+      "credentials": [{"type": "password", "value": "marina-sso-pass", "temporary": false}],
+      "groups": ["/pc-engineers"]
+    },
+    {
+      "username": "rafael.souza",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Rafael",
+      "lastName": "Souza",
+      "email": "rafael.souza@plant.test",
+      "credentials": [{"type": "password", "value": "rafael-sso-pass", "temporary": false}],
+      "groups": ["/pc-operators"]
+    },
+    {
+      "username": "outsider",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Someone",
+      "lastName": "Else",
+      "email": "outsider@plant.test",
+      "credentials": [{"type": "password", "value": "outsider-sso-pass", "temporary": false}]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "processcraft",
+      "name": "PlantCraft",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "processcraft-test-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://testserver/api/sso/oidc/callback", "http://127.0.0.1:8000/api/sso/oidc/callback"],
+      "attributes": {"pkce.code.challenge.method": "S256"},
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

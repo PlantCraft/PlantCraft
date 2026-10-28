@@ -1,0 +1,37 @@
+# Floors that only rise. When a number goes up, raise its floor in the same
+# change; never lower one (see AGENTS.md, "Tests are the gate").
+
+[methods]
+# Methods registered (data quality gate + CPM).
+registered = 17
+# Hostile datasets every method must survive (tests/test_hostile_inputs.py).
+hostile_frames = 14
+
+[signal_checks]
+# Signal data quality checks registered (from DataCraft).
+registered = 8
+# Hostile series every check must survive, on number, text and limit-less signals
+# (tests/test_signal_hostile_inputs.py).
+hostile_series = 15
+
+[api]
+# API operations exercised with junk by tests/test_suite_rules.py.
+operations = 73
+
+[oracles]
+# Simulator oracle (tests/oracles/test_simulator_oracle.py): cases whose verdict LinkCraft gets
+# right, and the number of cases (a case is never removed to raise the pass rate).
+simulator_cases = 10
+simulator_case_count = 10
+# International Stiction Database loops whose published label stiction_screening matches
+# (tests/oracles/test_isdb_oracle.py; 0 until the data is pinned and the labels transcribed).
+isdb_loops = 0
+# Synthetic signal oracle (tests/oracles/test_signal_synthetic_oracle.py): cases whose verdict
+# the signal checks get right, and the number of cases.
+signal_synthetic_cases = 90
+signal_synthetic_case_count = 90
+# PlantCraft Twin's oracle in Link (tests/oracles/test_twin_oracle.py): share of judged runs
+# where the twin's algorithm deviates and names the right loop, or stays normal (Twin's floors).
+twin_disturbance_found = 1.0
+twin_drift_found = 1.0
+twin_healthy_quiet = 0.96

@@ -1,0 +1,3 @@
+# Runtime dependencies of the PlantCraft Simulator image. `make lock` turns this into requirements.lock
+# (pinned, with hashes); keep it in step with `dependencies` in pyproject.toml.
+asyncua==1.1.8

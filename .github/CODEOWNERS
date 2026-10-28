@@ -1,0 +1,80 @@
+# Code owners (docs/contributing-safety.md). With the main branch's ruleset set to "Require
+# review from Code Owners", a pull request that touches any path below merges only after the
+# owner approves it. The paths are what keeps the plant, the people and the release safe: sign-in
+# and permissions, what the assistant may do, the stores, the sandbox for people's code, the
+# installer and the bundle, CI, and the rules the coding agents follow.
+# tests/test_contributing_safety.py fails when one of these paths moves without this file.
+
+# Rules for people and coding agents (an edit here steers every later agent session)
+/AGENTS.md                                   @PlantCraft/maintainers
+/CLAUDE.md                                   @PlantCraft/maintainers
+**/AGENTS.md                                 @PlantCraft/maintainers
+**/CLAUDE.md                                 @PlantCraft/maintainers
+/.claude/                                    @PlantCraft/maintainers
+/SECURITY.md                                 @PlantCraft/maintainers
+/docs/security-guide.md                      @PlantCraft/maintainers
+/docs/contributing-safety.md                 @PlantCraft/maintainers
+
+# CI, the Mac mini runner, the installer, the bundle and the release key's trust list
+/.github/                                    @PlantCraft/maintainers
+/ci/                                         @PlantCraft/maintainers
+/deploy/                                     @PlantCraft/maintainers
+/dev/                                        @PlantCraft/maintainers
+/Makefile                                    @PlantCraft/maintainers
+**/Makefile                                  @PlantCraft/maintainers
+/Dockerfile                                  @PlantCraft/maintainers
+**/Dockerfile                                @PlantCraft/maintainers
+/compose.yaml                                @PlantCraft/maintainers
+/.gitleaks.toml                              @PlantCraft/maintainers
+
+# Dependencies (a new or changed package reaches every installation)
+/pyproject.toml                              @PlantCraft/maintainers
+**/pyproject.toml                            @PlantCraft/maintainers
+**/package.json                              @PlantCraft/maintainers
+**/package-lock.json                         @PlantCraft/maintainers
+**/requirements*.txt                         @PlantCraft/maintainers
+**/requirements*.lock                        @PlantCraft/maintainers
+
+# Sign-in, people, tokens and permissions
+/processcraft/auth/                          @PlantCraft/maintainers
+/processcraft/directory/                     @PlantCraft/maintainers
+/processcraft/api/app.py                     @PlantCraft/maintainers
+/processcraft/api/deps.py                    @PlantCraft/maintainers
+/processcraft/api/identity.py                @PlantCraft/maintainers
+/processcraft/api/routers/session.py         @PlantCraft/maintainers
+/processcraft/api/routers/sso.py             @PlantCraft/maintainers
+/processcraft/audit/                         @PlantCraft/maintainers
+/sdk/python/plantcraft_sdk/auth.py         @PlantCraft/maintainers
+/sdk/python/plantcraft_sdk/jwt.py          @PlantCraft/maintainers
+/sdk/python/plantcraft_sdk/server/access.py @PlantCraft/maintainers
+
+# What the assistant (LLM) may read and do
+/processcraft/assistant_access/              @PlantCraft/maintainers
+/processcraft/assistant_chat/                @PlantCraft/maintainers
+/processcraft/specialists/                   @PlantCraft/maintainers
+/processcraft/api/routers/v1_assistant.py    @PlantCraft/maintainers
+
+# Stores, the apps' installer (it runs containers) and the read-only plant connections
+/processcraft/db.py                          @PlantCraft/maintainers
+/processcraft/apps/                          @PlantCraft/maintainers
+/processcraft/industrial_data/               @PlantCraft/maintainers
+/sdk/python/plantcraft_sdk/server/store.py @PlantCraft/maintainers
+/apps/historian/src/histcraft/vault.py       @PlantCraft/maintainers
+/apps/historian/src/histcraft/sources/       @PlantCraft/maintainers
+
+# People's own code: Link's block sandbox and the Models runners
+/apps/link/src/linkcraft/blocks/sandbox.py   @PlantCraft/maintainers
+/apps/models/src/modelcraft/omc/             @PlantCraft/maintainers
+/apps/models/src/modelcraft/runs/            @PlantCraft/maintainers
+
+# The tests that hold the rules above (weakening one is a change to the rule)
+/tests/test_route_permissions.py             @PlantCraft/maintainers
+/tests/test_security.py                      @PlantCraft/maintainers
+/tests/test_offline.py                       @PlantCraft/maintainers
+/tests/test_isolation.py                     @PlantCraft/maintainers
+/tests/test_read_only_plant.py               @PlantCraft/maintainers
+/tests/test_architecture.py                  @PlantCraft/maintainers
+/tests/test_contributing_safety.py           @PlantCraft/maintainers
+/sdk/python/plantcraft_sdk/apptest.py      @PlantCraft/maintainers
+**/tests/test_suite_rules.py                 @PlantCraft/maintainers
+/apps/link/tests/test_site_blocks.py         @PlantCraft/maintainers

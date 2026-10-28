@@ -1,0 +1,67 @@
+{
+  "id": "separator.centrifuge",
+  "title": "Centrifuge",
+  "category": "separation",
+  "w": 80,
+  "h": 80,
+  "svg": "<line x1=\"0\" y1=\"40\" x2=\"20\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"40\" x2=\"80\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"40\" y1=\"60\" x2=\"40\" y2=\"80\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle class=\"pc-state pc-run\" cx=\"40\" cy=\"40\" r=\"20\" stroke-width=\"2\" stroke-linejoin=\"round\"/><circle cx=\"40\" cy=\"40\" r=\"12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><path d=\"M40,28 A12,12 0 0 1 52,40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polygon points=\"52,40 48,34 56,34\" fill=\"currentColor\" stroke=\"none\"/>",
+  "ports": [
+    {
+      "id": "feed",
+      "x": 0,
+      "y": 40,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "liquid",
+      "x": 80,
+      "y": 40,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "solids",
+      "x": 40,
+      "y": 80,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 84,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "run"
+  ],
+  "keywords": [
+    "centrifuge",
+    "decanter",
+    "separator"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

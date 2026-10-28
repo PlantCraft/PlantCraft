@@ -1,0 +1,49 @@
+__pycache__/
+# Wheels downloaded at the root by hand (a vendored wheel lives in a folder's vendor/).
+/*.whl
+*.py[cod]
+.pytest_cache/
+.venv/
+*.tsbuildinfo
+frontend/node_modules
+frontend/dist/
+frontend/vite.config.js
+frontend/vite.config.d.ts
+.DS_Store
+.env
+secrets/
+
+var/
+*.sqlite3
+demo/output/
+*.egg-info/
+.ruff_cache/
+
+# Offline deployment: bundles and a local `deploy/install.sh --dev` installation.
+dist/
+deploy/.env
+deploy/data/
+deploy/backups/
+deploy/bundle.env
+deploy/local-ca-root.crt
+deploy/certs/*.pem
+
+# App publisher keys: private keys never enter the repository; development public keys stay local.
+keys/
+*.key
+deploy/trusted-publishers/dev*.pub
+deploy/data/installer/
+*.pcapp
+sdk/python/build/
+/build/
+
+# Scratch output of make targets (ui-check).
+build/
+
+# Notebooks: JupyterLite built by notebooks/build.py
+notebooks/dist/
+notebooks/.cache/
+notebooks/.venv/
+# Notebooks kits: built by notebooks/kit/build_kit.py
+notebooks/kit/dist/
+notebooks/kit/.cache/

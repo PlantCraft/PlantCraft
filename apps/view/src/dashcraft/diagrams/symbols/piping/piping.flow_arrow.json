@@ -1,0 +1,57 @@
+{
+  "id": "piping.flow_arrow",
+  "title": "Flow arrow",
+  "category": "piping",
+  "w": 20,
+  "h": 20,
+  "svg": "<polygon points=\"0,4 20,10 0,16\" fill=\"currentColor\" stroke=\"none\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 10,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 20,
+      "y": 10,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 10.0,
+      "y": 24,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 10.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 20,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "arrow",
+    "flow",
+    "direction"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""Which apps (apps/<app>) vendor another plantcraft-sdk or @plantcraft/ui than this tree's.
+
+    dev/vendor-drift            one line per app; exit 0
+    dev/vendor-drift --strict   exit 1 when any app differs (`dev/revendor --all` brings them in)
+
+In CI the lines are GitHub warnings: an app may stay on an older version for a while (its own
+pull request picks the new one up), but the suite ships best when every app is on the tree's.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import sys
+import tomllib
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def main() -> int:
+    sdk = tomllib.loads((ROOT / "sdk/python/pyproject.toml").read_text())["project"]["version"]
+    ui = json.loads((ROOT / "ui/package.json").read_text())["version"]
+    ci = os.environ.get("GITHUB_ACTIONS") == "true"
+    drift = 0
+    folders = sorted(p for p in (ROOT / "apps").iterdir() if (p / "app.toml").is_file())
+    for app in folders + [ROOT / "templates" / "app"]:
+        pinned_sdk = re.search(r'"plantcraft-sdk==([^"]+)"', (app / "pyproject.toml").read_text())
+        deps = json.loads((app / "frontend/package.json").read_text()).get("dependencies", {})
+        pinned_ui = re.search(r"plantcraft-ui-(.+)\.tgz", deps.get("@plantcraft/ui", ""))
+        have = (pinned_sdk and pinned_sdk[1], pinned_ui and pinned_ui[1])
+        if have == (sdk, ui):
+            print(f"{app.name}: sdk {sdk}, ui {ui}")
+            continue
+        drift += 1
+        line = f"{app.relative_to(ROOT)} vendors sdk {have[0]}, ui {have[1]}; the tree has sdk {sdk}, ui {ui}"
+        print(f"::warning::{line} (dev/revendor --all)" if ci else line)
+    return 1 if drift and "--strict" in sys.argv else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

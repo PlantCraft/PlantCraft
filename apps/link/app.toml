@@ -1,0 +1,676 @@
+# PlantCraft Analytics's manifest: the single source of its metadata (PlantCraft app standard, section 4).
+# The launcher card, the Apps page, the package, the image labels and /api/meta read it;
+# tests/test_app_standard.py checks that nothing else disagrees with it.
+
+[app]
+id = "linkcraft"
+name = "PlantCraft Analytics"
+version = "0.5.0"
+category = "Signal quality and control loop performance"
+summary = "Checks every signal for bad data and every control loop for oscillation, sticking and manual mode, and says why."
+description = """PlantCraft Analytics analyses the signals and control loops PlantCraft describes. Its \
+analyses are methods wired into protocols that run on a cadence: the Signal quality protocol \
+checks every signal's raw samples for gaps, stale, frozen, spiky, out-of-range, noisy, coarse \
+and drifting data; the loop round scores each loop's health from its recorded data, ranks the \
+portfolio worst first and names what limits each loop (oscillation, a sticky valve, saturation, \
+manual mode, poor tracking or unusable data), with a help page per method. For process and \
+control engineers. It needs PlantCraft's signal catalog and history, loop assets with PV and \
+OP signals bound, and an app key for its background runs."""
+publisher = "PlantCraft"
+license = "Apache-2.0"
+homepage = ""
+mark = "linkcraft"
+
+[runtime]
+prefix = "/link/"
+port = 8140
+uid = 10012
+health = "/healthz"
+image = "linkcraft"
+
+[requires]
+processcraft_api = ">=1.0"
+sdk = "0.77.0"
+asset_types = ["loop"]
+roles = { loop = ["pv", "op"] }
+
+[permissions]
+read = ["assets", "signals", "series", "results"]
+write = ["audit", "results", "events", "runs", "schedules", "knowledge", "series", "compute"]
+plant_write = false
+outbound = []
+
+# loop_health and signal_quality are also written as derived series, one point per round
+# (PUT /api/v1/series): app-linkcraft:<loop id>.health (number, /100) and
+# app-linkcraft:<loop id>.status (text), subject asset:<loop id>, result loop_health; and
+# app-linkcraft:<signal id>.quality (number, /100), subject the signal, result signal_quality.
+# The manifest of plantcraft-sdk 0.8.3 has no field for derived series ([publishes] takes
+# results and events; [permissions] write has no "series"): they are declared through the
+# result they come from. signal_quality on "asset" is the worst verdict of an asset's signals.
+# Results CPMCraft and DataCraft published (cpmcraft.loop_health, datacraft.signal_quality) and
+# their series (app-cpmcraft:*, app-datacraft:*) stay readable in PlantCraft.
+# Its data folder in the suite's backup (PlantCraft docs/operations.md).
+[backup]
+sqlite = ["linkcraft.sqlite3"]
+files = ["linkcraft-app-key"]
+skip = ["logs/"]
+
+[publishes]
+results = [
+  { kind = "loop_health", subject = "asset:loop" },
+  { kind = "signal_quality", subject = "signal" },
+  { kind = "signal_quality", subject = "asset" },
+]
+
+# The events Link writes (PlantCraft docs/app-standard.md, section 6). Link reports; the Alarms
+# app's rules decide what becomes an alarm and who hears it. Conditions (a finding, a message
+# of an algorithm, a subject's state in a schedule, a stalled schedule) are sent as start and
+# end with one key.
+[[publishes.events]]
+name = "status.changed"
+title = "Target state changed in a monitor"
+description = "A target went to warning or critical in a monitor (start), or back to ok (end). Key: <monitor id>:<target>."
+severity = "warning"
+category = "process"
+phase = "interval"
+payload = { schedule_id = "Monitor", status = "New state", previous_status = "State before", owner = "Monitor owner", url = "Page that shows it" }
+rule = { when = "open", minutes = 60, priority = "medium", notify = "owner" }
+
+[[publishes.events]]
+name = "run.failed"
+title = "Monitored run failed"
+description = "A monitored run failed: once per run of the monitor, however many of its targets failed (the first is the target)."
+severity = "warning"
+category = "run"
+payload = { schedule_id = "Monitor", schedule_name = "Monitor name", run_at = "The run that failed", owner = "Monitor owner", url = "Page that shows it" }
+rule = { when = "event", priority = "medium", notify = "owner" }
+
+[[publishes.events]]
+name = "schedule.stalled"
+title = "Monitor stopped running"
+description = "A monitor has not run for two of its periods (start), or ran again (end). One condition per monitor, about Analytics itself. Key: stalled:<monitor id>."
+severity = "warning"
+category = "run"
+phase = "interval"
+payload = { schedule_id = "Monitor", schedule_name = "Monitor name", subjects = "Targets it judges", owner = "Monitor owner" }
+rule = { when = "open", minutes = 30, priority = "high", notify = "owner" }
+
+[[publishes.events]]
+name = "finding.opened"
+title = "Loop finding opened"
+description = "A loop method found a problem (oscillation, sticky valve, manual mode...). Key: <loop>/<method>."
+severity = "warning"
+category = "process"
+phase = "interval"
+payload = { method_id = "Method", method_name = "Method name", status = "warning or bad", score = "Method score", url = "Loop page" }
+
+[[publishes.events]]
+name = "finding.closed"
+title = "Loop finding closed"
+description = "The finding of a loop method is gone. Same key as when it opened."
+severity = "ok"
+category = "process"
+phase = "interval"
+payload = { method_id = "Method", method_name = "Method name", opened_at = "When it opened" }
+
+[[publishes.events]]
+name = "protocol.alert"
+title = "Algorithm message raised"
+description = "A message block of an algorithm triggered on an asset. Key: <asset>/<message>."
+severity = "warning"
+category = "process"
+phase = "interval"
+payload = { output = "Message output", status = "Status", score = "Value", url = "Asset page" }
+
+[[publishes.events]]
+name = "protocol.cleared"
+title = "Algorithm message cleared"
+description = "The message block no longer triggers. Same key as when it was raised."
+severity = "ok"
+category = "process"
+phase = "interval"
+payload = { opened_at = "When it was raised" }
+
+# What the assistant does on Link's pages (PlantCraft docs/assistant.md, "What each page offers"):
+# each page names itself in useAssistantPage({page: "linkcraft:<id>"}). A block and an algorithm are
+# finished in their own forms (code to test, a diagram to draw): those works open the form filled
+# in; "Help me change this block" opens the block's next version ({subject}: the block on screen).
+[[contributes.assistant.works]]
+id = "new-block"
+pages = ["blocks", "block-new"]
+kind = "create"
+level = "admin"
+title = "Help me create a new block"
+hint = "Say what it must compute; the form opens filled in to test and create"
+instructions = """Help the person write a new Analytics block: one calculation with typed inputs and outputs, parameters and Python code (def run(inputs, params, ctx) returning a dict of outputs; inputs are pandas series by port name; numpy and pandas only). Ask what it must compute and from which signals if they have not said it. Look at Analytics' blocks first (the person may only need an existing one) and say so if one fits. List inputs and outputs as "port: what it is" and parameters as "name = default: what it is". Then propose it; the person tests it on an asset in the form before creating it."""
+object = "block"
+form = "/link/blocks/new"
+[[contributes.assistant.works.fields]]
+key = "name"
+title = "Name"
+required = true
+max_length = 120
+[[contributes.assistant.works.fields]]
+key = "summary"
+title = "What it computes"
+type = "long_text"
+required = true
+max_length = 500
+[[contributes.assistant.works.fields]]
+key = "inputs"
+title = "Inputs"
+type = "list"
+help = "port: what it is"
+max_length = 200
+[[contributes.assistant.works.fields]]
+key = "outputs"
+title = "Outputs"
+type = "list"
+required = true
+help = "port: what it is"
+max_length = 200
+[[contributes.assistant.works.fields]]
+key = "parameters"
+title = "Parameters"
+type = "list"
+help = "name = default: what it is"
+max_length = 200
+[[contributes.assistant.works.fields]]
+key = "code"
+title = "Python code"
+type = "long_text"
+required = true
+max_length = 20000
+
+[[contributes.assistant.works]]
+id = "find-block"
+pages = ["blocks", "block-new"]
+title = "Which block computes what I need?"
+hint = "Among Analytics' blocks, before writing one"
+ask = "What do you want to compute?"
+instructions = """Find the Analytics blocks that compute what the person describes (read Analytics' help and the blocks it describes): name each by its title as the page shows it, what it computes, its inputs and outputs, and how well it fits. Say plainly when none does: then a new block is the way."""
+
+[[contributes.assistant.works]]
+id = "about-block"
+pages = ["block"]
+title = "Explain this block"
+hint = "What it computes, line by line, and how to read its outputs"
+context = ["name", "summary", "inputs", "outputs", "parameters", "code"]
+instructions = """Explain the block on this page from its facts (name, inputs, outputs, parameters and code): what it computes, how its code does it in a few steps, how to read each output, and its assumptions and limits."""
+
+[[contributes.assistant.works]]
+id = "change-block"
+pages = ["block"]
+kind = "create"
+level = "admin"
+title = "Help me change this block"
+hint = "Say what to change; its next version opens filled in to test and save"
+context = ["name", "summary", "inputs", "outputs", "parameters", "code", "used_by"]
+instructions = """Help the person change the block on this page (its facts hold its current code, ports and parameters): one calculation with typed inputs and outputs, parameters and Python code (def run(inputs, params, ctx) returning a dict of outputs; inputs are pandas series by port name; numpy and pandas only). Ask what to change if they have not said it. Keep its inputs and outputs unless the change needs others, and say so plainly when it does: the algorithms that use it (used_by) keep their version until someone updates them. Propose the whole new code, the summary and what changed; the person tests it in the form and saves it as a new version."""
+object = "block"
+form = "/link/blocks/{subject}/edit"
+[[contributes.assistant.works.fields]]
+key = "code"
+title = "Python code"
+type = "long_text"
+required = true
+max_length = 20000
+[[contributes.assistant.works.fields]]
+key = "summary"
+title = "What it computes"
+type = "long_text"
+max_length = 500
+[[contributes.assistant.works.fields]]
+key = "change"
+title = "What changed"
+type = "long_text"
+required = true
+max_length = 2000
+
+[[contributes.assistant.works]]
+id = "block-variant"
+pages = ["block"]
+kind = "create"
+level = "admin"
+title = "Make a new block from this one"
+hint = "A variant with its own name; the new block's form opens filled in"
+context = ["name", "summary", "inputs", "outputs", "parameters", "code"]
+instructions = """Help the person make a new block that starts from the one on this page (its facts hold its code, ports and parameters): one calculation with typed inputs and outputs, parameters and Python code (def run(inputs, params, ctx) returning a dict of outputs; inputs are pandas series by port name; numpy and pandas only). Ask how the new block must differ if they have not said it, give it its own name, and propose all its fields; the person tests it in the form before creating it. The block on this page stays as it is."""
+object = "block"
+form = "/link/blocks/new"
+[[contributes.assistant.works.fields]]
+key = "name"
+title = "Name"
+required = true
+max_length = 120
+[[contributes.assistant.works.fields]]
+key = "summary"
+title = "What it computes"
+type = "long_text"
+required = true
+max_length = 500
+[[contributes.assistant.works.fields]]
+key = "inputs"
+title = "Inputs"
+type = "list"
+help = "port: what it is"
+max_length = 200
+[[contributes.assistant.works.fields]]
+key = "outputs"
+title = "Outputs"
+type = "list"
+required = true
+help = "port: what it is"
+max_length = 200
+[[contributes.assistant.works.fields]]
+key = "parameters"
+title = "Parameters"
+type = "list"
+help = "name = default: what it is"
+max_length = 200
+[[contributes.assistant.works.fields]]
+key = "code"
+title = "Python code"
+type = "long_text"
+required = true
+max_length = 20000
+
+[[contributes.assistant.works]]
+id = "block-used"
+pages = ["block"]
+title = "Where is it used?"
+hint = "The algorithms that use it, and what a change would affect"
+context = ["name", "used_by", "versions"]
+instructions = """Say which algorithms use the block on this page and which version each names (the facts: used_by, versions), what their results depend on from it, and what a change of its inputs or outputs would ask of each."""
+
+[[contributes.assistant.works]]
+id = "new-algorithm"
+pages = ["algorithms", "algorithm-new"]
+kind = "create"
+level = "editor"
+title = "Help me design a new algorithm"
+hint = "Say what it must judge; the form opens filled in, then the diagram"
+instructions = """Help the person design a new Analytics algorithm: a diagram of blocks that judges assets, control loops or signals on a cadence. Ask what it must judge and on what if they have not said it. Read the blocks first (list_app_objects, app linkcraft, kind block; get_app_object for one block's ports and parameters) and use only blocks that exist. Say which blocks to place and how to wire them, step by step, in your answer; then propose its name, what it works on (asset, loop or signal), a description of what it judges and how to read its result, and its diagram as text, one line each: `name = block_id` places a block (e.g. `pv = input.signal`), `a -> b` wires a's first fitting output to b's first free input, `a.output -> b.input` wires named ports, `name.parameter = value` sets a parameter. Use the ports the blocks have (get_app_object): wire an output only into an input that takes its type (a verdict gives result; a condition takes intervals), and name wires by the names you gave the blocks. A constant is a block's parameter. Start with the input blocks and end with an output block. Always give the diagram, unless you give the id of an existing algorithm to start from because one is close (the algorithms page lists them). The diagram's window opens with the blocks placed and wired; the person checks and saves it."""
+object = "algorithm"
+form = "/link/algorithms/new"
+[[contributes.assistant.works.fields]]
+key = "name"
+title = "Name"
+required = true
+max_length = 120
+[[contributes.assistant.works.fields]]
+key = "works_on"
+title = "Works on"
+type = "choice"
+options = ["asset", "loop", "signal"]
+required = true
+[[contributes.assistant.works.fields]]
+key = "description"
+title = "Description"
+type = "long_text"
+max_length = 2000
+[[contributes.assistant.works.fields]]
+key = "start_from"
+title = "Start from (algorithm id)"
+max_length = 120
+[[contributes.assistant.works.fields]]
+key = "diagram"
+title = "Diagram (blocks and wires, one per line)"
+type = "long_text"
+max_length = 4000
+
+[[contributes.assistant.works]]
+id = "find-algorithm"
+pages = ["algorithms", "algorithm-new"]
+title = "Which algorithm judges what I need?"
+hint = "Among Analytics' algorithms"
+ask = "What do you want to watch?"
+instructions = """Find the algorithms that judge what the person describes (the view section lists the ones on the page; read Analytics' help for more): name each, what it judges, on which targets, and how well it fits."""
+
+[[contributes.assistant.works]]
+id = "about-algorithm"
+pages = ["algorithm"]
+title = "Explain this algorithm"
+hint = "What it judges, from which signals, block by block"
+instructions = """Explain the algorithm on this page (the target): what it judges, from which signals, what each of its blocks does in order, and the result it gives."""
+
+[[contributes.assistant.works]]
+id = "algorithm-score"
+pages = ["algorithm"]
+title = "How do I read its result?"
+hint = "Its score or status and the thresholds"
+instructions = """Explain how this algorithm's score or status is computed and how to read it, with the thresholds it uses, and give an example from its latest results (latest_results)."""
+
+[[contributes.assistant.works]]
+id = "algorithm-fit"
+pages = ["algorithm"]
+title = "Which assets does it fit?"
+hint = "Kinds of assets or loops, and the ones of this plant"
+instructions = """Say which kinds of assets, loops or signals this algorithm fits and which it does not, and why; then name a few of this plant's (search_assets) it would fit and whether a monitor already runs it on them."""
+
+[[contributes.assistant.works]]
+id = "algorithm-variant"
+pages = ["algorithm"]
+kind = "create"
+level = "editor"
+title = "Design a new algorithm from this one"
+hint = "A variant that starts from its diagram"
+instructions = """Help the person design a new algorithm that starts from the one on this page (the target): ask how it must differ if they have not said it, say what to change in the diagram, step by step, then propose its name, what it works on, its description, and this algorithm's id as the one to start from. The algorithm on this page stays as it is."""
+object = "algorithm"
+form = "/link/algorithms/new"
+[[contributes.assistant.works.fields]]
+key = "name"
+title = "Name"
+required = true
+max_length = 120
+[[contributes.assistant.works.fields]]
+key = "works_on"
+title = "Works on"
+type = "choice"
+options = ["asset", "loop", "signal"]
+required = true
+[[contributes.assistant.works.fields]]
+key = "description"
+title = "Description"
+type = "long_text"
+max_length = 2000
+[[contributes.assistant.works.fields]]
+key = "start_from"
+title = "Start from (algorithm id)"
+max_length = 120
+
+[[contributes.assistant.works]]
+id = "about-schedules"
+pages = ["schedules"]
+title = "Which monitors found problems?"
+hint = "Their latest runs, worst first"
+instructions = """Go through Analytics' monitors and their latest runs (list_runs, latest_results): which found targets in alarm or warning, which failed, and which did not run when expected, worst first."""
+
+[[contributes.assistant.works]]
+id = "schedules-gaps"
+pages = ["schedules"]
+title = "What is not monitored yet?"
+hint = "Loops and assets no schedule runs on"
+instructions = """Compare the plant's loops and equipment (search_assets) with the targets Analytics' monitors run on (list_runs, latest_results): name what no monitor watches, the most important first, and which algorithm would fit each."""
+
+[[contributes.assistant.works]]
+id = "about-schedule"
+pages = ["schedule"]
+title = "Explain this monitor"
+hint = "What it runs, on what, when"
+context = ["schedule", "algorithm", "enabled", "last_run", "next_run", "subjects"]
+instructions = """Explain the monitor on this page from its facts: which algorithm it runs, on how many targets, how often, when it last ran and when it runs next, and whether it is on."""
+
+[[contributes.assistant.works]]
+id = "schedule-findings"
+pages = ["schedule"]
+title = "What did its last runs find?"
+hint = "Targets by status, and what changed"
+instructions = """Read this monitor's latest runs (list_runs, latest_results): what its targets gave, worst first, and what changed since the run before."""
+
+[[contributes.assistant.works]]
+id = "about-executions"
+pages = ["executions"]
+title = "Which runs failed, and why?"
+hint = "Analytics' latest problems first"
+instructions = """Find Analytics' runs that failed or ended with warnings (list_runs; the view section lists what is on screen): for each, the algorithm, when, why it failed as its messages say, and what to do about it. Say plainly when none did."""
+
+[[contributes.assistant.works]]
+id = "executions-found"
+pages = ["executions"]
+title = "What did the latest runs find?"
+hint = "Across every algorithm"
+instructions = """Summarize what Analytics' latest runs found (list_runs, latest_results), by algorithm: how many targets in alarm or warning and the worst of each."""
+
+[[contributes.assistant.works]]
+id = "about-round"
+pages = ["execution-group"]
+title = "Explain this loop monitor"
+hint = "Which algorithm ran and what each subject gave"
+instructions = """Explain this monitor's runs (a loop monitor; the facts give its algorithm, version and counts): which algorithm and version ran, what the targets gave, worst first, and why."""
+
+[[contributes.assistant.works]]
+id = "round-changes"
+pages = ["execution-group"]
+title = "What changed since the last run?"
+hint = "Targets that got better or worse"
+instructions = """Compare this run with the one before (result_history, list_runs): which targets got worse or better, since when, and what changed in their findings. Say plainly when nothing changed."""
+
+[[contributes.assistant.works]]
+id = "subject-explain"
+pages = ["subject-history"]
+title = "Explain this result"
+hint = "Its status, finding and the values behind it"
+context = ["schedule", "subject", "algorithm", "version", "status", "finding"]
+instructions = """Explain this target's latest result in the monitor (the facts: algorithm, status, finding; read the outputs with latest_results): what it means, the values behind it and how to read them."""
+
+[[contributes.assistant.works]]
+id = "subject-why"
+pages = ["subject-history"]
+title = "Why did it come out so?"
+hint = "From its signals over the analysed window"
+instructions = """Explain why this target's result came out as it did: read its signals over the analysed window (read_series, show_chart) and point to what in them drives the result."""
+
+[[contributes.assistant.works]]
+id = "subject-history"
+pages = ["subject-history"]
+title = "How has it changed over time?"
+hint = "Its results run after run"
+instructions = """Read this target's results over time in this monitor (result_history): how its status and measure moved, since when it is as it is now, and what changed at each turn."""
+
+[[contributes.assistant.works]]
+id = "about-run"
+pages = ["run"]
+title = "Explain this run"
+hint = "What ran, on what, what it found"
+instructions = """Explain the run on this page (the target): which algorithm and version ran, on what, and what it found, most important first. Read it with list_runs and latest_results."""
+
+[[contributes.assistant.works]]
+id = "run-failed"
+pages = ["run"]
+title = "Why did it fail?"
+hint = "Its error in plain words, and what to check"
+instructions = """If the run on this page failed, read its error (list_runs) and explain it in plain words, then list what to check first to make it run, most likely first. If it did not fail, say so."""
+
+[[contributes.assistant.works]]
+id = "run-verify"
+pages = ["run"]
+title = "What should engineering verify?"
+hint = "From its findings, with what each check confirms"
+instructions = """From the run's findings (latest_results), list what engineering should verify in the field or in the data, each with what it would confirm or rule out, and name the limiting method and why it limits."""
+
+[[contributes.assistant.works]]
+id = "run-method"
+pages = ["run"]
+title = "Explain one of its methods"
+hint = "What it measures, its value here, how to read it"
+ask = "Which method?"
+instructions = """Explain the method the person names in this run: what it measures, its value here, its limits and how to read it (latest_results)."""
+
+[[contributes.assistant.works]]
+id = "loop-health"
+pages = ["loop"]
+title = "Why is this loop's health what it is?"
+hint = "The limiting criterion and what drives it"
+instructions = """From the loop's latest result (the target; read it with latest_results and result_history: methods, limiting criterion, likely causes), explain its health in plain words, what drives it and since when. When the plant's documents can be searched (a tool doccraft_search_documents is offered), also search them for this loop (its asset) and cite what its control narrative, troubleshooting guide, maintenance history and incident reports say about its known causes, with document and page."""
+
+[[contributes.assistant.works]]
+id = "loop-plot"
+pages = ["loop"]
+title = "Plot its PV, SP and OP"
+hint = "Over the analysed window"
+context = ["pv", "sp", "op", "window_start", "window_end"]
+instructions = """Draw the loop's PV, SP and OP (the page's facts name their signals) over the analysed window with read_series and show_chart, and say what the chart shows about the loop's behaviour: tracking, oscillation, saturation, noise."""
+
+[[contributes.assistant.works]]
+id = "loop-checks"
+pages = ["loop"]
+title = "What should we check in the field first?"
+hint = "The likely causes, most likely first"
+instructions = """From the loop's likely causes and the methods' findings (latest_results), list what to check in the field, most likely first, with what each check would confirm or rule out. When the plant's documents can be searched (a tool doccraft_search_documents is offered), also search them for this loop (its asset) and cite what its control narrative, troubleshooting guide, maintenance history and incident reports say about its known causes, with document and page."""
+
+[[contributes.assistant.works]]
+id = "loop-method"
+pages = ["loop"]
+title = "Explain one of its methods"
+hint = "What it measures, its value here, how to read it"
+ask = "Which method?"
+instructions = """Explain the method the person names for this loop: what it measures, its value here, its limits and how to read it (latest_results)."""
+
+[[contributes.assistant.works]]
+id = "results-attention"
+pages = ["results"]
+title = "Which of these need attention first?"
+hint = "The subjects shown, with the reason and the check"
+instructions = """From the rows on screen (the view section) and Analytics' results (latest_results), say which targets need attention first, with the reason for each and the check to make."""
+
+[[contributes.assistant.works]]
+id = "results-common"
+pages = ["results"]
+title = "What do the worst have in common?"
+hint = "Findings, causes, areas and asset types"
+instructions = """Compare the worst results on screen (the view section; read more with latest_results and get_asset): their findings, causes, areas and asset types, and say what they have in common and what that suggests."""
+
+[[contributes.assistant.works]]
+id = "results-one"
+pages = ["results"]
+title = "Explain one result"
+hint = "Its status, measure and finding"
+ask = "Which loop or asset?"
+instructions = """Read Analytics' latest result for the target the person names (latest_results) and explain it: status, measure, finding and what to check."""
+
+[[contributes.assistant.works]]
+id = "signal-quality-problems"
+pages = ["signal-quality"]
+title = "Which signals have problems?"
+hint = "Frozen, noisy, out of range, missing, from the last check"
+instructions = """From Analytics' latest signal quality check (the page's facts give its counts and window; read the results with latest_results, kind signal quality), say which signals have problems, grouped by problem (frozen, noisy, spikes, out of range, gaps), the worst first, and what to check at the source for each group."""
+
+[[contributes.assistant.works]]
+id = "signal-quality-one"
+pages = ["signal-quality"]
+title = "Explain one signal's quality"
+hint = "What the check found, with its chart"
+ask = "Which signal?"
+instructions = """Read the signal quality result of the signal the person names (latest_results) and its series over the checked window (read_series, show_chart): say what the check found, show where, and what to check at the source."""
+
+[[contributes.assistant.offers]]
+work = "new-action"
+pages = ["loop", "results", "signal-quality", "run", "subject-history"]
+[consumes]
+results = []
+
+[suggests]
+asset_types = ["loop"]
+
+# The widgets of Link's Overview and of Desk's Today (PlantCraft docs/widgets.md), served by
+# api/routers/widgets.py. "Link: " is dropped on Link's own Overview.
+[[contributes.widgets]]
+id = "attention"
+title = "Analytics: needs attention"
+description = "How many signals, loops and other results are in alarm or warning."
+size = "s"
+kind = "number"
+default = true
+
+[[contributes.widgets]]
+id = "results"
+title = "Analytics: results by status"
+description = "Every result, or those of one kind, split by status; each part opens the list."
+size = "s"
+kind = "split"
+sizes = [{ w = 3, h = 1 }, { w = 4, h = 2 }, { w = 8, h = 2 }]
+pick = "Kind"
+
+[[contributes.widgets]]
+id = "in-alarm-history"
+title = "Analytics: in alarm, 14 days"
+description = "Loops and signals in alarm and in warning at the end of each of the last 14 days: is the plant getting better?"
+size = "m"
+kind = "columns"
+sizes = [{ w = 4, h = 2 }, { w = 6, h = 2 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "health-map"
+title = "Analytics: health map"
+description = "Every asset and signal as a square coloured by its status, grouped by area; each square opens it."
+size = "l"
+kind = "tiles"
+sizes = [{ w = 6, h = 3 }, { w = 8, h = 3 }, { w = 12, h = 3 }]
+
+[[contributes.widgets]]
+id = "worst"
+title = "Analytics: worst results"
+description = "The results in alarm or warning, the lowest health, quality or score first."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "schedules"
+title = "Analytics: monitors"
+description = "Each monitor, when it runs and how its last run ended."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "schedule"
+title = "Analytics: one monitor"
+description = "One monitor: its targets by status, its last and next run."
+size = "m"
+kind = "facts"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+pick = "Monitor"
+
+[[contributes.widgets]]
+id = "subject"
+title = "Analytics: one result"
+description = "The latest run of one target in one monitor, and each output it gave."
+size = "m"
+kind = "facts"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+pick = "Target"
+
+[[contributes.widgets]]
+id = "last-run"
+title = "Analytics: last run"
+description = "The newest run of any algorithm."
+size = "s"
+kind = "facts"
+sizes = [{ w = 3, h = 2 }, { w = 4, h = 2 }]
+
+[[contributes.widgets]]
+id = "runs"
+title = "Analytics: latest runs"
+description = "The newest runs of every algorithm."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+# What notebooks read and run (PlantCraft docs/en/notebooks.md, "The apps' objects"):
+# pc.app("link").blocks(), .get("block", id).run(...). Blocks and algorithms run on the person's
+# computer or in their browser with Link's own code (src/linkcraft/notebook.py), never here.
+[[contributes.objects]]
+kind = "block"
+title = "Block"
+description = "A block of the catalog: its ports, parameters and docs; it runs on your computer."
+run = "local"
+
+[[contributes.objects]]
+kind = "algorithm"
+title = "Algorithm"
+description = "A diagram of blocks with its window and step; it runs on your computer on one asset."
+run = "local"
+
+[[contributes.start]]
+# A new plant's first step (Assets › Import, once an import is applied): POST api/start/<id>.
+id = "analyze-loops"
+title = "Monitor the loops"
+description = "Reads the loops the import wrote and queues their first monitoring round, which starts each loop's baseline."
+open = "/link/results"
+
+[contributes.notebooks]
+examples = true
+runtime = ["linkcraft", "plantcraft_sdk"]
+entry = "linkcraft.notebook"

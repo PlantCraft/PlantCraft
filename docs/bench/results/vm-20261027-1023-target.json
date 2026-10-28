@@ -1,0 +1,387 @@
+{
+  "scale": "target",
+  "started_at": "2026-10-27T10:23:24Z",
+  "size": {
+    "loops": 2000,
+    "signals": 8000,
+    "hours": 24,
+    "twins": 50
+  },
+  "machine": {
+    "host": "vm",
+    "system": "Linux 6.18.44-fc-v165 x86_64",
+    "cpus": 4,
+    "memory_gib": 15.7,
+    "docker": "4 CPUs 16872812544 x86_64"
+  },
+  "versions": {
+    "linkcraft": {
+      "revision": "f1b49c5"
+    },
+    "dashcraft": {
+      "revision": "f1b49c5"
+    },
+    "histcraft": {
+      "revision": "f1b49c5"
+    }
+  },
+  "histcraft_seed": {
+    "points": 8000,
+    "catalog_seconds": 2.2,
+    "fed": 23040000,
+    "archived": 14215194,
+    "archive_seconds": 894.2,
+    "database_write_seconds": 775.0,
+    "values_per_second": 18342,
+    "compact_seconds": 473.4,
+    "chunks_merged": 8631975,
+    "database": "postgresql"
+  },
+  "plant_map": {
+    "assets": 2041,
+    "signals": 8000,
+    "preview_seconds": 16.2,
+    "apply_seconds": 41.5
+  },
+  "reads": {
+    "batch_1h_raw": {
+      "signals": 8000,
+      "seconds": 3.9,
+      "values": 352435,
+      "errors": 0,
+      "signals_per_second": 2058,
+      "request": {
+        "n": 16,
+        "mean_ms": 230.3,
+        "p95_ms": 272.8,
+        "max_ms": 272.8
+      }
+    },
+    "batch_window_60s": {
+      "signals": 8000,
+      "seconds": 25.8,
+      "values": 11520000,
+      "errors": 0,
+      "signals_per_second": 311,
+      "request": {
+        "n": 16,
+        "mean_ms": 1251.1,
+        "p95_ms": 1489.7,
+        "max_ms": 1489.7
+      }
+    },
+    "batch_1h_raw_direct": {
+      "signals": 8000,
+      "seconds": 3.1,
+      "values": 352435,
+      "errors": 0,
+      "signals_per_second": 2619,
+      "request": {
+        "n": 16,
+        "mean_ms": 179.2,
+        "p95_ms": 218.3,
+        "max_ms": 218.3
+      }
+    },
+    "batch_window_60s_direct": {
+      "signals": 8000,
+      "seconds": 26.4,
+      "values": 11520000,
+      "errors": 0,
+      "signals_per_second": 303,
+      "request": {
+        "n": 16,
+        "mean_ms": 1311.3,
+        "p95_ms": 1956.8,
+        "max_ms": 1956.8
+      }
+    },
+    "trend_24h_one_signal": {
+      "n": 100,
+      "mean_ms": 35.6,
+      "p95_ms": 55.6,
+      "max_ms": 212.5
+    }
+  },
+  "signal_quality": {
+    "status": "ok",
+    "signals": 8210,
+    "duration_seconds": 139.98,
+    "counts": {
+      "good": 8195,
+      "suspect": 13,
+      "bad": 2,
+      "unknown": 0
+    },
+    "error": null
+  },
+  "link_rounds": [
+    {
+      "round": "first",
+      "wall_seconds": 105.7,
+      "duration_seconds": 75.496,
+      "status": "ok",
+      "loops": 2050,
+      "status_counts": {
+        "critical": 1936,
+        "high": 55,
+        "medium": 44,
+        "normal": 13,
+        "no_data": 2
+      },
+      "failed_tags": 0,
+      "unread_loops": 0
+    },
+    {
+      "round": "second",
+      "wall_seconds": 109.5,
+      "duration_seconds": 79.608,
+      "status": "ok",
+      "loops": 2050,
+      "status_counts": {
+        "high": 55,
+        "critical": 1936,
+        "medium": 44,
+        "normal": 13,
+        "no_data": 2
+      },
+      "failed_tags": 0,
+      "unread_loops": 0
+    }
+  ],
+  "link_queue": {
+    "queued": 1000,
+    "workers": 4,
+    "drain_seconds": 582.0,
+    "per_second": 1.7,
+    "longest_wait_seconds": 260.7,
+    "failed": 114,
+    "engine_cpu_percent_peak": 0,
+    "engine_memory_mb_peak": 0,
+    "metrics_carry_queue": true
+  },
+  "dashboard": {
+    "cards": 24,
+    "all_cards_seconds": 2.78,
+    "card": {
+      "n": 24,
+      "mean_ms": 115.5,
+      "p95_ms": 249.2,
+      "max_ms": 309.8
+    }
+  },
+  "twins": {
+    "twins": 50,
+    "minutes": 3.0,
+    "cycle_seconds": 60.0,
+    "assets_run": 50,
+    "assets_without_run": 0,
+    "kept_up_percent": 100
+  },
+  "containers": {
+    "modelcraft": {
+      "cpu_percent": 36.79,
+      "mem_mib": 190.7
+    },
+    "doccraft": {
+      "cpu_percent": 43.0,
+      "mem_mib": 148.3
+    },
+    "histcraft-gateway": {
+      "cpu_percent": 3.76,
+      "mem_mib": 33.2
+    },
+    "alarmcraft": {
+      "cpu_percent": 92.74,
+      "mem_mib": 264.3
+    },
+    "linkcraft": {
+      "cpu_percent": 116.01,
+      "mem_mib": 1861.6
+    },
+    "histcraft": {
+      "cpu_percent": 163.43,
+      "mem_mib": 817.0
+    },
+    "dashcraft": {
+      "cpu_percent": 56.85,
+      "mem_mib": 121.9
+    },
+    "compute-gateway": {
+      "cpu_percent": 28.66,
+      "mem_mib": 71.3
+    },
+    "proxy": {
+      "cpu_percent": 8.69,
+      "mem_mib": 52.1
+    },
+    "histcraft-collector": {
+      "cpu_percent": 118.08,
+      "mem_mib": 271.8
+    },
+    "processcraft": {
+      "cpu_percent": 202.17,
+      "mem_mib": 1219.6
+    },
+    "llm-egress": {
+      "cpu_percent": 52.89,
+      "mem_mib": 34.6
+    },
+    "plantcraft": {
+      "cpu_percent": 102.16,
+      "mem_mib": 347.9
+    },
+    "histcraft-db": {
+      "cpu_percent": 197.37,
+      "mem_mib": 914.8
+    },
+    "installer": {
+      "cpu_percent": 82.32,
+      "mem_mib": 114.6
+    },
+    "linkcraft-executor": {
+      "cpu_percent": 318.49,
+      "mem_mib": 412.1
+    },
+    "modelcraft-executor": {
+      "cpu_percent": 7.75,
+      "mem_mib": 195.4
+    }
+  },
+  "cpu_by_phase": {
+    "histcraft_seed": {
+      "modelcraft": 34.56,
+      "doccraft": 43.0,
+      "histcraft-gateway": 3.76,
+      "alarmcraft": 69.21,
+      "linkcraft": 75.57,
+      "histcraft": 163.43,
+      "dashcraft": 56.85,
+      "compute-gateway": 24.31,
+      "proxy": 4.15,
+      "histcraft-collector": 117.69,
+      "processcraft": 56.61,
+      "llm-egress": 50.87,
+      "plantcraft": 98.8,
+      "histcraft-db": 197.37,
+      "installer": 82.32,
+      "linkcraft-executor": 204.13,
+      "modelcraft-executor": 7.75
+    },
+    "plant_map": {
+      "modelcraft": 36.79,
+      "doccraft": 31.61,
+      "histcraft-gateway": 3.05,
+      "alarmcraft": 0.64,
+      "linkcraft": 38.03,
+      "histcraft": 30.15,
+      "dashcraft": 0.79,
+      "compute-gateway": 0.5,
+      "proxy": 0.0,
+      "histcraft-collector": 1.35,
+      "processcraft": 101.11,
+      "llm-egress": 0.01,
+      "plantcraft": 96.93,
+      "histcraft-db": 19.76,
+      "installer": 43.37,
+      "linkcraft-executor": 0.82,
+      "modelcraft-executor": 0.45
+    },
+    "reads": {
+      "modelcraft": 26.96,
+      "doccraft": 32.41,
+      "histcraft-gateway": 0.32,
+      "alarmcraft": 34.02,
+      "linkcraft": 105.49,
+      "histcraft": 94.64,
+      "dashcraft": 2.49,
+      "compute-gateway": 17.78,
+      "proxy": 8.69,
+      "histcraft-collector": 112.32,
+      "processcraft": 61.37,
+      "llm-egress": 0.01,
+      "plantcraft": 99.57,
+      "histcraft-db": 22.69,
+      "installer": 45.77,
+      "linkcraft-executor": 35.63,
+      "modelcraft-executor": 0.46
+    },
+    "signal_quality": {
+      "modelcraft": 1.97,
+      "doccraft": 0.66,
+      "histcraft-gateway": 2.99,
+      "alarmcraft": 46.78,
+      "linkcraft": 108.11,
+      "histcraft": 80.47,
+      "dashcraft": 33.54,
+      "compute-gateway": 22.69,
+      "proxy": 3.51,
+      "histcraft-collector": 112.04,
+      "processcraft": 120.93,
+      "llm-egress": 52.89,
+      "plantcraft": 98.36,
+      "histcraft-db": 117.97,
+      "installer": 61.19,
+      "linkcraft-executor": 268.77,
+      "modelcraft-executor": 7.26
+    },
+    "link_rounds": {
+      "modelcraft": 0.35,
+      "doccraft": 42.19,
+      "histcraft-gateway": 2.81,
+      "alarmcraft": 92.74,
+      "linkcraft": 100.53,
+      "histcraft": 91.02,
+      "dashcraft": 0.22,
+      "compute-gateway": 28.66,
+      "proxy": 2.61,
+      "histcraft-collector": 118.08,
+      "processcraft": 102.97,
+      "llm-egress": 5.67,
+      "plantcraft": 100.46,
+      "histcraft-db": 73.56,
+      "installer": 2.77,
+      "linkcraft-executor": 279.37,
+      "modelcraft-executor": 5.77
+    },
+    "link_queue": {
+      "modelcraft": 34.7,
+      "doccraft": 37.09,
+      "histcraft-gateway": 3.7,
+      "alarmcraft": 82.29,
+      "linkcraft": 116.01,
+      "histcraft": 95.08,
+      "dashcraft": 39.11,
+      "compute-gateway": 23.38,
+      "proxy": 3.34,
+      "histcraft-collector": 115.73,
+      "processcraft": 100.89,
+      "llm-egress": 48.54,
+      "plantcraft": 93.17,
+      "histcraft-db": 96.99,
+      "installer": 46.7,
+      "linkcraft-executor": 318.49,
+      "modelcraft-executor": 6.63
+    },
+    "twins": {
+      "modelcraft": 33.84,
+      "doccraft": 0.35,
+      "histcraft-gateway": 0.4,
+      "alarmcraft": 63.18,
+      "linkcraft": 41.95,
+      "histcraft": 35.39,
+      "dashcraft": 1.14,
+      "compute-gateway": 15.31,
+      "proxy": 2.63,
+      "histcraft-collector": 115.99,
+      "processcraft": 202.17,
+      "llm-egress": 47.7,
+      "plantcraft": 102.16,
+      "histcraft-db": 63.06,
+      "installer": 55.03,
+      "linkcraft-executor": 2.8,
+      "modelcraft-executor": 5.56
+    }
+  },
+  "seconds": 3002
+}

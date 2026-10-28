@@ -1,0 +1,60 @@
+{
+  "id": "valve.angle",
+  "title": "Angle valve",
+  "category": "valves",
+  "w": 60,
+  "h": 60,
+  "svg": "<line x1=\"0\" y1=\"30\" x2=\"10\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"30\" y1=\"50\" x2=\"30\" y2=\"60\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"pc-state pc-run\" d=\"M10,20 L30,30 L10,40 Z M20,50 L30,30 L40,50 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 30,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 30,
+      "y": 60,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 30.0,
+      "y": 64,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 30.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 60,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "open"
+  ],
+  "keywords": [
+    "valve",
+    "manual",
+    "block",
+    "angle"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

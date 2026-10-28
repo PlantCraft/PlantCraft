@@ -1,0 +1,128 @@
+name: Simulator
+
+# Simulator (simulator/): runs only when that folder changes. CI budget and cadence:
+# ci/macmini/README.md. Pull requests run no tests here: the Lint and Security workflows check every
+# pull request, and contributors run this folder's `make ci` locally before merging. The Linux tests
+# run on main four times a day (the schedule below) when the folder changed since the last green
+# run, and by hand (Actions > this workflow > Run workflow); ticking "hosted" adds macOS (billed
+# 10x) and Windows (2x). A push to main redeploys the simulator on the Mac mini's local suite
+# (repository variable MACMINI_DEPLOY) without waiting for them. The container smoke runs by hand
+# with "hosted" ticked, or on main while the Mac mini is off. Documentation-only changes run
+# nothing.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "simulator/**"
+      - "!simulator/**/*.md"
+      - "!simulator/docs/**"
+      - ".github/workflows/simulator.yml"
+  pull_request:
+    paths:
+      - "simulator/**"
+      - "!simulator/**/*.md"
+      - "!simulator/docs/**"
+      - ".github/workflows/simulator.yml"
+  # The tests of main at about 09:00, 13:00, 17:00 and 21:00 Brasília (UTC-3; cron is UTC).
+  schedule:
+    - cron: "37 0,12,16,20 * * *"
+  workflow_dispatch:
+    inputs:
+      hosted:
+        description: "Also the jobs on GitHub's runners (containers, macOS, Windows): paid minutes"
+        type: boolean
+        default: false
+
+# A newer push to a pull request cancels its older run; runs on main are grouped by event and
+# commit, so a merge's deploy and a scheduled test run never wait on each other.
+concurrency:
+  group: simulator-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: simulator
+
+jobs:
+  # Scheduled runs only: test only if this workflow's folder changed since its last green run.
+  changes:
+    if: github.event_name == 'schedule'
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          sparse-checkout: ci
+      - id: gate
+        run: python3 ci/since-green
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    needs: [changes]
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini') || matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.hosted && '[{"os":"ubuntu-latest","python-version":"3.12"},{"os":"macos-latest","python-version":"3.13"},{"os":"windows-latest","python-version":"3.13"}]' || '[{"os":"ubuntu-latest","python-version":"3.12"}]') }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      # Linux runs the same `make ci` as a contributor (lint, catalog, tests, build).
+      - name: make ci
+        if: runner.os == 'Linux'
+        run: make ci
+      - name: Tests (macOS, Windows)
+        if: runner.os != 'Linux'
+        run: |
+          python -m pip install -e '.[test]'
+          simcraft validate-catalog
+          python -m pytest
+
+  container-smoke:
+    name: Linux container smoke
+    if: inputs.hosted || (github.event_name == 'push' && vars.MACMINI_DEPLOY != 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Build the image
+        run: make image VERSION=ci
+      - name: Start it read-only as the suite's compose file does and wait for HEALTHCHECK
+        run: make smoke VERSION=ci
+
+  # The Mac mini's local suite follows main: the image is rebuilt there and only the simulator's
+  # container is recreated (ci/macmini/suite-deploy from this checkout, so the deploy hold applies).
+  deploy:
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && vars.MACMINI_DEPLOY == 'true'
+    runs-on: [self-hosted, macmini]
+    concurrency:
+      group: deploy-simulator
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - run: make image
+      - run: ../ci/macmini/suite-deploy simcraft=simcraft

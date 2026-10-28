@@ -1,0 +1,75 @@
+{
+  "id": "exchanger.generic",
+  "title": "Heat exchanger",
+  "category": "heat-transfer",
+  "w": 80,
+  "h": 80,
+  "svg": "<line x1=\"0\" y1=\"40\" x2=\"20\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"40\" x2=\"80\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"40\" y1=\"60\" x2=\"40\" y2=\"80\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><circle class=\"pc-state\" cx=\"40\" cy=\"40\" r=\"20\" stroke-width=\"2\" stroke-linejoin=\"round\"/><polyline points=\"20,40 28,40 34,28 46,52 52,40 60,40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "tube_in",
+      "x": 0,
+      "y": 40,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "tube_out",
+      "x": 80,
+      "y": 40,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "shell_in",
+      "x": 40,
+      "y": 0,
+      "dir": "n",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "shell_out",
+      "x": 40,
+      "y": 80,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 84,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "heat exchanger",
+    "cooler",
+    "heater",
+    "condenser",
+    "exchanger"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

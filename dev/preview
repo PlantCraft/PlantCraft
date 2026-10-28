@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# preview: show the working tree of the repository on the Mac mini's suite in a
+# few seconds, without tests, images or a pull request (dev/README.md).
+#
+#   dev/preview [REPO_DIR ...]          push each one's working tree to its `preview` branch
+#   dev/preview --clear [REPO_DIR ...]  delete those `preview` branches (the Mac mini goes back
+#                                        to main)
+#
+# REPO_DIR defaults to the current repository. The working tree is pushed as it is, committed
+# or not (new files too, ignored ones never), on top of HEAD; the local branch, index and files
+# do not change. `preview` runs no CI: the workflows run on pull requests and on main only.
+set -euo pipefail
+
+BRANCH="${BRANCH:-preview}"
+clear=0
+if [ "${1:-}" = --clear ]; then clear=1; shift; fi
+[ "$#" -gt 0 ] || set -- .
+
+for dir in "$@"; do
+    top="$(git -C "$dir" rev-parse --show-toplevel)"
+    name="$(basename "$top")"
+    if [ "$clear" = 1 ]; then
+        if git -C "$top" ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null; then
+            git -C "$top" push -q origin --delete "$BRANCH"
+            echo "$name: $BRANCH deleted, the Mac mini shows main"
+        else
+            echo "$name: no $BRANCH branch"
+        fi
+        continue
+    fi
+    # The working tree as a commit, through a scratch index so the real one stays untouched.
+    index="$(mktemp)"
+    trap 'rm -f "$index"' EXIT
+    cp "$(git -C "$top" rev-parse --git-path index)" "$index" 2>/dev/null || true
+    GIT_INDEX_FILE="$index" git -C "$top" add -A
+    tree="$(GIT_INDEX_FILE="$index" git -C "$top" write-tree)"
+    rm -f "$index"
+    head="$(git -C "$top" rev-parse HEAD)"
+    if [ "$tree" = "$(git -C "$top" rev-parse 'HEAD^{tree}')" ]; then
+        commit="$head"
+    else
+        commit="$(git -C "$top" commit-tree "$tree" -p "$head" -m "preview of $(git -C "$top" rev-parse --abbrev-ref HEAD)")"
+    fi
+    git -C "$top" push -q -f origin "$commit:refs/heads/$BRANCH"
+    echo "$name: ${commit:0:7} on $BRANCH; the Mac mini shows it in a few seconds"
+done

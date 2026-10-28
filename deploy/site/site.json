@@ -1,0 +1,14 @@
+{
+  "name": "site",
+  "display_name": "Plant",
+  "description": "Production installation: the administrator adds the data sources and imports the plant map in the interface.",
+  "source": {
+    "type": "csv",
+    "path": "/app/deploy/site/no-data.csv",
+    "timezone": "UTC"
+  },
+  "storage": {
+    "sqlite_path": "/data/processcraft.sqlite3"
+  },
+  "loops": []
+}

@@ -1,0 +1,6 @@
+# Dependencies FMPy declares that PlantCraft Analytics never imports (compiling FMUs from source,
+# notebooks): left out of the image. `make lock` passes this file to uv as overrides; the image
+# installs the lock with --no-deps and `pip check` ignores exactly these three.
+cmake; sys_platform == "never"
+jinja2; sys_platform == "never"
+nbformat; sys_platform == "never"

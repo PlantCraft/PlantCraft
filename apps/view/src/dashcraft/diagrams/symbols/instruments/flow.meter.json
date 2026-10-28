@@ -1,0 +1,68 @@
+{
+  "id": "flow.meter",
+  "title": "In-line flow meter",
+  "category": "instruments",
+  "w": 60,
+  "h": 40,
+  "svg": "<line x1=\"0\" y1=\"20\" x2=\"16\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"44\" y1=\"20\" x2=\"60\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state\" x=\"16\" y=\"10\" width=\"28\" height=\"20\" stroke-width=\"2\" stroke-linejoin=\"round\"/><circle cx=\"30\" cy=\"20\" r=\"5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 20,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 60,
+      "y": 20,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "tap",
+      "x": 30,
+      "y": 10,
+      "dir": "n",
+      "kind": "signal"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 30.0,
+      "y": 44,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 30.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 60,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "flow meter",
+    "magnetic",
+    "coriolis",
+    "vortex",
+    "turbine",
+    "ultrasonic",
+    "FT"
+  ],
+  "standard": "ISA-5.1",
+  "description": ""
+}

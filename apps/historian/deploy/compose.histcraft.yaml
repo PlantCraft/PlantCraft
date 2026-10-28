@@ -1,0 +1,122 @@
+# PlantCraft Historian services for the suite's compose file (PlantCraft deploy/compose.yaml).
+#
+#   docker compose -f compose.yaml -f compose.histcraft.yaml --profile histcraft up -d
+#
+# PlantCraft Historian is the suite's data layer (docs/boundary.md): the only component on the plant network,
+# read-only toward PI Web API, OPC UA and CSV folders, and on the apps network for PlantCraft.
+# `histcraft serve` answers the pages and the API; `histcraft-collector` (the same image,
+# `histcraft collect`) collects and archives on its own, so restarting or updating the server
+# never stops the recording. Their PostgreSQL database `histcraft-db` has no port. Before the first start create the password and the folders:
+#
+#   openssl rand -base64 32 > data/histcraft-db-password && chmod 600 data/histcraft-db-password
+#   mkdir -p data/histcraft data/histcraft-db && chown 10008:10008 data/histcraft data/histcraft-db
+#   chmod 700 data/histcraft-db
+#
+# Source passwords are encrypted with data/histcraft/secret.key (created on first use, 0600):
+# back it up with the database, or the stored passwords must be typed again.
+services:
+  histcraft:
+    <<: *hardening
+    profiles: ["histcraft"]
+    image: histcraft:${HISTCRAFT_VERSION:-0.1.0}
+    user: "10008:10008"
+    environment:
+      PLANTCRAFT_URL: "http://processcraft:8060"
+      HISTCRAFT_ROOT_PATH: /hist
+      HISTCRAFT_DATA_DIR: /data
+      HISTCRAFT_DATABASE_URL: "postgresql://histcraft@histcraft-db:5432/histcraft"
+      HISTCRAFT_DATABASE_PASSWORD_FILE: /run/secrets/histcraft_db_password
+      # The collector runs in histcraft-collector (below).
+      HISTCRAFT_COLLECTOR: "off"
+      HISTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
+    secrets:
+      - histcraft_db_password
+    volumes:
+      - ./data/histcraft:/data
+      # CSV sources: files dropped here are read where they are (read-only).
+      - ./data/histcraft-csv:/csv:ro
+    networks:
+      # The plant for PI Web API and OPC UA (read-only), the apps network for PlantCraft.
+      - plant
+      - apps
+    depends_on:
+      processcraft:
+        condition: service_healthy
+      histcraft-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/healthz', timeout=4)"
+      interval: 20s
+      timeout: 5s
+      start_period: 60s
+
+  # The collector alone: reads the plant sources (read-only), archives, answers browse and test
+  # requests filed by the server. No port; healthy while its heartbeat is fresh. One collector per archive: a second one would wait as a standby (docs/boundary.md).
+  histcraft-collector:
+    <<: *hardening
+    profiles: ["histcraft"]
+    image: histcraft:${HISTCRAFT_VERSION:-0.1.0}
+    user: "10008:10008"
+    command: ["histcraft", "collect"]
+    environment:
+      HISTCRAFT_DATA_DIR: /data
+      HISTCRAFT_DATABASE_URL: "postgresql://histcraft@histcraft-db:5432/histcraft"
+      HISTCRAFT_DATABASE_PASSWORD_FILE: /run/secrets/histcraft_db_password
+      HISTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
+    secrets:
+      - histcraft_db_password
+    volumes:
+      - ./data/histcraft:/data
+      - ./data/histcraft-csv:/csv:ro
+    networks:
+      # The plant (read-only) and the network of its database.
+      - plant
+      - apps
+    depends_on:
+      histcraft-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "histcraft", "healthcheck"]
+      interval: 20s
+      timeout: 10s
+      start_period: 60s
+    # Time for the last flush: a stop writes the "no data" marker and the pending values.
+    stop_grace_period: 30s
+
+  # PlantCraft Historian's own database: PostgreSQL (PostgreSQL License), apps network only, no published
+  # port, PlantCraft Historian's uid, data in data/histcraft-db. Only `histcraft` holds its password. Backups: `docker compose exec histcraft-db pg_dump -U histcraft histcraft`.
+  histcraft-db:
+    <<: *hardening
+    profiles: ["histcraft"]
+    image: postgres:17.11-trixie@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+    user: "10008:10008"
+    environment:
+      POSTGRES_USER: histcraft
+      POSTGRES_DB: histcraft
+      POSTGRES_PASSWORD_FILE: /run/secrets/histcraft_db_password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --data-checksums"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    secrets:
+      - histcraft_db_password
+    volumes:
+      - ./data/histcraft-db:/var/lib/postgresql/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777,noexec,nosuid,nodev
+      - /var/run/postgresql:size=1m,uid=10008,gid=10008,mode=0700
+    shm_size: 256m
+    networks:
+      - apps
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "histcraft", "-d", "histcraft"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+    stop_grace_period: 60s
+
+secrets:
+  histcraft_db_password:
+    file: ./data/histcraft-db-password

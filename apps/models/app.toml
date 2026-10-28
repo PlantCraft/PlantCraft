@@ -1,0 +1,227 @@
+# PlantCraft Models' manifest: the single source of its metadata (the suite's app standard, section 4).
+# The launcher card, the Apps page, the package manifest, the image labels and /api/meta read it.
+
+[app]
+id = "modelcraft"
+name = "PlantCraft Models"
+version = "0.5.0"
+category = "Modelling and simulation"
+summary = "A Modelica workbench: write and draw models, simulate them on plant data and export FMUs."
+description = """\
+A Modelica programming environment in the browser. Projects of Modelica files are written in an \
+editor with Modelica highlighting, completion and omc's messages on the lines, or drawn as \
+diagrams with the Modelica Standard Library 4.0.0 (drag classes, connect connectors, set \
+parameters); the text stays the one source. Models are checked, simulated and exported as FMI \
+2.0 or 3.0 FMUs by OpenModelica in a separate container with no network and no secrets. Results \
+are plotted and compared between simulations; a simulation can take its inputs from the plant's \
+history and be drawn against the plant's signals. Co-simulation FMUs run in PlantCraft Analytics. \
+Needs PlantCraft; signals make plant data available to simulations."""
+publisher = "PlantCraft"
+license = "Apache-2.0"
+homepage = ""
+mark = "modelcraft"
+
+[runtime]
+prefix = "/model/"
+port = 8130
+uid = 10011
+health = "/healthz"
+image = "modelcraft"
+
+[requires]
+processcraft_api = ">=1.0"
+sdk = "0.77.0"
+asset_types = []        # any signal can feed a simulation
+roles = {}
+
+[permissions]
+read = ["assets", "signals", "series"]
+write = ["audit", "runs", "events", "compute"]
+plant_write = false
+outbound = []
+
+[publishes]
+results = []
+
+# The events Models writes (PlantCraft docs/app-standard.md, section 6); the Alarms app decides
+# what becomes an alarm.
+[[publishes.events]]
+name = "run.failed"
+title = "Simulation or export failed"
+description = "A simulation or FMU export ended in failure. Subject: the Models app."
+severity = "warning"
+category = "run"
+payload = { run_id = "Simulation id", model = "Model", kind = "simulate or export", by = "Who started it", url = "Simulation page" }
+rule = { when = "event", priority = "low", creates = "notice", notify = "owner" }
+
+[[publishes.events]]
+name = "study.finished"
+title = "Study finished"
+description = "Every simulation of a study ended. Subject: the Models app."
+severity = "info"
+category = "run"
+payload = { study_id = "Study id", done = "Simulations done", failed = "Simulations failed", url = "Study page" }
+
+# The assistant's works on Models' pages (PlantCraft docs/assistant.md, "What each page offers"):
+# each page names itself in useAssistantPage({page: "modelcraft:<id>"}).
+[[contributes.assistant.works]]
+id = "new-model"
+pages = ["model-new", "models"]
+title = "Help me design a new model"
+hint = "Say what process it must represent; the assistant proposes the blocks and how to wire them"
+ask = "What process should the model represent?"
+instructions = """Help the person design a new Models model: a diagram of blocks (sources, process units, controllers, scopes) simulated with Modelica. Ask what process it represents and what they want to see if they have not said it. Propose the blocks (from Models' blocks), how each is wired and its parameters, and what the scopes should show, in steps they can follow in the diagram's editor."""
+
+[[contributes.assistant.works]]
+id = "models-which"
+pages = ["models"]
+title = "Which model fits my question?"
+hint = "Say what you want to simulate"
+ask = "What do you want to simulate or find out?"
+instructions = """Help the person choose among Models' models (the view section lists them with their descriptions) for what they want to simulate or find out; say why it fits and what to change in it, or, when none fits, what a new model should hold (Design a new model)."""
+
+[[contributes.assistant.works]]
+id = "model-explain"
+pages = ["model"]
+title = "Explain this model"
+hint = "Its process, inputs and outputs"
+instructions = """From the model's blocks and wires (the subject section), explain what process it represents, its inputs and outputs, and what a simulation of it shows."""
+
+[[contributes.assistant.works]]
+id = "model-study"
+pages = ["model"]
+title = "Suggest a study"
+hint = "Which parameters to vary and which indicator answers"
+instructions = """Suggest which parameters of this model (the subject section) to vary in a study, over which values, and which indicator (overshoot, settling time, IAE, final value) answers the question. The person creates the study in the model's Studies tab."""
+
+[[contributes.assistant.works]]
+id = "model-change"
+pages = ["model"]
+title = "Help me change this model"
+hint = "Steps to follow in its diagram"
+ask = "What should it do differently?"
+instructions = """Help the person change the model on this page (the subject section: its blocks and wires): say which blocks to add, remove or rewire and which parameters to change, step by step, to make it do what they ask, and what the scopes should then show. The person makes the change in the diagram's editor."""
+
+[[contributes.assistant.works]]
+id = "about-studies"
+pages = ["studies"]
+title = "Which study answers my question?"
+hint = "Among the studies listed"
+ask = "What do you want to find out?"
+instructions = """Answer about Models' studies (the view section lists them with their model and last run): what each one varies and on which model, which ran recently, and which question each answers."""
+
+[[contributes.assistant.works]]
+id = "study-results"
+pages = ["study"]
+title = "What did this study find?"
+hint = "Which parameter mattered and by how much"
+instructions = """Read this study (the page's facts and view: its spec, the parameters varied and its runs with their indicators) and say what it found: which parameter mattered most for each indicator and by how much, the best and worst runs, and what to try next. Say plainly when runs failed or are still running."""
+
+[[contributes.assistant.works]]
+id = "study-next"
+pages = ["study"]
+title = "What should I try next?"
+hint = "The next parameters and values to vary"
+instructions = """From this study's spec and runs (the facts and view), suggest the next study: which parameters to vary, over which values, and which indicator answers what is still open, and why."""
+
+[consumes]
+results = []
+
+[suggests]
+asset_types = []
+
+[backup]                            # its data folder in the suite's backup (PlantCraft docs/operations.md)
+sqlite = ["modelcraft.sqlite3"]   # projects, runs and results
+skip = ["logs/"]
+
+# The widgets of Models' Overview and of Desk's Today (PlantCraft docs/widgets.md), served by
+# api/routers/widgets.py. "Models: " is dropped on Models' own Overview.
+[[contributes.widgets]]
+id = "run-status"
+title = "Models: simulations by status"
+description = "The latest simulations, split by how they ended: done, failed, running, queued."
+size = "s"
+kind = "split"
+sizes = [{ w = 3, h = 1 }, { w = 4, h = 2 }, { w = 6, h = 2 }]
+default = true
+
+[[contributes.widgets]]
+id = "model"
+title = "Models: one model"
+description = "One model: its diagram, its last simulation and how its simulations went."
+size = "m"
+kind = "facts"
+sizes = [{ w = 3, h = 2 }, { w = 4, h = 2 }, { w = 6, h = 2 }]
+pick = "Model"
+
+[[contributes.widgets]]
+id = "runner"
+title = "Models: Modelica runner"
+description = "Whether the Modelica compiler is available, and its libraries."
+size = "s"
+kind = "facts"
+sizes = [{ w = 3, h = 2 }, { w = 4, h = 2 }, { w = 6, h = 2 }]
+
+[[contributes.widgets]]
+id = "models"
+title = "Models: models"
+description = "The models, the examples first, with how many blocks each diagram has."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "runs"
+title = "Models: latest simulations"
+description = "The newest simulations and FMU exports, and whether they finished."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "studies"
+title = "Models: studies"
+description = "The latest studies, each with how many of its simulations are done."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "activity"
+title = "Models: simulations per day"
+description = "The simulations and study runs of the last 14 days, each day split by how they ended."
+size = "l"
+kind = "columns"
+sizes = [{ w = 6, h = 2 }, { w = 8, h = 2 }, { w = 12, h = 3 }]
+
+[[contributes.widgets]]
+id = "latest-study"
+title = "Models: latest study"
+description = "The latest study or optimization that finished, and its best result."
+size = "m"
+kind = "facts"
+sizes = [{ w = 4, h = 2 }, { w = 6, h = 2 }, { w = 6, h = 3 }]
+
+# Notebooks (PlantCraft docs/en/notebooks.md, "The apps' objects"): models and their runs read
+# with pc.app("models"); a simulation asked from a notebook runs in Models' queue, only when an
+# administrator switches it on (owner, 2026-10-26, D4).
+[[contributes.objects]]
+kind = "model"
+title = "Models"
+description = "Each model with its settings, inputs, outputs and parameters; .run() queues a simulation."
+run = "app"
+
+[[contributes.objects]]
+kind = "run"
+title = "Simulations"
+description = "Simulations and FMU exports; a finished simulation carries its results."
+
+[[contributes.settings]]
+key = "notebook_runs"
+title = "Simulations from notebooks"
+help = "Let editors of Models queue simulations from their notebooks (pc.app(\"models\")). Off: notebooks only read models and results."
+type = "boolean"
+default = false
+
+[contributes.notebooks]
+examples = true

@@ -1,0 +1,49 @@
+{
+  "id": "piping.vent",
+  "title": "Vent to atmosphere",
+  "category": "piping",
+  "w": 40,
+  "h": 40,
+  "svg": "<path d=\"M20,40 V16 A6,6 0 0 1 32,16 V20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 20,
+      "y": 40,
+      "dir": "s",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 20.0,
+      "y": 44,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 20.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 40,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "vent",
+    "atmosphere",
+    "gooseneck"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

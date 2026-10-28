@@ -1,0 +1,68 @@
+{
+  "id": "utility.cooling_tower",
+  "title": "Cooling tower",
+  "category": "heat-transfer",
+  "w": 120,
+  "h": 140,
+  "svg": "<polygon points=\"40,30 44,10 76,10 80,30\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect x=\"20\" y=\"30\" width=\"80\" height=\"100\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect class=\"pc-level\" x=\"21\" y=\"110\" width=\"78\" height=\"20\" stroke=\"none\"/><rect class=\"pc-state\" x=\"20\" y=\"30\" width=\"80\" height=\"100\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"20\" y1=\"50\" x2=\"100\" y2=\"50\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/><path d=\"M20,64 L100,100 M20,100 L100,64 M20,82 L60,64 L100,82 M20,82 L60,100 L100,82\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><ellipse class=\"pc-run\" cx=\"60\" cy=\"20\" rx=\"12\" ry=\"3\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "water_in",
+      "x": 100,
+      "y": 50,
+      "dir": "e",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "water_out",
+      "x": 60,
+      "y": 130,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "makeup",
+      "x": 20,
+      "y": 120,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 60.0,
+      "y": 144,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 60.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 100,
+      "y": 20,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "run",
+    "level"
+  ],
+  "keywords": [
+    "cooling tower",
+    "cooling water",
+    "evaporative"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

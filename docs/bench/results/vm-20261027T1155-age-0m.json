@@ -1,0 +1,322 @@
+{
+ "started": "2026-10-27 11:55 UTC",
+ "months": 0.0,
+ "machine": {
+  "host": "vm",
+  "system": "Linux 6.18.44-fc-v165 x86_64",
+  "cpus": 4,
+  "memory_gib": 15.7,
+  "docker": "4 CPUs 16872812544 x86_64"
+ },
+ "versions": {
+  "linkcraft": {
+   "revision": "f1b49c5"
+  },
+  "dashcraft": {
+   "revision": "f1b49c5"
+  },
+  "histcraft": {
+   "revision": "f1b49c5"
+  }
+ },
+ "rate_per_day": 940.0,
+ "measure": {
+  "months": 0.0,
+  "historian": {
+   "housekeeping": {
+    "prune_s": 12.47,
+    "compact_s": 2.89,
+    "rewrite_s": 0.03,
+    "rollups_s": 56.43,
+    "total_s": 71.82
+   },
+   "archive_bytes": 1395458048,
+   "chunks": 46090,
+   "rollups": 236924
+  },
+  "analytics": {
+   "maintenance": {
+    "health_prune_s": 0.005,
+    "quality_prune_s": 0.011,
+    "jobs_prune_s": 0.068,
+    "detail_prune_s": 0.055,
+    "total_s": 0.139
+   },
+   "reads": {
+    "loop_health_30d_s": 0.001,
+    "loop_health_30d_points": 8,
+    "portfolio_daily_30d_s": 0.045,
+    "portfolio_daily_30d_rows": 2100,
+    "portfolio_hourly_7d_s": 0.037,
+    "portfolio_hourly_7d_rows": 5250,
+    "checks_daily_7d_s": 0.141,
+    "signal_checks_30d_s": 0.001,
+    "signal_checks_30d_points": 7
+   },
+   "rows": {
+    "subject_health": 17700,
+    "quality_history": 57680,
+    "quality_rounds": 8,
+    "analysis_jobs": 5975,
+    "analysis_job_results": 32785,
+    "run_samples": 17482
+   },
+   "database_bytes": {
+    "": 1242619904,
+    "-wal": 118923832,
+    "-shm": 262144
+   }
+  },
+  "reads": {
+   "trend_whole_history_hourly": {
+    "n": 20,
+    "mean_ms": 62.9,
+    "p95_ms": 122.2,
+    "max_ms": 122.2
+   },
+   "trend_30d_hourly": {
+    "n": 20,
+    "mean_ms": 52.0,
+    "p95_ms": 94.9,
+    "max_ms": 94.9
+   },
+   "raw_day_month_ago": {
+    "n": 20,
+    "mean_ms": 35.7,
+    "p95_ms": 72.6,
+    "max_ms": 72.6
+   },
+   "batch_500_last_hour": {
+    "n": 5,
+    "mean_ms": 284.1,
+    "p95_ms": 356.3,
+    "max_ms": 356.3
+   },
+   "batch_100_whole_history_daily": {
+    "n": 3,
+    "mean_ms": 77.2,
+    "p95_ms": 90.6,
+    "max_ms": 90.6
+   },
+   "analytics_overview": {
+    "n": 5,
+    "mean_ms": 800.5,
+    "p95_ms": 1151.3,
+    "max_ms": 1151.3,
+    "failed": 0
+   },
+   "analytics_loop_page": {
+    "n": 5,
+    "mean_ms": 64.7,
+    "p95_ms": 90.3,
+    "max_ms": 90.3,
+    "failed": 0
+   },
+   "analytics_signal_checks_30d": {
+    "n": 5,
+    "mean_ms": 7.7,
+    "p95_ms": 9.0,
+    "max_ms": 9.0,
+    "failed": 0
+   },
+   "pages": {
+    "/": {
+     "n": 1,
+     "mean_ms": 960.3,
+     "p95_ms": 960.3,
+     "max_ms": 960.3,
+     "failed": 0
+    },
+    "/admin": {
+     "n": 1,
+     "mean_ms": 2174.6,
+     "p95_ms": 2174.6,
+     "max_ms": 2174.6,
+     "failed": 0
+    },
+    "/attention": {
+     "n": 1,
+     "mean_ms": 708.1,
+     "p95_ms": 708.1,
+     "max_ms": 708.1,
+     "failed": 0
+    },
+    "/assets/FIC-1003": {
+     "n": 1,
+     "mean_ms": 910.7,
+     "p95_ms": 910.7,
+     "max_ms": 910.7,
+     "failed": 0
+    },
+    "/link/": {
+     "n": 1,
+     "mean_ms": 5567.7,
+     "p95_ms": 5567.7,
+     "max_ms": 5567.7,
+     "failed": 0
+    },
+    "/link/loops/FIC-1003": {
+     "n": 1,
+     "mean_ms": 1053.7,
+     "p95_ms": 1053.7,
+     "max_ms": 1053.7,
+     "failed": 0
+    },
+    "/link/results": {
+     "n": 1,
+     "mean_ms": 1204.2,
+     "p95_ms": 1204.2,
+     "max_ms": 1204.2,
+     "failed": 0
+    },
+    "/hist/": {
+     "n": 1,
+     "mean_ms": 6514.6,
+     "p95_ms": 6514.6,
+     "max_ms": 6514.6,
+     "failed": 0
+    },
+    "/hist/points": {
+     "n": 1,
+     "mean_ms": 2175.4,
+     "p95_ms": 2175.4,
+     "max_ms": 2175.4,
+     "failed": 0
+    },
+    "/dash/": {
+     "n": 1,
+     "mean_ms": 520.3,
+     "p95_ms": 520.3,
+     "max_ms": 520.3,
+     "failed": 0
+    },
+    "/alarm/alarms": {
+     "n": 1,
+     "mean_ms": 1026.3,
+     "p95_ms": 1026.3,
+     "max_ms": 1026.3,
+     "failed": 0
+    },
+    "/alarm/events": {
+     "n": 1,
+     "mean_ms": 638.8,
+     "p95_ms": 638.8,
+     "max_ms": 638.8,
+     "failed": 0
+    },
+    "/model/": {
+     "n": 1,
+     "mean_ms": 611.3,
+     "p95_ms": 611.3,
+     "max_ms": 611.3,
+     "failed": 0
+    },
+    "/messages": {
+     "n": 1,
+     "mean_ms": 471.2,
+     "p95_ms": 471.2,
+     "max_ms": 471.2,
+     "failed": 0
+    },
+    "/actions": {
+     "n": 1,
+     "mean_ms": 454.4,
+     "p95_ms": 454.4,
+     "max_ms": 454.4,
+     "failed": 0
+    },
+    "/doc/documents": {
+     "n": 1,
+     "mean_ms": 395.8,
+     "p95_ms": 395.8,
+     "max_ms": 395.8,
+     "failed": 0
+    }
+   }
+  },
+  "signal_quality": {
+   "status": "ok",
+   "signals": 8210,
+   "duration_seconds": 205.09,
+   "counts": {
+    "good": 8108,
+    "suspect": 42,
+    "bad": 60,
+    "unknown": 0
+   },
+   "error": null
+  },
+  "link_rounds": [
+   {
+    "round": "first",
+    "wall_seconds": 167.3,
+    "duration_seconds": 128.809,
+    "status": "ok",
+    "loops": 2050,
+    "status_counts": {
+     "no_data": 34,
+     "critical": 1931,
+     "medium": 32,
+     "high": 53
+    },
+    "failed_tags": 0,
+    "unread_loops": 0
+   },
+   {
+    "round": "second",
+    "wall_seconds": 191.3,
+    "duration_seconds": 156.816,
+    "status": "ok",
+    "loops": 2050,
+    "status_counts": {
+     "no_data": 34,
+     "critical": 1931,
+     "medium": 32,
+     "high": 52,
+     "normal": 1
+    },
+    "failed_tags": 0,
+    "unread_loops": 0
+   }
+  ],
+  "memory": {
+   "modelcraft": "181MiB",
+   "doccraft": "144.1MiB",
+   "histcraft-gateway": "31.32MiB",
+   "alarmcraft": "283.1MiB",
+   "linkcraft": "2.146GiB",
+   "histcraft": "738.6MiB",
+   "dashcraft": "114MiB",
+   "compute-gateway": "54.12MiB",
+   "proxy": "50.95MiB",
+   "histcraft-collector": "253.5MiB",
+   "processcraft": "1.268GiB",
+   "llm-egress": "17.82MiB",
+   "plantcraft": "307.6MiB",
+   "histcraft-db": "784.9MiB",
+   "installer": "98.71MiB",
+   "linkcraft-executor": "437.7MiB",
+   "modelcraft-executor": "194.5MiB"
+  },
+  "disk": {
+   "age": 0,
+   "alarmcraft": 8627192,
+   "app-requests": 0,
+   "apps": 0,
+   "compute-jobs": 349,
+   "dashcraft": 609208,
+   "doccraft": 2724755,
+   "egress": 31,
+   "histcraft": 24168812,
+   "histcraft-csv": 0,
+   "histcraft-db": 3158118679,
+   "installer": 52507,
+   "linkcraft": 1632939882,
+   "modelcraft": 34798032,
+   "plantcraft": 102266784,
+   "processcraft": 57211187,
+   "proxy": 5109
+  }
+ },
+ "seconds": 797
+}

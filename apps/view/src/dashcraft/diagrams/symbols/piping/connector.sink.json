@@ -1,0 +1,51 @@
+{
+  "id": "connector.sink",
+  "title": "Stream sink",
+  "category": "piping",
+  "w": 60,
+  "h": 40,
+  "svg": "<line x1=\"0\" y1=\"20\" x2=\"20\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state\" x=\"20\" y=\"8\" width=\"40\" height=\"24\" rx=\"12\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 20,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "label",
+      "x": 40,
+      "y": 20,
+      "align": "middle",
+      "baseline": "middle"
+    },
+    {
+      "id": "tag",
+      "x": 40,
+      "y": 34,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40,
+      "y": 6,
+      "align": "middle",
+      "baseline": "bottom"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "sink",
+    "battery limit",
+    "product",
+    "export",
+    "boundary"
+  ],
+  "standard": "ISO 10628-2",
+  "description": "Where a stream leaves the diagram."
+}

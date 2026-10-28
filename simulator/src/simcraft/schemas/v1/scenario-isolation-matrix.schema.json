@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/scenario-isolation-matrix.schema.json",
+  "title": "Process Plant scenario isolation matrix v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "benchmark_version", "benchmark_manifest_digest", "partitions", "scenario_cycle_seconds", "frame_seconds", "integration_step_seconds", "scenario_ids", "run_count", "runs", "statistics", "passed", "failed_runs", "matrix_digest"],
+  "properties": {
+    "schema": {"const": "process-plant-opcua/scenario-isolation-matrix/v1"},
+    "benchmark_version": {"const": "0.4.0"},
+    "benchmark_manifest_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "partitions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["development", "validation", "held_out_test"],
+      "properties": {
+        "development": {"type": "array", "items": {"type": "integer"}, "uniqueItems": true},
+        "validation": {"type": "array", "items": {"type": "integer"}, "uniqueItems": true},
+        "held_out_test": {"type": "array", "items": {"type": "integer"}, "uniqueItems": true}
+      }
+    },
+    "scenario_cycle_seconds": {"type": "number", "minimum": 600},
+    "frame_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "integration_step_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "scenario_ids": {"type": "array", "minItems": 20, "maxItems": 20, "uniqueItems": true, "items": {"type": "string"}},
+    "run_count": {"const": 600},
+    "runs": {
+      "type": "array",
+      "minItems": 600,
+      "maxItems": 600,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["seed", "scenario_id", "frames", "scenario", "passed", "failures", "evaluation_digest"],
+        "properties": {
+          "seed": {"type": "integer", "minimum": 1, "maximum": 30},
+          "scenario_id": {"type": "string"},
+          "frames": {"type": "integer", "minimum": 1},
+          "scenario": {"type": "object"},
+          "passed": {"type": "boolean"},
+          "failures": {"type": "array"},
+          "evaluation_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "statistics": {"type": "object", "minProperties": 20, "maxProperties": 20},
+    "passed": {"type": "boolean"},
+    "failed_runs": {"type": "array"},
+    "matrix_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

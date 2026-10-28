@@ -1,0 +1,14 @@
+{
+  "pyodide": {
+    "version": "0.27.6",
+    "url": "https://github.com/pyodide/pyodide/releases/download/0.27.6/pyodide-0.27.6.tar.bz2",
+    "sha256": "b8ed3c0af6972d79301ce7cacbfb3d7bcfa2d281613ffc28a51dbfe6a8b3d08f",
+    "keep": ["micropip", "packaging", "ipython", "jedi", "sqlite3", "ssl", "numpy", "pandas", "scipy", "matplotlib", "requests", "pyodide-http", "pydantic"]
+  },
+  "wheels": [
+    {
+      "url": "https://files.pythonhosted.org/packages/60/97/891a0971e1e4a8c5d2b20bbe0e524dc04548d2307fee33cdeba148fd4fc7/comm-0.2.3-py3-none-any.whl",
+      "sha256": "c615d91d75f7f04f095b30d1c1711babd43bdc6419c1be9886a85f2f4e489417"
+    }
+  ]
+}

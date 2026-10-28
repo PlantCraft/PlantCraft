@@ -1,0 +1,58 @@
+{
+  "id": "filter.cartridge",
+  "title": "Filter",
+  "category": "separation",
+  "w": 80,
+  "h": 60,
+  "svg": "<line x1=\"0\" y1=\"30\" x2=\"20\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"30\" x2=\"80\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state\" x=\"20\" y=\"10\" width=\"40\" height=\"40\" stroke-width=\"2\" stroke-linejoin=\"round\"/><line x1=\"20\" y1=\"50\" x2=\"60\" y2=\"10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 30,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 80,
+      "y": 30,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 64,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "filter",
+    "cartridge",
+    "bag",
+    "strainer"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

@@ -1,0 +1,76 @@
+{
+  "id": "exchanger.shell_tube",
+  "title": "Shell-and-tube exchanger",
+  "category": "heat-transfer",
+  "w": 160,
+  "h": 80,
+  "svg": "<line x1=\"30\" y1=\"0\" x2=\"30\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"30\" y1=\"60\" x2=\"30\" y2=\"80\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"120\" y1=\"0\" x2=\"120\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"60\" x2=\"60\" y2=\"80\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state\" x=\"40\" y=\"20\" width=\"100\" height=\"40\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect x=\"20\" y=\"20\" width=\"20\" height=\"40\" stroke-width=\"2\" stroke-linejoin=\"round\"/><path d=\"M140,20 A20,20 0 0 1 140,60\" stroke-width=\"2\" stroke-linejoin=\"round\"/><line x1=\"20\" y1=\"40\" x2=\"40\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M40,30 H140 A10,10 0 0 1 140,50 H40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"74\" y1=\"20\" x2=\"74\" y2=\"46\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"106\" y1=\"34\" x2=\"106\" y2=\"60\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "tube_in",
+      "x": 30,
+      "y": 0,
+      "dir": "n",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "tube_out",
+      "x": 30,
+      "y": 80,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "shell_in",
+      "x": 120,
+      "y": 0,
+      "dir": "n",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "shell_out",
+      "x": 60,
+      "y": 80,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 80.0,
+      "y": 84,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 80.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 160,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "heat exchanger",
+    "shell and tube",
+    "TEMA",
+    "U-tube",
+    "cooler",
+    "condenser"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

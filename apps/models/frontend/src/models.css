@@ -1,0 +1,413 @@
+/* PlantCraft Models' own pieces on the suite's tokens: the workbench, the diagram, the plot page. */
+:root {
+  --mc-code-keyword: #8a2d8f;
+  --mc-code-type: #0d5fa8;
+  --mc-code-builtin: #00797a;
+  --mc-code-number: #a3520a;
+  --mc-code-string: #2f7d32;
+  /* Neutral pieces follow the suite's greys; only the syntax hues are Models' own. */
+  --mc-code-comment: var(--pc-text-3);
+  --mc-code-operator: var(--pc-text-2);
+  --mc-sheet: var(--pc-surface);
+  --mc-grid: var(--pc-surface-3);
+}
+:root[data-theme="dark"] {
+  --mc-code-keyword: #d79ad9;
+  --mc-code-type: #7fb6f0;
+  --mc-code-builtin: #5fd0cb;
+  --mc-code-number: #f0a868;
+  --mc-code-string: #8fd18f;
+  --mc-sheet: #f7f8fa;
+  --mc-grid: #e4e8ee;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --mc-code-keyword: #d79ad9;
+    --mc-code-type: #7fb6f0;
+    --mc-code-builtin: #5fd0cb;
+    --mc-code-number: #f0a868;
+    --mc-code-string: #8fd18f;
+    --mc-sheet: #f7f8fa;
+    --mc-grid: #e4e8ee;
+  }
+}
+
+/* Class badges: one letter per kind of class, as Modelica tools show them. */
+.mc-badge { width: 18px; height: 18px; flex: none; border-radius: 4px; display: inline-grid; place-items: center; font: 700 10px/1 var(--pc-font-mono); color: var(--pc-primary-text); background: var(--pc-primary-soft); }
+.mc-badge-package { color: var(--pc-text-2); background: var(--pc-surface-3); }
+.mc-badge-block { color: var(--pc-info-text, var(--pc-primary-text)); background: var(--pc-info-soft, var(--pc-primary-soft)); }
+.mc-badge-connector { color: var(--pc-good-text); background: var(--pc-good-soft); }
+.mc-badge-function { color: var(--pc-attention-text); background: var(--pc-attention-soft); }
+.mc-badge-partial { outline: 1px dashed var(--pc-border-strong); outline-offset: -1px; }
+.mc-inline-icon { width: 14px; height: 14px; margin-right: 6px; vertical-align: -2px; color: var(--pc-text-3); }
+
+/* The projects page. */
+.mc-project-card { padding: 0; }
+.mc-card-link { padding: 20px 20px 0; display: flex; flex-direction: column; gap: 8px; color: inherit; text-decoration: none; }
+.mc-project-card .card-foot { padding: 0 20px 14px; }
+.mc-project-card .card-head .tag { margin-top: 4px; display: inline-block; }
+.mc-templates { margin-top: 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.mc-templates .card { margin: 0; }
+.mc-chosen { border-color: var(--pc-primary); box-shadow: 0 0 0 2px var(--pc-primary-soft); }
+@media (max-width: 760px) { .mc-templates { grid-template-columns: 1fr; } }
+
+/* The workbench: a full-height IDE inside the suite frame. */
+.mc-workbench { display: flex; flex-direction: column; gap: 10px; min-height: calc(100vh - 120px); }
+.mc-workbench .notice { margin: 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.mc-notice-info { color: var(--pc-info-text, var(--pc-text-2)); background: var(--pc-info-soft, var(--pc-surface-2)); }
+.mc-dismiss { margin-left: auto; }
+.mc-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.mc-topbar .breadcrumb { margin: 0; font-size: var(--pc-fs-base); }
+.mc-topbar .breadcrumb span { color: var(--pc-text); font-weight: 700; }
+.mc-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.mc-actions select { max-width: 320px; min-height: 32px; }
+.mc-actions svg { width: 15px; height: 15px; }
+.mc-panes { flex: 1; min-height: 520px; display: grid; grid-template-columns: 260px minmax(0, 1fr) 270px; gap: 10px; }
+.mc-panes > .panel { margin: 0; padding: 12px; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.mc-side, .mc-right { overflow: auto; max-height: calc(100vh - 150px); }
+.mc-center { padding: 0 !important; overflow: hidden; }
+.mc-tabs { padding: 8px 10px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--pc-border-subtle); flex-wrap: wrap; }
+.mc-tab-actions { margin-left: auto; display: flex; gap: 4px; }
+.mc-tab-actions svg { width: 16px; height: 16px; }
+.mc-view { flex: 1; min-height: 480px; position: relative; display: flex; flex-direction: column; }
+.mc-center-note { margin: auto; padding: 24px; text-align: center; display: grid; gap: 12px; justify-items: center; }
+.mc-editor { flex: 1; min-height: 480px; max-height: calc(100vh - 200px); overflow: hidden; }
+.mc-editor .cm-editor { height: 100%; }
+.mc-editor .cm-editor.cm-focused { outline: none; }
+@media (max-width: 1100px) {
+  .mc-panes { grid-template-columns: 220px minmax(0, 1fr); }
+  .mc-right { grid-column: 1 / -1; max-height: none; }
+}
+@media (max-width: 760px) {
+  .mc-panes { grid-template-columns: 1fr; }
+  .mc-side { max-height: 320px; }
+}
+
+/* Trees: the project's files and classes, the library. */
+.mc-tree, .mc-tree ul { margin: 0; padding: 0; list-style: none; }
+.mc-tree-row { min-height: 28px; padding-right: 4px; display: flex; align-items: center; gap: 2px; border-radius: var(--pc-radius-sm); }
+.mc-tree-row:hover { background: var(--pc-surface-2); }
+.mc-tree-row.on { background: var(--pc-primary-soft); }
+.mc-tree-row.on .mc-tree-label { color: var(--pc-primary-text); font-weight: 700; }
+.mc-tree-label { min-width: 0; flex: 1; padding: 3px 4px; border: 0; display: flex; align-items: center; gap: 7px; color: var(--pc-text-2); background: none; font: inherit; font-size: var(--pc-fs-sm); text-align: left; cursor: pointer; }
+.mc-tree-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-file .mc-tree-label { color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
+.mc-row-action { width: 24px; height: 24px; opacity: 0; }
+.mc-row-action svg { width: 13px; height: 13px; }
+.mc-tree-row:hover .mc-row-action, .mc-row-action:focus-visible { opacity: 1; }
+.mc-twisty { width: 18px; height: 18px; flex: none; padding: 0; border: 0; display: grid; place-items: center; color: var(--pc-text-3); background: none; cursor: pointer; }
+.mc-twisty svg { width: 14px; height: 14px; }
+.mc-draggable { cursor: grab; }
+.mc-row-action.mc-simulable { opacity: 1; flex: none; color: var(--pc-good-text); }
+.mc-row-action.mc-simulable:hover { background: color-mix(in srgb, var(--pc-good) 14%, transparent); }
+.mc-tree-note { margin: 4px 8px; font-size: var(--pc-fs-xs); }
+.mc-project-tree { display: flex; flex-direction: column; gap: 8px; }
+.mc-project-tree > .link-button svg { width: 14px; height: 14px; }
+.mc-library { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.mc-search { display: flex; align-items: center; gap: 6px; }
+.mc-search svg { width: 15px; height: 15px; color: var(--pc-text-3); }
+.mc-search input { flex: 1; min-width: 0; }
+
+/* The diagram. */
+.mc-diagram-wrap { flex: 1; min-height: 480px; position: relative; display: flex; }
+.mc-diagram-wrap.mc-busy::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--pc-surface) 35%, transparent); cursor: progress; }
+.mc-diagram { flex: 1; width: 100%; height: calc(100vh - 230px); min-height: 480px; display: block; background: var(--pc-surface-2); touch-action: none; user-select: none; cursor: default; }
+.mc-diagram.mc-panning { cursor: grabbing; }
+.mc-diagram.mc-dropping { outline: 2px dashed var(--pc-primary); outline-offset: -4px; }
+.mc-sheet { fill: var(--mc-sheet); stroke: var(--pc-border); vector-effect: non-scaling-stroke; }
+.mc-grid line { stroke: var(--mc-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mc-text { font-family: var(--pc-font-sans); pointer-events: none; }
+.mc-hit { fill: transparent; stroke: transparent; }
+.mc-connection .mc-hit { fill: none; stroke-width: 10; vector-effect: non-scaling-stroke; cursor: pointer; }
+.mc-connection.mc-selected polyline:last-child { stroke: var(--pc-primary) !important; stroke-width: 3; }
+.mc-component { cursor: move; }
+.mc-component.mc-inherited { cursor: pointer; opacity: .85; }
+.mc-placeholder { fill: var(--pc-surface-2); stroke: var(--pc-text-4); stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+.mc-placeholder-name { fill: var(--pc-text-3); }
+.mc-port { fill: transparent; cursor: crosshair; }
+.mc-port:hover { fill: color-mix(in srgb, var(--pc-primary) 30%, transparent); }
+.mc-selection { fill: none; stroke: var(--pc-primary); stroke-width: 1.5; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; pointer-events: none; }
+.mc-wire { stroke: var(--pc-primary); stroke-width: 2; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; pointer-events: none; }
+.mc-bitmap { fill: var(--pc-surface-3); stroke: var(--pc-border); }
+.mc-icon { flex: none; color: var(--pc-text); }
+.mc-icon-empty rect { fill: var(--pc-surface-2); stroke: var(--pc-border); stroke-width: .3; }
+.mc-doc { flex: 1; width: 100%; min-height: 480px; border: 0; background: #fff; }
+
+/* The inspector and the class dialog. */
+.mc-inspector { display: flex; flex-direction: column; gap: 8px; }
+.mc-inspector .eyebrow { margin: 0; }
+.mc-break { overflow-wrap: anywhere; }
+.mc-class-head { display: flex; gap: 12px; align-items: flex-start; }
+.mc-class-head > div { min-width: 0; }
+.mc-class-head p { margin: 2px 0; }
+.mc-class-body { margin-top: 12px; }
+.mc-param-form { display: flex; flex-direction: column; gap: 10px; }
+.mc-param-form label { display: flex; flex-direction: column; gap: 3px; font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); }
+.mc-param-form label > span { font-family: var(--pc-font-mono); font-size: var(--pc-fs-xs); }
+.mc-param-form small { font-weight: 400; }
+.mc-param-form input { width: 100%; font-family: var(--pc-font-mono); }
+.mc-facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: var(--pc-fs-sm); }
+.mc-facts dt { color: var(--pc-text-3); }
+.mc-facts dd { margin: 0; }
+.mc-source { max-height: 460px; margin-top: 12px; padding: 12px; overflow: auto; border-radius: var(--pc-radius-md); background: var(--pc-surface-2); font: 12px/1.5 var(--pc-font-mono); }
+.dialog .segmented { margin-top: 14px; }
+.dialog .mc-doc { min-height: 420px; margin-top: 12px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); }
+.mc-dialog-section { margin: 20px 0 10px; display: flex; align-items: baseline; gap: 10px; font-size: var(--pc-fs-base); }
+.mc-dialog-section small { font-weight: 400; }
+.mc-dialog-section .check { display: inline-flex; gap: 8px; align-items: center; }
+h4.mc-dialog-section { font-size: var(--pc-fs-sm); }
+.mc-study-section .mc-params-table { max-height: none; }
+.mc-params-table { max-height: 300px; overflow: auto; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); }
+.mc-params-table td { padding: 6px 10px; }
+.mc-params-table input { width: 100%; min-width: 90px; }
+
+/* omc's messages under the workbench. */
+.mc-messages { max-height: 220px; overflow: auto; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-surface); }
+.mc-messages header { position: sticky; top: 0; padding: 8px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--pc-border-subtle); background: var(--pc-surface); }
+.mc-messages header svg { width: 16px; height: 16px; }
+.mc-ok { color: var(--pc-good-text); }
+.mc-bad { color: var(--pc-problem-text); }
+.mc-counts { margin-left: auto; color: var(--pc-text-3); white-space: nowrap; }
+.mc-messages ul, .mc-run-messages { margin: 0; padding: 6px 12px; list-style: none; display: grid; gap: 6px; }
+.mc-messages li, .mc-run-messages li { display: flex; gap: 10px; align-items: baseline; font-size: var(--pc-fs-sm); }
+.mc-message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* The run page. */
+.mc-results { margin-bottom: var(--pc-space-6); display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--pc-space-4); }
+.mc-results > .panel { margin: 0; }
+.mc-variables { display: flex; flex-direction: column; gap: 8px; }
+.mc-variable-groups { max-height: 480px; overflow: auto; }
+.mc-variable-groups details { margin-bottom: 4px; }
+.mc-variable-groups summary { cursor: pointer; font-size: var(--pc-fs-xs); color: var(--pc-text-2); }
+.mc-variable { padding: 2px 0 2px 14px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; align-items: center; font-size: var(--pc-fs-xs); }
+.mc-variable span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-inline-field { display: inline-flex; align-items: center; gap: 8px; font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); }
+.mc-tag { margin: 4px 6px 0 0; display: inline-block; text-transform: none; letter-spacing: 0; font-family: var(--pc-font-mono); }
+@media (max-width: 900px) { .mc-results { grid-template-columns: 1fr; } }
+
+/* Icons inside the suite's buttons at the text's size. */
+.pcs-content :is(.button, .icon-button) svg { width: 16px; height: 16px; flex: none; }
+/* The integrator, chosen first in the simulation dialog (2026-10-21). */
+.mc-solvers { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; margin-bottom: 8px; }
+.mc-solver { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); cursor: pointer; }
+.mc-solver:hover { border-color: var(--pc-primary); }
+.mc-solver.on { border-color: var(--pc-primary); background: var(--pc-primary-soft); }
+.mc-solver input { margin-top: 3px; accent-color: var(--pc-primary); }
+.mc-solver span { display: grid; gap: 2px; }
+.mc-solver small { color: var(--pc-text-3); font-size: var(--pc-fs-xs); line-height: 1.35; }
+.form-grid .field-span { grid-column: 1 / -1; }
+.mc-diagram-empty { position: absolute; left: 50%; top: 24px; transform: translateX(-50%); max-width: 440px; padding: 14px 16px; text-align: center;
+  background: var(--pc-surface); border: 1px dashed var(--pc-border-strong, var(--pc-border)); border-radius: var(--pc-radius-md); box-shadow: var(--pc-shadow-sm, none); }
+.mc-diagram-empty p { margin: 6px 0 10px; color: var(--pc-text-2); font-size: var(--pc-fs-sm); }
+.mc-topbar .breadcrumb span.pc-mono { font-weight: 600; }
+
+/* The Modelica runner widget on the Overview. */
+
+/* Progress: a running simulation, a study's simulations. */
+.mc-progress { display: inline-flex; align-items: center; gap: 8px; min-width: 140px; }
+.mc-progress-track { flex: 1; min-width: 80px; height: 6px; border-radius: 999px; background: var(--pc-surface-3); overflow: hidden; }
+.mc-progress-track > span { display: block; height: 100%; border-radius: inherit; background: var(--pc-info-fill); transition: width var(--pc-duration, 160ms) ease; }
+.mc-progress-good .mc-progress-track > span { background: var(--pc-good-fill); }
+.mc-progress-problem .mc-progress-track > span { background: var(--pc-problem-fill); }
+.mc-progress small { color: var(--pc-text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mc-run-progress .mc-progress { width: 100%; }
+
+/* The project page and the block libraries. */
+.mc-model-card, .mc-library-card { padding: 0; }
+.mc-model-card .card-foot, .mc-library-card .card-foot { padding: 0 20px 14px; }
+.mc-model-card .card-head { align-items: flex-start; }
+.mc-library-card { padding: 20px 20px 0; display: flex; flex-direction: column; gap: 8px; }
+.mc-library-card .card-foot { padding: 0 0 14px; }
+.mc-class-list, .mc-block-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.mc-class-list a, .mc-block-list a { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; }
+.mc-block-list { flex-direction: row; flex-wrap: wrap; gap: 6px 14px; font-size: var(--pc-fs-sm); }
+.mc-blocks { border-bottom: 1px solid var(--pc-border-subtle); padding-bottom: 8px; }
+.mc-tree-heading { margin: 4px 4px 6px; display: flex; align-items: center; gap: 6px; font-size: var(--pc-fs-sm); font-weight: 500; color: var(--pc-text-3); }
+.mc-tree-heading svg { width: 14px; height: 14px; }
+.mc-tree-heading .text-link { margin-left: auto; text-transform: none; letter-spacing: 0; }
+.mc-blocks summary { cursor: pointer; font-weight: 600; }
+
+/* Studies: the dialog, the bar, the comparison. */
+.mc-sweep-table select { min-width: 120px; }
+.mc-sweep-values { min-width: 220px; }
+.mc-range { display: grid; grid-template-columns: 1fr 1fr 64px; gap: 6px; }
+.mc-range input { min-width: 0 !important; }
+/* Round 9 M6/M7: the table's groups (inputs, parameters, simulation settings), an input's shape and
+   the integrators ticked to compare. */
+.mc-sweep-group th { background: var(--pc-surface-2); font-weight: 600; padding-top: 14px; }
+.mc-sweep-group small { display: block; font-weight: 400; color: var(--pc-text-3); }
+.mc-input-shape { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 6px; }
+.mc-input-shape label { display: inline-flex; align-items: center; gap: 4px; font-size: var(--pc-fs-sm); }
+.mc-input-shape input { width: 80px; min-width: 0 !important; }
+.mc-ticks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.mc-param-search { width: 100%; margin-bottom: 8px; }
+.mc-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.mc-chips .mc-tag { margin: 0; }
+.mc-study-count { margin-right: auto; font-weight: 600; color: var(--pc-text-2); font-variant-numeric: tabular-nums; }
+.mc-study-count.mc-warn { color: var(--pc-attention-text); }
+.mc-study-bar { display: flex; align-items: center; gap: 16px; padding: 12px 16px; }
+.mc-study-bar .mc-progress { flex: 1; }
+.mc-compare-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 8px; }
+.mc-compare-toolbar input[list] { min-width: 220px; }
+.mc-stats td.numeric, .mc-stats th.numeric { text-align: right; }
+
+/* The new-study page: the form on the left, the preview of what it makes on the right. */
+.mc-study-form { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.mc-study-sections { display: grid; gap: 16px; min-width: 0; }
+.mc-study-section h2, .mc-study-preview h2 { margin: 0 0 12px; font-size: 1rem; }
+.mc-study-section .table-wrap, .mc-study-section table { max-width: 100%; overflow-x: auto; }
+.mc-study-aside { position: sticky; top: 16px; display: grid; gap: 12px; }
+.mc-study-preview .mc-study-count { display: flex; align-items: baseline; gap: 6px; margin: 0 0 10px; }
+.mc-study-preview .mc-study-count b { font-size: 1.6rem; color: var(--pc-text); }
+.mc-study-sweep { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.mc-study-sweep li { display: grid; gap: 2px; padding-top: 8px; border-top: 1px solid var(--pc-border); }
+.mc-study-sweep small { color: var(--pc-text-2); }
+@media (max-width: 900px) {
+  .mc-study-form { grid-template-columns: 1fr; }
+  .mc-study-aside { position: static; order: -1; }
+}
+
+/* Side by side: one small chart per value of a varied parameter. */
+.mc-side-by-side { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.mc-side-chart { margin: 0; padding: 8px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); min-width: 0; }
+.mc-side-chart figcaption { font-size: 0.875rem; margin: 0 0 4px 4px; }
+
+/* The queue. */
+.mc-queue-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.mc-queue-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 220px) auto; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pc-border-subtle); }
+.mc-queue-row:first-child { border-top: 0; }
+.mc-queue-name { display: flex; flex-direction: column; min-width: 0; color: inherit; text-decoration: none; }
+.mc-queue-name strong, .mc-queue-name small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) { .mc-queue-row { grid-template-columns: minmax(0, 1fr) auto; } .mc-queue-row .mc-progress, .mc-queue-row .pc-pill { grid-column: 1 / -1; } }
+.mc-card-facts { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mc-card-facts small { color: var(--pc-text-3); }
+.mc-library-card .card-foot, .mc-model-card .card-foot { flex-wrap: wrap; gap: 6px 12px; }
+.mc-library-card .row-actions { gap: 12px; white-space: nowrap; }
+
+/* Models as block diagrams (owner, 2026-10-24): the editor fills its panel, the simulation
+   settings sit in its inspector, the last run's results follow. */
+.mc-model-editor { height: clamp(460px, calc(100vh - 260px), 760px); }
+.mc-model-results { margin-top: 16px; }
+.mc-model-results .panel-header p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 0; color: var(--pc-text-2); font-size: var(--pc-fs-sm); }
+.mc-model-hint { margin-top: 12px; }
+.mc-run-messages { margin: 8px 0 0; padding-left: 18px; color: var(--pc-problem-text); font-size: var(--pc-fs-sm); }
+.mc-sim-settings { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--pc-border-subtle); }
+/* First in its panel (a model's Settings tab): no rule or gap above it. */
+.mc-sim-settings:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.mc-sim-settings h3 { margin: 0; font-size: var(--pc-fs-sm); }
+.mc-sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mc-sim-grid label { display: flex; flex-direction: column; gap: 4px; font-size: var(--pc-fs-xs); font-weight: 600; color: var(--pc-text-2); min-width: 0; }
+.mc-sim-grid input, .mc-sim-grid select { width: 100%; min-width: 0; font: inherit; font-weight: 400; font-size: var(--pc-fs-sm); }
+.mc-sim-wide { grid-column: 1 / -1; }
+.mc-sim-settings small { color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 400; }
+
+/* A study's ranking: the best run first, highlighted. */
+.mc-ranking { margin-bottom: 16px; }
+.mc-best-line { display: flex; align-items: center; gap: 8px; margin: 8px 0 12px; font-weight: 600; }
+.mc-best-line svg { width: 18px; height: 18px; color: var(--pc-attention-fill); flex: none; }
+.mc-rank-table tbody tr { cursor: pointer; }
+.mc-rank-table tbody tr:hover { background: var(--pc-surface-2); }
+.mc-rank-table tr.mc-best { background: var(--pc-primary-soft); font-weight: 600; }
+.mc-rank-table td.numeric, .mc-rank-table th.numeric { text-align: right; font-variant-numeric: tabular-nums; }
+.mc-statistics { margin-top: 16px; }
+.mc-statistics summary { cursor: pointer; }
+.mc-group-summary { margin-bottom: 16px; display: grid; gap: 12px; }
+.mc-group-summary .facts { margin: 0; }
+
+/* Blocks: the libraries on the left, a library's blocks as cards, one block's page. */
+.mc-block-search { display: flex; align-items: center; gap: 8px; max-width: 420px; margin-bottom: 12px; padding: 6px 10px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); }
+.mc-block-search input { flex: 1; border: 0; outline: 0; background: transparent; font: inherit; }
+.mc-block-search svg { color: var(--pc-text-3); }
+.mc-library-head { margin-bottom: 12px; }
+.mc-library-head h2 { margin: 0; }
+.mc-library-head p { margin: 4px 0 0; }
+.mc-block-card { display: flex; flex-direction: column; gap: 6px; color: inherit; text-decoration: none; }
+.mc-block-card:hover { border-color: var(--pc-primary); }
+.mc-block-card p { margin: 0; color: var(--pc-text-2); font-size: var(--pc-fs-sm); }
+.blk-ports { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.blk-port { display: inline-flex; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--pc-border); font-size: var(--pc-fs-2xs, 11px); color: var(--pc-text-2); }
+.blk-card-ports { display: flex; flex-direction: column; gap: 4px; }
+.blk-card-ports > span { display: flex; align-items: baseline; gap: 6px; }
+.blk-card-ports b { min-width: 26px; color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
+.mc-block-about p { margin: 0; }
+.mc-code { margin: 0; padding: 12px; overflow: auto; max-height: 480px; border-radius: var(--pc-radius-md); background: var(--pc-surface-2); font: var(--pc-fs-xs)/1.5 var(--pc-font-mono, monospace); }
+
+/* A model's and a block's pages: tabs, then the page beside what it is (as Link's, round 8). */
+.mc-tab { margin-top: var(--pc-space-4); }
+.mc-tab-notice { margin-top: var(--pc-space-4); }
+.mc-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--pc-space-4); align-items: start; }
+.mc-page-main { display: grid; gap: var(--pc-space-4); min-width: 0; }
+.mc-page-main > .panel h2 { margin: 0 0 8px; font-size: var(--pc-fs-md); }
+.mc-model-about p { margin: 0 0 12px; color: var(--pc-text-2); line-height: var(--pc-lh-relaxed); }
+.mc-facts { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 0; }
+.mc-facts dt { font-size: var(--pc-fs-xs); font-weight: 600; color: var(--pc-text-3); text-transform: uppercase; letter-spacing: .04em; }
+.mc-facts dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.mc-facts-column { flex-direction: column; gap: 10px; }
+.mc-contract { table-layout: fixed; width: 100%; }
+.mc-contract .mc-col-name { width: 30%; }
+.mc-contract .mc-col-type { width: 14%; }
+.mc-contract .mc-col-unit { width: 18%; }
+.mc-contract td { vertical-align: top; overflow-wrap: anywhere; }
+.mc-contract td small { display: block; color: var(--pc-text-3); }
+.mc-contract .mc-contract-group th { background: var(--pc-surface-2); color: var(--pc-text-2); font-size: var(--pc-fs-xs); text-transform: uppercase; letter-spacing: .04em; text-align: left; }
+.mc-model-preview { height: 560px; }
+.mc-page-diagram .panel-header { margin-bottom: 12px; }
+.mc-node-parameters h2 small { font-weight: 400; margin-left: 6px; }
+.mc-node-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 16px; }
+.mc-inputs-save { position: sticky; bottom: 0; z-index: var(--pc-z-sticky); display: flex; flex-wrap: wrap; gap: var(--pc-space-3); align-items: center; justify-content: space-between; box-shadow: var(--pc-shadow-2); }
+.mc-node-field { display: flex; flex-direction: column; gap: 2px; }
+.mc-value-source { color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
+/* New model (round 9): the ways to start, as Link's New block. */
+.mc-new-ways { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--pc-space-3); margin-bottom: var(--pc-space-4); }
+.mc-new-way { text-align: left; display: grid; gap: 6px; cursor: pointer; border: 1px solid var(--pc-border); font: inherit; color: inherit; }
+.mc-new-way p { margin: 0; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
+.mc-new-way.active { border-color: var(--pc-primary); box-shadow: 0 0 0 1px var(--pc-primary); }
+.mc-new-way-icon { color: var(--pc-primary-text); }
+.mc-new-step { display: grid; gap: var(--pc-space-3); }
+.mc-new-step h2 { margin: 0; font-size: var(--pc-fs-md); }
+.mc-new-step p { margin: 0; }
+.mc-new-upload { justify-self: start; cursor: pointer; }
+.mc-new-upload input { display: none; }
+.mc-new-ok { color: var(--pc-good-text); }
+@media (max-width: 900px) { .mc-page { grid-template-columns: 1fr; } }
+
+/* A model's editor in a window of its own (as Link's algorithm editor). */
+.mc-window { height: 100vh; display: flex; flex-direction: column; background: var(--pc-bg); color: var(--pc-text); }
+.mc-window-state { align-items: center; justify-content: center; padding: 24px; }
+.mc-window-bar { display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-bottom: 1px solid var(--pc-border); background: var(--pc-surface); flex-wrap: wrap; }
+.mc-window-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--pc-text); font-weight: 700; text-decoration: none; }
+.mc-window-title { display: flex; flex-direction: column; min-width: 0; flex: 1 1 220px; }
+.mc-window-title b { font: 700 var(--pc-fs-md)/1.25 var(--pc-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-window-title small { color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
+.mc-window-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mc-window-notice { margin: 8px 14px 0; }
+.mc-window-editor { flex: 1; min-height: 0; }
+.mc-window-editor .be-editor { border: 0; border-radius: 0; }
+.mc-preview-aside { display: grid; gap: 8px; padding: 4px 0; }
+
+/* Versions (round 9 M3, M4): an older version shown, a comparison of versions. */
+.mc-version-notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.mc-compare { display: grid; gap: 16px; }
+.mc-compare .mc-inline-field input { min-width: 220px; }
+.mc-compare-table { margin-top: 12px; }
+.mc-compare-changed td, .mc-compare-changed th { background: var(--pc-attention-soft); }
+
+/* A block as a diagram draws it, and its picture (round 9 M1, M2). */
+.mc-block-image { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--pc-border-subtle); display: grid; gap: 8px; }
+.mc-block-image h3 { margin: 0; font-size: var(--pc-fs-sm); }
+
+/* Optimization studies: the type of study, the objective and constraints, the study's panel. */
+.mc-study-type { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.mc-study-type-option { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; padding: 10px 12px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); cursor: pointer; }
+.mc-study-type-option input { grid-row: span 2; margin-top: 3px; }
+.mc-study-type-option small { color: var(--pc-text-muted); }
+.mc-study-type-option.active { border-color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary); }
+.mc-subtitle { margin: 16px 0 8px; font-size: 0.9rem; }
+.mc-constraint { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) 64px minmax(0, 1fr) auto; gap: 6px; margin-bottom: 6px; align-items: center; }
+.mc-constraint input, .mc-constraint select { min-width: 0; }
+.mc-optimization-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; }
+.mc-optimization-status small { color: var(--pc-text-muted); flex-basis: 100%; }
+.mc-optimization .mc-best-line a { margin-left: auto; font-weight: 400; }
+@media (max-width: 640px) { .mc-constraint { grid-template-columns: 1fr 1fr; } }
+.mc-block-about h3 { margin: var(--pc-space-3) 0 4px; font-size: var(--pc-fs-sm); }
+.mc-formula { white-space: pre-wrap; font-family: var(--pc-font-mono); background: var(--pc-surface-2); padding: 8px 12px; border-radius: var(--pc-radius-md); margin: 0; }

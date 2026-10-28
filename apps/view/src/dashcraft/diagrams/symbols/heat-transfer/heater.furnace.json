@@ -1,0 +1,78 @@
+{
+  "id": "heater.furnace",
+  "title": "Fired heater / furnace",
+  "category": "heat-transfer",
+  "w": 120,
+  "h": 170,
+  "svg": "<line x1=\"10\" y1=\"90\" x2=\"20\" y2=\"90\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"100\" y1=\"130\" x2=\"110\" y2=\"130\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"150\" x2=\"60\" y2=\"170\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state\" x=\"50\" y=\"10\" width=\"20\" height=\"30\" stroke-width=\"2\" stroke-linejoin=\"round\"/><polygon class=\"pc-state\" points=\"20,70 40,40 80,40 100,70\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect class=\"pc-state\" x=\"20\" y=\"70\" width=\"80\" height=\"80\" stroke-width=\"2\" stroke-linejoin=\"round\"/><polyline points=\"20,90 88,90 88,100 32,100 32,110 88,110 88,120 32,120 32,130 100,130\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"40,52 80,52\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polyline points=\"40,60 80,60\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"pc-run\" d=\"M40,150 C33,142 37,136 40,128 C43,136 47,142 40,150 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><path class=\"pc-run\" d=\"M60,150 C53,142 57,136 60,128 C63,136 67,142 60,150 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><path class=\"pc-run\" d=\"M80,150 C73,142 77,136 80,128 C83,136 87,142 80,150 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "coil_in",
+      "x": 10,
+      "y": 90,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "coil_out",
+      "x": 110,
+      "y": 130,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "fuel",
+      "x": 60,
+      "y": 170,
+      "dir": "s",
+      "kind": "utility",
+      "flow": "in"
+    },
+    {
+      "id": "flue",
+      "x": 60,
+      "y": 10,
+      "dir": "n",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 60.0,
+      "y": 174,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 60,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 100,
+      "y": 40,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "run"
+  ],
+  "keywords": [
+    "furnace",
+    "fired heater",
+    "heater",
+    "radiant",
+    "convection",
+    "burner"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

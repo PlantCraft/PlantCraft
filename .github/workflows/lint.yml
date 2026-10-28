@@ -1,0 +1,50 @@
+name: Lint
+
+# The one check of a pull request besides Security: ruff in every Python folder (the platform, each
+# app, the Simulator and the app template, each with its own settings), about a minute. The tests
+# run on main a few times a day and contributors run `make ci` of the folders they change before
+# merging (ci/macmini/README.md). Documentation-only changes run nothing.
+on:
+  pull_request:
+    paths-ignore: ["**/*.md", "docs/**", "LICENSE", "NOTICE", ".claude/**"]
+  workflow_dispatch:
+
+# A newer push to a pull request cancels its older run.
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only token: no job here writes to the repository.
+permissions:
+  contents: read
+
+jobs:
+  ruff:
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          # The merge commit and its first parent, the base branch: the version check below.
+          fetch-depth: 2
+      # The version every pyproject.toml pins; nothing else is installed.
+      - run: rm -rf "$RUNNER_TEMP/venv" && python3 -m venv "$RUNNER_TEMP/venv" && "$RUNNER_TEMP/venv/bin/pip" install -q ruff==0.17.1
+      - name: ruff check and format in each folder
+        run: |
+          status=0
+          for dir in . apps/*/ simulator templates/app site; do
+            echo "== $dir"
+            (cd "$dir" && "$RUNNER_TEMP/venv/bin/ruff" check . && "$RUNNER_TEMP/venv/bin/ruff" format --check .) || status=1
+          done
+          exit $status
+      # Parallel branches that change sdk/python or ui/ must not reuse main's version: the one who
+      # merges second runs dev/sdk-version, which takes the next free one (AGENTS.md, section 6).
+      - name: SDK and ui versions above main's
+        if: github.event_name == 'pull_request'
+        run: python3 dev/sdk-version --check --base HEAD^1
+      # Keeps the repository small: no tracked file over 2 MB (the largest real ones, the FMUs and
+      # the vendored UI, are under 1 MB). Built wheels, images and kits belong in releases.
+      - name: no file over 2 MB
+        run: |
+          big=$(git ls-files -z | xargs -0 wc -c 2>/dev/null | awk '$2 != "total" && $1 > 2097152')
+          if [ -n "$big" ]; then echo "Files over 2 MB:"; echo "$big"; exit 1; fi

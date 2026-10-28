@@ -1,0 +1,11 @@
+{
+  "description": "Fifteen-minute deterministic compatibility and CI exercise.",
+  "duration_seconds": 900,
+  "history_seconds": 900,
+  "integration_step_seconds": 1.0,
+  "max_history_values_per_node": 1000,
+  "observation_frame_seconds": 30.0,
+  "profile_id": "smoke",
+  "scenario_cycle_seconds": 3600.0,
+  "schema": "process-plant-opcua/runtime-profile/v1"
+}

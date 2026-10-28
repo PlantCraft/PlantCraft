@@ -1,0 +1,75 @@
+{
+  "id": "reactor.tubular",
+  "title": "Tubular reactor",
+  "category": "reactors",
+  "w": 160,
+  "h": 60,
+  "svg": "<line x1=\"0\" y1=\"30\" x2=\"20\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"140\" y1=\"30\" x2=\"160\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"40\" y1=\"0\" x2=\"40\" y2=\"10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"120\" y1=\"50\" x2=\"120\" y2=\"60\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state\" x=\"20\" y=\"10\" width=\"120\" height=\"40\" rx=\"4\" stroke-width=\"2\" stroke-linejoin=\"round\"/><polyline points=\"20,30 30,18 46,42 62,18 78,42 94,18 110,42 126,18 140,30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 30,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 160,
+      "y": 30,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "coolant_in",
+      "x": 40,
+      "y": 0,
+      "dir": "n",
+      "kind": "utility",
+      "flow": "in"
+    },
+    {
+      "id": "coolant_out",
+      "x": 120,
+      "y": 60,
+      "dir": "s",
+      "kind": "utility",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 80.0,
+      "y": 64,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 80.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 160,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "reactor",
+    "tubular",
+    "plug flow",
+    "PFR",
+    "multitubular"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

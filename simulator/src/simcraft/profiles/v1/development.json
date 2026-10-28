@@ -1,0 +1,11 @@
+{
+  "description": "Six-hour local method-development and integration profile.",
+  "duration_seconds": 21600,
+  "history_seconds": 21600,
+  "integration_step_seconds": 1.0,
+  "max_history_values_per_node": 10000,
+  "observation_frame_seconds": 30.0,
+  "profile_id": "development",
+  "scenario_cycle_seconds": 21600.0,
+  "schema": "process-plant-opcua/runtime-profile/v1"
+}

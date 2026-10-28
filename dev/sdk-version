@@ -1,0 +1,269 @@
+#!/usr/bin/env python3
+"""Give this branch's plantcraft-sdk and @plantcraft/ui the next free versions, at merge time.
+
+    dev/sdk-version            # before merging a branch that changes sdk/python or ui/
+    dev/sdk-version --check    # only check (dev/ship and the Lint workflow run it)
+
+Parallel branches each bump the SDK or ui from the same main and collide on the number and on
+every vendored file. Run this right before merging instead of picking a number by hand:
+
+1. merges ``origin/main`` into the branch. Conflicts in the vendored files (``vendor/``) are
+   taken from main, and a conflict whose two sides differ only in version numbers and hashes
+   (pins, lock files, ``__version__``) too; any other conflict stops here for you to resolve,
+   ``git commit``, and run it again;
+2. a package the branch changes (``sdk/python``, ``ui/``) whose version is not above main's
+   gets main's next minor version (``0.72.0`` -> ``0.73.0``);
+3. builds the wheel and the ui package (``make sdk-wheel ui-package``), vendors them into every
+   app and the template (``dev/revendor --all``, ``--sdk-only`` when ui/ is unchanged) and into
+   the platform's ``frontend/``;
+4. moves "SDK 0.72.0", "ui 0.72.0" (or `plantcraft-sdk` 0.72.0) to the new numbers in the Markdown lines this branch adds
+   (changelogs, devlog), and commits.
+
+Then ``dev/ship``, push and merge at once. If main takes another SDK first, GitHub shows a
+conflict in the vendored wheels: run it again.
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import hashlib
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parents[1]
+MAIN = "origin/main"
+SDK_FILES = ("sdk/python/pyproject.toml", "sdk/python/plantcraft_sdk/__init__.py")
+UI_FILES = ("ui/package.json", "ui/package-lock.json")
+# Two sides of a conflict that are equal once these are blanked differ only in versions/hashes.
+VOLATILE = re.compile(r"\d+\.\d+\.\d+|sha512-[A-Za-z0-9+/=]+|\b[0-9a-f]{7,64}\b")
+
+
+def git(*args: str, check: bool = True) -> str:
+    done = subprocess.run(["git", "-C", str(HERE), *args], capture_output=True, text=True)
+    if check and done.returncode != 0:
+        sys.exit(f"dev/sdk-version: git {' '.join(args)}: {done.stderr.strip()}")
+    return done.stdout
+
+
+def ok(*args: str) -> bool:
+    return subprocess.run(["git", "-C", str(HERE), *args], capture_output=True).returncode == 0
+
+
+def run(*cmd: str) -> None:
+    print("$", " ".join(cmd), flush=True)
+    subprocess.run(cmd, cwd=HERE, check=True)
+
+
+def parse(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
+def sdk_version(text: str) -> str:
+    return re.search(r'^version = "([^"]+)"', text, re.MULTILINE).group(1)
+
+
+def ui_version(text: str) -> str:
+    return json.loads(text)["version"]
+
+
+def at(ref: str, path: str) -> str:
+    return git("show", f"{ref}:{path}")
+
+
+def changes(base: str, path: str) -> bool:
+    return not ok("diff", "--quiet", base, "--", path)
+
+
+def stale(base: str) -> list[str]:
+    """The packages this checkout changes against ``base`` without a version above base's."""
+
+    found = []
+    for name, path, file, read in (
+        ("plantcraft-sdk", "sdk/python", SDK_FILES[0], sdk_version),
+        ("@plantcraft/ui", "ui", UI_FILES[0], ui_version),
+    ):
+        if not changes(base, path):
+            continue
+        ours, theirs = read((HERE / file).read_text(encoding="utf-8")), read(at(base, file))
+        if parse(ours) <= parse(theirs):
+            found.append(f"{name} {ours} changes {path}/ but main has {theirs} already")
+    return found
+
+
+def settle(path: str) -> bool:
+    """Resolve one conflicted file when only versions and hashes differ; True when resolved."""
+
+    if "vendor/" in path:
+        if ok("cat-file", "-e", f"MERGE_HEAD:{path}"):
+            git("checkout", "--theirs", "--", path)
+            git("add", "--", path)
+        else:
+            git("rm", "-q", "--", path)
+        return True
+    file = HERE / path
+    try:
+        text = file.read_text(encoding="utf-8")
+    except (FileNotFoundError, UnicodeDecodeError):
+        return False
+    hunk = re.compile(r"^<<<<<<< [^\n]*\n(.*?)^=======\n(.*?)^>>>>>>> [^\n]*\n", re.S | re.M)
+    if any(VOLATILE.sub("#", a) != VOLATILE.sub("#", b) for a, b in hunk.findall(text)):
+        return False
+    file.write_text(hunk.sub(lambda m: m.group(2), text), encoding="utf-8")
+    git("add", "--", path)
+    return True
+
+
+def merge_main() -> None:
+    if ok("rev-parse", "-q", "--verify", "MERGE_HEAD"):
+        sys.exit("dev/sdk-version: a merge is in progress; resolve it and `git commit` first")
+    git("-c", "merge.conflictStyle=merge", "merge", "--no-edit", "-q", MAIN, check=False)
+    conflicted = git("diff", "--name-only", "--diff-filter=U").split()
+    left = [path for path in conflicted if not settle(path)]
+    if left:
+        sys.exit(
+            "dev/sdk-version: merged main; resolve these conflicts, `git commit`, run again:\n  "
+            + "\n  ".join(left)
+        )
+    if conflicted:
+        git("commit", "--no-edit", "-q")
+        print(f"merged {MAIN}; version-only conflicts taken from main: {len(conflicted)} files")
+
+
+def next_minor(version: str) -> str:
+    major, minor = parse(version)[:2]
+    return f"{major}.{minor + 1}.0"
+
+
+def write_sdk(version: str) -> None:
+    for path, pattern, line in (
+        (SDK_FILES[0], r'^version = "[^"]+"', f'version = "{version}"'),
+        (SDK_FILES[1], r'^__version__ = "[^"]+"', f'__version__ = "{version}"'),
+    ):
+        file = HERE / path
+        file.write_text(
+            re.sub(pattern, line, file.read_text(encoding="utf-8"), count=1, flags=re.M), "utf-8"
+        )
+
+
+def write_ui(version: str) -> None:
+    package = HERE / UI_FILES[0]
+    data = json.loads(package.read_text(encoding="utf-8"))
+    data["version"] = version
+    package.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    lock = HERE / UI_FILES[1]
+    data = json.loads(lock.read_text(encoding="utf-8"))
+    data["version"] = data["packages"][""]["version"] = version
+    lock.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def platform_frontend(version: str) -> None:
+    """Point the platform's frontend/ at frontend/vendor/plantcraft-ui-<version>.tgz."""
+
+    tgz = HERE / "frontend" / "vendor" / f"plantcraft-ui-{version}.tgz"
+    for old in tgz.parent.glob("plantcraft-ui-*.tgz"):
+        if old != tgz:
+            old.unlink()
+    spec = f"file:vendor/{tgz.name}"
+    package = HERE / "frontend" / "package.json"
+    package.write_text(
+        re.sub(r"file:vendor/plantcraft-ui-[^\"]+\.tgz", spec, package.read_text("utf-8")),
+        encoding="utf-8",
+    )
+    lock = package.with_name("package-lock.json")
+    data = json.loads(lock.read_text(encoding="utf-8"))
+    data["packages"][""]["dependencies"]["@plantcraft/ui"] = spec
+    data["packages"].pop("node_modules/@plantcraft/ui", None)
+    lock.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    npm = ("npm", "install", "--package-lock-only", "--no-audit", "--no-fund", "--ignore-scripts")
+    run(*npm, "--prefix", "frontend")
+    entry = json.loads(lock.read_text(encoding="utf-8"))["packages"][
+        "node_modules/@plantcraft/ui"
+    ]
+    integrity = "sha512-" + base64.b64encode(hashlib.sha512(tgz.read_bytes()).digest()).decode()
+    if entry.get("integrity") != integrity:
+        sys.exit(f"dev/sdk-version: npm wrote another integrity for {tgz.name}")
+
+
+def rename_mentions(moves: dict[str, tuple[str, str]]) -> None:
+    """Move "SDK old" to "SDK new" in the Markdown lines this branch adds (not on main)."""
+
+    for path in git("diff", "--name-only", MAIN, "--", "*.md").split():
+        file = HERE / path
+        if not file.is_file():
+            continue
+        main = set(git("show", f"{MAIN}:{path}", check=False).splitlines())
+        lines = file.read_text(encoding="utf-8").splitlines(keepends=True)
+        out = []
+        for line in lines:
+            if line.rstrip("\n") not in main:
+                for label, (old, new) in moves.items():
+                    line = re.sub(
+                        rf"(?<![\w-]){re.escape(label)} {re.escape(old)}\b", f"{label} {new}", line
+                    )
+            out.append(line)
+        if out != lines:
+            file.write_text("".join(out), encoding="utf-8")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--check", action="store_true", help="only check against --base")
+    parser.add_argument("--base", default=MAIN, help=f"the ref to check against (default {MAIN})")
+    args = parser.parse_args()
+
+    if args.check:
+        problems = stale(args.base)
+        for problem in problems:
+            print(f"dev/sdk-version: {problem}; run dev/sdk-version", file=sys.stderr)
+        return 1 if problems else 0
+
+    if git("status", "--porcelain", "--untracked-files=no").strip():
+        sys.exit("dev/sdk-version: commit or stash your changes first")
+    git("fetch", "-q", "origin", "main")
+    before = {
+        "SDK": sdk_version((HERE / SDK_FILES[0]).read_text("utf-8")),
+        "ui": ui_version((HERE / UI_FILES[0]).read_text("utf-8")),
+    }
+    merge_main()
+
+    sdk_changed, ui_changed = changes(MAIN, "sdk/python"), changes(MAIN, "ui")
+    if not (sdk_changed or ui_changed):
+        print("dev/sdk-version: this branch changes neither sdk/python nor ui/; nothing to do")
+        return 0
+    sdk = sdk_version((HERE / SDK_FILES[0]).read_text("utf-8"))
+    ui = ui_version((HERE / UI_FILES[0]).read_text("utf-8"))
+    main_sdk, main_ui = sdk_version(at(MAIN, SDK_FILES[0])), ui_version(at(MAIN, UI_FILES[0]))
+    if sdk_changed and parse(sdk) <= parse(main_sdk):
+        sdk = next_minor(main_sdk)
+        write_sdk(sdk)
+    if ui_changed and parse(ui) <= parse(main_ui):
+        ui = next_minor(main_ui)
+        write_ui(ui)
+
+    run("make", "sdk-wheel", *(["ui-package"] if ui_changed else []))
+    run(sys.executable, "dev/revendor", "--all", *([] if ui_changed else ["--sdk-only"]))
+    if ui_changed:
+        platform_frontend(ui)
+    rename_mentions(
+        {
+            **dict.fromkeys(("SDK", "`plantcraft-sdk`"), (before["SDK"], sdk)),
+            **dict.fromkeys(("ui", "`@plantcraft/ui`"), (before["ui"], ui)),
+        }
+    )
+
+    git("add", "-A", "--", ".")
+    label = f"SDK {sdk}" + (f", ui {ui}" if ui_changed else "")
+    if ok("diff", "--cached", "--quiet"):
+        print(f"dev/sdk-version: already on the next free versions ({label})")
+        return 0
+    git("commit", "-q", "-m", f"{label}: next free versions on main, vendored (dev/sdk-version)")
+    print(f"\n{label}. Name it in the pull request's title; then dev/ship, push and merge.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

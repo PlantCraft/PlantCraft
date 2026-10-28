@@ -1,0 +1,28 @@
+# Floors that only rise. When a number goes up, raise its floor in the same commit; never
+# lower one (AGENTS.md, "Tests are the gate"). Checked by tests/test_floors.py.
+
+[api]
+# Operations in HistCraft's OpenAPI schema (pages and admin API under /hist/api).
+operations = 37
+# Of those, the data layer PlantCraft calls (/api/v1/data: API v1 reads, derived writes,
+# sources).
+data_operations = 17
+
+[collection]
+# Source kinds: PI Web API, OPC UA, CSV, apps' derived series.
+source_kinds = 4
+
+[compression]
+# Values read per value archived: seeded random walk with a sine, 7,200 values at 1 s,
+# deviation 0.5 (the same signal as tests/test_compression.py).
+ratio_walk = 11.3
+# Values read per kilobyte of encoded chunk, same signal.
+values_per_kb_walk = 1280
+
+[tests]
+# Test functions in tests/.
+functions = 108
+
+[help]
+# Pages in docs/help (served by /api/help).
+pages = 5

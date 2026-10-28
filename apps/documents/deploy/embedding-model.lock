@@ -1,0 +1,10 @@
+# The embedding model bundled in the image (Dockerfile, stage "model"; deploy/fetch_model.py).
+# multilingual-e5-small (intfloat, MIT), the ONNX export with 8-bit weights (about 118 MB)
+# published by Xenova (MIT). Each file is checked against its SHA-256: a file whose hash differs
+# stops the build; a build machine that cannot reach the host builds without the model (search by
+# words only, said on the Search and Reading queue pages). Changing the model queues every
+# document to be read again. Pinned 2026-10-26 from Xenova/multilingual-e5-small at commit
+# 761b726dd34fb83930e26aab4e9ac3899aa1fa78 (model 118,308,185 bytes; tokenizer 17,082,730).
+# sha256  file  url
+f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193  model.onnx  https://huggingface.co/Xenova/multilingual-e5-small/resolve/761b726dd34fb83930e26aab4e9ac3899aa1fa78/onnx/model_quantized.onnx
+0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39  tokenizer.json  https://huggingface.co/Xenova/multilingual-e5-small/resolve/761b726dd34fb83930e26aab4e9ac3899aa1fa78/tokenizer.json

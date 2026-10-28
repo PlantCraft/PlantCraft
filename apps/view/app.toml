@@ -1,0 +1,316 @@
+# PlantCraft View' manifest: the single source of its metadata (the suite's app standard, section 4).
+# The launcher card, the Apps page, the package manifest, the image labels and /api/meta read it.
+
+[app]
+id = "dashcraft"
+name = "PlantCraft View"
+version = "0.5.0"
+category = "Dashboards and trends"
+summary = "Dashboards, trends and reports over the plant's signals and assets."
+description = """\
+Screens anyone in the plant can read: KPIs with limits, trends, bars and tables over the signals \
+and assets of PlantCraft, refreshed on their own, in full screen for a control room wall, or \
+behind a read-only public link. One dashboard can serve every asset of a kind, and panels can show \
+other apps' results, such as PlantCraft Analytics's loop health and signal quality. Reports put the same \
+panels, notes and the period's events in a PDF, made every day, week or month and sent to people \
+and groups in Messages. Needs PlantCraft with signals; assets with signal roles make asset \
+dashboards possible."""
+publisher = "PlantCraft"
+license = "Apache-2.0"
+homepage = ""
+mark = "dashcraft"
+
+[runtime]
+prefix = "/dash/"
+port = 8080
+uid = 10006
+health = "/healthz"
+image = "dashcraft"
+
+[requires]
+processcraft_api = ">=1.0"
+sdk = "0.77.0"
+asset_types = ["unit", "equipment", "loop"]   # asset pages link here (subtypes included)
+roles = {}
+
+[permissions]
+read = ["assets", "signals", "series", "results", "events", "people"]
+write = ["audit", "events", "runs", "schedules", "notifications", "llm"]
+plant_write = false
+outbound = []
+
+[publishes]
+results = []
+
+# What View writes (PlantCraft docs/app-standard.md, section 6): each report it sends, or could
+# not make. Alarms' rules decide whether a failure is worth telling anyone.
+[[publishes.events]]
+name = "report.sent"
+title = "Report sent"
+description = "A report was made and sent to its recipients in Messages (on its schedule or by a person)."
+severity = "info"
+category = "run"
+payload = { report = "Report id", name = "Report name", run = "Run id", recipients = "People and groups it went to", delivered = "Notifications delivered", problems = "Sections that could not be read in full", url = "The PDF" }
+
+[[publishes.events]]
+name = "report.failed"
+title = "Report not made"
+description = "A scheduled report could not be made: the reason is in the summary."
+severity = "warning"
+category = "run"
+payload = { report = "Report id", name = "Report name", run = "Run id", error = "What went wrong", url = "The report's page" }
+rule = { when = "event", priority = "low", notify = "admins" }
+
+# The assistant's works on View's pages (PlantCraft docs/assistant.md, "What each page offers"):
+# each page names itself in useAssistantPage({page: "dashcraft:<id>"}).
+[[contributes.assistant.works]]
+id = "dashboards-find"
+pages = ["dashboards"]
+title = "Which dashboard shows what I need?"
+hint = "Find one, or say what a new one should hold"
+ask = "What do you want to see?"
+instructions = """Help the person find the dashboard that shows what they need (the view section lists the dashboards with their descriptions; without it, list them with list_app_objects, app dashcraft, kind dashboard). Name the dashboards that fit and the panels that show it: check each one's signals against the asset the person means (say which one you took when they said "the first" or left it open; get_asset gives its signals), and say plainly what no dashboard shows. If none fits, suggest a new one: its panels and the signals of each (search_assets, search_signals), so they can build it with New dashboard."""
+
+[[contributes.assistant.works]]
+id = "dashboard-plan"
+pages = ["dashboards"]
+title = "Plan a new dashboard"
+hint = "Its cards and the signals of each"
+ask = "What should it show?"
+instructions = """Plan a new dashboard for what the person describes: its name, then each panel (a trend, a value, a gauge, a table) with the signals it shows (find them with search_assets and search_signals) and why, most important first, so they can build it with New dashboard. Find the signals before you answer, and propose a plan from what the person said rather than asking again."""
+
+[[contributes.assistant.works]]
+id = "dashboard-explain"
+pages = ["dashboard"]
+title = "Explain this dashboard"
+hint = "What each card shows now"
+instructions = """Explain this dashboard (the subject section; the view section lists its panels and their signals and the time window shown; without it, read the dashboard with get_app_object, app dashcraft, kind dashboard, the subject's id): read the signals now with signal_value and summarize what each panel shows, in a few lines, most important first. Say what the dashboard is for if its name and panels make it clear."""
+
+[[contributes.assistant.works]]
+id = "dashboard-changes"
+pages = ["dashboard"]
+title = "What changed in the period?"
+hint = "Steps, trends and events in the window shown"
+instructions = """Say what changed on this dashboard in the period it shows (the view section gives the window; the last 24 hours when each panel keeps its own; without the view section, read its panels with get_app_object, app dashcraft, kind dashboard): read the panels' signals with read_series and the apps' recent events about them with recent_events. Point out steps, trends, oscillations and alarms, most important first, with when each happened; say plainly when nothing changed."""
+
+[[contributes.assistant.works]]
+id = "dashboard-card"
+pages = ["dashboard"]
+title = "Explain one panel"
+hint = "What it shows and how it changed"
+ask = "Which card?"
+instructions = """Read the signals of the panel the person names (the view section lists the panels and their signals; without it, get_app_object, app dashcraft, kind dashboard) over the last day with read_series and explain what it shows and how it changed."""
+
+[[contributes.assistant.works]]
+id = "dashboard-more"
+pages = ["dashboard"]
+title = "What should it also show?"
+hint = "Up to three cards it lacks"
+context = ["cards"]
+instructions = """From the dashboard's panels (the view section, or get_app_object with app dashcraft, kind dashboard) and the assets their signals belong to (search_assets, get_asset), suggest up to three panels it lacks for its purpose, each with its signals and why it helps."""
+
+[[contributes.assistant.works]]
+id = "about-reports"
+pages = ["reports"]
+title = "Which reports are due next?"
+hint = "What each covers and who it is for"
+instructions = """Answer about View's reports (the view section lists them with their cadence and next send; without it, list them with list_app_objects, app dashcraft, kind report): what each one covers, who it seems to be for, which are due next, and what report is missing for the plant's assets (search_assets)."""
+
+[[contributes.assistant.works]]
+id = "report-plan"
+pages = ["reports"]
+title = "Plan a new report"
+hint = "Its sections, period and readers"
+ask = "Who is it for, and what should it tell them?"
+instructions = """Plan a new report for the readers the person describes: its name, period and cadence, then each section with what it shows (signals, results, events; find them with search_assets and search_signals), so they can build it with New report. Find the signals before you answer, and propose a plan from what the person said rather than asking again."""
+
+[[contributes.assistant.works]]
+id = "report-summary"
+pages = ["report"]
+title = "Summarize this report for the shift"
+hint = "What went well, what needs attention"
+instructions = """Read the signals and events of the report's sections (the page's context, or get_app_object with app dashcraft, kind report, the subject's id) over its period with read_series and recent_events, and write a short summary for the shift handover: what went well, what needs attention, most important first."""
+
+[[contributes.assistant.works]]
+id = "report-gaps"
+pages = ["report"]
+title = "What should this report also show?"
+hint = "Up to three sections it lacks"
+instructions = """Look at the report's sections (the page's context, or get_app_object with app dashcraft, kind report) and the plant's assets (search_assets) and suggest up to three sections it lacks for its readers, naming the report and saying why each helps, with the signals or results each would show."""
+
+[[contributes.assistant.works]]
+id = "trend-explain"
+pages = ["trends"]
+title = "Explain this trend"
+hint = "What the lines on screen show"
+instructions = """Explain the trend on screen (the view section gives its plots, signals and period): read the signals with read_series over that period (the last 24 hours when none is given), and describe each line's behaviour, how they relate and what changed when. When nothing is plotted yet, say so, then read the signals the person names, or else the PV and SP of the plant's first control loop (search_assets, search_signals), as the trend would show them. Do not ask first: read, then explain."""
+
+[[contributes.assistant.works]]
+id = "trend-related"
+pages = ["trends"]
+title = "Which signals relate to these?"
+hint = "From the same assets, to add to the trend"
+context = ["plots", "range"]
+instructions = """From the signals on the trend (the view section) and their assets (search_signals, get_asset), name up to five other signals, each by its id, worth adding (an upstream flow, the controller's output, a related temperature) and say what each would show. When nothing is plotted yet, start from the plant's first control loop (search_assets, search_signals) and say so."""
+
+[[contributes.assistant.works]]
+id = "diagram-explain"
+pages = ["diagram"]
+title = "Explain this process display"
+hint = "What it shows now, most important first"
+instructions = """Explain this process diagram (the subject section; the view section gives what is on screen and the time shown; without it, read the diagram with get_app_object, app dashcraft, kind diagram, the subject's id: its elements and their bindings). Read the bound signals now with signal_value (an asset and a role: get_asset gives the signal) and the loops' health with the results the page shows, then say in a few lines what the unit is doing: levels, flows, which pumps run, which loops need attention, most important first. Name each piece of equipment by its label."""
+
+[[contributes.assistant.works]]
+id = "diagram-changes"
+pages = ["diagram"]
+title = "What changed in the window?"
+hint = "Steps, trends and alarms on this unit"
+instructions = """Say what changed on this diagram in the window shown (the view section gives it; the last 24 hours when it does not; without the view section, read the diagram with get_app_object, app dashcraft, kind diagram): read the bound signals with read_series and the apps' recent events about the diagram's assets with recent_events. Point out steps, trends, oscillations, pumps that started or stopped and alarms, most important first, each with when it happened and the equipment it concerns; say plainly when nothing changed."""
+
+[[contributes.assistant.works]]
+id = "diagram-gaps"
+pages = ["diagram"]
+title = "What is missing from this process display?"
+hint = "Equipment, loops and values it lacks"
+instructions = """Compare this diagram (get_app_object, app dashcraft, kind diagram: its elements, bindings and assets) with the unit's assets in PlantCraft (search_assets, get_asset: the equipment, loops and their signal roles under the same unit). Name up to five things it lacks: equipment or loops not drawn, symbols with no binding, a tank without its level, a pump without its running state, a loop without its PV or SP, each with the asset and role to bind and why it helps."""
+
+[[contributes.assistant.works]]
+id = "diagram-plan"
+pages = ["diagrams"]
+title = "Plan a new process display"
+hint = "Its equipment, loops and lines"
+ask = "Which unit or section should it show?"
+instructions = """Plan a new process diagram for what the person describes: its name, then the equipment from left to right in the direction of flow (search_assets, get_asset: the unit's equipment and its feeds and downstream-of relations), the process lines between them, the loops above the equipment they control with their PV and SP, and the level, running and flow each symbol should show, each with its asset and role. Find the assets before you answer, and propose the plan from what the person said rather than asking again."""
+
+[consumes]
+# Optional: a card can show any app's result; PlantCraft Analytics's (CPMCraft and DataCraft until
+# 2026-10-20) come first. Cards saved with the old names read these (dashboards/merged_apps.py).
+results = [
+    { kind = "linkcraft.loop_health", subject = "asset:loop" },
+    { kind = "linkcraft.signal_quality", subject = "signal" },
+]
+
+# What View adds to PlantCraft (PlantCraft docs/app-standard.md, section 4b).
+[contributes.search]                 # Ctrl+K: api/routers/search.py
+types = ["Dashboard", "Trend", "Report", "Process display"]
+
+[[contributes.calendar]]             # Desk's calendar: suite/reports.py sends the coming sends
+id = "reports"
+title = "Scheduled reports"
+description = "When each report comes, for the people and groups it goes to."
+visible = false
+
+[[contributes.refs]]                 # #report:<id> in messages, actions and notes
+kind = "report"
+title = "Report"
+url = "/dash/reports/{id}"
+
+[[contributes.refs]]                 # #dashboard:<id> in messages, actions and notes
+kind = "dashboard"
+title = "Dashboard"
+url = "/dash/dashboards/{id}"
+
+[[contributes.refs]]                 # #trend:<id>; /dash/trends?signal=&start=&end= opens a new one
+kind = "trend"
+title = "Trend"
+url = "/dash/trends/{id}"
+
+[[contributes.refs]]                 # #diagram:<id>: api/routers/diagram_drafts.py
+kind = "diagram"
+title = "Process display"
+url = "/dash/diagrams/{id}"
+
+[[contributes.llm]]                  # Setup > Language models: api/routers/diagram_drafts.py
+id = "diagram-draft"
+title = "Draft a process display"
+description = "Drafts a process display of a unit from what an editor describes; the editor checks and saves it."
+reads = "The editor's description, the symbol ids, and the names, kinds, signal roles and relations of the unit's assets; no signal values."
+default = "off"
+
+[suggests]
+asset_types = ["unit", "equipment", "loop"]   # asset pages link here (subtypes included)
+
+[backup]                            # its data folder in the suite's backup (PlantCraft docs/operations.md)
+sqlite = ["dashcraft.sqlite3", "trendcraft.sqlite3"]   # dashboards, public links, reports and their PDFs (trendcraft.sqlite3 is the name before the rename)
+skip = ["logs/"]
+
+# The widgets of View's Overview and of Desk's Today (PlantCraft docs/widgets.md), served by
+# api/routers/widgets.py. "View: " is dropped on View's own Overview.
+[[contributes.widgets]]
+id = "dashboard"
+title = "View: one dashboard"
+description = "A shortcut to one dashboard, with its panels and when it changed."
+size = "s"
+kind = "facts"
+sizes = [{ w = 3, h = 2 }, { w = 4, h = 2 }, { w = 6, h = 2 }]
+pick = "Dashboard"
+
+[[contributes.widgets]]
+id = "dashboards"
+title = "View: dashboards"
+description = "The plant's dashboards, with when each was last updated."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+default = true
+
+[[contributes.widgets]]
+id = "trends"
+title = "View: saved trends"
+description = "The trends people saved, newest first."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "reports"
+title = "View: reports"
+description = "The reports, with when each goes out next and how its last send went."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "diagrams"
+title = "View: process displays"
+description = "The plant's process displays, newest first."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "public-links"
+title = "View: public links"
+description = "The links that open a dashboard, report or process display without signing in, with when each was last opened."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+# What the assistant (list_app_objects) and notebooks (pc.app("view")) read, read only.
+[[contributes.objects]]
+kind = "dashboard"
+title = "Dashboards"
+description = "Each dashboard with its description, its panels and the signals they show."
+
+[[contributes.objects]]
+kind = "report"
+title = "Reports"
+description = "Each report with its period, cadence, next send, sections and the signals they show."
+
+[[contributes.objects]]
+kind = "diagram"
+title = "Process displays"
+description = "Each process display with its description, its elements and the signals and assets bound to them."
+
+[[contributes.start]]
+# A new plant's first step (Assets › Import, once an import is applied): POST api/start/<id>.
+id = "unit-overviews"
+title = "Draw the unit overviews"
+description = "One overview dashboard for each unit of the import: its process values in tables and a trend."
+open = "/dash/"
+
+[[contributes.start]]
+id = "unit-diagrams"
+title = "Draw the process displays"
+description = "One process display page for each unit of the import: its equipment, its loops with their PV and SP, and the lines between them."
+open = "/dash/diagrams"

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/observation.schema.json",
+  "title": "Process Plant observation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source_timestamp", "server_timestamp", "signal_id", "node_id", "value", "quality", "engineering_unit"],
+  "properties": {
+    "schema": {"const": "process-plant-opcua/observation/v1"},
+    "source_timestamp": {"type": "string", "format": "date-time"},
+    "server_timestamp": {"type": "string", "format": "date-time"},
+    "signal_id": {"type": "string", "minLength": 1},
+    "node_id": {"type": "string", "minLength": 1},
+    "value": {"type": ["number", "string", "boolean"]},
+    "quality": {"enum": ["GOOD", "UNCERTAIN", "BAD", "BAD_NO_COMMUNICATION"]},
+    "engineering_unit": {"type": "string"}
+  }
+}

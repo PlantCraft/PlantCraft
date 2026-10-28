@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/dataset-manifest.schema.json",
+  "title": "Process Plant dataset manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "benchmark_version", "benchmark_manifest_digest", "catalog_digest", "seed", "start_at", "end_at", "duration_seconds", "integration_step_seconds", "observation_frame_seconds", "scenario_cycle_seconds", "frames", "observations", "observation_artifact", "truth_artifact"],
+  "properties": {
+    "schema": {"const": "process-plant-opcua/dataset-manifest/v1"},
+    "benchmark_version": {"type": "string"},
+    "benchmark_manifest_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "catalog_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "seed": {"type": "integer"},
+    "start_at": {"type": "string", "format": "date-time"},
+    "end_at": {"type": "string", "format": "date-time"},
+    "duration_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "integration_step_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "observation_frame_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "scenario_cycle_seconds": {"type": "number", "minimum": 600},
+    "frames": {"type": "integer", "minimum": 1},
+    "observations": {"type": "integer", "minimum": 0},
+    "observation_artifact": {"$ref": "#/$defs/artifact"},
+    "truth_artifact": {"$ref": "#/$defs/artifact"}
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "format", "path", "digest"],
+      "properties": {
+        "schema": {"type": "string", "minLength": 1},
+        "format": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

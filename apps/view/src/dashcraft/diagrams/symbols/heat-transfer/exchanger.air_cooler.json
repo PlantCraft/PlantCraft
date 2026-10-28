@@ -1,0 +1,60 @@
+{
+  "id": "exchanger.air_cooler",
+  "title": "Air cooler (fin fan)",
+  "category": "heat-transfer",
+  "w": 160,
+  "h": 90,
+  "svg": "<line x1=\"0\" y1=\"20\" x2=\"20\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"140\" y1=\"20\" x2=\"160\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect class=\"pc-state\" x=\"20\" y=\"10\" width=\"120\" height=\"20\" stroke-width=\"2\" stroke-linejoin=\"round\"/><line x1=\"30\" y1=\"10\" x2=\"30\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"40\" y1=\"10\" x2=\"40\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"50\" y1=\"10\" x2=\"50\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"10\" x2=\"60\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"70\" y1=\"10\" x2=\"70\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"80\" y1=\"10\" x2=\"80\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"90\" y1=\"10\" x2=\"90\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"100\" y1=\"10\" x2=\"100\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"110\" y1=\"10\" x2=\"110\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"120\" y1=\"10\" x2=\"120\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"130\" y1=\"10\" x2=\"130\" y2=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"80\" y1=\"30\" x2=\"80\" y2=\"70\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><ellipse class=\"pc-run\" cx=\"66\" cy=\"50\" rx=\"14\" ry=\"4\" stroke-width=\"2\" stroke-linejoin=\"round\"/><ellipse class=\"pc-run\" cx=\"94\" cy=\"50\" rx=\"14\" ry=\"4\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect x=\"72\" y=\"70\" width=\"16\" height=\"10\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 20,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 160,
+      "y": 20,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 80.0,
+      "y": 94,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 80.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 160,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "run"
+  ],
+  "keywords": [
+    "air cooler",
+    "fin fan",
+    "aerial cooler",
+    "condenser"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

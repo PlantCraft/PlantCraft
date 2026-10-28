@@ -1,0 +1,27 @@
+# PlantCraft's public site and its chat (site/README.md), installed by deploy/cloud/vm.sh site.
+# Listens on 127.0.0.1 only: the Cloudflare Tunnel on this host is the way in.
+[Unit]
+Description=PlantCraft site and chat
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=plantcraft-site
+Group=plantcraft-site
+EnvironmentFile=/etc/plantcraft-site/site.env
+WorkingDirectory=/opt/plantcraft-site
+ExecStart=/opt/plantcraft-site/venv/bin/python -m sitechat serve --host 127.0.0.1 --port 8090
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/var/lib/plantcraft-site
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

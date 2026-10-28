@@ -1,0 +1,2 @@
+# Inputs of requirements.lock (make lock): PlantCraft Analytics and its pinned plantcraft-sdk (from vendor/).
+-e .

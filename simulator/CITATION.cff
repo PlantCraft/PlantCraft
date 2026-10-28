@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, please cite the software release."
+title: "PlantCraft Simulator: OPC UA process plant simulator"
+type: software
+authors:
+  - family-names: Dambros
+    given-names: Jonathan
+version: 0.4.0
+date-released: 2026-10-19
+url: "https://github.com/PlantCraft/PlantCraft/tree/main/simulator"
+repository-code: "https://github.com/PlantCraft/PlantCraft/tree/main/simulator"
+license: Apache-2.0
+keywords:
+  - process control
+  - OPC UA
+  - fault diagnosis
+  - control performance monitoring
+  - data quality
+  - benchmark

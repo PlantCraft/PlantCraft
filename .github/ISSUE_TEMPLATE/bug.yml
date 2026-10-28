@@ -1,0 +1,34 @@
+name: Bug
+description: Something does not work as the docs or the screen say
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Leave out passwords, keys, host names and plant data that are not yours to share. A vulnerability goes through the private report form, not here.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The suite's version (Updates page or `release.json`) and the app, e.g. "0.4.0, Link"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: The page and the steps, so someone else can do the same
+    validations:
+      required: true
+  - type: textarea
+    id: seen
+    attributes:
+      label: What you saw, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Messages or logs
+      description: The message on the screen, or what `install.sh --diagnostics` reported
+      render: text

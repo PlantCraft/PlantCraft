@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/coupling-edge.schema.json",
+  "title": "Process Plant coupling edge v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_loop_id", "target_loop_id", "gain", "delay_seconds", "mechanism"],
+  "properties": {
+    "source_loop_id": {"type": "string", "minLength": 1},
+    "target_loop_id": {"type": "string", "minLength": 1},
+    "gain": {"type": "number"},
+    "delay_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "mechanism": {"type": "string", "minLength": 1}
+  }
+}

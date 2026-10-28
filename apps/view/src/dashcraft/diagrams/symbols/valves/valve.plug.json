@@ -1,0 +1,61 @@
+{
+  "id": "valve.plug",
+  "title": "Plug valve",
+  "category": "valves",
+  "w": 80,
+  "h": 40,
+  "svg": "<line x1=\"0\" y1=\"20\" x2=\"20\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"20\" x2=\"80\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path class=\"pc-state pc-run\" d=\"M20,10 L40,20 L20,30 Z M60,10 L40,20 L60,30 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect x=\"35\" y=\"15\" width=\"10\" height=\"10\" fill=\"currentColor\" stroke=\"none\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 20,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 80,
+      "y": 20,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 44,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "open"
+  ],
+  "keywords": [
+    "valve",
+    "manual",
+    "block",
+    "plug",
+    "quarter turn"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

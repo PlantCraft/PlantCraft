@@ -1,0 +1,52 @@
+{
+  "id": "connector.offpage",
+  "title": "To another diagram",
+  "category": "piping",
+  "w": 80,
+  "h": 40,
+  "stretch": true,
+  "svg": "<path class=\"pc-state\" d=\"M0,10 H60 L80,20 L60,30 H0 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 20,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "label",
+      "x": 30,
+      "y": 20,
+      "align": "middle",
+      "baseline": "middle"
+    },
+    {
+      "id": "tag",
+      "x": 40,
+      "y": 34,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40,
+      "y": 6,
+      "align": "middle",
+      "baseline": "bottom"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "off-page",
+    "connector",
+    "continuation",
+    "to",
+    "link"
+  ],
+  "standard": "ISO 10628-2",
+  "description": "The line goes on in another diagram; click to open it."
+}

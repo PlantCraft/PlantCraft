@@ -1,0 +1,11 @@
+# Development entry point. The suite's compose file is deploy/compose.yaml, the same file the
+# offline bundle ships; it runs from deploy/ with its own .env and data/ folder there.
+#
+#   make image                      build processcraft:<version>
+#   deploy/install.sh --dev --yes   create deploy/.env and deploy/data, start, wait for health
+#   docker compose ps | logs | down (from the repository root, through this file)
+#
+# See docs/install-offline.md for the real (offline) installation.
+include:
+  - path: deploy/compose.yaml
+    project_directory: deploy

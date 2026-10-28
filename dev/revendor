@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""Vendor this checkout's plantcraft-sdk wheel and @plantcraft/ui package into the apps (apps/).
+
+    make sdk-wheel ui-package                  # build both from this checkout
+    dev/revendor apps/link apps/historian      # or: dev/revendor --all (apps/ and templates/app)
+    make sdk-wheel && dev/revendor --sdk-only apps/historian   # the SDK alone; the app keeps its ui
+
+For each app: copies ``dist/plantcraft_sdk-<v>.whl`` and ``dist/plantcraft-ui-<v>.tgz`` to
+``vendor/`` (removing the old files), moves every pin to the new versions (``pyproject.toml``,
+``app.toml`` ``[requires] sdk``, ``Makefile``, its workflow ``.github/workflows/<app>.yml``,
+``Dockerfile``,
+``frontend/package.json`` and ``frontend/package-lock.json``, whose ``@plantcraft/ui`` entry npm
+writes again from the new file)
+and rewrites ``vendor/README.md`` with both SHA-256 sums. Run each app's ``make ci`` afterwards.
+The apps' files are only changed, never committed.
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tomllib
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parents[1]
+APPS = HERE / "apps"
+PINNED = ("pyproject.toml", "Makefile", "Dockerfile", "app.toml")
+
+README = """\
+# vendor
+
+Two packages of PlantCraft that are published on no index. {name} pins both and installs them
+only from this folder, so the image builds offline and checks each file's hash. Neither is edited
+here: a change is made in `sdk/python` or `ui/` at the repository's root, released as a new
+version, and `dev/revendor` puts the new file here with its hash.
+
+## plantcraft-sdk {sdk}
+
+`pip install --no-index --find-links vendor plantcraft-sdk=={sdk}` (Makefile, CI and the
+Dockerfile). The wheel is PlantCraft's reproducible build (`make sdk-wheel`, PlantCraft
+{revision}): every app on SDK {sdk} vendors these same bytes.
+
+## @plantcraft/ui {ui}
+
+The suite's frame and shared interface parts (PlantCraft `docs/app-standard.md`, section 10).
+`frontend/package.json` names it as `"@plantcraft/ui": "file:../vendor/{tgz}"`;
+`npm ci` checks it against the integrity hash in `frontend/package-lock.json`. Built by
+PlantCraft's `make ui-package` (every app on ui {ui} vendors the same bytes).
+
+## Checks
+
+The same in `sha256sum -c` format (the Docker build and `plantcraft-app check` check both):
+
+```text
+{sdk_sha}  {wheel}
+{ui_sha}  {tgz}
+```
+"""
+
+
+def _one(pattern: str) -> Path:
+    found = sorted((HERE / "dist").glob(pattern))
+    if len(found) != 1:
+        sys.exit(
+            f"dev/revendor: expected one dist/{pattern}, found {len(found)}; run make sdk-wheel ui-package"
+        )
+    return found[0]
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _revision() -> str:
+    try:
+        return subprocess.run(
+            ["git", "-C", str(HERE), "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+
+
+def revendor(app: Path, wheel: Path, tgz: Path | None) -> list[str]:
+    """``tgz`` None: the SDK alone, the app's own ``@plantcraft/ui`` package stays."""
+
+    sdk = wheel.name.split("-")[1]
+    vendor = app / "vendor"
+    sdk_only = tgz is None
+    if tgz is None:
+        kept = sorted(vendor.glob("plantcraft-ui-*.tgz"))
+        if len(kept) != 1:
+            sys.exit(f"dev/revendor: {app.name} has {len(kept)} vendor/plantcraft-ui-*.tgz")
+        tgz = kept[0]
+    ui = tgz.name.removeprefix("plantcraft-ui-").removesuffix(".tgz")
+    for old in vendor.glob("plantcraft_sdk-*.whl"):
+        old.unlink()
+    shutil.copy2(wheel, vendor / wheel.name)
+    changed = [f"vendor/{wheel.name}"]
+    if not sdk_only:
+        for old in vendor.glob("plantcraft-ui-*.tgz"):
+            old.unlink()
+        shutil.copy2(tgz, vendor / tgz.name)
+        changed.append(f"vendor/{tgz.name}")
+
+    # The app's workflow lives at the repository's root: .github/workflows/<folder>.yml.
+    files = [app / name for name in PINNED] + [HERE / ".github" / "workflows" / f"{app.name}.yml"]
+    for path in files:
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        new = re.sub(r"plantcraft-sdk==[0-9][0-9.]*", f"plantcraft-sdk=={sdk}", text)
+        new = re.sub(r"plantcraft_sdk-[0-9][0-9.]*-py3", f"plantcraft_sdk-{sdk}-py3", new)
+        if path.name == "app.toml":
+            new = re.sub(r'^sdk = "[^"]*"', f'sdk = "{sdk}"', new, flags=re.MULTILINE)
+        if new != text:
+            path.write_text(new, encoding="utf-8")
+            changed.append(os.path.relpath(path, app))
+
+    if sdk_only:
+        return _readme(app, vendor, wheel, tgz, sdk, ui, changed)
+    integrity = "sha512-" + base64.b64encode(hashlib.sha512(tgz.read_bytes()).digest()).decode()
+    spec = f"file:../vendor/{tgz.name}"
+    package = app / "frontend" / "package.json"
+    if package.is_file():
+        text = package.read_text(encoding="utf-8")
+        new = re.sub(r"file:\.\./vendor/plantcraft-ui-[^\"]+\.tgz", spec, text)
+        if new != text:
+            package.write_text(new, encoding="utf-8")
+            changed.append("frontend/package.json")
+    lock = app / "frontend" / "package-lock.json"
+    if lock.is_file():
+        # The package's lock entry is made again from the new file (its dependencies and peers
+        # change between versions), not patched: npm writes it, nothing is installed.
+        data = json.loads(lock.read_text(encoding="utf-8"))
+        packages = data.get("packages", {})
+        root = packages.get("", {})
+        if "@plantcraft/ui" in root.get("dependencies", {}):
+            root["dependencies"]["@plantcraft/ui"] = spec
+        packages.pop("node_modules/@plantcraft/ui", None)
+        lock.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        subprocess.run(
+            ["npm", "install", "--package-lock-only", "--no-audit", "--no-fund", "--ignore-scripts"],
+            cwd=lock.parent,
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+        entry = json.loads(lock.read_text(encoding="utf-8"))["packages"].get("node_modules/@plantcraft/ui", {})
+        if entry.get("integrity") != integrity:
+            sys.exit(f"dev/revendor: {app.name}: npm wrote another integrity for {tgz.name}")
+        changed.append("frontend/package-lock.json")
+    return _readme(app, vendor, wheel, tgz, sdk, ui, changed)
+
+
+def _readme(
+    app: Path, vendor: Path, wheel: Path, tgz: Path, sdk: str, ui: str, changed: list[str]
+) -> list[str]:
+    name = tomllib.loads((app / "app.toml").read_text(encoding="utf-8"))["app"]["name"]
+    (vendor / "README.md").write_text(
+        README.format(
+            name=name,
+            sdk=sdk,
+            ui=ui,
+            wheel=wheel.name,
+            tgz=tgz.name,
+            revision=_revision(),
+            sdk_sha=_sha256(wheel),
+            ui_sha=_sha256(tgz),
+        ),
+        encoding="utf-8",
+    )
+    changed.append("vendor/README.md")
+    return changed
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("apps", nargs="*", type=Path, help="app folders (apps/<app>)")
+    parser.add_argument(
+        "--all", action="store_true", help="every app in apps/, and the app template"
+    )
+    parser.add_argument(
+        "--sdk-only", action="store_true", help="vendor the SDK wheel alone; each app keeps its ui"
+    )
+    args = parser.parse_args()
+    apps = list(args.apps)
+    if args.all:
+        apps += sorted(path for path in APPS.iterdir() if (path / "app.toml").is_file())
+        apps.append(HERE / "templates" / "app")
+    if not apps:
+        parser.error("name the app folders, or --all")
+    wheel = _one("plantcraft_sdk-*.whl")
+    tgz = None if args.sdk_only else _one("plantcraft-ui-*.tgz")
+    for app in apps:
+        if not (app / "app.toml").is_file():
+            sys.exit(f"dev/revendor: {app} has no app.toml")
+        print(f"{app.name}: " + ", ".join(revendor(app.resolve(), wheel, tgz)))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

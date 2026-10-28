@@ -1,0 +1,2 @@
+# Inputs of requirements.lock (make lock): PlantCraft Models and its pinned plantcraft-sdk (from vendor/).
+-e .

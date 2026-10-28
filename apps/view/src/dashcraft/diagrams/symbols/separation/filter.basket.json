@@ -1,0 +1,58 @@
+{
+  "id": "filter.basket",
+  "title": "Strainer",
+  "category": "separation",
+  "w": 80,
+  "h": 60,
+  "svg": "<line x1=\"0\" y1=\"20\" x2=\"26\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"54\" y1=\"20\" x2=\"80\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polygon class=\"pc-state\" points=\"26,10 54,10 54,30 26,30\" stroke-width=\"2\" stroke-linejoin=\"round\"/><polygon points=\"36,30 44,30 50,50 30,50\" stroke-width=\"2\" stroke-linejoin=\"round\"/><line x1=\"33\" y1=\"40\" x2=\"47\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-dasharray=\"4 3\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 0,
+      "y": 20,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 80,
+      "y": 20,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 64,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "strainer",
+    "Y-strainer",
+    "basket",
+    "screen"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

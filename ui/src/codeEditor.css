@@ -1,0 +1,7 @@
+/* The suite's Python editor (CodeEditor.tsx, `@plantcraft/ui/codeEditor`). */
+.pc-code { border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); overflow: hidden; max-height: 70vh; display: flex; }
+.pc-code:not(.pc-code-readonly) .cm-content, .pc-code:not(.pc-code-readonly) .cm-gutter { min-height: 260px; }
+.pc-code > .cm-editor { flex: 1; min-width: 0; max-height: 70vh; }
+.pc-code .cm-scroller { overflow: auto; }
+.pc-code:focus-within { box-shadow: var(--pc-focus-ring); }
+.pc-code.pc-code-tall, .pc-code.pc-code-tall > .cm-editor { max-height: none; height: 100%; }

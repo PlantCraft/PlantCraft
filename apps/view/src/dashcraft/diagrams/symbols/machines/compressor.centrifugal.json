@@ -1,0 +1,60 @@
+{
+  "id": "compressor.centrifugal",
+  "title": "Centrifugal compressor",
+  "category": "machines",
+  "w": 80,
+  "h": 80,
+  "svg": "<line x1=\"0\" y1=\"40\" x2=\"20\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"40\" x2=\"80\" y2=\"40\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polygon class=\"pc-state pc-run\" points=\"20,16 60,28 60,52 20,64\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "suction",
+      "x": 0,
+      "y": 40,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "discharge",
+      "x": 80,
+      "y": 40,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 84,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "run"
+  ],
+  "keywords": [
+    "compressor",
+    "centrifugal",
+    "gas",
+    "axial"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

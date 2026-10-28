@@ -1,0 +1,55 @@
+{
+  "id": "piping.reducer",
+  "title": "Reducer",
+  "category": "piping",
+  "w": 40,
+  "h": 40,
+  "svg": "<line x1=\"0\" y1=\"20\" x2=\"10\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"30\" y1=\"20\" x2=\"40\" y2=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><polygon points=\"10,8 30,14 30,26 10,32\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "large",
+      "x": 0,
+      "y": 20,
+      "dir": "w",
+      "kind": "process"
+    },
+    {
+      "id": "small",
+      "x": 40,
+      "y": 20,
+      "dir": "e",
+      "kind": "process"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 20.0,
+      "y": 44,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 20.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 40,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "reducer",
+    "expander",
+    "concentric"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

@@ -1,0 +1,30 @@
+# Floors that only rise. When a number goes up, raise its floor in the same
+# commit; never lower one (see AGENTS.md, "Tests are the gate").
+#
+# 2026-10-19: PlantCraft became the central app of the suite and its analysis
+# moved to CPMCraft. The method, hostile-frame and oracle floors moved with the
+# methods (they are CPMCraft's now), and the API and translation floors were
+# restarted on the central app's own surface. This is a restructuring, not a
+# regression: see docs/devlog.md.
+
+[api]
+# /api operations exercised with junk by tests/test_hostile_inputs.py.
+# 97 on 2026-10-20: the legacy GET /api/settings left with the Settings page (owner decision).
+operations = 97
+# Of those, API v1 operations: the contract the apps of the suite build on.
+v1_operations = 24
+# Tests in tests/contract (API v1 contract).
+contract_tests = 77
+
+[sources]
+# Data source types (PI Web API, OPC UA, CSV).
+types = 3
+
+[e2e]
+# Browser journeys in tests/e2e.
+journeys = 17
+
+[i18n]
+# Strings with a Brazilian Portuguese translation.
+frontend_pt_br = 470
+backend_pt_br = 316

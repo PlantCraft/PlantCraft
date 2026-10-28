@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/PlantCraft/plantcraft/schemas/v1/server-checkpoint.schema.json",
+  "title": "Process Plant OPC UA server checkpoint v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "benchmark_version", "namespace_uri", "catalog_digest", "seed", "start_at", "elapsed_seconds", "integration_step_seconds", "sample_seconds", "scenario_cycle_seconds"],
+  "properties": {
+    "schema": {"const": "process-plant-opcua/server-checkpoint/v1"},
+    "benchmark_version": {"const": "0.4.0"},
+    "namespace_uri": {"const": "urn:processcraft:plantcraft"},
+    "catalog_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "seed": {"type": "integer"},
+    "start_at": {"type": "string", "format": "date-time"},
+    "elapsed_seconds": {"type": "number", "minimum": 0},
+    "integration_step_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "sample_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "scenario_cycle_seconds": {"type": "number", "minimum": 600}
+  }
+}

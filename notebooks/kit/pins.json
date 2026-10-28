@@ -1,0 +1,30 @@
+{
+  "python": "3.12",
+  "release": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/",
+  "targets": [
+    {
+      "id": "windows-x64",
+      "system": "Windows",
+      "arch": "x64",
+      "file": "cpython-3.12.12+20251014-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "sha256": "3c8b9b10a933909c98b9916297e2093b24a9c2abaa23df1c2622c2bfe052cb94",
+      "platform": "x86_64-pc-windows-msvc"
+    },
+    {
+      "id": "macos-arm64",
+      "system": "macOS",
+      "arch": "Apple silicon",
+      "file": "cpython-3.12.12+20251014-aarch64-apple-darwin-install_only_stripped.tar.gz",
+      "sha256": "84cb7acbf75264982c8bdd818bfa1ff0f1eb76007b48a5f3e01d28633b46afdf",
+      "platform": "aarch64-apple-darwin"
+    },
+    {
+      "id": "linux-x64",
+      "system": "Linux",
+      "arch": "x64",
+      "file": "cpython-3.12.12+20251014-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+      "sha256": "c74addcd1b033a6e4d60ead3ab47fcc995569027e01d3061c4a934f363c4a0cf",
+      "platform": "x86_64-manylinux_2_28"
+    }
+  ]
+}

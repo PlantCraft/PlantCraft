@@ -1,0 +1,74 @@
+{
+  "id": "exchanger.plate",
+  "title": "Plate exchanger",
+  "category": "heat-transfer",
+  "w": 80,
+  "h": 100,
+  "svg": "<rect class=\"pc-state\" x=\"20\" y=\"10\" width=\"40\" height=\"80\" stroke-width=\"2\" stroke-linejoin=\"round\"/><line x1=\"26\" y1=\"14\" x2=\"26\" y2=\"86\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"32\" y1=\"14\" x2=\"32\" y2=\"86\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"38\" y1=\"14\" x2=\"38\" y2=\"86\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"44\" y1=\"14\" x2=\"44\" y2=\"86\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"50\" y1=\"14\" x2=\"50\" y2=\"86\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><line x1=\"56\" y1=\"14\" x2=\"56\" y2=\"86\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "a_in",
+      "x": 20,
+      "y": 20,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "a_out",
+      "x": 20,
+      "y": 80,
+      "dir": "w",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "b_in",
+      "x": 60,
+      "y": 80,
+      "dir": "e",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "b_out",
+      "x": 60,
+      "y": 20,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 104,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40.0,
+      "y": -4,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 80,
+      "y": 0,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [],
+  "keywords": [
+    "plate",
+    "gasketed",
+    "heat exchanger",
+    "PHE"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

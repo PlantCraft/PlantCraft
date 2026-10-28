@@ -1,0 +1,45 @@
+# What the site's chat may answer from: public pages of this repository only, as published.
+# Paths are relative to the repository's root. `core` pages go into every question's context;
+# the rest are searched and only the passages that match go in.
+
+core = [
+    "site/knowledge/facts.md",
+    "docs/product-page.md",
+]
+
+searched = [
+    "README.md",
+    "docs/suite.md",
+    "docs/glossary.md",
+    "docs/install.md",
+    "docs/install-offline.md",
+    "docs/verify-a-release.md",
+    "docs/your-data.md",
+    "docs/requirements.md",
+    "docs/en/sizing.md",
+    "docs/security-guide.md",
+    "docs/support-policy.md",
+    "docs/corporate-login.md",
+    "docs/assistant.md",
+    "docs/assistant-access.md",
+    "docs/compute.md",
+    "docs/how-we-build.md",
+    "docs/desk.md",
+    "docs/notifications.md",
+    "docs/collaboration.md",
+    "docs/en/getting-started.md",
+    "docs/en/concepts.md",
+    "docs/en/user-guide.md",
+    "docs/en/notebooks.md",
+    "apps/link/README.md",
+    "apps/historian/README.md",
+    "apps/view/README.md",
+    "apps/alarms/README.md",
+    "apps/models/README.md",
+    "apps/documents/README.md",
+    "simulator/README.md",
+    "templates/app/README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "TRADEMARKS.md",
+]

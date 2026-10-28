@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""Writes docs/images/logo.svg, logo-dark.svg, logo-mark.svg, social.svg and frontend/public/favicon.svg.
+
+The mark comes from docs/images/apps/processcraft.svg (written from ui/src/appMarks.ts by
+`node --experimental-strip-types ui/src/appMarks.render.mjs`, run that first); the wordmark is
+"Plant" in Inter Regular and "Craft" in Inter SemiBold, drawn as outlines so the files need no font.
+social.svg is the link preview (1200 x 630); docs/images/social.png is rendered from it.
+Needs fonttools and brotli (`pip install fonttools brotli`). Run from the repository root.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+from fontTools.pens.svgPathPen import SVGPathPen
+from fontTools.pens.transformPen import TransformPen
+from fontTools.ttLib import TTFont
+from fontTools.varLib.instancer import instantiateVariableFont
+
+ROOT = Path(__file__).resolve().parent.parent
+FONT = ROOT / "ui/src/fonts/inter-latin-opsz-normal.woff2"
+SIZE = 23.0
+BASELINE = 24.0
+GAP = 11.0
+INK = {"light": "#1d1d1f", "dark": "#f5f5f7"}
+
+
+def mark_inner() -> str:
+    svg = (ROOT / "docs/images/apps/processcraft.svg").read_text()
+    return re.sub(r"^.*?</title>|</svg>\s*$", "", svg, flags=re.S)
+
+
+def outline(
+    text: str, weight: int, x: float, size: float = SIZE, baseline: float = BASELINE
+) -> tuple[str, float]:
+    font = instantiateVariableFont(TTFont(FONT), {"wght": weight, "opsz": 32})
+    scale = size / font["head"].unitsPerEm
+    glyphs = font.getGlyphSet()
+    cmap = font.getBestCmap()
+    pen = SVGPathPen(glyphs, lambda v: f"{v:.2f}".rstrip("0").rstrip("."))
+    for char in text:
+        name = cmap[ord(char)]
+        glyphs[name].draw(TransformPen(pen, (scale, 0, 0, -scale, x, baseline)))
+        x += glyphs[name].width * scale
+    return pen.getCommands(), x
+
+
+def lockup(theme: str) -> str:
+    start = 32 + GAP
+    plant, x = outline("Plant", 400, start)
+    craft, end = outline("Craft", 600, x)
+    width = round(end + 1)
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} 32" width="{width * 2}" height="64" '
+        f'role="img" aria-label="PlantCraft"><title>PlantCraft</title>{mark_inner()}'
+        f'<path fill="{INK[theme]}" d="{plant}{craft}"/></svg>\n'
+    )
+
+
+def social() -> str:
+    """The link preview: the lockup, one line on what the suite is, and the app family."""
+    inner = mark_inner()
+    apps = ROOT / "docs/images/apps"
+    ids = ["desk", "histcraft", "linkcraft", "dashcraft", "alarmcraft", "modelcraft", "simcraft"]
+    plant, x = outline("Plant", 400, 240, size=92, baseline=270)
+    craft, _ = outline("Craft", 600, x, size=92, baseline=270)
+    line, _ = outline("An open suite of industrial software for process engineers", 400, 96, size=34, baseline=362)
+    tiles = "".join(
+        f'<g transform="translate({96 + i * 92} 440) scale(2.25)">'
+        + re.sub(r"^.*?</title>|</svg>\s*$", "", (apps / f"{app}.svg").read_text(), flags=re.S)
+        + "</g>"
+        for i, app in enumerate(ids)
+    )
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" '
+        'role="img" aria-label="PlantCraft"><title>PlantCraft</title>'
+        '<rect width="1200" height="630" fill="#f5f5f7"/>'
+        f'<g transform="translate(96 170) scale(3.5)">{inner}</g>'
+        f'<path fill="{INK["light"]}" d="{plant}{craft}"/>'
+        f'<path fill="#6e6e73" d="{line}"/>{tiles}</svg>\n'
+    )
+
+
+def main() -> None:
+    images = ROOT / "docs/images"
+    (images / "logo.svg").write_text(lockup("light"))
+    (images / "logo-dark.svg").write_text(lockup("dark"))
+    mark = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">{mark_inner()}</svg>\n'
+    (images / "logo-mark.svg").write_text(mark)
+    (ROOT / "frontend/public/favicon.svg").write_text(mark)
+    (images / "social.svg").write_text(social())
+    print("wrote docs/images/logo.svg, logo-dark.svg, logo-mark.svg, social.svg and frontend/public/favicon.svg")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,85 @@
+{
+  "id": "vessel.tank",
+  "title": "Storage tank (flat roof)",
+  "category": "vessels",
+  "w": 100,
+  "h": 140,
+  "svg": "<rect x=\"10\" y=\"20\" width=\"80\" height=\"110\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect class=\"pc-level\" x=\"11\" y=\"20\" width=\"78\" height=\"110\" stroke=\"none\"/><rect class=\"pc-state\" x=\"10\" y=\"20\" width=\"80\" height=\"110\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "vent",
+      "x": 50,
+      "y": 20,
+      "dir": "n",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "inlet",
+      "x": 10,
+      "y": 40,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 90,
+      "y": 120,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "drain",
+      "x": 50,
+      "y": 130,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "inlet_top",
+      "x": 90,
+      "y": 30,
+      "dir": "e",
+      "kind": "process",
+      "flow": "in"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 50.0,
+      "y": 144,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 50,
+      "y": 75,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 90,
+      "y": 10,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "level"
+  ],
+  "keywords": [
+    "tank",
+    "storage",
+    "atmospheric",
+    "flat roof",
+    "day tank"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

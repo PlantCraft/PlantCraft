@@ -1,0 +1,88 @@
+{
+  "id": "vessel.vertical",
+  "title": "Vertical vessel",
+  "category": "vessels",
+  "w": 80,
+  "h": 160,
+  "svg": "<path d=\"M20,30 A20,10 0 0 1 60,30 V130 A20,10 0 0 1 20,130 Z\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect class=\"pc-level\" x=\"21\" y=\"30\" width=\"38\" height=\"100\" stroke=\"none\"/><path class=\"pc-state\" d=\"M20,30 A20,10 0 0 1 60,30 V130 A20,10 0 0 1 20,130 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>",
+  "ports": [
+    {
+      "id": "top",
+      "x": 40,
+      "y": 20,
+      "dir": "n",
+      "kind": "process"
+    },
+    {
+      "id": "bottom",
+      "x": 40,
+      "y": 140,
+      "dir": "s",
+      "kind": "process"
+    },
+    {
+      "id": "left_upper",
+      "x": 20,
+      "y": 50,
+      "dir": "w",
+      "kind": "process"
+    },
+    {
+      "id": "right_upper",
+      "x": 60,
+      "y": 50,
+      "dir": "e",
+      "kind": "process"
+    },
+    {
+      "id": "left_lower",
+      "x": 20,
+      "y": 110,
+      "dir": "w",
+      "kind": "process"
+    },
+    {
+      "id": "right_lower",
+      "x": 60,
+      "y": 110,
+      "dir": "e",
+      "kind": "process"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 40.0,
+      "y": 164,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 40,
+      "y": 80,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 60,
+      "y": 20,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "level"
+  ],
+  "keywords": [
+    "vessel",
+    "drum",
+    "vertical",
+    "accumulator",
+    "receiver",
+    "pressure vessel"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

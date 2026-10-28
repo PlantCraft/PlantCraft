@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plantcraft-notebook"
+version = "0.2.0"
+description = "PlantCraft from a notebook: signals, series, assets and results as pandas tables"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+# Pure Python, so the same wheel runs in the browser (JupyterLite, Pyodide) and on a computer.
+dependencies = ["pandas>=1.5"]
+
+[tool.setuptools]
+packages = ["plantcraft_notebook"]

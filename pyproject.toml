@@ -1,0 +1,86 @@
+[project]
+name = "processcraft"
+version = "0.5.0"
+description = "PlantCraft: the central app of the suite for process engineers (people, sign-in, data sources, signals and assets)"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11"
+dependencies = [
+    # Token signing and the API v1 contract the apps build on; developed in sdk/python
+    # (install it first: pip install -e sdk/python).
+    "plantcraft-sdk>=0.77,<0.78",
+    # Passwords of people who sign in here (Argon2id).
+    "argon2-cffi>=23.1,<26",
+    "cryptography>=42",
+    "numpy",
+    "pandas",
+    "pydantic",
+    "requests>=2.31",
+]
+
+[project.urls]
+Homepage = "https://github.com/PlantCraft/PlantCraft"
+Repository = "https://github.com/PlantCraft/PlantCraft"
+Issues = "https://github.com/PlantCraft/PlantCraft/issues"
+
+[project.optional-dependencies]
+pi = [
+    "requests-kerberos",
+]
+server = [
+    "fastapi>=0.116,<1",
+    "itsdangerous>=2.2,<3",
+    # Corporate sign-in with OpenID Connect: the ID token's signature and claims (BSD-3).
+    "joserfc>=1.0,<2",
+    # Corporate sign-in with LDAP or Active Directory (pure Python, LGPL-3.0, used unmodified).
+    "ldap3>=2.9,<3",
+    # Desk's calendars read from Outlook, Google or any .ics (BSD-2-Clause).
+    "icalendar>=6.3,<7",
+    # Plant map as an Excel workbook (template, export and import).
+    "openpyxl>=3.1,<4",
+    "uvicorn[standard]>=0.35,<1",
+]
+opcua = [
+    "asyncua>=1.1.8,<2",
+]
+dev = [
+    "httpx>=0.27",
+    "pytest>=8",
+    "ruff==0.17.1",
+]
+# Browser journeys in tests/e2e (also needs: python -m playwright install chromium).
+e2e = [
+    "playwright>=1.48",
+]
+
+[project.scripts]
+processcraft = "processcraft.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+# The time budget every app of the suite keeps (docs/testing.md, plantcraft_sdk.pytest_budget).
+[tool.plantcraft.tests]
+test_seconds = 10
+slow_seconds = 120
+suite_seconds = 1200  # about twice a run on a 4-core container (9 min, 2026-10-25)
+
+[tool.setuptools.packages.find]
+include = ["processcraft*"]
+
+[tool.setuptools.package-data]
+"processcraft.i18n" = ["locales/*.json"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+# plantcraft_sdk (sdk/python) is first-party too.
+src = [".", "sdk/python"]
+# The apps, the Simulator and the site lint with their own settings (their pyproject.toml, their make ci).
+extend-exclude = ["frontend", "apps", "simulator", "site"]
+
+[tool.ruff.lint]
+# Keep the gate small: real errors (pyflakes), import order, and no time without a time zone
+# (DTZ: everything in UTC, owner 2026-10-23).
+select = ["F", "I", "DTZ"]

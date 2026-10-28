@@ -1,0 +1,19 @@
+include AGENTS.md
+include ATTRIBUTION.md
+include CHANGELOG.md
+include CITATION.cff
+include CLAUDE.md
+include Dockerfile
+include LICENSE
+include Makefile
+include README.md
+include ROADMAP.md
+include SECURITY.md
+include SPEC.md
+include compose.yaml
+include deploy/requirements.in
+include deploy/requirements.lock
+recursive-include docs *.md *.svg
+recursive-include src/simcraft/catalog *.csv
+recursive-include src/simcraft/profiles *.json
+recursive-include src/simcraft/schemas *.json

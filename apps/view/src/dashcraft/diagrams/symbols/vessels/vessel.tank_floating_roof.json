@@ -1,0 +1,68 @@
+{
+  "id": "vessel.tank_floating_roof",
+  "title": "Storage tank (floating roof)",
+  "category": "vessels",
+  "w": 100,
+  "h": 140,
+  "svg": "<path d=\"M10,20 V130 H90 V20\" stroke-width=\"2\" stroke-linejoin=\"round\"/><rect class=\"pc-level\" x=\"11\" y=\"30\" width=\"78\" height=\"100\" stroke=\"none\"/><path class=\"pc-state\" d=\"M10,20 V130 H90 V20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect x=\"13\" y=\"44\" width=\"74\" height=\"6\" stroke-width=\"2\" stroke-linejoin=\"round\"/>",
+  "ports": [
+    {
+      "id": "inlet",
+      "x": 10,
+      "y": 60,
+      "dir": "w",
+      "kind": "process",
+      "flow": "in"
+    },
+    {
+      "id": "outlet",
+      "x": 90,
+      "y": 120,
+      "dir": "e",
+      "kind": "process",
+      "flow": "out"
+    },
+    {
+      "id": "drain",
+      "x": 50,
+      "y": 130,
+      "dir": "s",
+      "kind": "process",
+      "flow": "out"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "tag",
+      "x": 50.0,
+      "y": 144,
+      "align": "middle",
+      "baseline": "top"
+    },
+    {
+      "id": "value",
+      "x": 50,
+      "y": 85,
+      "align": "middle",
+      "baseline": "bottom"
+    },
+    {
+      "id": "alarm",
+      "x": 90,
+      "y": 20,
+      "align": "middle",
+      "baseline": "middle"
+    }
+  ],
+  "states": [
+    "level"
+  ],
+  "keywords": [
+    "tank",
+    "storage",
+    "floating roof",
+    "crude"
+  ],
+  "standard": "ISO 10628-2",
+  "description": ""
+}

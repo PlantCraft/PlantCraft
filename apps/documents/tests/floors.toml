@@ -1,0 +1,6 @@
+# Floors that only rise. When a number goes up, raise its floor in the same
+# change; never lower one (see AGENTS.md, "Tests are the gate").
+
+[api]
+# API operations exercised with junk by tests/test_suite_rules.py.
+operations = 5

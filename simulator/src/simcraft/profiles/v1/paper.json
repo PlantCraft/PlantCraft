@@ -1,0 +1,11 @@
+{
+  "description": "Seventy-two-hour full-cadence profile for one scientific seed.",
+  "duration_seconds": 259200,
+  "history_seconds": 86400,
+  "integration_step_seconds": 1.0,
+  "max_history_values_per_node": 20000,
+  "observation_frame_seconds": 5.0,
+  "profile_id": "paper",
+  "scenario_cycle_seconds": 21600.0,
+  "schema": "process-plant-opcua/runtime-profile/v1"
+}

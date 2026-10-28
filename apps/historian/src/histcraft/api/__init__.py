@@ -1,0 +1,1 @@
+"""HistCraft web application."""
