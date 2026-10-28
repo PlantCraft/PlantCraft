@@ -5,70 +5,95 @@
 
 # PlantCraft
 
-PlantCraft is a complete, open suite for process engineers (historian, analytics, alarms,
-dashboards and process models in one place), built on four ideas:
+**Industrial software for process engineers. Spend your time on the plant, not on building the tools.**
 
-- **Open.** All the code and every method is open (Apache-2.0), and the suite is made to grow:
-  new apps for specific uses start from the [app template](templates/app) and slot in beside the
-  official ones.
-- **Secure.** It installs offline on your own servers, only ever reads the plant, publishes one
-  HTTPS port and asks for sign-in by default ([security guide](docs/security-guide.md)).
-- **LLM-first.** Creating and asking go through the assistant on every page: it builds the
-  block, the algorithm, the rule or the model, and answers questions about the plant, so the
-  engineer's time goes to finding the problems and planning the solutions, not to building the
-  tools ([product page](docs/product-page.md)).
-- **Fast.** Value in days, not months: the demo installs in about ten minutes and Analytics checks
-  every signal and loop from its first round ([sizing](docs/en/sizing.md)).
+[Website](https://plantcraft.io) · [Live demo](https://demo.plantcraft.io) · [Install](docs/install.md) ·
+[Getting started](docs/en/getting-started.md) · [Security guide](docs/security-guide.md)
 
-This repository holds the whole suite: the platform at its root (people and access, the plant's
-data sources, signals and asset tree, what every app shares), the SDK
-([`sdk/python`](sdk/python)) and the shared interface ([`ui`](ui)), and every official app in its
-own folder. Each app still builds its own image and signed package, and an installation picks
-which apps it runs. The apps reach the platform's data through API v1:
+PlantCraft is a complete, open suite: historian, analytics, alarms, dashboards and diagrams,
+process models and plant documents in one place, built to work with AI. You ask, and the
+assistant builds the method, the block, the rule or the dashboard. You go straight to where the
+plant has a problem, and plan the fix with your team.
 
-| Module | Folder | What it does |
+> ⭐ **If PlantCraft is useful to you, or you would like to see it grow, star this repository.**
+> It is the simplest way to help an open industrial project get found.
+
+## Open, Secure, LLM-first, Fast
+
+- **Open: all code and methods.** Every line of code and every method is open (Apache-2.0), with
+  no paid edition and no locked feature. A finding says how it was reached, and the algorithm
+  behind it is blocks and Python you can read, change and share. Apps work together only through
+  what they publish, so a new app for your process, your research or your client starts from the
+  [app template](templates/app) and slots in beside the official ones.
+- **Secure: offline, read-only.** It installs from one signed bundle with no internet, never
+  writes to a DCS, PLC or historian, publishes one HTTPS port and asks for sign-in by default.
+  No language model is called until an administrator sets one up. The
+  [security guide](docs/security-guide.md) maps it to the Purdue model and IEC 62443.
+- **LLM-first: ask, don't build.** Every page has an assistant that proposes the block, the
+  algorithm, the alarm rule or the model with its fields filled in, and answers questions from
+  the plant's own data, results and documents. Your own AI can read the plant too, through a
+  read-only MCP server ([assistant access](docs/assistant-access.md)).
+- **Fast: value in days, not months.** The demo suite installs from the offline bundle in about
+  ten minutes, and Analytics checks every loop and signal from its first round, the worst first,
+  each with a sentence that says why ([sizing](docs/en/sizing.md)).
+
+## The suite
+
+One platform, every plant tool. Each app runs in its own container and shares the same people,
+plant assets, signals and look; an installation picks the apps it needs.
+
+| App | Folder | What it does |
 | --- | --- | --- |
 | PlantCraft Analytics | [`apps/link`](apps/link) | Checks every signal for bad data and every control loop for oscillation, sticking and manual mode, runs process models (FMUs) beside the plant, and says why |
 | PlantCraft Historian | [`apps/historian`](apps/historian) | The data layer: every plant connection (OPC UA, PI Web API, MQTT, Modbus TCP, SQL, CSV) and every history, read-only toward the plant |
-| PlantCraft View | [`apps/view`](apps/view) | Dashboards, scheduled reports and saved trends of any signal, shared with people or by a public link |
+| PlantCraft View | [`apps/view`](apps/view) | Dashboards, process diagrams, scheduled reports and saved trends of any signal, shared with people or by a public link |
 | PlantCraft Alarms | [`apps/alarms`](apps/alarms) | Rules that raise ISA-18.2 alarms and alerts from signals and results, the Active list, history and alarm performance |
 | PlantCraft Models | [`apps/models`](apps/models) | Block-diagram models (Modelica underneath): draw or write them, simulate them on plant data, run studies and export FMUs |
+| PlantCraft Documents | [`apps/documents`](apps/documents) | The plant's documents in one library (manuals, P&IDs, procedures, maintenance records), linked to the assets and searched by words and meaning; the assistant cites document, revision and page |
 | PlantCraft Simulator | [`simulator`](simulator) | The simulated plant (OPC UA) behind the demo and the benchmarks |
 | App template | [`templates/app`](templates/app) | StarterCraft, the starting point for an app of your own: rules, tests and prompts for Claude Code, tried inside PlantCraft with `make dev` |
 
 Desk (each person's day) and Notebooks (JupyterLab with the plant's data) are part of the
-platform itself. Ports, prefixes and versions: [docs/suite.md](docs/suite.md).
+platform itself, at the root of this repository with the SDK ([`sdk/python`](sdk/python)) and the
+shared interface ([`ui`](ui)). Ports, prefixes and versions: [docs/suite.md](docs/suite.md).
 
-**New here?** [Install PlantCraft](docs/install.md) on Linux, macOS or Windows, then take the
-[Getting started](docs/en/getting-started.md) tour of the demo plant.
+## Try it
 
-PlantCraft only reads the plant: it never writes to a controller, changes
-tuning or alters the process. Everything installs on premises and works
-offline.
+- **In your browser:** the [live demo](https://demo.plantcraft.io) runs the whole suite on a
+  simulated plant.
+- **On your own server:** [install PlantCraft](docs/install.md) from the offline bundle on Linux,
+  macOS or Windows (`./install.sh --demo` adds the demo plant), then take the
+  [Getting started](docs/en/getting-started.md) tour.
+- **Questions:** ask the chat on [plantcraft.io](https://plantcraft.io), or write to
+  [info@plantcraft.io](mailto:info@plantcraft.io).
 
-## Features
+## Documentation
 
-- **Sign-in and people.** Individual passwords, four access levels (admin,
-  editor, viewer, dashboards only) and, per person, the apps they may open.
-- **The launcher.** The home page lists the apps installed beside PlantCraft
-  (`PLANTCRAFT_APPS`) with each person's access.
-- **API v1 for the apps.** Short-lived signed tokens, app keys for background
-  work, the asset tree, signals and history, and a central audit log. The
-  contract is in [docs/api-v1.md](docs/api-v1.md); apps build on
-  [`sdk/python`](sdk/python) (`plantcraft-sdk`).
-- **Data sources.** OPC UA Historical Access, PI Web API and CSV, with a local
-  history cache and encrypted source credentials.
-- **Signals and assets.** Choose the signals the suite uses, link them to
-  assets with a role (a loop's `pv`, `sp`, `op`...), and organize the plant in
-  folders.
-- **Plant map.** Import or export the whole map (assets, signals, loops,
-  sources) as Excel or JSON, with a preview before anything changes.
-- **AI assistant access.** A read-only MCP server, off by default: each person connects their
-  own assistant with a token of theirs and it reads exactly what they may read
-  ([docs/assistant-access.md](docs/assistant-access.md)).
-- **English** interface, with a Brazilian Portuguese translation in progress.
+Start with [Install PlantCraft](docs/install.md), the [Getting started](docs/en/getting-started.md)
+tour, [the suite at a glance](docs/suite.md) and [how we build](docs/how-we-build.md). The full
+index is in [docs/README.md](docs/README.md). The user guides are also in the app, under **Help**.
 
-## Quick start
+## Built with AI, in the open
+
+PlantCraft is written almost entirely by [Claude Code](https://claude.com/claude-code), directed by
+a process engineer who decides what to build, reviews the results and owns every decision. We say
+so openly: it is how industrial software can reach researchers and process engineers who would
+never get a licence for it, and it is why the rules are strict. One standard for every module,
+tests that fail on network access, junk input, upward imports and slow tests, oracles on public
+data, and a security audit per stage ([AGENTS.md](AGENTS.md), [how we build](docs/how-we-build.md)).
+
+## Contributing
+
+Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). In short, `make ci` (ruff,
+pytest and the frontend build) before every push. To report a vulnerability, see
+[SECURITY.md](SECURITY.md). Everyone in the project follows the [code of conduct](CODE_OF_CONDUCT.md);
+supported versions and how API v1 changes are in the [support policy](docs/support-policy.md).
+
+PlantCraft is in alpha. If it helps you, ⭐ **star the repository** and tell us what you run it on.
+
+## For developers
+
+### Run it from source
 
 Requirements: Python 3.11+, and Node.js 22 to build the interface.
 
@@ -112,7 +137,7 @@ processcraft --scenario scenarios/generic_demo.json --browser
 For a production installation (PI Web API, Kerberos, systemd, backups) see
 [docs/deployment.md](docs/deployment.md).
 
-## Command line
+### Command line
 
 | Command | What it does |
 | --- | --- |
@@ -127,7 +152,7 @@ For a production installation (PI Web API, Kerberos, systemd, backups) see
 
 Every subcommand takes `--scenario` (default: `PLANTCRAFT_SCENARIO`).
 
-## Configuration
+### Configuration
 
 PlantCraft is configured by a scenario file (data source, loops, storage; see
 `scenarios/`) and by environment variables:
@@ -158,13 +183,7 @@ The Simulator, the demo plant, has its own `PLANTCRAFT_*` variables (see
 [docs/opcua-simulator.md](docs/opcua-simulator.md) and `simulator/`). Each app
 of the suite has its own settings in its folder (`apps/<app>/README.md`).
 
-## Languages
-
-English is the default language. A Brazilian Portuguese translation covers part of the
-interface and is being completed: choose **Português** in the language menu, or let the browser's
-`Accept-Language` header pick it.
-
-## Architecture
+### Architecture
 
 The backend is a Python package (`processcraft/`) with a FastAPI API; the
 interface is React + TypeScript (`frontend/`); state lives in one local SQLite
@@ -180,61 +199,7 @@ enforces:
 
 Details in [docs/architecture.md](docs/architecture.md).
 
-## Documentation
-
-Start with [Install PlantCraft](docs/install.md), the [Getting started](docs/en/getting-started.md)
-tour, [the suite at a glance](docs/suite.md) and [how we build](docs/how-we-build.md).
-The full index is in [docs/README.md](docs/README.md); the current state is in
-[docs/STATUS.md](docs/STATUS.md). The user guides are also available in the app
-under **Help**.
-
-## Project status
-
-Alpha. PlantCraft was a single application with loop monitoring, data
-quality, dashboards and collaboration inside it; it is now the central app, and
-loop monitoring lives in PlantCraft Analytics. The earlier monolith is kept in this
-repository's history.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). In short: `make ci` (ruff, pytest and
-the frontend build) before every push, and every user-facing string in English
-with its Brazilian Portuguese entry in the same change. To report a
-vulnerability, see [SECURITY.md](SECURITY.md). Everyone in the project follows the
-[code of conduct](CODE_OF_CONDUCT.md); supported versions and how API v1 changes are in the
-[support policy](docs/support-policy.md).
-
-## How it is built
-
-PlantCraft is **vibe coded**: written almost entirely by [Claude Code](https://claude.com/claude-code)
-(Anthropic's Claude Opus 5.5 model), directed by a process engineer who decides what to build,
-reviews the results and owns every decision. We say so openly. It is how one person with an AI
-agent can bring industrial software within reach of researchers and process engineers who would
-never get a licence for it, and it is why the rules are strict: one standard for every module,
-tests that fail on network access, junk input, upward imports and slow tests, oracles on public
-data, and a security audit per stage ([AGENTS.md](AGENTS.md)). The suite is also meant to be
-used with AI: **Copy as prompt** on methods, blocks, models and the plant map import, and a
-read-only MCP server a person's own AI assistant reads the plant through
-([assistant-access.md](docs/assistant-access.md)), both with the language model off until IT says
-otherwise. More in [How we build](docs/how-we-build.md).
-
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The names and logos are not
 part of the license: see [TRADEMARKS.md](TRADEMARKS.md).
-
-## Português
-
-O PlantCraft é uma suíte completa para engenheiros de processo, apoiada em três pilares:
-**aberta** (todo o código e todos os métodos abertos, e novos apps para aplicações específicas
-criados com facilidade), **segura** (offline, só leitura na planta, login por padrão) e
-**baseada em LLM** (criar e perguntar pelo assistente, para o engenheiro gastar o tempo achando
-os problemas e planejando as soluções, não construindo ferramentas). O app central reúne pessoas e acesso, fontes de dados, sinais e a árvore de ativos da
-planta, instalado na própria planta. Os módulos da suíte (como o PlantCraft Analytics, para o
-desempenho de malhas) rodam ao lado dele. A suíte é feita com IA (Claude Code, vibe coding),
-às claras, para dar a pesquisadores e engenheiros de processo acesso rápido a software
-industrial, e foi pensada para ser usada com IA ("Copiar como prompt" e um servidor MCP somente
-leitura, desligado por padrão): veja [como construímos](docs/how-we-build.md). O guia de
-segurança para TI e automação está em [português](docs/pt-BR/security-guide.md). A interface tem tradução completa
-para o português do Brasil (menu de idioma). Os guias do usuário em português
-estão em [docs/pt-BR](docs/pt-BR/).
