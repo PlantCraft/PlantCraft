@@ -14,7 +14,12 @@ OWNER="${OWNER:-PlantCraft}"
 REPO="${REPO:-PlantCraft}"
 # The repositories that had their own runner before every app moved into processcraft (apps/).
 FORMER="linkcraft dashcraft plantcraft histcraft alarmcraft modelcraft"
-export SUITE_DIR="${SUITE_DIR:-$HOME/PlantCraft}"
+# The installed suite: ~/PlantCraft, or ~/ProcessCraft where it was installed before the rename.
+if [ -z "${SUITE_DIR:-}" ]; then
+    SUITE_DIR="$HOME/PlantCraft"
+    [ -f "$SUITE_DIR/compose.yaml" ] || [ ! -f "$HOME/ProcessCraft/compose.yaml" ] || SUITE_DIR="$HOME/ProcessCraft"
+fi
+export SUITE_DIR
 compose() { docker compose -f compose.yaml "$@"; }
 
 command -v docker >/dev/null || { echo "Docker Desktop is not running or not installed."; exit 1; }

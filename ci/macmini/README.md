@@ -71,7 +71,7 @@ runners after a reboot.
   mini is offline, deploy jobs wait in the queue (for up to 24 h), so use `--off` before a long
   shutdown.
 
-The suite is expected in `~/PlantCraft`. For another prefix, run
+The suite is expected in `~/PlantCraft` (or `~/ProcessCraft`, where it was installed before the rename). For another prefix, run
 `SUITE_DIR=/path ci/macmini/setup.sh`.
 
 ## Memory: one job at a time per slot
