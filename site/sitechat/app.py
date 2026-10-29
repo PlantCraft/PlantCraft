@@ -19,6 +19,9 @@ SITE_STATS_PASSWORD    the password of /stats, the owner's stats page (or SITE_S
 SITE_STATS_TIMEZONE    the time zone /stats counts days in (default UTC)
 SITE_DEMO_STATS_URL    the public demo's GET /api/demo/stats, shown on /stats (optional), with
 SITE_DEMO_STATS_KEY_FILE  a file holding the demo's PLANTCRAFT_PUBLIC_DEMO_STATS_KEY
+
+/stats also shows the host's health ("Server now") from SITE_DATA_DIR/health.jsonl, which
+`python -m sitechat watch` writes (health.py; WATCH_* settings there).
 """
 
 from __future__ import annotations
@@ -39,7 +42,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ValidationError
 
-from . import chat
+from . import chat, health
 from .contacts import Contact, Inbox
 from .guard import MAX_HISTORY, MAX_MESSAGE, MAX_TURNS, Limits, Window
 from .knowledge import Knowledge
@@ -302,7 +305,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             visits.clicks(start),
             journeys(views, visits.clicked(start), demo),
         )
-        return HTMLResponse(render(data, zone, now))
+        return HTMLResponse(render(data, zone, now, health.now(settings.data_dir, now)))
+
+    @app.get("/stats/now.json")
+    def stats_now(request: Request):
+        """The server's health and who is on the site and in the demo now, for a script."""
+        refused = owner(request)
+        if refused is not None:
+            return refused
+        now = time.time()
+        demo = settings.demo_stats.read(1)
+        live = health.now(settings.data_dir, now)
+        return {
+            "at": now,
+            "site_now": len(
+                {v["visitor"] for v in visits.since(now - 86400) if now - v["last_seen"] <= 75}
+            ),
+            "demo_now": demo.get("now") if isinstance(demo, dict) else demo,
+            "health": {k: live[k] for k in ("last", "stale", "traffic", "open", "alerts")},
+        }
 
     @app.get("/stats/events.csv")
     def events(request: Request):

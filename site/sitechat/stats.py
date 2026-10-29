@@ -273,7 +273,151 @@ def _when(value: str, tz: ZoneInfo) -> str:
     return datetime.fromtimestamp(stamp, tz).strftime("%d/%m %H:%M") if stamp else ""
 
 
-def render(data: dict, tz: ZoneInfo, now: float | None = None) -> str:
+def _bytes(n: float) -> str:
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if n < 1024 or unit == "TB":
+            return f"{n:.0f} {unit}" if unit in ("B", "KB", "MB") else f"{n:.1f} {unit}"
+        n /= 1024
+    return ""
+
+
+def _spark(points: list[tuple[float, float]], top: float | None = None) -> str:
+    """A small line of the last two hours (an SVG: no script, the page's CSP stays strict)."""
+    points = [(t, v) for t, v in points if v is not None]
+    if len(points) < 2:
+        return ""
+    t0, t1 = points[0][0], points[-1][0]
+    high = top or max(v for _, v in points) or 1
+    xy = " ".join(
+        f"{100 * (t - t0) / max(t1 - t0, 1):.1f},{30 - 28 * min(v / high, 1):.1f}"
+        for t, v in points
+    )
+    return (
+        "<svg class='spark' viewBox='0 0 100 31' preserveAspectRatio='none' aria-hidden='true'>"
+        f"<polyline points='{xy}' fill='none' vector-effect='non-scaling-stroke'/></svg>"
+    )
+
+
+def _tile(value: str, label: str, spark: str = "", state: str = "") -> str:
+    cls = f"tile {state}".strip()
+    return f"<div class='{cls}'><b>{escape(value)}</b><span>{escape(label)}</span>{spark}</div>"
+
+
+def health_html(health: dict | None, tz: ZoneInfo, now: float) -> str:
+    """The "Now" panel: the server, the services, the answers and the alerts (health.py)."""
+    if health is None:
+        return ""
+    e = escape
+    last = health["last"]
+    if last is None:
+        return (
+            "<h2>Server now</h2><p class='muted'>No health samples yet: the watch "
+            "(plantcraft-watch) is not running on this host.</p>"
+        )
+    series = health["series"]
+    head = ""
+    if health["stale"]:
+        head = (
+            f"<p class='alert'>The last health sample is from "
+            f"{e(_duration(now - last['at']))} ago: the watch (plantcraft-watch) stopped.</p>"
+        )
+    if health["open"]:
+        head += "".join(
+            f"<p class='alert'>{e(_when_ts(a['at'], tz))} {e(a['line'])}</p>"
+            for a in health["open"]
+        )
+    elif not health["stale"]:
+        head += "<p class='ok'>All good: every check passes.</p>"
+    mem, disk = last["memory"], last["disk"]
+    cpu = last.get("cpu")
+    mem_pct = 100 * mem["used"] / max(mem["total"], 1)
+    disk_free = 100 * disk["free"] / max(disk["total"], 1)
+    t = health["traffic"]
+    tiles = [
+        _tile(
+            "–" if cpu is None else f"{cpu:.0f}%",
+            f"CPU ({last['cores']} cores, load {last['load'][0]:.1f})",
+            _spark([(s["at"], s.get("cpu")) for s in series], 100),
+            "warn" if (cpu or 0) >= 85 else "",
+        ),
+        _tile(
+            f"{mem_pct:.0f}%",
+            f"memory: {_bytes(mem['used'])} of {_bytes(mem['total'])}",
+            _spark([(s["at"], s["memory"]["used"]) for s in series], mem["total"]),
+            "warn" if mem_pct >= 90 else "",
+        ),
+        _tile(
+            f"{disk_free:.0f}%",
+            f"disk free: {_bytes(disk['free'])} of {_bytes(disk['total'])}",
+            "",
+            "warn" if disk_free < 15 else "",
+        ),
+    ]
+    if t is not None:
+        per_min = [
+            (
+                b["at"],
+                ((b["tunnel"]["requests"] - a["tunnel"]["requests"]) or 0)
+                / max((b["at"] - a["at"]) / 60, 1e-9),
+            )
+            for a, b in zip(series, series[1:])
+            if a.get("tunnel")
+            and b.get("tunnel")
+            and b["tunnel"]["requests"] >= a["tunnel"]["requests"]
+        ]
+        tiles.append(
+            _tile(
+                f"{t['per_minute']:.0f}/min",
+                f"requests (site + demo, last 5 min); {t['error_pct']:.1f}% errors (5xx)",
+                _spark(per_min),
+                "warn" if t["error_pct"] >= 5 and t["requests"] >= 30 else "",
+            )
+        )
+    probes = "".join(
+        f"<tr><th>{e(p['name'])}</th><td class='{'bad' if not 200 <= p['code'] < 400 else ''}'>"
+        f"{p['code'] or 'no answer'}</td><td>{p['seconds'] * 1000:.0f} ms</td><td>"
+        + _spark(
+            [(s["at"], q["seconds"]) for s in series for q in s["probes"] if q["name"] == p["name"]]
+        )
+        + "</td></tr>"
+        for p in last["probes"]
+    )
+    wanted = [c for c in last["containers"] if c["wanted"]]
+    up = [c for c in wanted if c["state"] == "running" and c["health"] != "unhealthy"]
+    services = "".join(
+        f"<tr><th>{e(c['name'])}</th><td class='{'' if c in up else 'bad'}'>{e(c['state'])}"
+        f"{' · ' + e(c['health']) if c['health'] else ''}</td><td>{c['cpu']:.0f}%</td>"
+        f"<td>{_bytes(c['mem'])}</td><td>{c['restarts']}</td></tr>"
+        for c in sorted(wanted, key=lambda c: (c in up, -c["cpu"]))
+    )
+    host_units = ", ".join(f"{n} {s}" for n, s in last["units"].items())
+    alerts = (
+        "".join(
+            f"<li><time>{e(_when_ts(a['at'], tz))}</time> "
+            f"{'<em>back</em> ' if a['state'] == 'ok' else ''}{e(a['line'])}</li>"
+            for a in health["alerts"]
+        )
+        or "<li class='muted'>No alerts in the last 7 days.</li>"
+    )
+    return f"""<h2>Server now</h2>
+{head}
+<div class="tiles server">{"".join(tiles)}</div>
+<div class="cols">
+<section><h3>Answers (checked every 30 s)</h3><div class="scroll"><table>
+<tr><th></th><th>Code</th><th>Time</th><th>Last 2 h</th></tr>{probes}</table></div></section>
+<section><h3>Last alerts</h3><ul class="list">{alerts}</ul></section>
+</div>
+<details><summary><b>{len(up)} of {len(wanted)}</b> services running · host: {e(host_units)}</summary>
+<div class="scroll"><table><tr><th>Service</th><th>State</th><th>CPU</th><th>Memory</th>
+<th>Restarts</th></tr>{services}</table></div></details>
+<p class="muted">Sample of {e(_when_ts(last["at"], tz))}. Lines: the last 2 hours.</p>"""
+
+
+def _when_ts(stamp: float, tz: ZoneInfo) -> str:
+    return datetime.fromtimestamp(stamp, tz).strftime("%d/%m %H:%M:%S")
+
+
+def render(data: dict, tz: ZoneInfo, now: float | None = None, health: dict | None = None) -> str:
     now = time.time() if now is None else now
     e = escape
     demo_now = data["demo_now"]
@@ -340,16 +484,17 @@ def render(data: dict, tz: ZoneInfo, now: float | None = None) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<meta http-equiv="refresh" content="60">
+<meta http-equiv="refresh" content="30">
 <title>Stats · PlantCraft</title>
 <link rel="stylesheet" href="assets/stats.css">
 </head>
 <body>
 <main>
 <h1>PlantCraft stats</h1>
-<p class="muted">{e(stamp)} ({e(str(tz))}). Refreshes every minute. No addresses are kept:
+<p class="muted">{e(stamp)} ({e(str(tz))}). Refreshes every 30 s. No addresses are kept:
 a visitor is one browser on one day.</p>
 <div class="tiles">{"".join(tiles)}</div>
+{health_html(health, tz, now)}
 <h2>In short</h2>
 <div class="scroll"><table>
 <tr><th></th><th>Site visitors</th><th>Time on the site</th><th>Demo visits</th>

@@ -525,3 +525,145 @@ def test_the_demo_is_asked_with_its_key_and_a_user_agent_of_its_own(monkeypatch)
 
     monkeypatch.setattr(stats.urllib.request, "urlopen", refuse)
     assert source.read() == "not reachable (HTTP 403)"
+
+
+# --- the server's health (health.py) ------------------------------------------------------------
+
+
+def _sample(at, **over):
+    sample = {
+        "at": at,
+        "cpu": 20.0,
+        "cores": 4,
+        "load": [0.5, 0.4, 0.3],
+        "memory": {"total": 16 * 2**30, "used": 6 * 2**30, "swap_used": 0},
+        "disk": {"total": 200 * 2**30, "free": 120 * 2**30},
+        "containers": [
+            {
+                "name": "processcraft",
+                "state": "running",
+                "health": "healthy",
+                "restarts": 0,
+                "wanted": True,
+                "cpu": 12.0,
+                "mem": 2**30,
+            },
+            {
+                "name": "ops-backup",
+                "state": "exited",
+                "health": "",
+                "restarts": 0,
+                "wanted": False,
+                "cpu": 0.0,
+                "mem": 0.0,
+            },
+        ],
+        "units": {"cloudflared": "active", "plantcraft-site": "active"},
+        "probes": [
+            {"name": "demo (internet)", "url": "https://demo.example/", "code": 200, "seconds": 0.4}
+        ],
+        "tunnel": {"requests": at, "errors": 0.0},
+    }
+    sample.update(over)
+    return sample
+
+
+def test_a_healthy_sample_has_no_problem_and_one_offs_are_not_watched():
+    from sitechat.health import problems
+
+    assert problems(_sample(1000), _sample(970), []) == {}
+
+
+def test_problems_are_named_and_alert_once_when_they_last_then_once_when_gone():
+    from sitechat.health import Alerts, problems
+
+    down = _sample(1000)
+    down["probes"][0].update(code=502)
+    down["containers"][0].update(state="restarting")
+    down["units"]["cloudflared"] = "failed"
+    found = problems(down, _sample(970), [])
+    assert sorted(found) == ["container:processcraft", "probe:demo (internet)", "unit:cloudflared"]
+    assert "HTTP 502" in found["probe:demo (internet)"][1]
+
+    sent = []
+    alerts = Alerts(sent.extend)
+    assert alerts.update(found) == []  # one sample is not an outage yet
+    assert {a["key"] for a in alerts.update(found)} == set(found)
+    assert alerts.update(found) == []  # said once
+    back = alerts.update({})
+    assert {a["state"] for a in back} == {"ok"} and len(back) == 3
+    assert len(sent) == 6
+
+
+def test_a_restart_full_disk_and_5xx_share_are_problems():
+    from sitechat.health import problems, traffic
+
+    now = _sample(1300, disk={"total": 100, "free": 5})
+    now["containers"][0]["restarts"] = 1
+    recent = [_sample(1000 + 30 * i) for i in range(10)]
+    recent[-1]["tunnel"] = {"requests": 1270.0, "errors": 0.0}
+    now["tunnel"] = {"requests": 1300.0, "errors": 30.0}  # 10% of 300
+    found = problems(now, recent[-1], recent)
+    assert {"restart:processcraft", "disk", "errors"} <= set(found)
+    # A counter that went down: cloudflared restarted; it counts from zero again.
+    rate = traffic([_sample(0), _sample(60, tunnel={"requests": 30.0, "errors": 3.0})])
+    assert rate["requests"] == 30 and rate["error_pct"] == 10
+
+
+def test_an_alert_is_a_push_with_a_link_to_the_stats(monkeypatch):
+    from sitechat import health
+
+    sent = []
+    monkeypatch.setattr(
+        health.urllib.request,
+        "urlopen",
+        lambda r, timeout: sent.append(r) or __import__("io").BytesIO(),
+    )
+    notify = health.Notifier("https://ntfy.sh/topic", "me@example.com", "plant.example")
+    notify([{"key": "disk", "state": "problem", "line": "disk 5% free"}])
+    request = sent[0]
+    assert request.full_url == "https://ntfy.sh/topic" and request.data == b"PROBLEM: disk 5% free"
+    assert request.get_header("Priority") == "high"
+    assert request.get_header("Click") == "https://plant.example/stats"
+    assert request.get_header("Email") == "me@example.com"
+    health.Notifier("")([{"key": "disk", "state": "ok", "line": "x"}])  # no topic: only the log
+    assert len(sent) == 1
+
+
+def test_stats_page_shows_the_server_now(tmp_path, knowledge):
+    import time
+
+    now = time.time()
+    rows = [_sample(now - 600 + 30 * i) for i in range(20)]
+    rows[-1]["containers"][0].update(state="restarting")
+    (tmp_path / "health.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    (tmp_path / "alerts.jsonl").write_text(
+        json.dumps(
+            {
+                "at": now - 30,
+                "key": "container:processcraft",
+                "state": "problem",
+                "line": "processcraft is restarting",
+            }
+        )
+        + "\n"
+    )
+    c = client(tmp_path, knowledge, stats_password="s3cret")
+    page = _stats(c).text
+    assert "Server now" in page and "processcraft is restarting" in page
+    assert "0 of 1</b> services running" in page and "ops-backup" not in page
+    assert "<svg class='spark'" in page and "requests (site + demo" in page
+    r = c.get("/stats/now.json", auth=("x", "s3cret"))
+    assert r.status_code == 200
+    body = r.json()
+    assert (
+        body["health"]["stale"] is False
+        and body["health"]["open"][0]["key"] == "container:processcraft"
+    )
+    assert c.get("/stats/now.json").status_code == 401
+
+
+def test_stats_page_says_when_the_watch_stopped(tmp_path, knowledge):
+    (tmp_path / "health.jsonl").write_text(json.dumps(_sample(1000.0)) + "\n")
+    c = client(tmp_path, knowledge, stats_password="s3cret")
+    assert "the watch (plantcraft-watch) stopped" in _stats(c).text

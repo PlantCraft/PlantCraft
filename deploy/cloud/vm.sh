@@ -8,7 +8,9 @@
 #   vm.sh tunnel-login  the same without the dashboard: one sign-in link, then the tunnel, its DNS
 #                     names (SITE_HOST, DEMO_HOST) and routes are made here
 #   vm.sh chat-key    asks for the chat's language model key (never on the command line)
-#   vm.sh site        builds the site and (re)starts its server at 127.0.0.1:8090
+#   vm.sh site        builds the site and (re)starts its server at 127.0.0.1:8090, and the watch
+#   vm.sh watch       (re)starts the watch only: the host's health on /stats, alerts by push
+#   vm.sh alerts      prints the alerts' ntfy topic (subscribe in the ntfy app) and sends a test
 #   vm.sh demo        builds the bundle here and installs or updates the suite with --public-demo,
 #                     published on 127.0.0.1:443 only, behind the tunnel
 #   vm.sh all         setup, site and demo
@@ -158,6 +160,42 @@ stats_secrets() { # the stats page's password and the key it reads the demo's nu
     return 0
 }
 
+watch() { # the host's health for /stats and the alerts (site/sitechat/health.py)
+    [ -x "$SITE_HOME/venv/bin/python" ] || die "run vm.sh site first"
+    if [ ! -f "$CONF/watch.env" ]; then
+        local topic
+        topic="plantcraft-$(head -c 32 /dev/urandom | base64 | tr -dc 'a-z0-9' | head -c 18)"
+        (umask 077 && cat >"$CONF/watch.env" <<EOF
+# The watch (vm.sh watch). Edit, then: systemctl restart plantcraft-watch
+SITE_DATA_DIR=$SITE_DATA
+WATCH_SITE_HOST=$SITE_HOST
+WATCH_DEMO_HOST=$DEMO_HOST
+# Alerts are pushed to this ntfy topic: subscribe to it in the ntfy app (vm.sh alerts). Its name
+# is the secret; empty: alerts go only to the log (journalctl -u plantcraft-watch).
+WATCH_NTFY_URL=https://ntfy.sh/$topic
+# An e-mail address ntfy also sends each alert to (optional).
+WATCH_EMAIL=
+EOF
+        )
+    fi
+    install -m 0644 "$SRC/deploy/cloud/plantcraft-watch.service" /etc/systemd/system/
+    systemctl daemon-reload
+    systemctl enable -q plantcraft-watch
+    systemctl restart plantcraft-watch
+    log "watch running: the server's health on https://$SITE_HOST/stats; vm.sh alerts for the phone"
+}
+
+alerts() {
+    [ -f "$CONF/watch.env" ] || die "run vm.sh watch first"
+    local url
+    url="$(sed -n 's/^WATCH_NTFY_URL=//p' "$CONF/watch.env")"
+    [ -n "$url" ] || die "no WATCH_NTFY_URL in $CONF/watch.env"
+    printf 'Alerts topic: %s\n' "$url"
+    printf 'Phone: install the ntfy app, tap +, topic %s (server ntfy.sh)\n' "${url##*/}"
+    curl -fsS -H "Title: PlantCraft test alert" -d "If you read this, the alerts reach you." "$url" >/dev/null &&
+        log "test alert sent"
+}
+
 site() {
     local flags=(--demo-url "https://$DEMO_HOST/")
     [ -n "$CONTACT" ] && flags+=(--contact "$CONTACT")
@@ -208,6 +246,7 @@ EOF
     systemctl enable -q plantcraft-site
     systemctl restart plantcraft-site
     log "site at http://127.0.0.1:8090 (https://$SITE_HOST through the tunnel)"
+    watch
 }
 
 set_env() { # set_env KEY VALUE: in the installation's .env
@@ -255,7 +294,7 @@ demo() {
 }
 
 status() {
-    systemctl --no-pager --lines=0 status cloudflared plantcraft-site || true
+    systemctl --no-pager --lines=0 status cloudflared plantcraft-site plantcraft-watch || true
     [ -f "$SUITE/.env" ] && docker compose --project-directory "$SUITE" --env-file "$SUITE/.env" ps \
         --format 'table {{.Service}}\t{{.Status}}'
     printf 'site: %s\n' "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8090/)"
@@ -272,8 +311,10 @@ case "${1:-}" in
         ;;
     chat-key) chat_key ;;
     site) site ;;
+    watch) watch ;;
+    alerts) alerts ;;
     demo) demo ;;
     all) setup && site && demo ;;
     status) status ;;
-    *) sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 1 ;;
+    *) sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac

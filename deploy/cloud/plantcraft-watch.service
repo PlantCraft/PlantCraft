@@ -1,0 +1,21 @@
+# The watch of PlantCraft's site and demo host (site/sitechat/health.py), installed by
+# deploy/cloud/vm.sh site: every 30 s the machine, the containers and the answers, for the "Server
+# now" panel of /stats, and a push (ntfy) when something stays wrong. Root: it asks Docker.
+[Unit]
+Description=PlantCraft watch (host health for /stats, alerts)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/plantcraft-site/watch.env
+ExecStart=/opt/plantcraft-site/venv/bin/python -m sitechat watch
+Restart=always
+RestartSec=10
+Nice=10
+MemoryMax=192M
+NoNewPrivileges=yes
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
