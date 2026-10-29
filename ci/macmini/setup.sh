@@ -14,7 +14,12 @@ OWNER="${OWNER:-PlantCraft}"
 REPO="${REPO:-PlantCraft}"
 # The repositories that had their own runner before every app moved into processcraft (apps/).
 FORMER="linkcraft dashcraft plantcraft histcraft alarmcraft modelcraft"
-export SUITE_DIR="${SUITE_DIR:-$HOME/PlantCraft}"
+# The installed suite: ~/PlantCraft, or ~/ProcessCraft where it was installed before the rename.
+if [ -z "${SUITE_DIR:-}" ]; then
+    SUITE_DIR="$HOME/PlantCraft"
+    [ -f "$SUITE_DIR/compose.yaml" ] || [ ! -f "$HOME/ProcessCraft/compose.yaml" ] || SUITE_DIR="$HOME/ProcessCraft"
+fi
+export SUITE_DIR
 compose() { docker compose -f compose.yaml "$@"; }
 
 command -v docker >/dev/null || { echo "Docker Desktop is not running or not installed."; exit 1; }
@@ -95,11 +100,14 @@ for i in "${!runners[@]}"; do
     fi
     token=""
     # Registered for another repository (the suite moved to $OWNER/$REPO): registered again here.
-    if ! docker run --rm -v "processcraft-ci_$service:/runner" --entrypoint grep \
-        processcraft-ci-runner:latest -qi "github.com/$OWNER/$REPO\"" /runner/.runner; then
+    # (.runner, or .runner_migrated once the runner has renamed it on its own.)
+    if ! docker run --rm -v "processcraft-ci_$service:/runner" --entrypoint sh \
+        processcraft-ci-runner:latest -c 'grep -qsi "$1" /runner/.runner /runner/.runner_migrated' \
+        sh "github.com/$OWNER/$REPO\""; then
         compose --profile "$service" rm -sf "$service" >/dev/null 2>&1 || true
         docker run --rm -v "processcraft-ci_$service:/runner" --entrypoint rm \
-            processcraft-ci-runner:latest -f /runner/.runner /runner/.credentials /runner/.credentials_rsaparams
+            processcraft-ci-runner:latest -f /runner/.runner /runner/.runner_migrated /runner/.credentials \
+            /runner/.credentials_migrated /runner/.credentials_rsaparams
         token="$(gh api -X POST "repos/$OWNER/$REPO/actions/runners/registration-token" -q .token)"
     fi
     RUNNER_TOKEN="$token" compose --profile "$service" up -d "$service" >/dev/null
