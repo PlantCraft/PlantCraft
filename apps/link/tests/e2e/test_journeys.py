@@ -319,9 +319,9 @@ def test_blocks_list_each_library_and_open_a_block(signed_in, app_url, screensho
         page.get_by_text("The code Analytics ships for this block, read-only.", exact=False)
     ).to_be_visible()
     # One calculation, not the declaration around it.
-    expect(page.locator(".lk-code")).to_have_count(1)
-    expect(page.locator(".lk-code .cm-content").first).to_contain_text("def ")
-    expect(page.locator(".lk-code .cm-content").first).not_to_contain_text("@method")
+    expect(page.locator(".pc-code")).to_have_count(1)
+    expect(page.locator(".pc-code .cm-content").first).to_contain_text("def ")
+    expect(page.locator(".pc-code .cm-content").first).not_to_contain_text("@method")
     if screenshots:
         page.screenshot(path=str(screenshots / "block-code.png"), full_page=True)
     page.get_by_role("link", name="Inputs and outputs").click()
@@ -370,7 +370,7 @@ def test_a_block_is_written_in_the_form_versioned_and_diffed(admin, app_url, scr
     page.get_by_role("combobox", name="Outputs 1: better when").select_option("lower")
     expect(page.locator("#blkf-runs-on-missing")).not_to_be_checked()
     expect(page.get_by_text("The block is valid", exact=False)).to_be_visible()
-    page.locator(".lk-code").first.scroll_into_view_if_needed()
+    page.locator(".pc-code").first.scroll_into_view_if_needed()
     page.wait_for_timeout(500)
     if screenshots:
         page.screenshot(path=str(screenshots / "block-new-form.png"), full_page=True)
@@ -403,7 +403,7 @@ def test_a_block_is_written_in_the_form_versioned_and_diffed(admin, app_url, scr
     page.get_by_role("link", name=re.compile("^Versions")).click()
     page.locator(".pc-versions").get_by_role("link", name="New version").click()
     expect(page.get_by_role("heading", name="New version of Smoothed level")).to_be_visible()
-    editor = page.locator(".lk-code .cm-content").first
+    editor = page.locator(".pc-code .cm-content").first
     editor.click()
     page.keyboard.press("Control+End")
     page.keyboard.type("\n# Version two.\n")
@@ -428,7 +428,7 @@ def test_a_block_is_written_in_the_form_versioned_and_diffed(admin, app_url, scr
         page.screenshot(path=str(screenshots / "block-version-1.png"), full_page=True)
     page.get_by_role("link", name="Code", exact=True).click()
     expect(page).to_have_url(re.compile(r"/code\?version=1$"))
-    expect(page.locator(".lk-code .cm-content").first).not_to_contain_text("Version two")
+    expect(page.locator(".pc-code .cm-content").first).not_to_contain_text("Version two")
     # New version starts from the version shown and saves the next number.
     page.get_by_role("link", name=re.compile("^Versions")).click()
     page.locator(".pc-versions").get_by_role("link", name="New version").click()

@@ -39,14 +39,15 @@ def test_the_guided_tour_walks_the_platform_and_ends_on_the_apps(first_visit_pag
     tour.get_by_role("button", name="Start the tour").click()
     expect(tour.get_by_role("heading", name="Desk: your day")).to_be_visible()
     visited = set()
-    for _ in range(12):
+    for _ in range(30):
         if tour.get_by_role("button", name="Finish").count():
             break
         tour.get_by_role("button", name="Next").click()
         page.wait_for_load_state("networkidle")
         visited.add(re.sub(r"^https?://[^/]+", "", page.url))
-    expect(tour.get_by_role("heading", name="Your apps")).to_be_visible()
-    assert {"/calendar", "/assets", "/messages", "/actions", "/users", "/admin"} <= visited, visited
+    expect(tour.get_by_role("heading", name="Now the apps")).to_be_visible()
+    stops = {"/calendar", "/actions", "/assets", "/health", "/users", "/apps", "/admin"}
+    assert stops <= visited, visited
     tour.get_by_role("button", name="Finish").click()
     expect(page.get_by_role("dialog")).to_have_count(0)
     # seen once: not again on the next visit, but always from the person's menu
