@@ -33,7 +33,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 ### Fixed
 
 - **Analytics rounds no longer fail with "PlantCraft could not be reached: timed out" (demo,
-  2026-10-29, SDK 0.77.0).** A loop round reads a day of every loop's signals; while the
+  2026-10-29, SDK 0.78.0).** A loop round reads a day of every loop's signals; while the
   Historian served other long reads, the round's read waited its turn in the Historian's read
   budget (up to 30 s) longer than the SDK client's 15 s, so the client asked again while its
   first read still ran, three times, and the round failed (22 times in 8 h on the demo, "failed"
