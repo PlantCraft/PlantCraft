@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import statistics
 import time
+import urllib.error
 import urllib.request
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -21,6 +22,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 ONLINE_SECONDS = 75
+USER_AGENT = "PlantCraft-site-stats/1"
 DAYS = 14
 
 
@@ -33,12 +35,17 @@ class DemoSource:
         """The demo's numbers, or why they could not be read."""
         if not self.url or not self.key:
             return "not set up (SITE_DEMO_STATS_URL and SITE_DEMO_STATS_KEY_FILE)"
+        # A user agent of its own: Cloudflare turns away Python's default one (a 403 before the
+        # request reaches the demo), and the demo is read through its public name.
         request = urllib.request.Request(
-            f"{self.url}?days={days}", headers={"Authorization": f"Bearer {self.key}"}
+            f"{self.url}?days={days}",
+            headers={"Authorization": f"Bearer {self.key}", "User-Agent": USER_AGENT},
         )
         try:
             with urllib.request.urlopen(request, timeout=8) as response:
                 return json.loads(response.read())
+        except urllib.error.HTTPError as exc:
+            return f"not reachable (HTTP {exc.code})"
         except Exception as exc:  # noqa: BLE001 - the page shows the rest anyway
             return f"not reachable ({type(exc).__name__})"
 
