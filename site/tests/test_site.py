@@ -499,3 +499,29 @@ def test_stats_page_without_the_demo(tmp_path, knowledge):
 def test_every_page_counts_its_visits(dist):
     for page in ("index.html", "privacy.html"):
         assert re.search(r'src="assets/visit\.js\?v=\w+"', (dist / page).read_text()), page
+
+
+def test_the_demo_is_asked_with_its_key_and_a_user_agent_of_its_own(monkeypatch):
+    import io
+    import urllib.error
+
+    from sitechat import stats
+
+    sent = []
+
+    def answer(request, timeout):
+        sent.append(request)
+        return io.BytesIO(b'{"now": {}, "visits": []}')
+
+    monkeypatch.setattr(stats.urllib.request, "urlopen", answer)
+    source = stats.DemoSource("https://demo.plant.example/api/demo/stats", "k")
+    assert source.read(15) == {"now": {}, "visits": []}
+    assert sent[0].full_url.endswith("?days=15")
+    assert sent[0].get_header("Authorization") == "Bearer k"
+    assert sent[0].get_header("User-agent") == stats.USER_AGENT
+
+    def refuse(request, timeout):
+        raise urllib.error.HTTPError(request.full_url, 403, "Forbidden", {}, None)
+
+    monkeypatch.setattr(stats.urllib.request, "urlopen", refuse)
+    assert source.read() == "not reachable (HTTP 403)"
