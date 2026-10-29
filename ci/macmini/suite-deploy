@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# suite-deploy SERVICE=IMAGE [SERVICE=IMAGE ...]
+#
+# Puts the image just built (the newest IMAGE:tag) under the reference the local suite's compose
+# file uses for SERVICE, and recreates that one container. Data volumes, the other services and
+# the suite's .env stay as they are. A container whose image differs from the build only in its
+# labels (commit, build time) is left running: every route of the suite goes through the proxy,
+# and recreating it for nothing drops them all for a few seconds. SUITE_DIR is the installed suite
+# (install.sh --prefix), mounted in the runner at the same path, so Docker Desktop resolves its
+# bind mounts.
+set -euo pipefail
+# Every step that stops the deploy says which one: a bare "exit code 1" in the job log says nothing.
+trap 'echo "::error::suite-deploy stopped at line $LINENO: $BASH_COMMAND"' ERR
+: "${SUITE_DIR:?SUITE_DIR is required}"
+[ -f "$SUITE_DIR/compose.yaml" ] || { echo "no suite installed in $SUITE_DIR"; exit 1; }
+
+# A soak (ci/bench/soak.py) keeps the suite on one build: data/deploy-hold says until when (epoch
+# seconds, first word). The image is built all the same; the next push after the hold deploys.
+hold="$SUITE_DIR/data/deploy-hold"
+if [ -f "$hold" ] && [ "$(awk '{print $1; exit}' "$hold")" -gt "$(date +%s)" ] 2>/dev/null; then
+    echo "::notice::deploy held: $(cut -d' ' -f2- "$hold")"
+    exit 0
+fi
+
+files=(-f "$SUITE_DIR/compose.yaml")
+# The installed apps' compose files, and the interface previews of `suite-dev on` (dev/README.md).
+for extra in "$SUITE_DIR"/data/installer/apps/*/compose.json "$SUITE_DIR/dev.compose.yaml"; do
+    [ -f "$extra" ] && files+=(-f "$extra")
+done
+compose() { docker compose --project-directory "$SUITE_DIR" "${files[@]}" --env-file "$SUITE_DIR/.env" "$@"; }
+config="$(compose config --format json)"
+
+# What a container runs: its layers and how it starts, without the labels. Empty when the image
+# cannot be read (the running container's image may have lost its last name): it is recreated.
+content() {
+    docker image inspect -f '{{json .RootFS.Layers}} {{json .Config.Entrypoint}} {{json .Config.Cmd}}
+{{json .Config.Env}} {{json .Config.User}} {{json .Config.WorkingDir}} {{json .Config.ExposedPorts}}
+{{json .Config.Volumes}} {{json .Config.Healthcheck}}' "$1" 2>/dev/null || true
+}
+
+services=()
+for pair in "$@"; do
+    service="${pair%%=*}" image="${pair#*=}"
+    target="$(jq -r --arg s "$service" '.services[$s].image // empty' <<<"$config")"
+    if [ -z "$target" ]; then
+        echo "::notice::$service is not in the suite on this machine (not installed or its profile is off); skipped"
+        continue
+    fi
+    built="$(docker images --format '{{.Repository}}:{{.Tag}}' "$image" | head -1)"
+    [ -n "$built" ] || { echo "::error::no $image image was built"; exit 1; }
+    running="$(compose ps -q "$service")"
+    if [ -n "$running" ]; then
+        current="$(docker inspect -f '{{.Image}}' "$running")"
+        before="$(content "$current")"
+        if [ -n "$before" ] && [ "$(content "$built")" = "$before" ]; then
+            echo "$service: $built has the content of the running container; left as it is"
+            continue
+        fi
+    fi
+    [ "$built" = "$target" ] || docker tag "$built" "$target"
+    echo "$service: $built -> $target"
+    services+=("$service")
+done
+[ "${#services[@]}" -gt 0 ] || exit 0
+
+compose up -d --no-deps "${services[@]}"
+for _ in $(seq 60); do
+    unhealthy=0
+    for service in "${services[@]}"; do
+        state="$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' \
+            "$(compose ps -q "$service")")"
+        case "$state" in healthy|running) ;; *) unhealthy=1 ;; esac
+    done
+    if [ "$unhealthy" = 0 ]; then
+        compose ps "${services[@]}"
+        docker image prune -f >/dev/null  # the images the retag left untagged
+        exit 0
+    fi
+    sleep 2
+done
+compose ps "${services[@]}"
+for service in "${services[@]}"; do compose logs --tail 50 "$service"; done
+echo "::error::${services[*]} did not become healthy"
+exit 1

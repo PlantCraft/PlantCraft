@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# notebook-kits: the Notebooks kits (Python and JupyterLab for people's computers,
+# notebooks/kit/build_kit.py) for the Mac mini's suite, built by the deploy job after each merge
+# on main when what makes them changed, so Notebooks › Run on your computer always offers the
+# kit of this commit. They go into PlantCraft's data (data/processcraft/notebook-kits, read at
+# /data/notebook-kits; left out of backups), since the installed compose.yaml mounts no
+# notebook-kits/ folder before the next bundle. kits.json is written last: PlantCraft never lists
+# a kit whose zip is not there yet.
+set -euo pipefail
+trap 'echo "::error::notebook-kits stopped at line $LINENO: $BASH_COMMAND"' ERR
+: "${SUITE_DIR:?SUITE_DIR is required}"
+target="$SUITE_DIR/data/processcraft/notebook-kits"
+# The local CA PlantCraft puts in each kit (processcraft/notebooks/kits.py reads /data/local-ca-root.crt).
+# install.sh copies it at install and update; an installation older than that copy gets it here.
+ca="$SUITE_DIR/local-ca-root.crt"
+if [ -f "$ca" ] && ! cmp -s "$ca" "$SUITE_DIR/data/processcraft/local-ca-root.crt"; then
+    cp "$ca" "$SUITE_DIR/data/processcraft/local-ca-root.crt"
+    chmod 0644 "$SUITE_DIR/data/processcraft/local-ca-root.crt"
+    echo "Local CA copied for the Notebooks kits"
+fi
+# The Windows setup needs makensis (the zip is built without it).
+if ! command -v makensis >/dev/null && command -v brew >/dev/null; then
+    brew install makensis >/dev/null || echo "::warning::makensis could not be installed: the Windows kit is a zip only"
+fi
+want="$(python3 notebooks/kit/build_kit.py --version)"
+have="$(jq -r '.version // empty' "$target/kits.json" 2>/dev/null || true)"
+# Kits built before makensis was here have no Windows setup: built again once it is.
+setup="$(jq -r '[.kits[] | select(.id | startswith("windows")) | .installer // empty] | length' "$target/kits.json" 2>/dev/null || echo 0)"
+if [ "$want" = "$have" ] && { [ "$setup" != "0" ] || ! command -v makensis >/dev/null; }; then
+    echo "Notebooks kits $want already in $target"
+    exit 0
+fi
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+python3 -m venv "$work/venv"
+"$work/venv/bin/pip" install -q uv==0.11.32
+# The downloads (Python builds, wheels) stay between deploys: only what changed is fetched again.
+UV="$work/venv/bin/uv" "$work/venv/bin/python" notebooks/kit/build_kit.py \
+    --output "$work/kits" --cache "${KIT_CACHE:-$HOME/.cache/plantcraft-kits}"
+mkdir -p "$target"
+find "$target" -maxdepth 1 -name 'kits.json' -delete
+cp "$work"/kits/*.zip "$target/"
+cp "$work"/kits/*.exe "$target/" 2>/dev/null || true
+cp "$work/kits/kits.json" "$target/kits.json"
+chmod 0755 "$target"
+chmod 0644 "$target"/*
+echo "Notebooks kits $want in $target ($(du -sh "$target" | cut -f1))"

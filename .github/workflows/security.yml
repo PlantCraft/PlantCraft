@@ -6,7 +6,11 @@ name: Security
 # - gitleaks: no secret in the tree, nor in any commit of the pull request (removed later or not);
 # - bandit: no high-severity finding in the Python that ships (shell=True, pickle, yaml.load, ...);
 # - zizmor: no workflow open to template injection, credential leaks or dangerous triggers;
-# - pip-audit: no known vulnerability in the pinned packages every image installs.
+# - pip-audit: no known vulnerability in the pinned packages every image installs;
+# - words: none of the words that must never be published (docs/publishing.md), in the tree or in
+#   a pull request's commit messages. The list is the secret BANNED_WORDS, since naming the words
+#   would publish them; only file:line is printed. A fork's pull request has no secrets, so the
+#   owner's review checks those.
 # A pull request can edit this file too: these checks catch mistakes, while the owner's review
 # of everything under .github/ (CODEOWNERS and the main branch's ruleset) stops a hostile edit.
 on:
@@ -32,7 +36,7 @@ env:
 
 jobs:
   secrets:
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -59,14 +63,14 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: '"$RUNNER_TEMP/gitleaks" git . --no-banner --redact -c .gitleaks.toml --log-opts="$BASE..$HEAD"'
-      # The daily and by-hand runs read every commit: the private history is kept, so a key
-      # committed and removed later is still found (docs/publishing.md).
+      # The daily and by-hand runs read every commit, so a key committed and removed later is
+      # still found (docs/publishing.md).
       - name: The whole history
         if: github.event_name != 'pull_request'
         run: '"$RUNNER_TEMP/gitleaks" git . --no-banner --redact -c .gitleaks.toml'
 
   code:
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -91,3 +95,34 @@ jobs:
             pip-audit --strict --disable-pip -r "$lock"
             echo "::endgroup::"
           done
+
+  words:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: No word that must never be published
+        env:
+          BANNED_WORDS: ${{ secrets.BANNED_WORDS }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -z "$BANNED_WORDS" ]; then
+            echo "::warning::BANNED_WORDS is not set here (a fork's pull request has no secrets): not checked"
+            exit 0
+          fi
+          pattern="$(printf '%s\n' "$BANNED_WORDS" | grep -v '^[[:space:]]*\(#\|$\)' | paste -sd'|' -)"
+          hits="$(git grep -nIiE -e "$pattern" -- . ':!**/node_modules/**' | cut -d: -f1,2 || true)"
+          if [ -n "$BASE" ]; then
+            git log --format=%B "$BASE..$HEAD" > "$RUNNER_TEMP/messages.txt"
+            grep -qiE -e "$pattern" "$RUNNER_TEMP/messages.txt" && hits="$hits
+          a commit message of this pull request"
+          fi
+          if [ -n "$(printf '%s' "$hits" | tr -d '[:space:]')" ]; then
+            printf '%s\n' "$hits"
+            echo "::error::A word that must never be published is in the lines above (the list: BANNED_WORDS)."
+            exit 1
+          fi
+          echo "none"

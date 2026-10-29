@@ -45,7 +45,7 @@ jobs:
   # Scheduled runs only: test only if this workflow's folder changed since its last green run.
   changes:
     if: github.event_name == 'schedule'
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
     permissions:
       contents: read
       actions: read
@@ -70,7 +70,7 @@ jobs:
     name: backend (${{ matrix.shard }}/3)
     needs: [changes]
     if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -108,7 +108,7 @@ jobs:
   frontend:
     needs: [changes]
     if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: frontend
@@ -130,7 +130,7 @@ jobs:
   e2e:
     needs: [changes]
     if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'macmini' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

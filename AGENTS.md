@@ -154,6 +154,11 @@ Our clients are industrial plants: nothing gets installed unless IT and OT secur
 
 ### Clean room
 
+- **This repository is public.** Every commit, branch name, pull request, review and comment is
+  published the moment it is pushed. Only public information and methods go in; the words that
+  must never be published (the owner's list, repository secret `BANNED_WORDS`, never committed)
+  appear nowhere, not even in a commit message. The Security workflow checks the tree and the
+  commit messages of every pull request; check yours against the list before pushing.
 - We study paid tools (AVEVA PI, Seeq, TrendMiner, Control Station, Honeywell, ABB, Aspen,
   Emerson) for **public behaviour only**: brochures, public manuals, papers, standards, public
   videos. Never use their code, binaries, internal manuals, client screenshots, or anything

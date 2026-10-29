@@ -102,7 +102,7 @@ cmd_on() {
             # Mac file sharing a copy cannot overwrite the read-only files git leaves behind.
             if [ ! -f "$src/dev/follow.sh" ]; then
                 mkdir -p "$src" && rm -rf "$src/.git" "$src.boot" && git init -q "$src"
-                git -C "$src" remote add origin "$REMOTE/processcraft.git"
+                git -C "$src" remote add origin "$REMOTE/PlantCraft.git"
                 git -C "$src" -c credential.helper="!f() { echo username=x-access-token; echo password=\$GH_TOKEN; }; f" \
                     fetch -q --depth=1 origin main
                 git -C "$src" -c advice.detachedHead=false checkout -q -f FETCH_HEAD
