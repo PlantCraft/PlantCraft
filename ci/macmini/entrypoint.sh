@@ -6,7 +6,8 @@ set -euo pipefail
 
 [ -x /runner/run.sh ] || cp -a /opt/runner/. /runner/
 cd /runner
-if [ ! -f .runner ]; then
+# Newer runners rename their .runner to .runner_migrated on their own: either one means registered.
+if [ ! -f .runner ] && [ ! -f .runner_migrated ]; then
     : "${RUNNER_TOKEN:?first start: RUNNER_TOKEN is required (run setup.sh)}"
     ./config.sh --unattended --replace --url "https://github.com/$REPO" --token "$RUNNER_TOKEN" \
         --name "${RUNNER_NAME:-macmini-${REPO##*/}}" --labels macmini --work /runner/_work

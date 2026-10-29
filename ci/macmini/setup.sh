@@ -100,11 +100,14 @@ for i in "${!runners[@]}"; do
     fi
     token=""
     # Registered for another repository (the suite moved to $OWNER/$REPO): registered again here.
-    if ! docker run --rm -v "processcraft-ci_$service:/runner" --entrypoint grep \
-        processcraft-ci-runner:latest -qi "github.com/$OWNER/$REPO\"" /runner/.runner; then
+    # (.runner, or .runner_migrated once the runner has renamed it on its own.)
+    if ! docker run --rm -v "processcraft-ci_$service:/runner" --entrypoint sh \
+        processcraft-ci-runner:latest -c 'grep -qsi "$1" /runner/.runner /runner/.runner_migrated' \
+        sh "github.com/$OWNER/$REPO\""; then
         compose --profile "$service" rm -sf "$service" >/dev/null 2>&1 || true
         docker run --rm -v "processcraft-ci_$service:/runner" --entrypoint rm \
-            processcraft-ci-runner:latest -f /runner/.runner /runner/.credentials /runner/.credentials_rsaparams
+            processcraft-ci-runner:latest -f /runner/.runner /runner/.runner_migrated /runner/.credentials \
+            /runner/.credentials_migrated /runner/.credentials_rsaparams
         token="$(gh api -X POST "repos/$OWNER/$REPO/actions/runners/registration-token" -q .token)"
     fi
     RUNNER_TOKEN="$token" compose --profile "$service" up -d "$service" >/dev/null
