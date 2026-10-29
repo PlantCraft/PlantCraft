@@ -30,7 +30,7 @@ from plantcraft_sdk.contributes import FEATURES
 from plantcraft_sdk.derived import DerivedError, check_owner, parse_derived, parse_runs
 from plantcraft_sdk.server.paging import MAX_PAGE, list_response
 from processcraft.api.deps import Runtime, action_visibility, claims_marks_owner
-from processcraft.api.feed import inbox_notices, marked_unread_chats
+from processcraft.api.feed import inbox_notices, marked_unread_chats, visit_reads
 from processcraft.api.identity import (
     READ_LEVELS,
     V1Caller,
@@ -181,7 +181,9 @@ def inbox(caller: V1Caller, rt: Runtime) -> dict[str, Any]:
     unread, urgent = inbox_notices(rt, caller.username, owner)
     return {
         # Chats only: apps' notifications are counted apart, with their own read marks.
-        "unread_messages": rt.workspace.messages.unread_total(caller.username, chats_only=True)
+        "unread_messages": rt.workspace.messages.unread_total(
+            caller.username, chats_only=True, read_upto=visit_reads(rt, owner)
+        )
         + marked_unread_chats(rt, caller.username, owner),
         "unread_notifications": unread,
         # The newest unread critical or high notification of the last hour, for the pop-up.

@@ -101,6 +101,7 @@ def demo_app(tmp_path, monkeypatch):
         "PLANTCRAFT_PUBLIC_DEMO": "true",
         "PLANTCRAFT_PUBLIC_DEMO_PASSWORD": "plantcraft-demo",
         "PLANTCRAFT_PUBLIC_DEMO_SEATS": "1",
+        "PLANTCRAFT_PUBLIC_DEMO_STATS_KEY": "stats-key",
     }.items():
         monkeypatch.setenv(key, value)
     app = create_app()
@@ -218,3 +219,56 @@ def test_an_ipv6_visitor_counts_by_its_block_not_its_device():
     assert _place_of("2804:14c:1:3::a") != _place_of("2804:14c:1:2::a")
     assert _place_of("::ffff:203.0.113.7") == "203.0.113.7" == _place_of("203.0.113.7")
     assert _place_of("testclient") == "testclient"
+
+
+def test_each_visit_is_logged_without_its_address(store):
+    first = _enter(store, "198.51.100.4", now=0)
+    _enter(store, "b", now=0)
+    waiting = _enter(store, "c", now=10)
+    store.seen(first.visit, active=True, minutes=15, now=20)
+    # A sign of life without use does not lengthen the visit in the log.
+    store.seen(first.visit, active=False, minutes=15, now=25)
+    store.leave(first.visit)
+    second = _enter(store, "c", waiting.ticket, now=30)
+    assert isinstance(second, Visit)
+    store.opened(second.visit, ["/link/loops/FIC-1003", "/link/runs/8f3a9b2c11", "x", "/"], now=40)
+    store.opened(second.visit, ["/", "/view/"], now=70)
+    store.opened("not-a-visit", ["/view/"])
+    history = store.history(0, now=500)
+    assert history[0] == {"started": 0, "seconds": 20, "waited": 0}
+    assert history[-1] == {"started": 30, "seconds": 0, "waited": 20}
+    assert {p["page"] for p in store.pages(0)} == {
+        "/link/loops/FIC-1003",
+        "/link/runs/:id",
+        "/",
+        "/view",
+    }
+    journey = store.journeys(0, now=500)[0]
+    assert journey["pages"] == [
+        ["/link/loops/FIC-1003", 10],
+        ["/link/runs/:id", 10],
+        ["/", 10],
+        ["/view", 40],
+    ]
+    assert second.visit not in json.dumps(store.journeys(0, now=500))
+    with store._connect() as connection:
+        columns = [row[1] for row in connection.execute("PRAGMA table_info(demo_visit_log)")]
+    assert "address" not in columns
+
+
+def test_the_demo_stats_need_their_key(demo_app):
+    visitor = TestClient(demo_app, headers=EDGE)
+    assert visitor.post("/api/demo/enter", json={}).json()["entered"] is True
+    beat = visitor.post("/api/demo/heartbeat", json={"active": True, "pages": ["/link/"]})
+    assert beat.status_code == 200
+    outside = TestClient(demo_app, headers=EDGE)
+    assert outside.get("/api/demo/stats").status_code == 404
+    wrong = {"Authorization": "Bearer nope"}
+    assert outside.get("/api/demo/stats", headers=wrong).status_code == 404
+    stats = outside.get("/api/demo/stats", headers={"Authorization": "Bearer stats-key"})
+    assert stats.status_code == 200, stats.text
+    body = stats.json()
+    assert body["now"] == {"taken": 1, "waiting": 0, "seats": 1}
+    assert len(body["visits"]) == 1 and body["pages"] == [{"page": "/link", "visits": 1}]
+    assert body["journeys"][0]["pages"][0][0] == "/link"
+    assert "address" not in json.dumps(body)

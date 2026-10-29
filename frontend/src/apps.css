@@ -46,7 +46,9 @@
 .apps-origin { padding: 2px 8px; border-radius: var(--pc-radius-pill); background: var(--pc-surface-3); color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 700; }
 .apps-origin-external { color: var(--pc-attention-text); background: var(--pc-attention-soft); }
 .apps-origin-package, .apps-origin-catalog { color: var(--pc-info-text); background: var(--pc-info-soft); }
-.apps-state { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; }
+.apps-state { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; white-space: nowrap; }
+/* A backup's file name stays on one line under its date. */
+.apps-sub code { white-space: nowrap; }
 .apps-state-running { color: var(--pc-good-text); }
 .apps-state-failed { color: var(--pc-attention-text); }
 .apps-actions { white-space: nowrap; }

@@ -29,6 +29,7 @@ from processcraft.api.deps import (
     marks_owner,
     open_to,
 )
+from processcraft.api.feed import visit_reads
 from processcraft.api.routers.messages import _resolve, present_ref
 from processcraft.auth.suite import app_access
 from processcraft.config import plant_today
@@ -155,8 +156,9 @@ def today(
         statuses=list(OPEN_STATUSES), visible=seen, view="mine", limit=500
     )
     followed = followed_assets(rt, user)
-    conversations = rt.workspace.messages.list_for(user, limit=50)
-    triage = rt.desk.triage(marks_owner(request, rt, user))
+    owner = marks_owner(request, rt, user)
+    conversations = rt.workspace.messages.list_for(user, limit=50, read_upto=visit_reads(rt, owner))
+    triage = rt.desk.triage(owner)
     iso = when.isoformat()
     overdue = [item for item in mine if item.get("due_at") and item["due_at"][:10] < iso]
     due_today = [item for item in mine if item.get("due_at") and item["due_at"][:10] == iso]

@@ -545,7 +545,7 @@ export function WidgetBoard({ catalog, layout, onLayout, loading, apps = [], onR
       onAdd={(def, size) => { onLayout(addToBoard(board, def, size)); setAdding(false); }} />}
     {!placed.length && !loading && <div className="panel pc-wg-empty"><p>{empty ?? t("No widgets yet. Press Customize, then Add a widget.")}</p></div>}
     <CardGrid cells={cells} editing={editing} resizable={false} onChange={moved} label={t("Widgets")}
-      foldAfter={2}
+      foldAfter={2} phoneHeight="content"
       render={(i, fold) => {
         const entry = byPlacement.get(i);
         if (!entry) return null;

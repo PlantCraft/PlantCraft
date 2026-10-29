@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PlantCraft</title>
 %%ROBOTS%%
-<meta name="description" content="An open, secure, LLM-first suite of industrial software for process engineers: historian, analytics, alarms, dashboards, diagrams, models and documents, on your own servers.">
+<meta name="description" content="The open suite for process plants: historian, analytics, alarms, dashboards, process models and documents on your own servers, with an AI assistant that checks the results with you.">
 <link rel="icon" href="assets/plantcraft.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/chat.js" defer></script>
+<script src="assets/showcase.js" defer></script>
+<script src="assets/visit.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -24,41 +26,32 @@
 
   <main id="main">
   <header class="hero" id="top">
-    <p class="eyebrow">Industrial software for process engineers</p>
-    <h1>Spend your time on the plant, not on building the tools.</h1>
-    <p class="lead">PlantCraft is a complete, open suite: historian, analytics, alarms, dashboards and diagrams, process models and plant documents in one place, built to work with AI. You ask, and the assistant builds the method, the block, the rule or the dashboard. You go straight to where the plant has a problem, and plan the fix with your team.</p>
+    <h1>The open suite for process plants.</h1>
+    <p class="lead">Historian, analytics, alarms, dashboards, process models and plant documents in one place, with an AI assistant that checks the results with you.</p>
     <div class="ctas">
-      <a class="btn primary" href="#install">Install free</a>
       %%DEMO%%
+      <a class="btn%%INSTALL_PRIMARY%%" href="#install">Install free</a>
       <button class="btn" type="button" data-chat="ask">Ask a question</button>
       <a class="btn" href="%%GH%%">Source on GitHub</a>
     </div>
+%%SHOWCASE%%
     <ul class="pillars-row" aria-label="The four pillars">
       <li><a href="#open"><b>Open</b><span>All code and methods</span></a></li>
-      <li><a href="#secure"><b>Secure</b><span>Offline, read-only</span></a></li>
-      <li><a href="#llm"><b>LLM-first</b><span>Ask, don't build</span></a></li>
+      <li><a href="#secure"><b>Secure</b><span>On your own network</span></a></li>
+      <li><a href="#llm"><b>LLM-first</b><span>An assistant that checks</span></a></li>
       <li><a href="#fast"><b>Fast</b><span>Value in days</span></a></li>
     </ul>
-    <figure class="shot-wrap">
-      <div class="shot">
-        <picture>
-          <source srcset="assets/analytics-overview-dark.png" media="(prefers-color-scheme: dark)">
-          <img alt="Analytics' Overview on the demo plant: results by status, the days in alarm, a health map of every loop and signal, and the worst results first" src="assets/analytics-overview-light.png" width="1440" height="900">
-        </picture>
-      </div>
-      <figcaption class="caption">Analytics on the demo plant: every loop and signal checked, the worst first, each with a sentence that says why.</figcaption>
-    </figure>
   </header>
 
   <section id="open" aria-labelledby="open-h">
     <p class="eyebrow">01 · Open</p>
     <h2 id="open-h">All of it open, and yours to extend.</h2>
-    <p class="sec-lead">Every line of code and every method is open. Nothing is a black box: a finding says how it was reached, and the algorithm behind it is blocks and Python you can read, change and share.</p>
+    <p class="sec-lead">Every line of code and every method is open. Nothing is a black box: each result says how it was reached, in blocks and Python you can read, change and share.</p>
     <ul class="points">
       <li><b>Apache-2.0</b><span>Use it, change it, ship it inside your own products. No paid edition, no locked feature.</span></li>
-      <li><b>Open methods</b><span>Loop performance, signal quality, alarm performance against ISA-18.2: written from public literature and tested on public data, so you can check, cite and improve them.</span></li>
-      <li><b>A complete suite</b><span>Each app does one job and shares the same people, plant assets, signals and look.</span></li>
-      <li><b>Expandable</b><span>Apps work together only through what they publish, so a new app for your process, your research or your client slots in beside the official ones.</span></li>
+      <li><b>Open methods</b><span>The performance and data quality methods are open and written in Python, from public literature, so you can check, cite and improve them.</span></li>
+      <li><b>A complete suite</b><span>Apps for data, analytics, alarms, dashboards, models and documents, ready to install and configure, sharing the same people, assets, signals and look.</span></li>
+      <li><b>Expandable</b><span>New apps for your process, your research or your client are created from a template and slot in beside the official ones.</span></li>
     </ul>
   </section>
 
@@ -67,32 +60,30 @@
     <h2 id="secure-h">Built for the plant's IT and OT review.</h2>
     <p class="sec-lead">Plants install nothing their security teams have not approved. PlantCraft is built for that review from the first line, and a two-page <a href="%%DOCS%%/docs/security-guide.md">security guide</a> maps it to the Purdue model and IEC 62443.</p>
     <ul class="points">
-      <li><b>Offline</b><span>Installs from one signed bundle with no internet. No telemetry, update check, licence call, web font or CDN.</span></li>
+      <li><b>On your own infrastructure</b><span>Installs on your servers and inside your network, from one signed bundle, even with no internet. No telemetry, licence call or outside service.</span></li>
       <li><b>Read-only to the plant</b><span>Reads OPC UA, PI Web API, MQTT, Modbus TCP, SQL and CSV. It never writes to a DCS, PLC or historian.</span></li>
-      <li><b>One port, sign-in by default</b><span>Only the HTTPS proxy listens. Roles are checked on every route, and an audit log keeps who changed what.</span></li>
-      <li><b>AI under your control</b><span>No model is called until an administrator sets one up, and it can run on your own network. The assistant reads only what the person asking may read.</span></li>
-      <li><b>Isolated calculations</b><span>Code that people or the assistant write runs on workers with no network, no secrets and hard limits.</span></li>
-      <li><b>Never lose data</b><span>One data folder, a backup before every update, and a rollback by itself when an update fails.</span></li>
+      <li><b>Protected by default</b><span>One HTTPS port with sign-in and an audit log, calculations isolated with no network or secrets, and a backup before every update.</span></li>
+      <li><b>AI you configure</b><span>Off until an administrator turns it on. Connect the provider you choose, or a model your company already runs. The assistant reads only what the person asking may read.</span></li>
     </ul>
   </section>
 
   <section id="llm" aria-labelledby="llm-h">
     <p class="eyebrow">03 · LLM-first</p>
-    <h2 id="llm-h">Ask, don't build.</h2>
-    <p class="sec-lead">Engineers lose weeks building tools before they can look at the plant. In PlantCraft the language model does that work, so your time goes to what only you can do: find the problem, understand it, and plan the fix with your team.</p>
+    <h2 id="llm-h">An assistant that finds the problems with you.</h2>
+    <p class="sec-lead">Instead of searching through results and charts, ask. The assistant checks the calculations and the results, points to what needs attention and suggests what to do, so your time goes to understanding the problem and planning the fix with your team.</p>
     <div class="two">
       <ul class="points single">
-        <li><b>Create by asking</b><span>Every page has an assistant with tasks for that page. It proposes the block, the algorithm, the alarm rule or the model with its fields filled in; you review it and confirm.</span></li>
-        <li><b>Find the problems first</b><span>Analytics ranks every signal and loop with a level, a score and a sentence that says why. You start from the worst, not from a blank screen.</span></li>
-        <li><b>Ask about the plant</b><span>The assistant answers from the plant's own data, results, documents and history, with charts and links to its sources.</span></li>
+        <li><b>Checks the results</b><span>It reads the plant's data, the results of every app, its documents and history, and answers with charts and links to its sources.</span></li>
+        <li><b>Suggests actions</b><span>It says what is wrong, why, and what to do first. A person always confirms.</span></li>
+        <li><b>Helps you build, too</b><span>It proposes new blocks, algorithms, alarm rules and models with their fields filled in, for you to review.</span></li>
         <li><b>Your own AI, too</b><span>Copy any block, model or the plant map as a prompt, or let your assistant read the plant through a read-only MCP server.</span></li>
       </ul>
       <div class="asks" aria-label="Examples of what people ask">
         <p class="ask">Why did this alarm fire?</p>
-        <p class="ask">Which loops should we fix first this week?</p>
+        <p class="ask">What should we fix first this week?</p>
+        <p class="ask">What changed in the furnace since Monday?</p>
         <p class="ask">Help me create a block that detects a sticky valve.</p>
         <p class="ask">Help me design a model of this heat exchanger.</p>
-        <p class="ask">What changed in the furnace since Monday?</p>
       </div>
     </div>
   </section>
@@ -100,12 +91,12 @@
   <section id="fast" aria-labelledby="fast-h">
     <p class="eyebrow">04 · Fast</p>
     <h2 id="fast-h">Value in days, not months.</h2>
-    <p class="sec-lead">No project before the first result. Install it, point it at the plant's data, and the first findings arrive the same day. Measured on a 4 vCPU, 16 GB server at 8,000 signals and 2,050 loops.</p>
+    <p class="sec-lead">No project before the first result. Install it, point it at the plant's data, and the first findings arrive the same day. Measured in our tests on a 4 vCPU, 16 GB server with 8,000 signals; a larger server does more.</p>
     <dl class="stats">
-      <div><dt>about 10 min</dt><dd>to install the demo suite from the offline bundle</dd></div>
-      <div><dt>106 s</dt><dd>for Analytics to check every one of 2,050 loops</dd></div>
+      <div><dt>under 1 hour</dt><dd>to install from the offline bundle</dd></div>
+      <div><dt>0.2 s</dt><dd>to run one algorithm on one asset</dd></div>
       <div><dt>21 ms</dt><dd>for a 24-hour trend of one signal (p95)</dd></div>
-      <div><dt>29,000</dt><dd>values a second written by the Historian</dd></div>
+      <div><dt>29,000+</dt><dd>values a second written by the Historian</dd></div>
     </dl>
     <p class="note">Sources: <a href="%%DOCS%%/docs/install.md">Install PlantCraft</a> and <a href="%%DOCS%%/docs/en/sizing.md">Sizing the server</a>. Run the same bench on your own machine.</p>
   </section>
@@ -117,10 +108,7 @@
     <div class="grid">
 %%CARDS%%
     </div>
-    <div class="build">
-      <p><strong>Build your own app</strong>Any company or research group can build an app for PlantCraft in the same format, open or closed, with AI doing most of the work. The app template brings the shared interface, the SDK, tests against a simulated plant, and the rules and prompts an AI assistant needs.</p>
-      <a class="btn" href="%%DOCS%%/templates/app">The app template</a>
-    </div>
+    <p class="note">Also inside: Jupyter notebooks with the plant's data, in the browser or on your own computer, and a simulated plant to try everything safely before connecting a real one.</p>
   </section>
 
   <section id="install" aria-labelledby="install-h">
@@ -143,13 +131,13 @@ cd %%BUNDLE%%
     <p class="eyebrow">Talk to us</p>
     <h2 id="contact-h">Tell us about your plant.</h2>
     <p class="sec-lead">A pilot on your unit, help to install it, training for your team, an app for your process, or a question the documentation does not answer: write to us and we answer personally.</p>
-    <div class="ctas"><button class="btn primary" type="button" data-chat="contact">Talk to us</button><button class="btn" type="button" data-chat="ask">Ask the assistant</button></div>
+    <div class="ctas">%%DEMO%%<button class="btn%%INSTALL_PRIMARY%%" type="button" data-chat="contact">Talk to us</button><button class="btn" type="button" data-chat="ask">Ask the assistant</button></div>
   </section>
   </main>
 
   <footer>
     <span>PlantCraft · Apache-2.0 · built with <a href="%%DOCS%%/docs/how-we-build.md">Claude Code</a></span>
-    <div class="fl"><a href="%%DOCS%%/docs/README.md">Docs</a><a href="%%DOCS%%/docs/security-guide.md">Security</a><a href="%%DOCS%%/TRADEMARKS.md">Trademarks</a><a href="privacy.html">Privacy</a><a href="%%GH%%">GitHub</a></div>
+    <div class="fl">%%MAIL%%<a href="%%DOCS%%/docs/README.md">Docs</a><a href="%%DOCS%%/docs/security-guide.md">Security</a><a href="%%DOCS%%/TRADEMARKS.md">Trademarks</a><a href="privacy.html">Privacy</a><a href="%%GH%%">GitHub</a></div>
   </footer>
 </div>
 
@@ -178,6 +166,9 @@ cd %%BUNDLE%%
   </form>
   <p class="chat-foot">An AI assistant: it can be wrong, so check the pages it cites. Questions are kept without your name or address to improve the answers. <button type="button" class="link" data-chat="contact">Talk to a person</button></p>
 </div>
-<button class="chat-launch" type="button" data-chat="ask" aria-controls="chat">Ask PlantCraft</button>
+<div class="launchers">
+  %%DEMO_FLOAT%%
+  <button class="chat-launch" type="button" data-chat="ask" aria-controls="chat"><svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18"><path d="M4 3h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3.5V14H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" fill="currentColor"/></svg>Ask PlantCraft</button>
+</div>
 </body>
 </html>

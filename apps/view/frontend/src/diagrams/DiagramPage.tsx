@@ -3,7 +3,7 @@
  * change it. `/diagrams/new` opens the editor on an empty canvas. The same viewer serves a public
  * link (`PublicDiagramPage`, `share/diagram/<token>`), read-only and without sign-in. */
 import { PageTabs, displayTimeZone, errorMessage as message, isoOf, localOf, useAssistantPage } from "@plantcraft/ui";
-import { Globe2, Maximize2, Minimize2, Pause, Pencil, Play, Radio, Scan, ZoomIn, ZoomOut } from "lucide-react";
+import { Clock, Globe2, Maximize2, Minimize2, Pause, Pencil, Play, Radio, Scan, ZoomIn, ZoomOut } from "lucide-react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { t } from "../i18n";
 import { ShareDialog } from "../Dialogs";
@@ -39,11 +39,9 @@ function clock(ms: number): string {
   return new Date(ms).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: displayTimeZone() });
 }
 
-/** The time bar: Live, or a cursor over the window read, played at 1x to 600x. */
-function TimeBar({ data, window, onWindow, cursor, onCursor, end, onEnd }: {
-  data: DiagramData | null; window: string; onWindow: (window: string) => void;
-  cursor: number | null; onCursor: (at: number | null) => void; end: string | null; onEnd: (end: string | null) => void;
-}) {
+/** Playing the window back: kept by the viewer, so the time bar may move (into full screen's
+ * time popover) without stopping it. */
+function usePlayback(data: DiagramData | null, cursor: number | null, onCursor: (at: number | null) => void) {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(60);
   const start = data ? Date.parse(data.range.start) : 0;
@@ -56,6 +54,18 @@ function TimeBar({ data, window, onWindow, cursor, onCursor, end, onEnd }: {
     }, 250);
     return () => clearInterval(timer);
   }, [playing, cursor, speed, start, stop, onCursor]);
+  return { playing, setPlaying, speed, setSpeed, start, stop };
+}
+
+type Playback = ReturnType<typeof usePlayback>;
+
+/** The time bar: Live, or a cursor over the window read, played at 1x to 600x. */
+function TimeBar({ data, window, onWindow, cursor, onCursor, end, onEnd, playback }: {
+  data: DiagramData | null; window: string; onWindow: (window: string) => void;
+  cursor: number | null; onCursor: (at: number | null) => void; end: string | null; onEnd: (end: string | null) => void;
+  playback: Playback;
+}) {
+  const { playing, setPlaying, speed, setSpeed, start, stop } = playback;
   const live = cursor === null && end === null;
   const goLive = () => { setPlaying(false); onEnd(null); onCursor(null); };
   return <div className="dg-timebar" role="group" aria-label={t("Time")}>
@@ -92,6 +102,29 @@ function TimeBar({ data, window, onWindow, cursor, onCursor, end, onEnd }: {
         <Radio size={15} /> {t("Live")}
       </button>
     </div>
+  </div>;
+}
+
+/** Full screen's time (owner, 2026-10-28): one button in the top strip saying what is shown
+ * (Live and the period, or the instant played back); the time bar opens under it on a click
+ * (stays until clicked again or elsewhere) or while the pointer rests on it. */
+function TimePopover({ summary, live, children }: { summary: string; live: boolean; children: ReactNode }) {
+  const [pinned, setPinned] = useState(false);
+  const [hover, setHover] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!pinned) return undefined;
+    const outside = (event: PointerEvent) => { if (!box.current?.contains(event.target as Node)) setPinned(false); };
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [pinned]);
+  const open = pinned || hover;
+  return <div ref={box} className="dg-full-time" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+    <button type="button" className={`button button-secondary${live ? " dg-full-live" : ""}`} aria-expanded={open} aria-haspopup="dialog"
+      title={t("Period, playback and live")} onClick={() => setPinned((was) => !was)}>
+      {live ? <Radio size={15} /> : <Clock size={15} />} {summary}
+    </button>
+    {open && <div className="dg-full-time-panel" role="dialog" aria-label={t("Time")}>{children}</div>}
   </div>;
 }
 
@@ -267,10 +300,13 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
     const search = params.toString();
     globalThis.history.replaceState(globalThis.history.state, "", `${globalThis.location.pathname}${search ? `?${search}` : ""}`);
   }, [parts]);
+  const pageTabs = pages.length > 1 && <PageTabs label={t("Pages of {name}", { name: diagram.name })} tabs={pages.map((item) => ({ to: item.id, label: item.name, active: item.id === page }))}
+    href={(to) => `${globalThis.location.pathname}?page=${encodeURIComponent(to)}`} navigate={setPage} />;
   const partTabs = parts.length > 0 && <PageTabs label={t("Parts of {name}", { name: diagram.name })}
     tabs={[{ to: "", label: t("Overview"), active: inView === "" }, ...parts.map((part) => ({ to: part.id, label: part.name, active: inView === part.id }))]}
     href={(to) => `${globalThis.location.pathname}${to ? `?part=${encodeURIComponent(to)}` : ""}`} navigate={openPart} />;
   const live = cursor === null && end === null;
+  const playback = usePlayback(data, cursor, setCursor);
   const request = useRef(0);
   const read = useCallback(() => {
     const mine = ++request.current;
@@ -304,6 +340,7 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
   const editable = Boolean(diagram.can_edit && me?.can_edit && !isPublic);
   // The trend opens on the display's window: the last hour live, the very period played back.
   const trendPeriod: TrendPeriod = !live && data ? { mode: "fixed", window, start: data.range.start, end: data.range.end } : { mode: "relative", window };
+  const timeBar = <TimeBar data={data} window={window} onWindow={(next) => { setWindow(next); setCursor(null); }} cursor={cursor} onCursor={setCursor} end={end} onEnd={setEnd} playback={playback} />;
   return <>
     <Heading title={diagram.name} assistant={!isPublic}
       actions={<>
@@ -312,16 +349,19 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
         {editable && <button className="button button-primary" onClick={onEdit}><Pencil size={16} /> {t("Edit")}</button>}
       </>} />
     {error && <ErrorBox text={error} />}
-    {pages.length > 1 && <div className="tc-pages dg-pages">
-      <PageTabs label={t("Pages of {name}", { name: diagram.name })} tabs={pages.map((item) => ({ to: item.id, label: item.name, active: item.id === page }))}
-        href={(to) => `${globalThis.location.pathname}?page=${encodeURIComponent(to)}`} navigate={setPage} />
-    </div>}
+    {pageTabs && !full && <div className="tc-pages dg-pages">{pageTabs}</div>}
     {partTabs && !full && <div className="tc-pages dg-pages">{partTabs}</div>}
-    <TimeBar data={data} window={window} onWindow={(next) => { setWindow(next); setCursor(null); }} cursor={cursor} onCursor={setCursor} end={end} onEnd={setEnd} />
+    {!full && timeBar}
     <div ref={stage} className={`dg-stage${full ? " dg-stage-full" : ""}`}>
-      {full && <span className="dg-kiosk-name">{diagram.name}{pages.length > 1 ? ` · ${pages.find((item) => item.id === page)?.name ?? ""}` : ""}{live ? "" : ` · ${clock(cursor ?? Date.parse(data?.range.end ?? ""))}`}</span>}
-      {full && !isPublic && <button className="icon-button" style={{ position: "absolute", top: 8, right: 8, zIndex: 1 }} aria-label={t("Leave full screen")} onClick={leaveFull}><Minimize2 size={16} /></button>}
-      {partTabs && full && <div className="dg-full-tabs">{partTabs}</div>}
+      {/* Full screen keeps a strip of its own on top (owner, 2026-10-28): the name, the tabs,
+          the time and the way out, never over the drawing. */}
+      {full && <div className="dg-full-bar">
+        <span className="dg-full-name" title={diagram.name}>{diagram.name}</span>
+        <div className="dg-full-tabs">{pageTabs || partTabs}</div>
+        <TimePopover live={live} summary={live ? t("Live · {span}", { span: windowLabel(window) }) : clock(cursor ?? Date.parse(data?.range.end ?? ""))}>{timeBar}</TimePopover>
+        {!isPublic && <button className="icon-button" aria-label={t("Leave full screen")} title={t("Leave full screen")} onClick={leaveFull}><Minimize2 size={16} /></button>}
+      </div>}
+      <div className="dg-stage-body">
       <ZoomStage width={shown.width} height={shown.height} reset={`${diagram.diagram_id}/${page}`} goTo={goTo} onView={setSeen}>
         {(view, svgRef, show) => <DiagramCanvas diagram={shown} symbols={symbols} shows={shows} view={view} svgRef={svgRef} onOpen={(element) => {
           if (element.link?.kind === "page") { if (pages.some((item) => item.id === element.link?.target)) setPage(element.link.target); return; }
@@ -336,6 +376,7 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
       </ZoomStage>
       {asset && <AssetPanel key={asset.id} assetId={asset.id} name={asset.name} values={(data?.bindings ?? []).filter((row) => row.element === asset.element)}
         onTrend={(title, signals) => setTrend({ title, signals })} onClose={() => setAsset(null)} />}
+      </div>
       {trend && <Suspense fallback={null}><TrendDialog title={trend.title} signals={trend.signals} period={trendPeriod} onClose={() => setTrend(null)} /></Suspense>}
     </div>
     <Legend diagram={shown} />

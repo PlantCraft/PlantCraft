@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { arrangeRows, filterOptions, pageText, type DataColumn } from "./DataTable";
+import { arrangeRows, cellClass, filterOptions, pageText, type DataColumn } from "./DataTable";
 import { addToBoard, boardOf, defaultLayout, fetchAppWidgets, widgetDataUrl, fetchSuiteWidgets, listRows, moveWidget, nearestSize, placedItems, placedWidgets, sizeName, sizesOf, widgetSize, type WidgetDef } from "./Widgets";
 import { freePlace, packCells, readingOrder } from "./Grid";
 import { barCount, barScale, columnRects, factCount, seriesPaths, tileSide } from "./WidgetKinds";
@@ -164,5 +164,13 @@ describe("bars, columns and tiles", () => {
     expect(tileSide(400, 2)).toBe(9);
     expect(tileSide(200, 3)).toBe(16);
     expect(tileSide(200, 3, 6)).toBe(12);
+  });
+});
+
+describe("table cells on a phone", () => {
+  it("leave out the columns marked phone hide and keep numbers right-aligned", () => {
+    expect(cellClass({ key: "a", label: "A" })).toBeUndefined();
+    expect(cellClass({ key: "a", label: "A", numeric: true, className: "small" })).toBe("num small");
+    expect(cellClass({ key: "a", label: "A", phone: "hide" })).toBe("pc-dt-phone-hide");
   });
 });

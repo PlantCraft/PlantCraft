@@ -14,7 +14,10 @@
 - language models are only for the people an administrator created (editors and
   administrators): visitors never reach one, and neither do the apps' uses;
 - each client address gets at most ``PLANTCRAFT_PUBLIC_DEMO_RATE`` requests per minute
-  (default 600) before a 429.
+  (default 600) before a 429;
+- ``PLANTCRAFT_PUBLIC_DEMO_STATS_KEY``, when set, lets whoever holds it read how many people
+  visited and for how long (``GET /api/demo/stats``, no addresses): the site's private stats
+  page asks for it. Unset, that route is a 404.
 """
 
 from __future__ import annotations
@@ -54,6 +57,8 @@ class PublicDemo:
     idle_minutes: int = DEFAULT_IDLE_MINUTES
     queries: int = DEFAULT_QUERIES
     queries_total: int = DEFAULT_QUERIES_TOTAL
+    # Who may read the visits' numbers (GET /api/demo/stats); empty: nobody.
+    stats_key: str = ""
 
     def as_dict(self) -> dict[str, int]:
         """What the sign-in page says about the demo (never the visitor's password)."""
@@ -97,6 +102,7 @@ def public_demo() -> PublicDemo | None:
         queries_total=_number(
             "PLANTCRAFT_PUBLIC_DEMO_QUERIES_TOTAL", DEFAULT_QUERIES_TOTAL, 1, 512
         ),
+        stats_key=os.environ.get("PLANTCRAFT_PUBLIC_DEMO_STATS_KEY", "").strip(),
     )
 
 

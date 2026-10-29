@@ -21,6 +21,8 @@ export type DataColumn<Row> = {
   /** Right-aligned numbers. */
   numeric?: boolean;
   className?: string;
+  /** "hide": left out on a phone (a secondary column: the row's page has it). */
+  phone?: "hide";
   /** A filter above the table (the suite's MultiSelect) that keeps the rows with the values
    * ticked in this column: `true` lists the values found in the rows; `options` fixes the list
    * (e.g. every status, in order). */
@@ -111,6 +113,11 @@ export function arrangeRows<Row>(rows: Row[], columns: DataColumn<Row>[], sort: 
   }).map((item) => item.row);
 }
 
+/** A column's cells' classes: numbers right-aligned, the column's own, hidden on a phone. */
+export function cellClass<Row>(column: DataColumn<Row>): string | undefined {
+  return [column.numeric ? "num" : "", column.className ?? "", column.phone === "hide" ? "pc-dt-phone-hide" : ""].filter(Boolean).join(" ") || undefined;
+}
+
 /** "26–50 of 132". */
 export function pageText(page: number, size: number, total: number): string {
   if (!total) return t("0 of 0");
@@ -192,14 +199,14 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
       <table className="table" aria-label={label}>
         <thead><tr>
           {selectable && <th className="pc-dt-check"><input type="checkbox" checked={allVisibleTicked} onChange={toggleVisible} aria-label={t("Select the rows of this page")} /></th>}
-          {columns.map((column) => <th key={column.key} className={[column.numeric ? "num" : "", column.className ?? ""].join(" ").trim() || undefined} aria-sort={sort?.key === column.key ? (sort.descending ? "descending" : "ascending") : undefined}>{header(column)}</th>)}
+          {columns.map((column) => <th key={column.key} className={cellClass(column)} aria-sort={sort?.key === column.key ? (sort.descending ? "descending" : "ascending") : undefined}>{header(column)}</th>)}
         </tr></thead>
         <tbody>
           {visible.map((row) => {
             const key = rowKey(row);
             return <tr key={key} className={[onRowClick ? "pc-dt-clickable" : "", rowClassName?.(row) ?? ""].join(" ").trim() || undefined} onClick={onRowClick ? (event) => { if ((event.target as HTMLElement).closest("a,button,input,select,label")) return; onRowClick(row); } : undefined}>
               {selectable && <td className="pc-dt-check"><input type="checkbox" checked={ticked.has(key)} onChange={() => toggle(key)} aria-label={t("Select")} /></td>}
-              {columns.map((column) => <td key={column.key} className={[column.numeric ? "num" : "", column.className ?? ""].join(" ").trim() || undefined}>{column.render ? column.render(row) : String((row as Record<string, unknown>)[column.key] ?? "")}</td>)}
+              {columns.map((column) => <td key={column.key} className={cellClass(column)}>{column.render ? column.render(row) : String((row as Record<string, unknown>)[column.key] ?? "")}</td>)}
             </tr>;
           })}
           {!visible.length && <tr><td colSpan={columns.length + (selectable ? 1 : 0)} className="pc-dt-empty">{query ? t("Nothing matches “{query}”.", { query }) : filtering ? t("Nothing matches the filters.") : empty ?? t("Nothing to show.")}</td></tr>}

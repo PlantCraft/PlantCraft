@@ -35,14 +35,14 @@ function ruleColumns(directory: ReturnType<typeof useDirectory>, me: Me, onChang
   const who = (rule: Rule) => (rule.notifies ? rule.recipients.map((ref) => whoLabel(ref, directory)).join(", ") : t("Alarms only"));
   return [
     { key: "on", label: t("On"), sort: (rule) => (rule.enabled ? 0 : 1), filter: { options: [{ value: "on", label: t("On") }, { value: "off", label: t("Off") }], value: (rule) => (rule.enabled ? "on" : "off") }, render: (rule) => <RuleSwitch rule={rule} me={me} onChanged={onChanged} /> },
-    { key: "name", label: t("Rule"), sort: (rule) => rule.name, render: (rule) => <>
+    { key: "name", label: t("Rule"), className: "al-name", sort: (rule) => rule.name, render: (rule) => <>
       <Link to={`/rules/${rule.rule_id}`} className="strong">{rule.name}</Link>{!rule.valid && <> <Pill status="alarm" label={t("Needs a fix")} /></>}
       <div className="small muted">{rule.where_words}</div>
     </> },
-    { key: "when", label: t("When"), sort: (rule) => rule.sentence, filter: { options: labelled(EDITOR_WORDS), value: (rule) => rule.editor, label: t("Written as") }, render: (rule) => <>{rule.sentence}<div className="small muted">{t(EDITOR_WORDS[rule.editor] ?? rule.editor)}</div></> },
+    { key: "when", label: t("When"), phone: "hide", sort: (rule) => rule.sentence, filter: { options: labelled(EDITOR_WORDS), value: (rule) => rule.editor, label: t("Written as") }, render: (rule) => <>{rule.sentence}<div className="small muted">{t(EDITOR_WORDS[rule.editor] ?? rule.editor)}</div></> },
     { key: "creates", label: t("Makes"), className: "small", sort: (rule) => rule.creates, filter: { value: (rule) => t(rule.creates_label) }, render: (rule) => <><PriorityPill priority={rule.priority} /> {t(rule.creates_label)}</> },
-    { key: "alarms", label: t("Alarms"), numeric: true, sort: (rule) => rule.alarms, render: (rule) => <>{rule.alarms}{rule.active > 0 && <div className="small"><Link to={`/alarms?rule=${encodeURIComponent(rule.rule_id)}`}>{t("{n} active", { n: rule.active })}</Link></div>}</> },
-    { key: "who", label: t("Notifies"), className: "small", sort: who, render: who },
+    { key: "alarms", label: t("Alarms"), numeric: true, phone: "hide", sort: (rule) => rule.alarms, render: (rule) => <>{rule.alarms}{rule.active > 0 && <div className="small"><Link to={`/alarms?rule=${encodeURIComponent(rule.rule_id)}`}>{t("{n} active", { n: rule.active })}</Link></div>}</> },
+    { key: "who", label: t("Notifies"), className: "small", phone: "hide", sort: who, render: who },
   ];
 }
 
@@ -140,7 +140,7 @@ export function SilencesPage({ me }: { me: Me }) {
     {!silences ? <Loading /> : silences.length ? <DataTable rows={silences} rowKey={(silence) => String(silence.silence_id)} label={t("Silences")} initialSort={{ key: "until", descending: true }} columns={[
       { key: "what", label: t("Silenced"), render: (silence) => <>{scopeWords(silence, alarms)}<div className="small muted">{silence.reason}</div></> },
       { key: "until", label: t("Until"), className: "small nowrap", sort: (silence) => silence.ends_at, render: (silence) => <>{silence.active ? <Pill status="warning" label={t("In force")} /> : <Pill status="unknown" label={t("Ended")} />} {formatDate(silence.ends_at)}</> },
-      { key: "who", label: t("By"), className: "small", render: (silence) => whoLabel(`user:${silence.created_by}`, directory) },
+      { key: "who", label: t("By"), className: "small", phone: "hide", render: (silence) => whoLabel(`user:${silence.created_by}`, directory) },
       { key: "actions", label: <span className="sr-only">{t("Actions")}</span>, className: "row-actions", render: (silence) => me.can_edit && silence.active && <button type="button" className="button button-small button-secondary" onClick={() => act(() => api.endSilence(silence.silence_id))}>{t("End now")}</button> },
     ]} /> : <div className="panel al-empty"><h2>{t("No silence in the last week")}</h2><p className="muted">{t("Before a planned shutdown, silence its area so nobody is woken up for alarms everyone expects.")}</p></div>}
     {adding && <SilenceDialog assets={assets} alarms={alarms} onClose={() => setAdding(false)} onSaved={() => { setAdding(false); void load(); }} />}

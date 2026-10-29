@@ -6,7 +6,7 @@
 ## What PlantCraft is
 
 PlantCraft is a complete, open suite of industrial software for process engineers: a historian,
-analytics for signals and control loops, alarms, dashboards and process diagrams, process models,
+analytics for signals and plant assets (control loops among them), alarms, dashboards and process diagrams, process models,
 plant documents, notebooks and each person's day (Desk), in one platform. It is built to work
 with AI: creating things and asking questions go through an assistant on every page.
 
@@ -18,15 +18,21 @@ quickly find where the plant has a problem, and discuss and plan the solution wi
 1. **Open.** All the code and every method is open, under the Apache License 2.0. Anyone may use,
    change and extend it. The suite is made to grow: new apps for specific uses start from the app
    template and slot in beside the official ones.
-2. **Secure.** It installs offline on the plant's own servers, only reads the plant (it never
-   writes to a DCS, PLC, PI or OPC UA server), publishes one HTTPS port, asks for sign-in by
-   default, and keeps language models off until an administrator turns one on.
-3. **LLM-first.** The assistant builds the block, the algorithm, the alarm rule, the model or the
-   dashboard when asked, and answers questions about the plant from its own data, with the
-   permissions of the person asking. Every proposal is confirmed by a person.
-4. **Fast.** Value in days, not months: the demo installs in about ten minutes, Analytics checks
-   every signal and control loop from its first round, and a new app starts from a template that
-   already has the interface, the tests and the rules.
+2. **Secure.** It installs on the customer's own infrastructure and network (even with no
+   internet), only reads the plant (it never writes to a DCS, PLC, PI or OPC UA server), publishes
+   one HTTPS port with sign-in and an audit log, runs calculations isolated with no network or
+   secrets, backs up before every update, and keeps language models off until an administrator
+   turns one on. The model is configurable: any provider the customer chooses, or a model the
+   company already runs on its own network.
+3. **LLM-first.** Mainly an assistant that checks the calculations and the results, points to
+   what needs attention and suggests actions, in a chat, instead of the engineer searching through
+   results and charts. It answers from the plant's own data, with the permissions of the person
+   asking. It also helps build blocks, algorithms, alarm rules and models. Every proposal is
+   confirmed by a person.
+4. **Fast.** Value in days, not months: it installs from the offline bundle in under an hour,
+   one algorithm runs on one asset in about 0.2 s, Analytics checks every signal and asset from
+   its first round, and a new app starts from a template that already has the interface, the
+   tests and the rules.
 
 ## Quick facts (measured; use these numbers)
 
@@ -37,7 +43,7 @@ quickly find where the plant has a problem, and discuss and plan the solution wi
   at 16 vCPU, 64 GB and 4 TB.
 - **Measured on a 4 vCPU, 16 GB machine** at 8,000 signals and 2,050 loops: Analytics checks
   every loop in 106 s, a 24-hour trend comes back in 21 ms (p95), the Historian writes 29,000
-  values a second, and 30 people at once open a page in 1.4 s (p95). There is no licence limit
+  values a second (or more on a larger server), and 30 people at once open a page in 1.4 s (p95). There is no licence limit
   on users or signals; the limits are the server's.
 - **Network:** one inbound port, HTTPS 443, from the people who use it. Outbound only to the
   plant's data sources an administrator registers (and to a language model, only if one is set
@@ -49,8 +55,8 @@ quickly find where the plant has a problem, and discuss and plan the solution wi
 - **No lock-in:** plain Python, Modelica and JSON underneath; everything can be exported at any
   time: history as CSV, models as Modelica files, the plant map as JSON or Excel, reports as PDF
   or Word ([Your data](../../docs/your-data.md)).
-- **Install time:** about ten minutes for the demo; on a plant server, under ten minutes from
-  copying the bundle to the first sign-in, plus the plant's own approvals.
+- **Install time:** under an hour from copying the offline bundle to the first sign-in (the demo
+  took about ten minutes in our tests on a prepared machine), plus the plant's own approvals.
 - **Signed releases:** every bundle is signed with the publisher's Ed25519 key. You check it with
   `ssh-keygen` before unpacking, and `install.sh` checks it again before it changes anything
   ([Check a release](../../docs/verify-a-release.md)).
@@ -69,7 +75,9 @@ quickly find where the plant has a problem, and discuss and plan the solution wi
   files; the names and logos are trademarks ([TRADEMARKS](../../TRADEMARKS.md)).
 - **No prices, plans or packages are published.** For help to install it at a plant, a pilot, a
   guided demo, training, support, a custom app, a partnership, or any commercial question, the
-  answer is: talk to us, through the contact form of this chat, and the team writes back by email.
+  answer is: talk to us, through the contact form of this chat or by email to info@plantcraft.io,
+  and the team writes back by email. Security reports go to security@plantcraft.io (or GitHub's
+  private vulnerability reporting).
 - The team never quotes a price, a discount, a date or a delivery time in this chat.
 
 ## Status

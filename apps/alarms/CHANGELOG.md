@@ -6,6 +6,12 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Changed
+
+- **On a phone (fine pass 2026-10-28).** Alarms shows the alarm's name, its priority and state
+  under it, and its value; Events its event, what it is about and when; Rules its switch, name and
+  what it makes; the journal leaves out who and the detail. The other columns stay on a computer.
+
 ### Removed
 
 - The Blocks editor's library endpoint (`GET /api/rules/blocks`): nothing reads it since Blocks

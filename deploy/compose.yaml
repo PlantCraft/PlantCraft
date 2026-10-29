@@ -125,6 +125,8 @@ services:
       PLANTCRAFT_PUBLIC_DEMO: "${PLANTCRAFT_PUBLIC_DEMO:-false}"
       PLANTCRAFT_PUBLIC_DEMO_PASSWORD: "${PLANTCRAFT_PUBLIC_DEMO_PASSWORD:-}"
       PLANTCRAFT_PUBLIC_DEMO_RATE: "${PLANTCRAFT_PUBLIC_DEMO_RATE:-600}"
+      # The key the site's private stats page reads the demo's visits with (empty: nobody).
+      PLANTCRAFT_PUBLIC_DEMO_STATS_KEY: "${PLANTCRAFT_PUBLIC_DEMO_STATS_KEY:-}"
       PLANTCRAFT_LANGUAGE: "${PLANTCRAFT_LANGUAGE:-en}"
       PLANTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
       # The apps of the suite run by this file (the launcher, access and API v1 list them);

@@ -87,13 +87,16 @@ export type CardGridProps = {
   render: (id: string, fold?: CellFold) => ReactNode;
   /** On a phone, the cells after this many (in reading order) start folded to their title. */
   foldAfter?: number;
+  /** On a phone, each card stacked at its own grid height ("grid", a dashboard's charts), or only
+   * as tall as what it shows ("content", Overview widgets: a short list leaves no gap below it). */
+  phoneHeight?: "grid" | "content";
   /** The part of a card that drags it (a CSS selector inside the card). */
   handle?: string;
   className?: string;
   label?: string;
 };
 
-export function CardGrid({ cells, editing = false, resizable, onChange, limits, render, foldAfter, handle = ".pc-cards-handle", className = "", label }: CardGridProps) {
+export function CardGrid({ cells, editing = false, resizable, onChange, limits, render, foldAfter, phoneHeight = "grid", handle = ".pc-cards-handle", className = "", label }: CardGridProps) {
   const { width, containerRef, mounted } = useContainerWidth();
   const narrow = mounted && width < GRID_NARROW;
   const [unfolded, setUnfolded] = useState<ReadonlySet<string>>(() => new Set());
@@ -114,11 +117,11 @@ export function CardGrid({ cells, editing = false, resizable, onChange, limits, 
     return { ...cell, minW: limit.minW ?? 2, minH: limit.minH ?? 1, maxH: limit.maxH ?? GRID_MAX_H, static: !editing, ...(resizable === false ? { isResizable: false } : {}) };
   });
   return <div ref={containerRef} className={`pc-cards${editing ? " pc-cards-editing" : ""} ${className}`.trim()} aria-label={label}>
-    {narrow && <div className="pc-cards-stack">
+    {narrow && <div className={`pc-cards-stack${phoneHeight === "content" ? " pc-cards-stack-content" : ""}`}>
       {readingOrder(cells).map((cell, index) => {
         // A phone shows the first cards whole and the rest as titles to open (a long page otherwise).
         const fold: CellFold | undefined = foldAfter !== undefined && !editing && index >= foldAfter ? { folded: !unfolded.has(cell.i), toggle: () => toggle(cell.i) } : undefined;
-        return <div key={cell.i} className={`pc-cards-cell${fold?.folded ? " pc-cards-folded" : ""}`} style={fold?.folded ? undefined : { minHeight: cell.h * GRID_ROW + (cell.h - 1) * GRID_GAP }}>{render(cell.i, fold)}</div>;
+        return <div key={cell.i} className={`pc-cards-cell${fold?.folded ? " pc-cards-folded" : ""}`} style={fold?.folded || phoneHeight === "content" ? undefined : { minHeight: cell.h * GRID_ROW + (cell.h - 1) * GRID_GAP }}>{render(cell.i, fold)}</div>;
       })}
     </div>}
     {mounted && !narrow && <ReactGridLayout layout={layout} width={width} onLayoutChange={change}

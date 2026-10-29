@@ -87,6 +87,10 @@
 			status 200
 		}
 	}
+	# They never set a cookie (PlantCraft sets the plant's time zone on every answer): a shared
+	# cache in front of the suite, such as Cloudflare's for the public demo, keeps no answer that
+	# sets one, and these files hold nothing of the visitor.
+	header @built -Set-Cookie
 
 	# Request bodies up to 64 MB, except app packages uploaded to the Apps page (PlantCraft
 	# checks their size itself, PLANTCRAFT_APP_MAX_MB) and the files sent to PlantCraft

@@ -17,7 +17,8 @@ from typing import Annotated, Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from processcraft.api.deps import Runtime
+from processcraft.api.deps import Runtime, claims_marks_owner
+from processcraft.api.feed import mark_conversation_read
 from processcraft.api.identity import READ_LEVELS, Caller, V1Caller
 from processcraft.api.routers.messages import (
     _member_conversation,
@@ -161,7 +162,8 @@ def conversation(
     cache: dict[str, dict[str, Any]] = {}
     messages = rt.workspace.messages.messages(conversation_id, after=after, limit=300)
     if messages:
-        rt.workspace.messages.mark_read(conversation_id, user, messages[-1]["message_id"])
+        owner = claims_marks_owner(caller.username, caller.claims)
+        mark_conversation_read(rt, user, owner, conversation_id, messages[-1]["message_id"])
     return {
         "conversation": _present_conversation(found, user, _subjects(rt)),
         "messages": [_present_message(rt, item, cache, user) for item in messages],

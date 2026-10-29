@@ -1,4 +1,5 @@
-"""The site's server: the built page and its two calls, the chat and the contact form.
+"""The site's server: the built page and its calls (the chat, the contact form, the page views)
+and the owner's private stats page.
 
 SITE_CHAT_PROVIDER     openai | anthropic | off (default off: the chat shows only the form)
 SITE_CHAT_API_KEY      the provider's key (or SITE_CHAT_API_KEY_FILE, a file holding it)
@@ -13,25 +14,38 @@ SITE_TRUST_PROXY       1 when a reverse proxy in front sets X-Forwarded-For; clo
                        Cloudflare Tunnel (the visitor is CF-Connecting-IP)
 SITE_DIST              the built site (default ./dist); its knowledge.json is what the chat reads
 SITE_DOCS_URL          where the cited pages are published (default: the public repository)
+SITE_STATS_PASSWORD    the password of /stats, the owner's stats page (or SITE_STATS_PASSWORD_FILE);
+                       unset: /stats is a 404
+SITE_STATS_TIMEZONE    the time zone /stats counts days in (default UTC)
+SITE_DEMO_STATS_URL    the public demo's GET /api/demo/stats, shown on /stats (optional), with
+SITE_DEMO_STATS_KEY_FILE  a file holding the demo's PLANTCRAFT_PUBLIC_DEMO_STATS_KEY
 """
 
 from __future__ import annotations
 
+import base64
+import binascii
 import os
-from dataclasses import dataclass
+import secrets
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ValidationError
 
 from . import chat
 from .contacts import Contact, Inbox
-from .guard import MAX_HISTORY, MAX_MESSAGE, MAX_TURNS, Limits
+from .guard import MAX_HISTORY, MAX_MESSAGE, MAX_TURNS, Limits, Window
 from .knowledge import Knowledge
 from .llm import Model, make_model
+from .stats import DAYS, DemoSource, events_csv, journeys, render, summary
+from .visits import Visits
 
 DOCS_URL = "https://github.com/PlantCraft/PlantCraft/blob/main"
 MAX_BODY = 64 * 1024
@@ -54,6 +68,9 @@ class Settings:
     log_questions: bool = True
     trust_proxy: bool | str = False  # True: X-Forwarded-For; "cloudflare": CF-Connecting-IP
     daily_limit: int = 1000
+    stats_password: str = ""
+    stats_timezone: str = "UTC"
+    demo_stats: DemoSource = field(default_factory=DemoSource)
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -69,6 +86,9 @@ class Settings:
             env.get("SITE_CHAT_REASONING", ""),
         )
         dist = Path(env.get("SITE_DIST", "dist"))
+        demo_key = ""
+        if env.get("SITE_DEMO_STATS_KEY_FILE") and Path(env["SITE_DEMO_STATS_KEY_FILE"]).exists():
+            demo_key = Path(env["SITE_DEMO_STATS_KEY_FILE"]).read_text().strip()
         knowledge = None
         if (dist / "knowledge.json").exists():
             knowledge = Knowledge.load(dist / "knowledge.json")
@@ -82,7 +102,17 @@ class Settings:
             log_questions=env.get("SITE_LOG_QUESTIONS", "1") not in ("0", "false", "off"),
             trust_proxy=_trust_proxy(env.get("SITE_TRUST_PROXY", "0")),
             daily_limit=int(env.get("SITE_CHAT_DAILY_LIMIT", "1000")),
+            stats_password=_secret(env, "SITE_STATS_PASSWORD"),
+            stats_timezone=env.get("SITE_STATS_TIMEZONE", "UTC").strip() or "UTC",
+            demo_stats=DemoSource(env.get("SITE_DEMO_STATS_URL", "").strip(), demo_key),
         )
+
+
+def _secret(env, name: str) -> str:
+    value = env.get(name, "").strip()
+    if not value and env.get(f"{name}_FILE") and Path(env[f"{name}_FILE"]).exists():
+        value = Path(env[f"{name}_FILE"]).read_text().strip()
+    return value
 
 
 def _trust_proxy(value: str) -> bool | str:
@@ -95,6 +125,15 @@ def _trust_proxy(value: str) -> bool | str:
 class Message(BaseModel):
     role: Literal["user", "assistant"]
     content: str = Field(min_length=1, max_length=4000)
+
+
+class VisitRequest(BaseModel):
+    id: str = Field(min_length=1, max_length=40)
+    # Only on the page view's first call.
+    page: str | None = Field(default=None, max_length=200)
+    ref: str = Field(default="", max_length=200)
+    # A button or link clicked: its words and where it goes.
+    click: str = Field(default="", max_length=200)
 
 
 class ChatRequest(BaseModel):
@@ -114,6 +153,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
     limits = Limits(settings.daily_limit)
     inbox = Inbox(settings.data_dir, settings.webhook, settings.log_questions)
+    visits = Visits(settings.data_dir)
+    stats_failures = Window(10, 600)
+    try:
+        zone = ZoneInfo(settings.stats_timezone)
+    except (ZoneInfoNotFoundError, ValueError):
+        zone = ZoneInfo("UTC")
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.state.settings = settings
 
@@ -141,7 +186,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-        if request.url.path.startswith("/api/"):
+        if request.url.path.startswith(("/api/", "/stats")):
             response.headers["Cache-Control"] = "no-store"
         return response
 
@@ -198,6 +243,80 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return JSONResponse({"error": "too many requests, try again later"}, status_code=429)
         inbox.add_contact(data)
         return {"ok": True}
+
+    @app.post("/api/visit")
+    def visit(body: VisitRequest, request: Request):
+        visits.hit(
+            body.id,
+            address=address(request),
+            agent=request.headers.get("user-agent", "")[:400],
+            page=body.page,
+            referrer=body.ref,
+            click=body.click,
+            # Cloudflare's guess of the visitor's country (when its IP Geolocation is on).
+            country=request.headers.get("cf-ipcountry", "")
+            if settings.trust_proxy == "cloudflare"
+            else "",
+        )
+        return Response(status_code=204)
+
+    def owner(request: Request) -> Response | None:
+        """None for the owner (the stats password); otherwise the answer to give."""
+        if not settings.stats_password:
+            return JSONResponse({"detail": "Not Found"}, status_code=404)
+        given = ""
+        scheme, _, encoded = request.headers.get("authorization", "").partition(" ")
+        if scheme.lower() == "basic":
+            try:
+                given = base64.b64decode(encoded).decode().partition(":")[2]
+            except (binascii.Error, UnicodeDecodeError):
+                given = ""
+        if given and secrets.compare_digest(given.encode(), settings.stats_password.encode()):
+            return None
+        if given and not stats_failures.allow(address(request)):
+            return JSONResponse({"error": "too many tries, wait a few minutes"}, 429)
+        return Response(
+            status_code=401, headers={"WWW-Authenticate": 'Basic realm="PlantCraft stats"'}
+        )
+
+    def window(now: float) -> float:
+        start = datetime.fromtimestamp(now, zone).replace(hour=0, minute=0, second=0, microsecond=0)
+        return (start - timedelta(days=DAYS - 1)).timestamp()
+
+    @app.get("/stats")
+    def stats(request: Request):
+        refused = owner(request)
+        if refused is not None:
+            return refused
+        now = time.time()
+        start = window(now)
+        views = visits.since(start)
+        demo = settings.demo_stats.read(DAYS + 1)
+        data = summary(
+            views,
+            demo,
+            inbox.questions(),
+            inbox.contacts(),
+            zone,
+            now,
+            visits.clicks(start),
+            journeys(views, visits.clicked(start), demo),
+        )
+        return HTMLResponse(render(data, zone, now))
+
+    @app.get("/stats/events.csv")
+    def events(request: Request):
+        refused = owner(request)
+        if refused is not None:
+            return refused
+        start = window(time.time())
+        views = visits.since(start)
+        paths = journeys(views, visits.clicked(start), settings.demo_stats.read(DAYS + 1))
+        return Response(
+            events_csv(paths, zone),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="plantcraft-events.csv"'},
+        )
 
     if settings.dist is not None:
         app.mount("/", StaticFiles(directory=settings.dist, html=True), name="site")

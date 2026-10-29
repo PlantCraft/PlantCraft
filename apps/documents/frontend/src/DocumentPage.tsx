@@ -163,7 +163,7 @@ export function DocumentPage({ me, docId }: { me: Me; docId: string }) {
             columns={[
               { key: "revision", label: t("Rev."), sort: (rev) => rev.revision, render: (rev) => <a href={api.fileUrl(doc.doc_id, { revision: rev.rev_id })}>{rev.revision || "–"}</a> },
               { key: "status", label: t("Reading"), sort: (rev) => rev.status, render: (rev) => <StatusPill status={rev.status} /> },
-              { key: "when", label: t("Sent"), sort: (rev) => rev.uploaded_at, render: (rev) => <>{formatAgo(rev.uploaded_at)} <span className="muted">{rev.uploaded_by}</span></> },
+              { key: "when", label: t("Sent"), className: "nowrap", sort: (rev) => rev.uploaded_at, render: (rev) => <>{formatAgo(rev.uploaded_at)} <span className="muted">{rev.uploaded_by}</span></> },
             ]} />
         </section>
         {doc.can_edit && <p><button className="link-button danger" type="button" onClick={() => void remove()}>{t("Delete the document")}</button></p>}

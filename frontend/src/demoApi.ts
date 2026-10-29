@@ -11,7 +11,7 @@ export type Waiting = { entered: false; ticket: string | null; position: number;
 export const demoApi = {
   /** `guide`: the role the visitor picked (kept in the visit's audit entry). */
   enter: (ticket: string | null, guide: string | null = null) => requestJson<Entered | Waiting>("/api/demo/enter", { method: "POST", body: JSON.stringify({ ticket, guide }) }),
-  heartbeat: (active: boolean) => requestJson<DemoVisitInfo>("/api/demo/heartbeat", { method: "POST", body: JSON.stringify({ active }) }),
+  heartbeat: (active: boolean, pages: string[] = []) => requestJson<DemoVisitInfo>("/api/demo/heartbeat", { method: "POST", body: JSON.stringify({ active, pages }) }),
 };
 
 /** "12:05": minutes and seconds left. */

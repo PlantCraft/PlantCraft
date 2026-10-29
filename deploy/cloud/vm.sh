@@ -13,6 +13,8 @@
 #                     published on 127.0.0.1:443 only, behind the tunnel
 #   vm.sh all         setup, site and demo
 #   vm.sh status      what runs, and a request to each part
+#   vm.sh stats-password  prints the password of https://SITE_HOST/stats, the private stats page
+#                     (site visits, demo visits, chat questions, contacts), made by vm.sh site
 #
 # Settings (environment, or /etc/plantcraft-site/vm.env): SITE_HOST (plantcraft.io), DEMO_HOST
 # (demo.plantcraft.io), CONTACT (the team's e-mail, for the privacy page and security.txt),
@@ -142,6 +144,20 @@ chat_key() {
     log "chat key saved in $CONF/chat-key; the chat answers once vm.sh site has run"
 }
 
+stats_secrets() { # the stats page's password and the key it reads the demo's numbers with
+    install -d -m 0750 "$CONF"
+    getent group plantcraft-site >/dev/null && chgrp plantcraft-site "$CONF"
+    local name
+    for name in stats-password demo-stats-key; do
+        if [ ! -s "$CONF/$name" ]; then
+            (umask 077 && head -c 24 /dev/urandom | base64 | tr -d '/+=' >"$CONF/$name")
+        fi
+        chmod 0640 "$CONF/$name"
+        getent group plantcraft-site >/dev/null && chgrp plantcraft-site "$CONF/$name"
+    done
+    return 0
+}
+
 site() {
     local flags=(--demo-url "https://$DEMO_HOST/")
     [ -n "$CONTACT" ] && flags+=(--contact "$CONTACT")
@@ -175,6 +191,15 @@ EOF
         chmod 0640 "$CONF/site.env"
         chgrp plantcraft-site "$CONF/site.env"
     fi
+    stats_secrets
+    # The stats page (added after the first sites: appended once to an existing site.env).
+    grep -q '^SITE_STATS_PASSWORD_FILE=' "$CONF/site.env" || cat >>"$CONF/site.env" <<EOF
+# The private stats page https://$SITE_HOST/stats (vm.sh stats-password prints its password).
+SITE_STATS_PASSWORD_FILE=$CONF/stats-password
+SITE_STATS_TIMEZONE=$TIMEZONE
+SITE_DEMO_STATS_URL=https://$DEMO_HOST/api/demo/stats
+SITE_DEMO_STATS_KEY_FILE=$CONF/demo-stats-key
+EOF
     # Empty until vm.sh chat-key: the site starts with its chat off rather than not at all.
     [ -f "$CONF/chat-key" ] || install -m 0640 /dev/null "$CONF/chat-key"
     chgrp plantcraft-site "$CONF/chat-key"
@@ -222,6 +247,9 @@ demo() {
     set_env PLANTCRAFT_HOSTNAME "$DEMO_HOST"
     set_env PLANTCRAFT_BIND_ADDRESS 127.0.0.1
     set_env PLANTCRAFT_TRUSTED_PROXIES "$(printf '%s\n' $gateways | awk 'NF { printf "%s%s/32", sep, $1; sep = "," }')"
+    # The site's stats page reads the demo's visits with this key.
+    stats_secrets
+    set_env PLANTCRAFT_PUBLIC_DEMO_STATS_KEY "$(cat "$CONF/demo-stats-key")"
     "$SUITE/install.sh" --yes
     log "demo at https://127.0.0.1/ (https://$DEMO_HOST through the tunnel)"
 }
@@ -238,6 +266,10 @@ case "${1:-}" in
     setup) setup ;;
     tunnel) tunnel ;;
     tunnel-login) tunnel_login ;;
+    stats-password)
+        stats_secrets
+        printf 'https://%s/stats  (any user name)  password: %s\n' "$SITE_HOST" "$(cat "$CONF/stats-password")"
+        ;;
     chat-key) chat_key ;;
     site) site ;;
     demo) demo ;;

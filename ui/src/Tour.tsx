@@ -73,6 +73,8 @@ const CARD_WIDTH = 380;
 const GAP = 14;
 const PAD = 6;
 const FIND_FOR_MS = 3000;
+/** How long a step's ``openPanel`` waits for its button to be drawn. */
+const WAIT_FOR_BUTTON_MS = 8000;
 
 /** Where the card goes: beside the target if there is room, else below or above it, else centred. */
 function cardPlace(box: Box | null, card: { width: number; height: number }): CSSProperties {
@@ -250,13 +252,13 @@ export function tourClosing(): TourStep {
 export function assistantTourStep(path: string, items: string[] = []): TourStep {
   return {
     path,
-    target: '[data-tour="assistant-title"]',
+    // The menu itself, open, so the step shows this page's questions (owner, 2026-10-28: not the icon).
+    // Without a menu (no model, outside a demo) the button itself.
+    target: '.pc-title-assistant-menu, [data-tour="assistant-title"]:not([aria-haspopup])',
     title: tt("The assistant on this page"),
     body: <AssistantStepBody items={items} />,
-    onShow: () => {
-      const button = document.querySelector<HTMLButtonElement>('[data-tour="assistant-title"]');
-      if (button && button.getAttribute("aria-expanded") !== "true") button.click();
-    },
+    // The button draws once the assistant's status arrives; until then it has no menu to open.
+    onShow: openPanel('[data-tour="assistant-title"][aria-haspopup="menu"]', ".pc-title-assistant-menu"),
   };
 }
 
@@ -299,8 +301,17 @@ export function openPanel(button: string, panel: string): () => () => void {
       const found = find();
       return Boolean(found && (found.classList.contains("pcs-active") || found.getAttribute("aria-pressed") === "true" || found.getAttribute("aria-expanded") === "true"));
     };
-    if (!open()) find()?.click();
-    return () => { if (open() && document.querySelector(panel)) find()?.click(); };
+    // A button drawn late (the assistant waits for its status, a slow server) is waited for.
+    const started = Date.now();
+    const timer = window.setInterval(() => {
+      const found = find();
+      if (found || Date.now() - started > WAIT_FOR_BUTTON_MS) window.clearInterval(timer);
+      if (found && !open()) found.click();
+    }, 150);
+    return () => {
+      window.clearInterval(timer);
+      if (open() && document.querySelector(panel)) find()?.click();
+    };
   };
 }
 

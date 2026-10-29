@@ -27,8 +27,11 @@ them and what they allow.
    - **The person's own marks.** `PUT /api/me/marks` with `{"key", "mark": "star" | "unread",
      "on"}`: a notification's key, `conversation:<id>` or `chat:<id>` (an assistant chat) as a
      favorite, and a conversation or an assistant chat unread again until it is opened. On a public
-     demo each visit keeps its own marks (`demo#visit:<id>`, gone a day later): the next visitor
-     starts from the demo as seeded.
+     demo each visit keeps its own marks (`demo#visit:<id>`, gone a day later), what it read in a
+     conversation too (`conversation:<id>@<message id>`, never the shared account's read mark):
+     the next visitor starts from the demo as seeded. A visit starts with the newest 20
+     notifications unread (`DEMO_UNREAD`) and the rest read; the seed leaves the newest message
+     of 4 conversations unread (`VISITOR_UNREAD`).
    - **Category and buttons.** `category` (`alarm`, `run`, `action`, `info`) chooses the icon and
      the filter; `actions` adds up to three buttons beside **Open**: `{"label": "Open the rule",
      "href": "/alarm/rules/4"}` opens a page, `{"label": "Acknowledge", "href":

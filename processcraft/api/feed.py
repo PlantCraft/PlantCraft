@@ -19,10 +19,12 @@ from typing import Any
 
 from processcraft.api.deps import action_visibility
 from processcraft.db import utc_text
-from processcraft.desk import hidden
+from processcraft.desk import VISIT_OWNER, hidden
 from processcraft.i18n import t
 
 FEED_DAYS = 30
+# How many notifications a public demo visit starts with unread.
+DEMO_UNREAD = 20
 CATEGORIES = ("alarm", "run", "action", "info")
 _TITLE = re.compile(r"^\*\*(?P<title>.+?)\*\*\s*(?:\n+(?P<text>.*))?$", re.DOTALL)
 
@@ -188,20 +190,56 @@ def notification_feed(rt: Any, user: str, owner: str | None = None) -> list[dict
     ]
     marks = rt.desk.triage(owner or user)
     stars = rt.desk.marks(owner or user, "star")
+    items.sort(key=lambda item: str(item.get("at") or ""), reverse=True)
+    # A public demo visit starts with the newest few unread, the rest read (owner, 2026-10-28):
+    # the same for every visitor, whatever the live plant added since the seed.
+    fresh = DEMO_UNREAD if owner and VISIT_OWNER in owner else None
     for item in items:
+        seen = item.pop("seen", False)
+        if fresh is not None and not seen:
+            seen = fresh <= 0
+            fresh -= 1
         mark = marks.get(item["key"])
         item["starred"] = mark_key(item["key"]) in stars
         if mark and mark["state"] in ("done", "snoozed") and hidden(mark):
             item["state"] = "archived"
         elif mark and mark["state"] == "unread":
             item["state"] = "unread"
-        elif (mark and mark["state"] == "read") or item.pop("seen", False):
+        elif (mark and mark["state"] == "read") or seen:
             item["state"] = "read"
         else:
             item["state"] = "unread"
-        item.pop("seen", None)
-    items.sort(key=lambda item: str(item.get("at") or ""), reverse=True)
     return items[:300]
+
+
+def visit_reads(rt: Any, owner: str) -> dict[int, int] | None:
+    """What a public demo visit read, by conversation (the newest message id it saw), read on
+    top of the account's own marks; None for anyone else."""
+
+    if VISIT_OWNER not in owner:
+        return None
+    reads: dict[int, int] = {}
+    for key in rt.desk.marks(owner, "read"):
+        ident, _, message = key.removeprefix("conversation:").partition("@")
+        if ident.isdigit() and message.isdigit():
+            reads[int(ident)] = max(reads.get(int(ident), 0), int(message))
+    return reads
+
+
+def mark_conversation_read(
+    rt: Any, user: str, owner: str, conversation_id: int, message_id: int | None = None
+) -> None:
+    """The person's read mark; a public demo visit keeps its own, so what one visitor opens
+    stays unread for the next (owner, 2026-10-28)."""
+
+    if VISIT_OWNER not in owner:
+        rt.workspace.messages.mark_read(conversation_id, user, message_id)
+        return
+    if message_id is None:
+        found = rt.workspace.messages.get(conversation_id) or {}
+        message_id = int((found.get("last_message") or {}).get("message_id") or 0)
+    if message_id:
+        rt.desk.set_mark(owner, f"conversation:{conversation_id}@{message_id}", "read", True)
 
 
 def marked_unread_chats(rt: Any, user: str, owner: str) -> int:
@@ -213,7 +251,7 @@ def marked_unread_chats(rt: Any, user: str, owner: str) -> int:
         return 0
     return sum(
         1
-        for item in rt.workspace.messages.list_for(user)
+        for item in rt.workspace.messages.list_for(user, read_upto=visit_reads(rt, owner))
         if f"conversation:{item['conversation_id']}" in marked and not item.get("unread")
     )
 

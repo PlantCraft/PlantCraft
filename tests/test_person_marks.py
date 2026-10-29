@@ -134,3 +134,69 @@ def test_a_demo_visit_marks_for_itself_only(demo_app):
     assert other.post("/api/demo/enter", json={}).json()["entered"] is True
     fresh = other.get(f"/api/messages/conversations/{cid}").json()["conversation"]
     assert fresh["starred"] is False
+
+
+def test_a_demo_visit_reads_a_conversation_for_itself_only(demo_app):
+    """Opening a conversation is the visit's read: the next visitor finds it unread as seeded
+    (owner, 2026-10-28), and the seed leaves the newest few unread for every visit."""
+
+    from processcraft.demo_seed import VISITOR_UNREAD, visitor_unread
+
+    rt = demo_app.state.runtime
+    sent = rt.workspace.messages
+    rt.workspace.users.upsert_user("ana", "Ana", "Engineer")
+    ids = []
+    for number in range(VISITOR_UNREAD + 2):
+        started = sent.start("ana", ["demo"], title=f"Talk {number}")
+        sent.post(started["conversation_id"], "ana", "First")
+        sent.post(started["conversation_id"], "ana", "Second")
+        ids.append(started["conversation_id"])
+    assert visitor_unread(rt.workspace) == VISITOR_UNREAD
+    assert visitor_unread(rt.workspace) == VISITOR_UNREAD  # the seed again: the same
+    assert sent.unread_total("demo") == VISITOR_UNREAD
+
+    visitor = TestClient(demo_app, headers=EDGE)
+    assert visitor.post("/api/demo/enter", json={}).json()["entered"] is True
+    assert visitor.get("/api/messages/conversations").json()["unread"] == VISITOR_UNREAD
+    newest = ids[-1]
+    read = visitor.post(f"/api/messages/conversations/{newest}/read", json={})
+    assert read.json()["unread"] == VISITOR_UNREAD - 1
+    listed = visitor.get("/api/messages/conversations").json()
+    assert listed["unread"] == VISITOR_UNREAD - 1
+    assert (
+        next(item for item in listed["items"] if item["conversation_id"] == newest)["unread"] == 0
+    )
+    # The account's own read marks are untouched.
+    assert sent.unread_total("demo") == VISITOR_UNREAD
+
+    visitor.post("/api/logout")
+    other = TestClient(demo_app, headers=EDGE)
+    assert other.post("/api/demo/enter", json={}).json()["entered"] is True
+    assert other.get("/api/messages/conversations").json()["unread"] == VISITOR_UNREAD
+
+
+def test_a_demo_visit_starts_with_the_newest_notifications_unread(demo_app):
+    from processcraft.api.feed import DEMO_UNREAD, notification_feed
+
+    rt = demo_app.state.runtime
+    robot = rt.workspace.messages
+    rt.workspace.users.upsert_user("alarmcraft", "Alarms", "App", kind="system")
+    talk = robot.start("alarmcraft", ["demo"], title="")
+    for number in range(DEMO_UNREAD + 7):
+        robot.post(
+            talk["conversation_id"],
+            "alarmcraft",
+            f"**Alarm {number}**",
+            meta={"kind": "notification", "app": "alarmcraft", "key": f"alarm:{number}"},
+        )
+    everyone = notification_feed(rt, "demo")
+    assert sum(item["state"] == "unread" for item in everyone) == DEMO_UNREAD + 7
+    visit = notification_feed(rt, "demo", "demo#visit:a")
+    unread = [item for item in visit if item["state"] == "unread"]
+    assert len(unread) == DEMO_UNREAD and unread[0]["key"] == visit[0]["key"]
+    # Marking one read takes one off, it does not bring an older one back.
+    rt.desk.set_triage("demo#visit:a", unread[0]["key"], "read")
+    again = notification_feed(rt, "demo", "demo#visit:a")
+    assert sum(item["state"] == "unread" for item in again) == DEMO_UNREAD - 1
+    other = notification_feed(rt, "demo", "demo#visit:b")
+    assert sum(item["state"] == "unread" for item in other) == DEMO_UNREAD

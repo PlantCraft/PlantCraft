@@ -218,11 +218,13 @@ a.kpi-split-item:hover { background: var(--pc-surface-2); }
 .table td { padding: 11px 14px; border-bottom: 1px solid var(--pc-border-subtle); vertical-align: top; font-size: var(--pc-fs-sm); }
 .table td small { display: block; margin-top: 3px; color: var(--pc-text-3); }
 .table tbody tr:last-child td { border-bottom: 0; }
-.table th.num, .table td.num { text-align: right; }
+.table th.num, .table td.num { text-align: right; white-space: nowrap; }
 .clickable { cursor: pointer; }
 .clickable:hover td { background: var(--pc-surface-2); }
 .row-actions { margin-top: 12px; display: flex; gap: 6px; justify-content: flex-end; }
 .table .row-actions { margin-top: 0; }
+/* A header cell stays a table cell (as flex it drops out of the header row and its rule). */
+.table th.row-actions { display: table-cell; }
 .alerts { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
 .alerts li { display: flex; gap: 12px; align-items: baseline; }
 .charts { display: grid; gap: 6px; }
@@ -381,6 +383,11 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 /* DataTable: sort, filter, pages, a checkbox per row ------------------------------------ */
 .pc-dt { margin-bottom: 18px; }
 .pc-dt .table-panel { border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: var(--pc-shadow-1); }
+/* A phone: tighter cells, secondary columns left out (DataColumn phone "hide"). */
+@media (max-width: 720px) {
+  .pc-dt .table th, .pc-dt .table td { padding: 9px 10px; }
+  .pc-dt .pc-dt-phone-hide { display: none; }
+}
 .pc-dt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
 .pc-dt-search { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text-3); flex: 1 1 240px; max-width: 360px; }
 .pc-dt-search input { border: 0; outline: 0; background: transparent; color: var(--pc-text); font: inherit; width: 100%; min-height: 34px; padding: 0; box-shadow: none; }
@@ -468,6 +475,10 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 .pc-cards-cell { min-width: 0; min-height: 0; }
 .pc-cards-cell > * { height: 100%; }
 .pc-cards-stack { display: flex; flex-direction: column; gap: 14px; }
+/* Widgets on a phone: each as tall as it shows (no desktop row height left empty under a short
+   list); a chart keeps a readable height of its own. */
+.pc-cards-stack-content .pc-cards-cell > * { height: auto; }
+.pc-cards-stack-content .pc-wg-chart { flex: none; height: 120px; }
 @media (prefers-reduced-motion: reduce) { .pc-cards .react-grid-layout, .pc-cards .react-grid-item { transition: none; } }
 .pc-wg-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
 .pc-wg-card-head h2 { margin: 0; min-width: 0; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--pc-text-3); font-size: var(--pc-fs-sm); font-weight: var(--pc-fw-medium); }

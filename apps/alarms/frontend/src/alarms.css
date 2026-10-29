@@ -18,6 +18,13 @@
 .al-row-rtn_unacked td:first-child { box-shadow: inset 4px 0 0 var(--pc-info-fill); }
 .al-row-shelved, .al-row-out_of_service { opacity: .75; }
 .al-row .row-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+/* A phone (ui DataTable phone "hide"): the name column takes the room the left-out ones leave,
+   with the alarm's priority and state under it. */
+.al-phone-pills { display: none; }
+@media (max-width: 720px) {
+  .al-name { min-width: 11rem; }
+  .al-phone-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+}
 
 /* Performance */
 .al-shares { display: grid; gap: 10px; }

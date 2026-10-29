@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from processcraft.api.deps import CurrentUser, Runtime, action_visibility, marks_owner, open_to
-from processcraft.api.feed import marked_unread_chats
+from processcraft.api.feed import mark_conversation_read, marked_unread_chats, visit_reads
 from processcraft.i18n import t
 from processcraft.refs import kind_label, parse_ref
 from processcraft.specialists import models_allowed
@@ -328,13 +328,15 @@ def _desk_references(rt: Any, user: str, text: str) -> list[dict[str, Any]]:
 def conversations(request: Request, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
     store = rt.workspace.messages
     subjects = _subjects(rt)
-    stars, unread = _marks(rt, marks_owner(request, rt, user))
+    owner = marks_owner(request, rt, user)
+    reads = visit_reads(rt, owner)
+    stars, unread = _marks(rt, owner)
     items = [
         _with_marks(_present_conversation(item, user, subjects), stars, unread)
-        for item in store.list_for(user)
+        for item in store.list_for(user, read_upto=reads)
     ]
     marked = sum(1 for item in items if item["marked_unread"] and item["unread"] == 1)
-    return {"unread": store.unread_total(user) + marked, "items": items}
+    return {"unread": store.unread_total(user, read_upto=reads) + marked, "items": items}
 
 
 @router.post("/api/messages/conversations", status_code=201)
@@ -413,13 +415,16 @@ def read(
     payload: ReadPayload | None = None,
 ) -> dict[str, Any]:
     _member_conversation(rt, conversation_id, user)
-    rt.workspace.messages.mark_read(conversation_id, user, payload.message_id if payload else None)
-    # Opened: no longer marked unread.
     owner = marks_owner(request, rt, user)
+    mark_conversation_read(
+        rt, user, owner, conversation_id, payload.message_id if payload else None
+    )
+    # Opened: no longer marked unread.
     if f"conversation:{conversation_id}" in rt.desk.marks(owner, "unread"):
         rt.desk.set_mark(owner, f"conversation:{conversation_id}", "unread", False)
     return {
-        "unread": rt.workspace.messages.unread_total(user) + marked_unread_chats(rt, user, owner)
+        "unread": rt.workspace.messages.unread_total(user, read_upto=visit_reads(rt, owner))
+        + marked_unread_chats(rt, user, owner)
     }
 
 

@@ -1,7 +1,7 @@
 """Builds PlantCraft's site into dist/: the page, its assets and fonts, and the chat's knowledge.
 
     python build.py [--owner PlantCraft] [--bundle processcraft-0.5.0-linux-amd64-bundle] [--draft]
-                    [--demo-url https://demo.example] [--contact team@example] [--noindex]
+                    [--demo-url https://demo.example] [--contact team@example] [--security sec@example] [--noindex]
 
 The page is page/template.html with the app cards, links and bundle name filled in; the app
 marks come from docs/images/apps and the fonts from ui/src/fonts, so the site uses the suite's
@@ -15,6 +15,7 @@ before its launch); --demo-url adds the live demo's button.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import re
 import shutil
 import sys
@@ -48,14 +49,14 @@ APPS = [
     (
         "linkcraft",
         "Analytics",
-        "Signals and loops",
-        "Algorithms of blocks that watch every signal and control loop and say what is wrong and why.",
+        "Signals and assets",
+        "Algorithms of blocks that watch every signal and asset and say what is wrong and why.",
     ),
     (
         "alarmcraft",
         "Alarms",
         "Operations",
-        "ISA-18.2 alarms and alerts, shelving, history and alarm performance.",
+        "Alarms and alerts, shelving, history and alarm performance.",
     ),
     (
         "dashcraft",
@@ -75,32 +76,27 @@ APPS = [
         "Plant knowledge",
         "Manuals, control narratives and datasheets, searched offline and cited by the assistant.",
     ),
-    (
-        "notebooks",
-        "Notebooks",
-        "Your own analysis",
-        "JupyterLab with the plant's data, in the browser or on your computer.",
-    ),
-    (
-        "simcraft",
-        "Simulator",
-        "Try it",
-        "An OPC UA plant of 50 control loops with faults on purpose, to try everything safely.",
-    ),
 ]
 
-# Notebooks has no mark of its own in docs/images/apps: a page with a code bracket, same style.
-NOTEBOOKS = (
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="64" height="64">'
-    '<rect width="32" height="32" rx="7" fill="#b45309"/>'
-    '<rect x="8" y="5" width="16" height="22" rx="2.5" stroke-width="2.2" fill="none" stroke="#fff"/>'
-    '<path d="M14 12l-3 4 3 4M18 12l3 4-3 4" stroke-width="2" fill="none" stroke="#fff" '
-    'stroke-linecap="round" stroke-linejoin="round"/></svg>'
-)
+# The clips at the top of the page (page/assets/clips/<name>.webm, .mp4 and .jpg, recorded from
+# the demo by record_clips.py): name, tab label, what it shows.
+CLIPS = [
+    ("dashboards", "Dashboards", "View: a dashboard of the unit, shared with the shift."),
+    ("process", "Process", "View: the plant's process diagram with live values."),
+    ("reports", "Reports", "View: a scheduled report of the unit, as it is sent by e-mail."),
+    (
+        "analytics",
+        "Analytics",
+        "Analytics: an algorithm's block diagram and the results on every asset.",
+    ),
+    ("alarms", "Alarms", "Alarms: the alarms of the plant, their history and performance."),
+    ("sources", "Sources", "PlantCraft: the plant's data sources, read-only, and their signals."),
+    ("desk", "Desk", "Desk: messages, actions, calendar and what needs you today."),
+]
 
 
 def mark(app: str, size: int = 44) -> str:
-    svg = NOTEBOOKS if app == "notebooks" else (MARKS / f"{app}.svg").read_text()
+    svg = (MARKS / f"{app}.svg").read_text()
     svg = re.sub(r"<title>.*?</title>", "", svg)
     svg = re.sub(r' width="64" height="64"', f' width="{size}" height="{size}"', svg)
     svg = re.sub(r' aria-label="[^"]*"', "", svg).replace(' role="img"', "")
@@ -113,6 +109,46 @@ def cards() -> str:
         f'<p class="cat">{cat}</p></div></div><p>{text}</p></article>'
         for app, name, cat, text in APPS
     )
+
+
+def showcase() -> str:
+    """One video and one button per clip under it; showcase.js swaps the video's sources (a
+    single video element, so speed-control browser add-ons draw one control, not seven)."""
+    n, _, alt = CLIPS[0]
+    tabs = "".join(
+        f'<button type="button" aria-pressed="{"true" if i == 0 else "false"}" '
+        f'data-webm="assets/clips/{name}.webm" data-mp4="assets/clips/{name}.mp4" '
+        f'data-poster="assets/clips/{name}.jpg" data-label="{escape(text)}">'
+        f'<span class="clip-name">{label}</span><span class="clip-fill"></span></button>'
+        for i, (name, label, text) in enumerate(CLIPS)
+    )
+    return (
+        '    <figure class="showcase" aria-label="PlantCraft at work">\n'
+        '      <div class="shot"><video muted playsinline preload="auto" '
+        f'poster="assets/clips/{n}.jpg" aria-label="{escape(alt)}" width="1440" height="900">'
+        f'<source src="assets/clips/{n}.webm" type="video/webm">'
+        f'<source src="assets/clips/{n}.mp4" type="video/mp4"></video></div>\n'
+        '      <div class="clip-bar">'
+        '<button type="button" class="clip-play" aria-label="Pause">'
+        '<svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16">'
+        '<path class="i-pause" d="M4 3h3v10H4zM9 3h3v10H9z"/>'
+        '<path class="i-play" d="M4 2.5v11l9.5-5.5z"/></svg></button>'
+        '<input class="clip-seek" type="range" min="0" max="1000" value="0" step="1" '
+        'aria-label="Position in the clip"></div>\n'
+        f'      <div class="clip-tabs" aria-label="Parts of the suite">{tabs}</div>\n'
+        "    </figure>"
+    )
+
+
+def _versioned(html: str) -> str:
+    """Each stylesheet, script, clip and poster with ?v=<its hash>: a cache in front of the site
+    (Cloudflare keeps them for hours) never serves a new page with an old file."""
+
+    def stamp(match: re.Match) -> str:
+        digest = hashlib.sha256((HERE / "page" / match[1]).read_bytes()).hexdigest()[:10]
+        return f'"{match[1]}?v={digest}"'
+
+    return re.sub(r'"(assets/[\w./-]+\.(?:css|js|webm|mp4|jpg))"', stamp, html)
 
 
 def _fill(html: str, values: dict[str, str]) -> str:
@@ -130,16 +166,28 @@ def build(
     demo_url: str = "",
     contact: str = "",
     noindex: bool = False,
+    security: str = "",
 ) -> Path:
     gh = f"https://github.com/{owner}/PlantCraft"
     banner = '<p class="draft">Draft: not published yet</p>' if draft else ""
-    demo = f'<a class="btn" href="{escape(demo_url)}">Try the live demo</a>' if demo_url else ""
+    demo = (
+        f'<a class="btn primary" href="{escape(demo_url)}">Try the live demo</a>'
+        if demo_url
+        else ""
+    )
+    demo_float = (
+        f'<a class="demo-launch" href="{escape(demo_url)}"><svg aria-hidden="true" viewBox="0 0 20 20"'
+        ' width="16" height="16"><path d="M6 4v12l10-6z" fill="currentColor"/></svg>Live demo</a>'
+        if demo_url
+        else ""
+    )
     if contact:
         write = f'write to <a href="mailto:{escape(contact)}">{escape(contact)}</a>'
     else:
         write = "write to us with <b>Talk to us</b> on the site"
     values = {
         "%%CARDS%%": cards(),
+        "%%SHOWCASE%%": showcase(),
         "%%LOGO%%": mark("processcraft", 28),
         "%%GH%%": gh,
         "%%DOCS%%": f"{gh}/blob/main",
@@ -147,10 +195,13 @@ def build(
         "%%DRAFT%%": banner,
         "%%ROBOTS%%": '<meta name="robots" content="noindex, nofollow">' if noindex else "",
         "%%DEMO%%": demo,
+        "%%DEMO_FLOAT%%": demo_float,
+        "%%INSTALL_PRIMARY%%": "" if demo_url else " primary",
         "%%WRITE%%": write,
+        "%%MAIL%%": f'<a href="mailto:{escape(contact)}">{escape(contact)}</a>' if contact else "",
     }
-    html = _fill((HERE / "page/template.html").read_text(encoding="utf-8"), values)
-    privacy = _fill((HERE / "page/privacy.html").read_text(encoding="utf-8"), values)
+    html = _versioned(_fill((HERE / "page/template.html").read_text(encoding="utf-8"), values))
+    privacy = _versioned(_fill((HERE / "page/privacy.html").read_text(encoding="utf-8"), values))
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(HERE / "page/assets", out / "assets")
@@ -168,7 +219,8 @@ def build(
     )
     (out / ".well-known").mkdir()
     expires = (datetime.now(timezone.utc) + timedelta(days=365)).strftime("%Y-%m-%dT00:00:00Z")
-    contacts = ([f"Contact: mailto:{contact}"] if contact else []) + [
+    reports = security or contact
+    contacts = ([f"Contact: mailto:{reports}"] if reports else []) + [
         f"Contact: {gh}/security/advisories/new"
     ]
     (out / ".well-known/security.txt").write_text(
@@ -184,12 +236,24 @@ def main() -> None:
     parser.add_argument("--owner", default="PlantCraft", help="the GitHub organization")
     parser.add_argument("--bundle", default="processcraft-0.5.0-linux-amd64-bundle")
     parser.add_argument("--draft", action="store_true", help="show a 'not published' banner")
-    parser.add_argument("--demo-url", default="", help="the public demo, for its button")
-    parser.add_argument("--contact", default="", help="the team's e-mail (privacy, security.txt)")
+    parser.add_argument(
+        "--demo-url", default="https://demo.plantcraft.io", help="the public demo, for its button"
+    )
+    parser.add_argument("--contact", default="info@plantcraft.io", help="the team's e-mail")
+    parser.add_argument(
+        "--security", default="security@plantcraft.io", help="where security reports go"
+    )
     parser.add_argument("--noindex", action="store_true", help="ask search engines to stay away")
     args = parser.parse_args()
     out = build(
-        args.out, args.owner, args.bundle, args.draft, args.demo_url, args.contact, args.noindex
+        args.out,
+        args.owner,
+        args.bundle,
+        args.draft,
+        args.demo_url,
+        args.contact,
+        args.noindex,
+        args.security,
     )
     print(f"built {out}")
 

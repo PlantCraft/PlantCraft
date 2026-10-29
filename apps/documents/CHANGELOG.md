@@ -4,6 +4,13 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Changed
+
+- **The library's table on one line (fine pass 2026-10-28).** Number, unit and when it was sent
+  no longer wrap; Assets names the first asset and how many more (all on hover); the description
+  never widens the title; the Rev. column left the list (the document's page has its revisions).
+  On a phone the list shows the title and its reading state.
+
 ## [0.5.0] - 2026-10-27
 
 ### Changed

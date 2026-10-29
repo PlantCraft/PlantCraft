@@ -325,3 +325,177 @@ def test_a_site_online_before_its_launch(tmp_path):
     assert "noindex" in (out / "privacy.html").read_text()
     assert "mailto:team@plant.example" in (out / "privacy.html").read_text()
     assert "Contact: mailto:team@plant.example" in (out / ".well-known/security.txt").read_text()
+
+
+def test_stylesheets_and_scripts_carry_their_hash(tmp_path):
+    html = (build.build(tmp_path / "dist", "PlantCraft", "b", False) / "index.html").read_text()
+    assert re.search(r'href="assets/site\.css\?v=[0-9a-f]{10}"', html)
+    assert re.search(r'src="assets/showcase\.js\?v=[0-9a-f]{10}"', html)
+    assert re.search(r'data-mp4="assets/clips/desk\.mp4\?v=[0-9a-f]{10}"', html)
+    assert re.search(r'data-poster="assets/clips/desk\.jpg\?v=[0-9a-f]{10}"', html)
+
+
+# --- visits and the stats page ------------------------------------------------------------------
+
+BROWSER = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0"}
+
+
+def _stats(c, password="s3cret"):
+    return c.get("/stats", auth=("owner", password))
+
+
+def test_page_views_are_counted_without_address(tmp_path, knowledge):
+    c = client(tmp_path, knowledge, trust_proxy="cloudflare")
+    head = {**BROWSER, "CF-Connecting-IP": "203.0.113.7", "CF-IPCountry": "BR"}
+    r = c.post(
+        "/api/visit", json={"id": "abc123xyz", "page": "/", "ref": "www.google.com"}, headers=head
+    )
+    assert r.status_code == 204 and r.headers["cache-control"] == "no-store"
+    c.post("/api/visit", json={"id": "abc123xyz"}, headers=head)
+    # Bots and junk ids are not people.
+    c.post(
+        "/api/visit", json={"id": "bot12345", "page": "/"}, headers={"User-Agent": "Googlebot/2.1"}
+    )
+    c.post("/api/visit", json={"id": "<script>", "page": "/"}, headers=BROWSER)
+    raw = (tmp_path / "visits.sqlite3").read_bytes()
+    assert b"203.0.113.7" not in raw
+    from sitechat.visits import Visits
+
+    rows = Visits(tmp_path).since(0)
+    assert len(rows) == 1 and rows[0]["country"] == "BR" and rows[0]["referrer"] == "www.google.com"
+
+
+def test_one_visitor_a_day_and_their_time(tmp_path):
+    from sitechat.visits import Visits
+
+    v = Visits(tmp_path)
+    v.hit("view1aaaa", address="a", agent="Firefox", page="/", now=1000)
+    v.hit("view1aaaa", address="a", agent="Firefox", now=1090)
+    v.hit("view2aaaa", address="a", agent="Firefox", page="/privacy.html", now=1100)
+    v.hit("view2aaaa", address="a", agent="Firefox", now=1300)
+    v.hit("view3aaaa", address="b", agent="Firefox", page="/", now=1200)
+    # Not heard from for longer than GONE_SECONDS: closed, a late call does not stretch it.
+    v.hit("view3aaaa", address="b", agent="Firefox", now=1200 + 3600)
+    rows = v.since(0)
+    assert len({r["visitor"] for r in rows}) == 2
+    from zoneinfo import ZoneInfo
+
+    from sitechat.stats import summary
+
+    data = summary(rows, "off", [], [], ZoneInfo("UTC"), now=1300)
+    assert data["online"] == 1
+    today = data["days"][0]
+    assert today["visitors"] == 2 and today["views"] == 3
+    # Visitor a: 1000 to 1300; visitor b: one moment.
+    assert today["site_time"] == "2 min 30 s (mean 2 min 30 s)"
+
+
+def test_stats_page_needs_its_password(tmp_path, knowledge):
+    assert client(tmp_path, knowledge).get("/stats").status_code == 404
+    c = client(tmp_path, knowledge, stats_password="s3cret")
+    r = c.get("/stats")
+    assert r.status_code == 401 and r.headers["www-authenticate"].startswith("Basic")
+    assert _stats(c, "wrong").status_code == 401
+    for _ in range(10):
+        _stats(c, "wrong")
+    assert _stats(c, "wrong").status_code == 429
+
+
+def test_stats_page_shows_site_demo_chat_and_contacts(tmp_path, knowledge, monkeypatch):
+    from sitechat import stats
+
+    c = client(
+        tmp_path,
+        knowledge,
+        FakeModel(),
+        stats_password="s3cret",
+        stats_timezone="America/Sao_Paulo",
+    )
+    c.post("/api/visit", json={"id": "abc123xyz", "page": "/"}, headers=BROWSER)
+    click = {"id": "abc123xyz", "click": "Try the live demo → demo.plant.example/"}
+    c.post("/api/visit", json=click, headers=BROWSER)
+    c.post("/api/visit", json=click, headers=BROWSER)
+    # A click of a page view never opened is not counted.
+    c.post("/api/visit", json={**click, "id": "unknown99"}, headers=BROWSER)
+    c.post("/api/chat", json={"messages": _q("Does it run offline?")})
+    c.post(
+        "/api/contact",
+        json={"name": "Ana", "email": "ana@plant.example", "need": "A pilot <b>now</b>"},
+    )
+    import time as clock
+
+    now = clock.time()
+    monkeypatch.setattr(
+        stats.DemoSource,
+        "read",
+        lambda self, days=31: {
+            "now": {"taken": 3, "waiting": 1, "seats": 10},
+            "visits": [{"started": now - 600, "seconds": 420, "waited": 30}],
+            "pages": [{"page": "/link/loops/:id", "visits": 1}],
+        },
+    )
+    r = _stats(c)
+    assert r.status_code == 200 and r.headers["cache-control"] == "no-store"
+    page = r.text
+    assert "reading the site now" in page and "<b>1</b>" in page
+    assert "<b>3</b><span>in the demo now, of 10 places; 1 waiting" in page
+    assert "Does it run offline?" in page and "Ana" in page
+    assert "<b>now</b>" not in page, "what visitors wrote is escaped"
+    assert "7 min 00 s" in page and "America/Sao_Paulo" in page
+    assert "/link/loops/:id" in page
+    assert "<td>Try the live demo → demo.plant.example/</td><td>1</td>" in page
+    assert "<b>site " in page and "clicked Try the live demo" in page
+
+
+def test_journeys_put_each_visitors_steps_in_order(tmp_path):
+    from zoneinfo import ZoneInfo
+
+    from sitechat.stats import events_csv, journeys
+    from sitechat.visits import Visits
+
+    v = Visits(tmp_path)
+    v.hit("view1aaaa", address="a", agent="Firefox", page="/", referrer="www.google.com", now=1000)
+    v.hit("view1aaaa", address="a", agent="Firefox", click="Install free → #install", now=1015)
+    v.hit("view1aaaa", address="a", agent="Firefox", now=1030)
+    v.hit("view2aaaa", address="a", agent="Firefox", page="/privacy.html", now=1060)
+    demo = {
+        "journeys": [
+            {
+                "visitor": "d1",
+                "started": 2000,
+                "seconds": 300,
+                "waited": 0,
+                "pages": [["/", 0], ["/link", 30]],
+            }
+        ]
+    }
+    paths = journeys(v.since(0), v.clicked(0), demo)
+    assert [p["source"] for p in paths] == ["demo", "site"]
+    site = paths[1]
+    assert [what for _, what in site["steps"]] == [
+        "opened / (from www.google.com)",
+        "clicked Install free → #install",
+        "opened /privacy.html",
+    ]
+    assert site["seconds"] == 60
+    rows = events_csv(paths, ZoneInfo("UTC")).splitlines()
+    assert rows[0] == "source,visitor,time,seconds_into_visit,step"
+    assert rows[1].startswith("site,") and rows[-1].endswith(",opened /link")
+
+
+def test_the_events_file_needs_the_password(tmp_path, knowledge):
+    c = client(tmp_path, knowledge, stats_password="s3cret")
+    assert c.get("/stats/events.csv").status_code == 401
+    r = c.get("/stats/events.csv", auth=("owner", "s3cret"))
+    assert r.status_code == 200 and r.text.startswith("source,visitor")
+    assert r.headers["cache-control"] == "no-store"
+
+
+def test_stats_page_without_the_demo(tmp_path, knowledge):
+    c = client(tmp_path, knowledge, stats_password="s3cret")
+    assert "demo: not set up" in _stats(c).text
+
+
+def test_every_page_counts_its_visits(dist):
+    for page in ("index.html", "privacy.html"):
+        assert re.search(r'src="assets/visit\.js\?v=\w+"', (dist / page).read_text()), page

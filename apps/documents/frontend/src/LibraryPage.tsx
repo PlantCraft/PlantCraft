@@ -21,6 +21,15 @@ export function StatusPill({ status }: { status: string | null }) {
 
 const lines = (text: string) => text.split(/[\s,]+/).map((item) => item.trim()).filter(Boolean);
 
+/** A document's assets in one line: the first picked by hand and how many more (all of them on
+ * hover), else how many are suggested (– for none). */
+function AssetIds({ doc }: { doc: DocRow }) {
+  const manual = doc.assets.filter((item) => item.source === "manual").map((item) => item.asset_id);
+  if (!manual.length) return doc.assets.length ? <span className="muted nowrap">{t("{n} suggested", { n: doc.assets.length })}</span> : <>–</>;
+  const more = manual.length - 1;
+  return <span className="nowrap" title={manual.join(", ")}>{manual[0]}{more > 0 && <span className="muted"> {t("+{n}", { n: more })}</span>}</span>;
+}
+
 function FolderDialog({ folder, onClose, onSaved }: { folder: Folder | null; onClose: () => void; onSaved: (folder: Folder) => void }) {
   const [name, setName] = useState(folder?.name ?? "");
   const [description, setDescription] = useState(folder?.description ?? "");
@@ -121,14 +130,13 @@ export function LibraryPage({ me, folderId, assetId }: { me: Me; folderId?: stri
       onRowClick={(doc) => navigate(`/documents/${doc.doc_id}`)}
       initialSort={{ key: "number", descending: false }}
       columns={[
-        { key: "number", label: t("Number"), className: "nowrap", sort: (doc) => doc.number, render: (doc) => <Link to={`/documents/${doc.doc_id}`}>{doc.number || "–"}</Link> },
-        { key: "title", label: t("Title"), sort: (doc) => doc.title, render: (doc) => <><Link to={`/documents/${doc.doc_id}`} className="strong">{doc.title}</Link>{doc.description && <small className="doc-description">{doc.description}</small>}</> },
-        { key: "kind", label: t("Kind"), sort: (doc) => doc.kind, filter: true, render: (doc) => t(doc.kind) },
-        { key: "unit", label: t("Unit"), sort: (doc) => doc.unit, filter: true, render: (doc) => doc.unit || "–" },
-        { key: "revision", label: t("Rev."), className: "nowrap", sort: (doc) => doc.revision ?? "", render: (doc) => doc.revision || "–" },
+        { key: "number", label: t("Number"), className: "nowrap", phone: "hide", sort: (doc) => doc.number, render: (doc) => <Link to={`/documents/${doc.doc_id}`}>{doc.number || "–"}</Link> },
+        { key: "title", label: t("Title"), className: "doc-title-cell", sort: (doc) => doc.title, render: (doc) => <><Link to={`/documents/${doc.doc_id}`} className="strong">{doc.title}</Link>{doc.description && <small className="doc-description">{doc.description}</small>}</> },
+        { key: "kind", label: t("Kind"), phone: "hide", sort: (doc) => doc.kind, filter: true, render: (doc) => t(doc.kind) },
+        { key: "unit", label: t("Unit"), className: "nowrap", phone: "hide", sort: (doc) => doc.unit, filter: true, render: (doc) => doc.unit || "–" },
         { key: "status", label: t("Reading"), sort: (doc) => doc.status ?? "", filter: true, render: (doc) => <StatusPill status={doc.status} /> },
-        { key: "assets", label: t("Assets"), sort: (doc) => doc.assets.length, render: (doc) => doc.assets.filter((item) => item.source === "manual").map((item) => item.asset_id).slice(0, 4).join(", ") || <span className="muted">{t("{n} suggested", { n: doc.assets.length })}</span> },
-        { key: "when", label: t("Sent"), sort: (doc) => doc.uploaded_at ?? "", render: (doc) => (doc.uploaded_at ? formatAgo(doc.uploaded_at) : "–") },
+        { key: "assets", label: t("Assets"), phone: "hide", sort: (doc) => doc.assets.length, render: (doc) => <AssetIds doc={doc} /> },
+        { key: "when", label: t("Sent"), className: "nowrap", phone: "hide", sort: (doc) => doc.uploaded_at ?? "", render: (doc) => (doc.uploaded_at ? formatAgo(doc.uploaded_at) : "–") },
       ]} />;
   return <div onDragOver={(event) => { if (canSend) { event.preventDefault(); setDragging(true); } }} onDragLeave={() => setDragging(false)} onDrop={drop}
     className={dragging ? "drop-target dragging" : "drop-target"}>

@@ -78,7 +78,10 @@
 
 /* Pages. */
 .dg-stage { position: relative; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); overflow: hidden; height: min(72vh, 900px); }
-.dg-stage-full { position: fixed; inset: 0; z-index: var(--pc-z-modal); border-radius: 0; height: auto; border: 0; }
+.dg-stage-full { position: fixed; inset: 0; z-index: var(--pc-z-modal); border-radius: 0; height: auto; border: 0; display: flex; flex-direction: column; }
+/* What the drawing fills: the whole stage, or in full screen what the top strip leaves. */
+.dg-stage-body { position: absolute; inset: 0; }
+.dg-stage-full .dg-stage-body { position: relative; inset: auto; flex: 1; min-height: 0; }
 /* The viewer's zoom: the canvas fills the stage; a zoomed drawing is dragged with the pointer. */
 .dg-zoom-stage { position: absolute; inset: 0; }
 /* The asset panel: over the right of the stage, so it stays on the display (full screen too). */
@@ -122,11 +125,22 @@
 .dg-legend .dg-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; }
 .dg-problems { font-size: var(--pc-fs-sm); color: var(--pc-text-2); }
 .dg-list-preview { height: 120px; background: var(--pc-surface-2); border-radius: var(--pc-radius-md); overflow: hidden; pointer-events: none; }
-/* Kiosk (full screen, a public link's ?screen=1): the canvas only; its name small in a corner. */
-/* The parts' tabs in full screen: over the top of the drawing, in the middle. */
-.dg-full-tabs { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); z-index: 2; max-width: calc(100% - 320px); padding: 2px 8px; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md, 8px); box-shadow: var(--pc-shadow-sm, none); }
-.dg-full-tabs .pcs-tabs { margin: 0; border-bottom: 0; }
-.dg-kiosk-name { position: absolute; left: 12px; top: 8px; z-index: 1; font-size: var(--pc-fs-sm); color: var(--pc-text-3); pointer-events: none; }
+/* Full screen (a public link's ?screen=1 too): a strip of its own on top with the name, the
+   tabs, the time and the way out; the drawing below it, never under it. */
+.dg-full-bar { flex: none; display: flex; align-items: center; gap: var(--pc-space-3, 12px); min-height: 48px; padding: 6px 12px; border-bottom: 1px solid var(--pc-border); background: var(--pc-surface); position: relative; z-index: 3; }
+.dg-full-name { flex: 0 1 auto; max-width: 28%; font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dg-full-tabs { flex: 1 1 auto; min-width: 0; display: flex; justify-content: center; }
+.dg-full-tabs .pcs-tabs { margin: 0; border-bottom: 0; max-width: 100%; }
+.dg-full-time { position: relative; flex: none; }
+.dg-full-time > .button { white-space: nowrap; }
+.dg-full-time > .dg-full-live { color: var(--pc-good-text); }
+/* Right under its button, inside the same box: moving the pointer onto it keeps it open. */
+.dg-full-time-panel { position: absolute; top: 100%; right: 0; width: min(560px, calc(100vw - 24px)); padding: 6px 14px; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); box-shadow: var(--pc-shadow-4, 0 8px 24px rgb(0 0 0 / 0.18)); }
+@media (max-width: 720px) {
+  .dg-full-bar { flex-wrap: wrap; gap: 6px 8px; }
+  .dg-full-name { max-width: none; flex: 1 1 0; }
+  .dg-full-tabs { order: 3; flex-basis: 100%; justify-content: flex-start; }
+}
 
 /* A dashboard's diagram card: the diagram scaled to the panel; a click opens its page. */
 .dg-card { flex: 1; display: flex; flex-direction: column; min-height: 0; }

@@ -8,6 +8,13 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Full screen keeps a strip of its own** (owner, 2026-10-28). A process display in full screen
+  has a top strip with its name, its page or part tabs, one time button and the way out; the
+  drawing starts below it, never under it. The time button says what is shown (Live and the
+  period, or the instant played back) and opens the period, playback and Live under it on a
+  click or while the pointer rests on it. Playback keeps playing when the display goes full
+  screen or back.
+
 - **Parts of a process display** (owner, 2026-10-28). A large page names its parts; the viewer
   shows tabs over it, **Overview** (the whole drawing) and one per part, that zoom there, full
   screen too, with `?part=` in the address. The demo's Riverbend plant has its seven parts, and

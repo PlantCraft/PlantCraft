@@ -92,7 +92,8 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
     ]),
     {
       path: "/",
-      target: ".pcs-queue-button",
+      target: ".pc-queue-panel",
+      onShow: openPanel(".pcs-queue-button", ".pc-queue-panel"),
       title: tt("Queues"),
       body: <p>{tt("The calculations the apps are running and waiting to run, with what failed.")}</p>,
     },

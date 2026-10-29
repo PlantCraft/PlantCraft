@@ -1958,6 +1958,31 @@ def past(
     return written
 
 
+# How many chat messages wait for a visitor (owner, 2026-10-28): a few, the rest read.
+VISITOR_UNREAD = 4
+
+
+def visitor_unread(workspace: Any) -> int:
+    """The visitor's conversations with people read, but for the newest message of the latest
+    ``VISITOR_UNREAD``: a person back from a morning in the field. Apps' notices and assistant
+    chats are left as they are (Notifications counts the former apart). Each visit reads on top
+    of this (``visit_reads``), so every visitor finds the same."""
+
+    messages = workspace.messages
+    chats = [
+        item
+        for item in messages.list_for(VISITOR, limit=1000)
+        if item.get("last_message")
+        and all(member["kind"] == "person" for member in item["members"])
+    ]
+    for item in chats:
+        messages.mark_read(item["conversation_id"], VISITOR)
+    waiting = [item for item in chats if item["last_message"]["author"] != VISITOR]
+    for item in waiting[:VISITOR_UNREAD]:
+        messages.set_read(item["conversation_id"], VISITOR, item["last_message"]["message_id"] - 1)
+    return min(len(waiting), VISITOR_UNREAD)
+
+
 # What Alarms sent the visitor over the last days (owner, 2026-10-28: the demo's notifications
 # should be mostly alarms, then the other apps, not action changes): (days ago, hour, minute, priority, key, title,
 # what happened, rule). Written as Alarms writes them; the live rules add more as the plant runs.
@@ -4570,6 +4595,7 @@ def run(suite: Suite) -> int:
     desk(suite, passwords, workspace, links)
     team_day(suite, passwords)
     if workspace is not None:
+        log(f"Messages: {visitor_unread(workspace)} unread for the visitor")
         log(f"guides by role: {guide_links(workspace, suite, admin, links)} pages they open")
     log(f"links: {len(links.refs)} documents, dashboards, reports, chats, actions and talks")
     log(

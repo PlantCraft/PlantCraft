@@ -32,6 +32,12 @@ When the visit ends, the browser is back on the sign-in page, which thanks the v
 to enter again. The places are in the database (`demo_visits`, `demo_line`), so every server
 process sees the same ones (`processcraft/auth/demo_visits.py`).
 
+Each visit also leaves a line in `demo_visit_log` (when it started, how long it was used, how long
+its visitor waited in line; no address) and the pages it had in front in `demo_visit_pages` (paths
+only, an object's id as `:id`), kept 400 days. `GET /api/demo/stats` gives them, with the places
+taken now, to whoever holds `PLANTCRAFT_PUBLIC_DEMO_STATS_KEY` as a bearer token (unset: a 404);
+the site's private `/stats` page reads it (`site/README.md`).
+
 ## Guides by role
 
 A demo convinces when it shows each visitor what matters to their job, in their words (owner,
@@ -129,4 +135,6 @@ those headers. The site's chat reads the same header with `SITE_TRUST_PROXY=clou
 `vm.sh site` builds the site with `--noindex` (search engines kept away) until `LAUNCHED=1` is
 set in `/etc/plantcraft-site/vm.env`; `vm.sh demo` again updates the suite from a newer push;
 `vm.sh status` shows what runs. Contact requests: `/var/lib/plantcraft-site/contacts.jsonl` and
-`SITE_CONTACT_WEBHOOK` in `/etc/plantcraft-site/site.env`.
+`SITE_CONTACT_WEBHOOK` in `/etc/plantcraft-site/site.env`. Visits, chat questions and contacts:
+`https://plantcraft.io/stats`, with the password `vm.sh stats-password` prints (`vm.sh site` and
+`vm.sh demo` share the demo's stats key through `/etc/plantcraft-site/demo-stats-key`).

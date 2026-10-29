@@ -721,13 +721,18 @@ export function AssistantTitleButton() {
   useDismiss(menu, close, box);
   // The menu opens under the button and stays inside the screen: on a phone a page with a long
   // title puts the button near the right edge, and a menu past it widens the page.
-  const [shift, setShift] = useState(0);
+  // It sizes and places the menu against the visible width (clientWidth: a phone's innerWidth and
+  // 100vw grow with anything wider than the screen), again when the works arrive.
+  const panel = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    if (!menu || !box.current) { setShift(0); return; }
+    const node = panel.current;
+    if (!menu || !node || !box.current) return;
+    const screen = document.documentElement.clientWidth || window.innerWidth;
+    const width = Math.min(340, screen - 32);
+    node.style.width = `${width}px`;
     const left = box.current.getBoundingClientRect().left;
-    const width = Math.min(340, window.innerWidth - 32);
-    setShift(Math.max(16 - left, Math.min(0, window.innerWidth - 16 - left - width)));
-  }, [menu]);
+    node.style.left = `${Math.max(16 - left, Math.min(0, screen - 16 - left - width))}px`;
+  }, [menu, works]);
   useEffect(() => {
     if (!source) return;
     let alive = true;
@@ -756,7 +761,7 @@ export function AssistantTitleButton() {
     <button type="button" className={`pc-title-assistant${open || menu ? " pc-on" : ""}${ready ? "" : " pc-off"}`} onClick={toggle} aria-pressed={open} aria-expanded={ready || demo ? menu : undefined} aria-haspopup={ready || demo ? "menu" : undefined} aria-label={hint} title={hint} data-tour="assistant-title">
       <AssistantMark size={20} />
     </button>
-    {menu && <div className="pc-title-assistant-menu" style={shift ? { left: shift } : undefined} role="menu" aria-label={t("What the assistant does here")}>
+    {menu && <div className="pc-title-assistant-menu" ref={panel} role="menu" aria-label={t("What the assistant does here")}>
       <h4>{t("What the assistant does here")}</h4>
       {demo && <p className="pc-drawer-note">{t("In this public demo it does not answer: these are what you could ask on this page. Pick one to read the team's chats.")}</p>}
       {works === null && described?.page && <p className="pc-drawer-wait"><LoaderCircle className="spin" size={13} /> {t("Loading…")}</p>}

@@ -47,6 +47,23 @@ commercial question goes to **Talk to us**. The text follows
 | `SITE_LOG_QUESTIONS` | `1` | keep visitors' questions (no address, no name) to see what they ask |
 | `SITE_TRUST_PROXY` | `0` | `1` behind a reverse proxy that sets `X-Forwarded-For` |
 | `SITE_DOCS_URL` | `https://github.com/PlantCraft/PlantCraft/blob/main` | where cited pages live |
+| `SITE_STATS_PASSWORD` / `SITE_STATS_PASSWORD_FILE` | | the password of `/stats`; unset, `/stats` is a 404 |
+| `SITE_STATS_TIMEZONE` | `UTC` | the time zone `/stats` counts days in |
+| `SITE_DEMO_STATS_URL` + `SITE_DEMO_STATS_KEY_FILE` | | the public demo's `/api/demo/stats` and its key, shown on `/stats` |
+
+## Visits and the stats page
+
+Each page view tells this server it opened, and every 30 seconds that it is still in front
+(`page/assets/visit.js`, no cookie; `sitechat/visits.py`): the page, the site it came from (host
+name only), the country Cloudflare names (`CF-IPCountry`, with `SITE_TRUST_PROXY=cloudflare`) and
+the times, in `$SITE_DATA_DIR/visits.sqlite3`. No address is kept: one browser on one day is a
+hash with a salt that lives in memory and changes daily. Bots and headless browsers are skipped.
+
+`/stats` (HTTP Basic, any user name, `SITE_STATS_PASSWORD`) shows on one page who reads the site
+now and in the demo, visitors and time per day for 14 days, where they came from, the pages read
+(the site's and the demo's), every chat question (marking those the docs did not answer and those
+that offered the contact form) and the contact requests. `deploy/cloud/vm.sh site` makes its
+password; `vm.sh stats-password` prints it.
 
 ### Safety
 

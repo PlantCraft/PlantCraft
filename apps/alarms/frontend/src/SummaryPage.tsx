@@ -83,16 +83,18 @@ export function AlarmTable({ alarms, me, onChanged, searchable = true, toolbar, 
 }) {
   const [shelving, setShelving] = useState<Alarm | null>(null);
   const columns: DataColumn<Alarm>[] = [
-    { key: "priority", label: t("Priority"), sort: (alarm) => RANK[alarm.priority] ?? 9, filter: searchable ? { options: labelled(PRIORITY_WORDS), value: (alarm) => alarm.priority } : undefined, render: (alarm) => <PriorityPill priority={alarm.priority} /> },
-    { key: "status", label: t("State"), sort: (alarm) => STATE_RANK[alarm.status] ?? 9, filter: searchable ? { options: labelled(STATUS_WORDS), value: (alarm) => alarm.status } : undefined, render: (alarm) => <StatusPill status={alarm.status} /> },
-    { key: "name", label: t("Alarm"), sort: (alarm) => alarm.name, render: (alarm) => <>
+    { key: "priority", label: t("Priority"), phone: "hide", sort: (alarm) => RANK[alarm.priority] ?? 9, filter: searchable ? { options: labelled(PRIORITY_WORDS), value: (alarm) => alarm.priority } : undefined, render: (alarm) => <PriorityPill priority={alarm.priority} /> },
+    { key: "status", label: t("State"), phone: "hide", sort: (alarm) => STATE_RANK[alarm.status] ?? 9, filter: searchable ? { options: labelled(STATUS_WORDS), value: (alarm) => alarm.status } : undefined, render: (alarm) => <StatusPill status={alarm.status} /> },
+    { key: "name", label: t("Alarm"), className: "al-name", sort: (alarm) => alarm.name, render: (alarm) => <>
       <Link to={`/alarms/${alarm.alarm_id}`} className="strong">{alarm.name}</Link>
+      {/* A phone leaves out the Priority and State columns: both show here, under the name. */}
+      <div className="al-phone-pills"><PriorityPill priority={alarm.priority} /> <StatusPill status={alarm.status} /></div>
       <div className="small muted">{[aboutWords(alarm), alarm.status === "shelved" ? t("shelved until {when}", { when: formatDate(alarm.shelved_until) }) : ""].filter(Boolean).join(" · ")}</div>
     </> },
-    { key: "area", label: t("Area"), className: "small", sort: (alarm) => alarm.area_name ?? "", filter: searchable ? { value: (alarm) => alarm.area_name ?? t("No area") } : undefined, render: (alarm) => alarm.area_name ?? "–" },
+    { key: "area", label: t("Area"), className: "small", phone: "hide", sort: (alarm) => alarm.area_name ?? "", filter: searchable ? { value: (alarm) => alarm.area_name ?? t("No area") } : undefined, render: (alarm) => alarm.area_name ?? "–" },
     { key: "value", label: t("Value"), numeric: true, className: "nowrap", sort: (alarm) => (typeof alarm.value === "number" ? alarm.value : null), render: (alarm) => (alarm.value === null ? "–" : reading(alarm.value, alarm.unit)) },
-    { key: "raised", label: t("Last raised"), className: "nowrap small", sort: (alarm) => alarm.raised_at, render: (alarm) => (alarm.raised_at ? formatAgo(alarm.raised_at) : "–") },
-    { key: "actions", label: <span className="sr-only">{t("Actions")}</span>, className: "row-actions", render: (alarm) => <AlarmActions alarm={alarm} me={me} onChanged={onChanged} onShelve={setShelving} /> },
+    { key: "raised", label: t("Last raised"), className: "nowrap small", phone: "hide", sort: (alarm) => alarm.raised_at, render: (alarm) => (alarm.raised_at ? formatAgo(alarm.raised_at) : "–") },
+    { key: "actions", label: <span className="sr-only">{t("Actions")}</span>, className: "row-actions", phone: "hide", render: (alarm) => <AlarmActions alarm={alarm} me={me} onChanged={onChanged} onShelve={setShelving} /> },
   ];
   return <>
     <DataTable rows={alarms} columns={columns} rowKey={(alarm) => alarm.alarm_id} rowClassName={(alarm) => `al-row al-row-${alarm.status} al-priority-${alarm.priority}`} label={t("Alarms")} className="al-table"

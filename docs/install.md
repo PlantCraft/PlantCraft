@@ -1,6 +1,6 @@
 # Install PlantCraft
 
-> **Updated:** 2026-10-26 · suite 0.4.0
+> **Updated:** 2026-10-28 · suite 0.5.0
 
 PlantCraft installs on your own machine or server, from one signed bundle, with no internet
 connection. This page helps you pick the right way to install it and says what you need on
@@ -74,7 +74,7 @@ and macOS has it; on Windows, in the Ubuntu window of WSL). Why and what each ch
 ```bash
 echo 'release@processcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
     > processcraft.allowed_signers
-B=processcraft-0.4.0-linux-amd64-bundle.tar.gz
+B=processcraft-0.5.0-linux-amd64-bundle.tar.gz
 ssh-keygen -Y verify -f processcraft.allowed_signers -I release@processcraft -n file \
     -s $B.sha256.sig < $B.sha256      # Good "file" signature for release@processcraft ...
 sha256sum -c $B.sha256               # macOS: shasum -a 256 -c $B.sha256
@@ -160,8 +160,8 @@ Ubuntu in WSL 2, on an i5-8500T with 24 GB: the install with every app and the d
    permissions, and Windows folders are slow to read from containers.
 
    ```bash
-   cp /mnt/c/Users/<you>/Downloads/processcraft-0.4.0-linux-amd64-bundle.tar.gz* ~/
-   cd ~ && B=processcraft-0.4.0-linux-amd64-bundle.tar.gz
+   cp /mnt/c/Users/<you>/Downloads/processcraft-0.5.0-linux-amd64-bundle.tar.gz* ~/
+   cd ~ && B=processcraft-0.5.0-linux-amd64-bundle.tar.gz
    ```
 
 5. Check the bundle (above), unpack it and install, in the same Ubuntu window:

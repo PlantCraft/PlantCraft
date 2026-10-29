@@ -9,6 +9,21 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **The public demo starts the same for every visitor (owner, 2026-10-28).** A visit starts
+  with the newest 20 notifications unread and the rest read, whatever the live plant added, and
+  the seed leaves the newest message of 4 conversations unread (the Messages badge shows 4).
+  Opening a conversation is now the visit's own read mark, like every other mark since the
+  check and favorites: before, it marked the shared demo account, so the next visitor found
+  everything read.
+
+- **Tables and pages on a phone (fine pass 2026-10-28, ui 0.86.0).** A table column can be left
+  out on a phone (`DataColumn.phone: "hide"`), cells are tighter there, a number and its unit
+  never split, and a header actions cell keeps the header's rule. Overview widgets stacked on a
+  phone are as tall as what they show (no empty desktop row under a short list; `CardGrid`
+  `phoneHeight`). Page tabs that scroll sideways fade at the edge with more tabs and keep the
+  active one in view. System health and Backups leave their secondary columns out on a phone; a
+  state, a size and a backup's name stay on one line.
+
 - **Check, seen or not, favorites (owner, 2026-10-28).** A notification gets a check (done) in its
   row, in the quick-access panel, when it is open and on the page it opens (a small bar on the
   action or the alarm); one button turns it seen and not seen again. A conversation and an

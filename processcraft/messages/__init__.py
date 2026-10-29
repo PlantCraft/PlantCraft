@@ -12,6 +12,7 @@ leaves stops receiving it (``sync``, run before anyone reads their conversations
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from processcraft.db import Database, Migration, Store, add_columns
@@ -20,6 +21,10 @@ from processcraft.refs import find_refs, parse_ref
 
 MAX_TEXT = 4000
 MAX_MEMBERS = 100
+
+
+def _upto(read_upto: dict[int, int] | None) -> str:
+    return json.dumps({str(key): int(value) for key, value in (read_upto or {}).items()})
 
 
 class ConversationStore(Store):
@@ -284,12 +289,23 @@ class ConversationStore(Store):
             ).fetchall()
         return [row["username"] for row in rows]
 
-    def get(self, conversation_id: int, *, viewer: str | None = None) -> dict[str, Any] | None:
-        items = self._conversations("conversation.conversation_id = ?", [conversation_id], viewer)
+    def get(
+        self,
+        conversation_id: int,
+        *,
+        viewer: str | None = None,
+        read_upto: dict[int, int] | None = None,
+    ) -> dict[str, Any] | None:
+        items = self._conversations(
+            "conversation.conversation_id = ?", [conversation_id], viewer, read_upto=read_upto
+        )
         return items[0] if items else None
 
-    def list_for(self, username: str, *, limit: int = 200) -> list[dict[str, Any]]:
-        """The user's conversations, most recent activity first."""
+    def list_for(
+        self, username: str, *, limit: int = 200, read_upto: dict[int, int] | None = None
+    ) -> list[dict[str, Any]]:
+        """The user's conversations, most recent activity first. ``read_upto``: what a public
+        demo visit read on top of the account's own marks (conversation id: message id)."""
 
         self.sync(username)
         return self._conversations(
@@ -297,6 +313,7 @@ class ConversationStore(Store):
             [username],
             username,
             limit=limit,
+            read_upto=read_upto,
         )
 
     def about(self, username: str, ref: str, *, limit: int = 20) -> list[dict[str, Any]]:
@@ -315,7 +332,13 @@ class ConversationStore(Store):
         )
 
     def _conversations(
-        self, where: str, parameters: list[Any], viewer: str | None, *, limit: int = 200
+        self,
+        where: str,
+        parameters: list[Any],
+        viewer: str | None,
+        *,
+        limit: int = 200,
+        read_upto: dict[int, int] | None = None,
     ) -> list[dict[str, Any]]:
         with self._lock, self._connect() as connection:
             rows = connection.execute(
@@ -369,11 +392,14 @@ class ConversationStore(Store):
                         FROM conversation_messages AS message
                         JOIN conversation_members AS member
                           ON member.conversation_id = message.conversation_id AND member.username = ?
+                        LEFT JOIN json_each(?) AS upto
+                          ON upto.key = CAST(message.conversation_id AS TEXT)
                         WHERE message.conversation_id IN ({marks})
-                          AND message.message_id > member.last_read_id AND message.author != ?
+                          AND message.message_id > MAX(member.last_read_id, COALESCE(upto.value, 0))
+                          AND message.author != ?
                         GROUP BY message.conversation_id
                         """,
-                        [viewer, *ids, viewer],
+                        [viewer, _upto(read_upto), *ids, viewer],
                     ):
                         unread[row["conversation_id"]] = int(row["total"])
         result = []
@@ -511,9 +537,25 @@ class ConversationStore(Store):
                 (message_id, conversation_id, username),
             )
 
-    def unread_total(self, username: str, *, chats_only: bool = False) -> int:
+    def set_read(self, conversation_id: int, username: str, message_id: int) -> None:
+        """Read up to ``message_id`` exactly, earlier too (the demo seed leaves a few unread)."""
+
+        with self._lock, self._write() as connection:
+            connection.execute(
+                "UPDATE conversation_members SET last_read_id = ? WHERE conversation_id = ? AND username = ?",
+                (message_id, conversation_id, username),
+            )
+
+    def unread_total(
+        self,
+        username: str,
+        *,
+        chats_only: bool = False,
+        read_upto: dict[int, int] | None = None,
+    ) -> int:
         """Messages the user has not read; ``chats_only`` leaves out what apps' robots post
-        (notifications, which Messages lists apart and counts with their own read marks)."""
+        (notifications, which Messages lists apart and counts with their own read marks);
+        ``read_upto`` as in ``list_for``."""
 
         self.sync(username)
         robots = (
@@ -527,9 +569,11 @@ class ConversationStore(Store):
                 SELECT COUNT(*) FROM conversation_messages AS message
                 JOIN conversation_members AS member
                   ON member.conversation_id = message.conversation_id AND member.username = ?
-                WHERE message.message_id > member.last_read_id AND message.author != ?{robots}
+                LEFT JOIN json_each(?) AS upto ON upto.key = CAST(message.conversation_id AS TEXT)
+                WHERE message.message_id > MAX(member.last_read_id, COALESCE(upto.value, 0))
+                  AND message.author != ?{robots}
                 """,
-                (username, username),
+                (username, _upto(read_upto), username),
             ).fetchone()
         return int(row[0])
 

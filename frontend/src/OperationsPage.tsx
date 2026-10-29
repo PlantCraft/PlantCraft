@@ -113,18 +113,19 @@ const EYEBROW = () => <><Activity size={14} /> {t("Administration")}</>;
  * Health, Backups and Updates were one Operations page until 2026-10-24 (owner: separate them). */
 export function HealthPage() {
   const ops = useOperations(true);
+  const canAct = useIsAdmin();
   if (!ops.isAdmin) return <HealthStatusPage />;
   const { data, health } = ops;
   return <div className="apps-page">
     <Heading eyebrow={<EYEBROW />} title={t("System health")} detail={t("The suite watches itself every 30 seconds and tells the administrators in Messages when a part of it stops.")}
-      actions={<><DiagnosticsButton /><RefreshButton onClick={() => void ops.load()} /></>} />
+      actions={<>{canAct && <DiagnosticsButton />}<RefreshButton onClick={() => void ops.load()} /></>} />
     <Notices ops={ops} />
     {data && <section className="apps-status" aria-label={t("State")}>
       <span className={`apps-chip ${data.installer.online ? "apps-chip-on" : "apps-chip-warn"}`}>{data.installer.online ? t("Installer running") : t("Installer not running: requests wait until it starts")}</span>
       <RunningChip data={data} />
       {data.free_bytes != null && <span className="apps-chip">{t("Free disk: {size}", { size: size(data.free_bytes) })}</span>}
     </section>}
-    {health && <HealthPanel health={health} />}
+    {health && <HealthPanel health={health} canAct={canAct} />}
     {health?.certificates && health.certificates.length > 0 && <CertificatesPanel certificates={health.certificates} onRenewed={() => void ops.load()} />}
   </div>;
 }
@@ -246,8 +247,8 @@ export function BackupsPage() {
         {data.free_bytes != null && <span className="apps-chip">{t("Free disk: {size}", { size: size(data.free_bytes) })}</span>}
       </section>
       {restoring && <RestorePanel backup={restoring} onCancel={() => setRestoring(null)} onDone={(name) => { setRestoring(null); ops.setNotice(t("Restore of {name} handed to the installer. The suite stops for a few minutes and this page comes back when it is up.", { name })); void ops.load(); }} />}
-      <ScheduleForm schedule={data.schedule} onSave={save} />
-      <BackupsTable backups={data.backups} disabled={running || !!busy} onVerify={(name) => void ops.act(`verify-${name}`, () => operationsApi.start("verify", name), t("Check of {name} handed to the installer.", { name }))} onRestore={setRestoring} />
+      <ScheduleForm schedule={data.schedule} onSave={save} readOnly={!canAct} />
+      <BackupsTable backups={data.backups} readOnly={!canAct} disabled={running || !!busy} onVerify={(name) => void ops.act(`verify-${name}`, () => operationsApi.start("verify", name), t("Check of {name} handed to the installer.", { name }))} onRestore={setRestoring} />
       <HistoryTable history={data.history.filter((item) => item.action !== "update")} />
     </>}
   </div>;
@@ -303,7 +304,7 @@ export function scheduleText(schedule: Schedule): string {
   return `${backup}; ${drill} (${timeZoneLabel(schedule.timezone || "local", t("Local time"))}).`;
 }
 
-function ScheduleForm({ schedule, onSave }: { schedule: Schedule; onSave: (value: Schedule) => Promise<void> }) {
+function ScheduleForm({ schedule, onSave, readOnly }: { schedule: Schedule; onSave: (value: Schedule) => Promise<void>; readOnly: boolean }) {
   const [form, setForm] = useState<Schedule>(schedule);
   const [saving, setSaving] = useState(false);
   useEffect(() => setForm(schedule), [schedule]);
@@ -324,7 +325,7 @@ function ScheduleForm({ schedule, onSave }: { schedule: Schedule; onSave: (value
         <label>{t("Restore drill day")}<select value={form.drill_weekday} disabled={!form.drill} onChange={(event) => setForm({ ...form, drill_weekday: Number(event.target.value) })}>{WEEKDAYS.map((day, index) => <option key={day} value={index}>{day}</option>)}</select></label>
         <label>{t("Restore drill time")}<input type="time" required value={form.drill_at} disabled={!form.drill} onChange={(event) => setForm({ ...form, drill_at: event.target.value })} /></label>
       </div>
-      <div className="heading-actions"><button className="button button-primary" disabled={saving || !changed}>{saving && <LoaderCircle className="spin" />} {t("Save")}</button>{changed && <button type="button" className="button button-secondary" onClick={() => setForm(schedule)}>{t("Cancel")}</button>}</div>
+      {!readOnly && <div className="heading-actions"><button className="button button-primary" disabled={saving || !changed}>{saving && <LoaderCircle className="spin" />} {t("Save")}</button>{changed && <button type="button" className="button button-secondary" onClick={() => setForm(schedule)}>{t("Cancel")}</button>}</div>}
     </FormSection>
   </form>;
 }
@@ -355,10 +356,10 @@ const SERVICE_COLUMNS: DataColumn<ServiceMetrics>[] = [
   { key: "state", label: t("State"), sort: (item) => (serviceGood(item) ? 1 : 0), filter: { value: (item) => item.health ? `${item.state} · ${item.health}` : item.state }, render: (item) => <span className={`apps-state apps-state-${serviceGood(item) ? "running" : "failed"}`}>{item.health ? `${item.state} · ${item.health}` : item.state}</span> },
   { key: "cpu_pct", label: t("CPU"), numeric: true, sort: (item) => item.cpu_pct, render: (item) => (item.cpu_pct != null ? `${item.cpu_pct} %` : "—") },
   { key: "mem_bytes", label: t("Memory"), numeric: true, sort: (item) => item.mem_bytes, render: (item) => <>{size(item.mem_bytes)}{item.mem_pct != null && <small className="apps-sub">{t("{pct} % of its limit", { pct: item.mem_pct })}</small>}</> },
-  { key: "restarts", label: t("Restarts"), numeric: true, sort: (item) => item.restarts, render: (item) => item.restarts ?? "—" },
+  { key: "restarts", label: t("Restarts"), numeric: true, phone: "hide", sort: (item) => item.restarts, render: (item) => item.restarts ?? "—" },
 ];
 
-function HealthPanel({ health }: { health: SuiteHealth }) {
+function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean }) {
   if (!health.watching) return <section className="panel apps-installed"><h2><Activity size={17} /> {t("Suite health")}</h2><p className="muted">{t("Nothing to watch: this PlantCraft runs without the suite's installer.")}</p></section>;
   const services = health.metrics?.services ?? [];
   const disk = health.metrics?.disk;
@@ -367,7 +368,7 @@ function HealthPanel({ health }: { health: SuiteHealth }) {
     <div className="ops-health-head">
       <h2 id="ops-health-title"><Activity size={17} /> {t("Suite health")}</h2>
       <div className="ops-health-actions">
-        {health.conversation_id != null && <button className="button button-secondary" onClick={() => navigate(`/messages/${health.conversation_id}`)}>{t("Open the conversation")}</button>}
+        {canAct && health.conversation_id != null && <button className="button button-secondary" onClick={() => navigate(`/messages/${health.conversation_id}`)}>{t("Open the conversation")}</button>}
       </div>
     </div>
     <p className="muted">{t("Checked every 30 s from Docker's health checks of each service, the free disk, the backups and the last restore drill. Last check: {date}.", { date: when(health.at) })}{health.held ? ` ${t("Service checks are on hold while an operation runs or the installer is silent.")}` : ""}</p>
@@ -432,19 +433,19 @@ const FULL_REASONS: Record<string, string> = {
   "the chain reached 7 backups": t("Weekly full copy"),
 };
 
-function BackupsTable({ backups, disabled, onVerify, onRestore }: { backups: Backup[]; disabled: boolean; onVerify: (name: string) => void; onRestore: (backup: Backup) => void }) {
+function BackupsTable({ backups, readOnly, disabled, onVerify, onRestore }: { backups: Backup[]; readOnly: boolean; disabled: boolean; onVerify: (name: string) => void; onRestore: (backup: Backup) => void }) {
   const columns: DataColumn<Backup>[] = [
     { key: "created_at", label: t("Backup"), sort: (item) => item.created_at, render: (item) => <><strong>{when(item.created_at)}</strong><small className="apps-sub"><code>{item.name}</code></small></> },
-    { key: "reason", label: t("Kind"), sort: (item) => REASONS[item.reason] ?? item.reason, render: (item) => REASONS[item.reason] ?? item.reason, filter: { options: options(REASONS), value: (item) => item.reason } },
-    { key: "historian", label: t("Historian"), sort: (item) => item.histcraft_db?.kind ?? "", filter: { options: options(HISTORIAN_KINDS), value: (item) => item.histcraft_db?.kind ?? "" }, render: (item) => <HistorianCell backup={item} /> },
-    { key: "suite_version", label: t("Version"), sort: (item) => item.suite_version, render: (item) => item.suite_version ?? "—", filter: true },
+    { key: "reason", label: t("Kind"), phone: "hide", sort: (item) => REASONS[item.reason] ?? item.reason, render: (item) => REASONS[item.reason] ?? item.reason, filter: { options: options(REASONS), value: (item) => item.reason } },
+    { key: "historian", label: t("Historian"), phone: "hide", sort: (item) => item.histcraft_db?.kind ?? "", filter: { options: options(HISTORIAN_KINDS), value: (item) => item.histcraft_db?.kind ?? "" }, render: (item) => <HistorianCell backup={item} /> },
+    { key: "suite_version", label: t("Version"), phone: "hide", sort: (item) => item.suite_version, render: (item) => item.suite_version ?? "—", filter: true },
     { key: "size", label: t("Size"), numeric: true, sort: (item) => item.size, render: (item) => size(item.size) },
     { key: "state", label: t("State"), sort: (item) => STATES[item.state] ?? item.state, filter: { options: options(STATES), value: (item) => item.state }, render: (item) => <><span className={`apps-state apps-state-${item.state === "ok" ? "running" : "failed"}`}>{STATES[item.state] ?? item.state}</span>
       {item.problems?.length ? <small className="apps-sub">{item.problems[0]}</small> : null}
       {item.drill && <small className="apps-sub">{item.drill.state === "ok" ? t("Restore drill passed") : t("Restore drill failed: {problem}", { problem: item.drill.problems[0] ?? "" })}</small>}</> },
     { key: "actions", label: <span className="sr-only">{t("Actions")}</span>, className: "ac-row-actions apps-actions", render: (item) => <>
-      {item.state !== "aside" && item.state !== "returned" && <button className="icon-button" disabled={disabled} title={t("Check again")} onClick={() => onVerify(item.name)}><ShieldQuestion size={15} /></button>}
-      {item.state === "ok" && <button className="icon-button" disabled={disabled} title={t("Restore")} aria-label={t("Restore {name}", { name: item.name })} onClick={() => onRestore(item)}><ArchiveRestore size={15} /></button>}
+      {!readOnly && item.state !== "aside" && item.state !== "returned" && <button className="icon-button" disabled={disabled} title={t("Check again")} onClick={() => onVerify(item.name)}><ShieldQuestion size={15} /></button>}
+      {!readOnly && item.state === "ok" && <button className="icon-button" disabled={disabled} title={t("Restore")} aria-label={t("Restore {name}", { name: item.name })} onClick={() => onRestore(item)}><ArchiveRestore size={15} /></button>}
     </> },
   ];
   return <section className="panel apps-installed" aria-labelledby="ops-backups-title">

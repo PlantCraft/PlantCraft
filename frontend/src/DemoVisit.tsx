@@ -63,7 +63,10 @@ export function DemoVisitBar({ visit, onEnded, onLeave }: { visit: DemoVisitInfo
   const ends = useRef(Date.now() + visit.seconds_left * 1000);
   const [left, setLeft] = useState(visit.seconds_left);
   const used = useRef(true);
-  const beat = useCallback((active: boolean) => demoApi.heartbeat(active).then((answer) => {
+  // The pages the visitor had in front since the last sign of life (the demo's stats: which pages
+  // people open; no clicks, nothing typed).
+  const pages = useRef(new Set<string>());
+  const beat = useCallback((active: boolean, seen: string[] = []) => demoApi.heartbeat(active, seen.slice(0, 20)).then((answer) => {
     ends.current = Date.now() + answer.seconds_left * 1000;
     setLeft(answer.seconds_left);
     return suiteApi.renewToken();
@@ -82,8 +85,12 @@ export function DemoVisitBar({ visit, onEnded, onLeave }: { visit: DemoVisitInfo
     };
     listen(window);
     const tick = window.setInterval(() => {
+      if (document.visibilityState === "visible") pages.current.add(window.location.pathname);
       document.querySelectorAll("iframe").forEach((frame) => {
         try { listen(frame.contentDocument); } catch { /* another origin */ }
+        try {
+          if (frame.offsetParent !== null && document.visibilityState === "visible" && frame.contentWindow) pages.current.add(frame.contentWindow.location.pathname);
+        } catch { /* another origin */ }
       });
       const seconds = Math.round((ends.current - Date.now()) / 1000);
       setLeft(seconds);
@@ -92,7 +99,9 @@ export function DemoVisitBar({ visit, onEnded, onLeave }: { visit: DemoVisitInfo
     const timer = window.setInterval(() => {
       const active = used.current;
       used.current = false;
-      void beat(active);
+      const seen = [...pages.current];
+      pages.current.clear();
+      void beat(active, seen);
     }, HEARTBEAT_MS);
     return () => {
       events.forEach((name) => window.removeEventListener(name, mark));

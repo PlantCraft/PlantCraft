@@ -11,6 +11,10 @@ from one (owner, 2026-10-28: that locked visitors out).
 In the database, not in memory, so every server process sees the same places. Every visit is
 the same read-only visitor account: the place is what is counted, not the person.
 
+Each visit also leaves a line in ``demo_visit_log`` (when it started, how long it was used, how
+long its visitor waited in line; no address), so the owner can see how many people visit and for
+how long (``GET /api/demo/stats``). The lines are kept ``LOG_DAYS``.
+
 The demo's guides by role (``frontend/src/demoGuides.tsx``) point at what the demo story holds by
 name ("Plant overview", "DOC-MH-001"); ``processcraft demo seed`` writes here the page each name
 opens (``demo_guide_links``), since the apps give their objects new ids on every installation.
@@ -18,6 +22,8 @@ opens (``demo_guide_links``), since the apps give their objects new ids on every
 
 from __future__ import annotations
 
+import hashlib
+import re
 import secrets
 import time
 from dataclasses import dataclass
@@ -26,6 +32,10 @@ from processcraft.db import Database, Store
 
 # A ticket whose browser stopped asking for this long has left the line.
 LINE_GONE_SECONDS = 30.0
+# Days the log of past visits keeps.
+LOG_DAYS = 400
+# A path segment that is an object's id ("/link/runs/8f3a..."), counted as one page.
+ID_SEGMENT = re.compile(r"^(\d+|[0-9a-f-]{8,}|[A-Za-z0-9_-]{20,})$")
 
 
 @dataclass(frozen=True)
@@ -62,6 +72,21 @@ class DemoVisits(Store):
         address TEXT NOT NULL,
         joined REAL NOT NULL,
         seen REAL NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS demo_visit_log (
+        visit TEXT PRIMARY KEY,
+        started REAL NOT NULL,
+        last_used REAL NOT NULL,
+        waited REAL NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS demo_visit_log_started ON demo_visit_log (started);
+
+    CREATE TABLE IF NOT EXISTS demo_visit_pages (
+        visit TEXT NOT NULL,
+        page TEXT NOT NULL,
+        at REAL NOT NULL,
+        PRIMARY KEY (visit, page)
     );
 
     CREATE TABLE IF NOT EXISTS demo_guide_links (
@@ -125,7 +150,23 @@ class DemoVisits(Store):
                 visits = [row for row in visits if row["visit"] not in taken]
             if position < free:
                 visit = Visit(secrets.token_urlsafe(18), now, now + minutes * 60)
+                joined = connection.execute(
+                    "SELECT joined FROM demo_line WHERE ticket = ?", (ticket,)
+                ).fetchone()
                 connection.execute("DELETE FROM demo_line WHERE ticket = ?", (ticket,))
+                connection.execute(
+                    "DELETE FROM demo_visit_pages WHERE visit IN (SELECT visit FROM "
+                    "demo_visit_log WHERE started < ?)",
+                    (now - LOG_DAYS * 86400,),
+                )
+                connection.execute(
+                    "DELETE FROM demo_visit_log WHERE started < ?", (now - LOG_DAYS * 86400,)
+                )
+                connection.execute(
+                    "INSERT INTO demo_visit_log (visit, started, last_used, waited) "
+                    "VALUES (?, ?, ?, ?)",
+                    (visit.visit, now, now, max(now - joined["joined"], 0) if joined else 0),
+                )
                 connection.execute(
                     """
                     INSERT INTO demo_visits (visit, address, started, ends, active)
@@ -167,6 +208,10 @@ class DemoVisits(Store):
                     "UPDATE demo_visits SET active = ?, ends = ? WHERE visit = ? AND ends > ?",
                     (now, now + minutes * 60, visit, now),
                 )
+                connection.execute(
+                    "UPDATE demo_visit_log SET last_used = ? WHERE visit = ? AND last_used < ?",
+                    (now, visit, now),
+                )
         return self.get(visit, now)
 
     def leave(self, visit: str) -> None:
@@ -185,6 +230,98 @@ class DemoVisits(Store):
                 "SELECT COUNT(*) FROM demo_line WHERE seen >= ?", (now - LINE_GONE_SECONDS,)
             ).fetchone()[0]
         return {"taken": int(taken), "waiting": int(waiting)}
+
+    def history(self, since: float, now: float | None = None) -> list[dict[str, float]]:
+        """The visits started since ``since``, oldest first: when each started, how long it was
+        used (seconds from its start to its last use) and how long its visitor waited first."""
+
+        now = time.time() if now is None else now
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT started, last_used, waited FROM demo_visit_log WHERE started >= ? "
+                "ORDER BY started LIMIT 50000",
+                (since,),
+            ).fetchall()
+        return [
+            {
+                "started": row["started"],
+                "seconds": round(max(min(row["last_used"], now) - row["started"], 0)),
+                "waited": round(row["waited"]),
+            }
+            for row in rows
+        ]
+
+    def opened(self, visit: str, paths: list[str], now: float | None = None) -> None:
+        """The pages a visit had in front, in the order it had them (paths only; an object's id
+        counts as ``:id``); each page keeps when the visit first opened it."""
+
+        now = time.time() if now is None else now
+        pages: dict[str, None] = {}
+        for path in paths[:20]:
+            if not isinstance(path, str) or not path.startswith("/"):
+                continue
+            parts = [":id" if ID_SEGMENT.match(p) else p for p in path[:200].split("/") if p]
+            pages["/" + "/".join(parts[:6])] = None
+        if not pages:
+            return
+        with self._lock, self._write() as connection:
+            if not connection.execute(
+                "SELECT 1 FROM demo_visit_log WHERE visit = ?", (visit,)
+            ).fetchone():
+                return
+            known = connection.execute(
+                "SELECT COUNT(*) FROM demo_visit_pages WHERE visit = ?", (visit,)
+            ).fetchone()[0]
+            connection.executemany(
+                "INSERT OR IGNORE INTO demo_visit_pages (visit, page, at) VALUES (?, ?, ?)",
+                [(visit, page, now) for page in pages][: max(200 - known, 0)],
+            )
+
+    def pages(self, since: float, limit: int = 30) -> list[dict[str, object]]:
+        """The pages the visits started since ``since`` opened, by how many visits opened each."""
+
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT p.page, COUNT(*) AS visits FROM demo_visit_pages p JOIN demo_visit_log l "
+                "ON l.visit = p.visit WHERE l.started >= ? GROUP BY p.page "
+                "ORDER BY visits DESC, p.page LIMIT ?",
+                (since, limit),
+            ).fetchall()
+        return [{"page": row["page"], "visits": int(row["visits"])} for row in rows]
+
+    def journeys(self, since: float, limit: int = 300, now: float | None = None) -> list[dict]:
+        """The last ``limit`` visits started since ``since``, newest first, each with the pages it
+        opened in order (seconds after its start). A visit is named by a short code, never by
+        what signs it in."""
+
+        now = time.time() if now is None else now
+        with self._lock, self._connect() as connection:
+            visits = connection.execute(
+                "SELECT visit, started, last_used, waited FROM demo_visit_log WHERE started >= ? "
+                "ORDER BY started DESC LIMIT ?",
+                (since, limit),
+            ).fetchall()
+            pages: dict[str, list] = {}
+            for row in connection.execute(
+                "SELECT visit, page, at FROM demo_visit_pages WHERE visit IN "
+                "(SELECT visit FROM demo_visit_log WHERE started >= ? ORDER BY started DESC "
+                "LIMIT ?) ORDER BY at, rowid",
+                (since, limit),
+            ):
+                pages.setdefault(row["visit"], []).append(row)
+        return [
+            {
+                "visitor": hashlib.sha256(v["visit"].encode()).hexdigest()[:8],
+                "started": v["started"],
+                "seconds": round(max(min(v["last_used"], now) - v["started"], 0)),
+                "waited": round(v["waited"]),
+                "pages": [
+                    [p["page"], round(max(p["at"] - v["started"], 0))]
+                    for p in pages.get(v["visit"], [])
+                ],
+            }
+            for v in visits
+        ]
 
     def set_guide_links(self, links: dict[str, str]) -> None:
         """The pages the demo story's names open now (all of them: the old ones are dropped)."""

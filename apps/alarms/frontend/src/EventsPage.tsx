@@ -24,6 +24,7 @@ export function aboutWords(subject: string): string {
   const value = rest.join(":");
   if (!value) return subject || "–";
   if (kind === "asset") return value;
+  if (kind === "app") return appLabel(value, value);
   return `${t(kind === "schedule" || kind === "execution" ? "Execution" : kind)} ${value}`;
 }
 
@@ -94,12 +95,12 @@ export function EventsPage({ me }: { me: Me }) {
       empty={<p className="muted al-pad">{show === "open" ? t("Nothing is open: no app has a condition started and not ended.") : t("Nothing came in during this period.")}</p>}
       columns={[
         { key: "kind", label: t("Event"), className: "al-wrap", sort: (row) => kindWords(row.kind), filter: { value: (row) => kindWords(row.kind), label: t("Type") }, render: (row) => <><b title={row.kind}>{kindWords(row.kind)}</b><div className="small muted">{row.summary}</div></> },
-        { key: "app", label: t("App"), className: "small", sort: (row) => appLabel(row.app, row.app), filter: { value: (row) => appLabel(row.app, row.app) }, render: (row) => appLabel(row.app, row.app) },
+        { key: "app", label: t("App"), className: "small", phone: "hide", sort: (row) => appLabel(row.app, row.app), filter: { value: (row) => appLabel(row.app, row.app) }, render: (row) => appLabel(row.app, row.app) },
         { key: "subject", label: t("About"), className: "small al-wrap", sort: (row) => aboutWords(row.subject), filter: { value: (row) => aboutWords(row.subject) }, render: (row) => aboutWords(row.subject) },
-        { key: "severity", label: t("Severity"), className: "small", sort: (row) => row.severity, filter: { options: labelled(SEVERITY_WORDS), value: (row) => row.severity }, render: (row) => (row.severity ? <Pill status={SEVERITY_PILL[row.severity] ?? "unknown"} label={t(SEVERITY_WORDS[row.severity] ?? row.severity)} /> : "–") },
-        { key: "state", label: t("State"), className: "small", sort: (row) => row.state, filter: { options: labelled(STATE_WORDS), value: (row) => row.state }, render: (row) => t(STATE_WORDS[row.state]) },
+        { key: "severity", label: t("Severity"), className: "small", phone: "hide", sort: (row) => row.severity, filter: { options: labelled(SEVERITY_WORDS), value: (row) => row.severity }, render: (row) => (row.severity ? <Pill status={SEVERITY_PILL[row.severity] ?? "unknown"} label={t(SEVERITY_WORDS[row.severity] ?? row.severity)} /> : "–") },
+        { key: "state", label: t("State"), className: "small", phone: "hide", sort: (row) => row.state, filter: { options: labelled(STATE_WORDS), value: (row) => row.state }, render: (row) => t(STATE_WORDS[row.state]) },
         { key: "at", label: t("When"), className: "small nowrap", sort: (row) => row.at, render: (row) => <span title={formatDate(row.at)}>{formatAgo(row.at)}</span> },
-        { key: "rules", label: t("Rules"), className: "small", filter: { value: (row) => (row.rules.length ? t("A rule") : t("No rule")), label: t("Counted") }, render: (row) => (row.rules.length ? row.rules.map((rule, index) => <div key={rule}><Link to={`/rules/${rule}`}>{row.rule_names[index] ?? rule}</Link></div>) : <span className="muted">–</span>) },
+        { key: "rules", label: t("Rules"), className: "small", phone: "hide", filter: { value: (row) => (row.rules.length ? t("A rule") : t("No rule")), label: t("Counted") }, render: (row) => (row.rules.length ? row.rules.map((rule, index) => <div key={rule}><Link to={`/rules/${rule}`}>{row.rule_names[index] ?? rule}</Link></div>) : <span className="muted">–</span>) },
       ]} />}
   </>;
 }

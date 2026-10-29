@@ -238,7 +238,7 @@ must = ["mcp|copy as prompt"]
 id = "how-fast"
 kind = "fast"
 ask = "How long until we see results on our plant?"
-expect = "Days, not months: the demo installs in about 10 minutes; once it reads the plant's data, Analytics checks every signal and loop from its first round. For a plant project, talk to the team."
+expect = "Days, not months: it installs from the offline bundle in under an hour; once it reads the plant's data, Analytics checks every signal and asset from its first round. For a plant project, talk to the team."
 sources = ["site/knowledge/facts.md", "docs/install.md"]
 must = ["minute|day"]
 must_not = ["weeks of setup"]
@@ -247,7 +247,7 @@ must_not = ["weeks of setup"]
 id = "install-time"
 kind = "fast"
 ask = "How long does the installation take?"
-expect = "About 10 minutes for the demo from the bundle; under 10 minutes on a plant server, plus your approvals."
+expect = "Under an hour from the offline bundle to the first sign-in (the demo took about 10 minutes in tests), plus your approvals."
 sources = ["docs/install.md", "site/knowledge/facts.md"]
 must = ["10|ten"]
 
@@ -419,7 +419,7 @@ contact = true
 id = "demo-meeting"
 kind = "commercial"
 ask = "Can I schedule a demo with your team?"
-expect = "Leave your contact in the form and the team writes back; you can also install the demo yourself in about 10 minutes."
+expect = "Leave your contact in the form and the team writes back; you can also install the demo yourself from the bundle in under an hour."
 sources = ["site/knowledge/facts.md"]
 contact = true
 

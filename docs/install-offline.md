@@ -33,7 +33,7 @@ it**, with `ssh-keygen` (OpenSSH 8.1 or later, already on every supported Linux 
 # The publisher's key, once: this line, compared with the one on the release page.
 echo 'release@processcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
     > processcraft.allowed_signers
-B=processcraft-0.4.0-linux-amd64-bundle.tar.gz
+B=processcraft-0.5.0-linux-amd64-bundle.tar.gz
 ssh-keygen -Y verify -f processcraft.allowed_signers -I release@processcraft -n file \
     -s $B.sha256.sig < $B.sha256        # Good "file" signature for release@processcraft ...
 sha256sum -c $B.sha256                 # processcraft-...tar.gz: OK  (macOS: shasum -a 256 -c)
@@ -224,7 +224,7 @@ certificate authority, OCSP responder or update server.
 against the same folder:
 
 ```bash
-cd processcraft-0.3.0-linux-amd64-bundle
+cd processcraft-0.5.0-linux-amd64-bundle
 sudo ./install.sh --prefix /opt/plantcraft
 ```
 

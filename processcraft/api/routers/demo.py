@@ -10,9 +10,11 @@ on (``processcraft demo seed``), for whoever is signed in.
 from __future__ import annotations
 
 import ipaddress
+import secrets
+import time
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
 from processcraft.api.deps import CurrentUser, Runtime, demo_visit
@@ -36,6 +38,8 @@ class EnterPayload(BaseModel):
 class HeartbeatPayload(BaseModel):
     # The page is open, in front, and the visitor used it since the last one.
     active: bool = False
+    # The paths the visitor had in front since the last one (the demo's stats).
+    pages: list[str] = Field(default_factory=list, max_length=20)
 
 
 def _demo() -> PublicDemo:
@@ -109,7 +113,30 @@ def heartbeat(payload: HeartbeatPayload, request: Request, rt: Runtime) -> dict[
     )
     if found is None:
         raise HTTPException(status_code=401, detail=t("Your demo visit ended."))
+    if payload.pages:
+        rt.workspace.demo_visits.opened(str(visit), payload.pages)
     return {"seconds_left": found.seconds_left(), "minutes": demo.minutes}
+
+
+@router.get("/api/demo/stats")
+def stats(
+    request: Request, rt: Runtime, days: int = Query(default=31, ge=1, le=400)
+) -> dict[str, Any]:
+    """How many people visit the demo and for how long, for the site's private stats page: the
+    visits started in the last ``days`` days and the places taken now. No addresses. Only with
+    ``PLANTCRAFT_PUBLIC_DEMO_STATS_KEY`` as the bearer token; otherwise a 404."""
+
+    demo = _demo()
+    given = request.headers.get("authorization", "").removeprefix("Bearer ").strip()
+    if not demo.stats_key or not secrets.compare_digest(given.encode(), demo.stats_key.encode()):
+        raise HTTPException(status_code=404, detail=t("Not found."))
+    now = time.time()
+    return {
+        "now": {**rt.workspace.demo_visits.counts(now), "seats": demo.seats},
+        "visits": rt.workspace.demo_visits.history(now - days * 86400, now),
+        "pages": rt.workspace.demo_visits.pages(now - days * 86400),
+        "journeys": rt.workspace.demo_visits.journeys(now - days * 86400, now=now),
+    }
 
 
 @router.get("/api/demo/guides")

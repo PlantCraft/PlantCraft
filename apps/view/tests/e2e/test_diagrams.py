@@ -183,7 +183,7 @@ def test_a_diagram_shared_by_link_opens_live_and_as_a_kiosk(
     _shot(anonymous, screenshots, "6-public-link")
     anonymous.goto(f"{url}?screen=1")
     expect(anonymous.locator(".dg-stage-full .dg-canvas")).to_be_visible()
-    expect(anonymous.locator(".dg-kiosk-name")).to_have_text("Feed by link")
+    expect(anonymous.locator(".dg-full-name")).to_have_text("Feed by link")
     _shot(anonymous, screenshots, "7-kiosk")
 
 
@@ -379,4 +379,11 @@ def test_a_whole_plant_has_tabs_back_to_its_overview(signed_in, app_url, screens
     inside = page.locator(".dg-full-tabs").get_by_role("link", name="Utilities")
     inside.click()
     expect(canvas).to_have_attribute("viewBox", "1600 1800 1600 900")
+    # The strip on top holds the tabs and the time: never over the drawing.
+    strip = page.locator(".dg-full-bar").bounding_box()
+    body = page.locator(".dg-stage-body").bounding_box()
+    assert strip and body and body["y"] >= strip["y"] + strip["height"] - 1
+    expect(page.get_by_role("slider", name="Instant shown")).to_have_count(0)
+    page.locator(".dg-full-time > button").click()
+    expect(page.get_by_role("slider", name="Instant shown")).to_be_visible()
     _shot(page, screenshots, "16-plant-tabs-full-screen")
