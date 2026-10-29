@@ -30,7 +30,7 @@ def test_the_installation_zone_is_picked_from_a_list(page):
         # The backups' schedule offers Local time first, now named after the plant.
         page.goto("/backups")
         zone = page.locator("#ops-schedule").get_by_role("combobox", name="Time zone")
-        expect(zone.locator("option").first).to_have_text("Local time · Sao Paulo (UTC−3)")
+        expect(zone.locator("option").first).to_have_text("Local time · São Paulo (UTC−3)")
         expect(zone.locator("option").nth(1)).to_have_text("UTC")
         expect(zone).to_have_value("local")
         _shot(page, "backups-schedule.png")
