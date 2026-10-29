@@ -1079,3 +1079,11 @@ Two open items of the offline-install report (`install-e2e/REPORT.md`, items 1 a
   the browser"; the kit is three cards (install, connection code of #370, open) with OS notes and
   "Use my own Python" folded. e2e test_notebook_kit now creates a connection code (it still looked
   for the "Connect this computer" button #370 removed).
+
+## 2026-10-29 (Analytics rounds failing with "timed out" on the demo)
+
+- Demo VPS: 22 "CPM round failed — Unavailable: PlantCraft could not be reached: timed out" in
+  8 h. The round's `POST /api/v1/series` (a day of 50 loops' signals, 4 parallel requests) waited
+  for the Historian's read budget (30 s) past the SDK client's 15 s timeout; each retry left the
+  first read running and added another. SDK 0.78.0: `SERIES_TIMEOUT` 90 s for series reads;
+  PlantCraft's Historian wait 40 s -> 75 s (budget 30 s + read limit 30 s).

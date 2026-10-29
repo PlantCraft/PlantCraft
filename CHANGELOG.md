@@ -32,6 +32,15 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Analytics rounds no longer fail with "PlantCraft could not be reached: timed out" (demo,
+  2026-10-29, SDK 0.78.0).** A loop round reads a day of every loop's signals; while the
+  Historian served other long reads, the round's read waited its turn in the Historian's read
+  budget (up to 30 s) longer than the SDK client's 15 s, so the client asked again while its
+  first read still ran, three times, and the round failed (22 times in 8 h on the demo, "failed"
+  in the Queue). The SDK's series reads now wait 90 s (`SERIES_TIMEOUT`, other calls keep 15 s)
+  and PlantCraft waits 75 s for the Historian (`HISTCRAFT_TIMEOUT_SECONDS`, was 40 s), longer
+  than the budget wait plus the Historian's own 30 s read limit.
+
 - **Public demo, found by testing it online (2026-10-27).** The maintenance and manager guides
   opened "Report not found": the demo's visitor joins the Instrumentation and control group,
   which View's Control loops folder is shown to. The demo's four calculated signals are made

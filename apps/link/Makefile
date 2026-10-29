@@ -2,7 +2,7 @@
 .PHONY: ci deps standard lint format test test-fast frontend e2e bench serve image package lock
 
 PYTHON ?= python
-SDK := plantcraft-sdk==0.77.0
+SDK := plantcraft-sdk==0.78.0
 
 ci: deps standard lint frontend test
 
