@@ -121,7 +121,7 @@ for app in $APPS; do
 done
 APPS="${known# }"
 [ -n "$APPS" ] || { log suite "no known app to build"; exit 1; }
-[ -d "$SRC/.git" ] || { git init -q "$SRC" && git -C "$SRC" remote add origin "$REMOTE/processcraft.git"; }
+[ -d "$SRC/.git" ] || { git init -q "$SRC" && git -C "$SRC" remote add origin "$REMOTE/PlantCraft.git"; }
 shown=""
 
 trap 'for a in $APPS; do stop_watch "$a"; done; exit 0' TERM INT

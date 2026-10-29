@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# ci-slot acquire|release: the runner's job-started and job-completed hooks.
+#
+# All runners on the Mac mini share one Docker Desktop, so its memory. A job waits here until one
+# of CI_SLOTS slots (the /slots volume every runner mounts) is free, which keeps the number of
+# jobs building at once within what that memory holds. A slot is a directory, taken with mkdir
+# (atomic), named after the container that holds it.
+set -u
+dir="${CI_SLOT_DIR:-/slots}"
+me="$(hostname)"
+slots="${CI_SLOTS:-1}"
+stale_min="${CI_SLOT_STALE_MIN:-120}"
+mkdir -p "$dir"
+
+release() {
+    for slot in "$dir"/slot-*; do
+        [ "$(cat "$slot/owner" 2>/dev/null)" = "$me" ] && rm -rf "$slot"
+    done
+    return 0
+}
+
+case "${1:-}" in
+    release) release ;;
+    acquire)
+        release  # a slot still ours is from a job whose completed hook never ran
+        waited=0
+        while :; do
+            for i in $(seq 1 "$slots"); do
+                if mkdir "$dir/slot-$i" 2>/dev/null; then
+                    echo "$me" >"$dir/slot-$i/owner"
+                    echo "CI slot $i of $slots taken after ${waited}s"
+                    exit 0
+                fi
+            done
+            # A slot held this long belongs to a runner that died mid-job.
+            find "$dir" -maxdepth 1 -name 'slot-*' -mmin +"$stale_min" -exec rm -rf {} + 2>/dev/null
+            [ $((waited % 60)) -eq 0 ] && echo "Waiting for a free CI slot (all $slots in use)..."
+            sleep 5
+            waited=$((waited + 5))
+        done
+        ;;
+    *) echo "usage: ci-slot acquire|release" >&2; exit 2 ;;
+esac

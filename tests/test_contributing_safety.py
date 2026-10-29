@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -104,3 +105,44 @@ def test_actions_are_pinned_to_a_commit(path):
     used = re.findall(r"uses:\s*([^\s#]+)", path.read_text(encoding="utf-8"))
     loose = [use for use in used if not PINNED.match(use)]
     assert not loose, f"{path.name}: pin these actions to a full commit SHA: {loose}"
+
+
+HOOK = ROOT / "ci" / "macmini" / "ci-slot-acquire.sh"
+
+
+@pytest.mark.parametrize(
+    ("event", "ref", "repository"),
+    [
+        ("pull_request", "refs/pull/1/merge", "PlantCraft/PlantCraft"),
+        ("pull_request_target", "refs/heads/main", "PlantCraft/PlantCraft"),
+        ("push", "refs/heads/feature", "PlantCraft/PlantCraft"),
+        ("push", "refs/heads/main", "someone/PlantCraft"),
+        ("", "", ""),
+    ],
+)
+def test_the_mac_mini_refuses_every_job_that_is_not_mains(event, ref, repository):
+    # The repository is public: a fork's pull request can edit a workflow to ask for the Mac mini,
+    # so its runners' job-started hook refuses anything but main's own jobs (ci/macmini/README.md).
+    env = {
+        "PATH": "/usr/bin:/bin",
+        "REPO": "PlantCraft/PlantCraft",
+        "GITHUB_EVENT_NAME": event,
+        "GITHUB_REF": ref,
+        "GITHUB_REPOSITORY": repository,
+    }
+    done = subprocess.run(["sh", str(HOOK)], env=env, capture_output=True, text=True, check=False)
+    assert done.returncode != 0 and "takes only main's jobs" in done.stderr
+
+
+@pytest.mark.parametrize("event", ["push", "schedule", "workflow_dispatch"])
+def test_the_mac_mini_takes_mains_own_jobs(event):
+    env = {
+        "PATH": "/usr/bin:/bin",
+        "REPO": "PlantCraft/PlantCraft",
+        "GITHUB_EVENT_NAME": event,
+        "GITHUB_REF": "refs/heads/main",
+        "GITHUB_REPOSITORY": "plantcraft/plantcraft",
+    }
+    done = subprocess.run(["sh", str(HOOK)], env=env, capture_output=True, text=True, check=False)
+    # Past the guard it waits for a CI slot (ci-slot, only inside the runner's image).
+    assert "takes only main's jobs" not in done.stderr

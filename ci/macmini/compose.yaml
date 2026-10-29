@@ -1,0 +1,62 @@
+# The suite's CI runners on the Mac mini, all for the one repository (README.md): up to three, as
+# many as CI_SLOTS, so the platform's and the apps' jobs of one push can run side by side.
+# setup.sh registers them; afterwards Docker Desktop starts them on its own. SUITE_DIR is the
+# installed suite the deploy jobs update (mounted at the same path so its bind mounts resolve on
+# the host). Shown in Docker Desktop as "processcraft-ci", beside the suite's "processcraft".
+name: processcraft-ci
+
+x-runner: &runner
+  image: processcraft-ci-runner:latest
+  restart: unless-stopped
+  init: true
+  environment: &env
+    SUITE_DIR: ${SUITE_DIR:?SUITE_DIR is required}
+    RUNNER_TOKEN: ${RUNNER_TOKEN:-}
+    REPO: PlantCraft/PlantCraft
+    # Jobs wait for one of CI_SLOTS shared slots (ci-slot), so the runners never build more at
+    # once than Docker Desktop's memory holds; setup.sh sizes it from that memory.
+    CI_SLOTS: ${CI_SLOTS:-1}
+    ACTIONS_RUNNER_HOOK_JOB_STARTED: /usr/local/bin/ci-slot-acquire.sh
+    ACTIONS_RUNNER_HOOK_JOB_COMPLETED: /usr/local/bin/ci-slot-release.sh
+  mem_limit: 3g
+
+services:
+  processcraft:
+    <<: *runner
+    profiles: [processcraft]
+    environment:
+      <<: *env
+      RUNNER_NAME: macmini-processcraft
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${SUITE_DIR}:${SUITE_DIR}
+      - processcraft:/runner
+      - slots:/slots
+  processcraft-2:
+    <<: *runner
+    profiles: [processcraft-2]
+    environment:
+      <<: *env
+      RUNNER_NAME: macmini-processcraft-2
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${SUITE_DIR}:${SUITE_DIR}
+      - processcraft-2:/runner
+      - slots:/slots
+  processcraft-3:
+    <<: *runner
+    profiles: [processcraft-3]
+    environment:
+      <<: *env
+      RUNNER_NAME: macmini-processcraft-3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${SUITE_DIR}:${SUITE_DIR}
+      - processcraft-3:/runner
+      - slots:/slots
+
+volumes:
+  slots:
+  processcraft:
+  processcraft-2:
+  processcraft-3:

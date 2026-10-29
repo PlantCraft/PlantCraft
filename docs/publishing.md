@@ -1,14 +1,18 @@
 # Publishing the suite
 
-The repository under development stays private, with its whole history: the platform, the SDK,
-the shared ui, every official app (`apps/`) and the Simulator (`simulator/`). The suite is
-published from **new** repositories under the organization that will carry it (`PlantCraft`):
-`PlantCraft/PlantCraft`, the whole suite, and `PlantCraft/plantcraft-app-template`, the starting
-point for anyone who builds an app of their own. Each new repository starts from one clean
-commit, and the snapshot is built from the current `main`. `dev/snapshot` builds that snapshot
-and checks it. Creating the repositories,
-pushing to them and making them public is the owner's decision and is done by hand. Nothing in
-this repository does it.
+**Since 2026-10-29 the suite is developed in the open, in `PlantCraft/PlantCraft`.** Every
+commit, branch, pull request and comment there is public. The repository it came from, with the
+whole history of its first weeks, stays private and archived; `PlantCraft/PlantCraft` started from
+one clean commit of it and took a second one, of the same kind, when development moved.
+
+The gates below now check every change as well: the Security workflow's `secrets` job (gitleaks)
+and its `words` job, which reads the words that must never be published from the repository
+secret `BANNED_WORDS` and fails on any of them in the tree or in a pull request's commit messages.
+
+`dev/snapshot` still builds one clean commit of a repository and checks it, for example
+`PlantCraft/plantcraft-app-template`, the starting point for anyone who builds an app of their
+own (`templates/app`). Creating repositories and making anything public stays the owner's
+decision (AGENTS.md, section 9).
 
 ## Building the snapshot
 
