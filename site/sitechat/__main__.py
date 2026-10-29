@@ -19,6 +19,8 @@ def main() -> None:
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8090)
     sub.add_parser("contacts", help="print the contact requests, newest last")
+    watch = sub.add_parser("watch", help="sample the host's health for /stats and send alerts")
+    watch.add_argument("--interval", type=float, default=30.0)
     ev = sub.add_parser("eval", help="ask the configured model every question of the eval set")
     ev.add_argument("--only", default="", help="question ids or kinds, comma separated")
     ev.add_argument("--judge", action="store_true", help="also have the model judge each answer")
@@ -32,6 +34,10 @@ def main() -> None:
         if settings.dist is None:
             sys.exit("No built site: run `python build.py` first (or set SITE_DIST).")
         uvicorn.run(create_app(settings), host=args.host, port=args.port, proxy_headers=False)
+    elif args.command == "watch":
+        from .health import run as watch_run
+
+        watch_run(settings.data_dir, args.interval)
     elif args.command == "contacts":
         from .contacts import Inbox
 

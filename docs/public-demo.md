@@ -138,3 +138,18 @@ set in `/etc/plantcraft-site/vm.env`; `vm.sh demo` again updates the suite from 
 `SITE_CONTACT_WEBHOOK` in `/etc/plantcraft-site/site.env`. Visits, chat questions and contacts:
 `https://plantcraft.io/stats`, with the password `vm.sh stats-password` prints (`vm.sh site` and
 `vm.sh demo` share the demo's stats key through `/etc/plantcraft-site/demo-stats-key`).
+
+**Watching it live.** `vm.sh site` also starts `plantcraft-watch` (`site/sitechat/health.py`, root,
+every 30 s): the machine's CPU, memory, disk and load, every container (running, healthy,
+restarts, its CPU and memory), `cloudflared` and the site, the answer of the site and of the
+demo from the VM and through Cloudflare (code and time), and the tunnel's requests and 5xx
+answers (cloudflared's own metrics). `/stats` shows it on top as *Server now*, with the last two
+hours and the last alerts; `/stats/now.json` gives the same to a script. When something stays
+wrong (a page not answering, a container down, unhealthy or restarted, a unit stopped, under 10%
+of the disk or 8% of the memory free, the CPU over 90% for 5 minutes, over 5% of answers 5xx)
+it pushes once to an [ntfy](https://ntfy.sh) topic, and once more when it is back:
+`vm.sh alerts` prints the topic to subscribe to in the ntfy app and sends a test
+(`WATCH_EMAIL` in `/etc/plantcraft-site/watch.env` also mails each alert). The alerts hold
+service names and numbers only, never a visitor's data. A VM that is gone cannot say so: run
+`deploy/cloud/outside-watch.sh install <topic url>` on another machine (the Mac mini), which
+opens both pages every minute and pushes to the same topic after 3 misses in a row.
