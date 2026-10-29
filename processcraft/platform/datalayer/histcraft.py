@@ -58,9 +58,10 @@ RENEW_MARGIN = 60
 # HistCraft answers that are the caller's own mistake reach the caller unchanged; 504 is a read
 # longer than its time limit (HISTCRAFT_QUERY_TIMEOUT): "ask for a shorter period or a larger step".
 PASS_THROUGH = {400, 404, 409, 413, 422, 504}
-# How long PlantCraft waits for the Historian: longer than the Historian's own read limit (30 s),
-# so a read past it ends with the Historian's advice, not with "did not answer in time".
-WAIT_SECONDS = 40.0
+# How long PlantCraft waits for the Historian: longer than a read may take there (its turn in the
+# read budget, up to 30 s, then its own read limit, 30 s), so a read past it ends with the
+# Historian's advice (503, 504), not with "did not answer in time".
+WAIT_SECONDS = 75.0
 # PlantCraft settings HistCraft keeps in a source's ``options``.
 OPTIONS = (
     "server",

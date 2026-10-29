@@ -104,6 +104,11 @@ from plantcraft_sdk.llm import messages_body
 from plantcraft_sdk.people import Group, NotificationReceipt, NotificationResolution, Person
 
 DEFAULT_TIMEOUT = 15.0
+# A series read waits its turn for the Historian's read budget (``HISTCRAFT_QUERY_TIMEOUT``, 30 s)
+# and may then run as long again, and PlantCraft waits 75 s for the Historian: a client that gave
+# up at 15 s asked again while its first read still ran, and a busy Historian never caught up
+# (Analytics rounds failing with "timed out" on the demo, 2026-10-29).
+SERIES_TIMEOUT = 90.0
 # A language model may take a while to write its answer.
 LLM_TIMEOUT = 120.0
 # Renew a service token this long before it expires.
@@ -407,6 +412,7 @@ class PlantCraftClient:
         *,
         params: Mapping[str, Any] | None = None,
         json: Any = None,
+        timeout: float | None = None,
     ) -> Any:
         """A signal or series read: from the Historian when it serves them, else PlantCraft.
 
@@ -416,7 +422,7 @@ class PlantCraftClient:
         answer, as PlantCraft's would be, since PlantCraft would forward to it.
         """
 
-        return self._read_exchange(method, path, params=params, json=json)[0]
+        return self._read_exchange(method, path, params=params, json=json, timeout=timeout)[0]
 
     def _read_exchange(
         self,
@@ -425,16 +431,19 @@ class PlantCraftClient:
         *,
         params: Mapping[str, Any] | None = None,
         json: Any = None,
+        timeout: float | None = None,
     ) -> tuple[Any, httpx.Headers]:
         historian = self._historian
         if historian is not None and self._historian_serves(historian):
             try:
-                return self._exchange(method, path, params=params, json=json, base=historian.url)
+                return self._exchange(
+                    method, path, params=params, json=json, base=historian.url, timeout=timeout
+                )
             except Unavailable as exc:
                 if exc.status_code is not None:
                     raise  # the Historian's own answer (a source that failed: 502)
                 historian.set(False)
-        return self._exchange(method, path, params=params, json=json)
+        return self._exchange(method, path, params=params, json=json, timeout=timeout)
 
     def _all_pages(self, exchange: Any, path: str, params: Mapping[str, Any]) -> list[Any]:
         """A list route read page by page (``plantcraft_sdk.server.paging``): never more than
@@ -624,6 +633,7 @@ class PlantCraftClient:
             "GET",
             f"/api/v1/signals/{quote(signal_id, safe='')}/series",
             params={"start": _time(start), "end": _time(end), "step": step},
+            timeout=SERIES_TIMEOUT,
         )
 
     def series_runs(
@@ -718,14 +728,16 @@ class PlantCraftClient:
         historian = self._historian
         if historian is not None and self._historian_serves(historian):
             try:
-                return self._send("POST", "/api/v1/series", json=body, base=historian.url)
+                return self._send(
+                    "POST", "/api/v1/series", json=body, base=historian.url, timeout=SERIES_TIMEOUT
+                )
             except Unavailable as exc:
                 if exc.status_code is not None:
                     raise
                 historian.set(False)
         if self._batch:
             try:
-                return self._send("POST", "/api/v1/series", json=body)
+                return self._send("POST", "/api/v1/series", json=body, timeout=SERIES_TIMEOUT)
             except (NotFound, BadRequest) as exc:
                 if exc.status_code not in (404, 405):
                     raise

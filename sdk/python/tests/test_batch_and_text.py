@@ -279,3 +279,31 @@ def test_iso_many_and_parse_times_match_the_one_by_one_versions():
 )
 def test_text_labels(value, label):
     assert text_label(value) == label
+
+
+def test_series_reads_wait_longer_than_other_calls():
+    """A busy Historian answers a series late: the client waits for it instead of asking again
+    (Analytics rounds failed with "timed out" on the demo, 2026-10-29)."""
+
+    from plantcraft_sdk.client import DEFAULT_TIMEOUT, SERIES_TIMEOUT
+
+    waited: dict[str, float] = {}
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        waited[f"{request.method} {request.url.path}"] = request.extensions["timeout"]["read"]
+        if request.url.path.endswith("/series") and request.method == "POST":
+            return httpx.Response(200, json={"series": [], "errors": []})
+        if request.url.path.endswith("/series"):
+            return httpx.Response(200, json={"signal": "A", "kind": "number", "t": [], "v": []})
+        return httpx.Response(200, json={"id": "A"})
+
+    client = PlantCraftClient(
+        BASE_URL, token="t", http_client=httpx.Client(transport=httpx.MockTransport(answer))
+    )
+    client.series_many(["A", "B"], HOUR, NOW)
+    client.series("A", HOUR, NOW)
+    client.signal("A")
+    assert SERIES_TIMEOUT > 75 > DEFAULT_TIMEOUT
+    assert waited["POST /api/v1/series"] == SERIES_TIMEOUT
+    assert waited["GET /api/v1/signals/A/series"] == SERIES_TIMEOUT
+    assert waited["GET /api/v1/signals/A"] != SERIES_TIMEOUT  # other calls keep the client's

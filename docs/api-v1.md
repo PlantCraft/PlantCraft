@@ -809,8 +809,9 @@ checks the forwarding against a stub.
 - **Errors.** Historian's 400, 404, 409, 413 and 422 reach the caller with their `detail`, and so
   does its 504 for a read past its time limit (`HISTCRAFT_QUERY_TIMEOUT`, "ask for a shorter
   period or a larger step"); any other answer (401, 403, 5xx, not JSON) or an unreachable
-  Historian is a 502, and no answer within `HISTCRAFT_TIMEOUT_SECONDS` (default 40, longer than
-  the Historian's own limit) a 504.
+  Historian is a 502, and no answer within `HISTCRAFT_TIMEOUT_SECONDS` (default 75: a read may
+  wait 30 s for its turn in the Historian's read budget, then run 30 s) a 504. The SDK's client
+  waits 90 s for a series read (`SERIES_TIMEOUT`), so it never asks again while its read runs.
 - **Long series pass through.** A series and a batch are Historian's JSON bytes as it wrote them:
   PlantCraft checks the caller, then passes the answer on without parsing it and writing it
   again.
