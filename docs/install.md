@@ -210,7 +210,8 @@ sign-in page and the language models off ([install-offline.md](install-offline.m
 
 ## From source (developers)
 
-Requirements: Python 3.11+, Node.js 22 and Docker.
+Requirements: Python 3.12 or 3.13 (asyncua, the OPC UA library, fails on 3.15:
+[#10](https://github.com/PlantCraft/PlantCraft/issues/10)), Node.js 22 and Docker.
 
 ```bash
 git clone https://github.com/PlantCraft/PlantCraft.git plantcraft && cd plantcraft
