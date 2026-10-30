@@ -32,6 +32,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Running from source says which Python to use (#10).** The demo from source is tested on
+  Python 3.12 and 3.13, and on 3.15 asyncua, the OPC UA library, fails to read, so signals show
+  no values. The README and the install guide now say 3.12 or 3.13 (the Simulator needs 3.12),
+  and `run_opcua_demo.py` warns on a newer Python. Thanks to the reporter of #10.
+
 - **Analytics rounds no longer fail with "PlantCraft could not be reached: timed out" (demo,
   2026-10-29, SDK 0.78.0).** A loop round reads a day of every loop's signals; while the
   Historian served other long reads, the round's read waited its turn in the Historian's read

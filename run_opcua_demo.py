@@ -181,8 +181,27 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+# The newest Python the demo is tested on. asyncua, the OPC UA library, fails on 3.15 (issue #10).
+NEWEST_TESTED_PYTHON = (3, 13)
+PYTHON_UNTESTED = (
+    "Python {version} is newer than the demo is tested on (3.12 and 3.13). The OPC UA library\n"
+    "asyncua fails on 3.15, so signals may show no values. Use Python 3.12 or 3.13:\n"
+    "https://github.com/PlantCraft/PlantCraft/issues/10"
+)
+
+
+def python_warning(version: tuple[int, ...] = tuple(sys.version_info)) -> str | None:
+    """A warning when this Python is newer than the demo is tested on, else None."""
+    if tuple(version[:2]) <= NEWEST_TESTED_PYTHON:
+        return None
+    return PYTHON_UNTESTED.format(version=".".join(str(part) for part in version[:2]))
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    warning = python_warning()
+    if warning:
+        print(warning, file=sys.stderr)
     if not args.skip_build:
         _ensure_frontend()
     if args.reset:

@@ -201,3 +201,12 @@ def test_the_demo_starts_an_app_of_your_own_by_its_address():
     for wrong in ("starter", "starter=/starter/", "starter=http://127.0.0.1/starter/"):
         with pytest.raises(argparse.ArgumentTypeError):
             run_opcua_demo._app_entry(wrong)
+
+
+def test_demo_warns_on_a_python_newer_than_tested() -> None:
+    import run_opcua_demo
+
+    assert run_opcua_demo.python_warning((3, 12, 1)) is None
+    assert run_opcua_demo.python_warning((3, 13, 0)) is None
+    warning = run_opcua_demo.python_warning((3, 15, 0))
+    assert warning is not None and "3.15" in warning and "issues/10" in warning
