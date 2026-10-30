@@ -811,7 +811,8 @@ STAND_IN_PLANTCRAFT = """
 STAND_IN_EXECUTOR = """
   {name}:
     image: processcraft:{{version}}
-    command: ["python", "-c", "import time; time.sleep(10 ** 9)"]
+    entrypoint: ["python", "-c", "import time; time.sleep(10 ** 9)"]
+    command: []
     healthcheck:
       test: ["CMD", "python", "-c", "pass"]
 """
