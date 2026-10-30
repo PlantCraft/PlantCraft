@@ -6,6 +6,11 @@ joins it into the bundle's release notes.
 
 ## [0.5.1] - 2026-10-30
 
+- **Memory stays bounded under many viewers.** View's short cache let expired values go only
+  when it held 4,096 of them, so a diagram's window of series per request piled up until the
+  container reached its 2 GiB limit and was stopped (public demo, 2026-10-29), or stalled for
+  minutes; expired values now leave at every store. Viewers asking for the same data together
+  share one read.
 - Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).
 
 ### Added

@@ -73,6 +73,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **View no longer runs out of memory with many viewers.** Its short cache kept expired
+  diagram data until it held 4,096 entries; on the public demo View reached its 2 GiB limit and
+  was stopped (2026-10-29). Expired data now leaves at once, and viewers asking for the same
+  data together share one read.
+
 - **The old name is gone from what people type and download.** The command
   is `plantcraft` (`processcraft` still works), release files are
   `plantcraft-<version>-linux-<arch>-bundle.tar.gz`, `ssh-keygen` checks them as
