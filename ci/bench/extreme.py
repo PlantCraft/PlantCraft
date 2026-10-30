@@ -177,12 +177,15 @@ class Stats(threading.Thread):
 def plant_signals(suite: Suite, count: int) -> list[str]:
     """The plant's first ``count`` number signals (Analytics' loops' and checks' kind)."""
 
-    # One page (the contract's largest) holds far more than a round reads.
+    # One page (the contract's largest) holds far more than a round reads. The plant's own
+    # signals only: not those apps write (app-*) nor the suite's health (system:).
     answer, _, _ = suite.call("GET", "/api/v1/signals?limit=5000")
     found = [
         item.get("id")
         for item in answer or []
-        if (item.get("kind") or "number") == "number" and not item.get("app")
+        if (item.get("kind") or "number") == "number"
+        and not item.get("app")
+        and not str(item.get("id")).startswith(("app-", "system:"))
     ]
     return [item for item in found if item][:count]
 
