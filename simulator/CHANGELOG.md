@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## [0.5.1] - 2026-10-30
+
+- Suite 0.5.1: same Simulator, version aligned with the suite; its image now carries this
+  changelog for the release notes.
+
+## [0.5.0] - 2026-10-27
 
 - **0.5.0: renamed to `simcraft`.** The platform is now PlantCraft, so the Simulator's package,
   import, command, image and compose service are `simcraft` and its variables `SIMCRAFT_*`

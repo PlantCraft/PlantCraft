@@ -110,7 +110,7 @@ export function SignalQualityPage({ me }: { me: Me }) {
       <div className="panel kpi-card"><span className="pc-overline">{t("Signal list")}</span>{sync.status === "error" ? <><Pill status="error" label={t("Sync failed")} /><small>{sync.error}</small></> : sync.at ? <><b>{t("{found} signals", { found: sync.found ?? 0 })}</b><small>{t("Read from PlantCraft {ago}: {added} added, {updated} updated, {missing} gone.", { ago: formatAgo(sync.at), added: sync.added ?? 0, updated: sync.updated ?? 0, missing: sync.missing ?? 0 })}</small></> : <b>—</b>}</div>
     </div>
     <Settings key={version} algorithm={algorithm} me={me} onSaved={(next) => { setAlgorithm(next); setVersion(version + 1); }} />
-    {/* Configuration, not history (owner, 2026-10-21): where the algorithm is used; its runs are on Results > Run history. */}
+    {/* Configuration, not history: where the algorithm is used; its runs are on Results > Run history. */}
     <h2 className="section-title">{t("Where it is used")}</h2>
     <div className="panel used-by">
       <p>{t("Every active signal PlantCraft knows: {count} today. The loop algorithms read its results before they judge a loop.", { count: formatNumber(algorithm.signal_count, 0) })}</p>

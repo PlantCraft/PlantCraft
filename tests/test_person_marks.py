@@ -1,5 +1,5 @@
 # ruff: noqa: F811  (the fixtures come from test_collaboration.py, test_quick_access.py, test_demo_visits.py)
-"""What a person marks for themselves (owner, 2026-10-28): a notification done (the check), seen
+"""What a person marks for themselves: a notification done (the check), seen
 or not seen again with one button, a favorite; a conversation or an assistant chat unread again
 or a favorite. A public demo visit keeps its own marks: the next visitor starts as seeded."""
 
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from processcraft.api.feed import mark_key
+from plantcraft.api.feed import mark_key
 from tests.test_collaboration import _person, signed  # noqa: F401
 from tests.test_demo_visits import EDGE, demo_app  # noqa: F401
 from tests.test_quick_access import _alarm, _notice, alarms  # noqa: F401
@@ -137,10 +137,10 @@ def test_a_demo_visit_marks_for_itself_only(demo_app):
 
 
 def test_a_demo_visit_reads_a_conversation_for_itself_only(demo_app):
-    """Opening a conversation is the visit's read: the next visitor finds it unread as seeded
-    (owner, 2026-10-28), and the seed leaves the newest few unread for every visit."""
+    """Opening a conversation is the visit's read: the next visitor finds it unread as seeded,
+    and the seed leaves the newest few unread for every visit."""
 
-    from processcraft.demo_seed import VISITOR_UNREAD, visitor_unread
+    from plantcraft.demo_seed import VISITOR_UNREAD, visitor_unread
 
     rt = demo_app.state.runtime
     sent = rt.workspace.messages
@@ -176,7 +176,7 @@ def test_a_demo_visit_reads_a_conversation_for_itself_only(demo_app):
 
 
 def test_a_demo_visit_starts_with_the_newest_notifications_unread(demo_app):
-    from processcraft.api.feed import DEMO_UNREAD, notification_feed
+    from plantcraft.api.feed import DEMO_UNREAD, notification_feed
 
     rt = demo_app.state.runtime
     robot = rt.workspace.messages

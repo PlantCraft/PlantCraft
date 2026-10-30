@@ -1,5 +1,5 @@
 /**
- * Schedules (owner, 2026-10-23): when each algorithm runs, on what, with which window of data.
+ * Schedules: when each algorithm runs, on what, with which window of data.
  * One kind of schedule: the loops' monitoring round, Signal quality and each algorithm on assets
  * are schedules like any other, paused, re-timed and run from here. A schedule opens on a page of
  * its own with a preview of what it will queue (how many executions, the next occurrences and
@@ -144,7 +144,7 @@ export function parameterSource(algorithm: unknown, monitor: unknown): "monitor"
 
 const SOURCE_TEXT = { monitor: "set here", algorithm: "from the algorithm", block: "block's default" } as const;
 
-/** The defaults cascade (owner, 2026-10-27): every parameter of the algorithm's blocks with its
+/** The defaults cascade: every parameter of the algorithm's blocks with its
  * value and where it comes from; a value set here is this monitor's only. */
 function MonitorParameters({ algorithm, value, onChange, disabled }: { algorithm: Algorithm; value: NodeParameters; onChange: (value: NodeParameters) => void; disabled: boolean }) {
   const [specs, setSpecs] = useState<Record<string, CatalogBlock>>({});
@@ -232,7 +232,7 @@ export function outputsCost(rows: RecordedOutput[], assets: number): { perDay: n
 
 const OUTPUT_KINDS: Record<RecordedOutput["kind"], string> = { number: "A value per run", verdict: "A result: its score and its status", series: "A whole series per run" };
 
-/** The schedule's "Recorded outputs" (owner, 2026-10-25, D6): what each execution writes in the
+/** The schedule's "Recorded outputs" (D6): what each execution writes in the
  * Historian, one row per output the algorithm records, and what it costs before it is saved. */
 function RecordedOutputs({ rows, assets, choices, onChange, disabled }: { rows: RecordedOutput[]; assets: number; choices: Record<string, OutputChoice>; onChange: (choices: Record<string, OutputChoice>) => void; disabled: boolean }) {
   if (!rows.length) return <p className="muted small schedule-note">{t("The algorithm records no output. Mark the ports to record in its diagram.")}</p>;
@@ -343,7 +343,7 @@ function TimesPicker({ value, onChange }: { value: string[]; onChange: (times: s
   </div>;
 }
 
-/** When it runs (owner, 2026-10-24): a frequency, every N, the days and times, a first and last day. */
+/** When it runs: a frequency, every N, the days and times, a first and last day. */
 function WhenFields({ when, onChange }: { when: When; onChange: (when: When) => void }) {
   const set = <K extends keyof When>(key: K, value: When[K]) => onChange({ ...when, [key]: value });
   const units = EVERY_UNITS[when.freq];
@@ -389,7 +389,7 @@ function WhenFields({ when, onChange }: { when: When; onChange: (when: When) => 
   </>;
 }
 
-/** What it does when an execution cannot read the plant or finds no data (owner, 2026-10-24, D5). */
+/** What it does when an execution cannot read the plant or finds no data (D5). */
 function RetryFields({ retry, onChange }: { retry: RetryPolicy; onChange: (retry: RetryPolicy) => void }) {
   const set = <K extends keyof RetryPolicy>(key: K, value: RetryPolicy[K]) => onChange({ ...retry, [key]: value });
   return <>
@@ -405,7 +405,7 @@ function RetryFields({ retry, onChange }: { retry: RetryPolicy; onChange: (retry
   </>;
 }
 
-/** A saved schedule's record over its latest executions (owner, 2026-10-25). */
+/** A saved schedule's record over its latest executions. */
 function StatsStrip({ stats, scheduleId }: { stats: ScheduleStats; scheduleId: string }) {
   if (!stats.executions) return null;
   const share = (count: number) => `${Math.round((100 * count) / stats.executions)}%`;
@@ -435,7 +435,7 @@ function AssetList({ value, choices, onChange, disabled }: { value: string[]; ch
   </div>;
 }
 
-/** One schedule on a page of its own (owner, 2026-10-24): what it runs, when, if it fails, who
+/** One schedule on a page of its own: what it runs, when, if it fails, who
  * answers for it, beside a preview that says it in words and lists the next occurrences. */
 export function SchedulePage({ scheduleId, me }: { scheduleId: string | null; me: Me }) {
   // A new schedule goes in the folder its list showed (round 9, D14).
@@ -525,7 +525,7 @@ export function SchedulePage({ scheduleId, me }: { scheduleId: string | null; me
       detail={round ? t("In turn: one run works through every target, one after another.") : t("Which algorithm runs, on which assets, when, what it does if it fails and who answers for it.")}
       actions={<>
         {scheduleId && me.can_edit && <button type="button" className="button button-secondary" onClick={run(() => api.runSchedule(scheduleId), t("Queued: it runs ahead of the monitors."))}><Play size={16} />{t("Run now")}</button>}
-        {/* Link publishes, the Alarms app decides (owner decision D6): its rule opens filled in for this schedule. */}
+        {/* Link publishes, the Alarms app decides: its rule opens filled in for this schedule. */}
         {scheduleId && schedule && scheduleId !== "round-signal_quality" && <a className="button button-secondary" href={alarmRuleHref(scheduleId, schedule.name)}><BellPlus size={16} />{t("Create alarm rule")}</a>}
       </>} />
     {error && <ErrorBox text={error} />}

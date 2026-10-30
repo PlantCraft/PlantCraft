@@ -11,7 +11,7 @@ from playwright.sync_api import expect
 from tests import app_packages
 from tests.e2e.conftest import ADMIN_PASSWORD
 
-# Desk's first page greets the person (owner, 2026-10-23: Desk is the first screen).
+# Desk's first page greets the person (Desk is the first screen).
 GREETING = re.compile(r"^Good (morning|afternoon|evening)")
 
 # Screenshots for the review of the Apps page, when the folder is given.
@@ -111,7 +111,7 @@ def test_desk_is_the_first_screen_and_its_pages_open(page):
         expect(page.get_by_role("heading", name=name, exact=True)).to_be_visible()
         page.wait_for_load_state("networkidle")
         _shot(page, f"desk-{name.lower()}.png")
-    # Team is hidden until an administrator shows it (owner, 2026-10-25); its page still opens.
+    # Team is hidden until an administrator shows it; its page still opens.
     expect(sidebar.get_by_role("link", name="Team", exact=True)).to_have_count(0)
     page.goto("/team")
     expect(page.get_by_role("heading", name="Team", exact=True)).to_be_visible()
@@ -120,7 +120,7 @@ def test_desk_is_the_first_screen_and_its_pages_open(page):
 
 
 def test_the_overview_shows_the_installation_and_the_launcher_comes_back(page):
-    """Owner, 2026-10-27: PlantCraft's Overview answers "is the installation healthy?". The apps'
+    """PlantCraft's Overview answers "is the installation healthy?". The apps'
     widgets, what needs attention and the launcher left the default board for the catalog."""
 
     page.goto("/admin")
@@ -324,7 +324,7 @@ def test_the_apps_open_from_the_name_and_the_menu_folds_from_the_corner(page):
 
 
 def test_messages_open_over_the_page_and_close_back_to_it(page):
-    # Owner, 2026-10-24: Messages and the Assistant cross every app; Messages opens over the page.
+    # Messages and the Assistant cross every app; Messages opens over the page.
     page.goto("/assets")
     quick = page.locator(".pcs-quick")
     quick.get_by_role("link", name=re.compile(r"^Messages")).click()
@@ -352,7 +352,7 @@ def test_messages_open_over_the_page_and_close_back_to_it(page):
     expect(notices.get_by_role("link", name="Full page")).to_have_attribute(
         "href", "/messages/notifications"
     )
-    # The same width as Messages' panel, and its button closes it again (owner, 2026-10-25).
+    # The same width as Messages' panel, and its button closes it again.
     assert abs(notices.bounding_box()["width"] - box["width"]) <= 2
     quick.get_by_role("link", name=re.compile(r"^Notifications")).click()
     expect(notices).to_have_count(0)
@@ -385,7 +385,7 @@ def test_messages_open_over_the_page_and_close_back_to_it(page):
     expect(desk_menu.get_by_role("link", name="Messages", exact=True)).to_have_count(0)
     page.goto("/messages")
     expect(page.get_by_role("heading", name="Messages", exact=True)).to_be_visible()
-    # Two sections: the chats, and the notifications read like an email inbox (owner, 2026-10-24).
+    # Two sections: the chats, and the notifications read like an email inbox.
     sections = page.get_by_role("navigation", name="Messages")
     sections.get_by_role("link", name=re.compile(r"^Notifications")).click()
     expect(page).to_have_url(re.compile(r"/messages/notifications$"))

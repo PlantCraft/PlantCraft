@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from processcraft.certificates import describe_pem, suite_https, with_state
+from plantcraft.certificates import describe_pem, suite_https, with_state
 from tests.test_apps_api import sign_in
 from tests.test_apps_api import world as api_world  # noqa: F401
 from tests.test_watch import NOW, World

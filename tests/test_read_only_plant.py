@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from processcraft.industrial_data.pi_web_api import PiError, ReadOnlySession
+from plantcraft.industrial_data.pi_web_api import PiError, ReadOnlySession
 
-ROOT = Path(__file__).resolve().parents[1] / "processcraft"
+ROOT = Path(__file__).resolve().parents[1] / "plantcraft"
 # Modules that open connections to plant systems (PI Web API, OPC UA, CSV exports of them).
 PLANT_FACING = [
     *sorted((ROOT / "industrial_data").glob("*.py")),
@@ -62,8 +62,8 @@ def test_the_pi_session_still_reads(monkeypatch):
 
 
 def test_the_pi_client_uses_the_read_only_session():
-    from processcraft.config import DataSourceConfig
-    from processcraft.industrial_data.pi_web_api import PiWebApiSource
+    from plantcraft.config import DataSourceConfig
+    from plantcraft.industrial_data.pi_web_api import PiWebApiSource
 
     config = DataSourceConfig(
         type="pi_web_api",

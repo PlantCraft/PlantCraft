@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from processcraft.demo_seed import CAST, PAST_ACTIONS, PAST_CONVERSATIONS, VISITOR, past
-from processcraft.platform.workspace import Workspace
+from plantcraft.demo_seed import CAST, PAST_ACTIONS, PAST_CONVERSATIONS, VISITOR, past
+from plantcraft.platform.workspace import Workspace
 
 
 def _workspace(tmp_path) -> Workspace:
@@ -56,8 +56,8 @@ def test_the_past_is_written_once_with_its_own_dates(tmp_path):
 
 
 def test_the_visitor_takes_part_and_alarms_reach_them(tmp_path):
-    from processcraft.demo_seed import VISITOR_ALARMS, VISITOR_APP_NOTICES, visitor_alarms
-    from processcraft.notify import NotificationStore
+    from plantcraft.demo_seed import VISITOR_ALARMS, VISITOR_APP_NOTICES, visitor_alarms
+    from plantcraft.notify import NotificationStore
 
     workspace = _workspace(tmp_path)
     now = datetime.now().astimezone().replace(microsecond=0)
@@ -87,7 +87,7 @@ def test_the_visitor_takes_part_and_alarms_reach_them(tmp_path):
 
 
 def test_the_lab_csv_is_a_month_of_samples_every_four_hours():
-    from processcraft.demo_seed import LAB_TAGS, lab_csv
+    from plantcraft.demo_seed import LAB_TAGS, lab_csv
 
     rows = lab_csv(now=1_792_000_000).decode().splitlines()
     assert rows[0].split(",")[1:] == [tag for tag, *_ in LAB_TAGS]
@@ -98,7 +98,7 @@ def test_the_lab_csv_is_a_month_of_samples_every_four_hours():
 
 def test_the_pressure_alarm_waits_for_an_archive(tmp_path):
     # Alarms suggests no limits since round 11: without an archive the seed says so
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     class NoArchive(demo_seed.Suite):
         def session(self, username, password):
@@ -111,7 +111,7 @@ def test_the_pressure_alarm_waits_for_an_archive(tmp_path):
 
 def test_the_pressure_alarm_limit_comes_from_the_archived_minutes(tmp_path):
     # the replay reads one value a minute: the limit is one those minutes cross 2% of the time
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     values = [50.0 + (i % 100) / 10 for i in range(2880)]  # 50.0 .. 59.9
 
@@ -133,8 +133,8 @@ def test_the_pressure_alarm_limit_comes_from_the_archived_minutes(tmp_path):
 
 
 def test_the_team_s_assistant_chats_and_notebooks_are_written_once(tmp_path):
-    from processcraft import demo_seed
-    from processcraft.assistant_chat import ChatStore
+    from plantcraft import demo_seed
+    from plantcraft.assistant_chat import ChatStore
 
     workspace = _workspace(tmp_path)
 
@@ -170,8 +170,8 @@ def test_the_team_s_assistant_chats_and_notebooks_are_written_once(tmp_path):
 
 
 def test_the_start_here_note_is_pinned_for_the_visitor_once(tmp_path):
-    from processcraft import demo_seed
-    from processcraft.desk import DeskStore
+    from plantcraft import demo_seed
+    from plantcraft.desk import DeskStore
 
     store = DeskStore(_workspace(tmp_path).db)
     demo_seed.start_here(store, "admin")
@@ -182,7 +182,7 @@ def test_the_start_here_note_is_pinned_for_the_visitor_once(tmp_path):
 
 
 def test_links_turn_names_into_mentions_and_markdown_links():
-    from processcraft.demo_seed import Links
+    from plantcraft.demo_seed import Links
 
     links = Links({"DOC-MH-001": "doc:7", "Plant overview": "dashboard:d1", "A chat": "chat:3"})
     assert links.fill("See {{DOC-MH-001}} and {{A chat|this chat}}; {{Gone}}.") == (
@@ -202,8 +202,8 @@ def test_links_turn_names_into_mentions_and_markdown_links():
 
 
 def test_the_past_links_the_documents_and_the_chats_cite_the_actions(tmp_path):
-    from processcraft import demo_seed
-    from processcraft.assistant_chat import ChatStore
+    from plantcraft import demo_seed
+    from plantcraft.assistant_chat import ChatStore
 
     workspace = _workspace(tmp_path)
     links = demo_seed.Links({"DOC-MH-001": "doc:9", "PRO-U200-012": "doc:12"})
@@ -233,8 +233,8 @@ def test_the_past_links_the_documents_and_the_chats_cite_the_actions(tmp_path):
 
 
 def test_a_story_seeded_before_the_links_gets_them_when_seeded_again(tmp_path):
-    from processcraft import demo_seed
-    from processcraft.desk import DeskStore
+    from plantcraft import demo_seed
+    from plantcraft.desk import DeskStore
 
     workspace = _workspace(tmp_path)
     past(workspace, "admin")
@@ -256,7 +256,7 @@ def test_a_story_seeded_before_the_links_gets_them_when_seeded_again(tmp_path):
 
 
 def test_the_guides_open_the_pages_of_the_story_by_name(tmp_path):
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     workspace = _workspace(tmp_path)
     links = demo_seed.Links({"DOC-MH-001": "doc:9", "Plant overview": "dashboard:d 1"})
@@ -285,7 +285,7 @@ def test_the_guides_open_the_pages_of_the_story_by_name(tmp_path):
 
 
 def test_the_retired_specialist_leaves_with_its_conversation(tmp_path):
-    from processcraft.demo_seed import RETIRED_SPECIALIST, retire_specialist
+    from plantcraft.demo_seed import RETIRED_SPECIALIST, retire_specialist
 
     workspace = _workspace(tmp_path)
     workspace.users.upsert_user(RETIRED_SPECIALIST, "Valve specialist", "Specialist", kind="system")

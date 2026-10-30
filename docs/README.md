@@ -67,8 +67,10 @@ Em português: [docs/pt-BR](pt-BR/).
 - [Design notes](design/): [Copy as prompt](design/copy-prompt.md).
 - [Desk](desk.md): each person's day, the suite's first screen (Today, calendar, to-do,
   team) and its API.
-- [Architecture](architecture.md): philosophy, layers, the apps of the suite,
-  loops and data sources.
+- [Architecture](architecture.md): the suite in one diagram, how the apps talk, what is core
+  and what is open, then the platform's layers, loops and data sources.
+- [Develop PlantCraft](development.md): run it from source, the command line and the settings.
+- [Maintainers](maintainers.md): how issues and pull requests are triaged and reviewed.
 - [The app standard](app-standard.md): what every app of the suite follows
   (manifest, layout, image, settings, references, results and events, the
   suite table). Decided by the owner on 2026-10-19.

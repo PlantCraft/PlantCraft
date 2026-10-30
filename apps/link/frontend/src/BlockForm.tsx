@@ -1,5 +1,5 @@
 /**
- * The form of a block file, in the order a block is thought out (owner, 2026-10-25, round 9):
+ * The form of a block file, in the order a block is thought out (round 9):
  * 1 what it is, 2 its inputs, 3 its outputs, 4 its parameters with their defaults, 5 its Python
  * code. Each input, output and parameter is one compact row (name, type, unit, description), its
  * less used fields under it, instead of a wide table. The same form makes a new block (from

@@ -61,7 +61,7 @@ How a token reaches an app:
   [assistant-access.md](assistant-access.md)) and answers as that person with their current
   access, for reads only: `GET`, and `POST /api/v1/series`. Any other write answers 403.
   Requests with an access token, and the series reads a person's browser sends through the
-  proxy, are limited per person (Settings › Notebooks, `processcraft/api/usage.py`): past the
+  proxy, are limited per person (Settings › Notebooks, `plantcraft/api/usage.py`): past the
   limit the answer is `429` with `Retry-After` and `reason` (`rate` or `busy`). Apps' requests
   (service tokens, and a person's token forwarded by an app inside the network) never count.
 
@@ -101,7 +101,7 @@ input. Times are ISO 8601 with offset; series timestamps are UTC.
 | `POST /api/v1/series/retire` | An app's service token only. Body `{"signals": ["app-<app id>:<name>"...]}` (1 to 500, its own source only, else 403 and nothing retired): the series it no longer writes stop being listed and read, `{"retired": [ids], "errors"}` |
 | `POST /api/v1/audit` | Body `{"action", "subject", "detail"}`; the user comes from the token: `{"id"}` |
 
-Signal ids are `<source id>:<tag>` (since 2026-10-20, decision D2 of `docs/app-standard.md`):
+Signal ids are `<source id>:<tag>` (`docs/app-standard.md`):
 `scenario:FIC-101.PV` for the scenario's own source, `pi:FIC1001.PV` for an added source with
 id `pi`. Clients URL-encode the id in a path (`quote(id, safe="")`); `:` needs no encoding, `/`,
 spaces and `\` do. See "Signal ids" below.
@@ -458,7 +458,7 @@ it shares what its panels show.
   its `GET /api/ops/metrics` carries them as `conditions` with its catalog as `events`.
   PlantCraft's health recorder reads them every minute and writes, in the app's name
   (`source` the app, actor `system`), a `start` for each new key and an `end` (severity `ok`)
-  for each key gone (`processcraft.events.conditions`). An app that did not answer, or whose
+  for each key gone (`plantcraft.events.conditions`). An app that did not answer, or whose
   metrics lack `conditions`, keeps its conditions open; open ones are stored
   (`relayed_conditions`). A name the app does not declare as `interval` is left out, logged
   once; a `subject` that is not a reference becomes `app:<id>`.
@@ -572,7 +572,7 @@ keeps them in `fake.links.calendar` and `fake.links.todos` (`fake.tick_todo` tic
 ## Language models (added 2026-10-25)
 
 An app writes with a language model only through PlantCraft, which keeps the keys and addresses
-and picks the model (owner, 2026-10-25). Each use is declared in `[[contributes.llm]]`
+and picks the model. Each use is declared in `[[contributes.llm]]`
 ([app-standard.md](app-standard.md) section 4b) and listed in Settings › Language models as
 `<app id>:<id>`, where an administrator gives it the default model, another provider's model or
 none; a use declared `default = "off"` has no model until one is chosen. Since the security
@@ -637,7 +637,7 @@ A notebook reads every app's objects in one format (`pc.app("link").list("block"
 declares its kinds in `[[contributes.objects]]` and serves them under its prefix
 (`plantcraft_sdk.server.objects`, `docs/app-standard.md` section 4b); PlantCraft lists what
 each app offers and forwards the reads to the app inside the suite's network with a signed
-identity of the person (`processcraft.api.app_proxy`), so the app applies its own access checks and
+identity of the person (`plantcraft.api.app_proxy`), so the app applies its own access checks and
 never sees an access token. A person's own token or session only (an app's token gets 403);
 only the apps the person may open. Reads, and one request to run (below).
 
@@ -756,7 +756,7 @@ Historian is the suite's data layer: when PlantCraft has `HISTCRAFT_URL` (for ex
 and PlantCraft forwards. API v1 is unchanged for the apps: PlantCraft checks the caller
 exactly as before (401, 403), then forwards the request and answers Historian's answer.
 Without `HISTCRAFT_URL`, PlantCraft reads its own sources through its history cache, as
-before (`processcraft/platform/datalayer/local.py`). `tests/contract/test_api_v1_histcraft.py`
+before (`plantcraft/platform/datalayer/local.py`). `tests/contract/test_api_v1_histcraft.py`
 checks the forwarding against a stub.
 
 | API v1 (and the interface) | Historian |
@@ -797,7 +797,7 @@ checks the forwarding against a stub.
   a signal is `PATCH .../signals/{source id}:{tag}` `{"enabled": false}`: Historian stops
   collecting it and keeps its history; a tag Historian does not have is skipped, and a derived
   signal is Historian's 422, passed on. Binding a signal to an asset stays in PlantCraft and records the source
-  it came from. `processcraft/platform/datalayer/histcraft.py` is the one place that maps them.
+  it came from. `plantcraft/platform/datalayer/histcraft.py` is the one place that maps them.
 - **Bare tags.** Historian's `/signals/{id}` routes take a bare tag that exactly one source has
   (404 otherwise) and answer with the canonical id, which PlantCraft keeps (a result subject
   `signal:FIC-101.PV` is stored as `signal:plc:FIC-101.PV`); PlantCraft adds no resolution of

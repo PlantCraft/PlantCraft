@@ -1,6 +1,6 @@
 [project]
-name = "processcraft"
-version = "0.5.0"
+name = "plantcraft"
+version = "0.5.1"
 description = "PlantCraft: the central app of the suite for process engineers (people, sign-in, data sources, signals and assets)"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -8,7 +8,7 @@ requires-python = ">=3.11"
 dependencies = [
     # Token signing and the API v1 contract the apps build on; developed in sdk/python
     # (install it first: pip install -e sdk/python).
-    "plantcraft-sdk>=0.78,<0.79",
+    "plantcraft-sdk>=0.79,<0.80",
     # Passwords of people who sign in here (Argon2id).
     "argon2-cffi>=23.1,<26",
     "cryptography>=42",
@@ -54,9 +54,9 @@ e2e = [
 ]
 
 [project.scripts]
-plantcraft = "processcraft.cli:main"
+plantcraft = "plantcraft.cli:main"
 # The command's name before PlantCraft was renamed (2026-10-27); scripts that call it keep working.
-processcraft = "processcraft.cli:main"
+processcraft = "plantcraft.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -69,10 +69,10 @@ slow_seconds = 120
 suite_seconds = 1200  # about twice a run on a 4-core container (9 min, 2026-10-25)
 
 [tool.setuptools.packages.find]
-include = ["processcraft*"]
+include = ["plantcraft*"]
 
 [tool.setuptools.package-data]
-"processcraft.i18n" = ["locales/*.json"]
+"plantcraft.i18n" = ["locales/*.json"]
 
 [tool.ruff]
 line-length = 100
@@ -84,5 +84,5 @@ extend-exclude = ["frontend", "apps", "simulator", "site"]
 
 [tool.ruff.lint]
 # Keep the gate small: real errors (pyflakes), import order, and no time without a time zone
-# (DTZ: everything in UTC, owner 2026-10-23).
+# (DTZ: everything in UTC).
 select = ["F", "I", "DTZ"]

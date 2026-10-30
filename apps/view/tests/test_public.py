@@ -98,7 +98,7 @@ def test_a_link_shows_every_page_of_its_dashboard(runtime, fake, client):
 
 
 def test_a_link_lasts_90_days_unless_an_administrator_says_otherwise(runtime, fake, client):
-    """Review decision D4 (2026-10-27): a link forgotten in an old e-mail stops by itself."""
+    """A link forgotten in an old e-mail stops by itself."""
 
     created, share = _shared(client)
     days = (

@@ -1,7 +1,6 @@
 # Interface rules: one look for the whole suite
 
-The short list every screen of PlantCraft and its apps follows (owner, 2026-10-27: "um só ponto
-para navegar", forms and spacing alike everywhere). The detail of each shared piece is in
+The short list every screen of PlantCraft and its apps follows. The detail of each shared piece is in
 [app-standard.md, section 10](app-standard.md#10-interface-one-frame-for-every-app); this page is the
 checklist to read before drawing a screen and before reviewing one. `tests/test_visual_rules.py`
 checks the rules marked *(checked)*.

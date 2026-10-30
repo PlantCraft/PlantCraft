@@ -1,5 +1,5 @@
 /**
- * Executions by schedule (owner, 2026-10-24: Executions and Results were the same thing by two
+ * Executions by schedule (Executions and Results were the same thing by two
  * paths). The page opens on the schedules; a schedule shows its subjects with the latest result
  * of each; a subject (an execution: the schedule's runs on it) shows its outputs over time from the
  * Historian (with a mark where a new version of the algorithm started), its last run on the

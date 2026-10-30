@@ -1,5 +1,5 @@
 /**
- * Executions: the queue that runs everything Link does (owner, 2026-10-23). The panel shows the
+ * Executions: the queue that runs everything Link does. The panel shows the
  * numbers of now and the queue over 1 h to 30 days (@plantcraft/ui QueuePanel, the same in
  * every app); the list below has every execution, newest first: an algorithm on a loop or an
  * asset, a round, the past replayed. A person cancels one still waiting or runs one again.
@@ -30,7 +30,7 @@ export function executionDetail(row: Execution): string {
   const parts: string[] = [];
   if (row.status === "running" && row.progress?.total) parts.push(t("{done} of {total}", { done: row.progress.done, total: row.progress.total }));
   if (row.status === "queued" && row.due_at && new Date(row.due_at).getTime() > Date.now()) parts.push(t("from {time}", { time: formatDate(row.due_at) }));
-  // The schedule's tries (owner, 2026-10-24): "try 2 of 3"; the queue's own retries say "try 2".
+  // The schedule's tries: "try 2 of 3"; the queue's own retries say "try 2".
   if (row.attempts > 1) parts.push(row.max_attempts ? t("try {n} of {max}", { n: row.attempts, max: row.max_attempts }) : t("try {n}", { n: row.attempts }));
   return parts.join(" · ");
 }

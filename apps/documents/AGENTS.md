@@ -84,9 +84,9 @@ shipped is a named step in the store's `MIGRATIONS` (`Migration`, `add_columns` 
 Users, sign-in, roles and groups, assets and asset types, signals and data sources, the
 historian, messages, licences, backups and the launcher are PlantCraft's. An app adds its own
 object, the methods on it and its workflow. When two apps would need the same thing, it belongs
-in PlantCraft (ask the owner) rather than in either app.
+in PlantCraft (ask a maintainer) rather than in either app.
 
-## Owner decisions (stop and ask)
+## Maintainer decisions (stop and ask)
 
 A new permission in `app.toml` (`read`, `write`), any write path toward the plant, a new outside
 dependency, the app's id, prefix, port and uid once it was installed somewhere, and anything that

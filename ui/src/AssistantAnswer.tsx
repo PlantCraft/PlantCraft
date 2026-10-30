@@ -1,6 +1,6 @@
 /**
- * The parts of an assistant's answer that Desk's Assistant and the side panel draw the same way
- * (owner, 2026-10-26): what is happening while the answer is written (thinking, which read is
+ * The parts of an assistant's answer that Desk's Assistant and the side panel draw the same way:
+ *what is happening while the answer is written (thinking, which read is
  * running, drawing the chart, writing), and the charts it drew, with full screen, one plot or
  * one per signal, and a way to go on with the same signals and period in Trends.
  */

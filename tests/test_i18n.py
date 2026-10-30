@@ -9,13 +9,13 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft import i18n
-from processcraft.api.app import create_app
-from processcraft.i18n import t
+from plantcraft import i18n
+from plantcraft.api.app import create_app
+from plantcraft.i18n import t
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOGS = {
-    "backend": ROOT / "processcraft" / "i18n" / "locales" / "pt-BR.json",
+    "backend": ROOT / "plantcraft" / "i18n" / "locales" / "pt-BR.json",
     "frontend": ROOT / "frontend" / "src" / "locales" / "pt-BR.json",
 }
 FIELD = re.compile(r"\{(\w*)\}")

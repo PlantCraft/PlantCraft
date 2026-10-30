@@ -1,5 +1,5 @@
 /**
- * The demo's guides by role (owner, 2026-10-27): a visitor says what they do, and a guide walks
+ * The demo's guides by role: a visitor says what they do, and a guide walks
  * them through the few screens that matter most to that role, across the apps, in its words. The
  * stops point at the demo story (`processcraft demo seed`): a fixed page ("/alarm/alarms"), or an
  * object by its name ("Plant overview"), whose page on this installation the seed wrote

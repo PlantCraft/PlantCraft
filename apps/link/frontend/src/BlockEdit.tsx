@@ -2,7 +2,7 @@
  * Making a block: `/blocks/new` (import a block file or fill in the form; the assistant's button
  * beside the title opens it on writing a block, owner 2026-10-25, round 9) and `/blocks/<id>/edit`
  * (the next version of a block, a block Link ships included). Saving a version asks for its name
- * and what changed (owner, 2026-10-23).
+ * and what changed.
  */
 import { Dialog, useAssistantPage } from "@plantcraft/ui";
 import { ChevronRight, FileUp, FormInput, Save } from "lucide-react";

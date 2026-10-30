@@ -1,4 +1,4 @@
-"""Time zones (owner, 2026-10-24): picked from a list with Local time and UTC first, the
+"""Time zones: picked from a list with Local time and UTC first, the
 installation's zone in Setup › Installation, and each person's choice in Preferences."""
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 """Builds PlantCraft's site into dist/: the page, its assets and fonts, and the chat's knowledge.
 
-    python build.py [--owner PlantCraft] [--bundle plantcraft-0.5.0-linux-amd64-bundle] [--draft]
+    python build.py [--owner PlantCraft] [--bundle plantcraft-0.5.1-linux-amd64-bundle] [--draft]
                     [--demo-url https://demo.example] [--contact team@example] [--security sec@example] [--noindex]
 
 The page is page/template.html with the app cards, links and bundle name filled in; the app
@@ -50,7 +50,7 @@ APPS = [
         "linkcraft",
         "Analytics",
         "Signals and assets",
-        "Algorithms of blocks that watch every signal and asset and say what is wrong and why.",
+        "Scheduled monitors, diagnostics and KPIs for signals and control loops: what is wrong and why.",
     ),
     (
         "alarmcraft",
@@ -234,7 +234,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path, default=HERE / "dist")
     parser.add_argument("--owner", default="PlantCraft", help="the GitHub organization")
-    parser.add_argument("--bundle", default="plantcraft-0.5.0-linux-amd64-bundle")
+    parser.add_argument("--bundle", default="plantcraft-0.5.1-linux-amd64-bundle")
     parser.add_argument("--draft", action="store_true", help="show a 'not published' banner")
     parser.add_argument(
         "--demo-url", default="https://demo.plantcraft.io", help="the public demo, for its button"

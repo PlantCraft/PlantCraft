@@ -3,11 +3,11 @@
 > **Updated:** 2026-10-25
 
 Every known shortfall of PlantCraft View, ranked by user impact. `B` marks a blocker for the next stage.
-When a gap closes, delete its row in the same change and log it in `ROADMAP.md`.
+When a gap closes, delete its row in the same change and note it in `CHANGELOG.md`.
 
 | Id | Gap | Impact | B |
 |---|---|---|---|
-| G14 | Packages are built and verified only with a development key; the real PlantCraft publisher key is the owner's, so no `.pcapp` signed by it exists yet | medium | |
+| G14 | Packages are built and verified only with a development key; the real PlantCraft publisher key is a maintainer's, so no `.pcapp` signed by it exists yet | medium | |
 | G1 | No event frames, annotations or alarm marks on trends | medium | |
 | G3 | The editor finds assets and signals by kind and text; there is no asset tree browser | medium | |
 | G8 | PlantCraft has no "dashboards only" grant for PlantCraft View yet: a person reaches PlantCraft View by its `apps` claim (viewer or editor); the monolith's "only dashboards" role maps to viewer here | medium | |

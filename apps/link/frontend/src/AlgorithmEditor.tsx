@@ -1,5 +1,5 @@
 /**
- * The algorithm editor, in its own window (owner, 2026-10-22: Simulink-like, the whole screen
+ * The algorithm editor, in its own window (Simulink-like, the whole screen
  * for the diagram), and the read-only diagram the other pages show. Both draw the suite's
  * `BlockEditor` (@plantcraft/ui): Link gives it the blocks, the diagram, the check and the test.
  */
@@ -70,7 +70,7 @@ const KIND_WORDS: Record<SubjectKind, string> = { loop: "on loops", signal: "on 
 
 /** The algorithm's own panel, beside the diagram when no block is selected: its name and what it
  * works on. Its texts, its assets and its data window are on its page, so the editor shows the
- * diagram alone (owner, 2026-10-24). */
+ * diagram alone. */
 function DocsPanel({ draft, setDraft, readOnly }: { draft: Draft; setDraft: (next: Draft) => void; readOnly: boolean }) {
   return <div className="alg-docs">
     <h3>{t("Algorithm")}</h3>

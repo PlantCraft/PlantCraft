@@ -1,6 +1,6 @@
 """The Historian's work queue: the CSV imports waiting, being written and just written.
 
-The suite's Queue (owner, 2026-10-26) asks every app ``GET <prefix>api/queue`` (format
+The suite's Queue asks every app ``GET <prefix>api/queue`` (format
 ``plantcraft-queue/1``, ``plantcraft_sdk.server.queue``). The Historian holds no app key and
 never calls the suite, so it answers there only: the numbers of now and their history, ``url``
 (its Imports page, where the panel links) and ``items``, each file of an import: waiting,

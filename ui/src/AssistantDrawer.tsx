@@ -1,9 +1,9 @@
 /**
- * The assistant's side panel (owner, 2026-10-23): one button at the top right of every page
+ * The assistant's side panel: one button at the top right of every page
  * opens the assistant in a panel from the left, over the page (SidePanel.tsx, round 8). It first asks what the person wants: the
  * tasks the page's developer offers there (`useAssistantPage`), or their own words. The task
  * steers the model (its instructions and the context it reads), so one page can offer several
- * things to do. Like a chat in Messages (owner, 2026-10-24, round 8), the panel opens on the
+ * things to do. Like a chat in Messages (round 8), the panel opens on the
  * person's earlier chats and a new one: a new chat is about the page it was started on, and every
  * chat is kept, private to the person, in Desk's Assistant ("Full page" opens it there). The model reads the
  * plant as the person, through PlantCraft's Assistant (docs/assistant.md); the context only tells
@@ -13,7 +13,7 @@
  * `AssistantHost` that `SuiteShell` renders. Every page's title carries the button that opens it
  * (`AssistantTitleButton`, drawn by `Heading`; owner, 2026-10-25, round 9).
  *
- * Works (owner, 2026-10-25): what the assistant does on a page is declared as data, PlantCraft's
+ * Works: what the assistant does on a page is declared as data, PlantCraft's
  * and each app's (docs/assistant.md, "Works"). A page names itself (`page: "<app>:<page id>"`) with a
  * few facts and what it shows (`facts`, `view`); the button beside the title lists that page's works
  * and tasks, and PlantCraft builds the chosen work's context. A "create" work ends in a card with the
@@ -34,7 +34,7 @@ import { claimPanel, registerPanel, SidePanel, usePresence } from "./SidePanel.j
 /** Often enough to follow the text as it is written (streamed into the message). */
 export const DRAWER_POLL_MS = 700;
 
-/** One thing the assistant can do on a page, offered when the panel opens (owner, 2026-10-23). */
+/** One thing the assistant can do on a page, offered when the panel opens. */
 export type AssistantTask = {
   /** What the person sees: "Explain this run". */
   label: string;
@@ -171,7 +171,7 @@ export function AssistantMark({ size = 18, className }: { size?: number; classNa
 }
 
 /** The mark as a button beside an object, opening the panel about it. Pages now describe their tasks
- * with `useAssistantPage` and the person opens the panel from the top (owner, 2026-10-23); this stays
+ * with `useAssistantPage` and the person opens the panel from the top; this stays
  * for a place outside a page (a dialog of its own). */
 export function AskAssistant({ label, className, ...request }: AssistantRequest & { label?: string; className?: string }) {
   const text = label ?? t("Ask the assistant about {title}", { title: request.title || request.subject || t("this page") });
@@ -415,7 +415,7 @@ function Answer({ message, base, chatId, onRetry }: { message: Message; base?: s
 }
 
 /** The suite's own task, offered on every page after the page's: explaining the page. What else
- * fits a page is that page's own works (owner, 2026-10-26: a generic "what needs attention" fits
+ * fits a page is that page's own works (a generic "what needs attention" fits
  * no list of blocks). */
 export function suiteTasks(): AssistantTask[] {
   return [
@@ -500,7 +500,7 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
   }, [base, status, request.page]);
   // The person's earlier chats, read each time the panel opens (newest first). With the model off
   // (a public demo) the chats shared with them too: reading them shows what the assistant does
-  // (owner, 2026-10-28).
+  //.
   useEffect(() => {
     if (!status) return;
     let alive = true;
@@ -635,10 +635,10 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
   </SidePanel>;
 }
 
-/** The assistant's button, the same at the top right of every page (owner, 2026-10-23): opens
+/** The assistant's button, the same at the top right of every page: opens
  * the panel about the page, or closes it. Hidden where models are forbidden. */
 /** The assistant's button: in the sidebar's row of buttons above the person's name, in every app
- * (owner, 2026-10-24; `variant="sidebar"`), or at the top of a page (`"top"`, older shells). */
+ * (`variant="sidebar"`), or at the top of a page (`"top"`, older shells). */
 export function AssistantTopButton({ platformUrl, page, variant = "top", collapsed = false, control }: { platformUrl?: string | null; page: () => AssistantRequest; variant?: "top" | "sidebar"; collapsed?: boolean; control?: { active: boolean; toggle: () => void } }) {
   const [state, setState] = useState<Status | null>(null);
   const local = useOpenAssistant();
@@ -651,7 +651,7 @@ export function AssistantTopButton({ platformUrl, page, variant = "top", collaps
   }, [platformUrl]);
   const offered = Boolean(state && state.allowed !== false);
   // Ready: a model answers. Until then the button stays, dimmed, saying why; an administrator's
-  // click goes straight to Setup › Language models (owner, 2026-10-25).
+  // click goes straight to Setup › Language models.
   const ready = Boolean(state?.available);
   // In the sidebar the button stays where people look for it, dimmed, saying why it is off
   // (models forbidden in the installation, the public demo); its panel says the same.
@@ -701,7 +701,7 @@ export function openPageAssistant(start: Pick<AssistantRequest, "work" | "task">
 }
 
 /**
- * The assistant's button beside a page's title (owner, 2026-10-25, round 9): the same mark on every
+ * The assistant's button beside a page's title (round 9): the same mark on every
  * page. It opens a menu of what the assistant does here (the page's works, then its tasks); the
  * person picks one and the panel opens on it, its context loaded, or asks something else.
  * `Heading` draws it, so every page of every app has it in the same place. It shows only where the
@@ -739,7 +739,7 @@ export function AssistantTitleButton() {
     void assistantStatus(platformUrl).then((value) => alive && setState(value));
     return () => { alive = false; };
   }, [Boolean(source), platformUrl]);
-  // A public demo shows it too: the menu lists what it does on this page, to read (owner, 2026-10-28).
+  // A public demo shows it too: the menu lists what it does on this page, to read.
   const demo = Boolean(state?.demo);
   if (!source || !state || (state.allowed === false && !demo)) return null;
   const ready = Boolean(state.available);

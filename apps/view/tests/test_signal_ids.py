@@ -1,4 +1,4 @@
-"""Cards saved with bare tags still read, and move to API v1 signal ids (decision D2)."""
+"""Cards saved with bare tags still read, and move to API v1 signal ids."""
 
 from __future__ import annotations
 

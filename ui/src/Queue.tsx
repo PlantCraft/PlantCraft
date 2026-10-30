@@ -1,5 +1,5 @@
 /**
- * An app's work queue, drawn the same way in every app (owner, 2026-10-23): the numbers of now
+ * An app's work queue, drawn the same way in every app: the numbers of now
  * and the items in the queue over time. The app serves `GET <app>/api/queue?window=24h` with
  * the SDK's `queue_answer` (`plantcraft_sdk.server.queue`, format `plantcraft-queue/1`) and
  * passes its own Plotly component, as with the time chart: this package draws no chart itself.

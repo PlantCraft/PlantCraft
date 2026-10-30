@@ -4,7 +4,7 @@
 [app]
 id = "modelcraft"
 name = "PlantCraft Models"
-version = "0.5.0"
+version = "0.5.1"
 category = "Modelling and simulation"
 summary = "A Modelica workbench: write and draw models, simulate them on plant data and export FMUs."
 description = """\
@@ -30,7 +30,7 @@ image = "modelcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.78.0"
+sdk = "0.79.0"
 asset_types = []        # any signal can feed a simulation
 roles = {}
 
@@ -204,7 +204,7 @@ sizes = [{ w = 4, h = 2 }, { w = 6, h = 2 }, { w = 6, h = 3 }]
 
 # Notebooks (PlantCraft docs/en/notebooks.md, "The apps' objects"): models and their runs read
 # with pc.app("models"); a simulation asked from a notebook runs in Models' queue, only when an
-# administrator switches it on (owner, 2026-10-26, D4).
+# administrator switches it on (D4).
 [[contributes.objects]]
 kind = "model"
 title = "Models"

@@ -44,7 +44,7 @@ before you go on.
 ```bash
 echo 'release@plantcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
     > plantcraft.allowed_signers
-B=plantcraft-0.5.0-linux-amd64-bundle.tar.gz
+B=plantcraft-0.5.1-linux-amd64-bundle.tar.gz
 ssh-keygen -Y verify -f plantcraft.allowed_signers -I release@plantcraft -n file \
     -s $B.sha256.sig < $B.sha256      # Good "file" signature for release@plantcraft ...
 sha256sum -c $B.sha256               # plantcraft-...tar.gz: OK   (macOS: shasum -a 256 -c $B.sha256)

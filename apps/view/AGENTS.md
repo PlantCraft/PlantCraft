@@ -2,7 +2,7 @@
 
 **Read the suite's rules first**: the repository's root `AGENTS.md` (`../../AGENTS.md`), the single
 source of rules for the platform and every app. This file adds only
-what is particular to PlantCraft View; where the two differ, ask the owner which one wins and fix the other.
+what is particular to PlantCraft View; where the two differ, ask a maintainer which one wins and fix the other.
 
 This folder is **PlantCraft View** (`dashcraft`, prefix `/dash/`, port 8080, uid 10006):
 Dashboards, trends and reports over the plant's signals and assets.

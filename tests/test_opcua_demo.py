@@ -18,8 +18,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from processcraft.config import DataSourceConfig, load_scenario
-from processcraft.industrial_data.sources import OpcUaHistoricalSource
+from plantcraft.config import DataSourceConfig, load_scenario
+from plantcraft.industrial_data.sources import OpcUaHistoricalSource
 from tests.opcua_plant import NAMESPACE_URI, FakePlantCraft, free_port
 
 SCENARIO = "scenarios/opcua_demo.json"
@@ -91,7 +91,7 @@ def test_the_demo_records_get_their_loop_type(tmp_path, monkeypatch):
 
     from fastapi.testclient import TestClient
 
-    from processcraft.api.app import create_app
+    from plantcraft.api.app import create_app
 
     payload = json.loads(open(SCENARIO, encoding="utf-8").read())
     payload["storage"]["sqlite_path"] = str(tmp_path / "workspace.sqlite3")

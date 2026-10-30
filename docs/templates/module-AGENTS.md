@@ -2,7 +2,7 @@
 
 **Read the suite's rules first**: the repository's root `AGENTS.md` (`../../AGENTS.md`), the single
 source of rules for the platform and every app. This file adds only
-what is particular to PlantCraft <Name>; where the two differ, ask the owner which one wins and
+what is particular to PlantCraft <Name>; where the two differ, ask a maintainer which one wins and
 fix the other.
 
 This folder is **PlantCraft <Name>** (`<id>`, prefix `/<prefix>/`, port <port>, uid <uid>):

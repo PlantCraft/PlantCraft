@@ -27,7 +27,7 @@ room, see AGENTS.md); no code of these tools is used.
 1. **Read only.** Alarms evaluates plant data read through PlantCraft API v1 and informs; it
    never writes to a control system. It complements the DCS's own alarms (a second, engineering
    view and the performance metrics), it does not replace them.
-2. **Rules make the alarms** (owner, 2026-10-24): a rule has one condition (high-high, high,
+2. **Rules make the alarms**: a rule has one condition (high-high, high,
    low, low-low, no data, an app's verdict, or a repeated event of the suite) over one signal or a
    signal role on assets and on every asset under some branches, resolved every cycle, so the
    plant map moves alarms with it. It makes one alarm per subject (asset, signal or Link

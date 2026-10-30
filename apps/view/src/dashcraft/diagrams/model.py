@@ -190,7 +190,7 @@ class Page(BaseModel):
 
 
 class Part(Page):
-    """A named part of a large page (owner, 2026-10-28): the viewer shows the parts as tabs
+    """A named part of a large page: the viewer shows the parts as tabs
     after "Overview", and a tab zooms to its part, so a plant drawn on one page still has
     its overview and a way to each unit."""
 

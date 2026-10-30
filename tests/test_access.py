@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.auth.access import Access
+from plantcraft.api.app import create_app
+from plantcraft.auth.access import Access
 
 ROOT = Path(__file__).resolve().parents[1]
 PASSWORD = "senha-forte-1"
@@ -240,8 +240,8 @@ def test_demo_without_sign_in_keeps_everyone_admin_until_a_level_is_set(demo):
 
 
 def test_users_command_sets_the_access_level(tmp_path, monkeypatch, capsys):
-    from processcraft.cli import main
-    from processcraft.platform.workspace import Workspace
+    from plantcraft.cli import main
+    from plantcraft.platform.workspace import Workspace
 
     _scenario(tmp_path, monkeypatch)
     assert main(["users", "add", "tv.sala", "--name", "TV da sala", "--access", "dashboards"]) == 0

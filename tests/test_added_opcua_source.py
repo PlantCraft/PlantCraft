@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.config import LoopConfig
+from plantcraft.api.app import create_app
+from plantcraft.config import LoopConfig
 from tests.opcua_plant import NAMESPACE_URI, FakePlantCraft
 
 pytest.importorskip("asyncua")

@@ -1,6 +1,6 @@
 # Install PlantCraft
 
-> **Updated:** 2026-10-28 · suite 0.5.0
+> **Updated:** 2026-10-30 · suite 0.5.1
 
 PlantCraft installs on your own machine or server, from one signed bundle, with no internet
 connection. This page helps you pick the right way to install it and says what you need on
@@ -74,7 +74,7 @@ and macOS has it; on Windows, in the Ubuntu window of WSL). Why and what each ch
 ```bash
 echo 'release@plantcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
     > plantcraft.allowed_signers
-B=plantcraft-0.5.0-linux-amd64-bundle.tar.gz
+B=plantcraft-0.5.1-linux-amd64-bundle.tar.gz
 ssh-keygen -Y verify -f plantcraft.allowed_signers -I release@plantcraft -n file \
     -s $B.sha256.sig < $B.sha256      # Good "file" signature for release@plantcraft ...
 sha256sum -c $B.sha256               # macOS: shasum -a 256 -c $B.sha256
@@ -83,6 +83,10 @@ sha256sum -c $B.sha256               # macOS: shasum -a 256 -c $B.sha256
 Compare the key on the first line with the one on the release page (OpenSSH fingerprint
 `SHA256:9l/yDgR8/Pzel1pncxrXz2IGCIhFirKpDT78tO49fG8`). If either check fails, do not use the
 bundle.
+
+On a first install, `install.sh` checks the signature again and then warns "the key above came
+with this bundle: compare its key id…". That is expected: it is the same key you just compared
+above.
 
 ## Linux
 
@@ -110,16 +114,18 @@ sleeps, and Docker Desktop runs the containers inside a virtual machine.
    it at least 8 GB of memory (Settings › Resources; 12 GB with every app on).
 2. Use the `linux-arm64` bundle on Apple silicon and `linux-amd64` on Intel (`uname -m` says
    `arm64` or `x86_64`).
-3. In Terminal, check the bundle (above, with `shasum -a 256 -c`), unpack it and install into a
-   folder of yours, without `sudo`:
+3. In Terminal, name the bundle for your Mac, check it as in [The release files](#the-release-files)
+   (with `shasum -a 256 -c`), then unpack it and install into a folder of yours, without `sudo`:
 
    ```bash
+   B=plantcraft-0.5.1-linux-arm64-bundle.tar.gz   # Intel Mac: linux-amd64
    tar -xzf $B && cd ${B%.tar.gz}
    ./install.sh --all-apps --demo --prefix ~/PlantCraft
    ```
 
-4. Open https://localhost and sign in as `admin` with the password the installer printed at
-   the end (it is shown once, and kept in `~/PlantCraft/data/initial-admin-password`). Your
+4. Open the address the installer printed at the end (`https://<your-mac>.local/`: the
+   certificate names the Mac, so `https://localhost` is refused) and sign in as `admin` with the
+   password it printed (it is shown once, and kept in `~/PlantCraft/data/initial-admin-password`). Your
    browser warns about the local certificate authority the first time: trust
    `~/PlantCraft/local-ca-root.crt` in Keychain Access, or give the proxy your own certificate
    ([install-offline.md](install-offline.md), section 6).
@@ -160,8 +166,8 @@ Ubuntu in WSL 2, on an i5-8500T with 24 GB: the install with every app and the d
    permissions, and Windows folders are slow to read from containers.
 
    ```bash
-   cp /mnt/c/Users/<you>/Downloads/plantcraft-0.5.0-linux-amd64-bundle.tar.gz* ~/
-   cd ~ && B=plantcraft-0.5.0-linux-amd64-bundle.tar.gz
+   cp /mnt/c/Users/<you>/Downloads/plantcraft-0.5.1-linux-amd64-bundle.tar.gz* ~/
+   cd ~ && B=plantcraft-0.5.1-linux-amd64-bundle.tar.gz
    ```
 
 5. Check the bundle (above), unpack it and install, in the same Ubuntu window:
@@ -238,7 +244,7 @@ starts from the [app template](../templates/app).
 | Add people and groups, decide who opens which app | [User guide](en/user-guide.md), People |
 | Certificates, backups, updates, the firewall | [install-offline.md](install-offline.md), [Running the suite](en/running-the-suite.md) |
 | Run calculations on other machines | [Compute workers](compute.md) |
-| Turn on a language model, or the MCP server | [Assistant](assistant.md), [assistant-access.md](assistant-access.md) |
+| Turn on the assistant (off until you connect a model), or the MCP server | [Turn it on](assistant.md#turn-it-on), [assistant-access.md](assistant-access.md) |
 | Hand the installation to IT and OT security | [Security guide](security-guide.md) ([português](pt-BR/security-guide.md)) |
 
 ## Remove it

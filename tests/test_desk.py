@@ -8,9 +8,9 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
-from processcraft.api.routers.desk import note_mentions
-from processcraft.config import plant_today
-from processcraft.desk import (
+from plantcraft.api.routers.desk import note_mentions
+from plantcraft.config import plant_today
+from plantcraft.desk import (
     CalendarError,
     event_times,
     feed_url,
@@ -511,7 +511,7 @@ def test_own_events_on_the_calendar(signed):
 
 
 def test_scheduled_runs_in_the_same_hour_come_together():
-    from processcraft.api.routers.desk import scheduled_runs
+    from plantcraft.api.routers.desk import scheduled_runs
 
     runs = scheduled_runs(
         [
@@ -525,8 +525,8 @@ def test_scheduled_runs_in_the_same_hour_come_together():
 
 
 def test_old_checklists_and_routines_become_todos(tmp_path):
-    from processcraft.db import Database
-    from processcraft.desk import DeskStore
+    from plantcraft.db import Database
+    from plantcraft.desk import DeskStore
 
     db = Database(tmp_path / "desk.db")
     DeskStore(db)
@@ -718,7 +718,7 @@ def test_notes_and_todos_are_mentioned_without_showing_what_they_are(signed):
 
 
 def test_the_demo_seed_fills_desk_once(signed):
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     def client(test_client):
         class Client(demo_seed.Http):
@@ -748,7 +748,7 @@ def test_the_demo_seed_fills_desk_once(signed):
     team = visitor.get("/api/desk/team").json()["group"]
     assert team["handover"] is not None and team["lists"][0]["name"] == demo_seed.SHIFT_LIST
     assert team["lists"][0]["open"] == 3
-    # One to-do every weekday, the others once a week (owner, 2026-10-28).
+    # One to-do every weekday, the others once a week.
     shift = [i for i in visitor.get("/api/desk/todos?view=all").json()["items"] if i["list_id"]]
     assert sorted((item["repeat"], tuple(item["days"])) for item in shift) == [
         ("days", (1,)),
@@ -769,7 +769,7 @@ def test_the_demo_seed_writes_the_visitors_desk_into_the_store(signed):
     # straight into Desk's store, once.
     from datetime import datetime, timedelta
 
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     class Refused(demo_seed.Http):
         def call(self, method, path, body=None, *, ok=(), raw=None, content_type=""):
@@ -785,7 +785,7 @@ def test_the_demo_seed_writes_the_visitors_desk_into_the_store(signed):
     today = datetime.now().astimezone().date()
     events = [item["title"] for item in store.events(demo_seed.VISITOR, today, today)]
     assert events == ["Shift handover"]
-    # Owner, 2026-10-28: a few real items, each repeat once (daily, weekly, monthly, one-off).
+    # a few real items, each repeat once (daily, weekly, monthly, one-off).
     ahead = store.events(demo_seed.VISITOR, today, today + timedelta(days=30))
     assert sorted(item["title"] for item in ahead) == sorted(
         spec[0] for spec in demo_seed.VISITOR_EVENTS
@@ -794,7 +794,7 @@ def test_the_demo_seed_writes_the_visitors_desk_into_the_store(signed):
 
 
 def test_the_team_page_is_hidden_until_an_administrator_shows_it(signed):
-    """Owner, 2026-10-25: Desk lists Team only after Setup › Desk turns it on."""
+    """Desk lists Team only after Setup › Desk turns it on."""
 
     ana = _person(signed, "ana")
     assert ana.get("/api/desk/team-page").json() == {"enabled": False}
@@ -806,10 +806,10 @@ def test_the_team_page_is_hidden_until_an_administrator_shows_it(signed):
 
 
 def test_the_demo_gives_the_visitor_actions_of_their_own():
-    """Owner, 2026-10-27: whoever enters the demo sees actions in Desk's "My actions"; one in
+    """whoever enters the demo sees actions in Desk's "My actions"; one in
     each column of the board, each following an action of the team seeded before it."""
 
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     titles = [spec["title"] for spec in demo_seed.OPEN_ACTIONS]
     mine = [spec for spec in demo_seed.OPEN_ACTIONS if spec["owner"] == demo_seed.VISITOR]

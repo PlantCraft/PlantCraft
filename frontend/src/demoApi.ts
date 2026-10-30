@@ -3,7 +3,7 @@ import { requestJson } from "./api";
 import { t } from "./i18n";
 import type { SessionInfo } from "./types";
 
-export interface PublicDemoInfo { seats: number; minutes: number }
+export interface PublicDemoInfo { seats: number; minutes: number; contact_url?: string }
 export interface DemoVisitInfo { seconds_left: number; minutes: number }
 export type Entered = SessionInfo & { entered: true };
 export type Waiting = { entered: false; ticket: string | null; position: number; wait_seconds: number; seats: number };

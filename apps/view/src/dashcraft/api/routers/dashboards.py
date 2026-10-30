@@ -44,7 +44,7 @@ MAX_LINK_DAYS = 366
 
 class ShareBody(BaseModel):
     label: str = Field(default="", max_length=80)
-    # How long the link opens (review decision D4, 2026-10-27): 90 days unless said
+    # How long the link opens: 90 days unless said
     # otherwise; ``None`` (until revoked, for a control room screen) is an administrator's.
     days: int | None = Field(default=LINK_DAYS, ge=1, le=MAX_LINK_DAYS)
 
@@ -396,7 +396,7 @@ def create_share(
 @router.get("/shares")
 def every_share(rt: RuntimeDep, user: EditorUser) -> list[dict[str, Any]]:
     """Every public link that still opens something, with what it opens: an administrator's
-    review of the installation's links (review decision D4)."""
+    review of the installation's links."""
 
     _admin(user)
     names = {item["dashboard_id"]: item["name"] for item in rt.dashboards.list()}

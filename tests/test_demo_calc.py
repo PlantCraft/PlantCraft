@@ -10,7 +10,7 @@ import json
 import re
 from pathlib import Path
 
-from processcraft.demo_seed import CALC_SIGNALS
+from plantcraft.demo_seed import CALC_SIGNALS
 
 MAP = Path(__file__).resolve().parents[1] / "deploy" / "demo" / "plantcraft-50-loops-map.json"
 

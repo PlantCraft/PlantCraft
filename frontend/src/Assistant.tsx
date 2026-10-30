@@ -1,11 +1,11 @@
 /**
- * Desk's Assistant (owner, 2026-10-23): each person's own chats with a language model, apart
+ * Desk's Assistant: each person's own chats with a language model, apart
  * from Messages (which stay between people). Many chats at once, each on its own subject, all
- * about the plant and the platform: it declines anything else (owner, 2026-10-23). The model reads the plant only through
+ * about the plant and the platform: it declines anything else. The model reads the plant only through
  * read-only tools, as the person who asks; each answer shows what it read (steps), the charts it
  * drew from the plant's history and the objects it used.
  *
- * The history (owner, 2026-10-26: "like ChatGPT's"): groups of the person's own, archived chats
+ * The history ("like ChatGPT's"): groups of the person's own, archived chats
  * apart, and a chat shared like a dashboard with people, groups or everyone, who read it and
  * continue in a copy of their own. Its reference (`chat:<id>`) goes in an action or a message.
  */

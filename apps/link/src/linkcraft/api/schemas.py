@@ -283,5 +283,5 @@ class CalibratePayload(BaseModel):
 
 class MethodDefaultsPayload(BaseModel):
     parameters: dict[str, Any] = Field(default_factory=dict)
-    # Saving defaults is a new version, and a version says what changed (owner, 2026-10-27).
+    # Saving defaults is a new version, and a version says what changed.
     description: str = Field(min_length=1, max_length=500)

@@ -1,5 +1,5 @@
 /** Download a report in the format the person picks: the PDF, Word, HTML or Markdown. The same
- * dialog on the report's page and on the list of reports (owner, 2026-10-27). */
+ * dialog on the report's page and on the list of reports. */
 import { Dialog } from "@plantcraft/ui";
 import { Download, FileText } from "lucide-react";
 import { exportUrl } from "./api";

@@ -1,6 +1,6 @@
 """What the end-to-end test of the live suite found where PlantCraft speaks to an app (2026-10-22)."""
 
-from processcraft import demo_seed
+from plantcraft import demo_seed
 
 
 def test_the_demo_keeps_three_monitors():
@@ -19,7 +19,7 @@ def test_a_historian_source_keeps_its_connection_state():
     """HistCraft's data API answers the collector's view as ``status`` (live: every source
     showed "No news" on the Overview while the Historian said Connected)."""
 
-    from processcraft.platform.datalayer.histcraft import source_item
+    from plantcraft.platform.datalayer.histcraft import source_item
 
     connected = {"status": "connected", "detail": "", "since": 1}
     assert source_item({"id": "plant", "kind": "opcua", "status": connected})["state"] == connected

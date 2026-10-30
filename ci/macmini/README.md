@@ -24,7 +24,7 @@ folder changes, so a change to one app deploys that app alone. `concurrency` can
 request's run that a newer push replaces, and changes to documentation only (`*.md`, `docs/`) run
 nothing.
 
-**Tests on main a few times a day (owner, 2026-10-26).** A pull request runs only Lint and
+**Tests on main a few times a day.** A pull request runs only Lint and
 Security, and its author runs `make ci` of every folder the change touches (`dev/ship`) before
 merging; that is the gate. The full tests and e2e run on main four times a day, and by hand when
 needed (`gh workflow run ci.yml -R PlantCraft/PlantCraft`, or the app's workflow). A merge is

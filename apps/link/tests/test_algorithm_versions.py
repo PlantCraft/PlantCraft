@@ -1,4 +1,4 @@
-"""Versions on top of an algorithm's page (owner, 2026-10-24): every save is kept as it was
+"""Versions on top of an algorithm's page: every save is kept as it was
 saved, with its name and description to choose from; an older one reads but never edits."""
 
 from __future__ import annotations

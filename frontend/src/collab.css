@@ -292,7 +292,7 @@
 .act-card-compact .act-card-owner { margin-left: auto; }
 .act-card-compact .co-avatar-sm { width: 20px; height: 20px; font-size: 9px; }
 .act-column:has(.act-card-compact) ol { gap: 6px; }
-/* The compact card opens in place on hover or focus to show the rest (owner, 2026-10-25). */
+/* The compact card opens in place on hover or focus to show the rest. */
 .act-card-more { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .16s ease; }
 .act-card-more-inner { min-height: 0; overflow: hidden; display: grid; gap: 6px; }
 .act-card-compact:hover .act-card-more, .act-card-compact:focus-visible .act-card-more { grid-template-rows: 1fr; }

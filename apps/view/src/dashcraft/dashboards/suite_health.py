@@ -137,7 +137,7 @@ QUERIES = (".up", ".latency_ms", ".errors", ".warnings", ".cpu_pct", ".mem_mb", 
            "host.disk_free", "backup.")  # fmt: skip
 
 
-# The folder View keeps its own dashboards in (owner, 2026-10-25): the platform's next to the
+# The folder View keeps its own dashboards in: the platform's next to the
 # plant's, so a new installation shows that dashboards live in folders.
 PLATFORM_FOLDER = {
     "name": "Platform",

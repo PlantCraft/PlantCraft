@@ -79,6 +79,10 @@ def test_the_token_is_read_only(path):
     for name, job in workflow["jobs"].items():
         granted = job.get("permissions") or {}
         writes = [scope for scope, level in dict(granted).items() if level == "write"]
+        if path.name == "labels.yml":
+            # Labels only, and never on a pull request: a stranger's code never holds the token.
+            assert writes == ["issues"] and not _triggers(workflow) & {"pull_request"}, path.name
+            continue
         assert not writes, f"{path.name} job {name} asks for write access: {writes}"
 
 

@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from processcraft import demo_seed
+from plantcraft import demo_seed
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "deploy" / "demo" / "documents"

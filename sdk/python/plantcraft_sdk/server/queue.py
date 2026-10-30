@@ -1,7 +1,7 @@
 """An app's work queue as numbers: what it holds now and how that went over time.
 
-Every app that queues work (Link's executions, Models' simulations) shows its queue the same way
-(owner, 2026-10-23): the numbers of now (queued, running, done and failed in the last hour, how
+Every app that queues work (Link's executions, Models' simulations) shows its queue the same way:
+the numbers of now (queued, running, done and failed in the last hour, how
 long the oldest item has waited, the workers) and the same numbers over 24 hours, 7 days and
 30 days. The app says what its queue holds now (``QueueNow``); ``QueueSampler`` asks it every
 15 seconds and ``QueueMetrics`` keeps each sample 30 days, in the app's own database. The

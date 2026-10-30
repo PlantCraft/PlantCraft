@@ -1,5 +1,5 @@
 /**
- * An algorithm as a file (owner, 2026-10-25, round 9): what it is, what it works on, its diagram,
+ * An algorithm as a file (round 9): what it is, what it works on, its diagram,
  * its texts, its data window and its tags, so it moves between sites like a block file. Its
  * assets, owner and versions stay on the site it came from.
  */

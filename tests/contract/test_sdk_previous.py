@@ -25,7 +25,7 @@ import pytest
 import uvicorn
 
 import plantcraft_sdk
-from processcraft.api.app import create_app
+from plantcraft.api.app import create_app
 
 ROOT = Path(__file__).resolve().parents[2]
 ADMIN, PASSWORD = "root", "root-password-123"

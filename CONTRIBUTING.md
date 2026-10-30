@@ -15,6 +15,27 @@ under the [Apache License 2.0](LICENSE), and so is every contribution.
 | Translate | Brazilian Portuguese entries for the English texts ([Translations](#translations-i18n)) |
 | Build an app for a specific use | In your own repository, open or closed, from the app template ([templates/app](templates/app/README.md)); it builds on the published SDK and does not need a pull request here |
 
+## What is core and what is open
+
+PlantCraft is a platform that others build on, so its base changes slowly and on purpose, and
+everything on top of it is open to grow. Before you start, find where your change lands
+([the picture](docs/architecture.md#core-and-extensions)):
+
+| Zone | Folders | Open an issue first? | What a pull request needs |
+|---|---|---|---|
+| **Core** | `plantcraft/`, `frontend/`, `sdk/python/`, `ui/`, `docs/api/v1/`, `deploy/`, `.github/`, `ci/`, `dev/`, `brand/`, `AGENTS.md` | **Yes**, and wait for a maintainer to agree on the approach | An additive change (nothing that existing apps or installations rely on breaks), with its tests; a maintainer reviews it ([CODEOWNERS](.github/CODEOWNERS)) |
+| **Official apps** | `apps/<app>/`, `simulator/`, `templates/app/` | For a new feature or a new dependency, yes; for a bug fix, no | Stays inside one app, `make ci` green in that app's folder, no import from another app or from the platform's code |
+| **Content** | Methods, blocks, algorithms, alarm rule templates, model libraries and notebook examples inside the app that owns them; `docs/`; translations | No | A public reference for every method, tests on known answers, the description format checks green |
+| **Your own app** | Your own repository, from [`templates/app`](templates/app/README.md) | No | Nothing here: it builds on the published SDK and installs as a signed package |
+
+A pull request that changes the core without an agreed issue is closed with a pointer to open
+one: it is not a judgement on the code, it keeps the base that every app relies on stable. Keep
+each pull request to **one zone and one change**; a core change and an app change go in two pull
+requests, the core first.
+
+Pull requests written with an AI assistant are welcome: this repository is built that way. The
+same rules apply, and you should be able to explain every line.
+
 ## Your first pull request
 
 1. Fork the repository and make a branch from `main`.
@@ -25,12 +46,14 @@ under the [Apache License 2.0](LICENSE), and so is every contribution.
    `make ci`; it runs what CI runs.
 4. Open the pull request against `main`: one change, and why it is needed. CI runs the lint and
    security checks on it; the full tests run on `main`.
-5. A maintainer reviews it. Paths listed in [.github/CODEOWNERS](.github/CODEOWNERS) wait for
-   the owner's review ([Pull requests](#pull-requests)).
+5. A maintainer reviews it, usually within a few days. Paths listed in
+   [.github/CODEOWNERS](.github/CODEOWNERS) wait for a maintainer's review
+   ([Pull requests](#pull-requests)). What a reviewer checks is in
+   [docs/maintainers.md](docs/maintainers.md).
 
 ## Development setup
 
-Requirements: Python 3.11+, Node.js 22 and npm.
+Requirements: Python 3.12 or 3.13, Node.js 22 and npm.
 
 ```bash
 git clone https://github.com/PlantCraft/PlantCraft.git plantcraft
@@ -100,7 +123,7 @@ format is in [docs/blocks.md](docs/blocks.md).
   [docs/architecture.md](docs/architecture.md). `tests/test_architecture.py`
   fails on any violation.
 - **Storage.** Each module owns its tables through a `Store` subclass
-  (`processcraft/db.py`). Add columns with a guarded `ALTER TABLE` in the
+  (`plantcraft/db.py`). Add columns with a guarded `ALTER TABLE` in the
   store's `__init__`; never edit existing rows by hand.
 - **Apps of the suite** live in `apps/<app>` (each its own image, package and `make ci`) and reach
   PlantCraft only through API v1 (`docs/api-v1.md`); PlantCraft never imports them, and
@@ -119,9 +142,9 @@ English is the source language of every user-facing string; Brazilian
 Portuguese (pt-BR) is a translation. **Every new or changed string needs its
 English text and its pt-BR entry in the same change.**
 
-- Backend: `from processcraft.i18n import t` and
+- Backend: `from plantcraft.i18n import t` and
   `t("Loop {loop} not found.", loop=loop_id)`. The English text is the key in
-  `processcraft/i18n/locales/pt-BR.json`. Call `t()` when the text is produced,
+  `plantcraft/i18n/locales/pt-BR.json`. Call `t()` when the text is produced,
   not at import time.
 - Frontend: `import { t, locale } from "./i18n"` and `t("Save")`, with keys in
   `frontend/src/locales/pt-BR.json`. Use `locale` for `Intl` and
@@ -137,7 +160,7 @@ product English in sentence case ("Add source", not "Add Source").
 - Keep each pull request focused on one change and describe why it is needed.
 - Include tests for behaviour changes and update the documentation in `docs/`.
 - A change to a path in [.github/CODEOWNERS](.github/CODEOWNERS) (sign-in, permissions, the
-  assistant, the stores, the sandbox, the installer, CI, dependencies) waits for the owner's
+  assistant, the stores, the sandbox, the installer, CI, dependencies) waits for a maintainer's
   review; dependency bumps come alone, and binary files from outside are not accepted
   ([docs/contributing-safety.md](docs/contributing-safety.md)).
 - By contributing, you agree that your contribution is licensed under the

@@ -5,8 +5,8 @@
 # `make image` from the repository root:  docker build -f deploy/installer/Dockerfile .
 #
 # It holds Python with `cryptography` (hash-checked wheels from deploy/requirements.lock), the
-# static Docker CLI and Compose plugin, and two files of PlantCraft: processcraft/apps/package.py
-# (verification) and processcraft/apps/installer.py. Nothing else of the application is in it.
+# static Docker CLI and Compose plugin, and two files of PlantCraft: plantcraft/apps/package.py
+# (verification) and plantcraft/apps/installer.py. Nothing else of the application is in it.
 # It runs with no network at all (`network_mode: none`).
 
 ARG PYTHON_IMAGE=python:3.13.16-slim-trixie@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
@@ -64,18 +64,21 @@ RUN --mount=type=bind,from=wheels,source=/wheelhouse,target=/wheelhouse \
     && groupadd --gid 10005 installer \
     && useradd --no-create-home --uid 10005 --gid 10005 --home-dir /tmp --shell /usr/sbin/nologin installer
 
-COPY processcraft/__init__.py /app/processcraft/__init__.py
-COPY processcraft/apps/__init__.py processcraft/apps/package.py processcraft/apps/installer.py processcraft/apps/operations.py processcraft/apps/historian_backup.py processcraft/apps/release.py /app/processcraft/apps/
+COPY plantcraft/__init__.py /app/plantcraft/__init__.py
+# The package's name until 0.5.0: `python -m processcraft.apps.<module>` still runs on this image
+# (plantcraft/legacy.py), so an older install.sh or Backups page can drive it.
+COPY plantcraft/legacy.py /app/processcraft/__init__.py
+COPY plantcraft/apps/__init__.py plantcraft/apps/package.py plantcraft/apps/installer.py plantcraft/apps/operations.py plantcraft/apps/historian_backup.py plantcraft/apps/release.py /app/plantcraft/apps/
 # Backup, restore and updates (docs/operations.md), run by the operations driver: this image as root.
-COPY processcraft/ops/__init__.py processcraft/ops/snapshot.py /app/processcraft/ops/
-RUN python -m compileall -q /app/processcraft \
+COPY plantcraft/ops/__init__.py plantcraft/ops/snapshot.py /app/plantcraft/ops/
+RUN python -m compileall -q /app/plantcraft /app/processcraft \
     && chmod -R u=rwX,go=rX /app \
-    && su -s /bin/sh installer -c 'python -c "import processcraft.apps.installer, processcraft.apps.operations, processcraft.apps.historian_backup, processcraft.apps.release"'
+    && su -s /bin/sh installer -c 'python -c "import plantcraft.apps.installer, plantcraft.apps.operations, plantcraft.apps.historian_backup, plantcraft.apps.release, processcraft.apps.release"'
 
 USER 10005:10005
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
-    CMD ["python", "-m", "processcraft.apps.installer", "health"]
+    CMD ["python", "-m", "plantcraft.apps.installer", "health"]
 
-ENTRYPOINT ["python", "-m", "processcraft.apps.installer"]
+ENTRYPOINT ["python", "-m", "plantcraft.apps.installer"]
 CMD ["serve"]

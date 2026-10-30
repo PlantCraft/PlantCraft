@@ -173,7 +173,7 @@ def test_files_that_cannot_be_read(admin):
 
 
 def test_the_demo_seed_names_the_plant(admin):
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     class Client(demo_seed.Http):
         """The seed's client, through the test client instead of the network."""
@@ -217,7 +217,7 @@ def test_the_asset_tree_prompt_asks_for_the_files_own_json(admin):
 
 
 def test_the_last_import_can_be_undone_once(admin, eng):
-    """An import into a plant already set up can be taken back (owner, 2026-10-24)."""
+    """An import into a plant already set up can be taken back."""
 
     store = _rt(admin).platform.workspace.assets
     assert admin.get("/api/asset-file/last-import").json() == {"import": None}

@@ -26,13 +26,15 @@
 
   <main id="main">
   <header class="hero" id="top">
-    <h1>The open suite for process plants.</h1>
-    <p class="lead">Historian, analytics, alarms, dashboards, process models and plant documents in one place, with an AI assistant that checks the results with you.</p>
-    <div class="ctas">
-      %%DEMO%%
-      <a class="btn%%INSTALL_PRIMARY%%" href="#install">Install free</a>
-      <button class="btn" type="button" data-chat="ask">Ask a question</button>
-      <a class="btn" href="%%GH%%">Source on GitHub</a>
+    <div class="hero-text">
+      <h1>The open suite for process plants.</h1>
+      <p class="lead">Historian, analytics, alarms, dashboards, process models and plant documents in one place, with an AI assistant that checks the results with you.</p>
+      <div class="ctas">
+        %%DEMO%%
+        <a class="btn%%INSTALL_PRIMARY%%" href="#install">Install free</a>
+        <button class="btn" type="button" data-chat="ask">Ask a question</button>
+        <a class="btn" href="%%GH%%">Source on GitHub</a>
+      </div>
     </div>
 %%SHOWCASE%%
     <ul class="pillars-row" aria-label="The four pillars">
@@ -55,15 +57,17 @@
     </ul>
   </section>
 
-  <section id="secure" aria-labelledby="secure-h">
-    <p class="eyebrow">02 · Secure</p>
-    <h2 id="secure-h">Built for the plant's IT and OT review.</h2>
-    <p class="sec-lead">Plants install nothing their security teams have not approved. PlantCraft is built for that review from the first line, and a two-page <a href="%%DOCS%%/docs/security-guide.md">security guide</a> maps it to the Purdue model and IEC 62443.</p>
-    <ul class="points">
-      <li><b>On your own infrastructure</b><span>Installs on your servers and inside your network, from one signed bundle, even with no internet. No telemetry, licence call or outside service.</span></li>
-      <li><b>Read-only to the plant</b><span>Reads OPC UA, PI Web API, MQTT, Modbus TCP, SQL and CSV. It never writes to a DCS, PLC or historian.</span></li>
-      <li><b>Protected by default</b><span>One HTTPS port with sign-in and an audit log, calculations isolated with no network or secrets, and a backup before every update.</span></li>
-      <li><b>AI you configure</b><span>Off until an administrator turns it on. Connect the provider you choose, or a model your company already runs. The assistant reads only what the person asking may read.</span></li>
+  <section id="secure" class="split" aria-labelledby="secure-h">
+    <div class="split-head">
+      <p class="eyebrow">02 · Secure</p>
+      <h2 id="secure-h">Built for the plant's IT and OT review.</h2>
+      <p class="sec-lead">Plants install nothing their security teams have not approved. PlantCraft is built for that review from the first line, and a two-page <a href="%%DOCS%%/docs/security-guide.md">security guide</a> maps it to the Purdue model and IEC 62443.</p>
+    </div>
+    <ul class="rows">
+        <li><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M4 5h16v6H4zM4 13h16v6H4zM8 8h.01M8 16h.01"/></svg><div><b>On your own infrastructure</b><span>Installs on your servers and inside your network, from one signed bundle, even with no internet. No telemetry, licence call or outside service.</span></div></li>
+        <li><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M3 12h11M10 7l5 5-5 5M19 4v16"/></svg><div><b>Read-only to the plant</b><span>Reads OPC UA, PI Web API, MQTT, Modbus TCP, SQL and CSV. It never writes to a DCS, PLC or historian.</span></div></li>
+        <li><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M6 11h12v9H6zM9 11V8a3 3 0 0 1 6 0v3"/></svg><div><b>Protected by default</b><span>One HTTPS port with sign-in and an audit log, calculations isolated with no network or secrets, and a backup before every update.</span></div></li>
+        <li><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M8 7h8a5 5 0 0 1 0 10H8A5 5 0 0 1 8 7zM8 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg><div><b>AI you configure</b><span>Off until an administrator turns it on. Connect the provider you choose, or a model your company already runs. The assistant reads only what the person asking may read.</span></div></li>
     </ul>
   </section>
 
@@ -136,7 +140,7 @@ cd %%BUNDLE%%
   </main>
 
   <footer>
-    <span>PlantCraft · Apache-2.0 · built with <a href="%%DOCS%%/docs/how-we-build.md">Claude Code</a></span>
+    <span>PlantCraft · Apache-2.0 · built with <a href="%%DOCS%%/docs/how-we-build.md">Claude Code</a> <span class="social"><a href="https://www.linkedin.com/company/plantcraft_io" rel="me" aria-label="PlantCraft on LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.5h4V21H3zM9.5 9.5h3.8v1.6h.06c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.77 2.65 4.77 6.1V21h-4v-5.1c0-1.22-.02-2.79-1.7-2.79-1.7 0-1.96 1.33-1.96 2.7V21h-4z"/></svg></a><a href="https://x.com/plantcraft_io" rel="me" aria-label="PlantCraft on X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77zm-1.08 16.18h1.7L7.4 4.73H5.58z"/></svg></a><a href="https://www.youtube.com/@plantcraft_io" rel="me" aria-label="PlantCraft on YouTube" title="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.75 15.02V8.98L15.5 12z"/></svg></a></span></span>
     <div class="fl">%%MAIL%%<a href="%%DOCS%%/docs/README.md">Docs</a><a href="%%DOCS%%/docs/security-guide.md">Security</a><a href="%%DOCS%%/TRADEMARKS.md">Trademarks</a><a href="privacy.html">Privacy</a><a href="%%GH%%">GitHub</a></div>
   </footer>
 </div>

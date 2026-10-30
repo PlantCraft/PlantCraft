@@ -1,5 +1,5 @@
 /**
- * Executions, in Link's shape (owner, 2026-10-25, round 8 M3): the study takes the schedule's
+ * Executions, in Link's shape (round 8 M3): the study takes the schedule's
  * place and the simulation the asset's. `/executions` opens on the studies, each with what it
  * runs and how its simulations ended (a model's single runs, what Run on its page starts, are a
  * group of their own); `/executions/<id>` is one group: a summary, then its simulations, each

@@ -1,5 +1,5 @@
 /**
- * When a schedule runs, as its form holds it (owner, 2026-10-24): once, or every N minutes,
+ * When a schedule runs, as its form holds it: once, or every N minutes,
  * hours, days, weeks or months, on some weekdays, between two times, from a first to a last day.
  * The server keeps the plain cadences (every N minutes, daily, weekly) where they say it all and a
  * calendar (``linkcraft.engine.recurrence``) for the rest, so older schedules stay as they were.

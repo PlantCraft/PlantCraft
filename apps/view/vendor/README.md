@@ -5,24 +5,24 @@ only from this folder, so the image builds offline and checks each file's hash. 
 here: a change is made in `sdk/python` or `ui/` at the repository's root, released as a new
 version, and `dev/revendor` puts the new file here with its hash.
 
-## plantcraft-sdk 0.78.0
+## plantcraft-sdk 0.79.0
 
-`pip install --no-index --find-links vendor plantcraft-sdk==0.78.0` (Makefile, CI and the
+`pip install --no-index --find-links vendor plantcraft-sdk==0.79.0` (Makefile, CI and the
 Dockerfile). The wheel is PlantCraft's reproducible build (`make sdk-wheel`, PlantCraft
-ac27dc4): every app on SDK 0.78.0 vendors these same bytes.
+1e2dbd0): every app on SDK 0.79.0 vendors these same bytes.
 
-## @plantcraft/ui 0.88.0
+## @plantcraft/ui 0.89.0
 
 The suite's frame and shared interface parts (PlantCraft `docs/app-standard.md`, section 10).
-`frontend/package.json` names it as `"@plantcraft/ui": "file:../vendor/plantcraft-ui-0.88.0.tgz"`;
+`frontend/package.json` names it as `"@plantcraft/ui": "file:../vendor/plantcraft-ui-0.89.0.tgz"`;
 `npm ci` checks it against the integrity hash in `frontend/package-lock.json`. Built by
-PlantCraft's `make ui-package` (every app on ui 0.88.0 vendors the same bytes).
+PlantCraft's `make ui-package` (every app on ui 0.89.0 vendors the same bytes).
 
 ## Checks
 
 The same in `sha256sum -c` format (the Docker build and `plantcraft-app check` check both):
 
 ```text
-f910cd3a566e967807e8c8c5c13163afa4906f45111e6cafb966b8664933aa74  plantcraft_sdk-0.78.0-py3-none-any.whl
-9e7877cc4e613cc00ef4efbe64e20c07f9c564ac08f7a7abe03d39051ad9ad04  plantcraft-ui-0.88.0.tgz
+c0aab47249b94b56279d6454f77b54eee05dcd46a876c9d0d53256d850b65157  plantcraft_sdk-0.79.0-py3-none-any.whl
+ff182a69145bab8a3665ba148b36fa9c68ba207079500eabbee1fce43a3963af  plantcraft-ui-0.89.0.tgz
 ```

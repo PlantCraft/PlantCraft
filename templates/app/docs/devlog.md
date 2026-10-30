@@ -1,11 +1,8 @@
 # Devlog
 
-## 2026-10-23
+Notes on how the module changed and why, newest first: what a later contributor would need to
+know that the code and `CHANGELOG.md` do not say. One short entry per change worth explaining.
 
-- StarterCraft 0.1.0, the app template of the suite: notes on assets, search, help, app standard
-  tests, browser journey, prompts for an agent, `make rename`, `make dev`, `make dev-package`.
+## 0.5.1
 
-## 2026-10-25: an example event
-
-- `[[publishes.events]]` `note.written` in `app.toml`, written by name through
-  `EventCatalog` when a note is created; the fake refuses undeclared kinds (`tests/plant.py`).
+- The repository's public history starts here; earlier releases are summarized in `CHANGELOG.md`.

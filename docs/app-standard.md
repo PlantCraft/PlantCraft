@@ -1,6 +1,6 @@
 # The PlantCraft app standard
 
-> **Decided** by the owner on 2026-10-19 ("sim para todos", all five points D1-D5 below).
+> **Decided** by a maintainer on 2026-10-19 ("sim para todos", all five points D1-D5 below).
 > Every app of the suite follows it; Analytics is the reference.
 
 ## Decisions (2026-10-19)
@@ -17,18 +17,18 @@
 
 | | Decision |
 |---|---|
-| D6 | Every app draws the same frame, `@plantcraft/ui` (section 10): one left sidebar with the app's brand and the fold button at the top, the app's pages ending with its own Help (owner, 2026-10-22), and at the bottom every app the person may open (PlantCraft first, always), then the messages button and the user menu (theme, language, tour, about, sign out) (owner, 2026-10-20). |
+| D6 | Every app draws the same frame, `@plantcraft/ui` (section 10): one left sidebar with the app's brand and the fold button at the top, the app's pages ending with its own Help, and at the bottom every app the person may open (PlantCraft first, always), then the messages button and the user menu (theme, language, tour, about, sign out). |
 | D7 | Analysis apps order their pages the same way: Overview, the objects they analyse, Runs, Protocols, Methods, Help. |
 | D8 | Sources and signals are HistCraft's: connections, tags, collection, history and their settings (general, per source, per point; the most specific wins). PlantCraft keeps assets, asset types and which signal fills each role. |
-| D9 | CPMCraft and DataCraft become one app, **LinkCraft** (`linkcraft`, `/link/`): signals and loops, with methods wired as blocks into protocols that run on a schedule (section 11). TrendCraft stays a separate app, renamed **DashCraft** (`dashcraft`, `/dash/`): it only shows the data HistCraft and the apps hold (owner, 2026-10-20). |
-| D10 | Only the platform keeps the Craft brand. A module's display name is **PlantCraft <name>** in documents, packages and proposals (PlantCraft Analytics, Historian, View, Plant, Twin, Alarms, Models) and just **<name>** inside the suite (sidebar, launcher). Ids, repositories, images and URL prefixes keep their `<function>craft` form (owner, 2026-10-20). |
+| D9 | CPMCraft and DataCraft become one app, **LinkCraft** (`linkcraft`, `/link/`): signals and loops, with methods wired as blocks into protocols that run on a schedule (section 11). TrendCraft stays a separate app, renamed **DashCraft** (`dashcraft`, `/dash/`): it only shows the data HistCraft and the apps hold. |
+| D10 | Only the platform keeps the Craft brand. A module's display name is **PlantCraft <name>** in documents, packages and proposals (PlantCraft Analytics, Historian, View, Plant, Twin, Alarms, Models) and just **<name>** inside the suite (sidebar, launcher). Ids, repositories, images and URL prefixes keep their `<function>craft` form. |
 
 Every app of the suite (Analytics, the Simulator, View, Historian and the ones to
 come) follows this one standard: the same metadata, the same repository layout, the same image and
 package, the same runtime settings, the same way to name assets and signals, and one way to talk
 to PlantCraft and to other apps. A reader who knows one app knows them all; the installer, the
 launcher and the security guide treat every app the same ("bem padronizada para não virar uma
-bagunça", owner, 2026-10-19).
+bagunça").
 
 Apps are **independent**: each runs alone against PlantCraft, none needs another to work. They
 are linked only by what they publish in PlantCraft (section 6). They look like one product
@@ -79,7 +79,7 @@ and its own database.
 |---|---|---|
 | Asset | `asset:<asset id>` | `asset:u200-fic1001` |
 | Signal | `signal:<source id>:<tag>`  | `signal:pi:FIC1001.PV` |
-| Person | `user:<user name>` | `user:jonathan` |
+| Person | `user:<user name>` | `user:ana.lima` |
 | Result | `<app id>.<kind>` | `linkcraft.signal_quality` |
 | Run | `run:<app id>/<run id>` | `run:linkcraft/2026-10-19-0600` |
 
@@ -108,7 +108,7 @@ and its own database.
 - **Ids are written as they are, never percent-encoded** (decided 2026-10-20): any id is 1 to
   300 characters, no control characters, no spaces at either end. A PI tag keeps its spaces,
   `/`, `\` and `:` (`signal:pi:Unit 2\FIC 101.PV`). Apps store and compare references as
-  text; only a URL path encodes the id (`quote(id, safe="")`). `processcraft.refs` and
+  text; only a URL path encodes the id (`quote(id, safe="")`). `plantcraft.refs` and
   `plantcraft_sdk.refs` apply this one rule (`check_id`); a source id is lower-case letters,
   digits, `_` and `-` (`[a-z0-9][a-z0-9_-]{0,47}`), so `parse_ref` splits `<source>:<tag>` at the
   first `:` after it.
@@ -199,7 +199,7 @@ roles = { loop = ["pv", "op"] }     # signal roles it needs per type
 [permissions]                       # shown to the admin before install; held to every API v1 route
 read = ["assets", "signals", "series", "results"]   # also: events runs schedules people knowledge
 write = ["audit", "results", "events", "runs", "schedules"]   # also: series notifications knowledge
-plant_write = false                 # always false; true is an owner decision (AGENTS.md)
+plant_write = false                 # always false; true is a maintainer decision (AGENTS.md)
 outbound = []                       # outbound hosts it may contact; [] for every app today
 
 [publishes]                         # its outputs: results and events other apps may read (section 6)
@@ -220,7 +220,7 @@ skip = ["logs/"]                    # left out; anything not named is copied as 
 
 ## 4b. What an app adds to PlantCraft: `[contributes]`
 
-Owner, 2026-10-25 ("Padronizar contratos entre apps e PlantCraft"): a new app must reach every
+A new app must reach every
 place of the platform **without a change to the platform**. So an app declares, in its
 `app.toml`, everything PlantCraft draws for it, and PlantCraft draws from the declarations
 without knowing the app. The manifest has three groups, each with one role:
@@ -324,7 +324,7 @@ retention = "app"                    # app (set per point, managed_by), historia
   `PUT /api/v1/contributions` (the events go to the catalog with it), retried while PlantCraft is
   not up and never stopping the app; an app without an app key carries it in
   `GET /api/ops/metrics`, which PlantCraft's monitor reads every minute. PlantCraft keeps one row
-  per app, replaced whole (`processcraft.apps.contributions`); `GET /api/v1/contributions` lists
+  per app, replaced whole (`plantcraft.apps.contributions`); `GET /api/v1/contributions` lists
   what every installed app adds.
 - **Every screen reads the registry**, never a list written for an app: Settings › Language
   models, Desk's calendar and to-do, the Overviews, Settings › Apps, Alarms' catalog. An app that is
@@ -414,7 +414,7 @@ cli.py              `<id> serve` and the app's commands (layer 3)
 ## 6. Results and events: how apps link
 
 Apps share findings through PlantCraft, never directly. A result on an asset or signal is how
-apps link (owner, 2026-10-19): DataCraft writes the data quality of a signal or asset, CPMCraft
+apps link: DataCraft writes the data quality of a signal or asset, CPMCraft
 reads it before judging a loop; CPMCraft writes the loop's health, View and the asset page
 show it. The asset page in PlantCraft lists every app's results for that asset.
 
@@ -478,8 +478,7 @@ work, with a visible "not available", when the producer is not installed or its 
 
 Each app has its own methods, protocols, parameters and way of running (a CPM round over loops,
 a Modelica simulation with its inputs and outputs, a data-quality sweep over signals). They are
-**not shared between apps** and PlantCraft does not run them (owner, 2026-10-19: no cross-app
-protocols for now; revisit only if apps overlap). PlantCraft only gives a **read-only overview**
+**not shared between apps** and PlantCraft does not run them. PlantCraft only gives a **read-only overview**
 of what every app is running, fed by the apps through API v1:
 
 - **Runs**: `PUT /api/v1/runs` with `[{"id": "<app's run id>", "name", "status":
@@ -495,8 +494,7 @@ of what every app is running, fed by the apps through API v1:
 
 ### A work queue looks the same in every app
 
-An app that queues work (Analytics' executions, Models' simulations) shows its queue one way (owner,
-2026-10-23): the numbers of now (in the queue, running, done and failed in the last hour, how
+An app that queues work (Analytics' executions, Models' simulations) shows its queue one way: the numbers of now (in the queue, running, done and failed in the last hour, how
 long the oldest item has waited, the workers busy) and the same numbers over 1 hour, 24 hours,
 7 days and 30 days.
 
@@ -617,7 +615,7 @@ image is kept for rollback.
 
 ## 9. Checklist for a new app
 
-1. Ask the owner for the repository (private). Take the id, prefix, port and uid from section 7.
+1. Ask a maintainer for the repository (private). Take the id, prefix, port and uid from section 7.
 2. Copy an app's layout (section 5; PlantCraft Alarms is the smallest), write `app.toml`,
    `SPEC.md`, `ROADMAP.md`. Build the server on `plantcraft_sdk.server`, never on a copy.
 3. Vendor the SDK wheel; read data only through it; reference things only as section 2 says;
@@ -643,24 +641,24 @@ copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
 - `SuiteShell`: the sidebar, top to bottom: the app's name (the app switcher, whose list floats over the sidebar and the page, as wide as its names); the suite's search; the app's pages;
   **Apps**, every app the person may open, read from `GET /api/v1/apps` on the shared host, with
   PlantCraft always first (added by the frame, so every app links back to the platform);
-  four quick buttons that cross every app, all the same size (owner, 2026-10-24, round 8):
+  four quick buttons that cross every app, all the same size:
   **Messages** and **Notifications** with their unread counts, the **Assistant** and the suite's
   **work queues** (below), each opening the same panel (`SidePanel`) out from under the sidebar's
   edge, over the page, without leaving the app, with **Full page** and close in its header; one
-  panel at a time, all of one width (owner, 2026-10-25, round 8): going from one straight to another
+  panel at a time, all of one width: going from one straight to another
   swaps what is inside without sliding, the button of the open panel closes it, and going to another
   page or app closes it. Messages and Notifications show their unread counts; the queues' button turns
   while work runs, is green for a moment when it finished well and red after a failure until the
   panel is opened. Last in the row, the **fold button** (the [ key folds too), so it stays where it
   was clicked. Then the person's menu, a floating window beside the sidebar, with the person's profile (PlantCraft's
   `/people/me`), **Preferences** (PlantCraft's `/preferences`, owner 2026-10-24: where times are shown, Local time, UTC or this device, and the language, saved for the person), **Help** (one for the suite, owner 2026-10-23: PlantCraft's `/help?app=<id>`, open at
-  the app's guides, which it reads from the app's `/api/help`; `helpTo: null` leaves it out), the tour and Sign out, under the theme, which comes first (owner, 2026-10-25); the version is a quiet line at its foot. The person's menu, the list of apps and the quick panels close alike: Escape or a click outside them, also on the app's page inside the frame (`dismiss.ts`). It folds to icons (the Apps keep their marks) and is a drawer on a
+  the app's guides, which it reads from the app's `/api/help`; `helpTo: null` leaves it out), the tour and Sign out, under the theme, which comes first; the version is a quiet line at its foot. The person's menu, the list of apps and the quick panels close alike: Escape or a click outside them, also on the app's page inside the frame (`dismiss.ts`). It folds to icons (the Apps keep their marks) and is a drawer on a
   phone. A page entry may name a `section` ("Work", "Administration"): the frame draws a heading
   over each group (a line when folded to icons). PlantCraft groups the day to day (Home, Assets,
   Actions) apart from what administrators do once or seldom (Users, Apps with their keys, Backups,
-  Updates, Settings) (owner, 2026-10-21). **An app's Settings page is always the last
-  entry of its menu** (owner, 2026-10-25; `tests/test_menu_order.py`);
-- the **frame** (owner, 2026-10-24, round 8; `frame.ts`, `AppFrames.tsx`, `FramedShell.tsx`): in
+  Updates, Settings). **An app's Settings page is always the last
+  entry of its menu**;
+- the **frame**: in
   an installation PlantCraft draws the sidebar once and every app runs beside it as content only,
   so switching apps never loads the sidebar again and every app shows the platform's current
   sidebar, whatever ui version it was built with. The proxy sends a page the person opens
@@ -680,8 +678,7 @@ copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
   tells the frame when something was read (`announceMessagesChanged`), Escape or the close button
   returns to the same screen, and **Full page** opens `/messages`. `openMessages(conversation?)`
   opens it from code;
-- the **Assistant** button in that row above the person (owner, 2026-10-24; at the top right of every
-  page from 2026-10-23 to ui 0.32.0), and its side panel. One panel at a time: opening one closes the other.
+- the **Assistant** button in that row above the person, and its side panel. One panel at a time: opening one closes the other.
   Each page tells it what it can do there, once, in the page's code:
   `useAssistantPage({ subject?, title, place, context, tasks })`. `place` is where the person is
   ("Alarms › FIC-101 HI"); `context` what the page shows, in a few lines, for the model; each task is
@@ -708,8 +705,7 @@ copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
   the block's version (Analytics: the block file; Models: the class's `Icon` annotation);
 - `HelpBrowser`: the app's help as folders (the guide's `category`, `A/B` nests) with a filter;
   no introduction text;
-- `DataTable` for every list that can grow past a screen (owner, 2026-10-22: every table of the
-  suite pages, filters and sorts the same way): pages of 25/50/100, a click on a header sorts
+- `DataTable` for every list that can grow past a screen: pages of 25/50/100, a click on a header sorts
   (`sort`), a search box (`searchText`) and, per column, `filter` (the suite's `MultiSelect`;
   `true`: the values found, each with its count; `{options}`: a fixed list such as every status; `value`: what a row is
   filtered by), "Clear filters" and "N of M"; `selectable` adds a checkbox per row;
@@ -718,7 +714,7 @@ copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
   `GET /api/prompts/<kind>/<id>` built with `plantcraft_sdk.prompts` and the button copies its
   text; preset questions only, never a free question from the URL;
 - `BlockEditor` (`@plantcraft/ui/blockEditor`, its styles in `blockEditor.css`): the one block
-  diagram editor of the suite, Simulink-like, on a page of its own (owner, 2026-10-22). It takes
+  diagram editor of the suite, Simulink-like, on a page of its own. It takes
   the app's block catalog (`plantcraft_sdk.blocks.describe_block`), the diagram (version 2) and
   the app's check and test trace, and gives back the edited diagram; an app never draws its own
   diagram editor. It needs `@xyflow/react` 12 in the app's `frontend/package.json`, and the page
@@ -746,17 +742,16 @@ copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
   actions at the right, its notices, then the widgets each person arranges (Customize: add,
   move, pick a size, set up, remove, restore the default), kept per person and per app in
   PlantCraft (`/api/home/layout?page=<app id>`). Desk's Today offers the widgets of every
-  installed app; an app's Overview offers only its own (owner, 2026-10-25). The widgets are the
+  installed app; an app's Overview offers only its own. The widgets are the
   ones the app declares in `[[contributes.widgets]]` and serves with `plantcraft_sdk.widgets`
   ([widgets.md](widgets.md)), so a widget is written once and reads the same on both pages; a
   page draws one itself (`render`) only when it needs the browser (the queue's chart). The app
   names a new person's board (`defaultLayout`, placements with sizes) so it looks finished on
   the first visit. What the app works on (dashboards, alarms, projects) is its own page after
-  Overview, never the Overview itself (owner, 2026-10-21);
+  Overview, never the Overview itself;
 - the **routine** (`JourneyPath`, up to four numbered steps on a first page): it folds to one
   line ("Hide"), the choice is kept in the browser per page (`pc-journey:<path>`), and a routine
-  whose steps are all done starts folded, since the tour already covers the first visit (owner,
-  2026-10-21). An app never draws its own routine panel;
+  whose steps are all done starts folded, since the tour already covers the first visit. An app never draws its own routine panel;
 - the **start** (scale review A2, ui 0.54.0): `main.tsx` is `startApp(App, { t, statusTones })`
   (the theme before the first paint, the app's `t` and status ids for the shared components)
   and `App` calls `useSuiteSession(UNAUTHORIZED_EVENT)` (the token renewed, sign-in again on a
@@ -773,7 +768,7 @@ copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
   token), and the app answers with `plantcraft_sdk.server.picker.signal_choices`: plant
   signals before derived series, then exact, prefix and other matches, so every app lists the
   same signals in the same order. An app ranks no signals of its own;
-- the **search** (owner, 2026-10-23; `Search.tsx`): an entry at the top of the sidebar and
+- the **search**: an entry at the top of the sidebar and
   Ctrl+K (Cmd+K on a Mac) on any screen open one box that asks every app the person may open at
   once, `GET <prefix>api/search?q=<text>&limit=6`, and lists the answers by app (arrows, Enter,
   Esc; Ctrl+Enter opens in a new tab). The answer is
@@ -788,7 +783,7 @@ copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
   0.21.0: `search_text`, `matches`, `SearchItem`, `search_answer` ranks and cuts the answer);
   `suite_api` answers `GET /api/search` and `GET /api/queue` with "nothing" for an app that
   passes no route of its own, so the frame's probes never end in a 404;
-- **charts** (owner, 2026-10-23: charts used by more than one app live in the package):
+- **charts**:
   `@plantcraft/ui/plot` holds the suite's one Plotly build (`Plot`, the cartesian bundle, so an
   app never keeps its own `Plot.tsx`) and `TimeChart`, the time chart every trend uses: the
   user's theme (or a fixed light or dark one, the PNG included), a y axis titled only with a unit
@@ -796,22 +791,21 @@ copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
   period is `PeriodPicker` ("Last 2 hours" … or "From – to"; `periodRange` gives what to load).
   An app installs `react-plotly.js` and `plotly.js-cartesian-dist-min` only when it draws charts.
 
-- **the page's top** (owner, 2026-10-25, round 8; ui 0.41.0, `Heading`, `base.css`): the title at the
+- **the page's top**: the title at the
   left and the page's buttons at the right, in a band of one height, so the buttons sit at the same
   place on every page. Nothing above the title (no eyebrow, no breadcrumb) and nothing under it (no
   line of purpose): the sidebar already says where the person is, and what a page is for belongs in
   its Help and in its empty states. `Heading` draws only `title` and `actions` (`eyebrow` and `detail`
   are still accepted and not drawn); `AppOverview` likewise. A line that must stay under a title (a
   date, an object's status) carries the class `pc-heading-keep`.
-- **time zones** (owner, 2026-10-24: "um drop-down", never a text to type): every field that asks
+- **time zones**: every field that asks
   for a time zone is `TimeZoneSelect`. The person's default comes first ("Local time · Sao Paulo
   (UTC−3)", or UTC), then the other, then the fixed offsets UTC−1 … UTC+14, and the cities last,
   folded. It saves `local` for the installation's zone (Settings › Installation); the app resolves it
   where it runs (`plantcraft_sdk.utc.resolve_zone(name, client.installation_time_zone())`), so a
   schedule follows the installation when its zone changes. Times on screen come from `formatDate`,
   `wallClock` and `Plot`, which follow the person's choice; `timeZoneLabel` names a saved zone.
-- **buttons and forms** (owner, 2026-10-24: "manter um formato padrão e um espaçamento"; ui
-  0.34.0, `base.css`): a page's actions sit at the right of its title, in `Heading`'s `actions`
+- **buttons and forms**: a page's actions sit at the right of its title, in `Heading`'s `actions`
   (class `heading-actions`, 8 px apart, wrapping on a phone). Any number of them: at most one
   `button-primary` (blue, the page's main action), the others `button-secondary` (grey);
   `button-danger` (red) only for what deletes or takes back; `button-ghost` for small actions
@@ -836,7 +830,7 @@ belongs in the package.
 
 ## 11. Analytics
 
-Analytics is the analysis app of the suite (D9, owner 2026-10-20). It works on **signals** (data
+Analytics is the analysis app of the suite (D9). It works on **signals** (data
 quality) and **loops** (control performance). Its analyses are `@method`s; a **protocol** wires
 methods as blocks (inputs: signals, assets and asset roles; methods; combinations such as
 worst-of; outputs: results, derived series in Historian, messages) and runs on a **schedule**;

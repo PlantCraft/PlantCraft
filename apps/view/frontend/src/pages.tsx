@@ -6,7 +6,7 @@ import { FileText, LayoutDashboard, LineChart, Monitor, Workflow } from "lucide-
 /** The app's own pages in the suite frame (app standard, section 10); Help is the frame's own entry.
  * View has four pages: Overview (`AppOverview`, the widgets each person arranges), Dashboards (the
  * list, each dashboard (`/d/<id>`) and the asset deep link (`/assets/<id>`)), Reports (`/reports`,
- * `/reports/<id>`) and Trends (`/trends`, `/trends/<id>`), the quick look last (owner, 2026-10-26). */
+ * `/reports/<id>`) and Trends (`/trends`, `/trends/<id>`), the quick look last. */
 export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
   { to: "/", label: "Overview", icon: <LayoutDashboard />, match: (path) => path === "/" },
   {
@@ -32,14 +32,14 @@ export async function tourExamples(): Promise<TourExamples> {
     api.dashboards().then((items) => { const item = pick(items, /plant overview/i); if (item) found.dashboard = `/d/${ref(item.dashboard_id)}`; }).catch(() => undefined),
     diagramsApi.list().then((items) => { const item = pick(items, /riverbend/i); if (item) found.diagram = `/diagrams/${ref(item.diagram_id)}`; }).catch(() => undefined),
     api.reports().then((items) => { const item = items[0]; if (item) found.report = `/reports/${ref(item.report_id)}`; }).catch(() => undefined),
-    // Only a trend the team saved on purpose, never whatever comes first (owner, 2026-10-28).
+    // Only a trend the team saved on purpose, never whatever comes first.
     api.trends().then((items) => { const item = items.find((entry) => /FIC-1003/.test(entry.name)); if (item) found.trend = `/trends/${ref(item.trend_id)}`; }).catch(() => undefined),
   ]);
   return found;
 }
 
 /** The app's guided tour (@plantcraft/ui; texts in the tour language, translated there): opens the
- * first time a person opens View. Each page, then one of its objects (owner, 2026-10-28). */
+ * first time a person opens View. Each page, then one of its objects. */
 export function tourSteps(examples: TourExamples = { dashboard: null, diagram: null, report: null, trend: null }): TourStep[] {
   const steps: TourStep[] = [
     {
@@ -95,7 +95,7 @@ export function tourSteps(examples: TourExamples = { dashboard: null, diagram: n
     title: tt("Trends"),
     body: tt("Pick signals, draw them on one plot or on stacked plots, choose the period and how to aggregate, and save the trend to open it again or download its data. This one is saved by the team."),
   });
-  // On a dashboard: the Overview has no assistant button (owner, 2026-10-28).
+  // On a dashboard: the Overview has no assistant button.
   steps.push(assistantTourStep(examples.dashboard ?? "/dashboards", [
     tt("Build a dashboard of a unit's critical loops"),
     tt("Explain what a panel shows and where its data comes from"),

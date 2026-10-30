@@ -59,7 +59,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     SIMCRAFT_STATE_DB=/data/opcua-state.sqlite3
 
 WORKDIR /app
-COPY LICENSE ATTRIBUTION.md /app/
+COPY LICENSE ATTRIBUTION.md CHANGELOG.md /app/
 
 # Dependencies from the hash-checked wheelhouse, without network; then PlantCraft Simulator.
 RUN --mount=type=bind,from=wheels,source=/wheelhouse,target=/wheelhouse \

@@ -41,7 +41,7 @@ WORKS = {
     "replay": "Replay of the past",
 }
 
-# The queue's order (owner, 2026-10-23): what a person asked for first, then the schedules,
+# The queue's order: what a person asked for first, then the schedules,
 # then the past replayed. Higher runs first; equal priorities run in the order they were due.
 PRIORITIES = {"manual": 100, "test": 100, "baseline": 60, "scheduled": 50, "replay": 10}
 OPEN_STATUSES = ("scheduled", "waiting_data", "queued", "running")
@@ -63,7 +63,7 @@ SCHEDULE_CADENCES = {
     "daily": "Daily",
     "weekly": "Weekly",
     # A calendar rule (``recurrence``): every N minutes on some days, several times a day, chosen
-    # weekdays, a day of the month (owner, 2026-10-24).
+    # weekdays, a day of the month.
     "calendar": "Calendar",
 }
 
@@ -620,7 +620,7 @@ class JobStore(Store):
     def prune_detail(self, *, keep: int = 50) -> int:
         """Keep the full detail (each method's result, the configuration it ran with) of the
         newest ``keep`` ended runs per subject and schedule; older runs keep their summary
-        (owner decision D7: the long history is in the Historian). Runs thinned."""
+        (the long history is in the Historian). Runs thinned."""
 
         with self._lock, self._connect() as connection:
             old = [
@@ -1180,7 +1180,7 @@ class JobStore(Store):
         schedule_id = f"round-{application_id}"
         existing = self.get_schedule(schedule_id)
         if existing is not None and existing.get("name") in RENAMED_ROUNDS:
-            # The loops' round is "Control loop performance" (owner, 2026-10-27), also where it
+            # The loops' round is "Control loop performance", also where it
             # was made under an older name; a name a person gave it stays.
             self.update_schedule(schedule_id, name=name)
             existing = self.get_schedule(schedule_id)
@@ -1470,7 +1470,7 @@ class JobStore(Store):
             skipped = 0
             for subject_id in subjects or []:
                 job_id = str(uuid.uuid4())
-                # No pile-up (owner, 2026-10-23): a subject whose previous occurrence has not
+                # No pile-up: a subject whose previous occurrence has not
                 # ended gets this one as skipped, with the reason, instead of a second in line.
                 late = subject_id in busy
                 offset = _spread(schedule_id, subject_id, spread) if spread else 0.0
@@ -1617,7 +1617,7 @@ class JobStore(Store):
         return found
 
     def schedule_stats(self, schedule_id: str, limit: int = 2000) -> dict[str, Any]:
-        """A schedule's record over its latest executions (owner, 2026-10-25, as Elipse EPM's
+        """A schedule's record over its latest executions (as Elipse EPM's
         statistics): how many ran, failed and needed another try, how long they took, and
         when the outcome last changed (completed to failed, or back)."""
 

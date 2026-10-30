@@ -1,5 +1,5 @@
 /** Messages: conversations between people (docs/collaboration.md). Questions for a language model go to
- * Desk's Assistant (owner, 2026-10-23), which keeps each person's chats apart. */
+ * Desk's Assistant, which keeps each person's chats apart. */
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, Bot, Check, Hash, LoaderCircle, MessageSquarePlus, MessagesSquare, Search, SendHorizontal, Star, UserPlus, Users, UsersRound, X } from "lucide-react";
 import { Avatar, errorText, fullWhen, Go, messageParts, plainMentions, ReadToggle, ReferencePicker, RefChip, resolveOption, sameDay, shortWhen, StarButton } from "./collab";
@@ -212,7 +212,7 @@ function ContactsDialog({ mode, contacts, me, exclude = [], prefill, onClose, on
   const needle = q.trim().toLowerCase();
   const match = (item: Contact) => !hidden.has(item.username) && (!needle || `${item.username} ${item.display_name} ${item.role} ${item.subject ?? ""}`.toLowerCase().includes(needle));
   const toggle = (name: string) => setChosen(chosen.includes(name) ? chosen.filter((item) => item !== name) : [...chosen, name]);
-  // Choosing a group chooses its people (owner, 2026-10-23); choosing it again leaves them out.
+  // Choosing a group chooses its people; choosing it again leaves them out.
   const groupPeople = (group: ContactGroup) => group.members.filter((name) => !hidden.has(name));
   const groupChosen = (group: ContactGroup) => groupPeople(group).length > 0 && groupPeople(group).every((name) => chosen.includes(name));
   const toggleGroup = (group: ContactGroup) => {
@@ -236,7 +236,7 @@ function ContactsDialog({ mode, contacts, me, exclude = [], prefill, onClose, on
     <Avatar name={item.display_name} bot={item.kind === "specialist"} size="sm" />
     <span><strong>{item.display_name}{item.kind === "specialist" && <span className="co-bot-tag">{t("Specialist")}</span>}{suggested.has(item.username) && <em>{t("suggested")}</em>}</strong><small>{item.kind === "specialist" ? `@${item.username}${item.subject ? ` · ${item.subject}` : ""}` : `@${item.username}${item.role ? ` · ${item.role}` : ""}`}</small></span>
     <span className="msg-check">{chosen.includes(item.username) && <Check />}</span></button></li>;
-  // Specialists answer in Desk's Assistant now (owner, 2026-10-23); Messages are between people.
+  // Specialists answer in Desk's Assistant now; Messages are between people.
   const specialists: Contact[] = [];
   const people = contacts.people.filter(match);
   const heading = mode === "add" ? t("Add people") : t("New conversation");
@@ -329,7 +329,7 @@ export function MessagesPage({ me, conversationId, onRead }: { me: string; conve
     void loadList();
   }
   const read = useCallback(() => { onRead(); void loadList(); }, [onRead, loadList]);
-  // The person's own marks (owner, 2026-10-28): a favorite, or unread again. Read again means opened:
+  // The person's own marks: a favorite, or unread again. Read again means opened:
   // the conversation's messages are marked read as when it is opened.
   const markConversation = useCallback(async (conversation: Conversation, mark: "star" | "unread", on: boolean) => {
     const id = conversation.conversation_id;
@@ -341,7 +341,7 @@ export function MessagesPage({ me, conversationId, onRead }: { me: string; conve
     } catch (err) { setError(errorText(err)); }
     void loadList();
   }, [loadList, onRead]);
-  // Two sections (owner, 2026-10-24): the chats, and the notifications read like an email inbox.
+  // Two sections: the chats, and the notifications read like an email inbox.
   const notices = conversationId === "notifications";
   const { feed, error: noticeError, mark, star, reload: reloadNotices } = useNotices(onRead);
   const [selected, setSelected] = useState<string | null>(null);

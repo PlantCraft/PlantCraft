@@ -33,9 +33,9 @@ export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
 ];
 
 /** The app's guided tour (@plantcraft/ui): opens the first time a person opens Alarms. */
-/** The first row of the page's table (owner, 2026-10-28: point at an event, a rule or an alarm,
+/** The first row of the page's table (point at an event, a rule or an alarm,
  * not at the search and filters), or the page's empty state. */
-// The whole list, as in the other apps' tours (owner, 2026-10-28).
+// The whole list, as in the other apps' tours.
 const LIST = ".pcs-content .pc-dt, .pcs-content .empty";
 
 export function tourSteps(): TourStep[] {

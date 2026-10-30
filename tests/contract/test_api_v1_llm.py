@@ -1,6 +1,6 @@
 """API v1 contributions and language model calls (docs/api-v1.md, "Language models"): an app
 declares its uses of a model, Setup lists them, and the app writes with the model an
-administrator gave each use (owner, 2026-10-25)."""
+administrator gave each use."""
 
 from __future__ import annotations
 

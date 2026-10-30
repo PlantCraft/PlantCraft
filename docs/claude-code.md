@@ -57,7 +57,7 @@ repository, the goal and the limit:
 
 **A bug from the plant:**
 
-> On the Mac mini, Analytics' loop page for FIC-1004 shows "unexpected error". Find the cause, add
+> On the project's test server, Analytics' loop page for FIC-1004 shows "unexpected error". Find the cause, add
 > the test that fails before the fix, fix it, and add a line to `docs/devlog.md`.
 
 **A review before merging:**
@@ -73,7 +73,7 @@ repository, the goal and the limit:
 - **Name the folder.** The platform is the repository's root and each module is `apps/<app>`;
   a change to the SDK or ui is released as a new version and the apps pick it up with
   `dev/revendor --all`, in the same PR when the change is one.
-- **Owner decisions stay with a person** (AGENTS.md, section 9): making anything public, secrets,
+- **Maintainer decisions stay with a person** (AGENTS.md, section 9): making anything public, secrets,
   deleting data or branches, a write path to a plant, licences. An agent stops and asks.
 - **Look at the screen.** For interface changes ask for a Playwright screenshot, or use
-  `dev/preview` on the Mac mini to see the change in seconds.
+  `dev/preview` on the project's test server to see the change in seconds.

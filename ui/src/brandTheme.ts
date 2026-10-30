@@ -10,7 +10,7 @@ import { APP_COLORS as APP_TILE_COLORS, type AppId as AppFamilyId } from "./appM
 /** Light and dark values of the tokens that JavaScript needs. Mirrors tokens.css. */
 export const BRAND_COLORS = {
   light: {
-    primary: "#0a66d0",
+    primary: "#2e5a88",
     surface: "#ffffff",
     text: "#1d1d1f",
     text2: "#424245",
@@ -27,7 +27,7 @@ export const BRAND_COLORS = {
     series: ["#1762b6", "#e06d00", "#00958f", "#654db6", "#cfa529", "#913e20", "#ca488f", "#438f31"],
   },
   dark: {
-    primary: "#1f74d8",
+    primary: "#3d78b6",
     surface: "#1c1c1e",
     text: "#f5f5f7",
     text2: "#d2d2d7",

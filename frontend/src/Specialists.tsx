@@ -13,7 +13,7 @@ import { Modal } from "./Modal";
 
 /** People and Specialists are two tabs of the Users page. */
 export function UserTabs({ current }: { current: "people" | "groups" | "specialists" }) {
-  // A public demo's visitor reads People and Groups only (owner, 2026-10-28).
+  // A public demo's visitor reads People and Groups only.
   const admin = useIsAdmin();
   return <PageTabs label={t("People")} href={(to) => to} navigate={navigate} tabs={[
     { to: "/users", label: t("People"), active: current === "people" },

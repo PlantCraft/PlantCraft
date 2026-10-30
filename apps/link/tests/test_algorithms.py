@@ -555,8 +555,8 @@ def test_an_algorithm_has_its_author_tags_version_and_group(rt, suite_fake):
 def test_twins_that_repeat_an_example_are_listed_and_removed_with_their_schedules(
     api, rt, suite_fake
 ):
-    """An installation that ran Twin and the demo's examples had each model twice
-    (owner, 2026-10-24): Algorithms lists the copies from Twin and an admin removes them."""
+    """An installation that ran Twin and the demo's examples had each model twice:
+    Algorithms lists the copies from Twin and an admin removes them."""
 
     _save(api)
     _save(api, algorithm_id="twin_pv_and_valve")

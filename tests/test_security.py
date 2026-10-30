@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.auth import throttle
-from processcraft.auth.users import check_password, needs_rehash
+from plantcraft.api.app import create_app
+from plantcraft.auth import throttle
+from plantcraft.auth.users import check_password, needs_rehash
 
 ROOT = Path(__file__).resolve().parents[1]
 ADMIN_PASSWORD = "Sup3rSecretAdmin"
@@ -84,7 +84,7 @@ def test_the_product_hashes_with_argon2_cffis_default_profile():
     # The tests swap in a cheap hasher (conftest.py); the product keeps RFC 9106's low-memory one.
     from argon2 import PasswordHasher
 
-    from processcraft.auth.users import PRODUCT_HASHER
+    from plantcraft.auth.users import PRODUCT_HASHER
 
     default = PasswordHasher()
     assert PRODUCT_HASHER.memory_cost == default.memory_cost >= 65536
@@ -163,7 +163,7 @@ def test_bad_inputs_are_refused_not_crashes(app, method, url, body):
 def test_no_person_takes_an_app_s_service_identity(app, name):
     # Apps trust a token whose subject is ``app:<id>`` as that app's service (offline): a person
     # may never be named like one, nor get a user token with such a subject.
-    from processcraft.api.identity import issue_user_token
+    from plantcraft.api.identity import issue_user_token
 
     with TestClient(app):
         admin = _login(app, "admin", ADMIN_PASSWORD)
@@ -176,7 +176,7 @@ def test_no_person_takes_an_app_s_service_identity(app, name):
 
 def test_failed_sign_ins_are_counted_in_the_database(tmp_path):
     # Every server process sees the same count, and old rows go away as new ones arrive.
-    from processcraft.db import Database
+    from plantcraft.db import Database
 
     db = Database(tmp_path / "w.sqlite3")
     first, second = throttle.LoginThrottle(db), throttle.LoginThrottle(db)

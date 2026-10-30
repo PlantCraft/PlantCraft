@@ -1,4 +1,4 @@
-"""A schedule's time zone as saved and as its clock (owner, 2026-10-25): ``local`` is the
+"""A schedule's time zone as saved and as its clock: ``local`` is the
 installation's zone, read from PlantCraft (``PlantCraftClient.installation_time_zone()``,
 cached a minute there), so a schedule saved on "Local time" follows the installation when its zone
 changes; ``UTC``, ``Etc/GMT+3`` (UTC−3) and a city's IANA name are themselves. Written once, in

@@ -1,5 +1,5 @@
 /**
- * `/studies`: every study; `/studies/<id>`: one study on one page (owner, 2026-10-24: no tabs).
+ * `/studies`: every study; `/studies/<id>`: one study on one page (no tabs).
  * Its runs ranked by the indicator chosen, the best first; their results overlaid, coloured by a
  * varied parameter, with the envelope of all of them; an indicator against a parameter; the runs
  * themselves; the settings; the statistics; and the export for Jupyter.

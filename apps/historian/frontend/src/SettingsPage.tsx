@@ -20,7 +20,7 @@ const SECTIONS: { title: string; detail: string; keys: (keyof Settings)[] }[] = 
   { title: "Collection and compression", detail: "How often signals are read and how much of what is read is archived.", keys: ["default_scan_seconds", "default_exception_percent", "default_deviation_percent", "default_max_seconds"] },
 ];
 
-/** Settings: one tile per group, as PlantCraft's Setup and every app (owner, 2026-10-22). */
+/** Settings: one tile per group, as PlantCraft's Setup and every app. */
 export function SettingsPage({ me, section }: { me: Me; section?: string }) {
   if (section === "retention") return <RetentionPage me={me} />;
   if (section) return <ErrorBox text={t("Page not found.")} />;

@@ -1,5 +1,5 @@
 /**
- * Desk's shared page heading (owner, 2026-10-23). Team moved to TeamPage.tsx in round 7; what
+ * Desk's shared page heading. Team moved to TeamPage.tsx in round 7; what
  * came to the person is in Messages' Notifications since 2026-10-24 (Notifications.tsx).
  */
 import { Heading } from "@plantcraft/ui";

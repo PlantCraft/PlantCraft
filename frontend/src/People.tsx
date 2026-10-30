@@ -1,6 +1,6 @@
 /** A person's page (/people/<username>, /people/me): who they are, how to reach them, the actions
  * they own and, for themselves and the administrators, the apps they open and with which role.
- * Each person edits their own profile here (owner, 2026-10-22). */
+ * Each person edits their own profile here. */
 import { useCallback, useEffect, useState, type FormEvent, type ReactElement } from "react";
 import { AlertTriangle, Bell, Building2, CalendarClock, ClipboardCheck, LoaderCircle, Mail, MapPin, Pencil, Phone, ShieldCheck, UserRound, Users } from "lucide-react";
 import { accessApi, EMPTY_PROFILE } from "./accessApi";

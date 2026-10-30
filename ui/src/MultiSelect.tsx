@@ -1,7 +1,7 @@
 /**
  * A filter that picks several values from a short list: a button that names what is chosen
  * ("Status: Alarm, Attention", or "All") and opens a list of checkboxes, each with its count.
- * The suite's lists filter with it (owner, 2026-10-21: dropdowns, not rows of buttons).
+ * The suite's lists filter with it (dropdowns, not rows of buttons).
  */
 import { Check, ChevronDown } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";

@@ -130,7 +130,7 @@ export function HealthPage() {
   </div>;
 }
 
-/** Health for everyone (owner, 2026-10-25): whether each part of the suite runs, to check an
+/** Health for everyone: whether each part of the suite runs, to check an
  * app that does not answer. Read only; the disk, backups and certificates stay with the admins. */
 function HealthStatusPage() {
   const [status, setStatus] = useState<SuiteStatus | null>(null);
@@ -177,7 +177,7 @@ function downloadPem(item: Certificate) {
   saveFile(`${item.id}.pem`, item.pem, "application/x-pem-file");
 }
 
-/** Health › Certificates (owner, 2026-10-25): every certificate and when it expires; the
+/** Health › Certificates: every certificate and when it expires; the
  * administrators get a message 30 days before, and a reminder 7 days before. */
 function CertificatesPanel({ certificates, onRenewed }: { certificates: Certificate[]; onRenewed: () => void }) {
   const [renewing, setRenewing] = useState<Certificate | null>(null);
@@ -297,7 +297,7 @@ function RestorePanel({ backup, onCancel, onDone }: { backup: Backup; onCancel: 
   </section>;
 }
 
-/** What the schedule is, read only: Operations watches, Setup changes (owner, 2026-10-21). */
+/** What the schedule is, read only: Operations watches, Setup changes. */
 export function scheduleText(schedule: Schedule): string {
   const backup = schedule.enabled ? t("Daily backup at {time}", { time: schedule.daily_at }) : t("No daily backup");
   const drill = schedule.drill ? t("restore drill on {day} at {time}", { day: WEEKDAYS[schedule.drill_weekday] ?? "", time: schedule.drill_at }) : t("no restore drill");

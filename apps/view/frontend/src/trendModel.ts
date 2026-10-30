@@ -68,7 +68,7 @@ export function trendTraces(data: TrendData, axisTheme: Record<string, unknown> 
     // A text signal (a mode, running or stopped) is a band of states under the plot's lines.
     const [bottom, top] = domains[index];
     const band = !states.length ? 0 : numbers.some((line) => line.t.length) ? Math.min((top - bottom) * 0.35, 0.05 + 0.04 * states.length) : top - bottom;
-    // An axis names a unit only when every line on it shares it (owner, 2026-10-23): with
+    // An axis names a unit only when every line on it shares it: with
     // two units, either would mislabel the other; each line keeps its own in the legend.
     const units = (side: "left" | "right") => sharedUnit(numbers.filter((line) => styleOf(line.style).axis === side).map((line) => line.unit));
     axes[index ? `yaxis${index + 1}` : "yaxis"] = { ...axisTheme, domain: [band && band < top - bottom ? bottom + band + 0.02 : bottom, top], anchor: "x", title: { text: [plot.title, units("left")].filter(Boolean).join(" · "), font: { size: 10 } } };
@@ -137,7 +137,7 @@ export const MAX_LINES = 8;
 
 export const EMPTY_VIEW: TrendView = { plots: [{ title: "", lines: [] }], period: { mode: "relative", window: "2h" }, step_seconds: null };
 
-/** A new trend from the address, `/trends?signal=A&signal=B&start=&end=` (owner, 2026-10-26: a
+/** A new trend from the address, `/trends?signal=A&signal=B&start=&end=` (a
  * chart of the assistant goes on in Trends): its signals on one plot, over its period. */
 export function viewFromAddress(search: string): TrendView | null {
   const params = new URLSearchParams(search);

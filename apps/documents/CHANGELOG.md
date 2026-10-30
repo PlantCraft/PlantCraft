@@ -2,7 +2,9 @@
 
 All notable changes to this app are recorded here ([Keep a Changelog](https://keepachangelog.com)).
 
-## [Unreleased]
+## [0.5.1] - 2026-10-30
+
+- Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).
 
 ### Changed
 
@@ -15,7 +17,7 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ### Changed
 
-- **Final review round (owner, 2026-10-27).** The Overview has no buttons at the top (the
+- **Final review round.** The Overview has no buttons at the top (the
   library and **Send files** are on Library, in the menu); the latest documents say when each was
   sent or changed. The library shows its folders in the column on the left, as Analytics and
   Models do (All, each folder with its count, General, New folder), and says under its title which
@@ -70,7 +72,7 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ## [0.4.0] - 2026-10-26
 
-- First version (owner, 2026-10-26, plan "Documents" D1 to D8): a library of the plant's
+- First version (plan "Documents" D1 to D8): a library of the plant's
   documents in folders with access, revisions by document number, the original files kept by
   SHA-256; PDF, Word, Excel, PowerPoint, text, Markdown, CSV and HTML read into passages with
   page and section; the plant's tags linked to its assets; search by words (FTS5) and by meaning

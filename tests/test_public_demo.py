@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.auth.public_demo import RateLimiter, public_demo
-from processcraft.specialists.profiles import models_allowed, models_allowed_for
+from plantcraft.api.app import create_app
+from plantcraft.auth.public_demo import RateLimiter, public_demo
+from plantcraft.specialists.profiles import models_allowed, models_allowed_for
 
 ROOT = Path(__file__).resolve().parents[1]
 VISITOR_PASSWORD = "plantcraft-demo"
@@ -69,6 +69,16 @@ def test_the_sign_in_page_offers_the_demo_never_its_password(suite):
     assert answer["public_demo"] == {"seats": 10, "minutes": 30}
 
 
+def test_the_visit_offers_the_teams_contact_only_at_an_https_address(monkeypatch):
+    monkeypatch.setenv("PLANTCRAFT_PUBLIC_DEMO", "true")
+    monkeypatch.delenv("PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL", raising=False)
+    assert "contact_url" not in public_demo().as_dict()
+    monkeypatch.setenv("PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL", "javascript:alert(1)")
+    assert "contact_url" not in public_demo().as_dict()
+    monkeypatch.setenv("PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL", " https://plantcraft.io/#talk ")
+    assert public_demo().as_dict()["contact_url"] == "https://plantcraft.io/#talk"
+
+
 def test_visitors_cannot_write_even_in_conversations(suite):
     app, _admin = suite
     for username in ("demo",):
@@ -115,7 +125,7 @@ def test_editors_and_the_administrator_still_write(suite):
 
 
 def test_language_models_are_only_for_the_people_an_administrator_created(suite, monkeypatch):
-    """Owner, 2026-10-25: the demo keeps the assistant for real accounts; visitors never reach
+    """the demo keeps the assistant for real accounts; visitors never reach
     a model, and neither do the apps' uses (a visitor's click could set them off)."""
 
     app, admin = suite
@@ -195,7 +205,7 @@ def test_the_visitor_sees_the_teams_actions(suite):
 
 
 def test_the_visitor_reads_the_administration_and_changes_nothing(suite):
-    """Owner, 2026-10-28: a visitor sees People, Apps and Backups to know the platform."""
+    """a visitor sees People, Apps and Backups to know the platform."""
 
     app, _admin = suite
     visitor = _signed(app, "demo")

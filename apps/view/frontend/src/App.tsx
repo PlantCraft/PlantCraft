@@ -61,7 +61,7 @@ function SignedInApp({ path }: { path: string }) {
   useEffect(() => {
     api.me().then(setMe).catch((err: Error) => setError(err.message));
   }, []);
-  // The tour opens a dashboard, a process display, a report and a trend (owner, 2026-10-28).
+  // The tour opens a dashboard, a process display, a report and a trend.
   const [examples, setExamples] = useState<TourExamples | undefined>(undefined);
   useEffect(() => { if (me) void tourExamples().then(setExamples); }, [me]);
   const tour = useMemo(() => (me && examples ? () => tourSteps(examples) : undefined), [me, examples]);

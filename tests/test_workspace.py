@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from processcraft.platform.workspace import Workspace
+from plantcraft.platform.workspace import Workspace
 
 
 def test_workspace_seeds_the_five_person_demo_team(tmp_path):

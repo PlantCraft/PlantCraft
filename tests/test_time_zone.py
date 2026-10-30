@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import TIME_ZONE_COOKIE, create_app
+from plantcraft.api.app import TIME_ZONE_COOKIE, create_app
 
 ROOT = Path(__file__).resolve().parents[1]
 

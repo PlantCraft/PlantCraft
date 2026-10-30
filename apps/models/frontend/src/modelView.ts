@@ -1,5 +1,5 @@
 /**
- * One kind of model (owner, 2026-10-24): every model is a block diagram. A model written as
+ * One kind of model: every model is a block diagram. A model written as
  * Modelica code is the one block of its own diagram, its real inputs and outputs the block's
  * ports and its public parameters the block's settings; the code stays one click away.
  */

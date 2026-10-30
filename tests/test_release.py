@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from processcraft.apps import package, release
-from processcraft.apps.release import ReleaseError
+from plantcraft.apps import package, release
+from plantcraft.apps.release import ReleaseError
 
 CHANGELOG = """# Changelog
 

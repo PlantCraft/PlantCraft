@@ -1,5 +1,5 @@
 /**
- * An object's versions in a tab of their own (owner, 2026-10-25, round 9): Link's blocks and
+ * An object's versions in a tab of their own (round 9): Link's blocks and
  * algorithms, Models' blocks and models. On top, what the object is ("About": who owns it, its
  * tags, who made it), then every version, newest first, each with its name, what changed, who
  * saved it and when. Opening a version shows it in the other tabs (the page decides how).

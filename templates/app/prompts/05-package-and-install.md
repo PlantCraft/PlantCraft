@@ -12,7 +12,7 @@ For a development stack:
    shown, install, give the app access to a person under Users, open it from the launcher.
 
 For a real stack: make a publisher key pair once
-(`python3 processcraft/apps/package.py keygen --name "<Company>" --out-dir <safe folder>` in
+(`python3 plantcraft/apps/package.py keygen --name "<Company>" --out-dir <safe folder>` in
 PlantCraft), keep the .key outside every repository, set app.toml's publisher to "<Company>",
 give the stack's admin the .pub for deploy/trusted-publishers/, then
 `make package PUBLISHER_KEY=<safe folder>/<company>.key`.

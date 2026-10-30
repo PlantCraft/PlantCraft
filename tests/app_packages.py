@@ -12,7 +12,7 @@ import tarfile
 from pathlib import Path
 from typing import Any
 
-from processcraft.apps import package as pkg
+from plantcraft.apps import package as pkg
 
 SBOM = {
     "spdxVersion": "SPDX-2.3",

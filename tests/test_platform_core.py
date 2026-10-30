@@ -9,11 +9,11 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.assets import AssetStore
-from processcraft.db import Database
-from processcraft.events import EventStore
-from processcraft.refs import RefResolvers, find_refs, parse_ref
+from plantcraft.api.app import create_app
+from plantcraft.assets import AssetStore
+from plantcraft.db import Database
+from plantcraft.events import EventStore
+from plantcraft.refs import RefResolvers, find_refs, parse_ref
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -80,7 +80,7 @@ def test_a_stale_synced_asset_goes_away(tmp_path):
 
 
 def test_a_database_from_the_monolith_hands_its_loops_to_the_scenario(tmp_path):
-    from processcraft.platform.loops import LEGACY_ORIGIN, SCENARIO_ORIGIN
+    from plantcraft.platform.loops import LEGACY_ORIGIN, SCENARIO_ORIGIN
 
     store = AssetStore(Database(tmp_path / "a.sqlite3"))
     store.save("old-area", name="Old area", kind="area", origin=LEGACY_ORIGIN)
@@ -131,7 +131,7 @@ def test_events_build_timelines_backlinks_and_reach_subscribers(tmp_path):
 def test_events_older_than_the_retention_are_dropped_with_their_refs(tmp_path, monkeypatch):
     from datetime import datetime, timedelta
 
-    from processcraft.db import recorded_at
+    from plantcraft.db import recorded_at
 
     events = EventStore(Database(tmp_path / "e.sqlite3"))
     with recorded_at(datetime.now().astimezone() - timedelta(days=800)):
@@ -162,7 +162,7 @@ def test_refs_take_every_id_the_suite_writes():
 
 
 def test_a_bare_tag_two_sources_have_names_no_signal():
-    from processcraft.platform.signals import AmbiguousSignal, SignalCatalog
+    from plantcraft.platform.signals import AmbiguousSignal, SignalCatalog
 
     catalog = SignalCatalog()
     for source in ("pi", "opc"):

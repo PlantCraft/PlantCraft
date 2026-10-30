@@ -52,7 +52,7 @@ RUN --mount=type=secret,id=build_ca,required=false \
         --wheel-dir /wheelhouse -r requirements.lock
 COPY sdk/python ./sdk/python
 COPY pyproject.toml README.md LICENSE NOTICE ./
-COPY processcraft ./processcraft
+COPY plantcraft ./plantcraft
 # First-party wheels: the SDK (installed as is) and the project, whose wheel carries only its
 # metadata (version, entry points) into the image.
 RUN --mount=type=secret,id=build_ca,required=false \
@@ -72,7 +72,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY pyproject.toml README.md LICENSE NOTICE /app/
-COPY processcraft /app/processcraft
+COPY plantcraft /app/plantcraft
+# The package's name until 0.5.0: `python -m processcraft.<module>` still runs (plantcraft/legacy.py).
+COPY plantcraft/legacy.py /app/processcraft/__init__.py
 COPY --from=frontend /build/frontend/dist /app/frontend/dist
 COPY --from=notebooks /build/notebooks/dist /app/notebooks/dist
 COPY docs /app/docs
@@ -89,12 +91,12 @@ RUN --mount=type=bind,from=wheels,source=/wheelhouse,target=/wheelhouse \
     python -m pip install --no-cache-dir --root-user-action=ignore --no-index --find-links /wheelhouse \
         --require-hashes -r /tmp/requirements.lock \
     && python -m pip install --no-cache-dir --root-user-action=ignore --no-index --no-deps \
-        /wheelhouse/plantcraft_sdk-*.whl /wheelhouse/processcraft-*.whl \
+        /wheelhouse/plantcraft_sdk-*.whl /wheelhouse/plantcraft-*.whl \
     && python -m pip check \
     && site="$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')" \
-    && rm -rf "${site}/processcraft" \
+    && rm -rf "${site}/plantcraft" \
     && echo /app > "${site}/plantcraft-app.pth" \
-    && python -m compileall -q /app/processcraft \
+    && python -m compileall -q /app/plantcraft /app/processcraft \
     && python -m pip uninstall -y --root-user-action=ignore pip \
     && rm -rf /root/.cache \
     && groupadd --gid 10001 processcraft \
@@ -111,7 +113,7 @@ HEALTHCHECK --interval=20s --timeout=5s --start-period=40s --retries=5 \
     CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8060/healthz', timeout=4)"]
 
 # PLANTCRAFT_WORKERS server processes (auto: 2 to 4 with Historian as the data layer, else 1).
-CMD ["python", "-m", "processcraft.api.serve"]
+CMD ["python", "-m", "plantcraft.api.serve"]
 
 # Last, so a new commit or build time changes only the labels: the layers stay cached and
 # identical, and suite-deploy (ci/macmini) leaves a container whose content did not change.

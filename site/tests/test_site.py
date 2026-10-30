@@ -630,6 +630,28 @@ def test_an_alert_is_a_push_with_a_link_to_the_stats(monkeypatch):
     assert len(sent) == 1
 
 
+def test_a_refused_email_never_costs_the_push(monkeypatch):
+    import io
+    import urllib.error
+
+    from sitechat import health
+
+    sent = []
+
+    def urlopen(request, timeout):
+        sent.append(request)
+        if request.get_header("Email"):
+            raise urllib.error.HTTPError(
+                request.full_url, 400, "Bad Request", {}, io.BytesIO(b'{"code":40035}')
+            )
+        return io.BytesIO()
+
+    monkeypatch.setattr(health.urllib.request, "urlopen", urlopen)
+    notify = health.Notifier("https://ntfy.sh/topic", "me@example.com", "plant.example")
+    assert notify.send("PlantCraft: something is wrong", "PROBLEM: x", urgent=True)
+    assert [r.get_header("Email") for r in sent] == ["me@example.com", None]
+
+
 def test_stats_page_shows_the_server_now(tmp_path, knowledge):
     import time
 

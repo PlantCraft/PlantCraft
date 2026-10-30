@@ -1,4 +1,4 @@
-"""Every app's menu ends with its settings (owner, 2026-10-25): Setup in PlantCraft, Settings in
+"""Every app's menu ends with its settings: Setup in PlantCraft, Settings in
 an app, always the last entry, so a person finds them in the same place everywhere."""
 
 from __future__ import annotations

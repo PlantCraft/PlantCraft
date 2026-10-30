@@ -1,12 +1,12 @@
 #!/bin/sh
 # Starts Caddy with the client's certificate when certs/cert.pem and certs/key.pem exist,
 # otherwise with Caddy's local certificate authority. Names come from PLANTCRAFT_HOSTNAME
-# (separated by spaces or commas), for example "processcraft.plant.example 10.0.0.5".
-# The names before the rename to PlantCraft (PROCESSCRAFT_HOSTNAME, rename-plantcraft: keep)
+# (separated by spaces or commas), for example "plantcraft.plant.example 10.0.0.5".
+# The names before the rename to PlantCraft (PROCESSCRAFT_HOSTNAME)
 # are still read: a compose file written by an older release passes them.
 set -eu
-PLANTCRAFT_HOSTNAME="${PLANTCRAFT_HOSTNAME:-${PROCESSCRAFT_HOSTNAME:-localhost}}" # rename-plantcraft: keep
-PLANTCRAFT_TRUSTED_PROXIES="${PLANTCRAFT_TRUSTED_PROXIES:-${PROCESSCRAFT_TRUSTED_PROXIES:-}}" # rename-plantcraft: keep
+PLANTCRAFT_HOSTNAME="${PLANTCRAFT_HOSTNAME:-${PROCESSCRAFT_HOSTNAME:-localhost}}"
+PLANTCRAFT_TRUSTED_PROXIES="${PLANTCRAFT_TRUSTED_PROXIES:-${PROCESSCRAFT_TRUSTED_PROXIES:-}}"
 
 names=$(printf '%s' "$PLANTCRAFT_HOSTNAME" | tr ',' ' ')
 sites=""

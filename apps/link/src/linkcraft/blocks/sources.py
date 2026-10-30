@@ -89,7 +89,7 @@ def _calculation(block: Block) -> Any:  # noqa: ANN401
 
 def shipped_sources(block: Block) -> list[dict[str, Any]]:
     """The calculation of a shipped block, alone: the one function that turns its inputs and
-    parameters into its outputs (owner, 2026-10-24: one code, isolated and easy to read; the
+    parameters into its outputs (one code, isolated and easy to read; the
     block's declaration is its contract, on the Overview)."""
 
     spec = block.spec

@@ -38,8 +38,8 @@
 # It never downloads anything: images come from images.tar in this bundle.
 set -Eeuo pipefail
 # Settings named before the rename to PlantCraft (2026-10-27) still count, as PLANTCRAFT_*.
-for former in $(compgen -e | grep '^PROCESSCRAFT_' || true); do # rename-plantcraft: keep
-    current="PLANTCRAFT_${former#PROCESSCRAFT_}" # rename-plantcraft: keep
+for former in $(compgen -e | grep '^PROCESSCRAFT_' || true); do
+    current="PLANTCRAFT_${former#PROCESSCRAFT_}"
     [ -n "${!current+set}" ] || export "$current=${!former}"
 done
 unset former current
@@ -465,18 +465,18 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
         env_set PLANTCRAFT_HOSTNAME "$(default_hostnames)" "$env"
         env_set PLANTCRAFT_TIMEZONE "$(server_time_zone)" "$env"
     fi
-    # Settings were PROCESSCRAFT_* until the rename to PlantCraft (2026-10-27). In such a .env, # rename-plantcraft: keep
+    # Settings were PROCESSCRAFT_* until the rename to PlantCraft (2026-10-27). In such a .env,
     # PLANTCRAFT_VERSION is the Simulator's (it was `plantcraft` until its 0.5.0): it moves first.
-    if grep -q '^PROCESSCRAFT_' "$env"; then # rename-plantcraft: keep
+    if grep -q '^PROCESSCRAFT_' "$env"; then
         env_rename PLANTCRAFT_VERSION SIMCRAFT_VERSION "$env"
         local former
-        for former in $(sed -n 's/^\(PROCESSCRAFT_[A-Z0-9_]*\)=.*/\1/p' "$env" | sort -u); do # rename-plantcraft: keep
-            env_rename "$former" "PLANTCRAFT_${former#PROCESSCRAFT_}" "$env" # rename-plantcraft: keep
+        for former in $(sed -n 's/^\(PROCESSCRAFT_[A-Z0-9_]*\)=.*/\1/p' "$env" | sort -u); do
+            env_rename "$former" "PLANTCRAFT_${former#PROCESSCRAFT_}" "$env"
         done
         log "Settings renamed to PLANTCRAFT_* in $env"
     fi
     # Installations from before 0.4 kept UTC on every upgrade: nobody chose it, so the server's
-    # zone is adopted (owner, 2026-10-25, D2). What Setup › Installation saves wins over this.
+    # zone is adopted (D2). What Setup › Installation saves wins over this.
     zone="$(env_get PLANTCRAFT_TIMEZONE "$env")"
     if [ -z "$zone" ] || [ "$zone" = "UTC" ]; then
         local server_zone
@@ -507,8 +507,8 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
         fi
         # An app whose image is not loaded is switched off (an upgrade to a bundle without it).
         version="$(env_get "$key" "$env")"
-        if [[ ",$profiles," == *",$app,"* ]] && ! app_image "$app" "${version:-0.5.0}"; then
-            warn "image $app:${version:-0.5.0} is not loaded: the $app profile is switched off"
+        if [[ ",$profiles," == *",$app,"* ]] && ! app_image "$app" "${version:-0.5.1}"; then
+            warn "image $app:${version:-0.5.1} is not loaded: the $app profile is switched off"
             profiles="$(printf '%s' ",$profiles," | sed "s/,$app,/,/; s/^,//; s/,\$//")"
         fi
     done
@@ -518,8 +518,8 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
     # The Simulator is its own image; an installation that had the demo keeps running without it
     # when the new bundle does not carry it (--demo itself was checked before anything changed).
     plant="$(env_get SIMCRAFT_VERSION "$env")"
-    if [[ ",$profiles," == *",demo,"* ]] && ! simcraft_image "${plant:-0.5.0}"; then
-        warn "image simcraft:${plant:-0.5.0} is not loaded: the demo profile is switched off"
+    if [[ ",$profiles," == *",demo,"* ]] && ! simcraft_image "${plant:-0.5.1}"; then
+        warn "image simcraft:${plant:-0.5.1} is not loaded: the demo profile is switched off"
         profiles="$(printf '%s' ",$profiles," | sed 's/,demo,/,/; s/^,//; s/,$//')"
     fi
     env_set COMPOSE_PROFILES "$profiles" "$env"
@@ -582,7 +582,7 @@ check_demo() { # check_demo SIMCRAFT_VERSION_OF_THE_BUNDLE
         return 0
     fi
     version="${1:-$(env_get SIMCRAFT_VERSION "$PREFIX/.env")}"
-    version="${version:-${SIMCRAFT_VERSION:-0.5.0}}"
+    version="${version:-${SIMCRAFT_VERSION:-0.5.1}}"
     simcraft_image "$version" ||
         die "--demo: image simcraft:$version not found. Build it from simulator/ (make simcraft-image)."
 }
@@ -618,7 +618,7 @@ check_apps() {
             continue
         fi
         version="${version:-$(env_get "$(version_key "$app")" "$PREFIX/.env")}"
-        version="${version:-0.5.0}"
+        version="${version:-0.5.1}"
         app_image "$app" "$version" || die "--with-$app: image $app:$version not found."
         if [ "$app" = histcraft ]; then
             local db
@@ -733,8 +733,8 @@ start_stack() {
 # it to data/<id>-app-key (the app's user, 0600) and restarts the app with it.
 APP_KEY_SNIPPET='
 import os, sys
-from processcraft.config import load_scenario
-from processcraft.platform.workspace import Workspace
+from plantcraft.config import load_scenario
+from plantcraft.platform.workspace import Workspace
 app_id, name = sys.argv[1], sys.argv[2]
 workspace = Workspace(load_scenario(os.environ["PLANTCRAFT_SCENARIO"]).storage.sqlite_path)
 record, key = workspace.app_keys.create(app_id, label=f"{name} (install.sh)", actor="install.sh")
@@ -772,7 +772,7 @@ provision_app_keys() {
         die "${restart[*]} did not become healthy with the app key: see docker compose logs ${restart[*]}"
 }
 
-# The demo story (processcraft/demo_seed.py): idempotent, so every install or upgrade with the
+# The demo story (plantcraft/demo_seed.py): idempotent, so every install or upgrade with the
 # demo profile repairs it. A failure is reported, never fatal: the suite itself is up.
 seed_demo() {
     [[ ",$(env_get COMPOSE_PROFILES "$PREFIX/.env")," == *",demo,"* ]] || return 0
@@ -803,7 +803,7 @@ print_access() {
         echo "  HTTPS:         client certificate in certs/cert.pem"
     else
         # The local CA's public root certificate, readable for distribution to browsers.
-        # PlantCraft adds it to the Notebooks kits people download (processcraft/notebooks/kits.py).
+        # PlantCraft adds it to the Notebooks kits people download (plantcraft/notebooks/kits.py).
         as_root "$(helper_image)" "cp /install/data/proxy/caddy/pki/authorities/local/root.crt /install/local-ca-root.crt && chmod 0644 /install/local-ca-root.crt && cp /install/local-ca-root.crt /install/data/processcraft/local-ca-root.crt" ||
             warn "could not copy the local CA root certificate"
         echo "  HTTPS:         local CA; install this root certificate in the browsers: $ca"
@@ -828,7 +828,7 @@ do_install() {
         # each app's repository), so that --all-apps means them.
         for app in $(app_ids); do
             app_version="$(env_get "$(version_key "$app")" "$BUNDLE_DIR/.env.example")"
-            app_version="${app_version:-0.5.0}"
+            app_version="${app_version:-0.5.1}"
             if app_image "$app" "$app_version"; then BUNDLE_APP_VERSIONS="$BUNDLE_APP_VERSIONS $app=$app_version"; fi
         done
     elif [ "$INSTALLED" = 1 ] && [ "$PREFIX" = "$BUNDLE_DIR" ]; then
@@ -893,6 +893,10 @@ do_install() {
 }
 
 # Updates (docs/operations.md, section 3) -------------------------------------------------------
+
+# The installer images of every version answer to the package's old name, processcraft (0.5.1 and
+# later through plantcraft/legacy.py): the calls below run on the version installed, which may be
+# older than this script.
 
 # True when the installer image of VERSION has the operations driver and release checks.
 has_ops() { # has_ops VERSION
@@ -1126,7 +1130,7 @@ run_installer() { # run_installer ARGS...
         "processcraft-installer:$version" "$@"
 }
 
-# The operations driver (processcraft.apps.operations): the installer image as root, no network,
+# The operations driver (plantcraft.apps.operations): the installer image as root, no network,
 # the install folder at its own path and the Docker socket. The same code the Backups page runs.
 run_driver() { # run_driver ARGS...
     local version image project attempt code=0

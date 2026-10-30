@@ -98,7 +98,7 @@ export type SuiteShellProps = {
   apps?: SuiteApp[];
   /** The messages button above the user menu (GET /api/v1/inbox for its badge; a 403 hides it); false hides it. */
   inbox?: boolean;
-  /** No longer used: the messages button opens the Messages panel over the page in every app (owner, 2026-10-24). */
+  /** No longer used: the messages button opens the Messages panel over the page in every app. */
   onOpenMessages?: () => void;
   /** Opens the person's profile inside the app (PlantCraft only); other apps follow the link to
    * PlantCraft's /people/me. */
@@ -194,7 +194,7 @@ export const DESK_APP: SuiteApp = { id: "desk", name: "Desk", url: "/" };
 export const ADMIN_PATH = "admin";
 
 /**
- * The suite's apps in the order they are used (owner, 2026-10-23): Desk first (the day's work),
+ * The suite's apps in the order they are used: Desk first (the day's work),
  * the Historian that collects, the apps that analyse, model and run, View where results are
  * seen, and PlantCraft last (configuration, seldom opened).
  */
@@ -297,7 +297,7 @@ function AppSwitcher({ app, appName, entries, localApps, subtitle, collapsed, ho
   const button = useRef<HTMLButtonElement | null>(null);
   useDismiss(open, () => setOpen(false), root);
   const label = t("Switch app");
-  // The list floats over the sidebar and the page, under the app's name (owner, 2026-10-25): it
+  // The list floats over the sidebar and the page, under the app's name: it
   // is as wide as its names, never the sidebar's width, so the sidebar never scrolls sideways.
   const at = open ? switcherPlace(button.current) : undefined;
   const link = (entry: SuiteApp) => <AppLink key={entry.id} entry={entry} current={appIdFor(entry.id) === app || entry.id === app} local={Boolean(openApp) || localApps.includes(appIdFor(entry.id) as AppId)} home={home} open={openApp ?? navigate} onDone={() => setOpen(false)} />;
@@ -330,7 +330,7 @@ function UserMenu({ user, version, extra, profileHref, onProfile, preferencesHre
   const [open, setOpen] = useState(false);
   const [theme, setChoice] = useState<ThemeChoice>(themeChoice);
   const root = useRef<HTMLDivElement | null>(null);
-  // A click anywhere else closes the menu (owner, 2026-10-21: it stayed open).
+  // A click anywhere else closes the menu (it stayed open).
   useDismiss(open, () => setOpen(false), root);
   function pick(choice: ThemeChoice) {
     setTheme(choice);
@@ -341,7 +341,7 @@ function UserMenu({ user, version, extra, profileHref, onProfile, preferencesHre
     <div className="pcs-user" ref={root}>
       {open && (
         <div className="pcs-user-pop" role="menu">
-          {/* Theme first, then the person's pages, help and sign out (owner, 2026-10-25). The
+          {/* Theme first, then the person's pages, help and sign out. The
               version is a quiet line at the foot; each app's version and license are on Updates. */}
           <span className="pcs-pop-label">{t("Theme")}</span>
           <div className="pcs-theme" role="radiogroup" aria-label={t("Theme")}>
@@ -495,7 +495,7 @@ function FullShell(props: SuiteShellProps) {
   const queues = useSuiteQueues(servers, { enabled: showQueues });
   // What the person started and what runs now, read from PlantCraft (docs/quick-access.md).
   const [jobs, readJobs] = useSuiteJobs(showQueues && Boolean(user), queuesOpen);
-  // One Help for the whole suite (owner, 2026-10-23): in the person's menu, at PlantCraft's Help
+  // One Help for the whole suite: in the person's menu, at PlantCraft's Help
   // with this app's guides open; the assistant answers most questions now. `helpTo` stays the
   // app's own page for old links.
   const help: ShellNavItem | null = null;

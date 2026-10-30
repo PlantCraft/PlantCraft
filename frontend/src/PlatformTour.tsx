@@ -59,7 +59,7 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
     }] : []),
     {
       path: "/",
-      // The panels open, so the step shows what is in them (owner, 2026-10-28).
+      // The panels open, so the step shows what is in them.
       target: ".pc-messages-drawer",
       onShow: openPanel(".pcs-quick .pcs-messages", ".pc-messages-drawer"),
       title: tt("Messages"),
@@ -123,7 +123,7 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
     title: tt("System health"),
     body: <p>{tt("Whether every app and data source is running, each with its state and what it last said.")}</p>,
   });
-  // The administration (owner, 2026-10-28): shown to administrators, and to a public demo's
+  // The administration: shown to administrators, and to a public demo's
   // visitor, who reads it without changing anything.
   if (admin) steps.push(
     {

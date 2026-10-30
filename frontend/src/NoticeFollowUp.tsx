@@ -1,4 +1,4 @@
-/** The notification a person opened, on the page it opened (owner, 2026-10-28: "dar o check na
+/** The notification a person opened, on the page it opened ("dar o check na
  * notificação dentro da action"): a small bar says where they came from and marks it done there,
  * without going back to Notifications. It lives in this tab (sessionStorage), so it also follows a
  * notification opened from the quick-access panel of any app; it goes when the person moves on. */

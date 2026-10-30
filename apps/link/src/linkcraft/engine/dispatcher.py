@@ -7,7 +7,7 @@ the plant's data could not be read, and the execution waits in the queue for its
 (``RETRY_SECONDS``) until ``attempts`` reach ``max_attempts``, then fails with the reason. An
 execution of a schedule follows the schedule's retries instead (``retry``: on or off, how many
 more tries, how far apart, and whether to give up when the schedule's next occurrence comes
-first; owner, 2026-10-25).
+first).
 """
 
 from __future__ import annotations

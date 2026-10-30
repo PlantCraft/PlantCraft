@@ -1,6 +1,6 @@
 /**
  * Where times are shown. The suite stores and computes every time in UTC; screens show it in
- * local time (owner, 2026-10-23): the installation's time zone by default (Setup › Installation,
+ * local time: the installation's time zone by default (Setup › Installation,
  * which the platform hands to the browser in the `processcraft_time_zone` cookie), or, when the
  * person picks it in their Preferences, UTC or the time zone of their own device (owner,
  * 2026-10-24: "Local time" and UTC first, never a long list of countries to start with).
@@ -10,7 +10,7 @@
 export type TimeZoneMode = "plant" | "utc" | "device";
 
 /** What a form saves for "the installation's local time": resolved where it is used, so a
- * schedule follows the installation when its zone changes (owner, 2026-10-25, D1). */
+ * schedule follows the installation when its zone changes (D1). */
 export const LOCAL_ZONE = "local";
 
 export const TIME_ZONE_COOKIE = "processcraft_time_zone";

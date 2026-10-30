@@ -9,9 +9,9 @@ import json
 
 from fastapi.testclient import TestClient
 
-from processcraft.api.help import document_index, read_document
-from processcraft.api.routers.assistant_chat import _reader
-from processcraft.assistant_chat.engine import HELP, history_for_model, read_help, refs_of, tools
+from plantcraft.api.help import document_index, read_document
+from plantcraft.api.routers.assistant_chat import _reader
+from plantcraft.assistant_chat.engine import HELP, history_for_model, read_help, refs_of, tools
 from tests.test_collaboration import (  # noqa: F401
     PASSWORD,
     _asset_id,
@@ -155,7 +155,7 @@ def test_chats_are_each_persons_own(signed):
 
 
 def test_a_person_groups_archives_and_shares_a_chat_and_others_continue_it_in_a_copy(signed):
-    """Owner, 2026-10-26: the history like ChatGPT's (groups, archive, archived ones apart) and a
+    """the history like ChatGPT's (groups, archive, archived ones apart) and a
     chat shared like a dashboard; others read it, continue in a copy of their own and find it
     from an action or a message (chat:<id>)."""
 
@@ -194,7 +194,7 @@ def test_a_person_groups_archives_and_shares_a_chat_and_others_continue_it_in_a_
         item["text"] for item in view["messages"]
     ]
     # The answers were read with the owner's access: only an administrator shares with
-    # everyone (review decision D3); she shares her copy with people or groups.
+    # everyone; she shares her copy with people or groups.
     own = f"/api/assistant/chats/{copy.json()['chat_id']}/sharing"
     assert ana.put(own, json={"grants": ["everyone"]}).status_code == 403
     assert ana.put(own, json={"grants": ["user:admin"]}).status_code == 200
@@ -296,7 +296,7 @@ def test_history_alternates_and_names_the_charts():
 
 
 def test_only_apps_keeps_what_the_person_may_open():
-    from processcraft.assistant_access.mcp import only_apps
+    from plantcraft.assistant_access.mcp import only_apps
 
     payload = {"items": [{"app": "linkcraft", "x": 1}, {"app": "alarmcraft"}, {"id": "no-app"}]}
     assert only_apps(payload, {"alarmcraft"}) == {
@@ -367,7 +367,7 @@ class GoldenModel:
 
 
 def test_the_evaluation_compares_answers_with_golden_answers_read_from_the_plant(signed):
-    from processcraft.assistant_chat.evals import build_cases
+    from plantcraft.assistant_chat.evals import build_cases
 
     rt = signed.app.state.runtime
     _publish_result(signed, f"asset:{_asset_id(signed)}")
@@ -418,8 +418,8 @@ def test_the_evaluation_compares_answers_with_golden_answers_read_from_the_plant
 
 
 def test_the_evaluation_asks_yesterday_a_series_a_block_and_results_in_alarm():
-    """Owner, 2026-10-26: cases for yesterday's average, a series, a block and an app's results."""
-    from processcraft.assistant_chat import evals
+    """cases for yesterday's average, a series, a block and an app's results."""
+    from plantcraft.assistant_chat import evals
 
     signals = [{"id": "FIC-101.PV", "name": "Feed flow", "kind": "number", "unit": "m3/h"}]
     texts = [{"app": "linkcraft", "ref": "block:linkcraft/link.oscillation", "title": "Oscillation index", "text": "Finds sustained oscillation."}]  # fmt: skip
@@ -454,7 +454,7 @@ def test_the_evaluation_asks_yesterday_a_series_a_block_and_results_in_alarm():
 
 
 def test_numbers_are_read_in_both_formats():
-    from processcraft.assistant_chat.evals import numbers_in, says_not_found
+    from plantcraft.assistant_chat.evals import numbers_in, says_not_found
 
     assert 1234.5 in numbers_in("1,234.5") and 1234.5 in numbers_in("1.234,5")
     assert 12.5 in numbers_in("média de 12,5 kg/h") and -3.0 in numbers_in("caiu para -3")
@@ -462,7 +462,7 @@ def test_numbers_are_read_in_both_formats():
 
 
 def test_the_model_reads_the_suites_help():
-    """read_help: the guides' list, the guides that mention words, one guide (owner, 2026-10-23)."""
+    """read_help: the guides' list, the guides that mention words, one guide."""
 
     assert HELP in {tool["name"] for tool in tools(True)}
     assert HELP not in {tool["name"] for tool in tools(False)}
@@ -532,7 +532,7 @@ class WorkModel:
 
 
 def test_the_works_evaluation_asks_each_work_as_its_page_does(signed):
-    """Owner, 2026-10-25: run the model with the context PlantCraft builds for each work and
+    """run the model with the context PlantCraft builds for each work and
     check it can read it: an ask work reads and names its subject, a create work proposes."""
 
     rt = signed.app.state.runtime
@@ -570,7 +570,7 @@ def test_the_works_evaluation_asks_each_work_as_its_page_does(signed):
 
 
 def test_any_chat_prepares_a_card_lists_only_what_it_read_and_asks_again_after_a_failure(signed):
-    """Owner, 2026-10-26: asked in any chat, a new object comes as a card (its form filled in
+    """asked in any chat, a new object comes as a card (its form filled in
     for a block); the sources under an answer are what was read, not ids that answered 404;
     a failed answer has Try again."""
 
@@ -635,7 +635,7 @@ def test_any_chat_prepares_a_card_lists_only_what_it_read_and_asks_again_after_a
 
 
 def test_a_chart_goes_on_in_trends_with_its_signals_and_period():
-    from processcraft.api.routers.assistant_chat import _trend_link
+    from plantcraft.api.routers.assistant_chat import _trend_link
 
     chart = {"series": [{"signal": "FIC-101.PV"}, {"signal": "FIC-101.SP"}], "start": "2026-10-25T00:00:00Z", "end": "2026-10-26T00:00:00Z"}  # fmt: skip
     assert _trend_link("/dash/trends", chart) == (
@@ -645,9 +645,9 @@ def test_a_chart_goes_on_in_trends_with_its_signals_and_period():
 
 
 def test_a_list_field_written_as_text_or_an_object_becomes_a_list():
+    from plantcraft.assistant_chat.engine import as_lists
+    from plantcraft.assistant_works import Work
     from plantcraft_sdk.contributes import AssistantWork
-    from processcraft.assistant_chat.engine import as_lists
-    from processcraft.assistant_works import Work
 
     spec = AssistantWork.model_validate(
         {
@@ -687,7 +687,7 @@ def test_a_list_field_written_as_text_or_an_object_becomes_a_list():
 
 
 def test_a_tool_call_written_as_text_is_left_out_of_the_answer():
-    from processcraft.assistant_chat.engine import without_tool_text
+    from plantcraft.assistant_chat.engine import without_tool_text
 
     text = 'There are 50 control valves.\nto=functions.get_asset {"asset_id": "FV-1"}'
     assert without_tool_text(text) == "There are 50 control valves."
@@ -696,7 +696,7 @@ def test_a_tool_call_written_as_text_is_left_out_of_the_answer():
 
 
 def test_a_long_list_keeps_whole_items_and_says_its_total():
-    from processcraft.assistant_chat.engine import TOOL_TEXT, fit
+    from plantcraft.assistant_chat.engine import TOOL_TEXT, fit
 
     valves = [{"id": f"FV-{n}", "name": "Control valve " + "x" * 300} for n in range(50)]
     found = fit(valves)
@@ -708,7 +708,7 @@ def test_a_long_list_keeps_whole_items_and_says_its_total():
 
 
 def test_the_unit_case_asks_for_the_unit_that_clearly_leads_in_problems():
-    from processcraft.assistant_chat.evals import _unit_case
+    from plantcraft.assistant_chat.evals import _unit_case
 
     unit_a, unit_b = {"id": "u-100", "name": "Crude unit"}, {"id": "u-900", "name": "Utilities"}
     rows = [
@@ -732,7 +732,7 @@ def test_the_unit_case_asks_for_the_unit_that_clearly_leads_in_problems():
 
 
 def test_the_language_of_the_question_is_named_last_in_the_prompt():
-    from processcraft.assistant_chat.engine import language_of
+    from plantcraft.assistant_chat.engine import language_of
 
     assert language_of("Which loop of the plant oscillates the most, and since when?") == "English"
     assert language_of("Quais ações minhas vencem esta semana?") == "Portuguese"
@@ -740,7 +740,7 @@ def test_the_language_of_the_question_is_named_last_in_the_prompt():
 
 
 def test_view_works_are_evaluated_on_the_first_dashboard_and_report():
-    from processcraft.assistant_chat.work_evals import SUBJECTS
+    from plantcraft.assistant_chat.work_evals import SUBJECTS
 
     def read(method, path, values):
         if path == "/api/v1/apps/dashcraft/objects/dashboard":

@@ -1,4 +1,4 @@
-"""A block's page as Analytics' (owner, 2026-10-27): its documentation in parts (what it does,
+"""A block's page as Analytics': its documentation in parts (what it does,
 how to read it, its formula), its defaults changed as a new version with what changed, and a
 copy of any block, the shipped ones too, in the site's own library."""
 

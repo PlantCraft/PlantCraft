@@ -10,7 +10,7 @@ export type Chat = {
   folder?: string; archived?: boolean; shared?: string[];
   /** false: someone else's chat shared with this person (read-only), with its owner. */
   mine?: boolean; owner?: string; owner_name?: string;
-  /** The person's own marks (owner, 2026-10-28): a favorite, and unread until opened. */
+  /** The person's own marks: a favorite, and unread until opened. */
   starred?: boolean; unread?: boolean;
 };
 export type ChatStep = { tool: string; title: string; summary: string; state: "running" | "ok" | "error"; error?: string };
@@ -69,7 +69,7 @@ export function settledUpTo(messages: ChatMessage[]): number {
 /** The person's chats as the list shows them: each group of theirs (by name), then the rest by when
  * they were last used. */
 export function chatSections(chats: Chat[], now = new Date()): Array<{ key: string; folder?: string; chats: Chat[] }> {
-  // The favorites first (owner, 2026-10-28), wherever they are kept.
+  // The favorites first, wherever they are kept.
   const starred = chats.filter((chat) => chat.starred);
   const rest = chats.filter((chat) => !chat.starred);
   const folders = new Map<string, Chat[]>();

@@ -15,10 +15,10 @@ from cryptography.hazmat.primitives.asymmetric import ec, ed25519
 from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.directory import jose, map_access, oidc
-from processcraft.directory.mapping import local_username
-from processcraft.directory.settings import DirectorySettings, check_settings
+from plantcraft.api.app import create_app
+from plantcraft.directory import jose, map_access, oidc
+from plantcraft.directory.mapping import local_username
+from plantcraft.directory.settings import DirectorySettings, check_settings
 from tests.directory_fakes import (
     CLIENT_SECRET,
     SERVICE_PASSWORD,

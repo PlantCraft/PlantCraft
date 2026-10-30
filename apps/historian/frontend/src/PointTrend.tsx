@@ -1,5 +1,5 @@
 /**
- * The trend on a point's page: one signal looked at closely (owner, 2026-10-24: "more options in
+ * The trend on a point's page: one signal looked at closely ("more options in
  * this chart, like a trend, for one signal"). Values as recorded or as averages, the min–max band
  * of each average, the archived values as dots, the compression's deviation around them, and the
  * same period a while earlier. Several signals together belong in View's Trends.

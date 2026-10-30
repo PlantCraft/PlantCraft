@@ -17,4 +17,4 @@ body:
     id: app
     attributes:
       label: Which app
-      description: Desk, Link, Historian, View, Alarms, Models, the platform, or "not sure"
+      description: Desk, Analytics, Historian, View, Alarms, Models, Documents, the platform, or "not sure"

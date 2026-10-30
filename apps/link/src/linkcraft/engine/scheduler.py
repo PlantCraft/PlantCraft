@@ -1,7 +1,7 @@
 """The schedules: when one is due, its occurrence goes into the queue.
 
 Every recurring piece of work is a row in ``analysis_schedules``, and every one is handled the
-same way (owner, 2026-10-23: no special rounds): at each occurrence ``materialize_occurrence``
+same way (no special rounds): at each occurrence ``materialize_occurrence``
 queues its executions (one per subject, or one round over all of them), each skipped when the
 subject's previous one has not ended, and the next occurrence is set. The workers
 (``engine.dispatcher``) run them. ``tick`` is called every ``interval_seconds`` for light

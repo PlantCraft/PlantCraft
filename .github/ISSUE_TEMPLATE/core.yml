@@ -1,0 +1,29 @@
+name: Change to the core
+description: Propose a change to the platform, the API, the SDK, the installer or CI before writing it
+labels: [core, proposal]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The core (CONTRIBUTING.md, "What is core and what is open") changes only after a maintainer agrees on the approach here. Once they do, link this issue in your pull request ("Closes #123"); the Zones check looks for it. A change that stays inside one app, or a new app of your own, needs no issue first.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What does not work, or cannot be done today, and for whom
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: The change you propose
+      description: Which part of the core (platform, API v1, SDK, ui, installer, CI) and what changes in it
+    validations:
+      required: true
+  - type: textarea
+    id: compat
+    attributes:
+      label: What existing installations and apps notice
+      description: Data, settings, API fields or app contracts that change, and how they keep working
+    validations:
+      required: true

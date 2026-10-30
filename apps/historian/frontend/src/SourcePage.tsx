@@ -1,6 +1,6 @@
 /**
  * A source's page: what it is, how it is read, the defaults it gives its points, and the points.
- * Every source has one, the series an app writes too (owner, 2026-10-22: "a button to understand
+ * Every source has one, the series an app writes too ("a button to understand
  * the other sources and what their points are").
  */
 import { DataTable, useSuiteApps } from "@plantcraft/ui";

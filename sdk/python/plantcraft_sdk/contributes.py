@@ -144,7 +144,7 @@ FEATURES = (
 )
 
 SLUG = r"^[a-z][a-z0-9-]{0,40}$"
-# A reference kind of the suite (processcraft.refs): letters and "_", no digits.
+# A reference kind of the suite (plantcraft.refs): letters and "_", no digits.
 REF_KIND = r"^[a-z][a-z_]{1,31}$"
 # Kinds PlantCraft owns; an app names its own objects.
 PLATFORM_REF_KINDS = (
@@ -381,7 +381,7 @@ WORK_FIELD_TYPES = (
     "datetime",
     "list",
 )
-# Access levels of the suite (processcraft.auth.access), lowest first.
+# Access levels of the suite (plantcraft.auth.access), lowest first.
 LEVELS = ("viewer", "editor", "admin")
 
 
@@ -415,7 +415,7 @@ class WorkField(_Table):
 
 
 class AssistantWork(_Table):
-    """Something the assistant does on some of the app's pages (owner, 2026-10-25): it reads and
+    """Something the assistant does on some of the app's pages: it reads and
     explains (``ask``) or collects fields and proposes an object the person creates with one click
     (``create``; the model itself never writes). ``docs/assistant.md``, "Works"."""
 
@@ -443,7 +443,7 @@ class AssistantWork(_Table):
     # create, open and form may hold "{subject}", the id of the page's object (a work that
     # changes the block on screen opens /link/blocks/{subject}/edit).
     form: Path | None = None
-    # What of the page the work sends (owner, 2026-10-26: "a specific context for each
+    # What of the page the work sends ("a specific context for each
     # question"): the keys of the page's facts and view it keeps. Empty sends them all; the
     # place, the subject's name and the person always go.
     context: list[Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_-]{0,40}$")]] = Field(
@@ -490,7 +490,7 @@ class ToolArg(_Table):
 
 
 class AssistantTool(_Table):
-    """A read-only tool an app offers the assistant (owner, 2026-10-26, plan "Documents", D7):
+    """A read-only tool an app offers the assistant (plan "Documents", D7):
     PlantCraft lists it to the model as ``<app id>_<id>`` and calls
     ``POST <prefix>api/assistant/tools/<id>`` with the arguments, as the person who asks, so the
     app's own access decides the answer. ``docs/assistant.md``, "Tools the apps add"."""
@@ -664,7 +664,7 @@ class NotebooksTable(_Table):
 
 
 class StartStep(_Table):
-    """A first step the app takes once a plant's assets exist (owner, 2026-10-27, review D5, F4):
+    """A first step the app takes once a plant's assets exist (review D5, F4):
     collect their signals, monitor their loops, draft their alarms, draw their overviews.
     PlantCraft offers the steps of every app on Assets › Import once an import is applied; an
     administrator ticks them, and PlantCraft calls ``POST <prefix>api/start/<id>`` as that person

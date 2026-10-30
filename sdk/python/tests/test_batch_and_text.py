@@ -255,7 +255,16 @@ def test_iso_many_and_parse_times_match_the_one_by_one_versions():
     whole = pd.date_range("2026-01-01", periods=5, freq="10s", tz="UTC")
     fractional = pd.DatetimeIndex(["2026-01-01T00:00:00.5Z", "2026-01-01T00:00:01Z"])
     naive = pd.date_range("2026-01-01", periods=3, freq="1h")
-    for index in (whole, fractional, naive, whole.tz_convert("America/Sao_Paulo")):
+    millis = pd.DatetimeIndex(["2026-01-01T00:00:00.123Z", "2026-01-01T00:00:01Z", "NaT"])
+    nanos = pd.DatetimeIndex(["2026-01-01T00:00:00.000000001Z"])
+    for index in (
+        whole,
+        fractional,
+        naive,
+        whole.tz_convert("America/Sao_Paulo"),
+        millis[:2],
+        nanos,
+    ):
         assert iso_many(index) == [iso(stamp) for stamp in index]
         assert (parse_times(iso_many(index)) == pd.to_datetime(index, utc=True)).all()
     assert iso_many([]) == []

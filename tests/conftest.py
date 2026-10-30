@@ -9,11 +9,15 @@ os.environ.setdefault("PLANTCRAFT_MAIL_OUTBOX", "false")
 # tenth of a second) ran several times per test and was minutes of every run. The hashes are
 # still Argon2id, so what the tests check about them holds; the product's own parameters are
 # held by test_security.py.
-from argon2 import PasswordHasher  # noqa: E402
+# CI's isolation job runs its tests against the built image, with no platform installed.
+try:
+    from argon2 import PasswordHasher
 
-import processcraft.auth.users as _users  # noqa: E402
+    import plantcraft.auth.users as _users
+except ImportError:
+    _users = None
 
-if not hasattr(_users, "PRODUCT_HASHER"):  # conftest may load twice (as tests.conftest)
+if _users is not None and not hasattr(_users, "PRODUCT_HASHER"):  # may load twice (tests.conftest)
     _users.PRODUCT_HASHER = _users._HASHER
     _users._HASHER = PasswordHasher(time_cost=1, memory_cost=8, parallelism=1)
 

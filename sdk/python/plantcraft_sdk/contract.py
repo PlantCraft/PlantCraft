@@ -318,12 +318,23 @@ def iso_many(index: Any) -> list[str]:
     found = _ISO_MEMO.get(key) if key is not None else None
     if found is not None:
         return list(found)
-    if stamps.hasnans or (nanos % 1_000_000_000).any():
-        # Sub-second or missing instants: written one by one, exactly as ``iso`` does.
+    fraction = nanos % 1_000_000_000
+    if stamps.hasnans or (fraction % 1000).any():
+        # Missing or nanosecond instants: written one by one, exactly as ``iso`` does.
         text = [iso(stamp) for stamp in stamps]
     else:
-        seconds = np.datetime_as_string(naive.to_numpy().astype("datetime64[s]"), unit="s")
-        text = np.char.add(seconds, "+00:00").tolist()
+        # Whole seconds without a fraction, the others with microseconds, as ``iso`` writes
+        # them; one by one this was most of a raw read of millisecond samples (0.6.0 load test).
+        moments = naive.to_numpy()
+        whole = fraction == 0
+        written = np.empty(len(moments), dtype=object)
+        if whole.any():
+            written[whole] = np.datetime_as_string(moments[whole].astype("datetime64[s]"), unit="s")
+        if not whole.all():
+            written[~whole] = np.datetime_as_string(
+                moments[~whole].astype("datetime64[us]"), unit="us"
+            )
+        text = [item + "+00:00" for item in written.tolist()]
     if key is not None:
         _ISO_MEMO.put(key, text)
     return list(text)

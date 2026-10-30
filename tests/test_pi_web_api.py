@@ -7,16 +7,16 @@ import socket
 import pandas as pd
 import pytest
 
-from processcraft.config import DataSourceConfig, LoopConfig
-from processcraft.db import Database
-from processcraft.industrial_data.cache import HistoryCache, build_cached_source
-from processcraft.industrial_data.pi_web_api import (
+from plantcraft.config import DataSourceConfig, LoopConfig
+from plantcraft.db import Database
+from plantcraft.industrial_data.cache import HistoryCache, build_cached_source
+from plantcraft.industrial_data.pi_web_api import (
     PiError,
     PiWebApiSource,
     make_web_id,
     normalize_value,
 )
-from processcraft.industrial_data.sources import build_loop_frame
+from plantcraft.industrial_data.sources import build_loop_frame
 from tests.pi_fake import FakePi
 
 TAGS = ["FIC4241004", "FIC4241004S", "FIC4241004O", "FIC4241004M", "PIC4241048"]
@@ -214,7 +214,7 @@ def test_path_web_id_convention():
 def _scenario(pi: FakePi, tmp_path):
     import json
 
-    from processcraft.config import load_scenario
+    from plantcraft.config import load_scenario
 
     data = {
         "name": "pi_teste",
@@ -241,7 +241,7 @@ def _scenario(pi: FakePi, tmp_path):
 
 
 def test_pi_check_walks_every_step_and_names_what_to_fix(pi, tmp_path):
-    from processcraft.industrial_data.pi_check import FAIL, OK, run_check
+    from plantcraft.industrial_data.pi_check import FAIL, OK, run_check
 
     _, scenario = _scenario(pi, tmp_path)
     report = run_check(scenario, hours=6)
@@ -261,7 +261,7 @@ def test_pi_check_walks_every_step_and_names_what_to_fix(pi, tmp_path):
 
 
 def test_pi_check_cli_writes_report_and_fails_on_missing_tag(pi, tmp_path, capsys):
-    from processcraft.cli import main
+    from plantcraft.cli import main
 
     path, _ = _scenario(pi, tmp_path)
     out = tmp_path / "relatorio.md"

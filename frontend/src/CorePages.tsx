@@ -46,7 +46,7 @@ async function appHelp(url: string): Promise<HelpSource> {
   };
 }
 
-/** One Help for the whole suite (owner, 2026-10-23): reached from the person's menu in every app,
+/** One Help for the whole suite: reached from the person's menu in every app,
  * it opens at that app's guides; the person picks another app at the top. */
 export function HelpPage({ apps = [] }: { apps?: SuiteAppCard[] }) {
   const query = new URLSearchParams(window.location.search);

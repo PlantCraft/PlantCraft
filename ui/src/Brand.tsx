@@ -7,7 +7,7 @@ import { APP_GLYPHS, appDisplayName, isFamilyApp, type AnyAppId } from "./appMar
 type MarkProps = {
   /** Rendered size in px (the mark is square). Reads down to 16. */
   size?: number;
-  /** "tile": white glyph on a PlantCraft Blue tile (default). "glyph": the glyph alone in currentColor. */
+  /** "tile": white glyph on a Steel Blue tile (default). "glyph": the glyph alone in currentColor. */
   variant?: "tile" | "glyph";
   /** Accessible name; omit when the mark sits next to the written name. */
   title?: string;
@@ -15,8 +15,8 @@ type MarkProps = {
 };
 
 /**
- * The mark: a control valve (bowtie) on a process line, driven by an
- * instrument bubble, the ISA-5.1 way an engineer draws a control loop.
+ * The mark: the letters P and C drawn as a control valve on a process line,
+ * the way an engineer draws one on a P&ID.
  */
 export function BrandMark({ size = 32, variant = "tile", title, className }: MarkProps) {
   const tile = variant === "tile";
@@ -32,7 +32,7 @@ export function BrandMark({ size = 32, variant = "tile", title, className }: Mar
       aria-hidden={title ? undefined : true}
       focusable="false"
     >
-      {tile && <rect width="32" height="32" rx="7" fill="var(--pc-app-processcraft, #0a66d0)" />}
+      {tile && <rect width="32" height="32" rx="7" fill="var(--pc-app-processcraft, #2e5a88)" />}
       {APP_GLYPHS.processcraft.map(({ tag: Tag, attrs, fill }, index) => {
         const props = Object.fromEntries(Object.entries(attrs).map(([key, value]) => [key.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase()), value]));
         return <Tag key={index} {...props} {...(fill ? { fill: ink } : { fill: "none", stroke: ink })} />;

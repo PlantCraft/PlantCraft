@@ -1,4 +1,4 @@
-"""Signed app packages (processcraft/apps/package.py) against hostile input.
+"""Signed app packages (plantcraft/apps/package.py) against hostile input.
 
 Every refused package raises PackageError with a reason, never another exception, and nothing
 is ever written outside the folder the caller gave (or anywhere, without one).
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from processcraft.apps import package as pkg
+from plantcraft.apps import package as pkg
 from tests import app_packages as ap
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -85,12 +85,12 @@ def test_keygen_never_overwrites_a_key_and_keeps_it_private(tmp_path):
 def test_the_module_imports_nothing_from_processcraft():
     """The installer image and other repositories run package.py on its own."""
 
-    tree = ast.parse((ROOT / "processcraft" / "apps" / "package.py").read_text())
+    tree = ast.parse((ROOT / "plantcraft" / "apps" / "package.py").read_text())
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom):
-            assert node.level == 0 and not (node.module or "").startswith("processcraft")
+            assert node.level == 0 and not (node.module or "").startswith("plantcraft")
         elif isinstance(node, ast.Import):
-            assert not any(alias.name.startswith("processcraft") for alias in node.names)
+            assert not any(alias.name.startswith("plantcraft") for alias in node.names)
 
 
 # Signatures and publishers --------------------------------------------------------------------

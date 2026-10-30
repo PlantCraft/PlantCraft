@@ -52,7 +52,7 @@ const settle = async () => { for (let n = 0; n < 4; n += 1) await act(async () =
 
 afterEach(() => { act(() => closeAssistant()); forgetAssistantStatus(); vi.useRealTimers(); vi.unstubAllGlobals(); document.body.innerHTML = ""; });
 
-describe("the assistant's works (owner, 2026-10-25)", () => {
+describe("the assistant's works", () => {
   it("lists the page's works beside the title, starts the chosen one, and creates from the card", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const calls = server();

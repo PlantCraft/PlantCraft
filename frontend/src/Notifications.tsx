@@ -1,8 +1,8 @@
-/** Messages' Notifications (owner, 2026-10-24): what came to the person besides conversations, read
+/** Messages' Notifications: what came to the person besides conversations, read
  * like an email inbox beside the chats. Apps' notifications (one thread per app and key: an alarm
  * fired, reminded, cleared), changes others made to the person's actions and alarms on what they
  * follow. Opening one marks it seen; one button turns it back to not seen and again; the check marks it
- * done (owner, 2026-10-28: here, in the quick-access panel, and on the page it opens), out of the list until
+ * done (here, in the quick-access panel, and on the page it opens), out of the list until
  * something new happens to it; the star keeps it among the person's favorites. */
 import { AlertTriangle, ArrowLeft, ArchiveRestore, BellRing, Check, CheckCheck, CheckCircle2, ClipboardCheck, ExternalLink, Info, PlayCircle, Siren, Star } from "lucide-react";
 import { runNoticeAction } from "@plantcraft/ui";

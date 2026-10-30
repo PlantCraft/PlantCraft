@@ -6,7 +6,7 @@ import { followNotice, hrefPath, onNoticePage } from "./NoticeFollowUp";
 
 const notice = (key: string, state: Notice["state"], starred = false) => ({ key, state, starred, category: "action", title: key, detail: "", from: "Ana" }) as Notice;
 
-describe("notifications marked by the person (owner, 2026-10-28)", () => {
+describe("notifications marked by the person", () => {
   const items = [notice("a", "unread", true), notice("b", "read"), notice("c", "archived", true), notice("d", "archived")];
   it("lists done ones only under Done, and favorites done or not under Favorites", () => {
     expect(filterNotices(items, "all", "").map((item) => item.key)).toEqual(["a", "b"]);

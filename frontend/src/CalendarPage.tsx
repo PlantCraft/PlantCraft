@@ -1,5 +1,5 @@
 /**
- * Desk › Calendar (owner, 2026-10-23; round 7 2026-10-24): everything with a date in one
+ * Desk › Calendar (round 7 2026-10-24): everything with a date in one
  * calendar, month, week, day or list (FullCalendar, MIT): the person's own events (a click or a
  * drag on the calendar makes one; they move, stretch and repeat), their actions and their
  * groups' by due date (dragging one changes its due date), their to-dos (a repeated one on each day ahead), alarms

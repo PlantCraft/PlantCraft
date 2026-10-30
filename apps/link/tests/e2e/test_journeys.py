@@ -100,7 +100,7 @@ def test_an_algorithm_page_and_its_editor_window(signed_in, app_url, screenshots
     expect(page.locator(".alg-parameters")).to_have_count(1)
     if screenshots:
         page.screenshot(path=str(screenshots / "algorithm-inputs.png"), full_page=True)
-    # Who answers for it and where it runs are Settings, not versions (owner, 2026-10-27).
+    # Who answers for it and where it runs are Settings, not versions.
     page.get_by_role("navigation", name="Algorithm").get_by_role("link", name="Settings").click()
     expect(page.locator(".alg-who", has_text="About it")).to_contain_text("PlantCraft")
     expect(page.locator(".alg-who", has_text="Where it runs")).to_have_count(1)
@@ -203,9 +203,9 @@ def test_the_help_browser_has_guides_and_method_folders(signed_in, app_url):
 
 
 def test_the_overview_shows_what_is_bad_and_where(signed_in, app_url, screenshots):
-    """Which loops and signals are bad now, and where (owner, 2026-10-27): results by status,
-    the days in alarm, the health map by area and the worst; the monitors and the queue below
-    (owner, 2026-10-24). The same for every kind of subject (owner, 2026-10-21)."""
+    """Which loops and signals are bad now, and where: results by status,
+    the days in alarm, the health map by area and the worst; the monitors and the queue below.
+    The same for every kind of subject."""
 
     page = signed_in
     page.goto(f"{app_url}/link/")
@@ -248,13 +248,13 @@ def test_the_overview_shows_what_is_bad_and_where(signed_in, app_url, screenshot
     page.get_by_role("button", name="Done").click()
     if screenshots:
         page.screenshot(path=str(screenshots / "overview.png"), full_page=True)
-    # An Overview only shows: no buttons on top (owner, 2026-10-27).
+    # An Overview only shows: no buttons on top.
     expect(page.locator(".heading-actions")).to_have_count(0)
     nav = page.locator(".pcs-nav")
-    # In the order of the work; the old Results page is inside this Results (owner, 2026-10-24).
+    # In the order of the work; the old Results page is inside this Results.
     labels = ["Overview", "Blocks", "Algorithms", "Monitors", "Results"]
     expect(nav.get_by_role("link")).to_have_text(labels)
-    # The assistant is the suite's button at the top, not a page of Link's (owner, 2026-10-24).
+    # The assistant is the suite's button at the top, not a page of Link's.
     expect(nav.get_by_role("link", name="Assistant", exact=True)).to_have_count(0)
     expect(nav.get_by_role("link", name="Runs", exact=True)).to_have_count(0)
 
@@ -265,7 +265,7 @@ def test_signals_list_and_a_signal_page(signed_in, app_url):
     expect(page).to_have_url(re.compile(r"/link/results\?asset_type=signal$"))
     table = page.locator(".results-table table")
     expect(table.locator("tbody tr").first).to_be_visible()
-    # Paged and sorted on the page (owner, 2026-10-21: no table without pages).
+    # Paged and sorted on the page (no table without pages).
     page.get_by_role("button", name="Asset", exact=True).click()
     expect(page.locator("th[aria-sort=ascending]")).to_contain_text("Asset")
     expect(table.locator(".pill").first).to_be_visible()
@@ -466,7 +466,7 @@ def test_a_block_is_written_in_the_form_versioned_and_diffed(admin, app_url, scr
 def test_a_block_plantcraft_ships_is_locked_and_duplicates_into_a_new_block(
     admin, app_url, screenshots
 ):
-    """Round 10 (owner, 2026-10-26): a block PlantCraft ships gets no new version here, its
+    """Round 10: a block PlantCraft ships gets no new version here, its
     Versions tab shows a lock; Duplicate, beside Download the file, opens its code as a new
     block in the library chosen, a library made from the form included."""
 
@@ -784,7 +784,7 @@ def test_the_first_visit_opens_links_own_tour(browser, fake, app_url):
 
 
 def test_executions_go_schedule_then_asset_then_its_history(signed_in, app_url, screenshots):
-    """Executions (owner, 2026-10-24): the schedules, a schedule's assets by name with a word for
+    """Executions: the schedules, a schedule's assets by name with a word for
     their status, then one asset's latest result, its series over time and past executions."""
 
     page = signed_in
@@ -939,7 +939,7 @@ def test_a_schedule_is_made_on_its_own_page_with_a_preview(signed_in, app_url, s
 
 
 def test_results_filter_by_tag_and_print_what_they_keep(signed_in, app_url, screenshots):
-    """Results of any algorithm (owner, 2026-10-23): filters by algorithm, tag, asset type,
+    """Results of any algorithm: filters by algorithm, tag, asset type,
     group and status; Report prints what the filter keeps; nothing loop-specific."""
 
     page = signed_in

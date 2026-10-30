@@ -6,7 +6,7 @@
  * page's own widgets (drawn by the page) and the widgets each installed app publishes, so the
  * Overview never depends on a given app: an app that is not installed adds nothing.
  *
- * Sizes are fixed (owner, 2026-10-24): each widget declares one to three sizes on the 12-column
+ * Sizes are fixed: each widget declares one to three sizes on the 12-column
  * grid, 1 to 3 rows high (a count fits 3 x 1, a list needs two rows), and draws what fits each one.
  * The widget gallery (`WidgetGallery`, Desk's /widgets) draws every widget at every size; its
  * browser test fails when one spills out of its card.
@@ -397,7 +397,7 @@ export function WidgetCard({ def, title, config, w, h, editing = false, setConfi
   const settings = config ?? def.defaultConfig ?? {};
   // A widget about one picked thing is titled by it, unless the person named the card.
   const name = title || (def.pick && typeof settings.label === "string" && settings.label ? settings.label : def.title);
-  // The title says on hover what the widget shows (owner, 2026-10-27: "what is each thing here").
+  // The title says on hover what the widget shows ("what is each thing here").
   const label = <>{mark}<span {...(def.description ? tipProps({ title: name, rows: [["", def.description]] }) : {})}>{name}</span></>;
   return <article className={`panel pc-wg-card pc-wg-h${h}${fold?.folded ? " pc-wg-folded" : ""}`} aria-label={name} data-widget={def.id}>
     <header className="pc-wg-card-head">
@@ -566,7 +566,7 @@ export function WidgetBoard({ catalog, layout, onLayout, loading, apps = [], onR
 }
 
 /** Every widget of a catalog at every size it allows, at its real size on this page's width: the
- * widget test page (owner, 2026-10-24). Its browser test fails when a widget spills out of its card. */
+ * widget test page. Its browser test fails when a widget spills out of its card. */
 export function WidgetGallery({ catalog, apps = [] }: { catalog: WidgetDef[]; apps?: SuiteApp[] }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const column = columnPixels(width || PREVIEW_BOARD);

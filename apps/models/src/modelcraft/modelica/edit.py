@@ -512,7 +512,7 @@ def set_modifiers(text: str, cls_name: str, name: str, values: Mapping[str, str 
 
 def set_binding(text: str, cls_name: str, name: str, value: str) -> str:
     """Set the value a declaration is bound to, ``parameter Real k = <value> "Gain";``: a block's
-    default (owner, 2026-10-27: a block's defaults change on its page, as a new version). Its
+    default (a block's defaults change on its page, as a new version). Its
     modifiers, comment and annotation stay."""
 
     value = value.strip()

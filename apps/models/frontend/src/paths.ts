@@ -19,7 +19,7 @@ import type { Run } from "./types";
 
 const part = encodeURIComponent;
 
-/** A model's tabs (owner, 2026-10-27: the tabs Analytics' algorithms have, and Settings);
+/** A model's tabs (the tabs Analytics' algorithms have, and Settings);
  * Overview has no segment. Run was a test, so it is Test; the studies that use it are Used by. */
 export const MODEL_TABS = ["inputs", "diagram", "test", "used-by", "versions", "settings", "compare"] as const;
 export type ModelTab = "overview" | (typeof MODEL_TABS)[number];

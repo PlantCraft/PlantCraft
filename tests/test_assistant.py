@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from processcraft.api.identity import issue_user_token
+from plantcraft.api.identity import issue_user_token
 from tests.test_collaboration import _person, _specialist, signed  # noqa: F401
 
 PROTOCOL = {

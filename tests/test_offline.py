@@ -17,39 +17,39 @@ FRONTEND = ROOT / "frontend"
 REMOTE = re.compile(r"""(https?:)?//[a-z0-9.-]+\.[a-z]{2,}""", re.IGNORECASE)
 # Modules allowed to open network connections, each to an address an administrator configures.
 NETWORK_MODULES = {
-    "processcraft/industrial_data/pi_web_api.py",  # the configured PI Web API
-    "processcraft/industrial_data/pi_check.py",  # diagnosis of that same PI Web API
+    "plantcraft/industrial_data/pi_web_api.py",  # the configured PI Web API
+    "plantcraft/industrial_data/pi_check.py",  # diagnosis of that same PI Web API
     # The online app catalog (only when PLANTCRAFT_APP_CATALOG_URL is set; off by default) and
     # the health check of an external app's address an administrator registers.
-    "processcraft/apps/remote.py",
+    "plantcraft/apps/remote.py",
     # HistCraft, the data layer, only when HISTCRAFT_URL is set (off by default).
-    "processcraft/platform/datalayer/histcraft.py",
+    "plantcraft/platform/datalayer/histcraft.py",
     # A specialist's language model, only when an admin turns it on with a key (off by default;
     # PLANTCRAFT_LLM=off forbids it in the installation, docs/collaboration.md).
-    "processcraft/specialists/model.py",
+    "plantcraft/specialists/model.py",
     # llm-egress, the proxy those calls take to a model in the cloud: tunnels only to the hosts
     # of the providers an admin added (none: it opens nothing), plus Health's look at it.
-    "processcraft/egress/__init__.py",
+    "plantcraft/egress/__init__.py",
     # `processcraft demo seed`, run by an administrator (install.sh --public-demo): the suite's
     # own services inside the installation's network, never an outside address.
-    "processcraft/demo_seed.py",
+    "plantcraft/demo_seed.py",
     # The suite's health: GET /api/ops/metrics of the suite's own servers, at their Compose
     # services inside the installation's network (PLANTCRAFT_OPS_URLS may name others).
-    "processcraft/watch/recorder.py",
+    "plantcraft/watch/recorder.py",
     # Corporate sign-in, only when an admin turns it on (off by default; the installation forbids
     # it with PLANTCRAFT_CORPORATE_LOGIN=off): the company's directory and sign-in provider,
     # inside the plant's network (docs/corporate-login.md).
-    "processcraft/directory/ldap.py",
-    "processcraft/directory/oidc.py",
+    "plantcraft/directory/ldap.py",
+    "plantcraft/directory/oidc.py",
     # The MCP server answers each tool with this process's own API v1, through httpx's ASGI
     # transport: an in-process call, never a socket (docs/assistant-access.md).
-    "processcraft/assistant_access/mcp.py",
+    "plantcraft/assistant_access/mcp.py",
     # A notebook's reads of an app's objects, forwarded to the app inside the suite's network
     # (GET only, under its api/objects/ and api/notebooks/; docs/api-v1.md).
-    "processcraft/api/app_proxy.py",
+    "plantcraft/api/app_proxy.py",
     # Desk's calendar links, only when an admin turns them on and names the servers allowed (off
     # by default; importing an .ics file needs no network, docs/desk.md).
-    "processcraft/desk/__init__.py",
+    "plantcraft/desk/__init__.py",
 }
 NETWORK_IMPORTS = {
     "requests",
@@ -109,7 +109,7 @@ def _imports(path: Path) -> set[str]:
 
 def test_only_known_modules_open_network_connections():
     offenders = []
-    for path in (ROOT / "processcraft").rglob("*.py"):
+    for path in (ROOT / "plantcraft").rglob("*.py"):
         relative = path.relative_to(ROOT).as_posix()
         used = {
             name

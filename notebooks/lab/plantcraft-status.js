@@ -35,7 +35,7 @@
     else hide();
   }
 
-  // Where this notebook runs, always in sight (owner, 2026-10-26): in this browser, with its edits
+  // Where this notebook runs, always in sight: in this browser, with its edits
   // kept here; the kit's JupyterLab on the person's computer says the same about itself.
   function place() {
     if (document.getElementById("plantcraft-where") || !document.body) return;

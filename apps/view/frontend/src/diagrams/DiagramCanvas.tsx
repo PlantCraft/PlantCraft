@@ -72,7 +72,7 @@ function NavigationButton({ element, label }: { element: SymbolElement; label: s
 
 /** A vessel's contents: the level goes over its straight part (`pc-level`) and the liquid fills
  * the vessel's own outline below it, heads and cone included, with the surface drawn as a line
- * (owner, 2026-10-27: "a rectangle that does not follow the tank"). A drawing without an outline
+ * ("a rectangle that does not follow the tank"). A drawing without an outline
  * keeps the rectangle. */
 function Liquid({ level, fraction, outline, size: [width, bottom], clip }: { level: { x: number; y: number; w: number; h: number }; fraction: number; outline: string | null; size: [number, number]; clip: string }) {
   const share = Math.max(0, Math.min(1, fraction));

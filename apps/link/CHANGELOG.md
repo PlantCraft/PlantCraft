@@ -4,7 +4,10 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/)). An update reads it before it starts
 (PlantCraft `docs/operations.md`).
 
-## [Unreleased]
+## [0.5.1] - 2026-10-30
+
+- Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).
+- The app's card, guides and the site describe it as scheduled monitors, diagnostics and KPIs for signals and control loops.
 
 ### Changed
 
@@ -16,8 +19,8 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 ### Changed
 
 - **A plant model example runs every hour** on a monitor named "<model>: model beside the
-  plant" (owner, 2026-10-27).
-- **The Overview only shows** (owner, 2026-10-27): "Check signals now", "Run the loop monitor
+  plant".
+- **The Overview only shows**: "Check signals now", "Run the loop monitor
   now" and "Open dashboard" are gone from its top, and so is the summary the page read only to
   draw them. A run starts on Monitors.
 - **The health map is every result, by area**: assets of any type (a control loop is one of
@@ -81,7 +84,7 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
-- **The Overview answers which loops and signals are bad now, and where (owner, 2026-10-27).**
+- **The Overview answers which loops and signals are bad now, and where.**
   Two new widgets: `in-alarm-history` (columns: loops and signals that ended each of the last 14
   days in alarm and in warning, from `subject_health` and `quality_history`) and `health-map`
   (tiles: every loop and signal by the area of its asset, each square opening its page). The
@@ -118,7 +121,7 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   near 1.6 GB). The tasks a stopped engine left on the workers are cancelled when it starts again,
   so the round it resumes is no longer queued behind thousands of orphans.
 
-- **Times on the plant's clock (owner, 2026-10-27).** The signal page's charts and quality bands
+- **Times on the plant's clock.** The signal page's charts and quality bands
   draw in the zone every page shows (they drew UTC); the results, loop and weekly PDFs write
   their dates and windows in the installation's zone, without "UTC"; a one-off monitor says its
   moment as a time, not as ISO text. SDK 0.62.0.
@@ -137,7 +140,7 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
-- **Where an algorithm runs (owner, 2026-10-26; processcraft-sdk 0.58.0; PlantCraft
+- **Where an algorithm runs (processcraft-sdk 0.58.0; PlantCraft
   `docs/compute.md`, "Environments and sizes").** An algorithm names the environment (the
   executor image with the packages it needs) and the size (small, medium, large: CPUs and
   memory) its runs need, in Versions › Where it runs (a new version; `compute` in its method
@@ -145,7 +148,7 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   compute workers with them, and only a worker with that environment and room for that size takes
   them. `GET /api/compute/offer` lists what the workers online offer.
 
-- **Analyses and blocks' code on the suite's compute workers (owner, 2026-10-26; processcraft-sdk
+- **Analyses and blocks' code on the suite's compute workers (processcraft-sdk
   0.57.0; PlantCraft `docs/compute.md`).** With `LINKCRAFT_COMPUTE=suite` (the suite's compose
   sets it) the loop analyses of rounds, executions and replays, the signal quality checks and
   every call of a site block's code leave this container, which holds the app key, for the
@@ -403,7 +406,7 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   assets (at least every 15 minutes), and two schedules cannot run the same algorithm on the same
   asset. The schedule page shows what it runs first, then when, then who owns it, in one column;
   running more often than every 5 minutes asks for a confirmation.
-- Fewer signals in Link's source of the Historian (owner, 2026-10-24). Every series on an asset
+- Fewer signals in Link's source of the Historian. Every series on an asset
   is `app-linkcraft:<asset>.<algorithm>.<output>`, named `<tag> · <algorithm> · <output>`: a
   loop's health (`<loop>.<algorithm>.health`, "FIC-101 · Flow loop · Health") and each output an
   algorithm records (the block's name, not its id). New versions keep writing to the same series;
@@ -412,7 +415,7 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   a loop its `.status` text: the status is in the result. Once PlantCraft answers, Link retires the series it no longer
   writes (processcraft-sdk 0.24.0 `retire_series`). A scheduled run's results expire after two of
   its schedule's intervals.
-- Executions and Results are one page (owner, 2026-10-24): Executions opens on the schedules,
+- Executions and Results are one page: Executions opens on the schedules,
   each with what it concluded (how many assets OK, warning, alarm) and when it runs next; a
   schedule lists its assets by name with a word for their status (Normal, Medium, High,
   Critical); an asset shows its latest result, its series in the Historian over the last 7 days
@@ -440,7 +443,7 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 ### Removed
 
 - The Assistant page and its menu entry: the assistant is the suite's button at the top of every
-  page (owner, 2026-10-23). An old link to `/assistant` opens the Overview.
+  page. An old link to `/assistant` opens the Overview.
 
 ### Security
 

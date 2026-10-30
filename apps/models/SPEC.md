@@ -63,7 +63,7 @@ linked into this code.
    `Modelica.Utilities.System/Files/Internal` (however aliased) are refused by the app before a
    job leaves and by the runner again; the administrator may allow `external` code.
 4. **Runs keep the model's files** as they were, so results always match a model.
-7. **Blocks are shared** (owner, 2026-10-23): block libraries are global and grouped, like
+7. **Blocks are shared**: block libraries are global and grouped, like
    Link's algorithms. Every simulation belongs to a study (quick, single or sweep); FMU exports
    are listed apart. Projects are no longer shown (2026-10-24): each model is stored as one
    package, the person sees models.
@@ -75,7 +75,7 @@ linked into this code.
    written to the plant.
 6. **The Twin hand-off is a file**: the FMU is downloaded and uploaded in Twin (apps never call
    each other); a file exchange through PlantCraft would make it one click (`docs/gaps.md`).
-9. **Models is Simulink-like and for study only** (owner, 2026-10-24): a model is a block
+9. **Models is Simulink-like and for study only**: a model is a block
    diagram integrated over time with its own solver and step; it never runs on the plant. Link
    runs algorithms at an instant over a data window. Nothing is published to Link for now; a
    later "Publish to Link" would be a form mapping inputs to asset roles.

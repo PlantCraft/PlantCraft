@@ -62,12 +62,12 @@ export function App() {
   useEffect(() => {
     api.me().then(setMe).catch((err: Error) => setError(err.message));
   }, []);
-  // The tour opens a block, a model and a simulation (owner, 2026-10-28): found before it starts.
+  // The tour opens a block, a model and a simulation: found before it starts.
   const [examples, setExamples] = useState<TourExamples | undefined>(undefined);
   useEffect(() => { if (me) void tourExamples().then(setExamples); }, [me]);
   const tour = useMemo(() => (me && examples ? () => tourSteps(examples) : undefined), [me, examples]);
   const editor = /^\/editor\/([^/]+)\/([^/]+)$/.exec(path);
-  // A model's editor has a window of its own, without the frame, as Link's (owner, 2026-10-24).
+  // A model's editor has a window of its own, without the frame, as Link's.
   if (editor) return error ? <ErrorBox text={error} /> : me ? <Suspense fallback={<Loading />}><ModelEditorWindow key={path} projectId={decodeURIComponent(editor[1])} model={decodeURIComponent(editor[2])} me={me} /></Suspense> : <Loading />;
   return <SuiteShell
     app="modelcraft"

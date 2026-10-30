@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from processcraft.api.identity import issue_user_token
+from plantcraft.api.identity import issue_user_token
 from tests.test_collaboration import (  # noqa: F401 (the fixture)
     PASSWORD,
     _asset_id,
@@ -129,7 +129,7 @@ def test_in_a_group_a_specialist_reads_what_everyone_there_may_read(signed):  # 
 
 
 def test_what_an_app_publishes_is_read_only_by_who_may_open_it(signed):  # noqa: F811
-    """One rule (review decision D1): the results, events and runs of an app reach a person
+    """One rule: the results, events and runs of an app reach a person
     only when they may open it, through API v1, the asset's page and Desk alike."""
 
     _person(signed, "ana", "viewer")

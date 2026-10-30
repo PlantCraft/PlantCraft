@@ -34,7 +34,7 @@ PINS = json.loads((HERE / "pins.json").read_text(encoding="utf-8"))
 KERNEL = "@jupyterlite/pyodide-kernel-extension:kernel"
 # Where a person's edits and settings live in their browser. JupyterLite names it after the page's
 # path by default, and PlantCraft serves each build under a path of its own (/notebooks/lite/v/<build>/,
-# processcraft/notebooks/dist.py): one fixed name, the one the first builds had, keeps them across
+# plantcraft/notebooks/dist.py): one fixed name, the one the first builds had, keeps them across
 # updates.
 STORAGE = "JupyterLite Storage - /notebooks/lite/"
 

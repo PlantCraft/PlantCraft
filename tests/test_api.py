@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
+from plantcraft.api.app import create_app
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -55,7 +55,7 @@ def test_unknown_resources_return_404(client):
 
 
 def test_settings_page_is_gone(client):
-    # Legacy (owner, 2026-10-20): each app has its own settings now.
+    # Legacy: each app has its own settings now.
     assert client.get("/api/settings").status_code == 404
 
 

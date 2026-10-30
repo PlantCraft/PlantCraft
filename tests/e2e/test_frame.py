@@ -1,4 +1,4 @@
-"""The suite's frame (owner, 2026-10-24, round 8; ui frame.ts): PlantCraft keeps the sidebar and
+"""The suite's frame (round 8; ui frame.ts): PlantCraft keeps the sidebar and
 an app runs beside it in an iframe, so switching apps never loads the page again.
 
 No app server runs in these journeys: the iframe's requests under /link/ are answered by a small

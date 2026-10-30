@@ -58,7 +58,7 @@ def test_the_audit_log_filters_and_downloads_as_csv(app):  # noqa: F811
 
 
 def test_quick_filters_volume_and_paging(app):  # noqa: F811
-    """The page's quick filters, its chart of rows per hour and "Load more" (owner, 2026-10-24)."""
+    """The page's quick filters, its chart of rows per hour and "Load more"."""
 
     runtime = app.state.runtime
     for number in range(5):

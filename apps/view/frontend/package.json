@@ -1,7 +1,7 @@
 {
   "name": "dashcraft-ui",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.5.1",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@plantcraft/ui": "file:../vendor/plantcraft-ui-0.88.0.tgz",
+    "@plantcraft/ui": "file:../vendor/plantcraft-ui-0.89.0.tgz",
     "lucide-react": "^0.468.0",
     "plotly.js-cartesian-dist-min": "^3.7.0",
     "react": "^19.1.1",

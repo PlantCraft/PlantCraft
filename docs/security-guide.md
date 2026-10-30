@@ -104,7 +104,7 @@ every container runs as described in section 5.
   computer the same package reads with their access token, read-only, while Notebooks are on.
   `PLANTCRAFT_NOTEBOOKS=off` forbids them in the installation.
   What one person may ask API v1 for is limited (Settings › Notebooks: 120 requests a minute and
-  2 reads at once by default, `processcraft/api/usage.py`): every request with an access token,
+  2 reads at once by default, `plantcraft/api/usage.py`): every request with an access token,
   and series reads from a browser through the proxy; past it that person alone gets 429, and the
   apps' own reads inside the internal network never count.
   The Notebooks kit (an optional part of the bundle, offered with Notebooks, an administrator may take it away) runs Python and
@@ -139,7 +139,7 @@ every container runs as described in section 5.
   (`data/histcraft-db-password`) are files of mode 0600 owned by the app's user, passed as Docker
   secrets. No data leaves the server. Backup means copying the install folder; upgrades back it
   up automatically (the Historian's database by blocks, with PostgreSQL's own tools) and
-  `./install.sh --rollback` returns to the previous version. **Planned:** `processcraft rollback`
+  `./install.sh --rollback` returns to the previous version. **Planned:** `plantcraft rollback`
   for installations without Docker (G12). Data at rest is not encrypted by PlantCraft: use the
   server's disk encryption if required.
 

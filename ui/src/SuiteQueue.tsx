@@ -1,5 +1,5 @@
 /**
- * The suite's work queues in every app's sidebar (owner, 2026-10-23): one of the four quick
+ * The suite's work queues in every app's sidebar: one of the four quick
  * buttons (round 8, 2026-10-24) says what runs and waits across the suite ("4 running · 12
  * waiting"), and opens a panel with each app's numbers and a link to its executions. It reads the same
  * `GET <app>/api/queue` the app's own QueuePanel draws (format `plantcraft-queue/1`,
@@ -183,7 +183,7 @@ const byRecent = (a: QueueJob, b: QueueJob) => Number(ACTIVE.has(b.status)) - Nu
  * newest first (what runs and waits on top), and how many of the active ones I started. */
 export type AppJobs = { app: string; appName: string; url: string | null; now: QueueNow | null; jobs: QueueJob[]; mineActive: number };
 
-/** The panel's apps (owner, 2026-10-26: the overview first, an app's jobs when it is opened): every
+/** The panel's apps (the overview first, an app's jobs when it is opened): every
  * app with a queue, in the shell's order, then the apps only the platform's runs name. */
 export function jobsByApp(platform: SuiteJobs | null, queues: AppQueue[]): AppJobs[] {
   const me = platform?.me ?? null;
@@ -334,7 +334,7 @@ function queueSummary(queues: AppQueue[]) {
 /** How long the button stays green after the last running work finished well. */
 export const QUEUE_DONE_MS = 8_000;
 
-/** What the button shows (owner, 2026-10-25): failed (red, until the person opens the panel),
+/** What the button shows: failed (red, until the person opens the panel),
  * running (a turning circle), done (green, for a moment after the last run finished well), late
  * (the oldest has waited long), waiting, idle. */
 export type QueueLook = "failed" | "running" | "done" | "late" | "waiting" | "idle";
@@ -456,7 +456,7 @@ function AppQueueRow({ item, open, workers, onToggle, onChanged }: { item: AppJo
   );
 }
 
-/** The work queues' panel (docs/quick-access.md; owner, 2026-10-26): each app's numbers first; an
+/** The work queues' panel (docs/quick-access.md): each app's numbers first; an
  * app opened lists its work (mine marked, progress, Cancel while it can, what ended in the last
  * day) and links to its own page of its queue. */
 export function SuiteQueueHost({ queues, fullHref, jobs = null, onChanged = () => {} }: { queues: AppQueue[]; fullHref?: string | null; jobs?: SuiteJobs | null; onChanged?: () => void }) {

@@ -24,8 +24,8 @@ import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from processcraft.cli import main as processcraft_main
-from processcraft.cli import reset_workspace
+from plantcraft.cli import main as processcraft_main
+from plantcraft.cli import reset_workspace
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 SCENARIO = PROJECT_ROOT / "scenarios" / "opcua_demo.json"
@@ -76,9 +76,9 @@ def _ensure_frontend() -> None:
 def _app_key(app_id: str, data_dir: Path) -> Path:
     """An app key for the app's background work, made once and kept beside its data."""
 
-    from processcraft.api.runtime import PROJECT_ROOT as ROOT
-    from processcraft.config import load_scenario
-    from processcraft.platform.workspace import Workspace
+    from plantcraft.api.runtime import PROJECT_ROOT as ROOT
+    from plantcraft.config import load_scenario
+    from plantcraft.platform.workspace import Workspace
 
     path = data_dir / f"{app_id}-app-key"
     keys = Workspace(load_scenario(SCENARIO, project_root=ROOT).storage.sqlite_path).app_keys

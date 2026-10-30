@@ -1,5 +1,5 @@
 /** Points an admin removed: kept with their archive for a while, restorable, then deleted for good
- * by the collector (owner, 2026-10-23: removing a point must never wipe history by one click). */
+ * by the collector (removing a point must never wipe history by one click). */
 import { DataTable } from "@plantcraft/ui";
 import { RotateCcw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";

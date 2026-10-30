@@ -1,8 +1,8 @@
-/** PlantCraft's Overview (/admin): is the installation healthy? Widgets each person arranges
- * (owner, 2026-10-21); the default board is the installation's health only (owner, 2026-10-27):
+/** PlantCraft's Overview (/admin): is the installation healthy? Widgets each person arranges;
+ *the default board is the installation's health only:
  * what answers, the data connections, the system and the last changes. The apps' widgets, what
  * needs attention and the apps stay in the catalog; each person's day is Desk's first page
- * (Desk.tsx, owner 2026-10-23). What needs attention is listed on its own page (/attention). */
+ * (Desk.tsx). What needs attention is listed on its own page (/attention). */
 import { ArrowRight, CheckCircle2, LoaderCircle, Settings2 } from "lucide-react";
 import { DataTable, useAssistantPage, fetchSuiteWidgets, formatAgo, MultiSelect, Pill, statusVar, useOverviewLayout, WidgetBoard, type BoardItem, type DataColumn, type WidgetDef } from "@plantcraft/ui";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
@@ -128,7 +128,7 @@ export function AttentionWidget({ apps, rows = 6 }: { apps: HomeData["apps"]; ro
     {items.length > rows && <a className="pc-wg-more" href="/attention" onClick={go("/attention")}>{t("See all {count}", { count: items.length })}</a>}</>;
 }
 
-/** Overview (owner, 2026-10-21): widgets each person arranges. The platform's (what needs attention,
+/** Overview: widgets each person arranges. The platform's (what needs attention,
  * open actions, what is online, the apps) and those each installed app publishes; nothing here
  * depends on a given app being installed. */
 export function PlatformHome({ data, admin }: { data: HomeData; admin: boolean }) {

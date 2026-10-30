@@ -5,9 +5,9 @@
 [app]
 id = "linkcraft"
 name = "PlantCraft Analytics"
-version = "0.5.0"
+version = "0.5.1"
 category = "Signal quality and control loop performance"
-summary = "Checks every signal for bad data and every control loop for oscillation, sticking and manual mode, and says why."
+summary = "Scheduled monitors, diagnostics and KPIs for signals and control loops: finds bad data, oscillation, sticking valves and manual mode, and says why."
 description = """PlantCraft Analytics analyses the signals and control loops PlantCraft describes. Its \
 analyses are methods wired into protocols that run on a cadence: the Signal quality protocol \
 checks every signal's raw samples for gaps, stale, frozen, spiky, out-of-range, noisy, coarse \
@@ -30,7 +30,7 @@ image = "linkcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.78.0"
+sdk = "0.79.0"
 asset_types = ["loop"]
 roles = { loop = ["pv", "op"] }
 

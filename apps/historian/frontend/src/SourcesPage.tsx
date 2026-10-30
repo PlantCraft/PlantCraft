@@ -175,7 +175,7 @@ export function SourceActions({ source, me, actions, open, compact = false }: { 
   </div>;
 }
 
-/** The folder an import repeats from (Imports, owner 2026-10-26): such an import is listed
+/** The folder an import repeats from (Imports): such an import is listed
  * with the sources, as it keeps bringing data in; '' for any other source. */
 export function repeatsFrom(source: Source): string {
   const repeat = source.options?.repeat as { pattern?: string } | undefined;
@@ -206,8 +206,8 @@ const KIND_HINT: Record<typeof PLANT_KINDS[number], string> = {
   sql: "LIMS, MES or ERP table",
 };
 
-/** Add source, first step: which type of source (owner, 2026-10-22: the type first, then its
- * form), as a plain list (owner, 2026-10-26: whoever adds a source knows what it is). */
+/** Add source, first step: which type of source (the type first, then its
+ * form), as a plain list (whoever adds a source knows what it is). */
 function TypePicker({ onPick, onClose }: { onPick: (kind: typeof PLANT_KINDS[number]) => void; onClose: () => void }) {
   return <Dialog title={t("Add source: which type?")} onClose={onClose}>
       <ul className="type-list" aria-label={t("Source types")}>

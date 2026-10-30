@@ -64,7 +64,7 @@ services:
   proxy:
     <<: *hardening
     # Caddy 2.11.2 (pinned by digest in deploy/proxy/Dockerfile) with the suite's Caddyfile.
-    image: processcraft-proxy:${PLANTCRAFT_VERSION:-0.5.0}
+    image: processcraft-proxy:${PLANTCRAFT_VERSION:-0.5.1}
     user: "10003:10003"
     environment:
       PLANTCRAFT_HOSTNAME: "${PLANTCRAFT_HOSTNAME:-localhost}"
@@ -107,7 +107,7 @@ services:
 
   processcraft:
     <<: *hardening
-    image: processcraft:${PLANTCRAFT_VERSION:-0.5.0}
+    image: processcraft:${PLANTCRAFT_VERSION:-0.5.1}
     user: "10001:10001"
     environment:
       # SQLite's sort and temporary files next to the data, not in the 64 MB /tmp: a GROUP BY over
@@ -127,6 +127,8 @@ services:
       PLANTCRAFT_PUBLIC_DEMO_RATE: "${PLANTCRAFT_PUBLIC_DEMO_RATE:-600}"
       # The key the site's private stats page reads the demo's visits with (empty: nobody).
       PLANTCRAFT_PUBLIC_DEMO_STATS_KEY: "${PLANTCRAFT_PUBLIC_DEMO_STATS_KEY:-}"
+      # The visit's "Talk to us" button opens this (the site's contact form); empty: no button.
+      PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL: "${PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL:-}"
       PLANTCRAFT_LANGUAGE: "${PLANTCRAFT_LANGUAGE:-en}"
       PLANTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
       # The apps of the suite run by this file (the launcher, access and API v1 list them);
@@ -209,7 +211,7 @@ services:
     # through data/compute-jobs/<app>/. It holds the worker's credential and nothing else; the
     # executors, which run the code, have no network and no secret. More workers, on other
     # machines, are added in Settings › Compute (install.sh --worker).
-    image: processcraft:${PLANTCRAFT_VERSION:-0.5.0}
+    image: processcraft:${PLANTCRAFT_VERSION:-0.5.1}
     user: "10020:10020"
     entrypoint: ["python", "-m", "plantcraft_sdk.compute", "gateway"]
     command:
@@ -251,16 +253,16 @@ services:
 
   llm-egress:
     <<: *hardening
-    # The suite's one way out to a language model in the cloud (processcraft/egress): an HTTPS
+    # The suite's one way out to a language model in the cloud (plantcraft/egress): an HTTPS
     # proxy that opens a tunnel only to port 443 of the hosts PlantCraft lists in
     # data/egress/allow.json (the providers of Setup › Language models), never to an address
     # inside the plant or the host. No provider in the cloud, or PLANTCRAFT_LLM=off: the list
     # is empty and every connection is refused. Each connection is logged; Health shows them.
-    image: processcraft:${PLANTCRAFT_VERSION:-0.5.0}
+    image: processcraft:${PLANTCRAFT_VERSION:-0.5.1}
     user: "10014:10014"
     group_add:
       - "10001" # reads data/egress (PlantCraft's group)
-    command: ["python", "-m", "processcraft.egress", "serve"]
+    command: ["python", "-m", "plantcraft.egress", "serve"]
     environment:
       PLANTCRAFT_EGRESS_ALLOWLIST: /egress/allow.json
     volumes:
@@ -276,7 +278,7 @@ services:
         - CMD
         - python
         - -c
-        - "import sys, processcraft.egress as e; sys.exit(e.status('http://127.0.0.1:3128') is None)"
+        - "import sys, plantcraft.egress as e; sys.exit(e.status('http://127.0.0.1:3128') is None)"
       interval: 30s
       timeout: 5s
       start_period: 20s
@@ -294,7 +296,7 @@ services:
     # root on the host: this container has no network, reads only PlantCraft's requests and
     # the trusted publisher keys, and writes only data/installer. Leave it out (and set
     # PLANTCRAFT_APP_INSTALL=off) to switch app installs off entirely.
-    image: processcraft-installer:${PLANTCRAFT_VERSION:-0.5.0}
+    image: processcraft-installer:${PLANTCRAFT_VERSION:-0.5.1}
     user: "10005:10005"
     group_add:
       - "10001" # reads data/app-requests (PlantCraft's group)
@@ -306,7 +308,7 @@ services:
         required: false
     environment:
       PLANTCRAFT_INSTALL_DIR: "${PLANTCRAFT_INSTALL_DIR:-/opt/processcraft}"
-      PLANTCRAFT_INSTALLER_IMAGE: "processcraft-installer:${PLANTCRAFT_VERSION:-0.5.0}"
+      PLANTCRAFT_INSTALLER_IMAGE: "processcraft-installer:${PLANTCRAFT_VERSION:-0.5.1}"
       PLANTCRAFT_APP_REQUESTS: /requests
       PLANTCRAFT_APP_MAX_MB: "${PLANTCRAFT_APP_MAX_MB:-4096}"
       PLANTCRAFT_TRUSTED_PUBLISHERS: /trusted-publishers
@@ -318,7 +320,7 @@ services:
       - ./data/app-requests:/requests:ro
       - ./trusted-publishers:/trusted-publishers:ro
     healthcheck:
-      test: ["CMD", "python", "-m", "processcraft.apps.installer", "health"]
+      test: ["CMD", "python", "-m", "plantcraft.apps.installer", "health"]
       interval: 15s
       timeout: 5s
       start_period: 20s
@@ -336,7 +338,7 @@ services:
     profiles: ["linkcraft"]
     # LinkCraft: loop performance, signal quality and process models (PlantCraft Twin's twins
     # merged, 2026-10-22).
-    image: linkcraft:${LINKCRAFT_VERSION:-0.5.0}
+    image: linkcraft:${LINKCRAFT_VERSION:-0.5.1}
     user: "10012:10012"
     environment:
       # SQLite's sort and temporary files next to the data, not in the 64 MB /tmp: a GROUP BY over
@@ -395,7 +397,7 @@ services:
     # The sandbox: no network at all, no secret, read-only, no capabilities, CPU, memory and
     # process limits, and a time and memory limit per task. Same image as Analytics, so its
     # version is always the app's.
-    image: linkcraft:${LINKCRAFT_VERSION:-0.5.0}
+    image: linkcraft:${LINKCRAFT_VERSION:-0.5.1}
     user: "10020:10020"
     network_mode: none
     entrypoint: ["python", "-m", "plantcraft_sdk.compute", "executor"]
@@ -437,7 +439,7 @@ services:
   dashcraft:
     <<: *hardening
     profiles: ["dashcraft"]
-    image: dashcraft:${DASHCRAFT_VERSION:-0.5.0}
+    image: dashcraft:${DASHCRAFT_VERSION:-0.5.1}
     user: "10006:10006"
     environment:
       # SQLite's sort and temporary files next to the data, not in the 64 MB /tmp: a GROUP BY over
@@ -482,7 +484,7 @@ services:
     # PlantCraft Alarms (AlarmCraft): alarms on plant signals, the alarm summary and alarm
     # performance; it reads signals and series through PlantCraft's API v1 only and publishes
     # results and events. Read only: it never writes to a plant system.
-    image: alarmcraft:${ALARMCRAFT_VERSION:-0.5.0}
+    image: alarmcraft:${ALARMCRAFT_VERSION:-0.5.1}
     user: "10009:10009"
     environment:
       # SQLite's sort and temporary files next to the data, not in the 64 MB /tmp: a GROUP BY over
@@ -530,7 +532,7 @@ services:
     # (with the person's token) and reports its runs. It never runs a model itself: every job is
     # a task of the suite's compute workers (`modelcraft-executor` here, more in Settings ›
     # Compute; docs/compute.md).
-    image: modelcraft:${MODELCRAFT_VERSION:-0.5.0}
+    image: modelcraft:${MODELCRAFT_VERSION:-0.5.1}
     user: "10011:10011"
     environment:
       # SQLite's sort and temporary files next to the data, not in the 64 MB /tmp: a GROUP BY over
@@ -580,7 +582,7 @@ services:
     # into passages and searched by words and by meaning, offline (its embedding model is in the
     # image). Its original files stay in its own data folder, never in PlantCraft. The assistant
     # reads it through the tools it declares, as the person who asks.
-    image: doccraft:${DOCCRAFT_VERSION:-0.5.0}
+    image: doccraft:${DOCCRAFT_VERSION:-0.5.1}
     user: "10015:10015"
     environment:
       # SQLite's sort and temporary files next to the data, not in the 64 MB /tmp: a GROUP BY over
@@ -629,7 +631,7 @@ services:
     # so it is a sandbox: no network at all, no secret, read-only, no capabilities, CPU, memory
     # and process limits, and a time, memory and file-size limit per job. compute-gateway hands
     # it Models' jobs through data/compute-jobs/modelcraft; it can reach nothing else.
-    image: modelcraft-runner:${MODELCRAFT_VERSION:-0.5.0}
+    image: modelcraft-runner:${MODELCRAFT_VERSION:-0.5.1}
     user: "10020:10020"
     network_mode: none
     command: ["python3", "/opt/runner/runner.py", "--jobs", "/jobs", "--workers", "${MODELCRAFT_EXECUTOR_SLOTS:-2}"]
@@ -666,7 +668,7 @@ services:
     # recording. Networks: `plant` for real plant servers (read-only, restricted by
     # firewall.sh like PlantCraft), `demo` to reach the Simulator (opc.tcp://plantcraft:4840/...),
     # `apps` for the proxy and PlantCraft, `histdb` for its database. It needs no app key.
-    image: histcraft:${HISTCRAFT_VERSION:-0.5.0}
+    image: histcraft:${HISTCRAFT_VERSION:-0.5.1}
     user: "10008:10008"
     environment:
       # SQLite's sort and temporary files next to the data, not in the 64 MB /tmp: a GROUP BY over
@@ -727,7 +729,7 @@ services:
     # hourly housekeeping. No port; healthy while its heartbeat is fresh. One collector per
     # archive: a second one would wait as a standby (HistCraft docs/boundary.md). Networks:
     # `plant` and `demo` for the sources, `histdb` for its database; not on `apps`.
-    image: histcraft:${HISTCRAFT_VERSION:-0.5.0}
+    image: histcraft:${HISTCRAFT_VERSION:-0.5.1}
     user: "10008:10008"
     command: ["histcraft", "collect"]
     environment:
@@ -887,7 +889,7 @@ services:
     # 50-loop portfolio at opc.tcp://plantcraft:4840/plantcraft/ (urn:processcraft:plantcraft):
     # the service was `plantcraft` until the Simulator 0.5.0, and the sources people made keep
     # that address, so it still answers to that host name on the demo network.
-    image: simcraft:${SIMCRAFT_VERSION:-0.5.0}
+    image: simcraft:${SIMCRAFT_VERSION:-0.5.1}
     user: "10004:10004"
     command:
       - simcraft

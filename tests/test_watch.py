@@ -1,4 +1,4 @@
-"""The suite watch (processcraft.watch): incidents from the installer's status, told in Messages."""
+"""The suite watch (plantcraft.watch): incidents from the installer's status, told in Messages."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from processcraft.auth.users import UserStore
-from processcraft.db import Database
-from processcraft.messages import ConversationStore
-from processcraft.watch import SYSTEM_USER, SuiteWatch
+from plantcraft.auth.users import UserStore
+from plantcraft.db import Database
+from plantcraft.messages import ConversationStore
+from plantcraft.watch import SYSTEM_USER, SuiteWatch
 
 NOW = datetime(2026, 10, 21, 12, 0, tzinfo=timezone.utc)
 
@@ -228,7 +228,7 @@ def test_an_uninstalled_app_ends_its_incident_quietly(world):
 
 
 def test_the_disk_forecast_warns_a_month_before_it_fills(world):
-    from processcraft.watch import disk_forecast
+    from plantcraft.watch import disk_forecast
 
     gib = 2**30
     free = 40 * gib
@@ -298,8 +298,8 @@ def test_every_worker_shows_what_the_ticking_watch_saw(world):
 
 
 def test_each_incident_is_an_event_of_the_platform(tmp_path):
-    from processcraft.events import EventStore
-    from processcraft.events.catalog import platform_catalog
+    from plantcraft.events import EventStore
+    from plantcraft.events.catalog import platform_catalog
 
     world = World(tmp_path)
     world.events = EventStore(world.db)

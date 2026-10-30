@@ -1,11 +1,11 @@
 # The Assistant in Desk
 
-Desk › **Assistant** (owner, 2026-10-23) is where each person talks with a language model. Each
+Desk › **Assistant** is where each person talks with a language model. Each
 person keeps many chats, each on its own subject: a question about the plant ("plot FIC-101
 yesterday", "which loops need attention today?") or about how the platform works. Messages stay
 between people.
 
-**Platform use only** (owner, 2026-10-23): the assistant helps with PlantCraft and the plant, in
+**Platform use only**: the assistant helps with PlantCraft and the plant, in
 Desk and in the side panel. It declines anything else (translating or writing general texts,
 general knowledge) in one sentence and says what it can do instead; in the side panel it keeps to
 the page and the task the person chose.
@@ -18,10 +18,28 @@ or a local one: any OpenAI-compatible server such as vLLM, Ollama or LM Studio, 
 API). `PLANTCRAFT_LLM=off` forbids models in the whole installation, and a public demo never
 uses one.
 
+## Turn it on
+
+The assistant is off in a new installation: nothing leaves the plant's network until an
+administrator chooses a model. To turn it on:
+
+1. Sign in as an administrator and open **Setup › Language models** (Desk › Assistant shows the
+   button when it is off).
+2. Add a provider: a model on your own machines (any OpenAI-compatible server such as Ollama,
+   vLLM or LM Studio), the company's own endpoint, or Anthropic's API with a key.
+3. Press **Test**. The first model that answers becomes the default.
+4. Optionally, in **Models by use**, pick another model per use (the Assistant, the Help, the
+   apps' own uses) or turn one off.
+
+The assistant then answers in Desk › Assistant and in the side panel of every page, as the
+person who asks, reading only what that person may open. `PLANTCRAFT_LLM=off` in `.env` keeps
+models off in the whole installation, whatever Setup says. The public demo shows recorded chats
+only: its visitors never reach a model.
+
 ## What the model can read
 
 The model has no database access. It reads the plant through the same read-only tools as the
-MCP server (`processcraft/assistant_access/mcp.py`, [assistant-access.md](assistant-access.md)):
+MCP server (`plantcraft/assistant_access/mcp.py`, [assistant-access.md](assistant-access.md)):
 search and read assets, asset types, signals, values and history, the apps' latest results and
 their history, events, runs, follow-up actions and the texts the apps wrote for assistants.
 
@@ -37,10 +55,10 @@ their history, events, runs, follow-up actions and the texts the apps wrote for 
 
 ## Tools the apps add
 
-Owner, 2026-10-26 (plan "Documents", D7): an app gives the assistant a read-only tool of its own
+An app gives the assistant a read-only tool of its own
 without a change to PlantCraft. It declares the tool in its `app.toml` and serves it under its
 prefix; PlantCraft lists it to the model as `<app id>_<id>` beside its own tools, in Desk's
-assistant, the side panel and the MCP server (`processcraft/assistant_access/app_tools.py`).
+assistant, the side panel and the MCP server (`plantcraft/assistant_access/app_tools.py`).
 Desk's assistant also names the offered app tools in its instructions and tells the model to
 search them before it answers "there is none" or gives general advice: in the first evaluation
 (2026-10-27, 40 questions on the demo plant's documents, gpt-5-nano) the model called the
@@ -70,8 +88,7 @@ required = true
   and the "why", action and event questions went to the plant's tools alone. Use it for a cheap
   search that answers most questions about the app's objects, not for a slow or wide read.
   On a page about an asset (the chat's subject is `asset:<id>`: an Analytics loop, an alarm's
-  tag), a tool that declares an `asset` argument gets it too (owner, 2026-10-27: a question about
-  a loop reads that loop's documents first).
+  tag), a tool that declares an `asset` argument gets it too.
 - **Citations that open the passage.** An item of an app's answer with `cite` (its number) and
   `url` (a path of the suite, `/doc/documents/<id>?passage=<n>&q=<words>`) is what the answer's
   `[n]` points to: PlantCraft writes each `[n]` of the final answer as a link to it
@@ -155,7 +172,7 @@ of name to description is read as a list. A proposal the check refuses shows as 
 
 ## The side panel: the assistant on every page
 
-Owner, 2026-10-23: the platform will be used mostly by talking to it, so the assistant is offered
+the platform will be used mostly by talking to it, so the assistant is offered
 on every page, the same way in every app, and each page says what it can do there.
 
 - **One button.** **Assistant**, a spark like the other quick buttons, one of the four above the
@@ -177,7 +194,7 @@ on every page, the same way in every app, and each page says what it can do ther
   "What to do …"), what the task read (a table's rows) and what the page shows. The model is told
   to do the task and to take everything else as information, never as instructions (it can quote
   the plant's own texts). The person reads it all under **See the context**.
-- **Like a chat in Messages** (owner, 2026-10-24, round 8). The panel opens on a new chat about
+- **Like a chat in Messages**. The panel opens on a new chat about
   the page (the tasks above) and, under it, the person's earlier chats, newest first (eight; the
   rest in Desk). A new chat is about the page it was started on (its place and context). Every
   chat is kept, private to the person, in Desk's Assistant; **Full page** opens it there, **New
@@ -191,14 +208,14 @@ on every page, the same way in every app, and each page says what it can do ther
 In the interface these are **tasks** (docs/glossary.md); the code, the API and `app.toml` keep
 the word `works`.
 
-Owner, 2026-10-25 (plan "Assistant on every page"): every page title has the assistant's button
+Every page title has the assistant's button
 on its right (ui `AssistantTitleButton`); clicking it lists the **works** of that page. A work is
 either **ask** (the assistant reads and explains) or **create** (it talks with the person until
 the object's fields are known and proposes it; the person creates it with one click). Choosing a
 work opens the standard assistant chat with a context PlantCraft builds.
 
 - **Declared as data, once.** PlantCraft's own works are `PLATFORM_WORKS`
-  (`processcraft/assistant_works`); an app declares its own in `app.toml` and the SDK sends them
+  (`plantcraft/assistant_works`); an app declares its own in `app.toml` and the SDK sends them
   with its contributions:
 
   ```toml
@@ -262,7 +279,7 @@ work opens the standard assistant chat with a context PlantCraft builds.
   the chat's object (the last part of its reference: `block:linkcraft/rate` gives `rate`):
   "Help me change this block" continues in `form = "/link/blocks/{subject}/edit"`. With no object
   the proposal is refused.
-- **What each page offers (owner, 2026-10-26: "each page has different questions").** The menu
+- **What each page offers.** The menu
   never repeats the same questions everywhere. Every page has the suite's **Explain this page**
   (ui); the rest are the page's own works, in this pattern, so the apps read as one suite:
 
@@ -277,7 +294,7 @@ work opens the standard assistant chat with a context PlantCraft builds.
 - **Who sees what.** `GET /api/assistant/works?page=` lists only the works of the person's level
   (a create work declares the level its route takes: an editor for shared objects, a viewer for
   their own); in a public demo visitors get none.
-- **PlantCraft's works** (`processcraft/assistant_works/platform.py`), page by page:
+- **PlantCraft's works** (`plantcraft/assistant_works/platform.py`), page by page:
 
   | Page | Works |
   |---|---|
@@ -327,7 +344,7 @@ guides at the top. The apps' own guides reach the model through what the apps wr
 
 Setup › Language models › **Evaluate** asks a fixed set of questions to the installation's model
 (or a specialist's) with the assistant's own tools and permissions, as the administrator who runs
-it, and checks each answer against a golden answer (`processcraft/assistant_chat/evals.py`). The
+it, and checks each answer against a golden answer (`plantcraft/assistant_chat/evals.py`). The
 golden answers are not written by hand: each run reads them from this installation's data, so
 the cases fit the demo plant and a real one.
 
@@ -353,9 +370,9 @@ or a specialist's instructions.
 
 ### Evaluate works: each work as its page asks it
 
-Owner, 2026-10-25: "run the model with the context the application adds from the person's
+"run the model with the context the application adds from the person's
 choice, and see whether it can read that context and whether the context is enough".
-**Evaluate works** (`processcraft/assistant_chat/work_evals.py`) makes one case per work offered
+**Evaluate works** (`plantcraft/assistant_chat/work_evals.py`) makes one case per work offered
 to an administrator, PlantCraft's and the installed apps':
 
 - **The same start as the button beside the title.** The question is the work's title, as the
@@ -396,7 +413,7 @@ conversations stay, and the `/api/v1/assistant` routes stay for apps that still 
 
 ## API
 
-Session routes, each person's own chats only (`processcraft/api/routers/assistant_chat.py`):
+Session routes, each person's own chats only (`plantcraft/api/routers/assistant_chat.py`):
 
 | Route | What |
 |---|---|
@@ -416,4 +433,4 @@ Session routes, each person's own chats only (`processcraft/api/routers/assistan
 | `POST /api/assistant/evals` | `{profile?}`: a new run, in the background (202; 409 while one runs) |
 | `GET /api/assistant/evals/{id}` | One run with each case's result |
 
-Tables: `assistant_chats`, `assistant_chat_messages`, `assistant_evals` (`processcraft/assistant_chat`, layer 2).
+Tables: `assistant_chats`, `assistant_chat_messages`, `assistant_evals` (`plantcraft/assistant_chat`, layer 2).

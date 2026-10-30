@@ -28,4 +28,4 @@ from plantcraft_sdk import settings_compat as _settings_compat
 # Settings an older compose file still passes under the former names (renamed 2026-10-27).
 _settings_compat.adopt()
 
-__version__ = "0.78.0"
+__version__ = "0.79.0"

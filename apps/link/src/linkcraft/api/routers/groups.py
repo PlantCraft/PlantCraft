@@ -1,6 +1,6 @@
 """Executions by schedule: the schedules, each schedule's subjects, one subject's history.
 
-One page answers what Link concluded and when (owner, 2026-10-24: Executions and Results were
+One page answers what Link concluded and when (Executions and Results were
 the same thing by two paths). It opens on the schedules (what each runs, on how many subjects,
 its last execution and the next); a schedule shows its subjects with the latest result of each;
 a subject shows that result first, its outputs over time (the Historian series Link writes, one

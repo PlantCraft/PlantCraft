@@ -1,4 +1,4 @@
-"""Executions by schedule (owner, 2026-10-24): schedules, then a schedule's subjects, then one
+"""Executions by schedule: schedules, then a schedule's subjects, then one
 subject's latest result, the series its outputs are in and its past executions. Lists go by
 name, never by status; status is a word beside each subject."""
 

@@ -8,13 +8,13 @@
 .pcs-sidebar { width: var(--pcs-sidebar); position: fixed; inset: 0 auto 0 0; z-index: var(--pc-z-nav); padding: 18px 12px 12px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; overscroll-behavior: contain; color: var(--pc-chrome-text); background: var(--pc-chrome-bg); border-right: 1px solid var(--pc-chrome-border); transition: width var(--pc-duration-fast, .15s) ease; }
 .pcs-sidebar > * { flex-shrink: 0; }
 .pcs-sidebar-top { padding: 0 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-/* The app's name opens the app switcher (owner, 2026-10-23). */
+/* The app's name opens the app switcher. */
 .pcs-switcher { position: relative; flex: 1; min-width: 0; }
 .pcs-brand { width: 100%; padding: 6px; border: 0; border-radius: var(--pc-radius-lg); display: flex; align-items: center; gap: 8px; min-width: 0; color: inherit; background: transparent; text-align: left; text-decoration: none; cursor: pointer; transition: background var(--pc-duration-fast) ease; }
 .pcs-brand:hover, .pcs-brand[aria-expanded="true"] { background: color-mix(in srgb, var(--pc-chrome-text-strong) 6%, transparent); }
 .pcs-brand:focus-visible { outline: 2px solid var(--pc-chrome-accent); outline-offset: 1px; }
 .pcs-switcher-chevron { margin-left: auto; flex: none; color: var(--pc-chrome-text-3); transition: transform var(--pc-duration-fast) ease; }
-/* The list of apps floats over the sidebar and the page, as wide as its names (owner, 2026-10-25);
+/* The list of apps floats over the sidebar and the page, as wide as its names;
    SuiteShell places it under the app's name (`switcherPlace`). */
 .pcs-switcher-pop { position: fixed; top: 64px; left: 12px; z-index: var(--pc-z-modal); width: max-content; min-width: 200px; max-width: calc(100vw - 24px); max-height: calc(100vh - 80px); overflow-y: auto; padding: 5px; animation: pcs-pop-in .14s ease; display: grid; gap: 2px; border: 1px solid var(--pc-chrome-border); border-radius: var(--pc-radius-lg); color: var(--pc-chrome-text); background: var(--pc-chrome-surface); box-shadow: 0 18px 40px color-mix(in srgb, var(--pc-shadow-color) 35%, transparent); }
 .pcs-switcher-pop hr { width: 100%; margin: 4px 0; border: 0; border-top: 1px solid var(--pc-chrome-border); }
@@ -71,7 +71,7 @@
 .pcs-profile-text strong, .pcs-profile-text small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pcs-profile-text strong { color: var(--pc-chrome-text); font-size: var(--pc-fs-md); }
 .pcs-profile-text small { margin-top: 2px; color: var(--pc-chrome-text-3); font-size: var(--pc-fs-sm); }
-/* The person's menu: a floating window over the sidebar and the page (owner, 2026-10-24), not a
+/* The person's menu: a floating window over the sidebar and the page, not a
  * strip the width of the sidebar. */
 .pcs-user-pop { position: fixed; left: calc(var(--pcs-sidebar) + 10px); bottom: 12px; z-index: var(--pc-z-modal); width: 320px; max-height: calc(100vh - 24px); overflow-y: auto; padding: 10px; animation: pcs-pop-in .14s ease; display: grid; gap: 3px; border: 1px solid var(--pc-chrome-border); border-radius: var(--pc-radius-lg); color: var(--pc-chrome-text); background: var(--pc-chrome-surface); box-shadow: 0 18px 40px color-mix(in srgb, var(--pc-shadow-color) 35%, transparent); }
 .pcs-user-pop > button, .pcs-user-pop > a.pcs-menu-link { text-decoration: none; padding: 8px; border: 0; border-radius: var(--pc-radius-md); display: flex; align-items: center; gap: 10px; color: var(--pc-chrome-text); background: transparent; font-size: var(--pc-fs-md); text-align: left; cursor: pointer; }
@@ -86,7 +86,7 @@
 .pcs-theme button.pcs-on { color: var(--pc-chrome-text-strong); background: var(--pc-chrome-surface-2); }
 .pcs-version { margin: 4px 8px 2px; color: var(--pc-chrome-text-4); font-size: var(--pc-fs-xs); }
 @keyframes pcs-pop-in { from { opacity: 0; transform: translateY(6px); } }
-/* Fold button: the last quick button at the bottom (round 8, owner 2026-10-25), the same icon open or folded. */
+/* Fold button: the last quick button at the bottom (round 8), the same icon open or folded. */
 .pcs-fold { width: 34px; height: 34px; padding: 0; flex: none; border: 0; border-radius: var(--pc-radius-md); display: grid; place-items: center; color: var(--pc-chrome-text-4); background: transparent; cursor: pointer; }
 .pcs-fold:hover { color: var(--pc-chrome-text-2); background: color-mix(in srgb, var(--pc-chrome-text-strong) 5%, transparent); }
 
@@ -197,7 +197,7 @@
 
 /* Page tabs */
 /* The line under the tabs is drawn inside the band (not a border the active tab overlaps by 1px), so
-   the band scrolls sideways only and never shows a vertical scroll bar (owner, 2026-10-25). */
+   the band scrolls sideways only and never shows a vertical scroll bar. */
 .pcs-tabs { margin: -6px 0 20px; display: flex; gap: 4px; box-shadow: inset 0 -1px 0 var(--pc-border); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
 .pcs-tabs a { padding: 10px 14px; border-bottom: 2px solid transparent; color: var(--pc-text-3); font-size: var(--pc-fs-md); font-weight: 600; text-decoration: none; white-space: nowrap; }
 .pcs-tabs a:hover { color: var(--pc-text); }
@@ -228,7 +228,7 @@
   .pcs-collapsed .pcs-inbox-dot { display: none; }
 }
 
-/* Work queues (SuiteQueue.tsx): the fourth quick button and its looks (owner, 2026-10-25): a turning
+/* Work queues (SuiteQueue.tsx): the fourth quick button and its looks: a turning
    circle while work runs, green for a moment when it finished well, red after a failure until the
    panel is opened, orange when the oldest has waited long. */
 .pcs-quick .pcs-queue-running, .pcs-quick .pcs-queue-waiting { color: var(--pc-chrome-accent-text); }
@@ -302,7 +302,7 @@
 }
 @media (prefers-reduced-motion: reduce) { .pct-card, .pct-spot, .pct-dim, .pct-progress span { animation: none; transition: none; } }
 
-/* The four quick buttons that cross every app, above the person (owner, 2026-10-24, round 8):
+/* The four quick buttons that cross every app, above the person (round 8):
  * Messages, Notifications, the Assistant and the work queues, all alike, each opening a panel. */
 .pcs-quick { margin-top: 6px; padding-top: 9px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; border-top: 1px solid var(--pc-chrome-border); }
 .pcs-quick + .pcs-account { margin-top: 2px; padding-top: 2px; border-top: 0; }
@@ -313,7 +313,7 @@
 .pcs-quick .pcs-quick-button:focus-visible { outline: 2px solid var(--pc-chrome-accent); outline-offset: 1px; }
 .pcs-quick .pcs-quick-button.pcs-quick-off, .pcs-assistant-top.pcs-quick-off { opacity: .45; }
 .pcs-quick .pcs-badge, .pcs-collapsed .pcs-quick .pcs-badge { position: absolute; top: 2px; left: calc(50% + 4px); min-width: 17px; height: 17px; padding: 0 4px; display: grid; color: #fff; background: var(--pc-problem-fill); font-size: 10.5px; font-weight: 700; line-height: 1; box-shadow: 0 0 0 2px var(--pc-chrome-bg); }
-/* The fold button is the last of the quick buttons (owner, 2026-10-25): quieter than the others. */
+/* The fold button is the last of the quick buttons: quieter than the others. */
 .pcs-quick .pcs-fold { color: var(--pc-chrome-text-3); }
 @media (max-width: 820px) { .pcs-quick .pcs-fold { display: none; } }
 

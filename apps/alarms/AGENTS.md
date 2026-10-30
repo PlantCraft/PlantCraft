@@ -2,7 +2,7 @@
 
 **Read the suite's rules first**: the repository's root `AGENTS.md` (`../../AGENTS.md`), the single
 source of rules for the platform and every app. This file adds only
-what is particular to PlantCraft Alarms; where the two differ, ask the owner which one wins and fix the other.
+what is particular to PlantCraft Alarms; where the two differ, ask a maintainer which one wins and fix the other.
 
 This folder is **PlantCraft Alarms** (`alarmcraft`, prefix `/alarm/`, port 8110, uid 10009):
 Alarm limits on plant signals, the alarm summary and alarm performance against ISA-18.2.

@@ -9,8 +9,8 @@ import time
 
 import pytest
 
-from processcraft.ops import snapshot
-from processcraft.ops.snapshot import SnapshotError
+from plantcraft.ops import snapshot
+from plantcraft.ops.snapshot import SnapshotError
 
 
 def _install(root):

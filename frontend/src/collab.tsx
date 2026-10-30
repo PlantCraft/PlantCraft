@@ -23,7 +23,7 @@ export function Go({ to, className, title, children, ...rest }: { to: string; cl
   return <a {...rest} href={to} className={className} title={title} onClick={follow}>{children}</a>;
 }
 
-/** A favorite's star (owner, 2026-10-28): notifications, conversations and assistant chats. */
+/** A favorite's star: notifications, conversations and assistant chats. */
 export function StarButton({ starred, onToggle, className = "" }: { starred: boolean; onToggle: () => void; className?: string }) {
   const label = starred ? t("Remove from favorites") : t("Add to favorites");
   return <button type="button" className={`co-icon co-star${starred ? " on" : ""}${className ? ` ${className}` : ""}`} onClick={(event) => { event.preventDefault(); event.stopPropagation(); onToggle(); }} title={label} aria-label={label} aria-pressed={starred}><Star /></button>;

@@ -1,4 +1,4 @@
-"""An app keeps a person to their part of the plant (asset scope, decision D2, 2026-10-27)."""
+"""An app keeps a person to their part of the plant (asset scope)."""
 
 from __future__ import annotations
 

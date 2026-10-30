@@ -17,7 +17,7 @@ import { Modal } from "./Modal";
 export interface AssetFileFormat { id: string; label: string; detail: string }
 interface FileSignal { role: string; tag: string; source_id: string }
 interface FileRelation { from: string; type: string; to: string; include: boolean; status?: string; errors?: string[] }
-/** Where a drafted row comes from (processcraft/platform/plantdraft.py): a rule, a document's passage or the model. */
+/** Where a drafted row comes from (plantcraft/platform/plantdraft.py): a rule, a document's passage or the model. */
 interface DraftSource { by: "rules" | "documents" | "model"; label: string; ref?: string; section?: string; excerpt: string }
 interface DraftRow { confidence: "high" | "medium" | "low"; why: string; sources: DraftSource[] }
 export interface DraftSummary { tags: number; loops: number; instruments: number; equipment: number; units: number; areas: number; placed: number; by_model: number; dropped: number; unsure: number; unrecognised: number; documents?: boolean; model?: boolean }
@@ -76,7 +76,7 @@ interface StartStep { app: string; app_name: string; id: string; title: string; 
 interface StartDone { summary: string; counts: Record<string, number>; open: string | null }
 type StepState = { state: "running" } | { state: "done"; done: StartDone } | { state: "failed"; error: string };
 
-/** The newest import applied, kept so it can be taken back once (owner, 2026-10-24). */
+/** The newest import applied, kept so it can be taken back once. */
 export type LastImport = { import_id: number; at: string; actor: string; summary: { created?: number; updated?: number; relations?: number }; undone_at: string | null; undone_by: string | null; can_undo: boolean };
 export const exportUrl = (kind: string, root: string) => `/api/asset-file/export.${kind}${root ? `?root=${enc(root)}` : ""}`;
 
@@ -203,7 +203,7 @@ export function AssetImportPage() {
   </>;
 }
 
-/** Assets › Import › Draft a new plant (owner decision D5, 2026-10-27): the first tree drafted from
+/** Assets › Import › Draft a new plant: the first tree drafted from
  * the plant's tags, placed by its documents and, for what stays unsure, a language model. The
  * draft opens on the review page like a file: nothing is written until it is applied. */
 function DraftPanel({ anchor }: { anchor: string }) {

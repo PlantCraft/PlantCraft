@@ -107,19 +107,19 @@ the trigger in the note happens) or **keep** (a library would add more than it r
 
 | Ours | Where | Alternative | Verdict |
 |---|---|---|---|
-| Historian backup (`pg_dump`) | `processcraft/apps/operations.py` | pgBackRest (MIT) | **Later**: when the archive passes about 100 GB (already planned) |
+| Historian backup (`pg_dump`) | `plantcraft/apps/operations.py` | pgBackRest (MIT) | **Later**: when the archive passes about 100 GB (already planned) |
 | Historian archive partitions | `histcraft/archive/partitions.py` | pg_partman (PostgreSQL) | **Later**: if partition upkeep grows; compression and rollups stay ours |
 | Data table (sort, search, filters, pages) | `ui/src/DataTable.tsx` | TanStack Table (MIT) | **Later**: when a list is too long for the browser; the fix then is paging on the server, which a library does not give |
-| Translations (`t()`, JSON catalogues) | `processcraft/i18n`, `ui/src/i18n.ts` | i18next or FormatJS (MIT) | **Later**: when the interface needs a third language or plurals per language |
+| Translations (`t()`, JSON catalogues) | `plantcraft/i18n`, `ui/src/i18n.ts` | i18next or FormatJS (MIT) | **Later**: when the interface needs a third language or plurals per language |
 | SQLite stores and forward migrations | `sdk/python/plantcraft_sdk/server/store.py` (~170 lines) | SQLAlchemy Core + Alembic (MIT) | **Later**: if an app has to run on another database |
-| Release signatures (Ed25519) | `processcraft/apps/release.py`, `deploy/bundle.sh` | minisign (ISC), Sigstore cosign (Apache-2.0) | **Later**: cosign only when releases are public; it needs internet, the bundle does not |
+| Release signatures (Ed25519) | `plantcraft/apps/release.py`, `deploy/bundle.sh` | minisign (ISC), Sigstore cosign (Apache-2.0) | **Later**: cosign only when releases are public; it needs internet, the bundle does not |
 | Markdown renderer | `ui/src/Markdown.tsx` | `react-markdown` + `remark-gfm` (MIT) | **Keep**: small, writes no raw HTML, and draws our flow and stack diagrams |
 | Product tour | `ui/src/Tour.tsx` | Driver.js (MIT) | **Keep**: five languages and the suite frame built in |
 | Navigation between pages | `ui/src/nav.ts` (~60 lines) | React Router (MIT) | **Keep**: each app has a handful of pages |
 | Block engine | `sdk/python/plantcraft_sdk/blocks` | pipefunc, PathSim (MIT) | **Keep**: decided 2026-10-22, the libraries were young |
 | Schedules, job queue and worker pool | `linkcraft/engine` | APScheduler, Procrastinate (MIT) | **Keep**: it would take two libraries (and PostgreSQL for Procrastinate) to do what the app's SQLite does |
 | Historian compression, chunks and rollups | `histcraft/archive` | TimescaleDB | **Keep**: swinging door is the plant historians' method, and TimescaleDB compression is under the Timescale Licence, not open source |
-| Language model client | `processcraft/specialists/model.py` | Official SDKs, LiteLLM (MIT) | **Keep**: plain HTTP speaks both formats with no dependency; off by default |
+| Language model client | `plantcraft/specialists/model.py` | Official SDKs, LiteLLM (MIT) | **Keep**: plain HTTP speaks both formats with no dependency; off by default |
 | SBOM of an image | `sdk/python/plantcraft_sdk/sbom.py` | Syft (Apache-2.0) | **Keep**: Syft is already used when installed; ours is the offline fallback |
 | PI Web API client | `histcraft/sources/pi_web_api.py` | None mature and open | **Keep** |
 | Alarm engine (ISA-18.2 figures) | `alarmcraft/engine` | None mature and open | **Keep** |

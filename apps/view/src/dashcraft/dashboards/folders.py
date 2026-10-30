@@ -28,7 +28,7 @@ from dashcraft.i18n import t
 GENERAL = ""
 MAX_FOLDERS = 200
 MAX_ENTRIES = 100
-# The name of what lies outside every folder (owner, 2026-10-26): no folder takes it.
+# The name of what lies outside every folder: no folder takes it.
 RESERVED = "general"
 ENTRY = re.compile(r"^(user|group):[A-Za-z0-9_.@-]{1,80}$")
 

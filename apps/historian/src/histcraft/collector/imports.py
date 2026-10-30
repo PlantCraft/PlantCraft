@@ -8,7 +8,7 @@ goes (``status`` running, done or error, ``step``, ``done`` of ``total`` tags, `
 ``finished``): the Imports list and the suite's work queue (``GET /api/queue``) read it.
 
 An import that repeats from a folder (``options.repeat``: a file or a pattern in one of the CSV
-folders, owner 2026-10-26) is checked every ``check_minutes``: each file new or changed since
+folders) is checked every ``check_minutes``: each file new or changed since
 the last check (its time and size, kept in ``import-repeat:<id>``) is read the way the import
 reads its files, joins it as a person's next file would (new tags become points) and is written
 the same way. The folder's files are only read: never moved, renamed or changed.

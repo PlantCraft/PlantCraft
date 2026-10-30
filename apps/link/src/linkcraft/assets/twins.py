@@ -239,7 +239,7 @@ __all__ = ["RESULT_NAME", "model_starter", "twin_diagram", "twin_subject", "twin
 def repeated_twins(profiles: list[dict[str, Any]]) -> list[tuple[dict[str, Any], dict[str, Any]]]:
     """The algorithms copied from Twin (``twin_<id>``) that repeat another algorithm of the site
     with the same name, which the demo's examples made too: each with the one it repeats. On an
-    installation that ran both, the two ran on the same assets (owner, 2026-10-24: remove them,
+    installation that ran both, the two ran on the same assets (remove them,
     after a list and a confirmation)."""
 
     others: dict[str, dict[str, Any]] = {}

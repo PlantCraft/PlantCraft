@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plantcraft-sdk"
-version = "0.78.0"
+version = "0.79.0"
 description = "Build apps for the PlantCraft suite: token verification, API v1 client, the @method SDK and a fake PlantCraft for tests"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.11"
@@ -42,7 +42,7 @@ Homepage = "https://github.com/PlantCraft/PlantCraft"
 Repository = "https://github.com/PlantCraft/PlantCraft"
 
 [tool.setuptools.packages.find]
-include = ["plantcraft_sdk*", "processcraft_sdk*"]  # the former import (rename-plantcraft: keep)
+include = ["plantcraft_sdk*", "processcraft_sdk*"]  # the former import
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

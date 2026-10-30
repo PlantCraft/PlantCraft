@@ -122,18 +122,18 @@ td small + small { margin-top: 3px; }
 .section-lead { margin: -6px 0 12px; }
 
 
-/* Results: search and the kind and status filters (dropdowns, owner 2026-10-21). */
+/* Results: search and the kind and status filters (dropdowns). */
 .results-filters .search { flex: 1; min-width: 240px; }
 .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; background: var(--pc-neutral-400, #9aa4b2); }
 .dot-alarm { background: var(--pc-problem-fill); }
 .dot-warning { background: var(--pc-attention-fill); }
 .dot-ok { background: var(--pc-good-fill); }
 
-/* Overview (owner, 2026-10-21: lighter, the same for every kind of subject). */
+/* Overview (lighter, the same for every kind of subject). */
 .used-by p { margin: 0 0 12px; color: var(--pc-text-2); }
 .pcs-tabs + .pc-dt, .pcs-tabs + .notice { margin-top: 12px; }
 
-/* Algorithms (owner, 2026-10-22): the list, an algorithm's page and the editor's own window. The
+/* Algorithms: the list, an algorithm's page and the editor's own window. The
    diagram itself is the suite's BlockEditor (@plantcraft/ui/blockEditor.css). */
 .alg-page { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .alg-page-docs .alg-doc-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px 24px; }
@@ -265,7 +265,7 @@ td small + small { margin-top: 3px; }
 @media (max-width: 760px) { .blkt-source { flex-direction: column; } }
 
 /* Schedules: the form on a page of its own, with its preview beside it. */
-/* A schedule's page (owner, 2026-10-24): what it runs first, then the form in one column of
+/* A schedule's page: what it runs first, then the form in one column of
    titled sections, label above field, actions at the end on the right. */
 .schedule-sections { display: grid; gap: 16px; min-width: 0; margin-bottom: 16px; }
 /* Each part (owner D21, 2026-10-26): title and what it is for on the left, fields on the right. */
@@ -348,7 +348,7 @@ td small + small { margin-top: 3px; }
 .alg-tags { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 @media (max-width: 760px) { .alg-who dl { grid-template-columns: auto 1fr; } }
 
-/* Executions by schedule: status is a quiet word with a dot, never a loud badge (owner, 2026-10-24). */
+/* Executions by schedule: status is a quiet word with a dot, never a loud badge. */
 .status-word { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; color: var(--pc-text-2, inherit); white-space: nowrap; }
 .status-word i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
 .group-summary .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px 24px; margin: 0; }
@@ -370,7 +370,7 @@ td small + small { margin-top: 3px; }
 .subject-chart-tools select { min-width: 12rem; }
 .run-open { white-space: nowrap; }
 
-/* An algorithm's page (owner, 2026-10-24): versions on top, who answers for it in one line, the texts one under the other. */
+/* An algorithm's page: versions on top, who answers for it in one line, the texts one under the other. */
 .alg-who-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 0 0 var(--pc-space-3); font-size: var(--pc-fs-sm); color: var(--pc-text-2); }
 .alg-who-line small { color: var(--pc-text-3); margin-right: 4px; }
 .alg-versions ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 420px; overflow-y: auto; }
@@ -382,7 +382,7 @@ td small + small { margin-top: 3px; }
 .alg-version small { color: var(--pc-text-3); }
 .alg-page-docs .alg-doc-list { grid-template-columns: 1fr; max-width: 78ch; }
 
-/* An algorithm's page, round 8: a block's tabs, versions on the right (owner, 2026-10-24). */
+/* An algorithm's page, round 8: a block's tabs, versions on the right. */
 .alg-node-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--pc-space-3) var(--pc-space-4); }
 .alg-node-parameters .panel-header p a { color: inherit; }
 .alg-inputs-save { justify-content: flex-end; }

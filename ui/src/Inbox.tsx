@@ -20,7 +20,7 @@ export function unreadCount(counts: InboxCounts | null | undefined): number {
   return counts.unread_messages + (counts.unread_notifications ?? 0);
 }
 
-/** Every 15 s while the page is visible (owner, 2026-10-26: an alarm must reach people at once). */
+/** Every 15 s while the page is visible (an alarm must reach people at once). */
 export const INBOX_POLL_MS = 15_000;
 
 /** What the sidebar knows: the counts (null: no badge) and whether the person may not use Messages. */

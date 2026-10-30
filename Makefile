@@ -1,5 +1,8 @@
 # Same checks as CI. `make ci` must be green before every push (AGENTS.md, section 4).
-.PHONY: ci ci-all api-contract lint test test-fast frontend notebooks notebook-kits notebook-kit-lock e2e e2e-suite e2e-bundle e2e-upgrade bench-suite soak format image simcraft-image bundle isolation lock
+.PHONY: ci ci-all api-contract lint test test-fast frontend notebooks notebook-kits notebook-kit-lock e2e e2e-suite e2e-bundle e2e-upgrade bench-suite soak format image simcraft-image bundle isolation lock apps-images release-bundle
+
+# macOS ships python3 only; a virtual environment gives both names.
+PYTHON ?= $(shell command -v python >/dev/null 2>&1 && echo python || echo python3)
 
 ci: sdk lint test frontend
 
@@ -9,9 +12,9 @@ ci-all: ci
 	@for dir in apps/*/ simulator/; do echo "== $$dir"; $(MAKE) -C $$dir ci || exit 1; done
 
 # API v1 as this commit serves it (docs/api/v1/openapi.json) and its reference page; CI refuses a
-# commit whose API v1 differs from the file, or that breaks a release's (processcraft.api.contract).
+# commit whose API v1 differs from the file, or that breaks a release's (plantcraft.api.contract).
 api-contract:
-	python -m processcraft.api.contract write
+	$(PYTHON) -m plantcraft.api.contract write
 
 lint:
 	ruff check .
@@ -22,22 +25,22 @@ format:
 	ruff check --fix .
 
 test:
-	python -m pytest -q --ignore=tests/e2e
-	python -m pytest -q sdk/python/tests
+	$(PYTHON) -m pytest -q --ignore=tests/e2e
+	$(PYTHON) -m pytest -q sdk/python/tests
 
 # The loop while working: everything but the slow tier (docs/testing.md).
 test-fast:
-	python -m pytest -q --ignore=tests/e2e -m "not slow"
-	python -m pytest -q sdk/python/tests -m "not slow"
+	$(PYTHON) -m pytest -q --ignore=tests/e2e -m "not slow"
+	$(PYTHON) -m pytest -q sdk/python/tests -m "not slow"
 
-# plantcraft-sdk (sdk/python) is a dependency of processcraft: install it from the tree, into
+# plantcraft-sdk (sdk/python) is a dependency of plantcraft: install it from the tree, into
 # the active virtual environment only. Nothing is installed when the SDK Python imports is already
 # this tree's; outside a virtual environment (and outside CI, which sets CI) it stops instead of
 # changing a shared Python. GitHub CI installs it in its own steps (.github/workflows/ci.yml).
 .PHONY: sdk
 sdk:
-	@python -c "$$SDK_CHECK"; status=$$?; \
-		if [ $$status -eq 3 ]; then python -m pip install -q -e sdk/python; \
+	@$(PYTHON) -c "$$SDK_CHECK"; status=$$?; \
+		if [ $$status -eq 3 ]; then $(PYTHON) -m pip install -q -e sdk/python; \
 		elif [ $$status -ne 0 ]; then exit $$status; fi
 
 # Exit 0: the SDK Python imports is this tree's; 3: install it here; 2: not in a virtual env.
@@ -67,7 +70,7 @@ sdk-wheel:
 		| grep -zv '^sdk/python/tests/' | xargs -0 cp --parents -t build/sdk-wheel
 	find build/sdk-wheel -type d -exec chmod 755 {} + && find build/sdk-wheel -type f -exec chmod 644 {} +
 	rm -f dist/plantcraft_sdk-*.whl
-	umask 022 && SOURCE_DATE_EPOCH=$(SDK_EPOCH) PYTHONHASHSEED=0 python -m pip wheel -q --no-deps --no-cache-dir \
+	umask 022 && SOURCE_DATE_EPOCH=$(SDK_EPOCH) PYTHONHASHSEED=0 $(PYTHON) -m pip wheel -q --no-deps --no-cache-dir \
 		-w dist build/sdk-wheel/sdk/python
 	rm -rf build/sdk-wheel
 	@sha256sum dist/plantcraft_sdk-*.whl
@@ -78,7 +81,7 @@ frontend: ui-check
 # Notebooks: JupyterLite with a pruned Pyodide in notebooks/dist (online, about a minute; the image
 # builds it in its own stage). Its own virtual environment: Jupyter's pins stay out of ours.
 notebooks:
-	test -x notebooks/.venv/bin/python || python -m venv notebooks/.venv
+	test -x notebooks/.venv/bin/python || $(PYTHON) -m venv notebooks/.venv
 	notebooks/.venv/bin/pip install -q -r notebooks/requirements.txt
 	notebooks/.venv/bin/python notebooks/build.py
 
@@ -86,7 +89,7 @@ notebooks:
 # a few minutes, about 180 MB each; an optional part of the bundle). uv fetches each system's wheels,
 # checked against notebooks/kit/requirements.txt; notebook-kit-lock writes that file again.
 notebook-kits:
-	test -x notebooks/.venv/bin/python || python -m venv notebooks/.venv
+	test -x notebooks/.venv/bin/python || $(PYTHON) -m venv notebooks/.venv
 	notebooks/.venv/bin/pip install -q uv==0.11.32
 	UV=notebooks/.venv/bin/uv notebooks/.venv/bin/python notebooks/kit/build_kit.py
 
@@ -98,7 +101,7 @@ notebook-kit-lock:
 # Apps vendor the packed file like the SDK wheel; PlantCraft's own frontend installs the same
 # file from frontend/vendor/. `make ui-package` rebuilds it; `make ui-check` (part of `make
 # frontend`) fails when the vendored file is not what ui/ builds now.
-UI_VERSION := $(shell python -c "import json; print(json.load(open('ui/package.json'))['version'])")
+UI_VERSION := $(shell $(PYTHON) -c "import json; print(json.load(open('ui/package.json'))['version'])")
 UI_TGZ := plantcraft-ui-$(UI_VERSION).tgz
 .PHONY: ui ui-package ui-check
 ui:
@@ -118,12 +121,12 @@ ui-check: ui
 	@sha256sum frontend/vendor/$(UI_TGZ)
 
 e2e:
-	python -m pytest -q tests/e2e
+	$(PYTHON) -m pytest -q tests/e2e
 
 # The demo story across every app, on a live installation (never in GitHub CI: locally or on the
 # Mac mini runner). SUITE_URL=https://host/ ; see tests/e2e_suite/conftest.py for the options.
 e2e-suite:
-	PLANTCRAFT_SUITE_URL=$(SUITE_URL) python -m pytest -q tests/e2e_suite
+	PLANTCRAFT_SUITE_URL=$(SUITE_URL) $(PYTHON) -m pytest -q tests/e2e_suite
 
 # Source to walked demo on this machine: every image, the bundle, a clean install with the public
 # demo and the suite journeys (ci/e2e-bundle.sh; needs the app checkouts next to this one).
@@ -150,13 +153,13 @@ soak:
 	python3 ci/bench/soak.py --prefix "$(BENCH_PREFIX)" --hours $(SOAK_HOURS)
 
 # Offline Docker deployment (deploy/, docs/install-offline.md).
-VERSION ?= $(shell python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+VERSION ?= $(shell $(PYTHON) -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
 LINKCRAFT_VERSION ?= $(VERSION)
 DASHCRAFT_VERSION ?= $(VERSION)
 HISTCRAFT_VERSION ?= $(VERSION)
 # The Simulator (the `demo` profile's OPC UA simulator) is its own product with its own version:
 # its image is built from simulator/ and bundled and tested only when that image exists.
-SIMCRAFT_VERSION ?= 0.5.0
+SIMCRAFT_VERSION ?= 0.5.1
 SIMCRAFT_SRC ?= simulator
 # Optional: BUILD_CA=/path/ca.pem behind a TLS-inspecting proxy; DOCKER_BUILD_FLAGS for the rest
 # (for example --network host); PROXY_BUILD_FLAGS only for the proxy image (for example
@@ -187,7 +190,7 @@ image:
 # DOCKER_BUILD_FLAGS (for example --build-arg PYTHON_IMAGE=<mirror>/python:...@sha256:<same digest>).
 simcraft-image:
 	@test -f "$(SIMCRAFT_SRC)/Dockerfile" || { echo "no Simulator at $(SIMCRAFT_SRC): set SIMCRAFT_SRC"; exit 1; }
-	@found=$$(cd "$(SIMCRAFT_SRC)" && python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"); \
+	@found=$$(cd "$(SIMCRAFT_SRC)" && $(PYTHON) -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"); \
 		test "$$found" = "$(SIMCRAFT_VERSION)" || { echo "$(SIMCRAFT_SRC) is the Simulator $$found, not $(SIMCRAFT_VERSION): set SIMCRAFT_VERSION"; exit 1; }
 	$(MAKE) -C "$(SIMCRAFT_SRC)" image VERSION=$(SIMCRAFT_VERSION) BUILD_CA="$(BUILD_CA)" \
 		DOCKER_BUILD_FLAGS="$(DOCKER_BUILD_FLAGS)"
@@ -197,12 +200,20 @@ simcraft-image:
 # with it install on a development stack (docs/app-package.md).
 .PHONY: dev-publisher
 dev-publisher:
-	python processcraft/apps/package.py keygen --name dev-publisher --out-dir keys
+	$(PYTHON) plantcraft/apps/package.py keygen --name dev-publisher --out-dir keys
 	cp keys/dev-publisher.pub deploy/trusted-publishers/dev-publisher.pub
 
 # With the Simulator at SIMCRAFT_SRC its image is built too; without it, the bundle
 # ships without the Simulator and the isolation tests use a stand-in on the demo network.
 WITH_SIMCRAFT := $(if $(wildcard $(SIMCRAFT_SRC)/Dockerfile),simcraft-image)
+
+# Every app's image at this checkout's versions (and Models' runner): what `release-bundle` ships.
+apps-images:
+	for app in alarms documents historian link models view; do $(MAKE) -C apps/$$app image || exit 1; done
+	$(MAKE) -C apps/models runner-image
+
+# The release: the platform, every app and the Simulator in one bundle.
+release-bundle: apps-images bundle
 
 # The bundle carries the Notebooks kits (built again only when what makes them changed).
 bundle: image notebook-kits $(WITH_SIMCRAFT)
@@ -214,11 +225,11 @@ isolation: image $(WITH_SIMCRAFT)
 	PLANTCRAFT_ISOLATION=live PLANTCRAFT_VERSION=$(VERSION) LINKCRAFT_VERSION=$(LINKCRAFT_VERSION) \
 		DASHCRAFT_VERSION=$(DASHCRAFT_VERSION) \
 		HISTCRAFT_VERSION=$(HISTCRAFT_VERSION) \
-		SIMCRAFT_VERSION=$(SIMCRAFT_VERSION) python -m pytest -q tests/test_isolation.py
+		SIMCRAFT_VERSION=$(SIMCRAFT_VERSION) $(PYTHON) -m pytest -q tests/test_isolation.py
 
 lock:
 	uv pip compile deploy/requirements.in --python-version 3.13 \
 		--python-platform x86_64-manylinux_2_28 --generate-hashes --no-header --quiet \
-		--no-emit-package processcraft --no-emit-package plantcraft-sdk \
+		--no-emit-package plantcraft --no-emit-package plantcraft-sdk \
 		-o deploy/requirements.lock
 	sed -i '1i # Pinned, hashed dependencies of the Docker image (Python 3.13, Linux). Regenerate with\n# `make lock` after changing a pyproject.toml; the image build refuses any file whose hash differs.' deploy/requirements.lock

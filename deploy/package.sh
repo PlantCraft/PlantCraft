@@ -12,11 +12,11 @@
 # --out       folder for <id>-<version>.pcapp (default dist/)
 #
 # Usable from another repository: it needs only bash, docker, python3 with `cryptography`, and
-# processcraft/apps/package.py next to this script (or PLANTCRAFT_PACKAGE_PY pointing at it).
+# plantcraft/apps/package.py next to this script (or PLANTCRAFT_PACKAGE_PY pointing at it).
 set -Eeuo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PACKAGE_PY="${PLANTCRAFT_PACKAGE_PY:-$HERE/../processcraft/apps/package.py}"
+PACKAGE_PY="${PLANTCRAFT_PACKAGE_PY:-$HERE/../plantcraft/apps/package.py}"
 MANIFEST="" IMAGE="" KEY="" SBOM="" OUT="dist" GZIP="--gzip"
 
 die() { printf 'package: ERROR: %s\n' "$*" >&2; exit 1; }

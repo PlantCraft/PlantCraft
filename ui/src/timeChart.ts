@@ -2,7 +2,7 @@
  * The suite's time chart: one look for every trend (Trends in View, a point's page in the
  * Historian, …). Pure helpers for Plotly, so this package needs no chart library: each app
  * draws with its own Plotly build and takes the periods, the layout, the hover text and the
- * buttons from here (owner, 2026-10-22: "the same chart everywhere").
+ * buttons from here ("the same chart everywhere").
  */
 import { BRAND_COLORS, plotTheme, statusColors, type BrandTheme } from "./brandTheme.js";
 import { t } from "./i18n.js";
@@ -28,7 +28,7 @@ export function windowLabel(window: string): string {
   return t("{count} {unit}", { count, unit: t(count === 1 ? unit[0] : unit[1]) });
 }
 
-/** The modebar keeps zoom, pan, autoscale, reset and the picture (owner, 2026-10-21). */
+/** The modebar keeps zoom, pan, autoscale, reset and the picture. */
 export const PLOT_BUTTONS_OFF = ["select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "toggleSpikelines", "hoverClosestCartesian", "hoverCompareCartesian"] as const;
 
 /** Plotly's config of a time chart; `modeBar: false` hides the buttons (small cards). */

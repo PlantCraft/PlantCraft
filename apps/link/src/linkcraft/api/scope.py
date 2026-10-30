@@ -1,4 +1,4 @@
-"""The part of the plant a person sees (PlantCraft's docs/asset-scope.md, decision D2): their
+"""The part of the plant a person sees (PlantCraft's docs/asset-scope.md): their
 token's claim ``assets`` names the roots of the asset tree they see. Analytics answers them only
 about the loops, signals and assets under those roots; what is outside reads as not found.
 

@@ -1,5 +1,5 @@
 /**
- * Results (owner, 2026-10-23): the latest result of every algorithm on every asset it runs on, on
+ * Results: the latest result of every algorithm on every asset it runs on, on
  * one list, whatever the algorithm: the asset and its type, the algorithm and its version, the
  * status in the suite's words, the headline measure, the finding, when, and the algorithm's tags.
  * The filters are the algorithm, the tag, the asset type, the responsible group and the status;

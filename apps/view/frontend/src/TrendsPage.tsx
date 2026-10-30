@@ -16,7 +16,7 @@ import { DEFAULT_STYLE, EMPTY_VIEW, MAX_LINES, MAX_PLOTS, chipText, periodLabel,
 import type { LineStyle, Me, Trend, TrendAgg, TrendData, TrendLineSpec, TrendPeriod, TrendView } from "./types";
 import { ErrorBox, Heading, Link, Loading } from "./ui";
 
-/** The chart's own theme (owner, 2026-10-23): "auto" follows the platform; light or dark fixes
+/** The chart's own theme: "auto" follows the platform; light or dark fixes
  * it, the PNG included, to send a chart whatever theme the page is in. Kept per browser. */
 export type ChartTheme = "auto" | BrandTheme;
 const CHART_THEME_KEY = "dashcraft.chart-theme";
@@ -114,7 +114,7 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
   const [view, setView] = useState<TrendView>(EMPTY_VIEW);
   const [data, setData] = useState<TrendData | null>(null);
   const [loading, setLoading] = useState(false);
-  // Full screen (owner, 2026-10-21): the chart panel alone, Esc leaves.
+  // Full screen: the chart panel alone, Esc leaves.
   const chartRef = useRef<HTMLDivElement>(null);
   const [full, setFull] = useState(false);
   // View's work here (app.toml): explain the trend on screen.
@@ -259,7 +259,7 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
   </>;
 }
 
-/** A trend over another page (owner, 2026-10-27): a click on a value of a process display draws
+/** A trend over another page: a click on a value of a process display draws
  * its signals here, with the period, the interval and each line's settings as in Trends, without
  * leaving the display; "Open in Trends" goes on with it there (to save it, add subplots).
  * Rendered where it is opened, so it shows inside a full-screen display too. */

@@ -1,6 +1,6 @@
 /* Desk (Desk.tsx, DeskPages.tsx, CalendarPage.tsx): each person's day. Tokens only. */
 .dk-heading { margin-bottom: 6px; }
-/* Today's top (owner, 2026-10-24): the greeting, the date and the time, nothing else. */
+/* Today's top: the greeting, the date and the time, nothing else. */
 .dk-heading-when { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 2px 0 0; color: var(--pc-text-3); }
 .dk-heading-when span::first-letter { text-transform: uppercase; }
 .dk-heading-when time { color: var(--pc-text-2); font-weight: 600; font-variant-numeric: tabular-nums; }

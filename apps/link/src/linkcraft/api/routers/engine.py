@@ -341,7 +341,7 @@ def _recorded_outputs(
 
 
 def _refuse_overlap(rt: Any, schedule: dict[str, Any], exclude: str | None = None) -> None:
-    """Each asset runs an algorithm in one schedule only (owner, 2026-10-24): its results and
+    """Each asset runs an algorithm in one schedule only: its results and
     signals then have one origin."""
 
     if schedule.get("kind") == "round":
@@ -524,7 +524,7 @@ def create_schedule(payload: SchedulePayload, user: EditorUser, rt: RuntimeDep) 
         raise HTTPException(status_code=422, detail=t("Choose when it runs."))
     on_assets = _on_assets(rt, payload.profile_id)
     if on_assets:
-        # An algorithm on assets runs on the assets the schedule names (owner, 2026-10-24).
+        # An algorithm on assets runs on the assets the schedule names.
         if not (payload.selector or {}).get("ids"):
             raise HTTPException(status_code=422, detail=t("Choose the assets it runs on."))
         payload.selector = {"mode": "list", "ids": list(dict.fromkeys(payload.selector["ids"]))}

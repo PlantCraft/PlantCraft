@@ -4,7 +4,7 @@ import { blockPath, modelPath, runPath } from "./paths";
 import { FlaskConical, LayoutDashboard, ListOrdered, Puzzle, Workflow } from "lucide-react";
 
 /** The app's own pages in the suite frame (app standard, section 10); Help is the frame's own
- * entry. One level, no sub-items, in Link's order (owner, 2026-10-24): Blocks are what a diagram
+ * entry. One level, no sub-items, in Link's order: Blocks are what a diagram
  * is drawn with, Models the diagrams (and the code a model or a library is written in), Studies
  * compare a model's runs over its parameters, Executions are the queue and every run. */
 export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
@@ -41,7 +41,7 @@ export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
 ];
 
 /** The pages the tour opens, when this installation has them: a block, an example model and a
- * finished simulation (owner, 2026-10-28). */
+ * finished simulation. */
 export type TourExamples = { block: string | null; model: string | null; run: string | null };
 
 export async function tourExamples(): Promise<TourExamples> {

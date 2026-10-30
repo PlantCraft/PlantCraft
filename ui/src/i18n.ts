@@ -6,7 +6,7 @@ type Translate = (text: string, values?: Record<string, string | number>) => str
 
 let translate: Translate = fillText;
 let currentLocale = "en-US";
-// Translations are switched off for now (owner, 2026-10-23): the suite speaks English until the
+// Translations are switched off for now: the suite speaks English until the
 // platform settles; the catalogs stay and come back with configureUi({ translations: true }).
 let translations = false;
 

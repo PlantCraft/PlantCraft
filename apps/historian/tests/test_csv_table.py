@@ -1,5 +1,5 @@
 """The CSV reader shared by imports and CSV sources: shapes, separators, times, and a report
-that names the lines to fix (owner, 2026-10-24: the platform says whether the file is right)."""
+that names the lines to fix (the platform says whether the file is right)."""
 
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 /**
- * Algorithms (owner, 2026-10-23): one list, PlantCraft's own and the site's together, each a block
+ * Algorithms: one list, PlantCraft's own and the site's together, each a block
  * diagram that judges loops, signals or assets on a schedule, with its tags, author, owner,
  * version and how many assets use it. The list opens an algorithm's page, which has a block's tabs
  * and, like a block's, Duplicate, Download the file and Delete on top and New version on its
@@ -358,7 +358,7 @@ const withParameters = (diagram: Diagram, specs: BlockSpecs) => diagram.nodes.fi
 /** The algorithm's contract as a list, like a block's: what it reads and gives, the data window
  * and every block's parameters with their values. Changing them is New version. */
 function InputsTab({ algorithm, read, specs, me, editable, newVersion, onSaved: saved }: { algorithm: Algorithm; read: Algorithm; specs: BlockSpecs; me: Me; editable: boolean; newVersion: string | null; onSaved: (next: Algorithm) => void }) {
-  // Like a block's (owner, 2026-10-27): its parameters change right here, and saving them is the
+  // Like a block's: its parameters change right here, and saving them is the
   // next version with what changed; inputs and outputs change in New version (the diagram).
   const [diagram, setDiagram] = useState(read.diagram);
   const [saving, setSaving] = useState(false);
@@ -745,7 +745,7 @@ export function AlgorithmPage({ algorithmId, tab, me }: { algorithmId: string; t
       </section>}
       {tab === "inputs" && <InputsTab key={`${read.algorithm_id}-${read.version}`} algorithm={algorithm} read={read} specs={specs} me={me} editable={editable && !older} newVersion={editable ? `${base}/edit${at}` : null} onSaved={saved} />}
       {tab === "settings" && <div className="alg-settings">
-        {/* Who answers for it and where its runs go: settings, not versions (owner, 2026-10-27). */}
+        {/* Who answers for it and where its runs go: settings, not versions. */}
         <Stewardship key={`${algorithm.algorithm_id}-${algorithm.version}`} algorithm={algorithm} me={me} onSaved={saved} />
         <WhereItRuns key={`where-${algorithm.algorithm_id}-${algorithm.version}`} algorithm={algorithm} onSaved={saved} />
       </div>}

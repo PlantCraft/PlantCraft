@@ -1,7 +1,7 @@
 /**
  * `/blocks`: what a model's diagram is drawn with, by library (Sources, Math, Continuous,
  * Control, Process equipment, Sinks, and the site's own), like Analytics' Blocks.
- * `/blocks/<class>[/<tab>]`: one block on the tabs Analytics' blocks have (owner, 2026-10-27):
+ * `/blocks/<class>[/<tab>]`: one block on the tabs Analytics' blocks have:
  * Overview (its drawing and what it does, how to read it, its formula), Inputs and outputs (with
  * its parameters; a site block's defaults change there, as a new version), Code, Used by and
  * Versions. The shipped libraries are read-only; Duplicate copies any block into the site's own
@@ -194,7 +194,7 @@ function BlockPicture({ block, canEdit, onChanged }: { block: CatalogBlock; canE
 }
 
 /** Inputs, outputs and parameters; a site block's defaults change here and saving is a new
- * version with what changed (owner, 2026-10-27). A model that sets its own value keeps it. */
+ * version with what changed. A model that sets its own value keeps it. */
 function InputsTab({ block, canEdit, onSaved }: { block: CatalogBlock; canEdit: boolean; onSaved: (block: CatalogBlock) => void }) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});
   const [naming, setNaming] = useState(false);
@@ -245,7 +245,7 @@ function DuplicateDialog({ block, onClose }: { block: CatalogBlock; onClose: () 
   </Dialog>;
 }
 
-/** One block on the pages Link's blocks have (owner, 2026-10-24): Overview, Code, Inputs and
+/** One block on the pages Link's blocks have: Overview, Code, Inputs and
  * parameters, Used by and Versions (what it is, then its versions; round 9). */
 export function BlockPage({ blockId, tab, me }: { blockId: string; tab: BlockTab; me: Me }) {
   const [block, setBlock] = useState<CatalogBlock | null>(null);

@@ -127,7 +127,7 @@ class EscalationStep(BaseModel):
 
 def zone_of(name: str | None) -> ZoneInfo:
     """The policy's time zone: ``local`` (or nothing) is the installation's, as PlantCraft says
-    it (owner, 2026-10-27: times in the user's zone, never UTC by default); a name unknown here is
+    it (times in the user's zone, never UTC by default); a name unknown here is
     the installation's too (no crash on an old image)."""
 
     return sdk_zone_of(name)

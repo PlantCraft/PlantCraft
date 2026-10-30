@@ -11,7 +11,7 @@ secret `BANNED_WORDS` and fails on any of them in the tree or in a pull request'
 
 `dev/snapshot` still builds one clean commit of a repository and checks it, for example
 `PlantCraft/plantcraft-app-template`, the starting point for anyone who builds an app of their
-own (`templates/app`). Creating repositories and making anything public stays the owner's
+own (`templates/app`). Creating repositories and making anything public stays a maintainer's
 decision (AGENTS.md, section 9).
 
 ## Building the snapshot
@@ -24,8 +24,8 @@ BANNED_FILE=~/banned-words.txt OWNER=PlantCraft REF=origin/main dev/snapshot ~/s
 For each repository the script:
 
 1. takes the files of `REF` (default `origin/main`) and none of the history;
-2. leaves out what is never published (`ci/macmini`, the owner's own build machine);
-3. rewrites the links to the private repositories so they name the new owner, and turns the owner's
+2. leaves out what is never published (`ci/macmini`, a maintainer's own build machine);
+3. rewrites the links to the private repositories so they name the new owner, and turns a maintainer's
    own machine name into a neutral example host;
 4. checks the gates below;
 5. when every gate passes, makes one commit and writes `<repo>.bundle`. A bundle is a whole git
@@ -80,7 +80,7 @@ notices in the images that carry them.
 
 ## Pushing a bundle
 
-This is done by the owner, once the new repository exists and is still private:
+This is done by a maintainer, once the new repository exists and is still private:
 
 ```sh
 git clone PlantCraft.bundle PlantCraft && cd PlantCraft

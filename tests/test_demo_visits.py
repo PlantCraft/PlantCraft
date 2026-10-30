@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.auth.demo_visits import LINE_GONE_SECONDS, DemoVisits, Visit, Waiting
-from processcraft.db import Database
+from plantcraft.api.app import create_app
+from plantcraft.auth.demo_visits import LINE_GONE_SECONDS, DemoVisits, Visit, Waiting
+from plantcraft.db import Database
 
 ROOT = Path(__file__).resolve().parents[1]
 EDGE = {"X-PlantCraft-Edge": "1"}
@@ -213,7 +213,7 @@ def test_the_guide_a_visitor_picked_is_in_the_audit_log_and_the_links_are_read(d
 
 def test_an_ipv6_visitor_counts_by_its_block_not_its_device():
     # One home gets a /64 and every device there its own address: they share their places.
-    from processcraft.api.routers.demo import _place_of
+    from plantcraft.api.routers.demo import _place_of
 
     assert _place_of("2804:14c:1:2::a") == _place_of("2804:14c:1:2:ffff::b") == "2804:14c:1:2::/64"
     assert _place_of("2804:14c:1:3::a") != _place_of("2804:14c:1:2::a")

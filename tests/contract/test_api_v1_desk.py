@@ -145,7 +145,7 @@ def test_a_to_do_outside_the_rules_is_refused_and_nobody_else_ticks_it(central):
 
 
 def test_an_app_gives_one_person_200_open_to_dos_at_most(central, monkeypatch):
-    from processcraft.desk import app_items
+    from plantcraft.desk import app_items
 
     monkeypatch.setattr(app_items, "MAX_OPEN_TODOS", 2)
     headers = _declared(central)

@@ -1,7 +1,7 @@
 """The demo's process display (``deploy/demo/diagrams``), which the seed creates in View.
 
 It is drawn on the plant map shipped with the demo, so it must keep up with it: the whole plant
-on one page (owner, 2026-10-27), every loop of the map drawn exactly once, every bound asset in
+on one page, every loop of the map drawn exactly once, every bound asset in
 the map, every line between two symbols of the display and every symbol at the library's own
 proportions. View checks the rest of the contract when the seed posts it
 (``apps/view/src/dashcraft/diagrams/model.py``).
@@ -47,7 +47,7 @@ def test_every_loop_is_drawn_exactly_once_on_one_page() -> None:
 
 
 def test_the_parts_are_tabs_to_each_tile_of_the_page() -> None:
-    """Overview and a tab per part (owner, 2026-10-28): every part a tile inside the canvas."""
+    """Overview and a tab per part: every part a tile inside the canvas."""
 
     display = _plant()
     parts = display["parts"]
@@ -135,7 +135,7 @@ class _View:
 
 
 def test_seed_creates_it_once_and_replaces_the_old_one_page_diagrams() -> None:
-    from processcraft.demo_seed import Suite, view_diagrams
+    from plantcraft.demo_seed import Suite, view_diagrams
 
     view = _View()
     view.diagrams["old"] = {"name": "Atmospheric column", "tags": ["demo"], "elements": []}
@@ -152,7 +152,7 @@ def test_seed_creates_it_once_and_replaces_the_old_one_page_diagrams() -> None:
 
 
 def test_seed_redraws_the_paged_demo_display_on_one_page_and_leaves_a_redrawn_one() -> None:
-    from processcraft.demo_seed import Suite, view_diagrams
+    from plantcraft.demo_seed import Suite, view_diagrams
 
     paged = {"id": "overview", "name": "Overview"}, {"id": "column", "name": "Column"}
     view = _View()

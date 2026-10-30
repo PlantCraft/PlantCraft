@@ -66,7 +66,7 @@ EXPECTED_NETWORKS = {
 }
 # HistCraft's database network: HistCraft, its collector and its database only.
 HISTDB_SERVICES = {"histcraft", "histcraft-collector", "histcraft-db"}
-# llm-egress (processcraft/egress): the only service that resolves internet names, and opens a
+# llm-egress (plantcraft/egress): the only service that resolves internet names, and opens a
 # tunnel only to the hosts of the language model providers PlantCraft lists.
 LLM_EGRESS = "llm-egress"
 LLM_SERVICES = {"processcraft", LLM_EGRESS}
@@ -87,7 +87,7 @@ MODELCRAFT_RUNNER_IMAGE = "modelcraft-runner"
 # The apps' executors on the local compute worker (docs/compute.md): they run what people wrote.
 EXECUTORS = {"linkcraft-executor": "linkcraft", MODELCRAFT_RUNNER: "modelcraft"}
 # An executor runs its app's own image, but for Models' runner (OpenModelica's, same version).
-EXECUTOR_IMAGES = {MODELCRAFT_RUNNER: f"{MODELCRAFT_RUNNER_IMAGE}:${{MODELCRAFT_VERSION:-0.5.0}}"}
+EXECUTOR_IMAGES = {MODELCRAFT_RUNNER: f"{MODELCRAFT_RUNNER_IMAGE}:${{MODELCRAFT_VERSION:-0.5.1}}"}
 # The app's setting that sends its work to the compute workers (default `suite`).
 COMPUTE_SETTINGS = {"linkcraft": "LINKCRAFT_COMPUTE", "modelcraft": "MODELCRAFT_RUNNER"}
 # Services with no network at all.
@@ -143,7 +143,7 @@ def test_simcraft_runs_its_own_image() -> None:
     """The demo plant is the Simulator's image (uid 10004), serving its loop portfolio."""
 
     plant = _services()["simcraft"]
-    assert plant["image"] == "simcraft:${SIMCRAFT_VERSION:-0.5.0}"
+    assert plant["image"] == "simcraft:${SIMCRAFT_VERSION:-0.5.1}"
     assert _uid(plant["user"]) == "10004"
     assert plant["command"][:3] == ["simcraft", "loops", "serve"]
     endpoint = plant["command"][plant["command"].index("--endpoint") + 1]
@@ -296,7 +296,7 @@ def test_llm_egress_opens_only_what_plantcraft_lists() -> None:
     services = _services()
     gate = services[LLM_EGRESS]
     assert gate["image"].startswith("processcraft:") and _uid(gate["user"]) == "10014"
-    assert gate["command"] == ["python", "-m", "processcraft.egress", "serve"]
+    assert gate["command"] == ["python", "-m", "plantcraft.egress", "serve"]
     assert gate["volumes"] == ["./data/egress:/egress:ro"]
     assert "secrets" not in gate and "profiles" not in gate
     assert gate["environment"]["PLANTCRAFT_EGRESS_ALLOWLIST"] == "/egress/allow.json"
@@ -313,7 +313,7 @@ def test_apps_follow_the_linkcraft_pattern(app: str) -> None:
 
     prefix, port, uid, root_variable = APPS[app]
     service = _services()[app]
-    assert service["image"] == f"{app}:${{{app.upper()}_VERSION:-0.5.0}}"
+    assert service["image"] == f"{app}:${{{app.upper()}_VERSION:-0.5.1}}"
     assert service["user"] == f"{uid}:{uid}"
     environment = service["environment"]
     assert environment["PLANTCRAFT_URL"] == "http://processcraft:8060"
@@ -482,7 +482,7 @@ def test_proxy_routes_and_stays_offline() -> None:
     edge = r"\{\s*import upstream (\d+)s\s*import edge\s*\}"
     assert re.search(rf"handle \{{\s*reverse_proxy processcraft:8060 {edge}\s*\}}", code)
     # PlantCraft learns which requests came from outside (people's reads count against their
-    # limits, processcraft/api/usage.py): the proxy sets the mark, whatever the client sent.
+    # limits, plantcraft/api/usage.py): the proxy sets the mark, whatever the client sent.
     assert re.search(r"\(edge\) \{\s*header_up X-PlantCraft-Edge 1\s", code)
     assert code.count("import edge") == code.count("reverse_proxy processcraft:8060")
     # Only refused connections are retried, for a bounded time.
@@ -650,8 +650,8 @@ def test_install_lists_every_app_whose_profile_is_on(
 def test_install_accepts_the_app_keys_processcraft_issues(tmp_path: Path) -> None:
     # The isolation job runs without PlantCraft installed; the backend job runs this test.
     pytest.importorskip("plantcraft_sdk")
-    from processcraft.auth.app_keys import AppKeyStore
-    from processcraft.db import Database
+    from plantcraft.auth.app_keys import AppKeyStore
+    from plantcraft.db import Database
 
     install = (DEPLOY / "install.sh").read_text(encoding="utf-8")
     pattern = re.search(r'\[\[ ! "\$key" =~ (\S+) \]\]', install).group(1)
@@ -806,11 +806,13 @@ STAND_IN_PLANTCRAFT = """
 """
 
 
-# PlantCraft Models' runner without its image: a process that sleeps, with no network.
-STAND_IN_MODELCRAFT_RUNNER = """
-  modelcraft-executor:
-    image: processcraft:{version}
-    command: ["python", "-c", "import time; time.sleep(10 ** 9)"]
+# An executor (or Historian's collector) without its image: a process that sleeps, on the
+# service's own networks.
+STAND_IN_EXECUTOR = """
+  {name}:
+    image: processcraft:{{version}}
+    entrypoint: ["python", "-c", "import time; time.sleep(10 ** 9)"]
+    command: []
     healthcheck:
       test: ["CMD", "python", "-c", "pass"]
 """
@@ -955,9 +957,12 @@ def stack(tmp_path_factory: pytest.TempPathFactory):
                 stand_ins.append(
                     STAND_IN_APP.format(name=app, version="{version}", prefix=app_prefix, port=port)
                 )
-        runner_image = f"{MODELCRAFT_RUNNER_IMAGE}:{_app_version('modelcraft')}"
-        if _docker("image", "inspect", runner_image, check=False).returncode:
-            stand_ins.append(STAND_IN_MODELCRAFT_RUNNER)
+                if app == "histcraft":  # its collector runs the same image
+                    stand_ins.append(STAND_IN_EXECUTOR.format(name="histcraft-collector"))
+        for name, app in EXECUTORS.items():
+            image = MODELCRAFT_RUNNER_IMAGE if name == MODELCRAFT_RUNNER else app
+            if _docker("image", "inspect", f"{image}:{_app_version(app)}", check=False).returncode:
+                stand_ins.append(STAND_IN_EXECUTOR.format(name=name))
         database = _services()[HISTCRAFT_DB]["image"].removeprefix("${HISTCRAFT_DB_IMAGE:-")
         database = os.environ.get("HISTCRAFT_DB_IMAGE") or database.removesuffix("}")
         if _docker("image", "inspect", database, check=False).returncode != 0:

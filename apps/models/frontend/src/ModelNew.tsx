@@ -1,5 +1,5 @@
 /**
- * `/models/new` (owner, 2026-10-25, round 9): a new model the way Link makes a new block or
+ * `/models/new` (round 9): a new model the way Link makes a new block or
  * algorithm. Import a Modelica file, or fill in the form (its name, group and what it is) and go
  * on in the diagram's editor; the assistant's button beside the title opens it on designing a
  * model of blocks.

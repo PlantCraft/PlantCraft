@@ -11,7 +11,7 @@ import { ErrorBox, Heading, Link, Loading, message } from "./ui";
 
 const FOUND_BY: Record<string, string> = { words: "words", meaning: "meaning" };
 
-/** Searches to start from, on the demo plant's documents (owner, 2026-10-28). */
+/** Searches to start from, on the demo plant's documents. */
 const EXAMPLES = [
   "Why does the recycle flow cycle?",
   "FV-1003 online valve test",

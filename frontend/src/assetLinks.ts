@@ -32,7 +32,7 @@ export function appsForAsset(apps: SuiteAppCard[], assetId: string, typePath: st
     .map((app) => ({ id: app.id, name: app.name, href: appAssetHref(app.url, assetId) }));
 }
 
-/** Sources and signals live in the Historian (owner, 2026-10-23); null when it is not installed. */
+/** Sources and signals live in the Historian; null when it is not installed. */
 export function sourcesUrl(data: { apps: Array<{ id: string; url: string; access?: string | null }> }): string | null {
   const hist = data.apps.find((app) => app.id === "histcraft" && app.access);
   return hist ? `${hist.url.replace(/\/?$/, "/")}sources` : null;

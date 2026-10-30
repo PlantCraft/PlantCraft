@@ -1,5 +1,5 @@
 # ruff: noqa: F811  (the fixtures admin, eng and viewer come from test_asset_model.py)
-"""Assets › Import › Draft a plant (owner decision D5, 2026-10-27): a new plant's first tree drafted
+"""Assets › Import › Draft a plant: a new plant's first tree drafted
 from its tags by rules, the plant's documents and, for what stays unsure, a language model, then
 reviewed on the import's own page. The demo plant's map is the answer key: the draft is built
 from its 205 tags alone, as an OPC UA browse lists them, with the passages a real Documents finds
@@ -19,10 +19,10 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from plantcraft.api import app_proxy as proxy
+from plantcraft.api.app import create_app
+from plantcraft.platform import plantdraft
 from plantcraft_sdk.contributes import ContributionsIn
-from processcraft.api import app_proxy as proxy
-from processcraft.api.app import create_app
-from processcraft.platform import plantdraft
 from tests.test_asset_model import _login, _rt, admin, app, eng, viewer  # noqa: F401
 from tests.test_assistant_chat import LOCAL
 from tests.test_collaboration import _scenario

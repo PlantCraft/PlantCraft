@@ -1,4 +1,4 @@
-"""Round 7's visual check (owner, 2026-10-24: "teste todos os elementos visualmente"): a gallery
+"""Round 7's visual check ("teste todos os elementos visualmente"): a gallery
 dashboard with every kind of card in several shapes and options, drawn in the light and the dark
 theme, on a wide screen and a phone. Each drawing is checked for what a person would see wrong:
 a value or a chart spilling out of its card, a title or a value hard to read on its background,

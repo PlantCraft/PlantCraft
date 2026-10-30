@@ -606,7 +606,7 @@ function Inspector({
 function CheckSummary({ onSelect }: { onSelect: (id: string) => void }) {
   const { check, diagram, blocks } = useEditor();
   // A valid diagram says so in the toolbar's small mark; the panel speaks only of problems and
-  // warnings (owner, 2026-10-25, round 9: "The diagram is valid" took the page's room).
+  // warnings (round 9: "The diagram is valid" took the page's room).
   if (!check || (check.valid && !check.warnings.length)) return null;
   const nodes = Object.fromEntries(diagram.nodes.map((node) => [node.id, node]));
   const located = Object.entries(check.node_errors ?? {}).flatMap(([id, items]) => items.map((item) => ({ id, item })));
@@ -900,7 +900,7 @@ function Editor(props: BlockEditorProps) {
               </>
             )}
             {/* Read-only (an algorithm's page), the tools that change the diagram are left out, not
-                shown disabled (owner, 2026-10-25, round 9): only fitting the view stays. */}
+                shown disabled (round 9): only fitting the view stays. */}
             {!readOnly && (
               <>
                 <button type="button" className="be-tool" title={t("Undo (Ctrl+Z)")} disabled={!history.past.length} onClick={() => travel(undo)}><Undo2 size={15} /></button>

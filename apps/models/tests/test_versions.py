@@ -84,7 +84,7 @@ def test_a_block_version_has_its_ports_and_code_then(client):
 
 
 def test_each_version_of_a_model_has_a_name_and_what_changed(client):
-    """Round 9 M4 leftover (owner, 2026-10-26): a save names its version, as Link's algorithms;
+    """Round 9 M4 leftover: a save names its version, as Link's algorithms;
     the name travels with the text into the versions a later save replaces."""
 
     project = editable_example(client)

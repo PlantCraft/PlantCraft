@@ -58,7 +58,7 @@ function Route({ path, me }: { path: string; me: Me }) {
   if (section === "results") return <ResultsPage me={me} />;
   if (section === "loops" && id) return <LoopPage loopId={id} me={me} />;
   if (section === "protocols") {
-    // The protocols of 0.2 became algorithms (owner, 2026-10-22).
+    // The protocols of 0.2 became algorithms.
     const target = !id ? "/algorithms" : id === "signal-quality" ? "/algorithms/signal_quality/settings" : `/algorithms/${encodeURIComponent(id)}`;
     window.history.replaceState({}, "", href(target));
     return <Route path={target} me={me} />;
@@ -89,12 +89,12 @@ function Route({ path, me }: { path: string; me: Me }) {
   }
   if (section === "methods" && id) return <MethodPage methodId={id} me={me} />;
   if (section === "methods") {
-    // Methods became the blocks that run them (owner, 2026-10-22).
+    // Methods became the blocks that run them.
     window.history.replaceState({}, "", href("/blocks"));
     return <BlocksPage me={me} />;
   }
   if (section === "assistant") {
-    // The assistant is the suite's button at the top of every page (owner, 2026-10-23), not a page of Link's.
+    // The assistant is the suite's button at the top of every page, not a page of Link's.
     window.history.replaceState({}, "", href("/"));
     return <OverviewPage />;
   }
@@ -114,11 +114,11 @@ export function App() {
     api.meta().then((meta) => { if (meta?.app?.version) setVersion(meta.app.version); }).catch(() => undefined);
   }, []);
   const editor = /^\/editor\/(.+)$/.exec(path);
-  // The tour opens a block, an algorithm and a result (owner, 2026-10-28): found before it starts.
+  // The tour opens a block, an algorithm and a result: found before it starts.
   const [examples, setExamples] = useState<TourExamples | undefined>(undefined);
   useEffect(() => { if (me) void tourExamples().then(setExamples); }, [me]);
   const tour = useMemo(() => (me && examples ? () => tourSteps(examples) : undefined), [me, examples]);
-  // The algorithm editor has a window of its own, without the frame (owner, 2026-10-22).
+  // The algorithm editor has a window of its own, without the frame.
   if (editor) return error ? <ErrorBox text={error} /> : me ? <Suspense fallback={<Loading />}><EditorWindow key={editor[1]} algorithmId={decodeURIComponent(editor[1])} me={me} /></Suspense> : <Loading />;
   return <SuiteShell
     app="linkcraft"

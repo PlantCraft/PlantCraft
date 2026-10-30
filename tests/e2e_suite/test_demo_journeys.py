@@ -80,7 +80,7 @@ def test_04_link_overview_shows_the_schedules_and_their_runs(visitor):
         monitors.get_by_role("link", name=re.compile("^Control loop performance"))
     ).to_be_visible()
     expect(app(visitor).get_by_role("heading", name="Queue")).to_be_visible()
-    # every result on one health map, by area (owner, 2026-10-27)
+    # every result on one health map, by area
     expect(app(visitor).get_by_role("heading", name="Health map")).to_be_visible()
 
 

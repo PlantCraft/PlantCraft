@@ -1,6 +1,6 @@
 /**
  * The signal list as a CSV (every signal's tag, source, address and settings): exported on
- * Exports and imported on Imports, beside the history they move (owner, 2026-10-27: the
+ * Exports and imported on Imports, beside the history they move (the
  * Signals page keeps only the buttons that add signals).
  */
 import { Dialog } from "@plantcraft/ui";

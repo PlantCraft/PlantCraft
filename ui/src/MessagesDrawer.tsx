@@ -1,5 +1,5 @@
 /**
- * Messages and Notifications over any app (owner, 2026-10-24): two of the sidebar's quick buttons
+ * Messages and Notifications over any app: two of the sidebar's quick buttons
  * open PlantCraft's Messages in a panel from the left, over the page, without leaving the app;
  * closing it returns to the same screen. Messages opens the chats, Notifications the notifications
  * (round 8: one button each, each with its own count). The panel shows PlantCraft's own page

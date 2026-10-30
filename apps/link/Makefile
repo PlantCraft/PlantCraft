@@ -1,8 +1,8 @@
 # Same checks as CI. `make ci` must be green before every push (AGENTS.md, section 4).
 .PHONY: ci deps standard lint format test test-fast frontend e2e bench serve image package lock
 
-PYTHON ?= python
-SDK := plantcraft-sdk==0.78.0
+PYTHON ?= $(shell command -v python >/dev/null 2>&1 && echo python || echo python3)
+SDK := plantcraft-sdk==0.79.0
 
 ci: deps standard lint frontend test
 
@@ -89,7 +89,7 @@ PUBLISHER_ID := $(shell $(PYTHON) -c "import re, tomllib; \
 	name = tomllib.load(open('app.toml', 'rb'))['app']['publisher']; \
 	print(re.sub('[^a-z0-9]+', '-', name.lower()).strip('-'))")
 DEV_KEYS := build/dev-publisher
-PACKAGE_PY := $(PLANTCRAFT_DIR)/processcraft/apps/package.py
+PACKAGE_PY := $(PLANTCRAFT_DIR)/plantcraft/apps/package.py
 
 package: image
 	@test -x "$(PLANTCRAFT_DIR)/deploy/package.sh" || { echo "make package: no" \

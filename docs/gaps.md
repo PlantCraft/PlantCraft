@@ -4,12 +4,12 @@
 
 Every known shortfall of PlantCraft (the central app), ranked by user impact. Each app's gaps are in its own `apps/<app>/docs/gaps.md`.
 `B` marks a blocker for the next stage. When a gap closes, delete its row in the same commit and
-log it in `ROADMAP.md`.
+note it in `CHANGELOG.md`.
 
 | Id | Product | Gap | Impact | B | Estimate |
 |---|---|---|---|---|---|
 | G11 | Release | Docker offline bundle and guide done (`make bundle`, `docs/install-offline.md`, 2026-10-19); signed releases for x86_64 and arm64 (0.3.0); still missing: wheelhouse with the built UI for installs without Docker, Windows installer without admin | high | B | |
-| G12 | Core | Docker deployment has one data folder, backup before upgrade and `install.sh --rollback` (2026-10-19); installs without Docker still lack them and `processcraft rollback` | high | B | |
+| G12 | Core | Docker deployment has one data folder, backup before upgrade and `install.sh --rollback` (2026-10-19); installs without Docker still lack them and `plantcraft rollback` | high | B | |
 | G13 | Release | Docker image pinned (base digests, hashed `deploy/requirements.lock`), CycloneDX SBOM of Python and npm dependencies, pip-audit, npm audit and SHA-256 sums in CI (2026-10-19). TODO: SBOM of the images' OS packages and the Caddy binary (syft or `docker buildx --sbom`); `pyproject.toml` ranges stay unpinned for library users | medium | | |
 | G2 | Core | PI Web API source never run against a real server; no validation on real plant data | high | B | |
 | G6 | Frontend | Plotly axes use day-first dates in every language | low | | |

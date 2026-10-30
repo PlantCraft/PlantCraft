@@ -505,7 +505,7 @@ must = ["issue"]
 id = "translate"
 kind = "build"
 ask = "Can I help translate the interface into Portuguese?"
-expect = "Yes: English is the source; pt-BR entries go in the catalogs (processcraft/i18n/locales/pt-BR.json, frontend/src/locales/pt-BR.json) as a pull request; tests check the catalogs are complete."
+expect = "Yes: English is the source; pt-BR entries go in the catalogs (plantcraft/i18n/locales/pt-BR.json, frontend/src/locales/pt-BR.json) as a pull request; tests check the catalogs are complete."
 sources = ["CONTRIBUTING.md"]
 must = ["pt-br|portuguese|translat"]
 

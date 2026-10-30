@@ -1,10 +1,10 @@
 # ruff: noqa: F811  (the fixture ``signed`` comes from test_collaboration.py)
 """Home's quick status (``/api/home/status``): which apps are online and the Historian's
-connections, at a glance (owner, 2026-10-21)."""
+connections, at a glance."""
 
 from __future__ import annotations
 
-from processcraft.platform.datalayer import DataLayerError
+from plantcraft.platform.datalayer import DataLayerError
 from tests.test_collaboration import signed  # noqa: F401
 
 

@@ -213,7 +213,7 @@ def test_a_new_version_that_changes_the_ports_says_so(runtime, fake):
 
 def test_a_shipped_block_shows_its_code_and_copies_into_a_site_block(runtime, fake):
     with client_for(runtime, fake, "admin") as admin:
-        # One code: the calculation alone (owner, 2026-10-24), not the block's declaration.
+        # One code: the calculation alone, not the block's declaration.
         code = admin.get("/link/api/blocks/transform.moving_average/code").json()
         assert code["site"] is False and len(code["sources"]) == 1
         assert code["sources"][0]["filename"].endswith("transforms.py")
@@ -235,7 +235,7 @@ def test_a_shipped_block_shows_its_code_and_copies_into_a_site_block(runtime, fa
         given = block.run({"x": series()}, block.spec.parameters(), Context(node_id="n"))
         assert given["value"].iloc[-1] == pytest.approx(7.0)
 
-        # A control loop block duplicates too (owner, 2026-10-27): the copy runs the method on
+        # A control loop block duplicates too: the copy runs the method on
         # the signals wired to it, as the original does on an asset.
         start = admin.get("/link/api/blocks/cpm.error_metrics_basic/copy").json()
         assert start["library"] == "custom" and "shipped(" in start["code"]
@@ -508,7 +508,7 @@ def test_a_block_keeps_its_image_with_the_version_and_serves_it_by_a_tagged_url(
 
 
 def test_a_site_makes_its_own_libraries_and_puts_blocks_in_them(runtime, fake):
-    """Round 10 (owner, 2026-10-26): blocks sit in libraries, not folders; New library makes one
+    """Round 10: blocks sit in libraries, not folders; New library makes one
     of this site, listed after Link's (before Outputs), and a block joins it."""
 
     with client_for(runtime, fake, "admin") as admin, client_for(runtime, fake) as engineer:

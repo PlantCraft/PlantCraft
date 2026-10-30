@@ -1,4 +1,4 @@
-"""The Overview's widgets about the whole plant (owner, 2026-10-27): the loops and signals in
+"""The Overview's widgets about the whole plant: the loops and signals in
 alarm on each of the last 14 days, and the health map, one square per loop and signal by area."""
 
 from __future__ import annotations
@@ -119,7 +119,7 @@ def test_the_days_in_alarm_keep_to_the_part_a_person_sees(analysed, fake):
 
 def test_the_health_map_shows_assets_by_area_not_loops_apart(client, analysed):
     """An algorithm's result on an asset is a square of its area too: loops are only one type
-    of asset, not a group of their own (owner, 2026-10-27)."""
+    of asset, not a group of their own."""
 
     runtime = analysed
     algorithm = runtime.presets.list_profiles()[0]

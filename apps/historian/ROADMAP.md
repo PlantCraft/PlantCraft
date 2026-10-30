@@ -16,13 +16,7 @@ tests and benchmarks; "estimated" ones are judgement. The ranked work list is `d
 | Deployment | ~40% | estimated | Image and compose snippet; not in PlantCraft's bundle yet (G1) |
 | **Overall** | **~45%** | estimated | Preview: first version |
 
-## Progress log
+## What changed
 
-| Date | Change |
-|---|---|
-| 2026-10-19 | First version: OPC UA collector (read-only, own container on the plant network), swinging-door compression, chunked archive with retention and compaction, reads in API v1 shapes, pages under `/hist/`. Boundary with PlantCraft in `docs/boundary.md`. Bench: 2,000 points at 1 s handled 53x faster than real time; 501 the Simulator points collected live at 500 reads/s. |
-| 2026-10-20 | Suite frame `@plantcraft/ui` 0.2.0 (D6) and SDK 0.8.1; settings in three levels, general, per source, per point, the most specific wins (D8), shown with their origin on the point page. |
-| 2026-10-20 | Module names (owner decision D10): PlantCraft Historian in documents, the package and `app.toml`, just Historian inside the suite (sidebar lockup, page title, help); plantcraft-sdk 0.8.2 and `@plantcraft/ui` 0.3.1 (PlantCraft `8dfd352`): short names in the lockup and Apps list, the messages button. |
-| 2026-10-20 | Closed G1 and G17: PlantCraft forwards API v1 data and source admin to Historian when `HISTCRAFT_URL` is set (`processcraft/platform/datalayer/histcraft.py`), and its bundle and `install.sh` carry `histcraft-db` (pinned by digest, its own data folder and password, `pg_dump` before upgrades). |
-| 2026-10-21 | Closed G20: recent reads of PI and OPC UA signals in `source` mode stay in memory (`sources/cache.py`, `HISTCRAFT_SOURCE_CACHE_SECONDS`, 300 s): a read inside them is answered there, a refresh up to now asks the source only for the last minutes; CSV files were already held in memory by their reader. |
-| 2026-10-21 | G9 narrowed to partitions: hourly rollups (`archive/rollup.py`, table `rollups`) keep per point and hour the covered time and the integral of the rebuilt signal; a trend on an hourly or coarser grid reads them and takes only the hours they lack (the newest, or one a write changed) from the chunks, with the same numbers. The collector fills up to a month per point at each housekeeping; every write drops the hours it changes. |
+Every release, newest first: `CHANGELOG.md`.
+

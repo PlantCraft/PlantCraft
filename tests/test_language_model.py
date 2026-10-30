@@ -8,8 +8,8 @@ from __future__ import annotations
 import io
 import json
 
-from processcraft.specialists import model as model_module
-from processcraft.specialists.model import ChatModel
+from plantcraft.specialists import model as model_module
+from plantcraft.specialists.model import ChatModel
 from tests.test_collaboration import (  # noqa: F401
     FakeModel,
     _asset_id,
@@ -169,7 +169,7 @@ def test_the_openai_format_carries_tools_both_ways(monkeypatch):
 
 
 def test_the_answers_length_goes_in_the_form_the_service_takes(monkeypatch):
-    """Owner, 2026-10-26: OpenAI's newer models refuse max_tokens ("Use 'max_completion_tokens'
+    """OpenAI's newer models refuse max_tokens ("Use 'max_completion_tokens'
     instead"); servers that speak the older form take max_tokens. The client starts from the
     form its address suggests and switches once when the service names the other."""
 
@@ -214,7 +214,7 @@ def test_the_answers_length_goes_in_the_form_the_service_takes(monkeypatch):
 
 
 def test_openai_itself_is_asked_through_responses_with_tools_and_reasoning(monkeypatch):
-    """Owner, 2026-10-26: a work on Today answered 400 "function tools with reasoning effort
+    """a work on Today answered 400 "function tools with reasoning effort
     are not supported" (gpt-6-luna in chat completions). OpenAI's own service is asked through
     its Responses API, which takes tools with reasoning; the effort is the provider's."""
 
@@ -327,7 +327,7 @@ def test_the_vendors_site_as_an_address_means_its_api():
     """Owner's installation, 2026-10-25: https://openai.com typed as the address made every call
     go to https://openai.com/chat/completions and fail; the vendor's site means its API."""
 
-    from processcraft.specialists.profiles import vendor_endpoint
+    from plantcraft.specialists.profiles import vendor_endpoint
 
     assert vendor_endpoint("openai", "https://openai.com") == ""
     assert vendor_endpoint("openai", "https://api.openai.com/v1") == ""
@@ -348,7 +348,7 @@ class _Events(_Response):
 
 
 def test_the_answer_is_streamed_as_it_is_written_in_each_format(monkeypatch):
-    """Owner, 2026-10-26: "streaming da mensagem". With ``on_text`` set, each call asks for a
+    """ "streaming da mensagem". With ``on_text`` set, each call asks for a
     stream and shows the text so far; tool calls still come through whole."""
 
     streams = [

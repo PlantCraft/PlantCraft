@@ -34,6 +34,11 @@
 # and the Simulator (the `demo` profile) when simcraft:$SIMCRAFT_VERSION does (make
 # simcraft-image builds it from simulator/).
 set -Eeuo pipefail
+# Associative arrays need bash 4 or newer: macOS's /bin/bash is 3.2 (brew install bash).
+if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    echo "$0 needs bash 4 or newer (this is $BASH_VERSION); on macOS: brew install bash" >&2
+    exit 2
+fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="${VERSION:?set VERSION}"
@@ -45,7 +50,7 @@ MODELCRAFT_VERSION="${MODELCRAFT_VERSION:-$VERSION}"
 DOCCRAFT_VERSION="${DOCCRAFT_VERSION:-$VERSION}"
 # The apps compose.yaml runs, each in its own profile (install.sh SUITE_APPS).
 APPS=(linkcraft dashcraft histcraft alarmcraft modelcraft doccraft)
-SIMCRAFT_VERSION="${SIMCRAFT_VERSION:-0.5.0}"
+SIMCRAFT_VERSION="${SIMCRAFT_VERSION:-0.5.1}"
 # The oldest installed version this bundle updates (install.sh refuses older ones).
 UPGRADE_FROM="${UPGRADE_FROM:-0.1.0}"
 RELEASE_KEY="${RELEASE_KEY:-}"
@@ -230,7 +235,7 @@ for app in "${!bundled[@]}"; do
             log "$app:${bundled[$app]} carries no /app/sbom.json: no $app SBOM in this bundle"
         fi
         # Its [permissions], pinned in the signed release.json: PlantCraft holds the app's token
-        # to them, whatever the app declares when it starts (processcraft.apps.scopes).
+        # to them, whatever the app declares when it starts (plantcraft.apps.scopes).
         docker cp "$container:/app/app.toml" "$CHANGELOGS/$app.toml" >/dev/null 2>&1 ||
             die "$app:${bundled[$app]} carries no /app/app.toml: its permissions cannot be pinned"
         changelog_args+=(--manifest "$app=$CHANGELOGS/$app.toml")
@@ -255,7 +260,7 @@ else
 fi
 
 log "Writing release.json and RELEASE-NOTES.md"
-PYTHONPATH="$ROOT" "$PYTHON" -m processcraft.apps.release make "$OUT" \
+PYTHONPATH="$ROOT" "$PYTHON" -m plantcraft.apps.release make "$OUT" \
     --upgrade-from "$UPGRADE_FROM" "${changelog_args[@]}"
 
 log "Writing SHA256SUMS"
@@ -263,7 +268,7 @@ sums="$(cd "$OUT" && find . -type f -printf '%P\n' | LC_ALL=C sort | xargs sha25
 printf '%s\n' "$sums" >"$OUT/SHA256SUMS"
 if [ -n "$RELEASE_KEY" ]; then
     log "Signing SHA256SUMS as $RELEASE_PUBLISHER"
-    PYTHONPATH="$ROOT" "$PYTHON" -m processcraft.apps.release sign "$OUT" \
+    PYTHONPATH="$ROOT" "$PYTHON" -m plantcraft.apps.release sign "$OUT" \
         --key "$RELEASE_KEY" --publisher "$RELEASE_PUBLISHER"
 else
     log "WARNING: RELEASE_KEY not set: the bundle is not signed (installations that trust a publisher refuse it without --allow-unsigned)"
@@ -273,7 +278,7 @@ log "Packing $NAME.tar.gz"
 tar -C "$DIST" -czf "$DIST/$NAME.tar.gz" "$NAME"
 (cd "$DIST" && sha256sum "$NAME.tar.gz" >"$NAME.tar.gz.sha256")
 if [ -n "$RELEASE_KEY" ]; then
-    PYTHONPATH="$ROOT" "$PYTHON" -m processcraft.apps.release sign-file "$DIST/$NAME.tar.gz.sha256" \
+    PYTHONPATH="$ROOT" "$PYTHON" -m plantcraft.apps.release sign-file "$DIST/$NAME.tar.gz.sha256" \
         --key "$RELEASE_KEY"
 fi
 log "Done: $DIST/$NAME.tar.gz ($(du -h "$DIST/$NAME.tar.gz" | cut -f1))"

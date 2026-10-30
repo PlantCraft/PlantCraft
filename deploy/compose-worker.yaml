@@ -33,7 +33,7 @@ x-hardening: &hardening
 services:
   compute-gateway:
     <<: *hardening
-    image: processcraft:${PLANTCRAFT_VERSION:-0.5.0}
+    image: processcraft:${PLANTCRAFT_VERSION:-0.5.1}
     user: "10020:10020"
     entrypoint: ["python", "-m", "plantcraft_sdk.compute", "gateway"]
     command:
@@ -79,7 +79,7 @@ services:
   linkcraft-executor:
     <<: *hardening
     profiles: ["linkcraft"]
-    image: linkcraft:${LINKCRAFT_VERSION:-0.5.0}
+    image: linkcraft:${LINKCRAFT_VERSION:-0.5.1}
     user: "10020:10020"
     network_mode: none
     entrypoint: ["python", "-m", "plantcraft_sdk.compute", "executor"]
@@ -120,7 +120,7 @@ services:
     <<: *hardening
     profiles: ["modelcraft"]
     # PlantCraft Models' Modelica runner (OpenModelica's image): it compiles and simulates models.
-    image: modelcraft-runner:${MODELCRAFT_VERSION:-0.5.0}
+    image: modelcraft-runner:${MODELCRAFT_VERSION:-0.5.1}
     user: "10020:10020"
     network_mode: none
     command: ["python3", "/opt/runner/runner.py", "--jobs", "/jobs", "--workers", "${MODELCRAFT_EXECUTOR_SLOTS:-2}"]

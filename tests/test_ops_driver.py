@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from processcraft.apps import operations as ops
-from processcraft.apps.installer import InstallError
+from plantcraft.apps import operations as ops
+from plantcraft.apps.installer import InstallError
 from tests.test_ops_snapshot import _install, _rows
 
 NOW = datetime(2026, 10, 21, 2, 0, 5, tzinfo=timezone.utc)

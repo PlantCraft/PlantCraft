@@ -4,7 +4,9 @@ Every release of PlantCraft Historian (`histcraft`), newest first, in the
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) form. PlantCraft's `deploy/bundle.sh`
 joins it into the bundle's release notes.
 
-## [Unreleased]
+## [0.5.1] - 2026-10-30
+
+- Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).
 
 ### Changed
 
@@ -196,7 +198,7 @@ joins it into the bundle's release notes.
   the app says so, none older than `keep_days`. Reads give the newest run, one run or the
   newest N (`series?run=`, `runs=`), and `GET /signals/{id}/runs` lists them. The point page
   picks a run or draws the newest 5 or 10 together.
-- **Reads have a time limit** (owner, 2026-10-25, with PlantCraft's per-person limits on API
+- **Reads have a time limit** (with PlantCraft's per-person limits on API
   v1): a read of series (`GET /api/v1/data/signals/{id}/series`, `POST /api/v1/data/series`,
   the point page's trend) stops after `HISTCRAFT_QUERY_TIMEOUT` seconds (default 30) as
   PostgreSQL's `statement_timeout`, for that read's transaction only, and answers 504 "This
@@ -220,15 +222,15 @@ joins it into the bundle's release notes.
   PlantCraft's monitor writes them as its events, start and end. A disconnected source is one
   condition, not one per point; while the collector is stalled nothing else is said. The
   suggested rule of `collector.stalled` is on in a new installation.
-- **A source's archive at a glance** (owner, 2026-10-24): the source page shows the values
+- **A source's archive at a glance**: the source page shows the values
   archived in the last 24 h (and the point that archives most), the archive's size, the
   compression since the collector started and the latest value with the points in error. The
   point list and the point page show each point's values for the last 24 h; Overview the total.
-- **A point's trend, looked at closely** (owner, 2026-10-24): values as recorded (up to a day)
+- **A point's trend, looked at closely**: values as recorded (up to a day)
   or as averages, the lowest and highest value in each average as a band (up to a week; API
   `extremes=true` on a point's series), the archived values as dots, the compression deviation
   around them, the same period before, a day or a week earlier, and the series as CSV.
-- **Imports read more files, and are kept** (owner, 2026-10-24): Excel (`.xlsx`, a sheet of your
+- **Imports read more files, and are kept**: Excel (`.xlsx`, a sheet of your
   choice, through openpyxl) next to CSV/TSV; checking a file fills in how it is read (separator,
   decimal mark, rows to skip, wide or long layout, time column and format, day or month first,
   tag/value/quality columns, tag prefix) with the first rows as read, and any of it can be changed
@@ -262,7 +264,7 @@ joins it into the bundle's release notes.
   through the suite's pinned Telegraf. `make sources-public` checks public servers by hand.
 - The demo seed adds an example import (`pilot-test-run-2026-09.csv`, six hours of a pilot
   unit's test run), so a fresh demo shows Import & export with one finished import.
-- **Import & export › Imports** (owner, 2026-10-24): a CSV file loaded once. Historian checks it
+- **Import & export › Imports**: a CSV file loaded once. Historian checks it
   first (layout, separator, decimal comma, time format and zone, per-line errors and notes) and
   writes nothing until the person confirms; the collector writes the values and deletes the
   uploaded file. Each import is a source `import-<n>` kept until deleted; deleting it removes its
@@ -314,13 +316,13 @@ joins it into the bundle's release notes.
 
 ### Added
 
-- "Open in a notebook" on the Export page and on a point's page (owner, 2026-10-23): PlantCraft's
+- "Open in a notebook" on the Export page and on a point's page: PlantCraft's
   Notebooks open a notebook that already loads those tags over that period (Python in the
   browser, offline). Shown only when PlantCraft's API v1 `/me` gives a `notebooks_url`.
 
 ### Changed
 
-- Removing a point retires it instead of deleting its history (owner, 2026-10-23): it is no
+- Removing a point retires it instead of deleting its history: it is no
   longer collected, listed or read by the apps, its archive stays for 30 days
   (`catalog.store.RETIRED_DAYS`) and an admin restores it as it was from Points › Removed points
   (`GET /api/points/retired`, `POST /api/points/restore`). After 30 days the collector's hourly

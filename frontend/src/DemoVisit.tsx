@@ -1,7 +1,7 @@
 /** A public demo's visit (docs/public-demo.md): "Enter the demo" and its line on the sign-in page,
  * then the visit's signs of life, the note before an unused visit closes, and its end. */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Clock3, LoaderCircle, LogOut } from "lucide-react";
+import { ArrowRight, Clock3, LoaderCircle, LogOut, MessageCircle } from "lucide-react";
 import { clockText, demoApi, waitText, type DemoVisitInfo, type Waiting } from "./demoApi";
 import { startGuide } from "./DemoGuide";
 import { t } from "./i18n";
@@ -12,10 +12,10 @@ const LINE_MS = 5_000;
 /** How often the visit's frame says it is alive and renews the apps' token (it lives 2 minutes). */
 const HEARTBEAT_MS = 30_000;
 
-/** The public demo's way in, its only one (owner, 2026-10-28: one short line and one button, nothing
+/** The public demo's way in, its only one (one short line and one button, nothing
  * that scares a first visitor): enter, or wait in line until a place frees. The platform's tour
  * opens inside; the guides by role are in the menu under the visitor's name. */
-export function DemoEntry({ ended, onEntered }: { ended: boolean; onEntered: (username: string) => void }) {
+export function DemoEntry({ ended, contactUrl, onEntered }: { ended: boolean; contactUrl?: string; onEntered: (username: string) => void }) {
   const [waiting, setWaiting] = useState<Waiting | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -43,6 +43,7 @@ export function DemoEntry({ ended, onEntered }: { ended: boolean; onEntered: (us
   }, [waiting]);
   return <div className="login-demo" role="note">
     {ended && <span className="demo-ended">{t("Your demo visit ended. Thank you for trying PlantCraft!")}</span>}
+    {ended && contactUrl && <a className="demo-ended-contact" href={contactUrl} target="_blank" rel="noopener">{t("Questions about your plant? Talk to us")} <ArrowRight size={14} aria-hidden="true" /></a>}
     <span>{t("A live demo of PlantCraft on a simulated refinery. Look around and try anything: nothing you change is saved.")}</span>
     {waiting ? <div className="demo-line" role="status" aria-live="polite">
       <LoaderCircle className="spin" size={16} />
@@ -54,7 +55,7 @@ export function DemoEntry({ ended, onEntered }: { ended: boolean; onEntered: (us
 }
 
 /** When the visit's place is given back unless the visitor comes back: nothing shows while they use
- * the demo (owner, 2026-10-28: no clock); a visit left unused for its minutes (30) ends, so a tab
+ * the demo (no clock); a visit left unused for its minutes (30) ends, so a tab
  * forgotten for days does not hold a place, and the last 5 of them say so. Says it is alive every
  * 30 s (with whether the visitor used the page), which also renews the apps' token. */
 export const WARN_SECONDS = 5 * 60;
@@ -116,4 +117,13 @@ export function DemoVisitBar({ visit, onEnded, onLeave }: { visit: DemoVisitInfo
     <button type="button" className="demo-visit-leave" onClick={() => { used.current = false; void beat(true); }}>{t("Keep exploring")}</button>
     <button type="button" className="demo-visit-leave" onClick={onLeave}><LogOut size={13} aria-hidden="true" />{t("Leave")}</button>
   </div>;
+}
+
+/** The visit's way to the team: a small button at the bottom right on every page, the apps
+ * included, that opens the site's contact form in a new tab (``PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL``;
+ * none without it). Most visitors come from a post and leave without a word: this is the word. */
+export function DemoContact({ url }: { url: string }) {
+  return <a className="demo-contact" href={url} target="_blank" rel="noopener" title={t("Questions, a pilot on your plant, a call: the team answers")}>
+    <MessageCircle size={15} aria-hidden="true" />{t("Talk to us")}
+  </a>;
 }

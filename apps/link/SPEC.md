@@ -9,7 +9,7 @@ Category: signal data quality and control loop performance monitoring (CPM): jud
 signal's recorded data (gaps, stale, frozen, spiky, out-of-range, noisy, coarse, drifting), score
 every loop of a plant from routine operating data, find the ones that need attention, say why
 (tracking, oscillation, valve stiction, saturation, noise, manual operation, data quality) and
-report it. PlantCraft Analytics is the former CPMCraft and DataCraft (owner decision D9); DataCraft's
+report it. PlantCraft Analytics is the former CPMCraft and DataCraft; DataCraft's
 features and tests moved here. Tools studied
 (research only): Control Station PlantESP, Honeywell Control Performance Analytics (formerly
 Control Performance Monitor), Emerson DeltaV Insight / PlantTriage loop diagnostics, ABB Loop

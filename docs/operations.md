@@ -8,19 +8,19 @@ nothing reports out.
 | Part | Where | Status |
 |---|---|---|
 | JSON logs, request ids, `/api/ops/metrics`, schema stamp, `[backup]` | `plantcraft-sdk` 0.10.0 | done |
-| Backup, verification, restore, restore drill, retention, schedule | `processcraft.ops.snapshot`, `processcraft.apps.operations` (the driver) | done |
-| Signed bundle, `release.json`, release notes, verified update, automatic rollback | `processcraft.apps.release`, `deploy/install.sh`, `deploy/bundle.sh` | done |
-| The Backups page (back up, check, restore with password and typed name, drill, schedule, history) and the Updates page (version, notes, update history) | `processcraft.apps.operations_desk`, `/api/operations`, `OperationsPage.tsx` | done |
-| Docker's view of every service (`metrics.json`), the suite watch, "System" messages, the Health panel and banner | `processcraft.apps.installer`, `processcraft.watch`, `/api/operations/health` | done |
-| Diagnostic bundle (Health panel, `install.sh --diagnostics`) | `processcraft.apps.installer` (`diagnostics`), `/api/operations/diagnostics` | done |
-| The suite's health as signals of the Historian's `system` source | `processcraft.watch.recorder`, Historian `POST /api/v1/data/system` | done |
+| Backup, verification, restore, restore drill, retention, schedule | `plantcraft.ops.snapshot`, `plantcraft.apps.operations` (the driver) | done |
+| Signed bundle, `release.json`, release notes, verified update, automatic rollback | `plantcraft.apps.release`, `deploy/install.sh`, `deploy/bundle.sh` | done |
+| The Backups page (back up, check, restore with password and typed name, drill, schedule, history) and the Updates page (version, notes, update history) | `plantcraft.apps.operations_desk`, `/api/operations`, `OperationsPage.tsx` | done |
+| Docker's view of every service (`metrics.json`), the suite watch, "System" messages, the Health panel and banner | `plantcraft.apps.installer`, `plantcraft.watch`, `/api/operations/health` | done |
+| Diagnostic bundle (Health panel, `install.sh --diagnostics`) | `plantcraft.apps.installer` (`diagnostics`), `/api/operations/diagnostics` | done |
+| The suite's health as signals of the Historian's `system` source | `plantcraft.watch.recorder`, Historian `POST /api/v1/data/system` | done |
 | The "Suite health" dashboard | View | done |
 | Maintenance page, update from the interface | platform, proxy | planned |
 
 ## 1. One engine: the operations driver
 
 Backup, restore, the restore drill, update and rollback are one engine,
-`processcraft.apps.operations`, run by the **driver**: a one-off container of the installer
+`plantcraft.apps.operations`, run by the **driver**: a one-off container of the installer
 image named `processcraft-ops`, as root, with no network, the install folder at its own path and
 the Docker socket. It is outside the Compose project, so it keeps running while it stops and
 starts the suite; its name is the lock (Docker never runs two containers with one name). The
@@ -62,7 +62,7 @@ PostgreSQL by blocks (below), settings (`.env`, `compose.yaml`, `bundle.env`, `r
 image ids, size and SHA-256 per file, rows per table), `data.tar.gz` and `histcraft-db/`; the
 images get a `:rollback-<date>` tag.
 
-**The Historian's database, by blocks** (`processcraft.apps.historian_backup`). A historian grows
+**The Historian's database, by blocks** (`plantcraft.apps.historian_backup`). A historian grows
 by hundreds of gigabytes a year, so a `pg_dump` of all of it every night does not scale: it
 rewrites every row, takes hours and holds a transaction open meanwhile. PostgreSQL 17 backs
 itself up by blocks instead, with the tools already in the `histcraft-db` image (nothing added to
@@ -136,7 +136,7 @@ progress. Command line: `install.sh --backup`, `--list-backups`, `--restore <nam
 
 **Versions.** The suite has one SemVer version (the bundle's name); each module keeps its own.
 The bundle carries `release.json` (suite version, each module's version, every image and its id,
-`upgrade_from`, date; `processcraft.apps.release`) and `RELEASE-NOTES.md`, joined by `bundle.sh`
+`upgrade_from`, date; `plantcraft.apps.release`) and `RELEASE-NOTES.md`, joined by `bundle.sh`
 from each module's `CHANGELOG.md` entry for its version (PlantCraft's from the repository, every
 app's from `/app/CHANGELOG.md` in its image; [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
 Added, Changed, Fixed, Security). `plantcraft-app check` fails when the version has no entry.
@@ -161,12 +161,12 @@ anything: only two small files are signed there, so the images never travel to i
 # Build machine: the bundle, unsigned.
 make bundle ARCH=arm64 DOCKER_BUILD_FLAGS="--platform linux/arm64"
 B=dist/plantcraft-<version>-linux-arm64-bundle
-# Key machine (python3 with cryptography, processcraft/apps/{release,package}.py copied over):
-python -m processcraft.apps.release sign <folder holding SHA256SUMS> --key processcraft.key --publisher processcraft
+# Key machine (python3 with cryptography, plantcraft/apps/{release,package}.py copied over):
+python -m plantcraft.apps.release sign <folder holding SHA256SUMS> --key processcraft.key --publisher processcraft
 # Build machine: SHA256SUMS.sig into $B, pack again, hash the archive.
 tar -C dist -czf $B.tar.gz $(basename $B) && (cd dist && sha256sum $(basename $B).tar.gz > $(basename $B).tar.gz.sha256)
 # Key machine: the archive's hash.
-python -m processcraft.apps.release sign-file <name>.tar.gz.sha256 --key processcraft.key
+python -m plantcraft.apps.release sign-file <name>.tar.gz.sha256 --key processcraft.key
 ```
 
 `SHA256SUMS.sig` is not listed in `SHA256SUMS`, so adding it changes no hash inside the bundle.
@@ -211,14 +211,14 @@ history; uploading a bundle there to update is the next step, through the same d
 ## 4. Monitoring
 
 **Metrics.** The installer writes Docker's view every 30 s to `data/installer/status/metrics.json`
-(`processcraft.apps.installer.Installer.metrics`): for each container its state, health, exit
+(`plantcraft.apps.installer.Installer.metrics`): for each container its state, health, exit
 code, restarts, start time, CPU and memory (`docker compose ps`, `inspect`, `stats`), and the
 free disk of the install folder. Docker runs every service's health check, which calls its
 `/healthz`, so `health` is each server's own answer seen from outside it. Every server also
 answers `GET /api/ops/metrics` (SDK, `plantcraft_sdk.server.ops`) to an admin or a token with the
 `ops` scope: version, uptime, warnings and errors logged, requests, server errors, p95 latency.
 
-**The `system` source.** Every 60 s PlantCraft (`processcraft.watch.recorder.HealthRecorder`)
+**The `system` source.** Every 60 s PlantCraft (`plantcraft.watch.recorder.HealthRecorder`)
 writes the suite's health to the Historian's reserved source `system`, shown as "System"
 ("Sistema"), which only PlantCraft writes (`POST /api/v1/data/system`; the Historian's
 `docs/data-layer.md`), kept 90 days. Signals: `system:<service>.up` (1 running and healthy),
@@ -232,7 +232,7 @@ empty url, drops one; an app installed from a package has Docker's view only);
 that reports a work queue (`ops.report_queue`: Analytics' executions, Models' simulations);
 `system:host.disk_free_gb`, `.disk_free_pct`; `system:backup.age_h`, `.ok`, `.drill_ok`.
 Metrics that carry `conditions` (an app without an app key, the Historian: `ops.report_conditions`)
-are handed each minute to `processcraft.events.conditions`, which writes them as that app's
+are handed each minute to `plantcraft.events.conditions`, which writes them as that app's
 events, start and end (`docs/api-v1.md`, Conditions of an app without an app key).
 A minute with nothing known (the installer silent) writes nothing for that signal: a gap, never
 a made-up value. While the Historian is down the values wait in memory, up to 24 h per signal,
@@ -240,7 +240,7 @@ and go on the next write. It runs in the leader process only (`ApiRuntime._lead`
 `PLANTCRAFT_HEALTH_SIGNALS=false` turns it off. View creates the read-only dashboard
 "Suite health" ("Saúde da suíte") when the source exists.
 
-**The watch** (`processcraft.watch`). A thread inside PlantCraft, using neither the Historian nor
+**The watch** (`plantcraft.watch`). A thread inside PlantCraft, using neither the Historian nor
 View, reads `metrics.json`, the backups, the last drill and the last update every 30 s, and
 the work queues the servers reported to the recorder's last sample.
 A check that fails 3 times in a row (90 s) opens an incident: a message from the robot user
@@ -276,7 +276,7 @@ when less than 24 h old. `PLANTCRAFT_WATCH=false` turns the watch off. The Healt
 the last check, the open and recent incidents and every service's state, CPU, memory and
 restarts (`GET /api/operations/health`, admins only).
 
-**Certificates** (`processcraft.certificates`, B17, 2026-10-25). A certificate that expires stops
+**Certificates** (`plantcraft.certificates`, B17, 2026-10-25). A certificate that expires stops
 a connection without a word on any screen, so Health lists every one the suite uses, read once an
 hour: the suite's HTTPS certificate (`certs/cert.pem`, mounted read-only at `/certs`, where `key.pem` stays readable by the proxy only; with
 none the proxy's local authority issues and renews its own, shown as "renews by itself") and the
@@ -301,7 +301,7 @@ Passwords, tokens, keys, cookies and `Authorization` values are replaced by `***
 Servers run uvicorn with `log_config=None` and no access log of its own.
 
 **Diagnostic bundle.** "Download diagnostic bundle" (Health panel; `install.sh --diagnostics`
-writes it to the current folder) asks the installer for a zip (`processcraft.apps.installer`,
+writes it to the current folder) asks the installer for a zip (`plantcraft.apps.installer`,
 action `diagnostics`; it runs beside any operation): the installer's status files
 (`release.json`, health and metrics, backups, the last drill, the operation running and the
 operations journal, the last update, installed apps), `docker compose ps` and `images`, the last
@@ -339,10 +339,13 @@ each release, not on every pull request.
 request at a time (the GIL), so with many people at once requests wait in line; removing the
 database lock inside one process made it worse (3 s, a GIL convoy, measured in the architecture
 review). PlantCraft therefore starts `PLANTCRAFT_WORKERS` processes (`python -m
-processcraft.api.serve`, the image's command; `plantcraft --workers N` locally). `auto`, the
+plantcraft.api.serve`, the image's command; `plantcraft --workers N` locally). `auto`, the
 default, is 2 to 4 (the CPUs, at most 4) when Historian is the data layer (`HISTCRAFT_URL`), and 1
 while PlantCraft reads plant sources itself, because that history cache lives in the process.
-What the processes share, and how (`processcraft.ops.workers`):
+Always 1 when the data folder is where SQLite cannot use WAL (a Docker Desktop bind mount on
+macOS or Windows, a network share, FUSE), whatever `PLANTCRAFT_WORKERS` says: file locks there do
+not hold between processes, and several of them writing a new database corrupted it.
+What the processes share, and how (`plantcraft.ops.workers`):
 
 | Shared | How |
 |---|---|

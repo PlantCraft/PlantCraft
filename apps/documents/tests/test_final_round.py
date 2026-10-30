@@ -1,4 +1,4 @@
-"""The final review round (owner, 2026-10-27): a document's description, the latest documents
+"""The final review round: a document's description, the latest documents
 with when, the reading queue in the suite's Queue, search words carried to the passage, and a
 Word file shown as a page."""
 

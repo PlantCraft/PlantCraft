@@ -9,7 +9,7 @@ import { statusVar } from "./brandTheme.js";
 import { t } from "./i18n.js";
 
 /**
- * The top of every page (owner, 2026-10-25, round 8): the title at the left, the page's buttons at
+ * The top of every page (round 8): the title at the left, the page's buttons at
  * the right, in a band of one height (base.css), so the buttons stay at the same place from page to
  * page. `eyebrow` and `detail` are no longer drawn (the sidebar says where the person is); they stay
  * accepted so older pages build, and are left out of new ones. The assistant's button sits beside

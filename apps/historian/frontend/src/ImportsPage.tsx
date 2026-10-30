@@ -1,5 +1,5 @@
 /**
- * Imports: CSV and Excel files (owner, 2026-10-24). A file is checked first
+ * Imports: CSV and Excel files. A file is checked first
  * and nothing is written until the person confirms; the check fills in how the file is read
  * (separator, columns, time format…), which the person can change and check again. An import
  * keeps that, so the next file of the same kind is read the same way into the same points.
@@ -97,7 +97,7 @@ export function ImportsPage({ me }: { me: Me }) {
 }
 
 /** The two example files: opened in the import dialog, checked, for whoever can import
- * (owner, 2026-10-26: a download alone looked like nothing happened); downloaded otherwise. */
+ * (a download alone looked like nothing happened); downloaded otherwise. */
 function Examples({ onError, onTry }: { onError: (text: string) => void; onTry?: (file: File) => void }) {
   const get = (shape: ExampleShape) => (onTry ? api.exampleFile(shape).then(onTry) : api.importExample(shape)).catch((err: Error) => onError(err.message));
   const Icon = onTry ? FileSpreadsheet : Download;
@@ -261,7 +261,7 @@ function Status({ item }: { item: ImportItem }) {
 }
 
 /** Repeat an import from a folder: each new or changed file there is read the way the import
- * reads its files, into the same signals (owner, 2026-10-26). The folder is only read. */
+ * reads its files, into the same signals. The folder is only read. */
 function RepeatDialog({ item, onClose, onDone }: { item: ImportItem; onClose: () => void; onDone: (notice: string) => void }) {
   const current = isRepeat(item.repeat) ? item.repeat : null;
   const [pattern, setPattern] = useState(current?.pattern ?? "");

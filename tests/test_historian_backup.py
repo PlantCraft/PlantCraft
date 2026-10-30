@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from processcraft.apps import historian_backup as hb
-from processcraft.apps import operations as ops
+from plantcraft.apps import historian_backup as hb
+from plantcraft.apps import operations as ops
 from tests.test_ops_driver import NOW, FakeDocker
 from tests.test_ops_snapshot import _install
 

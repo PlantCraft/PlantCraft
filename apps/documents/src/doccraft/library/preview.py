@@ -1,4 +1,4 @@
-"""A Word file as a page a browser shows (owner, 2026-10-27: "seria bom conseguir ver os arquivos
+"""A Word file as a page a browser shows ("seria bom conseguir ver os arquivos
 Word"): its headings, paragraphs (bold and italic kept), lists and tables, in document order.
 
 The file is untrusted: the page is built from its text only, every piece escaped, with a fixed

@@ -2,7 +2,7 @@
 
     python ci/bench/workers_bench.py --clients 16 --seconds 20 --workers 1 4
 
-Starts ``python -m processcraft.api.serve`` on a fresh data folder for each worker count, with
+Starts ``python -m plantcraft.api.serve`` on a fresh data folder for each worker count, with
 2,000 assets, signs in once and runs ``--clients`` threads that each loop over the pages people
 open (session, home, asset tree, one asset) with one write in ten (an asset renamed). Prints
 requests per second and latency percentiles; the same machine for every count.
@@ -54,7 +54,7 @@ def _start(folder: Path, workers: int) -> tuple[subprocess.Popen, str]:
         "PLANTCRAFT_LOG_LEVEL": "WARNING",
     }
     server = subprocess.Popen(
-        [sys.executable, "-m", "processcraft.api.serve"],
+        [sys.executable, "-m", "plantcraft.api.serve"],
         cwd=folder,
         env=env,
         stdout=subprocess.DEVNULL,

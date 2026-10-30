@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from processcraft import config
-from processcraft.apps import operations
+from plantcraft import config
+from plantcraft.apps import operations
 from tests.test_apps_api import PASSWORD, sign_in, world  # noqa: F401
 
 

@@ -254,7 +254,7 @@ def test_a_process_display_has_pages_and_the_tabs_turn_them(signed_in, app_url, 
 def test_a_whole_plant_on_one_page_zooms_and_moves(signed_in, app_url, screenshots):
     """The demo's plant (deploy/demo/diagrams) on one page: the whole of it first, then the
     wheel, a double click or the buttons zoom about a point, a drag moves the drawing and opens
-    nothing, and "Show the whole drawing" comes back (owner, 2026-10-27)."""
+    nothing, and "Show the whole drawing" comes back."""
 
     import json
     from pathlib import Path
@@ -346,7 +346,7 @@ def test_a_display_opens_trends_and_assets_over_itself_full_screen_too(
 
 
 def test_a_whole_plant_has_tabs_back_to_its_overview(signed_in, app_url, screenshots):
-    """Overview and a tab per part over the one-page plant (owner, 2026-10-28): a tab zooms to
+    """Overview and a tab per part over the one-page plant: a tab zooms to
     its part, Overview comes back to the whole drawing, and the tab of the part in view is
     the current one, full screen too."""
 

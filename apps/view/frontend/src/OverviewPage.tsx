@@ -16,7 +16,7 @@ const DEFAULT_BOARD: BoardItem[] = [
 
 /** View's first page, in the frame of every app's Overview (`AppOverview`, the board of Desk's
  * Today): the widgets View declares in app.toml and serves, arranged by each person. Nothing is
- * created here (owner, 2026-10-27): new dashboards, trends, reports and displays are made on
+ * created here: new dashboards, trends, reports and displays are made on
  * their own tabs. */
 export function OverviewPage() {
   return <AppOverview app="dashcraft" name={t("View")} url={BASE} defaultLayout={DEFAULT_BOARD} />;

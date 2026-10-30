@@ -172,7 +172,7 @@ function WhereChoice({ where, onChoose }: { where: NotebookPlace; onChoose: (whe
 type BrowserState = "checking" | "missing" | "installing" | "ready" | "failed";
 
 /** In this browser: Python installed once into this browser, then JupyterLab in a new tab with the
- * examples and the person's notebooks as folders (owner, 2026-10-25). */
+ * examples and the person's notebooks as folders. */
 function BrowserPanel({ data }: { data: NotebooksOverview }) {
   const [listing, setListing] = useState<BrowserFiles | null>(null);
   const [state, setState] = useState<BrowserState>("checking");
@@ -414,7 +414,7 @@ function NotebookKitSwitch({ data, onChanged, onError }: { data: NotebooksOvervi
 }
 
 /** How much one person may ask the plant for: a heavy notebook or script slows down its owner
- * alone, never the apps (``processcraft/api/usage.py``). */
+ * alone, never the apps (``plantcraft/api/usage.py``). */
 function NotebookLimits({ limits, onSaved }: { limits: UsageLimits; onSaved: (limits: UsageLimits) => void }) {
   const [perMinute, setPerMinute] = useState(String(limits.per_minute));
   const [concurrent, setConcurrent] = useState(String(limits.concurrent));

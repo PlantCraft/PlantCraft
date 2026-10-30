@@ -1,7 +1,7 @@
 /**
  * The suite's table for long lists: sort by any column, search by text, filter a column by its
  * values, pages of 25/50/100, and, when asked, a checkbox per row with actions on the rows ticked
- * ("Remove selected"). Every list that can grow past a screen uses it (owner, 2026-10-21: no
+ * ("Remove selected"). Every list that can grow past a screen uses it (no
  * table without pages; 2026-10-22: every table pages, filters and sorts the same way).
  */
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Search, X } from "lucide-react";

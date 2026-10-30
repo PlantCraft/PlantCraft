@@ -40,7 +40,7 @@ export function editorPath(id: string | null, from?: string, model?: string): st
 }
 
 /**
- * The editor opens in its own window (owner, 2026-10-22: like Simulink, the diagram has the whole
+ * The editor opens in its own window (like Simulink, the diagram has the whole
  * screen); one window per algorithm, brought forward when it is already open.
  */
 export function openEditor(id: string | null, from?: string, model?: string): void {

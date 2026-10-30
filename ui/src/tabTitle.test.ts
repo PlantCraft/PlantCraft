@@ -41,6 +41,6 @@ describe("tab title", () => {
 
   it("uses the platform's mark as the icon", () => {
     expect(BRAND_FAVICON.startsWith("data:image/svg+xml,")).toBe(true);
-    expect(decodeURIComponent(BRAND_FAVICON)).toContain("#0a66d0");
+    expect(decodeURIComponent(BRAND_FAVICON)).toContain("#2e5a88");
   });
 });

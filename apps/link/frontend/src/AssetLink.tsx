@@ -37,7 +37,7 @@ const SIGNAL_COLUMNS: DataColumn<LinkSignal>[] = [
 /** `/assets/<id>`: the asset's page in Link, the deep link every app of the suite uses. The latest
  * result of every algorithm that runs on it (its loop's algorithm, Signal quality on its signals,
  * the algorithms on assets that name it), each opening the series behind it; the quality of its
- * signals; and the latest word of each algorithm on assets (owner, 2026-10-23). */
+ * signals; and the latest word of each algorithm on assets. */
 export function AssetLinkPage({ assetId, me }: { assetId: string; me: Me }) {
   const [link, setLink] = useState<AssetLink | null>(null);
   const [error, setError] = useState("");

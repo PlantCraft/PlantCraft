@@ -284,7 +284,7 @@ h4.mc-dialog-section { font-size: var(--pc-fs-sm); }
 .mc-library-card .card-foot, .mc-model-card .card-foot { flex-wrap: wrap; gap: 6px 12px; }
 .mc-library-card .row-actions { gap: 12px; white-space: nowrap; }
 
-/* Models as block diagrams (owner, 2026-10-24): the editor fills its panel, the simulation
+/* Models as block diagrams: the editor fills its panel, the simulation
    settings sit in its inspector, the last run's results follow. */
 .mc-model-editor { height: clamp(460px, calc(100vh - 260px), 760px); }
 .mc-model-results { margin-top: 16px; }

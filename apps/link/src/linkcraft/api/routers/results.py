@@ -1,6 +1,6 @@
 """Results: the latest result of every algorithm on every asset it runs on, on one list.
 
-Each row says the same things whatever the algorithm (owner, 2026-10-23: Results are what the
+Each row says the same things whatever the algorithm (Results are what the
 algorithms concluded, nothing specific to loops or signals): the asset and its type, the
 algorithm with its version, tags and responsible group, the status in the suite's words (``ok``,
 ``warning``, ``alarm``, ``unknown``), the headline measure, the limiting finding, when, and where

@@ -75,7 +75,7 @@ class ProjectStore(Store):
         ("kind", "TEXT NOT NULL DEFAULT 'project'"),
         ("block_group", "TEXT NOT NULL DEFAULT ''"),
     )
-    # A version's name and what changed in it (round 9 M4 leftover, owner 2026-10-26).
+    # A version's name and what changed in it (round 9 M4 leftover).
     VERSION_COLUMNS = {
         "version_name": "TEXT NOT NULL DEFAULT ''",
         "version_note": "TEXT NOT NULL DEFAULT ''",

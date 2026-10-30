@@ -1,7 +1,7 @@
 """Runs and where an algorithm is used, read the same way whatever the algorithm.
 
 A run is one execution of an algorithm: a Signal quality round over every signal, or a loop
-algorithm on one loop. The Results page lists them on one history (owner, 2026-10-21: no page
+algorithm on one loop. The Results page lists them on one history (no page
 split between signal quality and loops); an algorithm's page says where it is used (its schedules
 and the subjects that use it), not its last runs.
 """

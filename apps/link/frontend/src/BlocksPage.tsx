@@ -121,7 +121,7 @@ const portRow = (port: PortSpec) => <tr key={`port-${port.port}`}>
   <td>{port.description}{(port.required || port.multiple || port.record) && <small>{[port.required ? t("required") : "", port.multiple ? t("takes several wires") : "", port.record ? t("recorded in the historian by default") : ""].filter(Boolean).join(" · ")}</small>}</td>
 </tr>;
 
-/** Inputs, outputs and parameters in one table, so their columns line up (owner, 2026-10-24). */
+/** Inputs, outputs and parameters in one table, so their columns line up. */
 function ContractTable({ block, parameters = true }: { block: BlockDetail; parameters?: boolean }) {
   const groups: Array<[string, React.ReactNode[]]> = [
     [t("Inputs"), block.inputs.map(portRow)],
@@ -187,7 +187,7 @@ const ORIGINS: Record<string, string> = {
 };
 
 /** A block's versions, newest first, in their own tab: a block Link ships is version 1, and the
- * site's edits of it are 2, 3… (owner, 2026-10-24). "current" is the one in use; opening one
+ * site's edits of it are 2, 3…. "current" is the one in use; opening one
  * shows the block's page at that version. */
 export function blockVersions(block: Pick<BlockDetail, "site" | "versions" | "number" | "version" | "in_use">): VersionItem[] {
   if (!block.site) return [{ number: 1, name: t("Analytics' version"), author: t("PlantCraft"), note: t("ships with Analytics {version}", { version: block.version }), current: true }];
@@ -243,7 +243,7 @@ function UsedBy({ block }: { block: BlockDetail }) {
 function About({ block }: { block: BlockDetail }) {
   const list = (title: string, items: string[]) => items.length > 0 && <><h3>{title}</h3><ul>{items.map((item) => <li key={item}>{item}</li>)}</ul></>;
   const text = (title: string, body: string | null | undefined) => body && <><h3>{title}</h3><p>{body}</p></>;
-  // Every block reads the same (owner, 2026-10-27): What it does, How to read it, then the
+  // Every block reads the same: What it does, How to read it, then the
   // Formula where the block computes one (an input or an output block has none).
   return <section className="panel blk-about">
     <div className="panel-header"><div><h2>{t("About this block")}</h2></div></div>

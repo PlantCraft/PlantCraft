@@ -2,7 +2,7 @@
 consultant or a colleague to analyse in their own tools or their own PlantCraft.
 
 The page searches tags and assets of any kind together (a loop is one kind of asset among
-others, owner 2026-10-21), and "Add" puts the tags of what is ticked in the list that is
+others), and "Add" puts the tags of what is ticked in the list that is
 exported (``/resolve`` lists an asset's tags, with everything under it). The assets they came
 from travel as metadata (``assets.csv``, ``plant-map.json``). A choice can be saved under a
 name and run again (``/saved``). The series come from the Historian's archive; the plant's
@@ -55,7 +55,7 @@ class ExportRequest(BaseModel):
     end: str | None = Field(default=None, max_length=64)
     hours: float | None = Field(default=24.0, gt=0, le=MAX_DAYS * 24)
     step_seconds: int | None = Field(default=None, ge=1, le=86400)
-    # What each step keeps (owner, 2026-10-21): the time-weighted mean, or the first, last,
+    # What each step keeps: the time-weighted mean, or the first, last,
     # lowest or highest value recorded in it.
     aggregate: Aggregate = "mean"
     anonymize: bool = False
@@ -445,7 +445,7 @@ def export(
         },
     )
     name = f"historian-package-{start:%Y%m%d}{'-anonymized' if request.anonymize else ''}.zip"
-    # What the package holds, for the page to say after the download (owner, 2026-10-22: "the
+    # What the package holds, for the page to say after the download ("the
     # zip is so small; is everything there?").
     with zipfile.ZipFile(io.BytesIO(body)) as archive:
         manifest = json.loads(archive.read("manifest.json"))

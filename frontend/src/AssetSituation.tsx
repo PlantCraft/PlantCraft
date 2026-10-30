@@ -56,7 +56,7 @@ function kindLabel(kind: string): string {
   return kind.replace(/_/g, " ");
 }
 
-/** An asset's Situation tab (owner, 2026-10-23): alarms, Link's diagnoses, models and actions
+/** An asset's Situation tab: alarms, Link's diagnoses, models and actions
  * of one asset, its signals and what is inside it, on one page, worst first. */
 export function AssetSituation({ assetId, onActions }: { assetId: string; onActions: () => void }) {
   const [data, setData] = useState<Situation | null>(null);

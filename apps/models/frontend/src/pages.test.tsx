@@ -21,7 +21,7 @@ describe("the frame's pages", () => {
     expect(modelPath("p 1", "Pkg.Tank")).toBe("/models/p%201/Pkg.Tank");
     expect(modelPath("p-1", "Pkg.Tank", "inputs")).toBe("/models/p-1/Pkg.Tank/inputs");
     expect(["diagram", "test", "used-by", "settings", "nope", undefined].map(modelTab)).toEqual(["diagram", "test", "used-by", "settings", "overview", "overview"]);
-    // The tabs of the round before keep their addresses (owner, 2026-10-27).
+    // The tabs of the round before keep their addresses.
     expect(["run", "studies"].map(modelTab)).toEqual(["test", "used-by"]);
     expect(blockPath("PlantCraftControl.PID", "used-by")).toBe("/blocks/PlantCraftControl.PID/used-by");
     expect(["code", "inputs", "x"].map(blockTab)).toEqual(["code", "inputs", "overview"]);

@@ -124,7 +124,7 @@ function matches(value: AttributeValue | undefined, needle: string) {
   return !needle || String(value).toLowerCase().includes(needle);
 }
 
-/** Assets and their types are one place (owner, 2026-10-20): two tabs of the Assets page. */
+/** Assets and their types are one place: two tabs of the Assets page. */
 export function AssetTabs({ current }: { current: "assets" | "types" }) {
   const isAdmin = useIsAdmin();
   if (!isAdmin && current === "assets") return null;
@@ -362,11 +362,11 @@ export function tabOf(search: string): AssetTab {
   return value && ASSET_TABS.includes(value) ? value : "overview";
 }
 
-/** One asset, built from its type (owner, 2026-10-21: redone, no links that lead nowhere): a
+/** One asset, built from its type (redone, no links that lead nowhere): a
  * header, then tabs: an overview (record, main signals, what is inside), its situation (what
  * every app says about it, AssetSituation), the signals as one
  * table, the assets inside it, relations, follow-up actions and history. */
-/** Follow an asset: its alarms and results come to the person's Desk (owner, 2026-10-23). */
+/** Follow an asset: its alarms and results come to the person's Desk. */
 function FollowButton({ assetId }: { assetId: string }) {
   const ref = `asset:${assetId}`;
   const [following, setFollowing] = useState<boolean | null>(null);

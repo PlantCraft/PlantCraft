@@ -1,4 +1,4 @@
-"""Every time in UTC (owner, 2026-10-23): one text form for every instant the suite stores or answers.
+"""Every time in UTC: one text form for every instant the suite stores or answers.
 
 ``2026-10-23T14:05:09.123Z``: UTC, milliseconds, fixed width. Two of them compare as text in
 their time order, so SQL filters and sorts them as plain text. Each person sees them in their own
@@ -65,7 +65,7 @@ LOCAL = "local"
 
 
 def resolve_zone(name: str | None, local: str = "UTC") -> ZoneInfo:
-    """The zone a saved setting means (owner, 2026-10-25): ``local`` (or nothing, or a name this
+    """The zone a saved setting means: ``local`` (or nothing, or a name this
     server does not know) is the installation's, ``local`` here (from
     ``PlantCraftClient.installation_time_zone()``); ``Etc/GMT+3`` is UTC−3. Saving ``local``
     keeps a schedule on the installation's clock when the installation's zone changes."""

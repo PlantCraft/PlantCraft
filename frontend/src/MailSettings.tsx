@@ -1,6 +1,6 @@
 /** Setup › Email: the plant's own mail server (SMTP), so the apps' notifications can also reach
  * people by email. Off by default; the suite runs offline and never needs it: every notification
- * reaches Messages anyway (owner, 2026-10-22). */
+ * reaches Messages anyway. */
 import { FormSection, Heading } from "@plantcraft/ui";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, LoaderCircle, Mail, Send, ShieldCheck } from "lucide-react";

@@ -27,7 +27,7 @@ const STEPS: { seconds: number | null; label: string }[] = [
   { seconds: 3600, label: "Every hour" },
   { seconds: 86400, label: "Every day" },
 ];
-/** What each step keeps (owner, 2026-10-21). */
+/** What each step keeps. */
 export const AGGREGATES: { id: Aggregate; label: string }[] = [
   { id: "mean", label: "Mean (time-weighted)" },
   { id: "first", label: "First value" },

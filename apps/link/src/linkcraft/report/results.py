@@ -3,7 +3,7 @@
 What the Results page shows, on paper: which filter made it, how many results in each status,
 each algorithm's count, and every result worst first (asset, type, algorithm and version, status,
 measure, finding, when). A filter on the tag "control loop" gives the loop portfolio report; any
-other filter gives the report of what it keeps (owner, 2026-10-23).
+other filter gives the report of what it keeps.
 """
 
 from __future__ import annotations

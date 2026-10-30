@@ -38,7 +38,7 @@ export function appDisplayName(app: AnyAppId, name?: string | null): string {
 
 /**
  * The platform's brand, written once. The tab title and the tab icon of every app use it
- * (tabTitle.ts), the lockups (Brand.tsx) and the full names below (owner, 2026-10-23: the platform
+ * (tabTitle.ts), the lockups (Brand.tsx) and the full names below (the platform
  * is PlantCraft; ids, packages and URLs keep processcraft).
  */
 export const BRAND_NAME = "PlantCraft";
@@ -50,7 +50,7 @@ export const BRAND_NAME = "PlantCraft";
  */
 export const APP_NAMES: Record<AppId, string> = {
   processcraft: BRAND_NAME,
-  // Each person's day: the suite's first page (owner, 2026-10-23), served by the platform.
+  // Each person's day: the suite's first page, served by the platform.
   desk: "Desk",
   linkcraft: "Analytics",
   dashcraft: "View",
@@ -93,7 +93,7 @@ export const APP_ID_BY_MACHINE_ID: Record<string, AppId> = {
   trendcraft: "dashcraft",
   simulator: "simcraft",
   // The Simulator was `plantcraft` until its 0.5.0: the platform took the name (2026-10-27).
-  // The Twin was retired into Link (owner, 2026-10-22).
+  // The Twin was retired into Link.
   twincraft: "linkcraft",
   twin: "linkcraft",
 };
@@ -108,19 +108,20 @@ export function appIdFor(id: string | null | undefined): AppId | null {
 /**
  * Tile colours. Deep, white-glyph-safe (contrast >= 4.5:1 in both themes) and
  * kept off the loop-health hues (status fills are mid-tone and bright; tiles
- * are dark). Dark values are a step lighter so the tile holds on #151c24.
+ * are dark). Toned toward the Steel Blue brand (2026-10-30): same hues, less
+ * saturation. Dark values are the lightest that keep 4.5:1, so tiles hold on black.
  * Mirrored as --pc-app-<id> in tokens.css; change both together.
  */
 export const APP_COLORS: Record<AppId, { name: string; light: string; dark: string }> = {
-  processcraft: { name: "PlantCraft Blue", light: "#0a66d0", dark: "#1f74d8" },
-  desk: { name: "Logbook Plum", light: "#6a3d9a", dark: "#7b4cad" },
-  linkcraft: { name: "Loop Teal", light: "#00726b", dark: "#08857d" },
-  dashcraft: { name: "Chart Indigo", light: "#3442a6", dark: "#3f52b8" },
-  simcraft: { name: "Equipment Olive", light: "#56661a", dark: "#647722" },
-  alarmcraft: { name: "Annunciator Wine", light: "#9c2b4f", dark: "#b0395f" },
-  histcraft: { name: "Archive Bronze", light: "#80591a", dark: "#926722" },
-  modelcraft: { name: "Copper", light: "#9c4419", dark: "#ae5023" },
-  doccraft: { name: "Manual Slate", light: "#3d5a73", dark: "#4a6a86" },
+  processcraft: { name: "Steel Blue", light: "#2e5a88", dark: "#3d78b6" },
+  desk: { name: "Logbook Plum", light: "#5b3a7e", dark: "#8b62b7" },
+  linkcraft: { name: "Loop Teal", light: "#1b5753", dark: "#28807a" },
+  dashcraft: { name: "Chart Indigo", light: "#333d85", dark: "#636ec3" },
+  simcraft: { name: "Equipment Olive", light: "#536020", dark: "#6a7b29" },
+  alarmcraft: { name: "Annunciator Wine", light: "#882f4c", dark: "#c14c72" },
+  histcraft: { name: "Archive Bronze", light: "#755625", dark: "#946d2f" },
+  modelcraft: { name: "Copper", light: "#8a4a2b", dark: "#b15f37" },
+  doccraft: { name: "Manual Slate", light: "#415a6f", dark: "#577894" },
 };
 
 type Attrs = Record<string, string | number>;
@@ -128,32 +129,30 @@ type Attrs = Record<string, string | number>;
 export type GlyphPart = { tag: "path" | "circle" | "rect" | "ellipse"; attrs: Attrs; fill?: boolean };
 
 const s = (d: string, width = 2.2, extra: Attrs = {}): GlyphPart => ({ tag: "path", attrs: { d, "stroke-width": width, ...extra } });
+const R: Attrs = { "stroke-linejoin": "round", "stroke-linecap": "round" };
 const f = (d: string): GlyphPart => ({ tag: "path", attrs: { d }, fill: true });
 
 /** The glyphs, drawn on the 32 grid in the ISA-5.1 line-art spirit of the PlantCraft mark. */
 export const APP_GLYPHS: Record<AppId, GlyphPart[]> = {
-  // Control valve on a process line, driven by an instrument bubble; the valve carries the mark,
-  // the stem is short so it never reads as a figure at 16 px (owner, 2026-10-23).
+  // "PC" drawn as a control valve on a process line: the P's bowl is the valve triangle, the line
+  // runs into the P and out of the open C.
   processcraft: [
-    s("M4 21h4M24 21h4", 2.4),
-    s("M16 21V13.6"),
-    { tag: "circle", attrs: { cx: 16, cy: 9.2, r: 4.4, "stroke-width": 2.2 } },
-    f("M8 15.4v11.2l8-5.6zM24 15.4v11.2L16 21z"),
+    s("M4.5 14h4M24.5 14h3", 2.2, R),
+    s("M8.5 26V7l7.5 7-7.5 7", 2.2, R),
+    s("M24.5 8.3A7 7 0 0 0 16 14a7 7 0 0 0 8.5 5.7", 2.2, R),
   ],
-  // A desk calendar page with a check: the day's work, ticked off.
+  // An operator console with the day's checklist on screen.
   desk: [
-    { tag: "rect", attrs: { x: 5, y: 7, width: 22, height: 20, rx: 3, "stroke-width": 2.2 } },
-    s("M5 13h22", 1.6),
-    s("M11 4.5v5M21 4.5v5", 2.2),
-    s("M11 19.8l3.4 3.4 6.6-7", 2.4, { "stroke-linejoin": "round", "stroke-linecap": "round" }),
+    s("M6.5 5.5h19a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-19A1.5 1.5 0 0 1 5 19V7a1.5 1.5 0 0 1 1.5-1.5z", 2.2, R),
+    s("M16 20.5v4.5M11 26.5h10", 2.2, R),
+    s("M9 11l1.5 1.5 3-3M16 11h7M9.5 15.5h3M16 15.5h7", 1.6, R),
   ],
-  // One method block inside its feedback loop: the loop and its diagnosis (2026-10-23; two
-  // blocks in a row read as glasses at 16 px).
+  // Two blocks connected: a method feeding its result.
   linkcraft: [
-    { tag: "rect", attrs: { x: 10, y: 6, width: 12, height: 11, rx: 2, "stroke-width": 2.2 } },
-    s("M4 11.5h2.6M22 11.5h6", 2.2),
-    f("M10 11.5l-3.4-2.9v5.8z"),
-    s("M25 11.5V24H7v-8", 1.8, { "stroke-linejoin": "round" }),
+    s("M5 4.5h7.5a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V6A1.5 1.5 0 0 1 5 4.5z", 2.2, R),
+    s("M19.5 19.5H27a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5h-7.5A1.5 1.5 0 0 1 18 26v-5a1.5 1.5 0 0 1 1.5-1.5z", 2.2, R),
+    s("M14 8.5h9.25V15", 2.2, R),
+    f("M20.55 14.4h5.4l-2.7 3.4z"),
   ],
   // A trend on its axes under a dashed limit line: a dashboard card.
   dashcraft: [
@@ -161,38 +160,33 @@ export const APP_GLYPHS: Record<AppId, GlyphPart[]> = {
     s("M9 22l5-6.5 4 3.5 8-7.5", 2.4, { "stroke-linejoin": "round", "stroke-linecap": "round" }),
     s("M9.5 8.5h17", 1.6, { "stroke-dasharray": "2.6 2" }),
   ],
-  // A column with feed and product lines.
+  // A column with feed and product lines (the plant simulator; not an app of the family).
   simcraft: [
     { tag: "rect", attrs: { x: 11, y: 4, width: 10, height: 24, rx: 5, "stroke-width": 2.2 } },
     s("M14 12h4M14 16h4M14 20h4", 1.6),
     s("M4 16h7M21 9h7M21 23h7", 2.2),
   ],
-  // An annunciator horn over a limit line.
+  // A bell in the same line as the rest of the family.
   alarmcraft: [
-    f("M16 4.6a1.6 1.6 0 0 1 1.6 1.6v.5a6.6 6.6 0 0 1 5 6.4v5.2l2.4 3H7l2.4-3v-5.2a6.6 6.6 0 0 1 5-6.4v-.5A1.6 1.6 0 0 1 16 4.6z"),
-    f("M13.2 22.7h5.6a2.8 2.8 0 0 1-5.6 0z"),
-    s("M4 27h3.5M10.5 27h4M17.5 27h4M24.5 27h3.5", 1.8),
+    s("M10 21.5V15a6 6 0 0 1 12 0v6.5l2 2.5H8z", 2.2, R),
+    s("M14 27.5h4M16 6v3", 2.2, R),
   ],
-  // A historian: stacked data cylinder on a time axis.
+  // A historian: the stacked data cylinder.
   histcraft: [
-    { tag: "ellipse", attrs: { cx: 16, cy: 7.5, rx: 8, ry: 3, "stroke-width": 2.2 } },
-    s("M8 7.5v12c0 1.7 3.6 3 8 3s8-1.3 8-3v-12M8 13.5c0 1.7 3.6 3 8 3s8-1.3 8-3", 2.2),
-    s("M4 27.5h24M8 25.5v2M16 25.5v2M24 25.5v2", 1.6),
+    { tag: "ellipse", attrs: { cx: 16, cy: 10, rx: 8, ry: 3, "stroke-width": 2.2 } },
+    s("M8 10v12c0 1.7 3.6 3 8 3s8-1.3 8-3V10M8 16c0 1.7 3.6 3 8 3s8-1.3 8-3", 2.2, R),
   ],
-  // A transfer block with input and output, a step response inside.
+  // A distillation column with its trays, feed, top and bottom lines.
   modelcraft: [
-    { tag: "rect", attrs: { x: 9.5, y: 9.5, width: 13, height: 13, rx: 2, "stroke-width": 2.2 } },
-    s("M12.5 19.5c1.6 0 1.8-6 4.4-6h2.6", 1.8, { "stroke-linecap": "round", "stroke-linejoin": "round" }),
-    s("M4 16h5.5M22.5 16h2", 2.2),
-    f("M28 16l-3.6-3v6z"),
+    s("M12 8a4 4 0 0 1 8 0v16a4 4 0 0 1-8 0z", 2.2, R),
+    s("M4.5 16H12M20 8.5h6M20 23.5h6", 2.2, R),
+    s("M12 12h5M15 16h5M12 20h5", 1.6, R),
   ],
-  // A manual: a page with a folded corner, lines of text and a magnifier over them.
+  // A page with a folded corner and lines of text.
   doccraft: [
-    s("M9 4.5h9.5l5.5 5.5v17.5H9z", 2.2, { "stroke-linejoin": "round" }),
-    s("M18.5 4.5V10H24", 1.8, { "stroke-linejoin": "round" }),
-    s("M12.5 14h8M12.5 18h5M12.5 22h4", 1.8, { "stroke-linecap": "round" }),
-    { tag: "circle", attrs: { cx: 21, cy: 21, r: 3.2, "stroke-width": 2 } },
-    s("M23.4 23.4l3.6 3.6", 2.2, { "stroke-linecap": "round" }),
+    s("M9 4.5h9.5l5 5v18H9z", 2.2, R),
+    s("M18.5 4.5v5h5", 2.2, R),
+    s("M12.5 14h7M12.5 18h7M12.5 22h4.5", 1.6, R),
   ],
 };
 

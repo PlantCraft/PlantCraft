@@ -11,10 +11,10 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from plantcraft.api import app_proxy as proxy
+from plantcraft.api.app import create_app
+from plantcraft.assistant_access.app_tools import NOTE, refs_in, tools_of
 from plantcraft_sdk.contributes import ContributionsIn
-from processcraft.api import app_proxy as proxy
-from processcraft.api.app import create_app
-from processcraft.assistant_access.app_tools import NOTE, refs_in, tools_of
 from tests.test_assistant_chat import LOCAL, ScriptedModel, _ask, _ready
 from tests.test_collaboration import PASSWORD, _scenario
 
@@ -296,7 +296,7 @@ def test_the_question_is_searched_before_the_model_answers(documents):
 
 
 def test_a_page_about_an_asset_searches_about_it_and_each_citation_opens_its_passage(documents):
-    """Owner, 2026-10-27: a question about a loop in Analytics reads its documents; each [n] of
+    """a question about a loop in Analytics reads its documents; each [n] of
     the answer opens the document at the passage it cites."""
 
     rt = documents.app.state.runtime
@@ -326,7 +326,7 @@ def test_a_page_about_an_asset_searches_about_it_and_each_citation_opens_its_pas
 
 
 def test_citations_link_only_to_the_suite_own_pages():
-    from processcraft.assistant_chat.engine import cites_in, linked_citations
+    from plantcraft.assistant_chat.engine import cites_in, linked_citations
 
     found = cites_in(
         {

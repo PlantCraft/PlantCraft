@@ -1,4 +1,4 @@
-/** Setup › Language models, in the order an administrator sets them up (owner, 2026-10-25):
+/** Setup › Language models, in the order an administrator sets them up:
  * first the providers (the same vendor may come more than once, each with its own key), then
  * the model each use writes with: the default, and each part of the suite that uses a model,
  * the apps' own included. Choosing a default is what turns models on; the first model that
