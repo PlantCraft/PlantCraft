@@ -61,3 +61,10 @@ Work for the next version collects on one branch during the day. One pull reques
 "PlantCraft X.Y.Z", carries the CHANGELOG section as its description; the full tests run on it,
 it merges to `main` and is tagged `vX.Y.Z`. The public demo updates only on a release, at a quiet
 hour.
+
+The release files are built on a machine with Docker and internet, once per processor:
+`make release-bundle` builds every app's image, the Simulator and the platform and writes
+`dist/plantcraft-<version>-linux-<arch>-bundle/` (bash 4 or newer: on macOS, `brew install
+bash`). The publisher's key signs `SHA256SUMS` where the key lives
+([verify-a-release.md](verify-a-release.md) says what users check), and the files go on the
+GitHub release of the tag.

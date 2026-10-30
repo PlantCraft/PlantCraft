@@ -110,10 +110,11 @@ sleeps, and Docker Desktop runs the containers inside a virtual machine.
    it at least 8 GB of memory (Settings › Resources; 12 GB with every app on).
 2. Use the `linux-arm64` bundle on Apple silicon and `linux-amd64` on Intel (`uname -m` says
    `arm64` or `x86_64`).
-3. In Terminal, check the bundle (above, with `shasum -a 256 -c`), unpack it and install into a
-   folder of yours, without `sudo`:
+3. In Terminal, name the bundle for your Mac, check it as in [The release files](#the-release-files)
+   (with `shasum -a 256 -c`), then unpack it and install into a folder of yours, without `sudo`:
 
    ```bash
+   B=plantcraft-0.5.1-linux-arm64-bundle.tar.gz   # Intel Mac: linux-amd64
    tar -xzf $B && cd ${B%.tar.gz}
    ./install.sh --all-apps --demo --prefix ~/PlantCraft
    ```

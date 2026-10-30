@@ -360,10 +360,13 @@ short-lived container, so a member of the `docker` group needs no `sudo`.
 
 ## 11. Building a bundle (release managers)
 
-On a machine with internet and Docker, from a green `main`, once per processor:
+On a machine with internet, Docker and bash 4 or newer (macOS: `brew install bash`), from a green
+`main`, once per processor. `make bundle` ships an app only when its image of this version is
+already built, so a release starts with `make release-bundle`:
 
 ```bash
-make bundle          # make image (+ make simcraft-image), then deploy/bundle.sh
+make release-bundle  # every app's image (make apps-images), then make bundle
+make bundle          # the platform (+ the Simulator) and the app images already built
 make isolation       # the isolation tests against the built images (tests/test_isolation.py)
 # The arm64 bundle on an x86_64 machine (QEMU registered in binfmt_misc), or the other way round:
 make bundle ARCH=arm64 DOCKER_BUILD_FLAGS="--platform linux/arm64"

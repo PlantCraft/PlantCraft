@@ -34,6 +34,11 @@
 # and the Simulator (the `demo` profile) when simcraft:$SIMCRAFT_VERSION does (make
 # simcraft-image builds it from simulator/).
 set -Eeuo pipefail
+# Associative arrays need bash 4 or newer: macOS's /bin/bash is 3.2 (brew install bash).
+if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    echo "$0 needs bash 4 or newer (this is $BASH_VERSION); on macOS: brew install bash" >&2
+    exit 2
+fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="${VERSION:?set VERSION}"

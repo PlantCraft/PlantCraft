@@ -24,6 +24,11 @@
 # dist/e2e-upgrade/install), BUILD_CA and DOCKER_BUILD_FLAGS as for make image,
 # PYTHON (with pytest and Playwright) and PLANTCRAFT_SUITE_CHROMIUM for the journeys. Logs and fingerprints: dist/e2e-upgrade/logs/.
 set -Eeuo pipefail
+# Associative arrays need bash 4 or newer: macOS's /bin/bash is 3.2 (brew install bash).
+if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    echo "$0 needs bash 4 or newer (this is $BASH_VERSION); on macOS: brew install bash" >&2
+    exit 2
+fi
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK="$ROOT/dist/e2e-upgrade"
