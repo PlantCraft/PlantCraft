@@ -34,17 +34,17 @@
   --pc-neutral-900: #1d1d1f;
   --pc-neutral-950: #111113;
 
-  /* PlantCraft Blue: the brand colour. */
-  --pc-blue-50: #eef5fe;
-  --pc-blue-100: #d9e9fc;
-  --pc-blue-200: #b5d3f9;
-  --pc-blue-300: #86b6f3;
-  --pc-blue-400: #5294ea;
-  --pc-blue-500: #2477dc;
-  --pc-blue-600: #0a66d0;
-  --pc-blue-700: #0853ab;
-  --pc-blue-800: #0a4285;
-  --pc-blue-900: #0b2f5c;
+  /* Steel Blue: the brand colour (2026-10-30). */
+  --pc-blue-50: #eef3f8;
+  --pc-blue-100: #dce6f0;
+  --pc-blue-200: #bccfe2;
+  --pc-blue-300: #93b1cf;
+  --pc-blue-400: #6a90b9;
+  --pc-blue-500: #44729f;
+  --pc-blue-600: #2e5a88;
+  --pc-blue-700: #264b71;
+  --pc-blue-800: #1f3c5b;
+  --pc-blue-900: #172d44;
 
   /* Surfaces, lines and ink */
   --pc-bg: #f5f5f7;            /* app canvas */
@@ -62,13 +62,13 @@
   --pc-on-accent: #ffffff;     /* text on primary / status fills */
 
   /* Interactive */
-  --pc-primary: #0a66d0;
-  --pc-primary-hover: #0853ab;
-  --pc-primary-text: #0a5fc2;
-  --pc-primary-soft: #e8f1fc;
-  --pc-primary-soft-2: #d6e7fb;
-  --pc-primary-border: #a9c9f0;
-  --pc-focus: #2477dc;
+  --pc-primary: #2e5a88;
+  --pc-primary-hover: #264b71;
+  --pc-primary-text: #2b5582;
+  --pc-primary-soft: #e8eef5;
+  --pc-primary-soft-2: #d6e1ee;
+  --pc-primary-border: #a9bfd8;
+  --pc-focus: #44729f;
 
   /* Loop health. fill = dots, bars, markers; text = AA on soft and surface. */
   --pc-good-fill: #34c759;
@@ -120,15 +120,15 @@
 
   /* App family tiles (white glyph on top; mirrored in appMarks.ts).
      Never use them for status or chart series. */
-  --pc-app-processcraft: #0a66d0;
-  --pc-app-desk: #6a3d9a;
-  --pc-app-linkcraft: #00726b;
-  --pc-app-dashcraft: #3442a6;
-  --pc-app-simcraft: #56661a;
-  --pc-app-alarmcraft: #9c2b4f;
-  --pc-app-histcraft: #80591a;
-  --pc-app-modelcraft: #9c4419;
-  --pc-app-doccraft: #3d5a73;
+  --pc-app-processcraft: #2e5a88;
+  --pc-app-desk: #5b3a7e;
+  --pc-app-linkcraft: #1b5753;
+  --pc-app-dashcraft: #333d85;
+  --pc-app-simcraft: #536020;
+  --pc-app-alarmcraft: #882f4c;
+  --pc-app-histcraft: #755625;
+  --pc-app-modelcraft: #8a4a2b;
+  --pc-app-doccraft: #415a6f;
 
   /* Elevation */
   --pc-shadow-color: #000000;
@@ -152,13 +152,13 @@
     --pc-text-3: #98989d;
     --pc-text-4: #8e8e93;
     --pc-on-accent: #ffffff;
-    --pc-primary: #1f74d8;
-    --pc-primary-hover: #3385ee;
-    --pc-primary-text: #6aa8ff;
-    --pc-primary-soft: #10243f;
-    --pc-primary-soft-2: #163256;
-    --pc-primary-border: #24508a;
-    --pc-focus: #3d8bfd;
+    --pc-primary: #3d78b6;
+    --pc-primary-hover: #4f88c2;
+    --pc-primary-text: #7fa6d1;
+    --pc-primary-soft: #1c2a3b;
+    --pc-primary-soft-2: #24364c;
+    --pc-primary-border: #3a5a80;
+    --pc-focus: #7fa6d1;
     --pc-good-fill: #30d158;
     --pc-good-text: #63e07f;
     --pc-good-soft: #12291a;
@@ -201,16 +201,16 @@
     --pc-series-8: #499537;
     --pc-chart-grid: #2c2c2e;
     --pc-chart-axis: #38383a;
-    --pc-app-processcraft: #1f74d8;
-    --pc-app-desk: #7b4cad;
-    --pc-app-linkcraft: #08857d;
-  --pc-app-dashcraft: #3f52b8;
-    --pc-app-simcraft: #647722;
-    --pc-app-alarmcraft: #b0395f;
-    --pc-app-histcraft: #926722;
-    --pc-app-modelcraft: #ae5023;
-  --pc-app-doccraft: #4a6a86;
-    --pc-app-doccraft: #4a6a86;
+    --pc-app-processcraft: #3d78b6;
+    --pc-app-desk: #8b62b7;
+    --pc-app-linkcraft: #28807a;
+  --pc-app-dashcraft: #636ec3;
+    --pc-app-simcraft: #6a7b29;
+    --pc-app-alarmcraft: #c14c72;
+    --pc-app-histcraft: #946d2f;
+    --pc-app-modelcraft: #b15f37;
+  --pc-app-doccraft: #577894;
+    --pc-app-doccraft: #577894;
     --pc-shadow-color: #000000;
     --pc-scrim: #000000;
   }
@@ -232,13 +232,13 @@
   --pc-text-3: #98989d;
   --pc-text-4: #8e8e93;
   --pc-on-accent: #ffffff;
-  --pc-primary: #1f74d8;
-  --pc-primary-hover: #3385ee;
-  --pc-primary-text: #6aa8ff;
-  --pc-primary-soft: #10243f;
-  --pc-primary-soft-2: #163256;
-  --pc-primary-border: #24508a;
-  --pc-focus: #3d8bfd;
+  --pc-primary: #3d78b6;
+  --pc-primary-hover: #4f88c2;
+  --pc-primary-text: #7fa6d1;
+  --pc-primary-soft: #1c2a3b;
+  --pc-primary-soft-2: #24364c;
+  --pc-primary-border: #3a5a80;
+  --pc-focus: #7fa6d1;
   --pc-good-fill: #30d158;
   --pc-good-text: #63e07f;
   --pc-good-soft: #12291a;
@@ -281,14 +281,14 @@
   --pc-series-8: #499537;
   --pc-chart-grid: #2c2c2e;
   --pc-chart-axis: #38383a;
-  --pc-app-processcraft: #1f74d8;
-  --pc-app-linkcraft: #08857d;
-  --pc-app-dashcraft: #3f52b8;
-  --pc-app-simcraft: #647722;
-  --pc-app-alarmcraft: #b0395f;
-  --pc-app-histcraft: #926722;
-  --pc-app-modelcraft: #ae5023;
-  --pc-app-desk: #7b4cad;
+  --pc-app-processcraft: #3d78b6;
+  --pc-app-linkcraft: #28807a;
+  --pc-app-dashcraft: #636ec3;
+  --pc-app-simcraft: #6a7b29;
+  --pc-app-alarmcraft: #c14c72;
+  --pc-app-histcraft: #946d2f;
+  --pc-app-modelcraft: #b15f37;
+  --pc-app-desk: #8b62b7;
   --pc-shadow-color: #000000;
   --pc-scrim: #000000;
 }
@@ -307,9 +307,9 @@
   --pc-chrome-text-2: #c7c7cc;
   --pc-chrome-text: #ececf0;
   --pc-chrome-text-strong: #ffffff;
-  --pc-chrome-accent: #3d8bfd;
-  --pc-chrome-accent-strong: #1f74d8;
-  --pc-chrome-accent-text: #a9cdff;
+  --pc-chrome-accent: #7fa6d1;
+  --pc-chrome-accent-strong: #3d78b6;
+  --pc-chrome-accent-text: #b4cbe4;
 
   /* Typography. Inter: a screen face with optical sizing (tighter in titles, open in body) and
      true tabular figures; JetBrains Mono for tags, values and code. Both self-hosted inside this
