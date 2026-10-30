@@ -67,7 +67,7 @@ ARG APP_ID=linkcraft
 ARG APP_PREFIX=/link/
 ARG APP_PORT=8140
 ARG APP_UID=10012
-ARG SUMMARY="Checks every signal for bad data and every control loop for oscillation, sticking and manual mode, and says why."
+ARG SUMMARY="Scheduled monitors, diagnostics and KPIs for signals and control loops: finds bad data, oscillation, sticking valves and manual mode, and says why."
 ARG VERSION
 ARG REVISION=unknown
 ARG CREATED=unknown

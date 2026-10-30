@@ -44,7 +44,7 @@ plant assets, signals and look; an installation picks the apps it needs.
 
 | App | Folder | What it does |
 | --- | --- | --- |
-| PlantCraft Analytics | [`apps/link`](apps/link) | Checks every signal for bad data and every control loop for oscillation, sticking and manual mode, runs process models (FMUs) beside the plant, and says why |
+| PlantCraft Analytics | [`apps/link`](apps/link) | Scheduled monitors, diagnostics and KPIs for signals and control loops: finds bad data, oscillation, sticking valves and manual mode, and says why |
 | PlantCraft Historian | [`apps/historian`](apps/historian) | The data layer: every plant connection (OPC UA, PI Web API, MQTT, Modbus TCP, SQL, CSV) and every history, read-only toward the plant |
 | PlantCraft View | [`apps/view`](apps/view) | Dashboards, process diagrams, scheduled reports and saved trends of any signal, shared with people or by a public link |
 | PlantCraft Alarms | [`apps/alarms`](apps/alarms) | Rules that raise ISA-18.2 alarms and alerts from signals and results, the Active list, history and alarm performance |

@@ -18,7 +18,7 @@ brand name (BACKLOG D5b); then they change once, with redirects from the old add
 |---|---|---|
 | **PlantCraft** | The platform: people, assets, settings, results and events, the launcher. Its entry in the app menu holds Assets, System health and the administration | |
 | **Desk** | Each person's day: Today, Actions, Calendar, Notebooks, To-do, Notes, Team | |
-| **Analytics** | Algorithms of blocks that run on the plant's assets and signals and publish results (signal quality, loop performance, equipment, process models) | Link |
+| **Analytics** | Scheduled monitors, diagnostics and KPIs for signals, control loops and equipment, built from blocks; they publish results | Link |
 | **Historian** | The data layer: sources, collection, compression, archive | |
 | **View** | Dashboards, reports and trends | Dashboards |
 | **Alarms** | Rules that raise ISA-18.2 alarms, the Active list, history and performance | |

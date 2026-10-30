@@ -38,7 +38,7 @@ reached, and the algorithm behind it is blocks and Python you can read, change a
   |---|---|
   | **Desk** | Your day: what needs you, actions, calendar, to-do, notes and the team on shift |
   | **Historian** | Collects and archives the plant's signals from OPC UA, PI Web API, MQTT, Modbus TCP, SQL and CSV |
-  | **Analytics** | Algorithms of blocks that watch every signal and control loop and say what is wrong and why |
+  | **Analytics** | Scheduled monitors, diagnostics and KPIs for signals and control loops, built from blocks: what is wrong and why |
   | **Alarms** | ISA-18.2 alarms and alerts, shelving, history and alarm performance |
   | **View** | Dashboards, scheduled reports and trends |
   | **Models** | Block-diagram models (Modelica underneath), simulations, studies and FMUs |

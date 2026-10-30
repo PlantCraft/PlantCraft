@@ -50,7 +50,7 @@ APPS = [
         "linkcraft",
         "Analytics",
         "Signals and assets",
-        "Algorithms of blocks that watch every signal and asset and say what is wrong and why.",
+        "Scheduled monitors, diagnostics and KPIs for signals and control loops: what is wrong and why.",
     ),
     (
         "alarmcraft",

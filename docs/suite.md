@@ -21,7 +21,7 @@ breaks when names change.
 | Module | Folder | id | Prefix | Port | uid | What it does |
 |---|---|---|---|---|---|---|
 | PlantCraft (platform) | [root](..) | `processcraft` | `/` | 8060 | 10001 | People and access, licences, settings, the asset tree and signal roles, published results and events, messages and specialists, the launcher and the installer; `plantcraft-sdk` and `@plantcraft/ui` |
-| PlantCraft Analytics | [`apps/link`](../apps/link) | `linkcraft` | `/link/` | 8140 | 10012 | Checks every signal for bad data and every control loop for oscillation, sticking and manual mode, runs process models (FMUs) beside the plant, and says why |
+| PlantCraft Analytics | [`apps/link`](../apps/link) | `linkcraft` | `/link/` | 8140 | 10012 | Scheduled monitors, diagnostics and KPIs for signals and control loops: finds bad data, oscillation, sticking valves and manual mode, and says why |
 | PlantCraft Historian | [`apps/historian`](../apps/historian) | `histcraft` | `/hist/` | 8100 | 10008 | The data layer: every plant connection (OPC UA, PI Web API, CSV) and every history, read-only toward the plant |
 | PlantCraft View | [`apps/view`](../apps/view) | `dashcraft` | `/dash/` | 8080 | 10006 | Dashboards, scheduled reports and saved trends of any signal, shared with people or by a public link |
 | PlantCraft Alarms | [`apps/alarms`](../apps/alarms) | `alarmcraft` | `/alarm/` | 8110 | 10009 | Alarm limits on plant signals, the alarm summary and alarm performance against ISA-18.2 |

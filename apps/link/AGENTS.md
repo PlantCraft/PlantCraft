@@ -5,7 +5,7 @@ source of rules for the platform and every app. This file adds only
 what is particular to PlantCraft Analytics; where the two differ, ask a maintainer which one wins and fix the other.
 
 This folder is **PlantCraft Analytics** (`linkcraft`, prefix `/link/`, port 8140, uid 10012):
-Checks every signal for bad data and every control loop for oscillation, sticking and manual mode, and says why.
+Scheduled monitors, diagnostics and KPIs for signals and control loops: finds bad data, oscillation, sticking valves and manual mode, and says why.
 
 ## What PlantCraft Analytics is (above every block and algorithm)
 
