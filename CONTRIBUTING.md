@@ -23,7 +23,7 @@ everything on top of it is open to grow. Before you start, find where your chang
 
 | Zone | Folders | Open an issue first? | What a pull request needs |
 |---|---|---|---|
-| **Core** | `plantcraft/`, `frontend/`, `sdk/python/`, `ui/`, `docs/api/v1/`, `deploy/`, `.github/`, `ci/`, `dev/`, `AGENTS.md` | **Yes**, and wait for a maintainer to agree on the approach | An additive change (nothing that existing apps or installations rely on breaks), with its tests; a maintainer reviews it ([CODEOWNERS](.github/CODEOWNERS)) |
+| **Core** | `plantcraft/`, `frontend/`, `sdk/python/`, `ui/`, `docs/api/v1/`, `deploy/`, `.github/`, `ci/`, `dev/`, `brand/`, `AGENTS.md` | **Yes**, and wait for a maintainer to agree on the approach | An additive change (nothing that existing apps or installations rely on breaks), with its tests; a maintainer reviews it ([CODEOWNERS](.github/CODEOWNERS)) |
 | **Official apps** | `apps/<app>/`, `simulator/`, `templates/app/` | For a new feature or a new dependency, yes; for a bug fix, no | Stays inside one app, `make ci` green in that app's folder, no import from another app or from the platform's code |
 | **Content** | Methods, blocks, algorithms, alarm rule templates, model libraries and notebook examples inside the app that owns them; `docs/`; translations | No | A public reference for every method, tests on known answers, the description format checks green |
 | **Your own app** | Your own repository, from [`templates/app`](templates/app/README.md) | No | Nothing here: it builds on the published SDK and installs as a signed package |

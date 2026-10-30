@@ -37,6 +37,7 @@ CORE = (
     "notebooks/",
     "site/",
     "templates/",
+    "brand/",
     "AGENTS.md",
     "CLAUDE.md",
     "SECURITY.md",

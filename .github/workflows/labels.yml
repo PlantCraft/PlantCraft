@@ -10,12 +10,16 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   sync:
     if: github.repository == 'PlantCraft/PlantCraft'
     runs-on: ubuntu-latest
+    # The one write a workflow has: labels, from a push to main or a maintainer's run, never from
+    # a pull request (tests/test_contributing_safety.py holds it to that).
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
