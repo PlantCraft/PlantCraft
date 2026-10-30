@@ -140,6 +140,43 @@ def test_one_read_serves_every_viewer_while_cached(fake):
     assert fake.requests == before
 
 
+def test_the_cache_lets_expired_values_go_as_soon_as_another_is_stored():
+    """A playback window per request kept thousands of megabyte series after their seconds: the
+    View container reached its memory limit and the kernel stopped it (public demo, 2026-10-29)."""
+
+    now = [0.0]
+    cache = TtlCache(10, clock=lambda: now[0])
+    for end in range(50):
+        cache.get(("series", end), lambda: b"x" * 1000)
+    assert len(cache) == 50
+    now[0] = 11.0
+    cache.get(("series", "new"), lambda: b"x")
+    assert len(cache) == 1
+    assert cache.get(("series", "new"), lambda: b"other") == b"x"
+
+
+def test_viewers_asking_together_share_one_read():
+    import threading
+
+    cache, reads, started = TtlCache(10), [], threading.Event()
+
+    def load():
+        reads.append(1)
+        started.set()
+        threading.Event().wait(0.2)
+        return "rows"
+
+    first = threading.Thread(target=cache.get, args=("key", load))
+    first.start()
+    started.wait(2)
+    others = [threading.Thread(target=cache.get, args=("key", load)) for _ in range(10)]
+    for thread in [*others]:
+        thread.start()
+    for thread in [first, *others]:
+        thread.join(5)
+    assert len(reads) == 1 and cache.misses == 1
+
+
 def test_app_results_show_the_producers_status_and_score(fake, reader):
     publish_loop_health(fake)
     health = {"asset_id": CONTEXT, "result": "linkcraft.loop_health"}

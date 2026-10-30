@@ -6,6 +6,14 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Memory stays bounded under many viewers.** View's short cache let expired values go only
+  when it held 4,096 of them, so a diagram's window of series per request piled up until the
+  container reached its 2 GiB limit and was stopped (public demo, 2026-10-29), or stalled for
+  minutes; expired values now leave at every store. Viewers asking for the same data together
+  share one read.
+
 ### Added
 
 - **Full screen keeps a strip of its own** (owner, 2026-10-28). A process display in full screen
