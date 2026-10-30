@@ -4,7 +4,7 @@
 [app]
 id = "histcraft"
 name = "PlantCraft Historian"
-version = "0.5.0"
+version = "0.5.1"
 category = "Process historian"
 summary = "The suite's data layer: every plant connection and every history, read-only toward the plant."
 description = """PlantCraft Historian holds the suite's connections to PI Web API, OPC UA and CSV files, \

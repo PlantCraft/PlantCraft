@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "doccraft"
-version = "0.5.0"
+version = "0.5.1"
 description = "PlantCraft Documents: the plant's documents, searched offline and cited by the assistant"
 readme = "README.md"
 license = {text = "Apache-2.0"}

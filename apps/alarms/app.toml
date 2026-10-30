@@ -4,7 +4,7 @@
 [app]
 id = "alarmcraft"
 name = "PlantCraft Alarms"
-version = "0.5.0"
+version = "0.5.1"
 category = "Alarm management"
 summary = "Rules that turn plant values and what the apps report into alarms, sent once to the right person, against ISA-18.2."
 description = """\

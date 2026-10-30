@@ -156,7 +156,7 @@ DASHCRAFT_VERSION ?= $(VERSION)
 HISTCRAFT_VERSION ?= $(VERSION)
 # The Simulator (the `demo` profile's OPC UA simulator) is its own product with its own version:
 # its image is built from simulator/ and bundled and tested only when that image exists.
-SIMCRAFT_VERSION ?= 0.5.0
+SIMCRAFT_VERSION ?= 0.5.1
 SIMCRAFT_SRC ?= simulator
 # Optional: BUILD_CA=/path/ca.pem behind a TLS-inspecting proxy; DOCKER_BUILD_FLAGS for the rest
 # (for example --network host); PROXY_BUILD_FLAGS only for the proxy image (for example

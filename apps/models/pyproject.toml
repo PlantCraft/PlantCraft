@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "modelcraft"
-version = "0.5.0"
+version = "0.5.1"
 description = "PlantCraft Models: write, check, simulate and export Modelica models in the browser, for the PlantCraft suite"
 readme = "README.md"
 license = {text = "Apache-2.0"}

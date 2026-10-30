@@ -507,8 +507,8 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
         fi
         # An app whose image is not loaded is switched off (an upgrade to a bundle without it).
         version="$(env_get "$key" "$env")"
-        if [[ ",$profiles," == *",$app,"* ]] && ! app_image "$app" "${version:-0.5.0}"; then
-            warn "image $app:${version:-0.5.0} is not loaded: the $app profile is switched off"
+        if [[ ",$profiles," == *",$app,"* ]] && ! app_image "$app" "${version:-0.5.1}"; then
+            warn "image $app:${version:-0.5.1} is not loaded: the $app profile is switched off"
             profiles="$(printf '%s' ",$profiles," | sed "s/,$app,/,/; s/^,//; s/,\$//")"
         fi
     done
@@ -518,8 +518,8 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
     # The Simulator is its own image; an installation that had the demo keeps running without it
     # when the new bundle does not carry it (--demo itself was checked before anything changed).
     plant="$(env_get SIMCRAFT_VERSION "$env")"
-    if [[ ",$profiles," == *",demo,"* ]] && ! simcraft_image "${plant:-0.5.0}"; then
-        warn "image simcraft:${plant:-0.5.0} is not loaded: the demo profile is switched off"
+    if [[ ",$profiles," == *",demo,"* ]] && ! simcraft_image "${plant:-0.5.1}"; then
+        warn "image simcraft:${plant:-0.5.1} is not loaded: the demo profile is switched off"
         profiles="$(printf '%s' ",$profiles," | sed 's/,demo,/,/; s/^,//; s/,$//')"
     fi
     env_set COMPOSE_PROFILES "$profiles" "$env"
@@ -582,7 +582,7 @@ check_demo() { # check_demo SIMCRAFT_VERSION_OF_THE_BUNDLE
         return 0
     fi
     version="${1:-$(env_get SIMCRAFT_VERSION "$PREFIX/.env")}"
-    version="${version:-${SIMCRAFT_VERSION:-0.5.0}}"
+    version="${version:-${SIMCRAFT_VERSION:-0.5.1}}"
     simcraft_image "$version" ||
         die "--demo: image simcraft:$version not found. Build it from simulator/ (make simcraft-image)."
 }
@@ -618,7 +618,7 @@ check_apps() {
             continue
         fi
         version="${version:-$(env_get "$(version_key "$app")" "$PREFIX/.env")}"
-        version="${version:-0.5.0}"
+        version="${version:-0.5.1}"
         app_image "$app" "$version" || die "--with-$app: image $app:$version not found."
         if [ "$app" = histcraft ]; then
             local db
@@ -828,7 +828,7 @@ do_install() {
         # each app's repository), so that --all-apps means them.
         for app in $(app_ids); do
             app_version="$(env_get "$(version_key "$app")" "$BUNDLE_DIR/.env.example")"
-            app_version="${app_version:-0.5.0}"
+            app_version="${app_version:-0.5.1}"
             if app_image "$app" "$app_version"; then BUNDLE_APP_VERSIONS="$BUNDLE_APP_VERSIONS $app=$app_version"; fi
         done
     elif [ "$INSTALLED" = 1 ] && [ "$PREFIX" = "$BUNDLE_DIR" ]; then

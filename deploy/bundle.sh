@@ -45,7 +45,7 @@ MODELCRAFT_VERSION="${MODELCRAFT_VERSION:-$VERSION}"
 DOCCRAFT_VERSION="${DOCCRAFT_VERSION:-$VERSION}"
 # The apps compose.yaml runs, each in its own profile (install.sh SUITE_APPS).
 APPS=(linkcraft dashcraft histcraft alarmcraft modelcraft doccraft)
-SIMCRAFT_VERSION="${SIMCRAFT_VERSION:-0.5.0}"
+SIMCRAFT_VERSION="${SIMCRAFT_VERSION:-0.5.1}"
 # The oldest installed version this bundle updates (install.sh refuses older ones).
 UPGRADE_FROM="${UPGRADE_FROM:-0.1.0}"
 RELEASE_KEY="${RELEASE_KEY:-}"

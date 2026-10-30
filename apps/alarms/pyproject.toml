@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "alarmcraft"
-version = "0.5.0"
+version = "0.5.1"
 description = "PlantCraft Alarms: alarm limits, the alarm summary and alarm performance (ISA-18.2), for the PlantCraft suite"
 readme = "README.md"
 license = {text = "Apache-2.0"}

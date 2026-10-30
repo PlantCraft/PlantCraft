@@ -1,6 +1,6 @@
 [project]
 name = "plantcraft"
-version = "0.5.0"
+version = "0.5.1"
 description = "PlantCraft: the central app of the suite for process engineers (people, sign-in, data sources, signals and assets)"
 readme = "README.md"
 license = {text = "Apache-2.0"}

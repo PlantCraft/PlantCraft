@@ -4,7 +4,7 @@
 [app]
 id = "dashcraft"
 name = "PlantCraft View"
-version = "0.5.0"
+version = "0.5.1"
 category = "Dashboards and trends"
 summary = "Dashboards, trends and reports over the plant's signals and assets."
 description = """\

@@ -270,7 +270,7 @@ def test_the_suite_frame_and_a_frameless_full_screen(signed_in, app_url, screens
     expect(page.locator(".topbar")).to_have_count(0)  # no menu of its own
     sidebar.locator(".pcs-profile").click()
     expect(page.get_by_role("radiogroup", name="Theme")).to_be_visible()
-    expect(page.locator(".pcs-user-pop .pcs-version")).to_contain_text("0.5.0")
+    expect(page.locator(".pcs-user-pop .pcs-version")).to_contain_text("0.5.1")
     page.locator(".pcs-theme button").nth(1).click()  # dark
     expect(page.locator("html")).to_have_attribute("data-theme", "dark")
     page.keyboard.press("Escape")

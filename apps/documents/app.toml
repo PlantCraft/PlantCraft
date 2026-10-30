@@ -4,7 +4,7 @@
 [app]
 id = "doccraft"
 name = "PlantCraft Documents"
-version = "0.5.0"
+version = "0.5.1"
 category = "Knowledge"
 summary = "The plant's manuals, narratives, datasheets and guides, searched offline and cited by the assistant."
 description = """\

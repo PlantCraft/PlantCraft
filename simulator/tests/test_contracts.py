@@ -40,7 +40,7 @@ def _validate_schema(filename: str, value: object) -> None:
 
 
 def test_package_version_is_independent_from_benchmark_identity() -> None:
-    assert __version__ == version("simcraft") == "0.5.0"
+    assert __version__ == version("simcraft") == "0.5.1"
 
 
 def test_all_bundled_json_schemas_are_valid() -> None:

@@ -1,0 +1,4299 @@
+{
+ "components": {
+  "schemas": {
+   "AssistantMessage": {
+    "properties": {
+     "text": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "title": "AssistantMessage",
+    "type": "object"
+   },
+   "AssistantStart": {
+    "properties": {
+     "ref": {
+      "maxLength": 400,
+      "minLength": 3,
+      "title": "Ref",
+      "type": "string"
+     },
+     "specialist": {
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Specialist",
+      "type": "string"
+     },
+     "text": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "specialist",
+     "ref",
+     "text"
+    ],
+    "title": "AssistantStart",
+    "type": "object"
+   },
+   "AuditEntry": {
+    "properties": {
+     "action": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Action",
+      "type": "string"
+     },
+     "app": {
+      "anyOf": [
+       {
+        "maxLength": 40,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "App"
+     },
+     "detail": {
+      "title": "Detail"
+     },
+     "subject": {
+      "default": "",
+      "maxLength": 300,
+      "title": "Subject",
+      "type": "string"
+     }
+    },
+    "required": [
+     "action"
+    ],
+    "title": "AuditEntry",
+    "type": "object"
+   },
+   "CloseIn": {
+    "properties": {
+     "keys": {
+      "items": {
+       "maxLength": 200,
+       "minLength": 1,
+       "type": "string"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Keys",
+      "type": "array"
+     }
+    },
+    "required": [
+     "keys"
+    ],
+    "title": "CloseIn",
+    "type": "object"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "title": "Detail",
+      "type": "array"
+     }
+    },
+    "title": "HTTPValidationError",
+    "type": "object"
+   },
+   "KnowledgeDelete": {
+    "properties": {
+     "app": {
+      "anyOf": [
+       {
+        "maxLength": 40,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "App"
+     },
+     "refs": {
+      "items": {
+       "maxLength": 400,
+       "type": "string"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Refs",
+      "type": "array"
+     }
+    },
+    "required": [
+     "refs"
+    ],
+    "title": "KnowledgeDelete",
+    "type": "object"
+   },
+   "NotificationAction": {
+    "properties": {
+     "href": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Href",
+      "type": "string"
+     },
+     "label": {
+      "maxLength": 40,
+      "minLength": 1,
+      "title": "Label",
+      "type": "string"
+     },
+     "method": {
+      "default": "GET",
+      "enum": [
+       "GET",
+       "POST"
+      ],
+      "title": "Method",
+      "type": "string"
+     }
+    },
+    "required": [
+     "label",
+     "href"
+    ],
+    "title": "NotificationAction",
+    "type": "object"
+   },
+   "NotificationRequest": {
+    "properties": {
+     "actions": {
+      "items": {
+       "$ref": "#/components/schemas/NotificationAction"
+      },
+      "maxItems": 3,
+      "title": "Actions",
+      "type": "array"
+     },
+     "category": {
+      "anyOf": [
+       {
+        "enum": [
+         "alarm",
+         "run",
+         "action",
+         "info"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Category"
+     },
+     "email": {
+      "default": false,
+      "title": "Email",
+      "type": "boolean"
+     },
+     "key": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Key"
+     },
+     "priority": {
+      "default": "medium",
+      "enum": [
+       "critical",
+       "high",
+       "medium",
+       "low"
+      ],
+      "title": "Priority",
+      "type": "string"
+     },
+     "recipients": {
+      "items": {
+       "maxLength": 80,
+       "minLength": 3,
+       "type": "string"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Recipients",
+      "type": "array"
+     },
+     "refs": {
+      "items": {
+       "maxLength": 300,
+       "minLength": 3,
+       "type": "string"
+      },
+      "maxItems": 12,
+      "title": "Refs",
+      "type": "array"
+     },
+     "text": {
+      "default": "",
+      "maxLength": 3000,
+      "title": "Text",
+      "type": "string"
+     },
+     "title": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     }
+    },
+    "required": [
+     "recipients",
+     "title"
+    ],
+    "title": "NotificationRequest",
+    "type": "object"
+   },
+   "NotificationResolve": {
+    "properties": {
+     "key": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Key",
+      "type": "string"
+     },
+     "note": {
+      "default": "",
+      "maxLength": 200,
+      "title": "Note",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key"
+    ],
+    "title": "NotificationResolve",
+    "type": "object"
+   },
+   "ResultRemove": {
+    "properties": {
+     "ids": {
+      "items": {
+       "maxLength": 200,
+       "minLength": 1,
+       "type": "string"
+      },
+      "maxItems": 2000,
+      "minItems": 1,
+      "title": "Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "ids"
+    ],
+    "title": "ResultRemove",
+    "type": "object"
+   },
+   "RunBody": {
+    "properties": {
+     "id": {
+      "maxLength": 400,
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+     },
+     "options": {
+      "additionalProperties": true,
+      "maxProperties": 100,
+      "title": "Options",
+      "type": "object"
+     }
+    },
+    "required": [
+     "id"
+    ],
+    "title": "RunBody",
+    "type": "object"
+   },
+   "SeriesBatchRequest": {
+    "properties": {
+     "end": {
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End"
+     },
+     "signals": {
+      "items": {
+       "maxLength": 300,
+       "minLength": 1,
+       "type": "string"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Signals",
+      "type": "array"
+     },
+     "start": {
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Start"
+     },
+     "step": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Step"
+     }
+    },
+    "required": [
+     "signals"
+    ],
+    "title": "SeriesBatchRequest",
+    "type": "object"
+   },
+   "SeriesRetire": {
+    "properties": {
+     "signals": {
+      "items": {
+       "maxLength": 340,
+       "minLength": 1,
+       "type": "string"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Signals",
+      "type": "array"
+     }
+    },
+    "required": [
+     "signals"
+    ],
+    "title": "SeriesRetire",
+    "type": "object"
+   },
+   "ServiceTokenRequest": {
+    "properties": {
+     "app": {
+      "maxLength": 40,
+      "minLength": 1,
+      "title": "App",
+      "type": "string"
+     },
+     "key": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Key",
+      "type": "string"
+     }
+    },
+    "required": [
+     "app",
+     "key"
+    ],
+    "title": "ServiceTokenRequest",
+    "type": "object"
+   },
+   "ValidationError": {
+    "properties": {
+     "ctx": {
+      "title": "Context",
+      "type": "object"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "title": "Location",
+      "type": "array"
+     },
+     "msg": {
+      "title": "Message",
+      "type": "string"
+     },
+     "type": {
+      "title": "Error Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError",
+    "type": "object"
+   },
+   "WaitIn": {
+    "properties": {
+     "ids": {
+      "items": {
+       "maxLength": 64,
+       "type": "string"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Ids",
+      "type": "array"
+     },
+     "seconds": {
+      "default": 20.0,
+      "maximum": 25.0,
+      "minimum": 0.0,
+      "title": "Seconds",
+      "type": "number"
+     }
+    },
+    "required": [
+     "ids"
+    ],
+    "title": "WaitIn",
+    "type": "object"
+   }
+  }
+ },
+ "info": {
+  "title": "PlantCraft API v1",
+  "version": "1"
+ },
+ "openapi": "3.1.0",
+ "paths": {
+  "/api/v1/actions": {
+   "get": {
+    "description": "Follow-up actions, those about ``ref`` (``asset:<id>``) when given: an app shows what was\ndecided about the asset it is showing (docs/collaboration.md). Read only. A person's token\nreads the actions that person sees; an app's service token reads them all.",
+    "operationId": "actions_api_v1_actions_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "ref",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 400,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Ref"
+      }
+     },
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 100,
+       "maximum": 500,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Actions Api V1 Actions Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Actions"
+   }
+  },
+  "/api/v1/apps": {
+   "get": {
+    "description": "``PLANTCRAFT_APPS`` and the apps installed from the Apps page (docs/app-package.md).",
+    "operationId": "apps_api_v1_apps_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Apps Api V1 Apps Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Apps"
+   }
+  },
+  "/api/v1/apps/{app}/notebooks/runtime": {
+   "get": {
+    "description": "The app's runtime (a zip of its Python packages) that runs its objects on the person's\ncomputer or in their browser.",
+    "operationId": "runtime_file_api_v1_apps__app__notebooks_runtime_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "app",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9_-]{0,39}$",
+       "title": "App",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Runtime File"
+   }
+  },
+  "/api/v1/apps/{app}/objects/{kind}": {
+   "get": {
+    "description": "The objects of one kind, as the app lists them for this person (``plantcraft-objects/1``).",
+    "operationId": "objects_api_v1_apps__app__objects__kind__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "app",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9_-]{0,39}$",
+       "title": "App",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "kind",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9-]{0,40}$",
+       "title": "Kind",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Objects"
+   }
+  },
+  "/api/v1/apps/{app}/objects/{kind}/run": {
+   "post": {
+    "description": "Ask the app to run one object (``run = \"app\"``): the app starts it in its own queue, with\nthe person's access, when its administrator allows notebook runs; read back what it\nanswers in ``started`` (``{\"kind\": \"run\", \"id\": ...}``).",
+    "operationId": "run_object_api_v1_apps__app__objects__kind__run_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "app",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9_-]{0,39}$",
+       "title": "App",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "kind",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9-]{0,40}$",
+       "title": "Kind",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RunBody"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Run Object"
+   }
+  },
+  "/api/v1/apps/{app}/objects/{kind}/{object_id}": {
+   "get": {
+    "description": "One object, whole: what a notebook needs to read it or run it.",
+    "operationId": "one_object_api_v1_apps__app__objects__kind___object_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "app",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9_-]{0,39}$",
+       "title": "App",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "kind",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9-]{0,40}$",
+       "title": "Kind",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "object_id",
+      "required": true,
+      "schema": {
+       "title": "Object Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "One Object"
+   }
+  },
+  "/api/v1/apps/{app}/tools/{tool_id}": {
+   "post": {
+    "description": "Call one app's tool with the person's identity; the app's answer comes back as it is.",
+    "operationId": "call_tool_api_v1_apps__app__tools__tool_id__post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "app",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9_-]{0,39}$",
+       "title": "App",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "tool_id",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9_]{1,40}$",
+       "title": "Tool Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Call Tool"
+   }
+  },
+  "/api/v1/asset-types": {
+   "get": {
+    "description": "The type catalog with inherited attributes and roles resolved.",
+    "operationId": "asset_types_api_v1_asset_types_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Asset Types Api V1 Asset Types Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Asset Types"
+   }
+  },
+  "/api/v1/assets": {
+   "get": {
+    "description": "``kind`` is the exact type; ``type`` also takes its subtypes. Result assets (what apps\nrecord about assets) come only with ``results=true`` or when asked by type. ``limit`` and\n``cursor`` answer it in pages by id; an ``ETag`` answers a list that did not change with\n304 (``plantcraft_sdk.server.paging``).",
+    "operationId": "assets_api_v1_assets_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "kind",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 60,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Kind"
+      }
+     },
+     {
+      "in": "query",
+      "name": "type",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 64,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Type"
+      }
+     },
+     {
+      "in": "query",
+      "name": "parent_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 200,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Parent Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "results",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Results",
+       "type": "boolean"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maximum": 5000,
+         "minimum": 1,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Limit"
+      }
+     },
+     {
+      "in": "query",
+      "name": "cursor",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 400,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Cursor"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Assets Api V1 Assets Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Assets"
+   }
+  },
+  "/api/v1/assets/results": {
+   "put": {
+    "description": "An app's whole set of result assets (``{\"assets\": [...]}``, see ``parse_result_assets``).\n\nOnly a service token, for its own app (403 otherwise); a broken item makes the request a\n422 and nothing is written. Results no longer listed are ended, not removed.\n``{\"saved\", \"ended\"}``.",
+    "operationId": "put_result_assets_api_v1_assets_results_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "integer"
+         },
+         "title": "Response Put Result Assets Api V1 Assets Results Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Result Assets"
+   }
+  },
+  "/api/v1/assets/results/remove": {
+   "post": {
+    "description": "An app removes result assets of its own (``{\"ids\": [...]}``); others' ids are skipped.\nTheir points stay in the Historian until their retention ends. ``{\"removed\"}``.",
+    "operationId": "remove_result_assets_api_v1_assets_results_remove_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ResultRemove"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "integer"
+         },
+         "title": "Response Remove Result Assets Api V1 Assets Results Remove Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Remove Result Assets"
+   }
+  },
+  "/api/v1/assets/{asset_id}": {
+   "get": {
+    "operationId": "asset_api_v1_assets__asset_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "asset_id",
+      "required": true,
+      "schema": {
+       "title": "Asset Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Asset Api V1 Assets  Asset Id  Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Asset"
+   }
+  },
+  "/api/v1/assistant": {
+   "get": {
+    "description": "Who can talk about ``ref``, and the person's conversations that already cite it.",
+    "operationId": "assistant_api_v1_assistant_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "ref",
+      "required": true,
+      "schema": {
+       "maxLength": 400,
+       "minLength": 3,
+       "title": "Ref",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Assistant Api V1 Assistant Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Assistant"
+   }
+  },
+  "/api/v1/assistant/conversations": {
+   "post": {
+    "description": "A new conversation with one specialist about ``ref``, opened by the person's question.",
+    "operationId": "start_api_v1_assistant_conversations_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AssistantStart"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Start Api V1 Assistant Conversations Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Start"
+   }
+  },
+  "/api/v1/assistant/conversations/{conversation_id}": {
+   "get": {
+    "description": "The conversation and its messages after ``after`` (the panel polls with the last id).",
+    "operationId": "conversation_api_v1_assistant_conversations__conversation_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "conversation_id",
+      "required": true,
+      "schema": {
+       "title": "Conversation Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "after",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "minimum": 0,
+       "title": "After",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Conversation Api V1 Assistant Conversations  Conversation Id  Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Conversation"
+   }
+  },
+  "/api/v1/assistant/conversations/{conversation_id}/messages": {
+   "post": {
+    "operationId": "send_api_v1_assistant_conversations__conversation_id__messages_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "conversation_id",
+      "required": true,
+      "schema": {
+       "title": "Conversation Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AssistantMessage"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Send Api V1 Assistant Conversations  Conversation Id  Messages Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Send"
+   }
+  },
+  "/api/v1/audit": {
+   "post": {
+    "description": "Record a change an app's user made; the user comes from the token.",
+    "operationId": "audit_api_v1_audit_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AuditEntry"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "integer"
+         },
+         "title": "Response Audit Api V1 Audit Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Audit"
+   }
+  },
+  "/api/v1/auth/keys": {
+   "get": {
+    "operationId": "keys_api_v1_auth_keys_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Keys Api V1 Auth Keys Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Keys"
+   }
+  },
+  "/api/v1/auth/revoked": {
+   "get": {
+    "description": "Tokens ended before they expire, for apps that verify offline (``REVOKED_PATH``).\n\nPublic like the keys: people appear only as the SHA-256 of their username, and an entry is\nlisted only while a token from before it could still be alive.",
+    "operationId": "revoked_api_v1_auth_revoked_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Revoked Api V1 Auth Revoked Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Revoked"
+   }
+  },
+  "/api/v1/auth/service-token": {
+   "post": {
+    "operationId": "service_token_api_v1_auth_service_token_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ServiceTokenRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "title": "Response Service Token Api V1 Auth Service Token Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Service Token"
+   }
+  },
+  "/api/v1/auth/token": {
+   "post": {
+    "description": "A fresh user token for the browser's session (also set as the ``processcraft_token`` cookie).",
+    "operationId": "renew_token_api_v1_auth_token_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "title": "Response Renew Token Api V1 Auth Token Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Renew Token"
+   }
+  },
+  "/api/v1/calendar/{feed}": {
+   "put": {
+    "description": "A calendar feed's whole list, replaced: ``[{id, title, start, end?, all_day, audience,\nref?, url?, detail?}]``. The feed is one of the app's ``[[contributes.calendar]]``.",
+    "operationId": "put_calendar_api_v1_calendar__feed__put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "feed",
+      "required": true,
+      "schema": {
+       "pattern": "^[a-z][a-z0-9-]{0,40}$",
+       "title": "Feed",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Calendar Api V1 Calendar  Feed  Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Calendar"
+   }
+  },
+  "/api/v1/compute/capacity": {
+   "get": {
+    "description": "How many workers online run this app's tasks (in an environment, with room for a size),\nwhat waits, and the environments and sizes on offer: an app says \"waiting for a compute\nworker\" when there is none.",
+    "operationId": "capacity_api_v1_compute_capacity_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "version",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 40,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Version"
+      }
+     },
+     {
+      "in": "query",
+      "name": "environment",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 40,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Environment"
+      }
+     },
+     {
+      "in": "query",
+      "name": "size",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 20,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Capacity Api V1 Compute Capacity Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Capacity"
+   }
+  },
+  "/api/v1/compute/runs/{run_id}/cancel": {
+   "post": {
+    "description": "Every task of one of the app's runs that waits or runs (the person cancelled the run).",
+    "operationId": "cancel_run_api_v1_compute_runs__run_id__cancel_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Cancel Run Api V1 Compute Runs  Run Id  Cancel Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Cancel Run"
+   }
+  },
+  "/api/v1/compute/tasks": {
+   "post": {
+    "description": "Queue a task: the body is its input (``application/octet-stream``). ``environment``\nand ``size`` say where it may run (docs/compute.md).",
+    "operationId": "submit_api_v1_compute_tasks_post",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "kind",
+      "required": false,
+      "schema": {
+       "default": "",
+       "maxLength": 60,
+       "title": "Kind",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "priority",
+      "required": false,
+      "schema": {
+       "default": "run",
+       "maxLength": 20,
+       "title": "Priority",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "version",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 40,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Version"
+      }
+     },
+     {
+      "in": "query",
+      "name": "labels",
+      "required": false,
+      "schema": {
+       "default": "",
+       "maxLength": 400,
+       "title": "Labels",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "run",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 200,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Run"
+      }
+     },
+     {
+      "in": "query",
+      "name": "timeout_seconds",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "exclusiveMinimum": 0,
+         "maximum": 21600,
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Timeout Seconds"
+      }
+     },
+     {
+      "in": "query",
+      "name": "memory_mb",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maximum": 65536,
+         "minimum": 64,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Memory Mb"
+      }
+     },
+     {
+      "in": "query",
+      "name": "environment",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 40,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Environment"
+      }
+     },
+     {
+      "in": "query",
+      "name": "size",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 20,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Size"
+      }
+     }
+    ],
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Submit Api V1 Compute Tasks Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Submit"
+   }
+  },
+  "/api/v1/compute/tasks/{task_id}": {
+   "delete": {
+    "description": "The app has what it needs: the task's bytes go now.",
+    "operationId": "collected_api_v1_compute_tasks__task_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "task_id",
+      "required": true,
+      "schema": {
+       "title": "Task Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Collected Api V1 Compute Tasks  Task Id  Delete",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Collected"
+   },
+   "get": {
+    "operationId": "task_api_v1_compute_tasks__task_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "task_id",
+      "required": true,
+      "schema": {
+       "title": "Task Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Task Api V1 Compute Tasks  Task Id  Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Task"
+   }
+  },
+  "/api/v1/compute/tasks/{task_id}/cancel": {
+   "post": {
+    "operationId": "cancel_api_v1_compute_tasks__task_id__cancel_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "task_id",
+      "required": true,
+      "schema": {
+       "title": "Task Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Cancel Api V1 Compute Tasks  Task Id  Cancel Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Cancel"
+   }
+  },
+  "/api/v1/compute/tasks/{task_id}/output": {
+   "get": {
+    "description": "The worker's answer (a tar archive), until the app drops it (``DELETE``) or an hour on.",
+    "operationId": "output_api_v1_compute_tasks__task_id__output_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "task_id",
+      "required": true,
+      "schema": {
+       "title": "Task Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Output"
+   }
+  },
+  "/api/v1/compute/wait": {
+   "post": {
+    "description": "The tasks, as soon as one of them has finished (or after ``seconds``).",
+    "operationId": "wait_api_v1_compute_wait_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WaitIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Wait Api V1 Compute Wait Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Wait"
+   }
+  },
+  "/api/v1/contributions": {
+   "get": {
+    "description": "What every installed app adds, in the suite's order: ``{\"features\", \"apps\": [{\"app\",\n\"name\", \"version\", \"contributes\", \"series\", \"unknown\", \"updated_at\"}]}``.",
+    "operationId": "contributions_api_v1_contributions_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Contributions Api V1 Contributions Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Contributions"
+   },
+   "put": {
+    "description": "What an app adds (its ``[contributes]``, ``[[publishes.series]]`` and events), replaced\nwhole; sent by the SDK when the app starts. The events go to the catalog as\n``PUT /events/catalog`` would put them.",
+    "operationId": "put_contributions_api_v1_contributions_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Contributions Api V1 Contributions Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Contributions"
+   }
+  },
+  "/api/v1/contributions/settings": {
+   "get": {
+    "description": "The calling app's installation settings (``[[contributes.settings]]``), as the\nadministrator set them in Settings › Apps, else their defaults, secrets included: an app's\nservice token only. ``{\"app\", \"values\": {key: value}}``.",
+    "operationId": "contribution_settings_api_v1_contributions_settings_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Contribution Settings Api V1 Contributions Settings Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Contribution Settings"
+   }
+  },
+  "/api/v1/events": {
+   "get": {
+    "description": "Events oldest first: after the event id ``after``, else the latest ``limit``; ``key``\nkeeps one condition's.",
+    "operationId": "events_api_v1_events_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "ref",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 400,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Ref"
+      }
+     },
+     {
+      "in": "query",
+      "name": "kind",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 120,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Kind"
+      }
+     },
+     {
+      "in": "query",
+      "name": "after",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "minimum": 0,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "After"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 100,
+       "maximum": 500,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "key",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 200,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Key"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Events Api V1 Events Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Events"
+   },
+   "post": {
+    "description": "Record what happened, about an asset or a signal: one event, or a list of up to 1,000.\n\nOne object answers the event (an item error is the request's status); a list\nanswers ``{\"saved\", \"ids\", \"errors\"}``, the failing items in ``errors``.",
+    "operationId": "post_event_api_v1_events_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Event Api V1 Events Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Post Event"
+   }
+  },
+  "/api/v1/events/catalog": {
+   "get": {
+    "description": "Every declared event, PlantCraft's first: ``[{\"app\", \"name\", \"events\", \"undeclared\"}]``,\neach event with its full ``kind``.",
+    "operationId": "event_catalog_api_v1_events_catalog_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Event Catalog Api V1 Events Catalog Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Event Catalog"
+   },
+   "put": {
+    "description": "The events an app declares (its ``[[publishes.events]]``), replaced; sent by the SDK\nwhen the app starts.",
+    "operationId": "put_event_catalog_api_v1_events_catalog_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Event Catalog Api V1 Events Catalog Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Event Catalog"
+   }
+  },
+  "/api/v1/explore": {
+   "get": {
+    "description": "The plant's top assets, one asset's contents, or what matches ``q`` (module docstring).",
+    "operationId": "explore_api_v1_explore_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "asset",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 200,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Asset"
+      }
+     },
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "default": "",
+       "maxLength": 120,
+       "title": "Q",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Explore Api V1 Explore Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Explore"
+   }
+  },
+  "/api/v1/groups": {
+   "get": {
+    "description": "Every group: id, name, kind, the asset it covers, its coordinator, the group it sits\nunder and its members.",
+    "operationId": "groups_api_v1_groups_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Groups Api V1 Groups Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Groups"
+   }
+  },
+  "/api/v1/inbox": {
+   "get": {
+    "description": "A person's unread chat messages, unread notifications and open actions: the badge of the\nsuite's messages button (chats and notifications together).",
+    "operationId": "inbox_api_v1_inbox_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Inbox Api V1 Inbox Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Inbox"
+   }
+  },
+  "/api/v1/installation": {
+   "get": {
+    "description": "The installation's id (which plant or site this is, stable for good), its time zone\n(the \"local\" every app's schedules and screens mean) and what this PlantCraft draws for\napps (``features``: the tables of ``[contributes]``).",
+    "operationId": "installation_api_v1_installation_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Installation Api V1 Installation Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Installation"
+   }
+  },
+  "/api/v1/knowledge": {
+   "get": {
+    "description": "Texts about ``ref`` (written for it or naming it), else those matching ``q``.",
+    "operationId": "knowledge_api_v1_knowledge_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "ref",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 400,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Ref"
+      }
+     },
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "default": "",
+       "maxLength": 200,
+       "title": "Q",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "maximum": 500,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Knowledge Api V1 Knowledge Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Knowledge"
+   },
+   "put": {
+    "description": "Write up to 500 texts (one per app and ref) that specialists read as context.",
+    "operationId": "put_knowledge_api_v1_knowledge_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Knowledge Api V1 Knowledge Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Knowledge"
+   }
+  },
+  "/api/v1/knowledge/delete": {
+   "post": {
+    "description": "Remove the app's texts about these refs (a protocol deleted in the app).",
+    "operationId": "delete_knowledge_api_v1_knowledge_delete_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/KnowledgeDelete"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Delete Knowledge Api V1 Knowledge Delete Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Delete Knowledge"
+   }
+  },
+  "/api/v1/llm/{use}": {
+   "post": {
+    "description": "One answer from the model of one of the app's uses (``<id>`` or ``<app id>:<id>``):\n``{use, model, text}``.",
+    "operationId": "llm_api_v1_llm__use__post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "use",
+      "required": true,
+      "schema": {
+       "title": "Use",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Llm Api V1 Llm  Use  Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Llm"
+   }
+  },
+  "/api/v1/me": {
+   "get": {
+    "operationId": "me_api_v1_me_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Me Api V1 Me Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Me"
+   }
+  },
+  "/api/v1/notebooks": {
+   "get": {
+    "description": "The examples and the person's notebooks: names and paths for ``/notebooks/file``.",
+    "operationId": "notebooks_api_v1_notebooks_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Notebooks Api V1 Notebooks Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Notebooks"
+   }
+  },
+  "/api/v1/notebooks/file": {
+   "get": {
+    "description": "One notebook (``.ipynb`` JSON) by its path: ``Examples/<app>/<name>`` or\n``My notebooks/<name>``.",
+    "operationId": "notebook_file_api_v1_notebooks_file_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "path",
+      "required": true,
+      "schema": {
+       "maxLength": 300,
+       "minLength": 3,
+       "title": "Path",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Notebook File Api V1 Notebooks File Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Notebook File"
+   }
+  },
+  "/api/v1/notifications": {
+   "get": {
+    "description": "What a notification can reach now: ``email`` when an administrator set up the email\nserver (Setup, Email), so an app offers email only where it can go out.",
+    "operationId": "notification_settings_api_v1_notifications_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Notification Settings Api V1 Notifications Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Notification Settings"
+   },
+   "post": {
+    "description": "Delivers a notification; ``{\"delivered\", \"email_queued\", \"unknown\"}``.",
+    "operationId": "notify_api_v1_notifications_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NotificationRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Notify Api V1 Notifications Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Notify"
+   }
+  },
+  "/api/v1/notifications/resolve": {
+   "post": {
+    "description": "Settles a notification thread for everyone who received it (an alarm acknowledged or\ncleared): it leaves their unread count and shows ``note`` instead of its buttons.\n``{\"key\", \"resolved_at\", \"note\"}``.",
+    "operationId": "resolve_api_v1_notifications_resolve_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NotificationResolve"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Resolve Api V1 Notifications Resolve Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Resolve"
+   }
+  },
+  "/api/v1/objects": {
+   "get": {
+    "description": "The apps' kinds of object a notebook may read (and run), by app.",
+    "operationId": "offered_api_v1_objects_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Offered Api V1 Objects Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Offered"
+   }
+  },
+  "/api/v1/people": {
+   "get": {
+    "description": "The active people: username, name, sector, job title, unit and groups.",
+    "operationId": "people_api_v1_people_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response People Api V1 People Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "People"
+   }
+  },
+  "/api/v1/queue": {
+   "get": {
+    "description": "What the Queue panel lists for this person, from the runs apps write: ``mine`` (what\nthey started, waiting or running, and what ended in the last 24 hours) and ``running``\n(everything waiting or running in the apps they may open), newest first.\n``{\"me\", \"mine\", \"running\"}``; each run as ``GET /api/v1/runs`` gives it, with ``app_name``.",
+    "operationId": "queue_api_v1_queue_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Queue Api V1 Queue Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Queue"
+   }
+  },
+  "/api/v1/results": {
+   "get": {
+    "description": "The latest results; ``under`` keeps the results about an asset and the assets under\nit, ``group`` (an asset type, e.g. ``unit``) adds the ancestor of that type to each.\n\nIn pages of at most ``limit`` (``MAX_PAGE``) results by subject, app and kind: when more\nare left the answer has an ``X-Next-Cursor`` header, and ``?cursor=`` reads on. Before\npages, a list cut at 5,000 said nothing: 1,000 bench loops filled it and the assistant\nnever saw the plant's signals (2026-10-27).",
+    "operationId": "results_api_v1_results_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "subject",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Subject"
+      }
+     },
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     },
+     {
+      "in": "query",
+      "name": "kind",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Kind"
+      }
+     },
+     {
+      "in": "query",
+      "name": "under",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 400,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Under"
+      }
+     },
+     {
+      "in": "query",
+      "name": "group",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Group"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maximum": 5000,
+         "minimum": 1,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Limit"
+      }
+     },
+     {
+      "in": "query",
+      "name": "cursor",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 1200,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Cursor"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Results Api V1 Results Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Results"
+   },
+   "put": {
+    "description": "Write up to 500 results; each failing item is in ``errors``, the rest are saved.",
+    "operationId": "put_results_api_v1_results_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Results Api V1 Results Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Results"
+   }
+  },
+  "/api/v1/results/history": {
+   "get": {
+    "description": "Status changes about ``subject`` (last 90 days), oldest first, after ``after``.",
+    "operationId": "result_history_api_v1_results_history_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "subject",
+      "required": true,
+      "schema": {
+       "maxLength": 400,
+       "minLength": 1,
+       "title": "Subject",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     },
+     {
+      "in": "query",
+      "name": "kind",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Kind"
+      }
+     },
+     {
+      "in": "query",
+      "name": "after",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 64,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "After"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 100,
+       "maximum": 500,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Result History Api V1 Results History Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Result History"
+   }
+  },
+  "/api/v1/runs": {
+   "get": {
+    "operationId": "runs_api_v1_runs_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     },
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 20,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "in": "query",
+      "name": "subject",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 400,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Subject"
+      }
+     },
+     {
+      "in": "query",
+      "name": "by",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 80,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "By"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 100,
+       "maximum": 500,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Runs Api V1 Runs Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Runs"
+   },
+   "put": {
+    "description": "Write up to 500 runs (one per app and run id); failing items are in ``errors``.",
+    "operationId": "put_runs_api_v1_runs_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Runs Api V1 Runs Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Runs"
+   }
+  },
+  "/api/v1/schedules": {
+   "get": {
+    "operationId": "schedules_api_v1_schedules_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 100,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Schedules Api V1 Schedules Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Schedules"
+   },
+   "put": {
+    "description": "Replace the app's schedules; items that fail are in ``errors`` and left out.",
+    "operationId": "put_schedules_api_v1_schedules_put",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 40,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Schedules Api V1 Schedules Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Schedules"
+   }
+  },
+  "/api/v1/series": {
+   "post": {
+    "description": "Many signals' series in one request and one source read; each failure is listed\nin ``errors`` (404, 422, 502, or 413 when the request ran out of points).",
+    "operationId": "series_batch_api_v1_series_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SeriesBatchRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "title": "Response Series Batch Api V1 Series Post"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Series Batch"
+   },
+   "put": {
+    "description": "Derived series: an app's service token writes computed series to ``app-<app id>``.\n\nThe whole body is checked first (422); an item naming another app's source makes the\nrequest a 403 and nothing is written. ``{\"written\", \"errors\"}``.",
+    "operationId": "put_series_api_v1_series_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Series Api V1 Series Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Series"
+   }
+  },
+  "/api/v1/series/retire": {
+   "post": {
+    "description": "An app retires derived series it no longer writes (``{\"signals\": [...]}``).\n\nOnly its own source (403 otherwise, nothing retired). A retired series is no longer listed\nnor read; the Historian keeps its archive for its retired days. ``{\"retired\", \"errors\"}``.",
+    "operationId": "retire_series_api_v1_series_retire_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SeriesRetire"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Retire Series Api V1 Series Retire Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Retire Series"
+   }
+  },
+  "/api/v1/series/runs": {
+   "put": {
+    "description": "Runs points: an app's service token writes one whole series per execution\n(``[{\"signal\", \"run_at\", \"t\", \"v\", \"keep_runs\", \"keep_days\", ...}]``) to ``app-<app id>``.\n\nChecked as ``PUT /api/v1/series`` is (422, then 403 for another app's source, nothing\nwritten). A run at the same ``run_at`` replaces it. ``{\"written\", \"errors\"}``.",
+    "operationId": "put_series_runs_api_v1_series_runs_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Series Runs Api V1 Series Runs Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Series Runs"
+   }
+  },
+  "/api/v1/signals": {
+   "get": {
+    "description": "Every signal; ``app``, ``subject`` and ``result`` keep the derived signals that have them.\n``limit`` and ``cursor`` answer it in pages by id; an ``ETag`` answers a list that did not\nchange with 304.",
+    "operationId": "signals_api_v1_signals_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "default": "",
+       "maxLength": 200,
+       "title": "Q",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 40,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     },
+     {
+      "in": "query",
+      "name": "subject",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 300,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Subject"
+      }
+     },
+     {
+      "in": "query",
+      "name": "result",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 60,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Result"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maximum": 5000,
+         "minimum": 1,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Limit"
+      }
+     },
+     {
+      "in": "query",
+      "name": "cursor",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 400,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Cursor"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "title": "Response Signals Api V1 Signals Get"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Signals"
+   }
+  },
+  "/api/v1/signals/{signal_id}": {
+   "get": {
+    "description": "One signal by id; a bare tag one source has answers that signal (deprecated).",
+    "operationId": "signal_api_v1_signals__signal_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "signal_id",
+      "required": true,
+      "schema": {
+       "title": "Signal Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Signal Api V1 Signals  Signal Id  Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Signal"
+   }
+  },
+  "/api/v1/signals/{signal_id}/runs": {
+   "get": {
+    "description": "The executions a runs point keeps: ``{\"signal\", \"runs\": [{\"run_at\", \"start\", \"end\",\n\"n\"}]}``, newest first; 422 for another kind.",
+    "operationId": "run_list_api_v1_signals__signal_id__runs_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "signal_id",
+      "required": true,
+      "schema": {
+       "title": "Signal Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "maximum": 200,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "title": "Response Run List Api V1 Signals  Signal Id  Runs Get"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Run List"
+   }
+  },
+  "/api/v1/signals/{signal_id}/series": {
+   "get": {
+    "description": "Recorded values, or one mean (text: the last label) per ``step`` seconds; at most\n200,000 points. ``signal`` in the answer is the id as asked. A runs point answers\n``{\"signal\", \"kind\": \"runs\", \"runs\": [{\"run_at\", \"t\", \"v\"}]}``, newest first: the run at\n``run`` (``latest`` by default, or its ISO time) or the ``runs`` newest.",
+    "operationId": "series_api_v1_signals__signal_id__series_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "signal_id",
+      "required": true,
+      "schema": {
+       "title": "Signal Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "start",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 64,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Start"
+      }
+     },
+     {
+      "in": "query",
+      "name": "end",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 64,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "End"
+      }
+     },
+     {
+      "in": "query",
+      "name": "step",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Step"
+      }
+     },
+     {
+      "in": "query",
+      "name": "run",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 64,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Run"
+      }
+     },
+     {
+      "in": "query",
+      "name": "runs",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maximum": 50,
+         "minimum": 1,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Runs"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "title": "Response Series Api V1 Signals  Signal Id  Series Get"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Series"
+   }
+  },
+  "/api/v1/signals/{signal_id}/value": {
+   "get": {
+    "description": "One aggregate (``last, mean, min, max, std``) over the ``window`` that ends now.\n\nA text signal has only ``last``, its newest label.",
+    "operationId": "value_api_v1_signals__signal_id__value_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "signal_id",
+      "required": true,
+      "schema": {
+       "title": "Signal Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "agg",
+      "required": false,
+      "schema": {
+       "default": "last",
+       "maxLength": 10,
+       "title": "Agg",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "window",
+      "required": false,
+      "schema": {
+       "default": "1h",
+       "maxLength": 20,
+       "title": "Window",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Value Api V1 Signals  Signal Id  Value Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Value"
+   }
+  },
+  "/api/v1/todos": {
+   "get": {
+    "description": "The app's own to-dos, newest change first, with who ticked them and when.",
+    "operationId": "app_todos_api_v1_todos_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     },
+     {
+      "in": "query",
+      "name": "state",
+      "required": false,
+      "schema": {
+       "default": "all",
+       "pattern": "^(open|done|all)$",
+       "title": "State",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response App Todos Api V1 Todos Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "App Todos"
+   },
+   "post": {
+    "description": "A to-do for a person or a group, made or changed by its ``key`` (a done one stays\ndone). The ``kind`` is one of the app's ``[[contributes.todo]]``.",
+    "operationId": "put_todo_api_v1_todos_post",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Todo Api V1 Todos Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Todo"
+   }
+  },
+  "/api/v1/todos/close": {
+   "post": {
+    "description": "The app closes its to-dos: gone from every Desk. Answers how many there were.",
+    "operationId": "close_todos_api_v1_todos_close_post",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "app",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "App"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CloseIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Close Todos Api V1 Todos Close Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Close Todos"
+   }
+  },
+  "/api/v1/tools": {
+   "get": {
+    "description": "The tools the apps this person may open add to the assistant.",
+    "operationId": "tools_api_v1_tools_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Tools Api V1 Tools Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Tools"
+   }
+  }
+ }
+}

@@ -33,7 +33,7 @@ it**, with `ssh-keygen` (OpenSSH 8.1 or later, already on every supported Linux 
 # The publisher's key, once: this line, compared with the one on the release page.
 echo 'release@plantcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
     > plantcraft.allowed_signers
-B=plantcraft-0.5.0-linux-amd64-bundle.tar.gz
+B=plantcraft-0.5.1-linux-amd64-bundle.tar.gz
 ssh-keygen -Y verify -f plantcraft.allowed_signers -I release@plantcraft -n file \
     -s $B.sha256.sig < $B.sha256        # Good "file" signature for release@plantcraft ...
 sha256sum -c $B.sha256                 # plantcraft-...tar.gz: OK  (macOS: shasum -a 256 -c)
@@ -195,7 +195,7 @@ settings and certificates.
 | `LINKCRAFT_VERSION`, `DASHCRAFT_VERSION`, `HISTCRAFT_VERSION`, `ALARMCRAFT_VERSION`, `MODELCRAFT_VERSION` | from the bundle | Image of each app; set by `install.sh` |
 | `LINKCRAFT_SIGNAL_ROUND_MINUTES`, `LINKCRAFT_SIGNAL_WINDOW_HOURS` | `15`, `24` | Analytics' Signal quality schedule and window at its first start (then changed in Analytics) |
 | `HISTCRAFT_URL` | empty | Optional data layer. Empty: PlantCraft reads its own sources. With the Historian on, `http://histcraft:8100/hist` makes the Historian the data layer (sources kept in the Historian, signals and series read through it) |
-| `SIMCRAFT_VERSION` | `0.5.0` | Image of the `demo` profile; set by `install.sh` from the bundle |
+| `SIMCRAFT_VERSION` | `0.5.1` | Image of the `demo` profile; set by `install.sh` from the bundle |
 | `PLANTCRAFT_ADMIN_USERNAME` | `admin` | Emergency administrator |
 | `PLANTCRAFT_CPUS`, `PLANTCRAFT_MEMORY` | `4`, `4g` | Container limits (also `LINKCRAFT_*` `4`/`4g`; `DASHCRAFT_*`, `HISTCRAFT_*` `2`/`2g`; `HISTCRAFT_DB_MEMORY` `2g`, with `HISTCRAFT_DB_SHARED_BUFFERS` `512MB` and `HISTCRAFT_DB_CACHE_SIZE` `1GB`: about 1/4 and 1/2 of it); `install.sh` lowers a CPU limit above the host's CPU count, which Docker would refuse |
 | `PLANTCRAFT_PLANT_SUBNET`, `_APPS_SUBNET`, `_EDGE_SUBNET`, `_DEMO_SUBNET`, `_HISTDB_SUBNET` | `172.30.10-14.0/24` | Change only if they clash with a plant or office network |
@@ -224,7 +224,7 @@ certificate authority, OCSP responder or update server.
 against the same folder:
 
 ```bash
-cd plantcraft-0.5.0-linux-amd64-bundle
+cd plantcraft-0.5.1-linux-amd64-bundle
 sudo ./install.sh --prefix /opt/plantcraft
 ```
 
@@ -390,7 +390,7 @@ Each app is included when its image `<app>:$<APP>_VERSION` exists
 locally (built in its folder, `apps/<app>`, with `make image`; `LINKCRAFT_VERSION`,
 `DASHCRAFT_VERSION`, `HISTCRAFT_VERSION`, `ALARMCRAFT_VERSION`, `MODELCRAFT_VERSION`, default the suite's version), the Historian only with its
 PostgreSQL image (`docker pull` the digest `compose.yaml` names, once), and the Simulator when
-`simcraft:$SIMCRAFT_VERSION` (default `0.5.0`) does.
+`simcraft:$SIMCRAFT_VERSION` (default `0.5.1`) does.
 The Simulator lives in `simulator/`: `make simcraft-image` builds its image from the
 folder at `SIMCRAFT_SRC` (default `simulator`, which must be that version), and
 `make bundle` and `make isolation` run it whenever that folder exists. A Simulator image

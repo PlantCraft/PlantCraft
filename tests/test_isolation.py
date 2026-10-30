@@ -87,7 +87,7 @@ MODELCRAFT_RUNNER_IMAGE = "modelcraft-runner"
 # The apps' executors on the local compute worker (docs/compute.md): they run what people wrote.
 EXECUTORS = {"linkcraft-executor": "linkcraft", MODELCRAFT_RUNNER: "modelcraft"}
 # An executor runs its app's own image, but for Models' runner (OpenModelica's, same version).
-EXECUTOR_IMAGES = {MODELCRAFT_RUNNER: f"{MODELCRAFT_RUNNER_IMAGE}:${{MODELCRAFT_VERSION:-0.5.0}}"}
+EXECUTOR_IMAGES = {MODELCRAFT_RUNNER: f"{MODELCRAFT_RUNNER_IMAGE}:${{MODELCRAFT_VERSION:-0.5.1}}"}
 # The app's setting that sends its work to the compute workers (default `suite`).
 COMPUTE_SETTINGS = {"linkcraft": "LINKCRAFT_COMPUTE", "modelcraft": "MODELCRAFT_RUNNER"}
 # Services with no network at all.
@@ -143,7 +143,7 @@ def test_simcraft_runs_its_own_image() -> None:
     """The demo plant is the Simulator's image (uid 10004), serving its loop portfolio."""
 
     plant = _services()["simcraft"]
-    assert plant["image"] == "simcraft:${SIMCRAFT_VERSION:-0.5.0}"
+    assert plant["image"] == "simcraft:${SIMCRAFT_VERSION:-0.5.1}"
     assert _uid(plant["user"]) == "10004"
     assert plant["command"][:3] == ["simcraft", "loops", "serve"]
     endpoint = plant["command"][plant["command"].index("--endpoint") + 1]
@@ -313,7 +313,7 @@ def test_apps_follow_the_linkcraft_pattern(app: str) -> None:
 
     prefix, port, uid, root_variable = APPS[app]
     service = _services()[app]
-    assert service["image"] == f"{app}:${{{app.upper()}_VERSION:-0.5.0}}"
+    assert service["image"] == f"{app}:${{{app.upper()}_VERSION:-0.5.1}}"
     assert service["user"] == f"{uid}:{uid}"
     environment = service["environment"]
     assert environment["PLANTCRAFT_URL"] == "http://processcraft:8060"
