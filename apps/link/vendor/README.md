@@ -9,7 +9,7 @@ version, and `dev/revendor` puts the new file here with its hash.
 
 `pip install --no-index --find-links vendor plantcraft-sdk==0.79.0` (Makefile, CI and the
 Dockerfile). The wheel is PlantCraft's reproducible build (`make sdk-wheel`, PlantCraft
-5dd4ba6): every app on SDK 0.79.0 vendors these same bytes.
+1e2dbd0): every app on SDK 0.79.0 vendors these same bytes.
 
 ## @plantcraft/ui 0.89.0
 
@@ -23,6 +23,6 @@ PlantCraft's `make ui-package` (every app on ui 0.89.0 vendors the same bytes).
 The same in `sha256sum -c` format (the Docker build and `plantcraft-app check` check both):
 
 ```text
-cf873a199dd6974c4462430b0a54a1fbc9c47bc092c0b64171b839b2a90d9bd4  plantcraft_sdk-0.79.0-py3-none-any.whl
+c0aab47249b94b56279d6454f77b54eee05dcd46a876c9d0d53256d850b65157  plantcraft_sdk-0.79.0-py3-none-any.whl
 ff182a69145bab8a3665ba148b36fa9c68ba207079500eabbee1fce43a3963af  plantcraft-ui-0.89.0.tgz
 ```

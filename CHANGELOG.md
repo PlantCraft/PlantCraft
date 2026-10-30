@@ -79,6 +79,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **The Historian answers raw reads about four times faster.** Writing the time of every value
+  one by one was 79 % of a raw read of millisecond samples (a day of the demo's 167 plant
+  signals: 3.1 s, now 0.85 s). `plantcraft-sdk` writes sub-second times for a whole series at
+  once, with the same text as before. With ten methods reading at once, Analytics' round went
+  from 30 to 16 s.
+
 - **A new install on macOS or Windows starts.** On a Docker Desktop bind mount several
   PlantCraft processes wrote a new database at once and corrupted it ("database disk image is
   malformed"): file locks do not hold between processes there. PlantCraft now runs one process
