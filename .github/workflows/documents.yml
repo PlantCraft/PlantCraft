@@ -138,8 +138,8 @@ jobs:
         run: |
           docker run -d --name docs --read-only --tmpfs /tmp:noexec --cap-drop ALL \
             --security-opt no-new-privileges:true -v docsdata:/data -p 8150:8150 doccraft:ci
-          for i in $(seq 30); do curl -fsS http://127.0.0.1:8150/docs/healthz && break; sleep 2; done
-          curl -fsS http://127.0.0.1:8150/docs/healthz
+          for i in $(seq 30); do curl -fsS http://127.0.0.1:8150/healthz && break; sleep 2; done
+          curl -fsS http://127.0.0.1:8150/doc/healthz
           docker logs docs
           docker rm -f docs
 

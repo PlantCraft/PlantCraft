@@ -806,8 +806,8 @@ STAND_IN_PLANTCRAFT = """
 """
 
 
-# An executor without its image (its app's, or Models' runner): a process that sleeps, with no
-# network.
+# An executor (or Historian's collector) without its image: a process that sleeps, on the
+# service's own networks.
 STAND_IN_EXECUTOR = """
   {name}:
     image: processcraft:{{version}}
@@ -956,6 +956,8 @@ def stack(tmp_path_factory: pytest.TempPathFactory):
                 stand_ins.append(
                     STAND_IN_APP.format(name=app, version="{version}", prefix=app_prefix, port=port)
                 )
+                if app == "histcraft":  # its collector runs the same image
+                    stand_ins.append(STAND_IN_EXECUTOR.format(name="histcraft-collector"))
         for name, app in EXECUTORS.items():
             image = MODELCRAFT_RUNNER_IMAGE if name == MODELCRAFT_RUNNER else app
             if _docker("image", "inspect", f"{image}:{_app_version(app)}", check=False).returncode:
