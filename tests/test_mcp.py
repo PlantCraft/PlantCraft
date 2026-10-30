@@ -7,8 +7,8 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.assistant_access import mcp
+from plantcraft.api.app import create_app
+from plantcraft.assistant_access import mcp
 from tests.test_access import PASSWORD, _create, _login, _scenario
 
 INIT = {
@@ -355,7 +355,7 @@ def test_my_actions_are_the_ones_i_own():
 
 
 def test_an_unknown_type_says_so_and_a_typographic_apostrophe_says_not_found():
-    from processcraft.assistant_chat.evals import says_not_found
+    from plantcraft.assistant_chat.evals import says_not_found
 
     assert mcp._matching_assets([], {"kind": "control_loop"})["note"].startswith("no asset of type")
     assert says_not_found("I couldn\u2019t find XQ-4242.PV.")

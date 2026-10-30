@@ -1,4 +1,4 @@
-"""API v1 as published (scale review E3, ``processcraft.api.contract``).
+"""API v1 as published (scale review E3, ``plantcraft.api.contract``).
 
 The API v1 this commit serves is ``docs/api/v1/openapi.json`` (``make api-contract`` writes it,
 so every change to API v1 shows in a review), and no release's API v1 is broken by it.
@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from processcraft.api import contract
+from plantcraft.api import contract
 
 RELEASES = sorted(contract.RELEASES.glob("*.json"))
 

@@ -144,7 +144,7 @@ FEATURES = (
 )
 
 SLUG = r"^[a-z][a-z0-9-]{0,40}$"
-# A reference kind of the suite (processcraft.refs): letters and "_", no digits.
+# A reference kind of the suite (plantcraft.refs): letters and "_", no digits.
 REF_KIND = r"^[a-z][a-z_]{1,31}$"
 # Kinds PlantCraft owns; an app names its own objects.
 PLATFORM_REF_KINDS = (
@@ -381,7 +381,7 @@ WORK_FIELD_TYPES = (
     "datetime",
     "list",
 )
-# Access levels of the suite (processcraft.auth.access), lowest first.
+# Access levels of the suite (plantcraft.auth.access), lowest first.
 LEVELS = ("viewer", "editor", "admin")
 
 

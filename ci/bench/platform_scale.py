@@ -238,7 +238,7 @@ def run(signals: int, apps: int) -> dict:
         PLANTCRAFT_MAIL_OUTBOX="false",
     )
     sys.path.insert(0, str(ROOT))
-    from processcraft.api.app import create_app
+    from plantcraft.api.app import create_app
 
     port = _free_port()
     started = time.perf_counter()

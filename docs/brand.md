@@ -15,10 +15,10 @@ colour, font or radius.
 
 - Write **PlantCraft**: one word, capital P and capital C.
 - Do not write "Plant Craft", "Plantcraft", "PLANTCRAFT" or "PC".
-- The suite was called ProcessCraft until 2026-10-27. People type and download `plantcraft`
-  (the command, the release files); the Python package `processcraft`, image and service names,
-  data ids and URLs inside an installation keep the old form, so existing installations and
-  their data never change. The plant simulator is the
+- The suite was called ProcessCraft until 2026-10-27. The code, the command and the release files
+  say `plantcraft` (the Python package since 0.5.1; `processcraft` still runs as an alias). Image
+  and service names, data ids, cookies and URLs inside an installation keep `processcraft`, so
+  existing installations and their data never change. The plant simulator is the
   **Simulator** ("PlantCraft Simulator" in documents).
 - The name is not translated. In Portuguese text it stays "PlantCraft".
 
@@ -117,7 +117,7 @@ app's mark and nothing else.
 
 | App | Machine id | Colour | Light | Dark | Glyph |
 | --- | --- | --- | --- | --- | --- |
-| PlantCraft | `processcraft` | PlantCraft Blue | `#0A66D0` | `#1F74D8` | Control valve on a line, instrument bubble |
+| PlantCraft | `processcraft` (app id) | PlantCraft Blue | `#0A66D0` | `#1F74D8` | Control valve on a line, instrument bubble |
 | Desk | `desk` | Logbook Plum | `#6A3D9A` | `#7B4CAD` | Calendar page with a check |
 | Link | `linkcraft` | Loop Teal | `#00726B` | `#08857D` | One block in a feedback loop |
 | View | `dashcraft` | Chart Indigo | `#3442A6` | `#3F52B8` | Trend on a chart frame under a dashed limit |

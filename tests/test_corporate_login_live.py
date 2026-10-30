@@ -15,9 +15,9 @@ import pytest
 import requests
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.directory import oidc
-from processcraft.directory.settings import LDAP_PRESETS
+from plantcraft.api.app import create_app
+from plantcraft.directory import oidc
+from plantcraft.directory.settings import LDAP_PRESETS
 
 pytestmark = pytest.mark.skipif(
     os.environ.get("PLANTCRAFT_LIVE_DIRECTORY") != "1",

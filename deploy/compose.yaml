@@ -251,7 +251,7 @@ services:
 
   llm-egress:
     <<: *hardening
-    # The suite's one way out to a language model in the cloud (processcraft/egress): an HTTPS
+    # The suite's one way out to a language model in the cloud (plantcraft/egress): an HTTPS
     # proxy that opens a tunnel only to port 443 of the hosts PlantCraft lists in
     # data/egress/allow.json (the providers of Setup › Language models), never to an address
     # inside the plant or the host. No provider in the cloud, or PLANTCRAFT_LLM=off: the list
@@ -260,7 +260,7 @@ services:
     user: "10014:10014"
     group_add:
       - "10001" # reads data/egress (PlantCraft's group)
-    command: ["python", "-m", "processcraft.egress", "serve"]
+    command: ["python", "-m", "plantcraft.egress", "serve"]
     environment:
       PLANTCRAFT_EGRESS_ALLOWLIST: /egress/allow.json
     volumes:
@@ -276,7 +276,7 @@ services:
         - CMD
         - python
         - -c
-        - "import sys, processcraft.egress as e; sys.exit(e.status('http://127.0.0.1:3128') is None)"
+        - "import sys, plantcraft.egress as e; sys.exit(e.status('http://127.0.0.1:3128') is None)"
       interval: 30s
       timeout: 5s
       start_period: 20s
@@ -318,7 +318,7 @@ services:
       - ./data/app-requests:/requests:ro
       - ./trusted-publishers:/trusted-publishers:ro
     healthcheck:
-      test: ["CMD", "python", "-m", "processcraft.apps.installer", "health"]
+      test: ["CMD", "python", "-m", "plantcraft.apps.installer", "health"]
       interval: 15s
       timeout: 5s
       start_period: 20s

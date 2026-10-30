@@ -414,7 +414,7 @@ function NotebookKitSwitch({ data, onChanged, onError }: { data: NotebooksOvervi
 }
 
 /** How much one person may ask the plant for: a heavy notebook or script slows down its owner
- * alone, never the apps (``processcraft/api/usage.py``). */
+ * alone, never the apps (``plantcraft/api/usage.py``). */
 function NotebookLimits({ limits, onSaved }: { limits: UsageLimits; onSaved: (limits: UsageLimits) => void }) {
   const [perMinute, setPerMinute] = useState(String(limits.per_minute));
   const [concurrent, setConcurrent] = useState(String(limits.concurrent));

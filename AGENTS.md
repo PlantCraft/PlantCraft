@@ -35,7 +35,7 @@ code. Read this file first, then `docs/STATUS.md`; the map of the suite is
 ## 2. Map and layers
 
 ```text
-processcraft/
+plantcraft/
   db config i18n refs                       layer 0: storage, settings, languages, references
   industrial_data auth assets events audit  layer 1: data sources, people and tokens, assets, events, audit
   results                                   layer 1: results, runs and schedules the apps publish (API v1)
@@ -115,7 +115,7 @@ Our clients are industrial plants: nothing gets installed unless IT and OT secur
   a Docker image `.tar`, and a wheelhouse with every dependency and the built UI. Runs as a normal
   user, in one folder, on a port above 1024.
 - **Never lose data on upgrade.** All state lives in one data folder. Upgrades back it up first;
-  `processcraft rollback` returns to the previous version. Schema migrations are additive.
+  `./install.sh --rollback` returns to the previous version. Schema migrations are additive.
 - **Secure defaults.** Sign-in on by default outside `127.0.0.1`; roles enforced on every route
   (test per route); HTTPS with the client's certificate; audit log of who changed what.
   Secrets come from environment variables or a vault, never stored in plain text or logged.
@@ -131,21 +131,21 @@ Our clients are industrial plants: nothing gets installed unless IT and OT secur
    `describe(metrics)` is the one place a finding is worded. PlantCraft itself has no methods.
 2. **Every user action is an API endpoint** with a test; the UI calls only the API. Specialists
    (LLM) act only through the same API and permissions as people.
-3. **Each table is owned by one module** (a `Store` subclass in `processcraft/db.py` with its
+3. **Each table is owned by one module** (a `Store` subclass in `plantcraft/db.py` with its
    `SCHEMA`). A change to a table a release shipped is a named step in the store's `MIGRATIONS`
    (`Migration`, `add_columns`): run once per database and recorded, never renamed or removed.
    At each release add its schema to `tests/schemas/` (`dev/schema-snapshot/dump.py`) and its
-   API v1 to `docs/api/v1/releases/` (`python -m processcraft.api.contract release <version>`),
+   API v1 to `docs/api/v1/releases/` (`python -m plantcraft.api.contract release <version>`),
    and replace `tests/contract/previous-sdk/` with that release's SDK wheel;
    never edit existing rows by hand.
-4. **Apps of the suite are listed once**, in `PLANTCRAFT_APPS` (`processcraft/auth/suite.py`):
+4. **Apps of the suite are listed once**, in `PLANTCRAFT_APPS` (`plantcraft/auth/suite.py`):
    the launcher, people's access and API v1's `/apps` all read that list.
 
 ### One language source
 
 - English is the source of every user-facing string; Brazilian Portuguese (pt-BR) is a translation.
-- Backend: `from processcraft.i18n import t` and `t("Loop {loop} not found.", loop=loop_id)`, called
-  when the text is produced (not at import). Keys live in `processcraft/i18n/locales/pt-BR.json`.
+- Backend: `from plantcraft.i18n import t` and `t("Loop {loop} not found.", loop=loop_id)`, called
+  when the text is produced (not at import). Keys live in `plantcraft/i18n/locales/pt-BR.json`.
 - Frontend: `import { t, locale } from "./i18n"`, `t("Save")`; keys in
   `frontend/src/locales/pt-BR.json`. Use `locale` for `Intl` and `localeCompare`.
 - Until the MVP ships the product is English only (owner decision, 2026-10-19): wrap new strings
@@ -244,7 +244,7 @@ The full plan, with roles and the GitHub organisation, is
   check of every PR fail when a branch changes the SDK or ui without a version above main's.
 - **One pull request may span folders** when the change is one: an SDK change and the apps that
   use it, a ui change and every app that draws it. Each folder's workflow runs its own checks.
-- Inside this repository, shared files (`processcraft/api/app.py`, the frontend router, the
+- Inside this repository, shared files (`plantcraft/api/app.py`, the frontend router, the
   locale catalogs, `pyproject.toml`) get small, surgical edits; re-read before editing. Add new
   code in a **new module** instead of growing a shared file.
 - **CI cadence (owner, 2026-10-26).** A pull request runs only Lint and Security; run `make ci` of

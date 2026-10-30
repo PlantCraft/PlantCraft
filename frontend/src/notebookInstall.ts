@@ -1,5 +1,5 @@
 /** Python in this browser (Notebooks › Run in the browser): PlantCraft serves each JupyterLite
- * build under a path of its own, kept by the browser for a year (processcraft/notebooks/dist.py).
+ * build under a path of its own, kept by the browser for a year (plantcraft/notebooks/dist.py).
  * "Install" fetches every file of the build once, with its progress, so JupyterLab and Python
  * then open from this computer; "installed" is remembered per build and checked against the
  * browser's cache, which can drop files when the disk runs short. */

@@ -83,7 +83,7 @@ jobs:
       - run: python -m pip install "bandit==1.9.4" "pip-audit==2.10.1" "zizmor==1.31.1"
       - name: bandit (high severity, high confidence)
         run: >-
-          bandit -q -r -lll -iii processcraft sdk/python/plantcraft_sdk apps/*/src simulator/src
+          bandit -q -r -lll -iii plantcraft sdk/python/plantcraft_sdk apps/*/src simulator/src
           templates/app/src
       - name: zizmor (the workflows themselves, for injections, credentials and triggers)
         run: zizmor --offline .github/workflows/

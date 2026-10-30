@@ -43,7 +43,7 @@
 }
 
 # Says to PlantCraft that a request came from outside, through this proxy, whatever the client
-# sent: people's reads count against their limits there (processcraft/api/usage.py); the apps'
+# sent: people's reads count against their limits there (plantcraft/api/usage.py); the apps'
 # own requests, inside the internal network, never pass here.
 (edge) {
 	header_up X-PlantCraft-Edge 1

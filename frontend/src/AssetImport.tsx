@@ -17,7 +17,7 @@ import { Modal } from "./Modal";
 export interface AssetFileFormat { id: string; label: string; detail: string }
 interface FileSignal { role: string; tag: string; source_id: string }
 interface FileRelation { from: string; type: string; to: string; include: boolean; status?: string; errors?: string[] }
-/** Where a drafted row comes from (processcraft/platform/plantdraft.py): a rule, a document's passage or the model. */
+/** Where a drafted row comes from (plantcraft/platform/plantdraft.py): a rule, a document's passage or the model. */
 interface DraftSource { by: "rules" | "documents" | "model"; label: string; ref?: string; section?: string; excerpt: string }
 interface DraftRow { confidence: "high" | "medium" | "low"; why: string; sources: DraftSource[] }
 export interface DraftSummary { tags: number; loops: number; instruments: number; equipment: number; units: number; areas: number; placed: number; by_model: number; dropped: number; unsure: number; unrecognised: number; documents?: boolean; model?: boolean }

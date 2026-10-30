@@ -273,7 +273,7 @@ def _client(token: str | None = None, url: str | None = None) -> Any:
     )
 
 
-# A connection code (``processcraft.notebooks.kits.connection_code``): this PlantCraft's address,
+# A connection code (``plantcraft.notebooks.kits.connection_code``): this PlantCraft's address,
 # the kit's token and the SHA-256 of its local certificate authority, as one line.
 CODE_PREFIX = "pcnb1:"
 

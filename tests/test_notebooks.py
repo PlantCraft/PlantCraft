@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.notebooks import NotebookStore, file_name, templates
+from plantcraft.notebooks import NotebookStore, file_name, templates
 from tests.test_route_permissions import ADMIN_PASSWORD, _login, app  # noqa: F401
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,7 +83,7 @@ def test_a_notebook_of_signals_is_in_its_owners_folder_only(app, dist):  # noqa:
         assert created.status_code == 201, created.text
         item = created.json()
         assert item["path"].startswith("My notebooks/") and item["path"].endswith(".ipynb")
-        # JupyterLite under its build's own path (processcraft/notebooks/dist.py).
+        # JupyterLite under its build's own path (plantcraft/notebooks/dist.py).
         build = vera.get("/api/notebooks").json()["browser"]["build"]
         base = f"/notebooks/lite/v/{build}/"
         assert item["url"].startswith(f"{base}lab/index.html?path=My%20notebooks/")
@@ -205,11 +205,11 @@ def test_relative_and_naive_times_are_utc():
 
 
 def test_names_are_safe_and_a_person_keeps_the_newest(tmp_path, monkeypatch):
-    from processcraft.db import Database
+    from plantcraft.db import Database
 
     assert file_name("FIC-101/PV: last week?") == "FIC-101 PV last week.ipynb"
     assert file_name("../..") == "Notebook.ipynb"
-    monkeypatch.setattr("processcraft.notebooks.MAX_PER_PERSON", 2)
+    monkeypatch.setattr("plantcraft.notebooks.MAX_PER_PERSON", 2)
     store = NotebookStore(Database(tmp_path / "db.sqlite3"))
     _title, notebook = templates.blank_notebook()
     names = [store.create("vera", "Study", notebook)["name"] for _ in range(3)]
@@ -265,8 +265,8 @@ def test_every_example_has_a_title_of_its_own():
 def test_the_copies_the_old_example_cards_wrote_are_dropped(tmp_path):
     """Before 2026-10-25 each click on an example card wrote "Example - ... 2", "... 3"."""
 
-    from processcraft.db import Database
-    from processcraft.notebooks import _drop_example_copies
+    from plantcraft.db import Database
+    from plantcraft.notebooks import _drop_example_copies
 
     store = NotebookStore(Database(tmp_path / "pc.db"))
     notebook = templates.blank_notebook()[1]

@@ -4,8 +4,8 @@ owner 2026-10-25): a packaged app to its signed manifest, a suite app to what it
 
 from __future__ import annotations
 
+from plantcraft.apps import package
 from plantcraft_sdk import scopes
-from processcraft.apps import package
 from tests.contract.test_api_v1 import _app_key, _rt, central  # noqa: F401
 
 
@@ -75,7 +75,7 @@ def test_a_packaged_app_is_held_to_its_manifest_not_to_what_it_says(central):
 
 
 def test_an_external_app_granted_nothing_cannot_grant_itself_more(central, monkeypatch):
-    from processcraft.apps import remote
+    from plantcraft.apps import remote
 
     rt = _rt(central)
     monkeypatch.setattr(remote, "check_health", lambda url: {"ok": True})

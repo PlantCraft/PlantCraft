@@ -16,7 +16,7 @@ import pytest
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import PUBLIC, ROUTERS, create_app
+from plantcraft.api.app import PUBLIC, ROUTERS, create_app
 
 ROOT = Path(__file__).resolve().parents[1]
 ADMIN_PASSWORD = "Sup3rSecretAdmin"
@@ -169,7 +169,7 @@ def test_an_editor_never_reaches_admin_routes(app):
 def test_the_server_refuses_a_network_address_without_sign_in(
     tmp_path, monkeypatch, host, sign_in, flag, starts
 ):
-    from processcraft import cli
+    from plantcraft import cli
 
     monkeypatch.delenv("PLANTCRAFT_BASIC_AUTH_ENABLED", raising=False)
     if sign_in:

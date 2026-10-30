@@ -82,7 +82,7 @@ def test_the_schedule_is_checked_and_stored_for_the_installer(world):
     on_disk = json.loads((world.requests / "ops-settings.json").read_text())
     assert on_disk["backup"]["timezone"] == "America/Sao_Paulo"
     client.put("/api/operations/schedule", json={"drill_weekday": 2, "drill_at": "04:15"})
-    from processcraft.apps import operations
+    from plantcraft.apps import operations
 
     read = operations.schedule_settings(world.requests / "ops-settings.json")
     assert (read["daily_at"], read["drill_weekday"], read["drill_at"]) == ("03:30", 2, "04:15")

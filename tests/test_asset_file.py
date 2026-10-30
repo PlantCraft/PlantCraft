@@ -173,7 +173,7 @@ def test_files_that_cannot_be_read(admin):
 
 
 def test_the_demo_seed_names_the_plant(admin):
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     class Client(demo_seed.Http):
         """The seed's client, through the test client instead of the network."""

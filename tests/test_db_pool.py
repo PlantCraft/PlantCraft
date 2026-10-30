@@ -1,11 +1,11 @@
-"""PlantCraft's connections are kept per thread and used again (processcraft/db.py)."""
+"""PlantCraft's connections are kept per thread and used again (plantcraft/db.py)."""
 
 from __future__ import annotations
 
 import sqlite3
 import threading
 
-from processcraft.db import Database
+from plantcraft.db import Database
 
 
 def test_a_connection_whose_block_ended_serves_the_next_block(tmp_path):

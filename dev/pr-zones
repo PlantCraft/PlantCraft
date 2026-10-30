@@ -21,7 +21,7 @@ import sys
 # Top-level paths of the core: the platform, the contract, the shared code, the installer, CI and
 # the rules every agent follows. Everything here waits for an agreed issue.
 CORE = (
-    "processcraft/",
+    "plantcraft/",
     "frontend/",
     "sdk/",
     "ui/",

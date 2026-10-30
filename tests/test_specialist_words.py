@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from processcraft.specialists.facts import SpecialistFacts, result_kind
+from plantcraft.specialists.facts import SpecialistFacts, result_kind
 
 
 def test_a_result_reads_in_words():

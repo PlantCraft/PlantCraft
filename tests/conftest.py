@@ -11,7 +11,7 @@ os.environ.setdefault("PLANTCRAFT_MAIL_OUTBOX", "false")
 # held by test_security.py.
 from argon2 import PasswordHasher  # noqa: E402
 
-import processcraft.auth.users as _users  # noqa: E402
+import plantcraft.auth.users as _users  # noqa: E402
 
 if not hasattr(_users, "PRODUCT_HASHER"):  # conftest may load twice (as tests.conftest)
     _users.PRODUCT_HASHER = _users._HASHER

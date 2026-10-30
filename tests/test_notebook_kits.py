@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.notebooks import kits
+from plantcraft.notebooks import kits
 from tests.test_notebooks import _routed, _turn_on, dist  # noqa: F401
 from tests.test_route_permissions import ADMIN_PASSWORD, _login, app  # noqa: F401
 
@@ -226,7 +226,7 @@ def test_the_kit_copies_the_notebooks_and_keeps_what_the_person_edited(
 
 
 def test_kits_built_by_a_deploy_are_read_from_the_data_folder(tmp_path, monkeypatch):
-    from processcraft.ops import snapshot
+    from plantcraft.ops import snapshot
 
     monkeypatch.delenv("PLANTCRAFT_NOTEBOOK_KITS", raising=False)
     bundled, built = tmp_path / "bundled", tmp_path / "built"
@@ -389,8 +389,8 @@ def test_a_connection_code_connects_the_app_with_one_paste(
 
 
 def test_a_code_ends_after_two_minutes(tmp_path, monkeypatch):
-    from processcraft.db import Database
-    from processcraft.notebooks import NotebookStore
+    from plantcraft.db import Database
+    from plantcraft.notebooks import NotebookStore
 
     store = NotebookStore(Database(tmp_path / "pc.db"))
     code, _expires = store.pairing_code("vera")

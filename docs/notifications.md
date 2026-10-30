@@ -64,4 +64,4 @@ them and what they allow.
 - Each person chooses in their profile (`/people/me`): email on or off, and from which priority
   (high and above by default). The address is the profile's email.
 
-The code is `processcraft/notify` (layer 2); `tests/test_groups_and_notifications.py` holds it.
+The code is `plantcraft/notify` (layer 2); `tests/test_groups_and_notifications.py` holds it.

@@ -16,8 +16,8 @@ def _catalog_size(path: Path) -> int:
 
 
 def _app(tmp_path, monkeypatch):
-    from processcraft.api.app import create_app
-    from processcraft.api.runtime import ApiRuntime
+    from plantcraft.api.app import create_app
+    from plantcraft.api.runtime import ApiRuntime
 
     scenario = json.loads((ROOT / "scenarios" / "generic_demo.json").read_text())
     scenario["storage"]["sqlite_path"] = str(tmp_path / "workspace.sqlite3")
@@ -54,7 +54,7 @@ def test_contract_floor():
 
 
 def test_source_type_floor():
-    from processcraft.industrial_data.registry import SOURCE_TYPES
+    from plantcraft.industrial_data.registry import SOURCE_TYPES
 
     assert len(SOURCE_TYPES) >= FLOORS["sources"]["types"]
 
@@ -66,6 +66,6 @@ def test_e2e_journey_floor():
 
 def test_translation_floors():
     frontend = _catalog_size(ROOT / "frontend" / "src" / "locales" / "pt-BR.json")
-    backend = _catalog_size(ROOT / "processcraft" / "i18n" / "locales" / "pt-BR.json")
+    backend = _catalog_size(ROOT / "plantcraft" / "i18n" / "locales" / "pt-BR.json")
     assert frontend >= FLOORS["i18n"]["frontend_pt_br"]
     assert backend >= FLOORS["i18n"]["backend_pt_br"]

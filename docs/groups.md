@@ -46,4 +46,4 @@ administrator sees everything. A group cannot move under itself or a group below
 
 Routes: `GET /api/groups`, `GET /api/groups/{id}` (everyone signed in), `POST /api/groups`,
 `PUT /api/groups/{id}`, `DELETE /api/groups/{id}` (administrators), `PUT /api/groups/{id}/members`
-(the coordinator or an administrator). The store is `processcraft/groups` (layer 1).
+(the coordinator or an administrator). The store is `plantcraft/groups` (layer 1).

@@ -1,4 +1,4 @@
-"""Several server processes on one installation (``processcraft.ops.workers``, PLANTCRAFT_WORKERS)."""
+"""Several server processes on one installation (``plantcraft.ops.workers``, PLANTCRAFT_WORKERS)."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from pathlib import Path
 import httpx
 import pytest
 
-from processcraft.db import Database, Store
-from processcraft.ops.workers import Leader, first_only, startup, worker_count
+from plantcraft.db import Database, Store
+from plantcraft.ops.workers import Leader, first_only, startup, worker_count
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -133,7 +133,7 @@ def test_three_server_processes_share_sign_in_writes_and_one_leader(tmp_path):
     # reads holds, and a full pipe blocks every process that logs (a request hangs).
     log = (tmp_path / "server.log").open("w")
     server = subprocess.Popen(
-        [sys.executable, "-m", "processcraft.api.serve"],
+        [sys.executable, "-m", "plantcraft.api.serve"],
         cwd=tmp_path,
         env=env,
         stdout=subprocess.DEVNULL,
@@ -193,7 +193,7 @@ def test_three_server_processes_share_sign_in_writes_and_one_leader(tmp_path):
 
 
 def test_asset_types_changed_in_another_process_are_seen(tmp_path, monkeypatch):
-    from processcraft.assets import types
+    from plantcraft.assets import types
 
     path = tmp_path / "types.sqlite3"
     here, there = types.AssetTypeStore(Database(path)), types.AssetTypeStore(Database(path))

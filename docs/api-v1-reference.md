@@ -1,6 +1,6 @@
 # API v1 reference
 
-Written by `python -m processcraft.api.contract write` from `docs/api/v1/openapi.json`;
+Written by `python -m plantcraft.api.contract write` from `docs/api/v1/openapi.json`;
 never edited by hand. The rules, the shapes and examples are in `docs/api-v1.md`.
 **Permission** is what an app's own token needs (its `app.toml` `[permissions]`):
 *any app* for every app, *people only* for a route no app's token may use.

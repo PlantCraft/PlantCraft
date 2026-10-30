@@ -1,5 +1,5 @@
 # ruff: noqa: F811  (the fixture ``signed`` comes from test_collaboration.py)
-"""llm-egress, the suite's one way out to a language model in the cloud (processcraft/egress):
+"""llm-egress, the suite's one way out to a language model in the cloud (plantcraft/egress):
 PlantCraft lists the providers' hosts, the proxy opens a tunnel to those on 443 and nothing else."""
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from processcraft import egress
+from plantcraft import egress
 from tests.test_collaboration import signed  # noqa: F401
 
 PUBLIC = "93.184.216.34"

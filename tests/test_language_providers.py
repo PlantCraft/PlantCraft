@@ -164,9 +164,9 @@ def test_each_model_of_a_provider_can_be_tested(signed):
 
 
 def test_the_single_connection_of_before_becomes_a_provider(tmp_path):
-    from processcraft.auth.users import UserStore
-    from processcraft.db import Database
-    from processcraft.specialists.profiles import (
+    from plantcraft.auth.users import UserStore
+    from plantcraft.db import Database
+    from plantcraft.specialists.profiles import (
         INSTALLATION_KEY,
         KeyFile,
         SpecialistStore,
@@ -195,9 +195,9 @@ def test_the_single_connection_of_before_becomes_a_provider(tmp_path):
 
 
 def test_a_switch_left_off_before_leaves_no_default(tmp_path):
-    from processcraft.auth.users import UserStore
-    from processcraft.db import Database
-    from processcraft.specialists.profiles import KeyFile, SpecialistStore
+    from plantcraft.auth.users import UserStore
+    from plantcraft.db import Database
+    from plantcraft.specialists.profiles import KeyFile, SpecialistStore
 
     db = Database(tmp_path / "w.db")
     users = UserStore(db)

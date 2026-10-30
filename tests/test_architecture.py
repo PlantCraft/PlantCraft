@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-PACKAGE = Path(__file__).resolve().parents[1] / "processcraft"
+PACKAGE = Path(__file__).resolve().parents[1] / "plantcraft"
 
 LAYERS = {
     "db": 0,
@@ -19,6 +19,8 @@ LAYERS = {
     "ops": 0,
     # llm-egress, the one way out to a language model in the cloud (standard library only).
     "egress": 0,
+    # The package's old name as a door to this one (copied to processcraft/ in the images).
+    "legacy": 0,
     "industrial_data": 1,
     "auth": 1,
     "assets": 1,
@@ -98,7 +100,7 @@ def _imports(path: Path) -> set[str]:
             names = [alias.name for alias in node.names]
         for name in names:
             parts = name.split(".")
-            if parts[0] == "processcraft" and len(parts) > 1:
+            if parts[0] == "plantcraft" and len(parts) > 1:
                 found.add(parts[1])
     return found
 

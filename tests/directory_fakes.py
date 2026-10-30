@@ -81,7 +81,7 @@ class FakeDirectory:
 
     def connect(self, _settings: Any, user: str, password: str) -> Connection:
         if self.down:
-            from processcraft.directory import DirectoryUnavailable
+            from plantcraft.directory import DirectoryUnavailable
 
             raise DirectoryUnavailable("The directory did not answer: connection refused")
         return Connection(
@@ -94,7 +94,7 @@ class FakeDirectory:
 
 
 def ldap_settings(**changes: Any) -> dict[str, Any]:
-    from processcraft.directory.settings import LDAP_PRESETS
+    from plantcraft.directory.settings import LDAP_PRESETS
 
     return {
         **LDAP_PRESETS["openldap"],

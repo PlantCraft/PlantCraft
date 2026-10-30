@@ -19,10 +19,10 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from plantcraft.api import app_proxy as proxy
+from plantcraft.api.app import create_app
+from plantcraft.platform import plantdraft
 from plantcraft_sdk.contributes import ContributionsIn
-from processcraft.api import app_proxy as proxy
-from processcraft.api.app import create_app
-from processcraft.platform import plantdraft
 from tests.test_asset_model import _login, _rt, admin, app, eng, viewer  # noqa: F401
 from tests.test_assistant_chat import LOCAL
 from tests.test_collaboration import _scenario

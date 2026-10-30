@@ -59,7 +59,7 @@ def server(tmp_path_factory):
         PLANTCRAFT_APPS="linkcraft=/link/@0.1.0",
     )
     _fake_installer(tmp)
-    from processcraft.api.app import create_app
+    from plantcraft.api.app import create_app
 
     port = _free_port()
     app = create_app()
@@ -82,7 +82,7 @@ def _fake_installer(tmp: Path) -> None:
 
     import sys
 
-    from processcraft.apps import installer
+    from plantcraft.apps import installer
     from tests import app_packages
 
     key, trusted = app_packages.publisher(tmp / "publisher", "e2e-publisher")

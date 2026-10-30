@@ -36,28 +36,28 @@
 **/requirements*.lock                        @PlantCraft/maintainers
 
 # Sign-in, people, tokens and permissions
-/processcraft/auth/                          @PlantCraft/maintainers
-/processcraft/directory/                     @PlantCraft/maintainers
-/processcraft/api/app.py                     @PlantCraft/maintainers
-/processcraft/api/deps.py                    @PlantCraft/maintainers
-/processcraft/api/identity.py                @PlantCraft/maintainers
-/processcraft/api/routers/session.py         @PlantCraft/maintainers
-/processcraft/api/routers/sso.py             @PlantCraft/maintainers
-/processcraft/audit/                         @PlantCraft/maintainers
+/plantcraft/auth/                          @PlantCraft/maintainers
+/plantcraft/directory/                     @PlantCraft/maintainers
+/plantcraft/api/app.py                     @PlantCraft/maintainers
+/plantcraft/api/deps.py                    @PlantCraft/maintainers
+/plantcraft/api/identity.py                @PlantCraft/maintainers
+/plantcraft/api/routers/session.py         @PlantCraft/maintainers
+/plantcraft/api/routers/sso.py             @PlantCraft/maintainers
+/plantcraft/audit/                         @PlantCraft/maintainers
 /sdk/python/plantcraft_sdk/auth.py         @PlantCraft/maintainers
 /sdk/python/plantcraft_sdk/jwt.py          @PlantCraft/maintainers
 /sdk/python/plantcraft_sdk/server/access.py @PlantCraft/maintainers
 
 # What the assistant (LLM) may read and do
-/processcraft/assistant_access/              @PlantCraft/maintainers
-/processcraft/assistant_chat/                @PlantCraft/maintainers
-/processcraft/specialists/                   @PlantCraft/maintainers
-/processcraft/api/routers/v1_assistant.py    @PlantCraft/maintainers
+/plantcraft/assistant_access/              @PlantCraft/maintainers
+/plantcraft/assistant_chat/                @PlantCraft/maintainers
+/plantcraft/specialists/                   @PlantCraft/maintainers
+/plantcraft/api/routers/v1_assistant.py    @PlantCraft/maintainers
 
 # Stores, the apps' installer (it runs containers) and the read-only plant connections
-/processcraft/db.py                          @PlantCraft/maintainers
-/processcraft/apps/                          @PlantCraft/maintainers
-/processcraft/industrial_data/               @PlantCraft/maintainers
+/plantcraft/db.py                          @PlantCraft/maintainers
+/plantcraft/apps/                          @PlantCraft/maintainers
+/plantcraft/industrial_data/               @PlantCraft/maintainers
 /sdk/python/plantcraft_sdk/server/store.py @PlantCraft/maintainers
 /apps/historian/src/histcraft/vault.py       @PlantCraft/maintainers
 /apps/historian/src/histcraft/sources/       @PlantCraft/maintainers

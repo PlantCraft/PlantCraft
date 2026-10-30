@@ -30,6 +30,20 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   assistant chat can be marked unread until opened; the three take a star, favorites first.
   `PUT /api/me/marks`. On the public demo each visit marks for itself only.
 
+### Changed
+
+- **The platform's Python package is `plantcraft` (owner, 2026-10-30).** The folder at the root of
+  the repository, every import and `python -m plantcraft.<module>` follow the product's name, and
+  the distribution is `plantcraft`. `processcraft` still runs: the console script, and inside the
+  images `python -m processcraft.<module>` (`plantcraft/legacy.py`), so an older `install.sh`, a
+  rollback to 0.5.0 and the Backups page keep driving every version's installer image. Image and
+  service names, data folders, the app id, cookies and stored ids are unchanged.
+
+- **Architecture in pictures and the zones of a contribution.** `docs/architecture.md` opens with
+  the suite in one diagram, how the apps talk (one sticky valve) and what is core and what is open;
+  `CONTRIBUTING.md` says when an issue comes first. The Zones check (`dev/pr-zones`) shows a pull
+  request's zones on its run page and holds a fork's core change to an agreed issue.
+
 ### Fixed
 
 - **The old name is gone from what people type and download (owner, 2026-10-30).** The command

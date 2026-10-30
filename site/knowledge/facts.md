@@ -16,9 +16,9 @@ quickly find where the plant has a problem, and discuss and plan the solution wi
 ## The name
 
 PlantCraft was called ProcessCraft until 27 October 2026, before it was published. It is the same
-product. The old name still shows in some places in the code (the Python package
-`processcraft`, image names, ids inside an installation), kept so existing installations keep
-working; the command is `plantcraft` and the release files are `plantcraft-<version>-...`. The
+product. The old name still shows in a few ids inside an installation (image and
+service names, the app id, data folders), kept so existing installations keep working; the code
+is the Python package `plantcraft`, the command is `plantcraft` and the release files are `plantcraft-<version>-...`. The
 apps are PlantCraft Historian, Analytics, View, Alarms, Models and Documents, with Desk and
 Notebooks built in and the Simulator as the demo plant. Analytics was called Link (and before
 that CPMCraft and DataCraft), and View was called TrendCraft and Dashboards.

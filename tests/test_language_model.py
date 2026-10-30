@@ -8,8 +8,8 @@ from __future__ import annotations
 import io
 import json
 
-from processcraft.specialists import model as model_module
-from processcraft.specialists.model import ChatModel
+from plantcraft.specialists import model as model_module
+from plantcraft.specialists.model import ChatModel
 from tests.test_collaboration import (  # noqa: F401
     FakeModel,
     _asset_id,
@@ -327,7 +327,7 @@ def test_the_vendors_site_as_an_address_means_its_api():
     """Owner's installation, 2026-10-25: https://openai.com typed as the address made every call
     go to https://openai.com/chat/completions and fail; the vendor's site means its API."""
 
-    from processcraft.specialists.profiles import vendor_endpoint
+    from plantcraft.specialists.profiles import vendor_endpoint
 
     assert vendor_endpoint("openai", "https://openai.com") == ""
     assert vendor_endpoint("openai", "https://api.openai.com/v1") == ""

@@ -89,7 +89,7 @@ PUBLISHER_ID := $(shell $(PYTHON) -c "import re, tomllib; \
 	name = tomllib.load(open('app.toml', 'rb'))['app']['publisher']; \
 	print(re.sub('[^a-z0-9]+', '-', name.lower()).strip('-'))")
 DEV_KEYS := build/dev-publisher
-PACKAGE_PY := $(PLANTCRAFT_DIR)/processcraft/apps/package.py
+PACKAGE_PY := $(PLANTCRAFT_DIR)/plantcraft/apps/package.py
 
 package: image
 	@test -x "$(PLANTCRAFT_DIR)/deploy/package.sh" || { echo "make package: no" \

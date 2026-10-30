@@ -17,9 +17,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.apps import installer as inst
-from processcraft.apps import package as pkg
+from plantcraft.api.app import create_app
+from plantcraft.apps import installer as inst
+from plantcraft.apps import package as pkg
 from tests import app_packages as ap
 
 ROOT = Path(__file__).resolve().parents[1]

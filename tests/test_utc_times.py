@@ -10,9 +10,9 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from plantcraft.db import Database, Store, utc_text
+from plantcraft.platform.workspace import UTC_TIMES, Workspace
 from plantcraft_sdk.utc import is_instant, normalize_times, utc_iso
-from processcraft.db import Database, Store, utc_text
-from processcraft.platform.workspace import UTC_TIMES, Workspace
 
 
 @pytest.fixture(params=["America/Sao_Paulo", "Asia/Kolkata", "UTC"])
@@ -90,7 +90,7 @@ def test_api_answers_times_in_utc(tmp_path):
 
 
 def test_the_plant_day_follows_the_plant_zone(monkeypatch):
-    from processcraft import config
+    from plantcraft import config
 
     monkeypatch.setenv("PLANTCRAFT_TIMEZONE", "Pacific/Kiritimati")  # UTC+14
     ahead = config.plant_today()

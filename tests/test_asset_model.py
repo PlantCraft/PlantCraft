@@ -11,9 +11,9 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.assets import AssetStore
-from processcraft.db import Database
+from plantcraft.api.app import create_app
+from plantcraft.assets import AssetStore
+from plantcraft.db import Database
 
 ROOT = Path(__file__).resolve().parents[1]
 PASSWORD = "password-123"

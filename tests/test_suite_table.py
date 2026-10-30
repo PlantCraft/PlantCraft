@@ -101,7 +101,7 @@ def test_the_sdk_enforces_the_same_table():
 
 
 def test_the_installer_uses_the_same_table():
-    from processcraft.apps.package import SUITE as PACKAGE_SUITE
+    from plantcraft.apps.package import SUITE as PACKAGE_SUITE
 
     table = _table()
     for app_id, (prefix, port, uid) in PACKAGE_SUITE.items():

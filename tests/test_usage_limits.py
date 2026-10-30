@@ -1,4 +1,4 @@
-"""Limits on how much one person asks API v1 for (``processcraft.api.usage``): a notebook, a
+"""Limits on how much one person asks API v1 for (``plantcraft.api.usage``): a notebook, a
 script or an assistant slows down its owner alone, never the apps of the suite."""
 
 from __future__ import annotations
@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.identity import issue_service_token
-from processcraft.auth.usage import Refusal, UsageStore
-from processcraft.db import Database
+from plantcraft.api.identity import issue_service_token
+from plantcraft.auth.usage import Refusal, UsageStore
+from plantcraft.db import Database
 from tests.test_route_permissions import ADMIN_PASSWORD, _login, app  # noqa: F401
 
 ROOT = Path(__file__).resolve().parents[1]

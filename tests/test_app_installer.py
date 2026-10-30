@@ -1,4 +1,4 @@
-"""The installer service (processcraft/apps/installer.py) with a fake Docker CLI.
+"""The installer service (plantcraft/apps/installer.py) with a fake Docker CLI.
 
 ``tests/fake_docker.py`` records the commands; the installer's files (compose service, proxy
 route, state, statuses) are real. ``tests/test_installer_live.py`` runs the same against Docker.
@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from processcraft.apps import installer as inst
-from processcraft.apps import package as pkg
+from plantcraft.apps import installer as inst
+from plantcraft.apps import package as pkg
 from tests import app_packages as ap
 
 FAKE = Path(__file__).with_name("fake_docker.py")
@@ -376,11 +376,11 @@ def test_the_installer_imports_only_the_package_module():
         if (
             isinstance(node, ast.ImportFrom)
             and node.module
-            and node.module.startswith("processcraft")
+            and node.module.startswith("plantcraft")
         ):
             found.add(node.module)
-    assert found == {"processcraft.apps"}
-    assert pkg.__name__ == "processcraft.apps.package"
+    assert found == {"plantcraft.apps"}
+    assert pkg.__name__ == "plantcraft.apps.package"
 
 
 def test_an_operation_request_starts_the_driver_once(env):

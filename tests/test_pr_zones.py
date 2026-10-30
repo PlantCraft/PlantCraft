@@ -28,7 +28,7 @@ def test_every_top_level_path_has_a_deliberate_zone():
 
 
 def test_files_land_in_their_zone():
-    assert zones.zone("processcraft/api/app.py") == "core"
+    assert zones.zone("plantcraft/api/app.py") == "core"
     assert zones.zone("sdk/python/plantcraft_sdk/blocks.py") == "core"
     assert zones.zone("docs/api/v1/openapi.json") == "core"
     assert zones.zone("apps/link/src/linkcraft/methods/signal/frozen.py") == "app: link"
@@ -46,7 +46,7 @@ def _run(paths: str, **env: str) -> subprocess.CompletedProcess:
 
 
 def test_a_fork_s_core_change_needs_an_issue():
-    core = "processcraft/api/app.py\n"
+    core = "plantcraft/api/app.py\n"
     assert _run(core, PR_FORK="true", PR_BODY="Makes it faster").returncode == 1
     assert _run(core, PR_FORK="true", PR_BODY="Closes #42").returncode == 0
     assert _run(core, PR_FORK="false", PR_BODY="").returncode == 0  # the owner's own

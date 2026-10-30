@@ -9,9 +9,9 @@ ci-all: ci
 	@for dir in apps/*/ simulator/; do echo "== $$dir"; $(MAKE) -C $$dir ci || exit 1; done
 
 # API v1 as this commit serves it (docs/api/v1/openapi.json) and its reference page; CI refuses a
-# commit whose API v1 differs from the file, or that breaks a release's (processcraft.api.contract).
+# commit whose API v1 differs from the file, or that breaks a release's (plantcraft.api.contract).
 api-contract:
-	python -m processcraft.api.contract write
+	python -m plantcraft.api.contract write
 
 lint:
 	ruff check .
@@ -30,7 +30,7 @@ test-fast:
 	python -m pytest -q --ignore=tests/e2e -m "not slow"
 	python -m pytest -q sdk/python/tests -m "not slow"
 
-# plantcraft-sdk (sdk/python) is a dependency of processcraft: install it from the tree, into
+# plantcraft-sdk (sdk/python) is a dependency of plantcraft: install it from the tree, into
 # the active virtual environment only. Nothing is installed when the SDK Python imports is already
 # this tree's; outside a virtual environment (and outside CI, which sets CI) it stops instead of
 # changing a shared Python. GitHub CI installs it in its own steps (.github/workflows/ci.yml).
@@ -197,7 +197,7 @@ simcraft-image:
 # with it install on a development stack (docs/app-package.md).
 .PHONY: dev-publisher
 dev-publisher:
-	python processcraft/apps/package.py keygen --name dev-publisher --out-dir keys
+	python plantcraft/apps/package.py keygen --name dev-publisher --out-dir keys
 	cp keys/dev-publisher.pub deploy/trusted-publishers/dev-publisher.pub
 
 # With the Simulator at SIMCRAFT_SRC its image is built too; without it, the bundle
@@ -219,6 +219,6 @@ isolation: image $(WITH_SIMCRAFT)
 lock:
 	uv pip compile deploy/requirements.in --python-version 3.13 \
 		--python-platform x86_64-manylinux_2_28 --generate-hashes --no-header --quiet \
-		--no-emit-package processcraft --no-emit-package plantcraft-sdk \
+		--no-emit-package plantcraft --no-emit-package plantcraft-sdk \
 		-o deploy/requirements.lock
 	sed -i '1i # Pinned, hashed dependencies of the Docker image (Python 3.13, Linux). Regenerate with\n# `make lock` after changing a pyproject.toml; the image build refuses any file whose hash differs.' deploy/requirements.lock

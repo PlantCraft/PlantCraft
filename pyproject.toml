@@ -1,5 +1,5 @@
 [project]
-name = "processcraft"
+name = "plantcraft"
 version = "0.5.0"
 description = "PlantCraft: the central app of the suite for process engineers (people, sign-in, data sources, signals and assets)"
 readme = "README.md"
@@ -54,9 +54,9 @@ e2e = [
 ]
 
 [project.scripts]
-plantcraft = "processcraft.cli:main"
+plantcraft = "plantcraft.cli:main"
 # The command's name before PlantCraft was renamed (2026-10-27); scripts that call it keep working.
-processcraft = "processcraft.cli:main"
+processcraft = "plantcraft.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -69,10 +69,10 @@ slow_seconds = 120
 suite_seconds = 1200  # about twice a run on a 4-core container (9 min, 2026-10-25)
 
 [tool.setuptools.packages.find]
-include = ["processcraft*"]
+include = ["plantcraft*"]
 
 [tool.setuptools.package-data]
-"processcraft.i18n" = ["locales/*.json"]
+"plantcraft.i18n" = ["locales/*.json"]
 
 [tool.ruff]
 line-length = 100

@@ -4,7 +4,7 @@ connections, at a glance (owner, 2026-10-21)."""
 
 from __future__ import annotations
 
-from processcraft.platform.datalayer import DataLayerError
+from plantcraft.platform.datalayer import DataLayerError
 from tests.test_collaboration import signed  # noqa: F401
 
 

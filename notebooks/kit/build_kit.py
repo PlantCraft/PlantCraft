@@ -21,7 +21,7 @@ click, no administrator, no internet):
 The app asks once for a connection code from Notebooks › Run on your computer (the server's
 address, a token of the person's own and the fingerprint of its CA; ``plantcraft_notebook.kit``).
 PlantCraft adds ``plantcraft.json`` (its address) and its local
-certificate authority to the zip as it sends it (``processcraft.notebooks.kits``); the setup and
+certificate authority to the zip as it sends it (``plantcraft.notebooks.kits``); the setup and
 the app are the same file for everyone. No token is ever in a kit.
 
 Runs once, online, for every system at once on any machine (``uv`` installs each system's own
@@ -159,7 +159,7 @@ def kit_version() -> str:
     """The package's version and a digest of everything a kit is made of."""
 
     digest = hashlib.sha256()
-    templates = HERE.parents[1] / "processcraft" / "notebooks" / "templates.py"
+    templates = HERE.parents[1] / "plantcraft" / "notebooks" / "templates.py"
     cells = HERE.parents[1] / "sdk" / "python" / "plantcraft_sdk" / "notebooks.py"
     for path in [
         HERE / "pins.json",
@@ -261,7 +261,7 @@ def examples(kit: Path) -> None:
 
     root = HERE.parents[1]
     load("plantcraft_sdk.notebooks", root / "sdk" / "python" / "plantcraft_sdk" / "notebooks.py")
-    templates = load("plantcraft_examples", root / "processcraft" / "notebooks" / "templates.py")
+    templates = load("plantcraft_examples", root / "plantcraft" / "notebooks" / "templates.py")
 
     # Examples/PlantCraft, as PlantCraft serves it; the apps' folders come with the first sync.
     folder = kit / "examples" / "PlantCraft"
@@ -329,7 +329,7 @@ MAC_PLIST = """<?xml version="1.0" encoding="UTF-8"?>
 <dict>
   <key>CFBundleName</key><string>PlantCraft Notebooks</string>
   <key>CFBundleDisplayName</key><string>PlantCraft Notebooks</string>
-  <key>CFBundleIdentifier</key><string>org.plantcraft.notebooks</string>
+  <key>CFBundleIdentifier</key><string>org.processcraft.notebooks</string>
   <key>CFBundleExecutable</key><string>PlantCraft Notebooks</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>@VERSION@</string>

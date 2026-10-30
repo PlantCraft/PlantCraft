@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from processcraft.apps import package, release
+from plantcraft.apps import package, release
 
 ROOT = Path(__file__).resolve().parents[1]
 DEPLOY = ROOT / "deploy"
@@ -143,7 +143,7 @@ def suite(tmp_path_factory):
                    "-e", f"PLANTCRAFT_INSTALL_DIR={prefix}", "-e", f"COMPOSE_PROJECT_NAME={project}",
                    "-v", "/var/run/docker.sock:/var/run/docker.sock", "-v", f"{prefix}:{prefix}",
                    "--entrypoint", "python", f"processcraft-installer:{env('PLANTCRAFT_VERSION')}",
-                   "-m", "processcraft.apps.operations", "health"]  # fmt: skip
+                   "-m", "plantcraft.apps.operations", "health"]  # fmt: skip
         result = _run(*command, check=False)
         return json.loads(result.stdout)
 

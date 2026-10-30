@@ -10,7 +10,7 @@ set -euo pipefail
 trap 'echo "::error::notebook-kits stopped at line $LINENO: $BASH_COMMAND"' ERR
 : "${SUITE_DIR:?SUITE_DIR is required}"
 target="$SUITE_DIR/data/processcraft/notebook-kits"
-# The local CA PlantCraft puts in each kit (processcraft/notebooks/kits.py reads /data/local-ca-root.crt).
+# The local CA PlantCraft puts in each kit (plantcraft/notebooks/kits.py reads /data/local-ca-root.crt).
 # install.sh copies it at install and update; an installation older than that copy gets it here.
 ca="$SUITE_DIR/local-ca-root.crt"
 if [ -f "$ca" ] && ! cmp -s "$ca" "$SUITE_DIR/data/processcraft/local-ca-root.crt"; then

@@ -13,12 +13,12 @@ from pathlib import Path
 
 import pytest
 
+from plantcraft.compute import LEASE_SECONDS, MAX_ATTEMPTS
 from plantcraft_sdk.client import PlantCraftClient
 from plantcraft_sdk.compute import folder
 from plantcraft_sdk.compute.client import ComputeClient
 from plantcraft_sdk.compute.executor import Executor
 from plantcraft_sdk.compute.gateway import Gateway
-from processcraft.compute import LEASE_SECONDS, MAX_ATTEMPTS
 from tests.contract.test_api_v1 import ADMIN, PASSWORD, _app_key, _as, _auth, _rt
 
 WORKER = "/api/compute-worker"

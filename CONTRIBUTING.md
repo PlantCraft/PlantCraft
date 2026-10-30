@@ -23,7 +23,7 @@ everything on top of it is open to grow. Before you start, find where your chang
 
 | Zone | Folders | Open an issue first? | What a pull request needs |
 |---|---|---|---|
-| **Core** | `processcraft/`, `frontend/`, `sdk/python/`, `ui/`, `docs/api/v1/`, `deploy/`, `.github/`, `ci/`, `dev/`, `AGENTS.md` | **Yes**, and wait for a maintainer to agree on the approach | An additive change (nothing that existing apps or installations rely on breaks), with its tests; the owner reviews it ([CODEOWNERS](.github/CODEOWNERS)) |
+| **Core** | `plantcraft/`, `frontend/`, `sdk/python/`, `ui/`, `docs/api/v1/`, `deploy/`, `.github/`, `ci/`, `dev/`, `AGENTS.md` | **Yes**, and wait for a maintainer to agree on the approach | An additive change (nothing that existing apps or installations rely on breaks), with its tests; the owner reviews it ([CODEOWNERS](.github/CODEOWNERS)) |
 | **Official apps** | `apps/<app>/`, `simulator/`, `templates/app/` | For a new feature or a new dependency, yes; for a bug fix, no | Stays inside one app, `make ci` green in that app's folder, no import from another app or from the platform's code |
 | **Content** | Methods, blocks, algorithms, alarm rule templates, model libraries and notebook examples inside the app that owns them; `docs/`; translations | No | A public reference for every method, tests on known answers, the description format checks green |
 | **Your own app** | Your own repository, from [`templates/app`](templates/app/README.md) | No | Nothing here: it builds on the published SDK and installs as a signed package |
@@ -123,7 +123,7 @@ format is in [docs/blocks.md](docs/blocks.md).
   [docs/architecture.md](docs/architecture.md). `tests/test_architecture.py`
   fails on any violation.
 - **Storage.** Each module owns its tables through a `Store` subclass
-  (`processcraft/db.py`). Add columns with a guarded `ALTER TABLE` in the
+  (`plantcraft/db.py`). Add columns with a guarded `ALTER TABLE` in the
   store's `__init__`; never edit existing rows by hand.
 - **Apps of the suite** live in `apps/<app>` (each its own image, package and `make ci`) and reach
   PlantCraft only through API v1 (`docs/api-v1.md`); PlantCraft never imports them, and
@@ -142,9 +142,9 @@ English is the source language of every user-facing string; Brazilian
 Portuguese (pt-BR) is a translation. **Every new or changed string needs its
 English text and its pt-BR entry in the same change.**
 
-- Backend: `from processcraft.i18n import t` and
+- Backend: `from plantcraft.i18n import t` and
   `t("Loop {loop} not found.", loop=loop_id)`. The English text is the key in
-  `processcraft/i18n/locales/pt-BR.json`. Call `t()` when the text is produced,
+  `plantcraft/i18n/locales/pt-BR.json`. Call `t()` when the text is produced,
   not at import time.
 - Frontend: `import { t, locale } from "./i18n"` and `t("Save")`, with keys in
   `frontend/src/locales/pt-BR.json`. Use `locale` for `Intl` and

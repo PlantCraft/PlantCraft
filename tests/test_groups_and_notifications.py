@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-import processcraft.notify as notify
+import plantcraft.notify as notify
 from tests.test_collaboration import _person, signed  # noqa: F401
 
 

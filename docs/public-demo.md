@@ -30,7 +30,7 @@ is the read-only visitor account `demo`, in one of a few places at once:
 
 When the visit ends, the browser is back on the sign-in page, which thanks the visitor and offers
 to enter again. The places are in the database (`demo_visits`, `demo_line`), so every server
-process sees the same ones (`processcraft/auth/demo_visits.py`).
+process sees the same ones (`plantcraft/auth/demo_visits.py`).
 
 Each visit also leaves a line in `demo_visit_log` (when it started, how long it was used, how long
 its visitor waited in line; no address) and the pages it had in front in `demo_visit_pages` (paths
@@ -91,7 +91,7 @@ The two query limits travel in the visit's token (`demo` claim) and are applied 
 waits its turn, up to 30 s, then answers 429 "The demo is busy". A visit's tokens live two
 minutes and the frame renews them every 30 s, so a visit that ended loses the apps within about
 two minutes even in a tab left open. The series reads of a visit through API v1 count against
-the visit's own budget (`processcraft.api.usage`), not one shared by every visitor.
+the visit's own budget (`plantcraft.api.usage`), not one shared by every visitor.
 
 The defaults come from the multi-user load test (`ci/bench/load_users.py`, 2026-10-27, 4 vCPU and
 16 GB, the whole suite, with that day's speed fixes): 10 people kept a screen's p95 at 1.0 s and 50 at 1.6 s, so 10 places are

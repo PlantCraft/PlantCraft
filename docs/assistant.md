@@ -21,7 +21,7 @@ uses one.
 ## What the model can read
 
 The model has no database access. It reads the plant through the same read-only tools as the
-MCP server (`processcraft/assistant_access/mcp.py`, [assistant-access.md](assistant-access.md)):
+MCP server (`plantcraft/assistant_access/mcp.py`, [assistant-access.md](assistant-access.md)):
 search and read assets, asset types, signals, values and history, the apps' latest results and
 their history, events, runs, follow-up actions and the texts the apps wrote for assistants.
 
@@ -40,7 +40,7 @@ their history, events, runs, follow-up actions and the texts the apps wrote for 
 Owner, 2026-10-26 (plan "Documents", D7): an app gives the assistant a read-only tool of its own
 without a change to PlantCraft. It declares the tool in its `app.toml` and serves it under its
 prefix; PlantCraft lists it to the model as `<app id>_<id>` beside its own tools, in Desk's
-assistant, the side panel and the MCP server (`processcraft/assistant_access/app_tools.py`).
+assistant, the side panel and the MCP server (`plantcraft/assistant_access/app_tools.py`).
 Desk's assistant also names the offered app tools in its instructions and tells the model to
 search them before it answers "there is none" or gives general advice: in the first evaluation
 (2026-10-27, 40 questions on the demo plant's documents, gpt-5-nano) the model called the
@@ -198,7 +198,7 @@ the object's fields are known and proposes it; the person creates it with one cl
 work opens the standard assistant chat with a context PlantCraft builds.
 
 - **Declared as data, once.** PlantCraft's own works are `PLATFORM_WORKS`
-  (`processcraft/assistant_works`); an app declares its own in `app.toml` and the SDK sends them
+  (`plantcraft/assistant_works`); an app declares its own in `app.toml` and the SDK sends them
   with its contributions:
 
   ```toml
@@ -277,7 +277,7 @@ work opens the standard assistant chat with a context PlantCraft builds.
 - **Who sees what.** `GET /api/assistant/works?page=` lists only the works of the person's level
   (a create work declares the level its route takes: an editor for shared objects, a viewer for
   their own); in a public demo visitors get none.
-- **PlantCraft's works** (`processcraft/assistant_works/platform.py`), page by page:
+- **PlantCraft's works** (`plantcraft/assistant_works/platform.py`), page by page:
 
   | Page | Works |
   |---|---|
@@ -327,7 +327,7 @@ guides at the top. The apps' own guides reach the model through what the apps wr
 
 Setup › Language models › **Evaluate** asks a fixed set of questions to the installation's model
 (or a specialist's) with the assistant's own tools and permissions, as the administrator who runs
-it, and checks each answer against a golden answer (`processcraft/assistant_chat/evals.py`). The
+it, and checks each answer against a golden answer (`plantcraft/assistant_chat/evals.py`). The
 golden answers are not written by hand: each run reads them from this installation's data, so
 the cases fit the demo plant and a real one.
 
@@ -355,7 +355,7 @@ or a specialist's instructions.
 
 Owner, 2026-10-25: "run the model with the context the application adds from the person's
 choice, and see whether it can read that context and whether the context is enough".
-**Evaluate works** (`processcraft/assistant_chat/work_evals.py`) makes one case per work offered
+**Evaluate works** (`plantcraft/assistant_chat/work_evals.py`) makes one case per work offered
 to an administrator, PlantCraft's and the installed apps':
 
 - **The same start as the button beside the title.** The question is the work's title, as the
@@ -396,7 +396,7 @@ conversations stay, and the `/api/v1/assistant` routes stay for apps that still 
 
 ## API
 
-Session routes, each person's own chats only (`processcraft/api/routers/assistant_chat.py`):
+Session routes, each person's own chats only (`plantcraft/api/routers/assistant_chat.py`):
 
 | Route | What |
 |---|---|
@@ -416,4 +416,4 @@ Session routes, each person's own chats only (`processcraft/api/routers/assistan
 | `POST /api/assistant/evals` | `{profile?}`: a new run, in the background (202; 409 while one runs) |
 | `GET /api/assistant/evals/{id}` | One run with each case's result |
 
-Tables: `assistant_chats`, `assistant_chat_messages`, `assistant_evals` (`processcraft/assistant_chat`, layer 2).
+Tables: `assistant_chats`, `assistant_chat_messages`, `assistant_evals` (`plantcraft/assistant_chat`, layer 2).

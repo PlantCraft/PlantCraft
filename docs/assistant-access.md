@@ -86,7 +86,7 @@ Streamable HTTP, `POST /mcp`, JSON-RPC 2.0, protocol versions `2025-06-18` (pref
 `2025-03-26` and `2024-11-05`. The server answers each request with one JSON object. It has no
 session and no server-sent stream (`GET /mcp` is 405). It serves `initialize`, `ping`,
 `tools/list` and `tools/call`; a notification is answered 202. The protocol is written in
-`processcraft/assistant_access/mcp.py` without a new dependency.
+`plantcraft/assistant_access/mcp.py` without a new dependency.
 
 ## The same tokens in a notebook
 

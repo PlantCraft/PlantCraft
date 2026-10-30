@@ -15,9 +15,9 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.assets import asset_id_for
-from processcraft.config import load_scenario
+from plantcraft.api.app import create_app
+from plantcraft.assets import asset_id_for
+from plantcraft.config import load_scenario
 
 ROOT = Path(__file__).resolve().parents[1]
 SCENARIO = ROOT / "scenarios" / "opcua_demo.json"

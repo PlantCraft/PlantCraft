@@ -8,6 +8,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from plantcraft.api.routers.assistant_chat import PageInfo
+from plantcraft.assistant_works import LIMITS, Work, WorkRegistry, envelope, render
 from plantcraft_sdk.contributes import (
     AssistantTable,
     AssistantWork,
@@ -16,8 +18,6 @@ from plantcraft_sdk.contributes import (
     contributions,
     fields_schema,
 )
-from processcraft.api.routers.assistant_chat import PageInfo
-from processcraft.assistant_works import LIMITS, Work, WorkRegistry, envelope, render
 from tests.test_assistant_chat import LOCAL, _ask
 from tests.test_collaboration import _person, signed  # noqa: F401
 

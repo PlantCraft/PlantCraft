@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INTERFACES = [ROOT / "frontend" / "src", ROOT / "ui" / "src"] + sorted(
     (ROOT / "apps").glob("*/frontend/src")
 )
-SERVERS = [ROOT / "processcraft", ROOT / "sdk" / "python" / "plantcraft_sdk"] + sorted(
+SERVERS = [ROOT / "plantcraft", ROOT / "sdk" / "python" / "plantcraft_sdk"] + sorted(
     (ROOT / "apps").glob("*/src")
 )
 CONVERTER = ROOT / "ui" / "src" / "timeZone.ts"
@@ -83,7 +83,7 @@ def test_the_servers_never_write_utc_into_what_people_read():
                 if UTC_TEXT.search(line):
                     wrong.append(
                         f"{path.relative_to(ROOT)}:{number}: 'UTC' in a text for people; write the "
-                        "time on the plant's clock (processcraft.config.plant_clock, "
+                        "time on the plant's clock (plantcraft.config.plant_clock, "
                         "plantcraft_sdk.utc.local_text)"
                     )
     assert not wrong, "\n".join(wrong)

@@ -161,7 +161,7 @@ An app puts dated items in **calendar feeds** and gives **to-dos** through API v
 (`docs/api-v1.md`, "Calendar feeds and to-dos in Desk"); it declares each feed in
 `[[contributes.calendar]]` and each kind of to-do in `[[contributes.todo]]`
 (`docs/app-standard.md`, section 4b), and Desk refuses what it did not declare. Desk owns the
-format (`plantcraft_sdk.desk`), and `processcraft.desk.app_items` keeps the items.
+format (`plantcraft_sdk.desk`), and `plantcraft.desk.app_items` keeps the items.
 
 - **Calendar.** Each feed is one chip beside "Scheduled runs", named after the app and the feed;
   a feed declared `visible = false` starts off. A person sees the items for them (`user:`, one of
@@ -191,5 +191,5 @@ format (`plantcraft_sdk.desk`), and `processcraft.desk.app_items` keeps the item
 | POST | `/team/{group}/handover?day` | The group's handover note of the day, made by the first who opens it. |
 | GET, PUT | `/settings` | Admins: calendar links and allowed servers. |
 
-Tables (layer 2, `processcraft/desk`): `desk_todos`, `desk_todo_lists`, `desk_follows`,
+Tables (layer 2, `plantcraft/desk`): `desk_todos`, `desk_todo_lists`, `desk_follows`,
 `desk_events`, `desk_notes`, `desk_calendars`, `desk_triage`, `desk_settings`.

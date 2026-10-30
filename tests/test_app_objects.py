@@ -13,9 +13,9 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from plantcraft.api import app_proxy as proxy
+from plantcraft.api import notebook_examples as examples
 from plantcraft_sdk.contributes import ContributionsIn
-from processcraft.api import app_proxy as proxy
-from processcraft.api import notebook_examples as examples
 from tests.test_notebooks import _routed, _turn_on, dist, pc  # noqa: F401
 from tests.test_route_permissions import _login, app  # noqa: F401
 

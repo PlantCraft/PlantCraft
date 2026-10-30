@@ -733,8 +733,8 @@ start_stack() {
 # it to data/<id>-app-key (the app's user, 0600) and restarts the app with it.
 APP_KEY_SNIPPET='
 import os, sys
-from processcraft.config import load_scenario
-from processcraft.platform.workspace import Workspace
+from plantcraft.config import load_scenario
+from plantcraft.platform.workspace import Workspace
 app_id, name = sys.argv[1], sys.argv[2]
 workspace = Workspace(load_scenario(os.environ["PLANTCRAFT_SCENARIO"]).storage.sqlite_path)
 record, key = workspace.app_keys.create(app_id, label=f"{name} (install.sh)", actor="install.sh")
@@ -772,7 +772,7 @@ provision_app_keys() {
         die "${restart[*]} did not become healthy with the app key: see docker compose logs ${restart[*]}"
 }
 
-# The demo story (processcraft/demo_seed.py): idempotent, so every install or upgrade with the
+# The demo story (plantcraft/demo_seed.py): idempotent, so every install or upgrade with the
 # demo profile repairs it. A failure is reported, never fatal: the suite itself is up.
 seed_demo() {
     [[ ",$(env_get COMPOSE_PROFILES "$PREFIX/.env")," == *",demo,"* ]] || return 0
@@ -803,7 +803,7 @@ print_access() {
         echo "  HTTPS:         client certificate in certs/cert.pem"
     else
         # The local CA's public root certificate, readable for distribution to browsers.
-        # PlantCraft adds it to the Notebooks kits people download (processcraft/notebooks/kits.py).
+        # PlantCraft adds it to the Notebooks kits people download (plantcraft/notebooks/kits.py).
         as_root "$(helper_image)" "cp /install/data/proxy/caddy/pki/authorities/local/root.crt /install/local-ca-root.crt && chmod 0644 /install/local-ca-root.crt && cp /install/local-ca-root.crt /install/data/processcraft/local-ca-root.crt" ||
             warn "could not copy the local CA root certificate"
         echo "  HTTPS:         local CA; install this root certificate in the browsers: $ca"
@@ -893,6 +893,10 @@ do_install() {
 }
 
 # Updates (docs/operations.md, section 3) -------------------------------------------------------
+
+# The installer images of every version answer to the package's old name, processcraft (0.5.1 and
+# later through plantcraft/legacy.py): the calls below run on the version installed, which may be
+# older than this script.
 
 # True when the installer image of VERSION has the operations driver and release checks.
 has_ops() { # has_ops VERSION
@@ -1126,7 +1130,7 @@ run_installer() { # run_installer ARGS...
         "processcraft-installer:$version" "$@"
 }
 
-# The operations driver (processcraft.apps.operations): the installer image as root, no network,
+# The operations driver (plantcraft.apps.operations): the installer image as root, no network,
 # the install folder at its own path and the Docker socket. The same code the Backups page runs.
 run_driver() { # run_driver ARGS...
     local version image project attempt code=0

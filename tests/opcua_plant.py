@@ -17,7 +17,7 @@ import socket
 import threading
 from datetime import datetime, timedelta, timezone
 
-from processcraft.config import LoopConfig
+from plantcraft.config import LoopConfig
 
 NAMESPACE_URI = "urn:processcraft:plantcraft"
 

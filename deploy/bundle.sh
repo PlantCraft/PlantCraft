@@ -230,7 +230,7 @@ for app in "${!bundled[@]}"; do
             log "$app:${bundled[$app]} carries no /app/sbom.json: no $app SBOM in this bundle"
         fi
         # Its [permissions], pinned in the signed release.json: PlantCraft holds the app's token
-        # to them, whatever the app declares when it starts (processcraft.apps.scopes).
+        # to them, whatever the app declares when it starts (plantcraft.apps.scopes).
         docker cp "$container:/app/app.toml" "$CHANGELOGS/$app.toml" >/dev/null 2>&1 ||
             die "$app:${bundled[$app]} carries no /app/app.toml: its permissions cannot be pinned"
         changelog_args+=(--manifest "$app=$CHANGELOGS/$app.toml")
@@ -255,7 +255,7 @@ else
 fi
 
 log "Writing release.json and RELEASE-NOTES.md"
-PYTHONPATH="$ROOT" "$PYTHON" -m processcraft.apps.release make "$OUT" \
+PYTHONPATH="$ROOT" "$PYTHON" -m plantcraft.apps.release make "$OUT" \
     --upgrade-from "$UPGRADE_FROM" "${changelog_args[@]}"
 
 log "Writing SHA256SUMS"
@@ -263,7 +263,7 @@ sums="$(cd "$OUT" && find . -type f -printf '%P\n' | LC_ALL=C sort | xargs sha25
 printf '%s\n' "$sums" >"$OUT/SHA256SUMS"
 if [ -n "$RELEASE_KEY" ]; then
     log "Signing SHA256SUMS as $RELEASE_PUBLISHER"
-    PYTHONPATH="$ROOT" "$PYTHON" -m processcraft.apps.release sign "$OUT" \
+    PYTHONPATH="$ROOT" "$PYTHON" -m plantcraft.apps.release sign "$OUT" \
         --key "$RELEASE_KEY" --publisher "$RELEASE_PUBLISHER"
 else
     log "WARNING: RELEASE_KEY not set: the bundle is not signed (installations that trust a publisher refuse it without --allow-unsigned)"
@@ -273,7 +273,7 @@ log "Packing $NAME.tar.gz"
 tar -C "$DIST" -czf "$DIST/$NAME.tar.gz" "$NAME"
 (cd "$DIST" && sha256sum "$NAME.tar.gz" >"$NAME.tar.gz.sha256")
 if [ -n "$RELEASE_KEY" ]; then
-    PYTHONPATH="$ROOT" "$PYTHON" -m processcraft.apps.release sign-file "$DIST/$NAME.tar.gz.sha256" \
+    PYTHONPATH="$ROOT" "$PYTHON" -m plantcraft.apps.release sign-file "$DIST/$NAME.tar.gz.sha256" \
         --key "$RELEASE_KEY"
 fi
 log "Done: $DIST/$NAME.tar.gz ($(du -h "$DIST/$NAME.tar.gz" | cut -f1))"

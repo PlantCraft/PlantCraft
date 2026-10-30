@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
-from processcraft.auth.public_demo import RateLimiter, public_demo
-from processcraft.specialists.profiles import models_allowed, models_allowed_for
+from plantcraft.api.app import create_app
+from plantcraft.auth.public_demo import RateLimiter, public_demo
+from plantcraft.specialists.profiles import models_allowed, models_allowed_for
 
 ROOT = Path(__file__).resolve().parents[1]
 VISITOR_PASSWORD = "plantcraft-demo"

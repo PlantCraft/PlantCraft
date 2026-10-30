@@ -135,7 +135,7 @@ class _View:
 
 
 def test_seed_creates_it_once_and_replaces_the_old_one_page_diagrams() -> None:
-    from processcraft.demo_seed import Suite, view_diagrams
+    from plantcraft.demo_seed import Suite, view_diagrams
 
     view = _View()
     view.diagrams["old"] = {"name": "Atmospheric column", "tags": ["demo"], "elements": []}
@@ -152,7 +152,7 @@ def test_seed_creates_it_once_and_replaces_the_old_one_page_diagrams() -> None:
 
 
 def test_seed_redraws_the_paged_demo_display_on_one_page_and_leaves_a_redrawn_one() -> None:
-    from processcraft.demo_seed import Suite, view_diagrams
+    from plantcraft.demo_seed import Suite, view_diagrams
 
     paged = {"id": "overview", "name": "Overview"}, {"id": "column", "name": "Column"}
     view = _View()

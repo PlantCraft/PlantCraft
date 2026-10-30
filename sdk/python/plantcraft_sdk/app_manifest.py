@@ -68,12 +68,12 @@ SUITE: dict[str, SuiteRow] = {
 SERVICES: dict[str, tuple[int | None, int]] = {
     "proxy": (8443, 10003),
     "installer": (None, 10005),
-    # The one way out to a language model in the cloud (PlantCraft's image, processcraft/egress).
+    # The one way out to a language model in the cloud (PlantCraft's image, plantcraft/egress).
     "llm-egress": (3128, 10014),
     # The local compute worker's gateway and the apps' executors (docs/compute.md).
     "compute": (None, 10020),
 }
-# The uids PlantCraft hands to apps (processcraft/apps/package.py keeps the same range).
+# The uids PlantCraft hands to apps (plantcraft/apps/package.py keeps the same range).
 FIRST_UID, LAST_UID = 10002, 65533
 # An app outside the table names no port and no uid (scale review E5, 2026-10-25): each app runs
 # in its own container, so every one listens on the same port inside it, and its container user

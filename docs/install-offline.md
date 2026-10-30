@@ -384,7 +384,7 @@ never in a repository or on a build server), `bundle.sh` writes `SHA256SUMS.sig`
 bundle and `<bundle>.tar.gz.sha256.sig` beside it. The key can stay on an offline machine
 instead, since only two small files are signed there (docs/operations.md, section 3). The key
 id, the OpenSSH fingerprint and the `allowed_signers` line to publish come from
-`python -m processcraft.apps.release fingerprint deploy/trusted-publishers/processcraft.pub --publisher processcraft`.
+`python -m plantcraft.apps.release fingerprint deploy/trusted-publishers/processcraft.pub --publisher processcraft`.
 
 Each app is included when its image `<app>:$<APP>_VERSION` exists
 locally (built in its folder, `apps/<app>`, with `make image`; `LINKCRAFT_VERSION`,

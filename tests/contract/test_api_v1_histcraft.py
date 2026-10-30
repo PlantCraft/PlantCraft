@@ -15,8 +15,8 @@ from urllib.parse import unquote
 import httpx
 import pytest
 
+from plantcraft.platform.datalayer import DataLayerError
 from plantcraft_sdk import jwt
-from processcraft.platform.datalayer import DataLayerError
 from tests.contract.test_api_v1 import ADMIN, PASSWORD, SpySource, _app_key, _as, _auth, _rt
 
 URL = "http://histcraft.test/hist"
@@ -603,7 +603,7 @@ def test_the_interface_charts_read_through_histcraft(hist):
 def test_an_opcua_source_sends_only_the_options_histcraft_takes():
     """The demo map's OPC UA source carries auth_type: HistCraft refuses it ("Unknown option")."""
 
-    from processcraft.platform.datalayer.histcraft import source_body
+    from plantcraft.platform.datalayer.histcraft import source_body
 
     settings = {
         "endpoint_url": "opc.tcp://plantcraft:4840/plantcraft/",

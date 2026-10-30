@@ -32,7 +32,7 @@ os.environ.update(
 sys.path.insert(0, str(root))
 from fastapi.testclient import TestClient
 
-from processcraft.api.app import create_app
+from plantcraft.api.app import create_app
 
 with TestClient(create_app()) as client:
     client.get("/api/health")

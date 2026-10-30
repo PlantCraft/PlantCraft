@@ -117,7 +117,7 @@ def test_a_role_per_app_goes_into_the_token(signed):
     assert saved.status_code == 200, saved.text
     assert saved.json()["app_roles"] == {"dashcraft": "viewer"}
     rt = signed.app.state.runtime
-    from processcraft.api.identity import user_claims
+    from plantcraft.api.identity import user_claims
 
     assert user_claims(rt, "ana")["apps"] == {"linkcraft": "editor", "dashcraft": "viewer"}
     # Leaving app_roles out keeps them; an unknown app or role is refused.

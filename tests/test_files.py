@@ -1,4 +1,4 @@
-"""Files written whole or not at all, created with their final mode (processcraft.files)."""
+"""Files written whole or not at all, created with their final mode (plantcraft.files)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import stat
 
 import pytest
 
-from processcraft.files import write_atomic
+from plantcraft.files import write_atomic
 
 
 def _mode(path) -> int:

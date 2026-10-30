@@ -66,7 +66,7 @@ EXPECTED_NETWORKS = {
 }
 # HistCraft's database network: HistCraft, its collector and its database only.
 HISTDB_SERVICES = {"histcraft", "histcraft-collector", "histcraft-db"}
-# llm-egress (processcraft/egress): the only service that resolves internet names, and opens a
+# llm-egress (plantcraft/egress): the only service that resolves internet names, and opens a
 # tunnel only to the hosts of the language model providers PlantCraft lists.
 LLM_EGRESS = "llm-egress"
 LLM_SERVICES = {"processcraft", LLM_EGRESS}
@@ -296,7 +296,7 @@ def test_llm_egress_opens_only_what_plantcraft_lists() -> None:
     services = _services()
     gate = services[LLM_EGRESS]
     assert gate["image"].startswith("processcraft:") and _uid(gate["user"]) == "10014"
-    assert gate["command"] == ["python", "-m", "processcraft.egress", "serve"]
+    assert gate["command"] == ["python", "-m", "plantcraft.egress", "serve"]
     assert gate["volumes"] == ["./data/egress:/egress:ro"]
     assert "secrets" not in gate and "profiles" not in gate
     assert gate["environment"]["PLANTCRAFT_EGRESS_ALLOWLIST"] == "/egress/allow.json"
@@ -482,7 +482,7 @@ def test_proxy_routes_and_stays_offline() -> None:
     edge = r"\{\s*import upstream (\d+)s\s*import edge\s*\}"
     assert re.search(rf"handle \{{\s*reverse_proxy processcraft:8060 {edge}\s*\}}", code)
     # PlantCraft learns which requests came from outside (people's reads count against their
-    # limits, processcraft/api/usage.py): the proxy sets the mark, whatever the client sent.
+    # limits, plantcraft/api/usage.py): the proxy sets the mark, whatever the client sent.
     assert re.search(r"\(edge\) \{\s*header_up X-PlantCraft-Edge 1\s", code)
     assert code.count("import edge") == code.count("reverse_proxy processcraft:8060")
     # Only refused connections are retried, for a bounded time.
@@ -650,8 +650,8 @@ def test_install_lists_every_app_whose_profile_is_on(
 def test_install_accepts_the_app_keys_processcraft_issues(tmp_path: Path) -> None:
     # The isolation job runs without PlantCraft installed; the backend job runs this test.
     pytest.importorskip("plantcraft_sdk")
-    from processcraft.auth.app_keys import AppKeyStore
-    from processcraft.db import Database
+    from plantcraft.auth.app_keys import AppKeyStore
+    from plantcraft.db import Database
 
     install = (DEPLOY / "install.sh").read_text(encoding="utf-8")
     pattern = re.search(r'\[\[ ! "\$key" =~ (\S+) \]\]', install).group(1)

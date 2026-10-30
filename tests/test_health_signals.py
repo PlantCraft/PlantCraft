@@ -1,4 +1,4 @@
-"""The suite's health as signals (processcraft.watch.recorder): what is written to "System"."""
+"""The suite's health as signals (plantcraft.watch.recorder): what is written to "System"."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 
-from processcraft.watch.recorder import HealthRecorder, ServerMetrics, server_urls
+from plantcraft.watch.recorder import HealthRecorder, ServerMetrics, server_urls
 from tests.test_watch import FakeDesk
 
 NOW = datetime(2026, 10, 22, 23, 0, tzinfo=timezone.utc)

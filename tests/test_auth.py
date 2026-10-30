@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from processcraft.auth.config import AuthConfig
+from plantcraft.auth.config import AuthConfig
 
 
 def test_disabled_authentication_requires_no_credentials(monkeypatch) -> None:

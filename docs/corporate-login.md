@@ -8,7 +8,7 @@ access level, the apps they open with their role in each, and the groups they be
 account is created the first time they sign in, with their name, email, job title, sector, phone,
 organization and unit read from the directory.
 
-Set it up in **Settings › Corporate sign-in** (admins). Code: `processcraft/directory`, routes
+Set it up in **Settings › Corporate sign-in** (admins). Code: `plantcraft/directory`, routes
 `/api/directory` (admins) and `/api/sso/*` (the sign-in page).
 
 ## Safe by default

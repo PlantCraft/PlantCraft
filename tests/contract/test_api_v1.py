@@ -17,13 +17,13 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from plantcraft.api.app import create_app
+from plantcraft.api.identity import issue_user_token
 from plantcraft_sdk import jwt
 from plantcraft_sdk.auth import AuthError, TokenVerifier
 from plantcraft_sdk.client import PlantCraftClient
 from plantcraft_sdk.contract import MAX_BATCH_SIGNALS, BatchBuilder
 from plantcraft_sdk.testing import FakePlantCraft
-from processcraft.api.app import create_app
-from processcraft.api.identity import issue_user_token
 
 ROOT = Path(__file__).resolve().parents[2]
 ADMIN, PASSWORD = "root", "root-password-123"
@@ -661,7 +661,7 @@ def test_batch_series_reads_the_source_once(central):
 
 
 def test_a_full_batch_postpones_the_rest_with_413(central, monkeypatch):
-    from processcraft.platform.datalayer import local
+    from plantcraft.platform.datalayer import local
 
     monkeypatch.setattr(local, "BatchBuilder", lambda: BatchBuilder(100))
     window = {"start": "2026-01-01T11:00:00Z", "end": "2026-01-01T11:10:00Z"}
@@ -677,7 +677,7 @@ def test_a_full_batch_postpones_the_rest_with_413(central, monkeypatch):
 
 
 def test_the_client_reads_a_full_batch_in_several_requests(central, monkeypatch):
-    from processcraft.platform.datalayer import local
+    from plantcraft.platform.datalayer import local
 
     monkeypatch.setattr(local, "BatchBuilder", lambda: BatchBuilder(100))
     client = PlantCraftClient("http://testserver", _token(central, "op"), http_client=central)

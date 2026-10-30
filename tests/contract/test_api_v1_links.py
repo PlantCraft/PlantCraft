@@ -370,7 +370,7 @@ def test_a_bare_signal_subject_is_stored_by_its_signal_id(central):
 def test_stored_bare_signal_refs_are_renamed_once(central):
     """Rows written before D2 (``signal:<tag>``) gain their source the first time it runs."""
 
-    from processcraft.platform.signals import RENAME_MIGRATION, rename_signal_refs
+    from plantcraft.platform.signals import RENAME_MIGRATION, rename_signal_refs
 
     rt = _rt(central)
     workspace = rt.workspace

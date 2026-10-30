@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from processcraft.api.identity import issue_user_token
+from plantcraft.api.identity import issue_user_token
 from tests.test_collaboration import (  # noqa: F401 (the fixture)
     _person,
     _publish_result,

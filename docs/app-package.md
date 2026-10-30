@@ -3,9 +3,9 @@
 How an app of the suite is packaged, signed, checked and installed. What an app is, its
 `app.toml`, its image and its runtime settings are in [app-standard.md](app-standard.md)
 (sections 4, 7 and 8); this file is the package format and the installer behind the Apps page.
-The code is `processcraft/apps/package.py` (format and checks, standard library plus
-`cryptography`), `processcraft/apps/installer.py` (the installer service) and
-`processcraft/apps/manager.py` (what the Apps page does).
+The code is `plantcraft/apps/package.py` (format and checks, standard library plus
+`cryptography`), `plantcraft/apps/installer.py` (the installer service) and
+`plantcraft/apps/manager.py` (what the Apps page does).
 
 ## 1. The file
 
@@ -82,16 +82,16 @@ From any repository, with `docker`, `python3` and `cryptography`:
 
 ```bash
 # Once per publisher: a key pair. Keep the .key outside every repository.
-python3 processcraft/apps/package.py keygen --name processcraft --out-dir ~/secure/keys
+python3 plantcraft/apps/package.py keygen --name processcraft --out-dir ~/secure/keys
 # Per release: build the image, then the package (SBOM from syft when --sbom is omitted).
 docker build -t linkcraft:0.1.0 .
 deploy/package.sh --app app.toml --key ~/secure/keys/processcraft.key --sbom sbom.spdx.json --out dist/
 # dist/linkcraft-0.1.0.pcapp and dist/linkcraft-0.1.0.pcapp.sha256
-python3 processcraft/apps/package.py verify --trusted deploy/trusted-publishers dist/linkcraft-0.1.0.pcapp
+python3 plantcraft/apps/package.py verify --trusted deploy/trusted-publishers dist/linkcraft-0.1.0.pcapp
 ```
 
 From another repository, point `PLANTCRAFT_PACKAGE_PY` at a checkout's
-`processcraft/apps/package.py` (or copy that one file). For development,
+`plantcraft/apps/package.py` (or copy that one file). For development,
 `make dev-publisher` writes `keys/dev-publisher.key` and puts its public key in
 `deploy/trusted-publishers/dev-publisher.pub`; both are ignored by git and `deploy/bundle.sh`
 never ships a `dev*` key.
@@ -101,7 +101,7 @@ never ships a `dev*` key.
 A folder served over HTTPS with the packages, `index.json` and `index.json.sig`:
 
 ```bash
-python3 processcraft/apps/package.py index --key ~/secure/keys/processcraft.key \
+python3 plantcraft/apps/package.py index --key ~/secure/keys/processcraft.key \
     --publisher processcraft --out-dir site/ site/*.pcapp
 ```
 

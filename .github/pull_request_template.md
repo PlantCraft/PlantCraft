@@ -4,7 +4,16 @@
 
 ## Why
 
-<!-- The issue, the review note or the problem it answers. -->
+<!-- The issue, the review note or the problem it answers. A change to the core links an issue
+a maintainer agreed to: Closes #123. -->
+
+## Zone
+
+<!-- One zone per pull request (CONTRIBUTING.md, "What is core and what is open"). -->
+
+- [ ] One app (`apps/<app>`, `simulator`, `templates/app`)
+- [ ] Content: methods, blocks, examples, docs or translations
+- [ ] Core (`plantcraft/`, `frontend/`, `sdk/`, `ui/`, API v1, `deploy/`, CI), with its issue: #
 
 ## Checked
 

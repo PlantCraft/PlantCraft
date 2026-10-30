@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from processcraft.apps import operations
+from plantcraft.apps import operations
 
 ROOT = Path(__file__).resolve().parents[1]
 LIVE = os.environ.get("PLANTCRAFT_OPS_LIVE") == "live"

@@ -108,7 +108,7 @@ and its own database.
 - **Ids are written as they are, never percent-encoded** (decided 2026-10-20): any id is 1 to
   300 characters, no control characters, no spaces at either end. A PI tag keeps its spaces,
   `/`, `\` and `:` (`signal:pi:Unit 2\FIC 101.PV`). Apps store and compare references as
-  text; only a URL path encodes the id (`quote(id, safe="")`). `processcraft.refs` and
+  text; only a URL path encodes the id (`quote(id, safe="")`). `plantcraft.refs` and
   `plantcraft_sdk.refs` apply this one rule (`check_id`); a source id is lower-case letters,
   digits, `_` and `-` (`[a-z0-9][a-z0-9_-]{0,47}`), so `parse_ref` splits `<source>:<tag>` at the
   first `:` after it.
@@ -324,7 +324,7 @@ retention = "app"                    # app (set per point, managed_by), historia
   `PUT /api/v1/contributions` (the events go to the catalog with it), retried while PlantCraft is
   not up and never stopping the app; an app without an app key carries it in
   `GET /api/ops/metrics`, which PlantCraft's monitor reads every minute. PlantCraft keeps one row
-  per app, replaced whole (`processcraft.apps.contributions`); `GET /api/v1/contributions` lists
+  per app, replaced whole (`plantcraft.apps.contributions`); `GET /api/v1/contributions` lists
   what every installed app adds.
 - **Every screen reads the registry**, never a list written for an app: Settings › Language
   models, Desk's calendar and to-do, the Overviews, Settings › Apps, Alarms' catalog. An app that is

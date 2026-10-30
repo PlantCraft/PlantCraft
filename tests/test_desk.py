@@ -8,9 +8,9 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
-from processcraft.api.routers.desk import note_mentions
-from processcraft.config import plant_today
-from processcraft.desk import (
+from plantcraft.api.routers.desk import note_mentions
+from plantcraft.config import plant_today
+from plantcraft.desk import (
     CalendarError,
     event_times,
     feed_url,
@@ -511,7 +511,7 @@ def test_own_events_on_the_calendar(signed):
 
 
 def test_scheduled_runs_in_the_same_hour_come_together():
-    from processcraft.api.routers.desk import scheduled_runs
+    from plantcraft.api.routers.desk import scheduled_runs
 
     runs = scheduled_runs(
         [
@@ -525,8 +525,8 @@ def test_scheduled_runs_in_the_same_hour_come_together():
 
 
 def test_old_checklists_and_routines_become_todos(tmp_path):
-    from processcraft.db import Database
-    from processcraft.desk import DeskStore
+    from plantcraft.db import Database
+    from plantcraft.desk import DeskStore
 
     db = Database(tmp_path / "desk.db")
     DeskStore(db)
@@ -718,7 +718,7 @@ def test_notes_and_todos_are_mentioned_without_showing_what_they_are(signed):
 
 
 def test_the_demo_seed_fills_desk_once(signed):
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     def client(test_client):
         class Client(demo_seed.Http):
@@ -769,7 +769,7 @@ def test_the_demo_seed_writes_the_visitors_desk_into_the_store(signed):
     # straight into Desk's store, once.
     from datetime import datetime, timedelta
 
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     class Refused(demo_seed.Http):
         def call(self, method, path, body=None, *, ok=(), raw=None, content_type=""):
@@ -809,7 +809,7 @@ def test_the_demo_gives_the_visitor_actions_of_their_own():
     """Owner, 2026-10-27: whoever enters the demo sees actions in Desk's "My actions"; one in
     each column of the board, each following an action of the team seeded before it."""
 
-    from processcraft import demo_seed
+    from plantcraft import demo_seed
 
     titles = [spec["title"] for spec in demo_seed.OPEN_ACTIONS]
     mine = [spec for spec in demo_seed.OPEN_ACTIONS if spec["owner"] == demo_seed.VISITOR]

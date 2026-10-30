@@ -1,12 +1,12 @@
 """The conditions an app without an app key reports in its metrics (the Historian), written as
-that app's events by the monitor (processcraft.events.conditions)."""
+that app's events by the monitor (plantcraft.events.conditions)."""
 
 from __future__ import annotations
 
-from processcraft.db import Database
-from processcraft.events import EventStore
-from processcraft.events.conditions import ConditionRelay
-from processcraft.watch.recorder import HealthRecorder
+from plantcraft.db import Database
+from plantcraft.events import EventStore
+from plantcraft.events.conditions import ConditionRelay
+from plantcraft.watch.recorder import HealthRecorder
 from tests.test_health_signals import NOW
 from tests.test_watch import FakeDesk
 
@@ -102,7 +102,7 @@ def test_the_recorder_hands_the_apps_conditions_each_minute(tmp_path):
 
 
 def test_what_a_keyless_app_adds_reaches_the_registry(tmp_path):
-    from processcraft.apps.contributions import ContributionStore
+    from plantcraft.apps.contributions import ContributionStore
 
     db = Database(tmp_path / "platform.sqlite3")
     registry = ContributionStore(db)
