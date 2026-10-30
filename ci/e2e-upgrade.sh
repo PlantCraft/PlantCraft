@@ -14,7 +14,7 @@
 #      then walks the demo story (tests/e2e_suite) on the updated suite,
 #   6. rolls back (install.sh --rollback) and checks the fingerprint again on the old version.
 #
-#   FROM_BUNDLE=/path/processcraft-0.3.0-linux-amd64-bundle.tar.gz ci/e2e-upgrade.sh
+#   FROM_BUNDLE=/path/plantcraft-0.3.0-linux-amd64-bundle.tar.gz ci/e2e-upgrade.sh
 #   ci/e2e-upgrade.sh --skip-build     reuse the TO_VERSION images and bundle of a previous run
 #   ci/e2e-upgrade.sh --keep           leave the updated stack running (no rollback step)
 #   ci/e2e-upgrade.sh --down           uninstall and purge the stack of a previous run
@@ -136,11 +136,11 @@ if [ "$SKIP_BUILD" = 0 ]; then
 fi
 ARCH="$(docker info --format '{{.Architecture}}')"
 case "$ARCH" in x86_64) ARCH=amd64 ;; aarch64) ARCH=arm64 ;; esac
-archive="$ROOT/dist/processcraft-$TO_VERSION-linux-$ARCH-bundle.tar.gz"
+archive="$ROOT/dist/plantcraft-$TO_VERSION-linux-$ARCH-bundle.tar.gz"
 [ -f "$archive" ] || die "no $TO_VERSION bundle at $archive (run without --skip-build)"
 rm -rf "$WORK/to" && mkdir -p "$WORK/to"
 tar -xzf "$archive" -C "$WORK/to"
-to_dir="$WORK/to/processcraft-$TO_VERSION-linux-$ARCH-bundle"
+to_dir="$WORK/to/plantcraft-$TO_VERSION-linux-$ARCH-bundle"
 (cd "$to_dir" && sha256sum --quiet -c SHA256SUMS) || die "the $TO_VERSION bundle's SHA256SUMS do not match"
 
 step "installing the released $FROM_VERSION, as a client did"

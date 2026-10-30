@@ -70,5 +70,5 @@ without entering the editor; inside the editor it changes what **Save** saves.
 | Versions | The last 30 saves, who and when; **Restore** saves an old one again as the newest |
 | JSON | The dashboard as a file, to start a dashboard from it elsewhere |
 
-A saved dashboard reads plant data with the Dashboards app key, so every viewer sees the same numbers, and one
+A saved dashboard reads plant data with the View app key, so every viewer sees the same numbers, and one
 read is shared by all viewers for a few seconds.

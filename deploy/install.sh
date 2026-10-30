@@ -289,7 +289,7 @@ check_architecture() {
         warn "this bundle is for linux/$wanted and this server is linux/$host: the suite runs emulated (--allow-emulation), several times slower."
         return 0
     fi
-    die "this bundle is for linux/$wanted and this server is linux/$host: get the linux/$host bundle of this release (processcraft-<version>-linux-$host-bundle.tar.gz), or pass --allow-emulation. Nothing was changed."
+    die "this bundle is for linux/$wanted and this server is linux/$host: get the linux/$host bundle of this release (plantcraft-<version>-linux-$host-bundle.tar.gz), or pass --allow-emulation. Nothing was changed."
 }
 
 # The publisher keys a signature is checked against, in a folder for the installer image:

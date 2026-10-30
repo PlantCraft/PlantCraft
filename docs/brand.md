@@ -15,8 +15,10 @@ colour, font or radius.
 
 - Write **PlantCraft**: one word, capital P and capital C.
 - Do not write "Plant Craft", "Plantcraft", "PLANTCRAFT" or "PC".
-- In code, file names and URLs keep `processcraft` (the platform was called PlantCraft until
-  2026-10-23; packages, variables, ids and URLs kept that form). The plant simulator is the
+- The suite was called ProcessCraft until 2026-10-27. People type and download `plantcraft`
+  (the command, the release files); the Python package `processcraft`, image and service names,
+  data ids and URLs inside an installation keep the old form, so existing installations and
+  their data never change. The plant simulator is the
   **Simulator** ("PlantCraft Simulator" in documents).
 - The name is not translated. In Portuguese text it stays "PlantCraft".
 

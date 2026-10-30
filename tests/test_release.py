@@ -82,13 +82,13 @@ def test_make_writes_the_release_and_its_notes(tmp_path):
     folder = _bundle(tmp_path)
     written = json.loads((folder / "release.json").read_text())
     assert written["version"] == "0.2.0" and written["upgrade_from"] == "0.1.0"
-    assert written["components"]["linkcraft"] == {"name": "LinkCraft", "version": "0.3.1",
+    assert written["components"]["linkcraft"] == {"name": "PlantCraft Analytics", "version": "0.3.1",
                                                   "notes": False}  # fmt: skip
     assert "dashcraft" not in written["components"]  # not in this bundle
     assert written["images"][0] == {"ref": "processcraft:0.2.0", "id": "sha256:" + "a" * 64}
     notes = (folder / "RELEASE-NOTES.md").read_text()
     assert "## PlantCraft 0.2.0\n\n### Added\n\n- Backups." in notes
-    assert "## LinkCraft 0.3.1\n\n_No notes for this version._" in notes
+    assert "## PlantCraft Analytics 0.3.1\n\n_No notes for this version._" in notes
 
 
 def test_a_signed_bundle_passes_and_says_who_signed(tmp_path, keys):
@@ -190,8 +190,8 @@ def test_the_committed_release_key_is_published_consistently():
 
 def test_the_archive_hash_is_signed_for_ssh_keygen(tmp_path, keys):
     private, trusted = keys
-    sums = tmp_path / "processcraft-0.3.0-linux-arm64-bundle.tar.gz.sha256"
-    sums.write_text(f"{'c' * 64}  processcraft-0.3.0-linux-arm64-bundle.tar.gz\n")
+    sums = tmp_path / "plantcraft-0.3.0-linux-arm64-bundle.tar.gz.sha256"
+    sums.write_text(f"{'c' * 64}  plantcraft-0.3.0-linux-arm64-bundle.tar.gz\n")
     signature = release.sign_file(sums, private)
     assert signature.name == sums.name + ".sig"
     text = signature.read_text()
@@ -200,7 +200,7 @@ def test_the_archive_hash_is_signed_for_ssh_keygen(tmp_path, keys):
     printed = release.fingerprint(trusted / "processcraft.pub", "processcraft")
     assert printed["ssh_fingerprint"].startswith("SHA256:")
     assert printed["allowed_signers"].startswith(
-        'release@processcraft namespaces="file" ssh-ed25519 '
+        'release@plantcraft namespaces="file" ssh-ed25519 '
     )
     if not shutil.which("ssh-keygen"):
         pytest.skip("ssh-keygen is not installed: the format is checked against it where it is")
@@ -209,7 +209,7 @@ def test_the_archive_hash_is_signed_for_ssh_keygen(tmp_path, keys):
 
     def verify(data: bytes) -> subprocess.CompletedProcess:
         return subprocess.run(
-            ["ssh-keygen", "-Y", "verify", "-f", str(signers), "-I", "release@processcraft",
+            ["ssh-keygen", "-Y", "verify", "-f", str(signers), "-I", "release@plantcraft",
              "-n", "file", "-s", str(signature)],
             input=data, capture_output=True, check=False,
         )  # fmt: skip

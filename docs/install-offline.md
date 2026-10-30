@@ -1,7 +1,7 @@
 # Offline installation with Docker
 
 For the IT administrator of a plant. This guide installs the PlantCraft suite on a Linux server
-**without internet access**, from the release bundle `processcraft-<version>-linux-<arch>-bundle.tar.gz`.
+**without internet access**, from the release bundle `plantcraft-<version>-linux-<arch>-bundle.tar.gz`.
 Target: under 10 minutes from copying the bundle to the first sign-in. The security design behind
 it is summarised in [security-guide.md](security-guide.md). For a trial on macOS or Windows,
 and to choose between the ways to install, start at [install.md](install.md).
@@ -31,12 +31,12 @@ it**, with `ssh-keygen` (OpenSSH 8.1 or later, already on every supported Linux 
 
 ```bash
 # The publisher's key, once: this line, compared with the one on the release page.
-echo 'release@processcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
-    > processcraft.allowed_signers
-B=processcraft-0.5.0-linux-amd64-bundle.tar.gz
-ssh-keygen -Y verify -f processcraft.allowed_signers -I release@processcraft -n file \
-    -s $B.sha256.sig < $B.sha256        # Good "file" signature for release@processcraft ...
-sha256sum -c $B.sha256                 # processcraft-...tar.gz: OK  (macOS: shasum -a 256 -c)
+echo 'release@plantcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
+    > plantcraft.allowed_signers
+B=plantcraft-0.5.0-linux-amd64-bundle.tar.gz
+ssh-keygen -Y verify -f plantcraft.allowed_signers -I release@plantcraft -n file \
+    -s $B.sha256.sig < $B.sha256        # Good "file" signature for release@plantcraft ...
+sha256sum -c $B.sha256                 # plantcraft-...tar.gz: OK  (macOS: shasum -a 256 -c)
 tar -xzf $B
 cd ${B%.tar.gz}
 ```
@@ -101,7 +101,7 @@ installation that had an app or the demo keeps running without it, with a warnin
 upgrade to a bundle without that image.
 
 `--public-demo` is `--demo` for an installation left open to visitors: it also writes the demo
-story (`processcraft demo seed`: the plant map, the Simulator's last 48 hours copied into the Historian,
+story (`plantcraft demo seed`: the plant map, the Simulator's last 48 hours copied into the Historian,
 loop criticalities, Analytics' three monitors (loops, signals, the Furnaces model), dashboards with a
 public link, Analytics' model examples of the plant (the Furnaces model names the drifting
 sensor), the suggested alarms of every loop with the story's alarms and two
@@ -167,7 +167,7 @@ the images. If the suite does not become healthy,
    import can be undone there) and create the people who will use the suite. With `--demo`
    the map of the simulator (the bundle's `demo/plantcraft-50-loops-map.json`: the Simulator
    source, the unit, the 50 loops with their signals by role and each loop's type) is already
-   imported by `processcraft demo seed`. A whole map can still be applied by script
+   imported by `plantcraft demo seed`. A whole map can still be applied by script
    ([configuration file](en/configuration-file.md)).
 4. Open the apps from the launcher; they use the same sign-in. Analytics analyses the loops of
    the map in its next round (every 10 minutes), or at once with **Run round**, and checks every
@@ -224,7 +224,7 @@ certificate authority, OCSP responder or update server.
 against the same folder:
 
 ```bash
-cd processcraft-0.5.0-linux-amd64-bundle
+cd plantcraft-0.5.0-linux-amd64-bundle
 sudo ./install.sh --prefix /opt/plantcraft
 ```
 
@@ -369,7 +369,7 @@ make isolation       # the isolation tests against the built images (tests/test_
 make bundle ARCH=arm64 DOCKER_BUILD_FLAGS="--platform linux/arm64"
 ```
 
-The result is `dist/processcraft-<version>-linux-<arch>-bundle/` and its `.tar.gz` with a
+The result is `dist/plantcraft-<version>-linux-<arch>-bundle/` and its `.tar.gz` with a
 `.sha256` file to publish with the release. `ARCH` (`amd64` or `arm64`, default the build
 machine's) names the bundle and `bundle.env`; every image must be built for it (each app with
 `make image DOCKER_BUILD_FLAGS="--platform linux/<arch>"` in its repository, PostgreSQL with

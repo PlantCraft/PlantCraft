@@ -160,7 +160,7 @@ anything: only two small files are signed there, so the images never travel to i
 ```bash
 # Build machine: the bundle, unsigned.
 make bundle ARCH=arm64 DOCKER_BUILD_FLAGS="--platform linux/arm64"
-B=dist/processcraft-<version>-linux-arm64-bundle
+B=dist/plantcraft-<version>-linux-arm64-bundle
 # Key machine (python3 with cryptography, processcraft/apps/{release,package}.py copied over):
 python -m processcraft.apps.release sign <folder holding SHA256SUMS> --key processcraft.key --publisher processcraft
 # Build machine: SHA256SUMS.sig into $B, pack again, hash the archive.
@@ -339,7 +339,7 @@ each release, not on every pull request.
 request at a time (the GIL), so with many people at once requests wait in line; removing the
 database lock inside one process made it worse (3 s, a GIL convoy, measured in the architecture
 review). PlantCraft therefore starts `PLANTCRAFT_WORKERS` processes (`python -m
-processcraft.api.serve`, the image's command; `processcraft --workers N` locally). `auto`, the
+processcraft.api.serve`, the image's command; `plantcraft --workers N` locally). `auto`, the
 default, is 2 to 4 (the CPUs, at most 4) when Historian is the data layer (`HISTCRAFT_URL`), and 1
 while PlantCraft reads plant sources itself, because that history cache lives in the process.
 What the processes share, and how (`processcraft.ops.workers`):

@@ -1,7 +1,7 @@
 # Public demo
 
 An installation left open on the internet so anyone can see what the suite does in a few
-minutes: `install.sh --public-demo` installs the demo plant, runs `processcraft demo seed` (one
+minutes: `install.sh --public-demo` installs the demo plant, runs `plantcraft demo seed` (one
 refinery story, already in use by its team: results, alarms, actions, conversations, assistant
 chats, dashboards, notebooks) and sets `PLANTCRAFT_PUBLIC_DEMO=true`. Never turn it on for an
 installation holding real plant data.
@@ -26,7 +26,7 @@ is the read-only visitor account `demo`, in one of a few places at once:
 - no cap per address: behind the proxy and the tunnel every visitor can seem to come from one
   (the per-visit request limits still hold);
 - from outside (through the proxy) the visitor account signs in only this way, never with its
-  password; inside the network the password still works, and `processcraft demo seed` uses it.
+  password; inside the network the password still works, and `plantcraft demo seed` uses it.
 
 When the visit ends, the browser is back on the sign-in page, which thanks the visitor and offers
 to enter again. The places are in the database (`demo_visits`, `demo_line`), so every server
@@ -54,7 +54,7 @@ guide away, take **Another role**, or close it. While a guide is on, the apps' o
 
 - The guides are in `frontend/src/demoGuides.ts` (texts in English, through `t()`). A stop opens
   a fixed page (`/alarm/performance`) or an object of the story by name ("Plant overview",
-  "DOC-MH-001"); `processcraft demo seed` writes the page each name opens on this installation
+  "DOC-MH-001"); `plantcraft demo seed` writes the page each name opens on this installation
   (`demo_guide_links`, read by `GET /api/demo/guides`), and a name not there opens its list.
 - The role a visitor picked is in the visit's audit entry (`session.sign_in`, `guide`): which
   people the demo interests.

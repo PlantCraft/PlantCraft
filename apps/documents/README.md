@@ -24,7 +24,7 @@ make dev      # the Simulator, PlantCraft on :8060 and Documents on :8150
 ```
 
 In the suite it is the `doccraft` profile of PlantCraft's `deploy/compose.yaml`
-(`install.sh --with-doccraft`). The demo seed (`processcraft demo seed`) sends the Simulator
+(`install.sh --with-doccraft`). The demo seed (`plantcraft demo seed`) sends the Simulator
 plant's twelve demo documents (`deploy/demo/documents/` in PlantCraft).
 
 ## What each part does

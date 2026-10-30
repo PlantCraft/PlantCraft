@@ -39,7 +39,7 @@ the `main` branch) and continue from `python3 -m venv .venv`.
 Check the installation:
 
 ```bash
-processcraft --help
+plantcraft --help
 ```
 
 ## 3. Demo with the Simulator
@@ -138,13 +138,13 @@ Each person signs in with their own username and password:
 
 ```bash
 export PLANTCRAFT_SCENARIO=/etc/processcraft/plant.json PLANTCRAFT_DEMO_USERS=false
-processcraft users add ana.lima --name "Ana Lima" --role "Control engineering"
-processcraft users password ana.lima
-processcraft users list
+plantcraft users add ana.lima --name "Ana Lima" --role "Control engineering"
+plantcraft users password ana.lima
+plantcraft users list
 ```
 
 Passwords must have at least 8 characters. To change a password, run
-`processcraft users password` again (`PLANTCRAFT_PASSWORD` provides it
+`plantcraft users password` again (`PLANTCRAFT_PASSWORD` provides it
 without a prompt).
 
 Each person has an **access level** and the **applications** they can see.
@@ -153,10 +153,10 @@ create the person with username, name, role and initial password, edit, reset
 the password and deactivate. From the command line:
 
 ```bash
-processcraft users add tv.room --name "Control room TV" --access dashboards
-processcraft users add joao.link --name "João" --access viewer --apps linkcraft
-processcraft users access marina.costa editor          # changes the level; --apps limits
-processcraft users admin ana.lima                      # same as --access admin
+plantcraft users add tv.room --name "Control room TV" --access dashboards
+plantcraft users add joao.link --name "João" --access viewer --apps linkcraft
+plantcraft users access marina.costa editor          # changes the level; --apps limits
+plantcraft users admin ana.lima                      # same as --access admin
 ```
 
 | Level | What it does |
@@ -188,8 +188,8 @@ fix and writes a Markdown report:
 
 ```bash
 set -a; . /etc/processcraft/env; set +a
-processcraft pi check
-processcraft --host 0.0.0.0 --port 8060
+plantcraft pi check
+plantcraft --host 0.0.0.0 --port 8060
 ```
 
 `processcraft` refuses a network address such as `0.0.0.0` while sign-in is off (4.4); pass

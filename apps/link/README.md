@@ -37,7 +37,7 @@ signal results first: a frozen transmitter reads "data not usable", not "bad tun
 ```text
 browser ── proxy ─┬─ /       PlantCraft             users, sign-in, connections (PI, OPC UA), assets, signals
                   ├─ /link/  PlantCraft Analytics        signals, loops, blocks, algorithms, runs, reports (own SQLite)
-                  └─ /dash/  PlantCraft View  dashboards (reads Link's results and series)
+                  └─ /dash/  PlantCraft View  dashboards (reads Analytics' results and series)
 PlantCraft Analytics ── PlantCraft API v1 (plantcraft-sdk) ──> series, values, assets, audit
 ```
 
@@ -75,7 +75,7 @@ python -m venv .venv && . .venv/bin/activate
 make deps                                  # plantcraft-sdk from vendor/, then PlantCraft Analytics
 (cd frontend && npm ci && npm run build)   # the interface, served under /link/
 
-# In PlantCraft: PLANTCRAFT_APPS=linkcraft=/link/ processcraft --port 8060,
+# In PlantCraft: PLANTCRAFT_APPS=linkcraft=/link/ plantcraft --port 8060,
 # then an admin creates an app key for linkcraft (Settings, or POST /api/app-keys).
 export PLANTCRAFT_URL=http://127.0.0.1:8060
 export PLANTCRAFT_APP_KEY=...            # or PLANTCRAFT_APP_KEY_FILE=/path/to/key

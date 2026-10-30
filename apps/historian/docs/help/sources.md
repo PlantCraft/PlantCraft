@@ -35,7 +35,7 @@ change or remove sources.
   of Imports; a file loaded once belongs in **Imports**. Files read the way you checked them
   (columns, time format), with every tag becoming a signal, are an import that **repeats from
   a folder**: it is listed here too, marked **Repeats**.
-- An app merged into another (Twin, CPMCraft and DataCraft into Link) shows "App retired":
+- An app merged into another (Twin, CPMCraft and DataCraft into Analytics) shows "App retired":
   nothing writes its series any more, and an admin may remove it with its signals.
 - **Browse** lists the server's variables with their units and ranges, so you can add many
   signals at once. Signals already archived are marked. Leave scan and deviation empty to use

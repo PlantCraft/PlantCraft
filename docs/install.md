@@ -63,7 +63,7 @@ Each release has, per processor:
 
 | File | What it is |
 |---|---|
-| `processcraft-<version>-linux-<arch>-bundle.tar.gz` | The bundle: images, `compose.yaml`, `install.sh`, `firewall.sh`, SBOMs, this documentation |
+| `plantcraft-<version>-linux-<arch>-bundle.tar.gz` | The bundle: images, `compose.yaml`, `install.sh`, `firewall.sh`, SBOMs, this documentation |
 | `....tar.gz.sha256` | Its SHA-256 hash |
 | `....tar.gz.sha256.sig` | The publisher's signature over that hash |
 
@@ -72,11 +72,11 @@ and macOS has it; on Windows, in the Ubuntu window of WSL). Why and what each ch
 [Check a release](verify-a-release.md).
 
 ```bash
-echo 'release@processcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
-    > processcraft.allowed_signers
-B=processcraft-0.5.0-linux-amd64-bundle.tar.gz
-ssh-keygen -Y verify -f processcraft.allowed_signers -I release@processcraft -n file \
-    -s $B.sha256.sig < $B.sha256      # Good "file" signature for release@processcraft ...
+echo 'release@plantcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
+    > plantcraft.allowed_signers
+B=plantcraft-0.5.0-linux-amd64-bundle.tar.gz
+ssh-keygen -Y verify -f plantcraft.allowed_signers -I release@plantcraft -n file \
+    -s $B.sha256.sig < $B.sha256      # Good "file" signature for release@plantcraft ...
 sha256sum -c $B.sha256               # macOS: shasum -a 256 -c $B.sha256
 ```
 
@@ -160,8 +160,8 @@ Ubuntu in WSL 2, on an i5-8500T with 24 GB: the install with every app and the d
    permissions, and Windows folders are slow to read from containers.
 
    ```bash
-   cp /mnt/c/Users/<you>/Downloads/processcraft-0.5.0-linux-amd64-bundle.tar.gz* ~/
-   cd ~ && B=processcraft-0.5.0-linux-amd64-bundle.tar.gz
+   cp /mnt/c/Users/<you>/Downloads/plantcraft-0.5.0-linux-amd64-bundle.tar.gz* ~/
+   cd ~ && B=plantcraft-0.5.0-linux-amd64-bundle.tar.gz
    ```
 
 5. Check the bundle (above), unpack it and install, in the same Ubuntu window:

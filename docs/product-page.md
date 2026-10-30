@@ -158,8 +158,8 @@ check its signature, run the installer. It sets up the platform, the apps, the S
 want it, and an administrator account.
 
 ```bash
-tar -xzf processcraft-0.5.0-linux-amd64-bundle.tar.gz
-cd processcraft-0.5.0-linux-amd64-bundle
+tar -xzf plantcraft-0.5.0-linux-amd64-bundle.tar.gz
+cd plantcraft-0.5.0-linux-amd64-bundle
 ./install.sh --all-apps --demo
 # open https://<server>/ and sign in as admin
 ```

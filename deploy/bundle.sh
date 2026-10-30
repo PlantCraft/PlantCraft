@@ -2,7 +2,7 @@
 # Builds the offline release bundle (run by `make bundle`, on a machine with internet), for one
 # processor architecture (ARCH: amd64 or arm64, default this machine's Docker):
 #
-#   dist/processcraft-<version>-linux-<arch>-bundle/
+#   dist/plantcraft-<version>-linux-<arch>-bundle/
 #     images.tar            docker save of every image the suite runs
 #     compose.yaml compose-worker.yaml certs/ .env.example bundle.env
 #     install.sh firewall.sh docs/ LICENSE NOTICE
@@ -19,7 +19,7 @@
 #     SHA256SUMS            hash of every file above
 #     SHA256SUMS.sig        Ed25519 signature over SHA256SUMS (with RELEASE_KEY, the publisher's
 #                           private key, never committed; RELEASE_PUBLISHER, default processcraft)
-#   dist/processcraft-<version>-linux-<arch>-bundle.tar.gz (+ .sha256, + .sha256.sig: the same
+#   dist/plantcraft-<version>-linux-<arch>-bundle.tar.gz (+ .sha256, + .sha256.sig: the same
 #                         key's OpenSSH signature over that hash, for ssh-keygen -Y verify)
 #
 # Every image must be built for ARCH (make image DOCKER_BUILD_FLAGS=--platform=linux/<arch>;
@@ -59,7 +59,7 @@ case "$ARCH" in
 esac
 CYCLONEDX_NPM="@cyclonedx/cyclonedx-npm@6.0.1"
 
-NAME="processcraft-$VERSION-linux-$ARCH-bundle"
+NAME="plantcraft-$VERSION-linux-$ARCH-bundle"
 DIST="$ROOT/dist"
 OUT="$DIST/$NAME"
 
