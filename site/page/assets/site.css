@@ -99,6 +99,8 @@ pre .c { color: var(--fg-3); }
 footer { border-top: 1px solid var(--line); padding-block: 32px 96px; color: var(--fg-3); font-size: 14px; display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
 footer .fl { display: flex; gap: 18px; flex-wrap: wrap; }
 footer a { text-decoration: none; } footer a:hover { color: var(--fg); }
+footer .social { display: inline-flex; gap: 14px; align-items: center; margin-left: 10px; vertical-align: -3px; }
+footer .social svg { width: 16px; height: 16px; fill: currentColor; display: block; }
 
 /* The chat: a panel at the bottom right; the whole screen on a phone. */
 .launchers { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: 16px; z-index: 20; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
