@@ -68,8 +68,8 @@ export function ImportsPage({ me }: { me: Me }) {
     {notice && <div className="notice notice-ok">{notice}</div>}
     {error && <ErrorBox text={error} />}
     {!items ? (error ? null : <Loading />) : items.length === 0
-      ? <div className="panel empty"><h2>{t("No imports")}</h2><p>{t("Import a CSV or Excel file: lab analyses, an export from another system, a spreadsheet. Start from an example to see the two layouts. For files another application keeps writing, add a CSV source instead.")}</p></div>:
-      <DataTable
+      ? <div className="panel empty"><h2>{t("No imports")}</h2><p>{t("Import a CSV or Excel file: lab analyses, an export from another system, a spreadsheet. Start from an example to see the two layouts. For files another application keeps writing, add a CSV source instead.")}</p></div>
+      : <DataTable
         rows={items}
         rowKey={(item) => item.id}
         label={t("Imports")}
@@ -174,8 +174,8 @@ function ImportDialog({ into, example, onClose, onDone }: { into?: ImportItem; e
         <summary>{t("How the file is read")}<small>{used.format === "excel" ? t("Excel, sheet {sheet}", { sheet: used.sheet ?? "" }) : t("separator {sep}, decimal {dec}", { sep: report.delimiter === "\t" ? t("tab") : `“${report.delimiter}”`, dec: `“${report.decimal}”` })} · {report.shape === "long" ? t("long") : t("wide")} {used.time_column ? <> · {t("time in {column}", { column: used.time_column })}</> : null}</small></summary>
         <div className="form-grid">
           {used.format === "excel"
-            ? <label>{t("Sheet")}<select value={String(options.sheet ?? "")} onChange={(event) => set("sheet", event.target.value)}>{(used.sheets ?? []).map((sheet) => <option key={sheet}>{sheet}</option>)}</select></label>:
-            <>{pick("delimiter", "Separator", [[",", "Comma ,"], [";", "Semicolon ;"], ["\t", "Tab"], ["|", "Bar |"]])}
+            ? <label>{t("Sheet")}<select value={String(options.sheet ?? "")} onChange={(event) => set("sheet", event.target.value)}>{(used.sheets ?? []).map((sheet) => <option key={sheet}>{sheet}</option>)}</select></label>
+            : <>{pick("delimiter", "Separator", [[",", "Comma ,"], [";", "Semicolon ;"], ["\t", "Tab"], ["|", "Bar |"]])}
               {pick("decimal", "Decimal mark", [[".", "Point 1.5"], [",", "Comma 1,5"]])}</>}
           <label>{t("Lines before the header")}<input type="number" min={0} max={1000} value={options.skip_rows ?? 0} onChange={(event) => set("skip_rows", Number(event.target.value) || 0)} /><small>{t("A title or notes above the column names.")}</small></label>
           {pick("shape", "Layout", [["wide", "Wide: one column per tag"], ["long", "Long: one value per line"]])}

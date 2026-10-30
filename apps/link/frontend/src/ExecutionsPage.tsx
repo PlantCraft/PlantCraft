@@ -77,8 +77,8 @@ export function ExecutionsPage({ me }: { me: Me }) {
     {error && <ErrorBox text={error} />}
     <section className="panel" aria-label={t("Runs")}>
       <div className="panel-header"><div><h2>{t("Runs")}</h2><p>{list ? t("{total} runs, {open} waiting or running in this list.", { total: list.total, open }) : ""}</p></div></div>
-      {!list ? (error ? null : <Loading />):
-        <DataTable
+      {!list ? (error ? null : <Loading />)
+        : <DataTable
           rows={list.items}
           columns={columns}
           rowKey={(row) => row.id}

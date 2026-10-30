@@ -63,8 +63,8 @@ export function HelpPage({ apps = [] }: { apps?: SuiteAppCard[] }) {
     setSource(null); setError("");
     const found = shown.find((item) => item.id === app);
     const loading: Promise<HelpSource> = found
-      ? appHelp(found.url):
-      api.help().then((rows) => ({ docs: rows.map((row) => ({ id: row.document_id, title: row.title, category: row.category })), load: platform }));
+      ? appHelp(found.url)
+      : api.help().then((rows) => ({ docs: rows.map((row) => ({ id: row.document_id, title: row.title, category: row.category })), load: platform }));
     loading.then((value) => alive && setSource(value)).catch((err) => alive && setError(err instanceof Error ? err.message : t("Couldn't load help.")));
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,8 +79,8 @@ export function HelpPage({ apps = [] }: { apps?: SuiteAppCard[] }) {
         <AppMark app={item.id} name={item.name} size={18} />{item.name}
       </button>)}
     </div>
-    {error ? <Failure message={error} /> : !source ? <Loading /> : source.docs.length === 0 ? <p className="muted">{t("This app has no guides yet.")}</p>:
-      <HelpBrowser key={app} docs={source.docs} load={source.load} initial={query.get("doc") ?? undefined} onOpen={(id) => window.history.replaceState(window.history.state, "", where(app, id))} />}
+    {error ? <Failure message={error} /> : !source ? <Loading /> : source.docs.length === 0 ? <p className="muted">{t("This app has no guides yet.")}</p>
+      : <HelpBrowser key={app} docs={source.docs} load={source.load} initial={query.get("doc") ?? undefined} onOpen={(id) => window.history.replaceState(window.history.state, "", where(app, id))} />}
   </>;
 }
 

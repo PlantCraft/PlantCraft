@@ -100,15 +100,15 @@ export function BlocksPage({ me }: { me: Me }) {
         footer={canWriteBlocks(me) && <NewLibraryButton onMade={(made) => { setCurrent(made.library); window.history.replaceState({}, "", href(`/blocks?library=${encodeURIComponent(made.library)}`)); setLoaded((now) => now + 1); }} />} />
       <section className="methods-main">
         {searching
-          ? <div className="pc-folder-head"><h2>{t("{count} blocks found", { count: shown.length })}</h2></div>:
-          library && <div className="pc-folder-head"><h2>{library.name}</h2><p className="muted">{library.description}</p></div>}
+          ? <div className="pc-folder-head"><h2>{t("{count} blocks found", { count: shown.length })}</h2></div>
+          : library && <div className="pc-folder-head"><h2>{library.name}</h2><p className="muted">{library.description}</p></div>}
         {shown.length
           ? <div className="pc-grid">{shown.map((item) => <Link key={item.block_id} to={`/blocks/${encodeURIComponent(pageId(item))}`} className="panel card blk-card">
             <span className="eyebrow pc-mono">{pageId(item)}</span><strong>{item.name}</strong><p>{item.summary}</p>
             <small className="blk-card-ports">{item.inputs.length > 0 && <span><b>{t("In")}</b><Ports ports={item.inputs} /></span>}<span><b>{t("Out")}</b><Ports ports={item.outputs} /></span></small>
             <small className="blk-card-by">{!item.site && <Lock size={12} aria-label={t("Ships with PlantCraft")} />}{madeBy(item)}{(item.tags ?? []).map((tag) => <span key={tag} className="tag">{tag}</span>)}</small>
-          </Link>)}</div>:
-          <div className="panel empty"><p>{searching ? t("No block matches.") : into ? t("No block in this library yet. New block imports a block file, opens the form or asks an assistant to write one.") : t("No block matches.")}</p></div>}
+          </Link>)}</div>
+          : <div className="panel empty"><p>{searching ? t("No block matches.") : into ? t("No block in this library yet. New block imports a block file, opens the form or asks an assistant to write one.") : t("No block matches.")}</p></div>}
       </section>
     </div>
   </>;
@@ -167,12 +167,12 @@ function Stewardship({ block, me, onSaved }: { block: BlockDetail; me: Me; onSav
         ? <select id="blk-owner" value={owner} onChange={(event) => setOwner(event.target.value)}>
           {!people.some((item) => item.username === owner) && <option value={owner}>{block.owner_name || owner}</option>}
           {people.map((item) => <option key={item.username} value={item.username}>{item.name}</option>)}
-        </select>:
-        block.owner_name}</dd>
+        </select>
+        : block.owner_name}</dd>
       <dt>{t("Origin")}</dt><dd>{t(ORIGINS[block.origin] ?? block.origin)}</dd>
       <dt>{t("Labels")}</dt><dd>{editable
-        ? <input id="blk-tags" value={tags} onChange={(event) => setTags(event.target.value)} placeholder={t("fouling, heat exchanger")} />:
-        (block.tags ?? []).length ? block.tags.map((tag) => <span key={tag} className="tag">{tag}</span>) : <span className="muted">—</span>}</dd>
+        ? <input id="blk-tags" value={tags} onChange={(event) => setTags(event.target.value)} placeholder={t("fouling, heat exchanger")} />
+        : (block.tags ?? []).length ? block.tags.map((tag) => <span key={tag} className="tag">{tag}</span>) : <span className="muted">—</span>}</dd>
     </dl>
     {editable && <div className="row-actions"><button type="button" className="button button-secondary button-small" onClick={() => void save()}>{t("Save owner and labels")}</button>{note && <small className="muted">{note}</small>}</div>}
   </section>;
@@ -222,8 +222,8 @@ function BlockVersions({ block, base, me, newVersion, onSaved }: { block: BlockD
     versions={blockVersions(block)}
     shown={block.site ? block.number ?? undefined : 1}
     onOpen={(number) => navigate(versionAddress(base, number, block))}
-    actions={newVersion ? <Link to={newVersion} className="button button-primary"><PenLine size={16} />{t("New version")}</Link>:
-      !block.site || block.locked ? <VersionLock>{t("Ships with PlantCraft: no new version here")}</VersionLock> : null}
+    actions={newVersion ? <Link to={newVersion} className="button button-primary"><PenLine size={16} />{t("New version")}</Link>
+      : !block.site || block.locked ? <VersionLock>{t("Ships with PlantCraft: no new version here")}</VersionLock> : null}
     footer={!block.site || block.locked ? t("A block PlantCraft ships changes with PlantCraft itself. Duplicate it to make a block of this site from it.") : t("Algorithms keep the version they name until someone updates them.")} />;
 }
 
@@ -314,14 +314,14 @@ function CodeTab({ block, version }: { block: BlockDetail; version?: number }) {
     <div className="panel-header"><div>
       <h2>{t("Version {number}", { number: shown })}</h2>
       <p>{code.site
-        ? t("It runs in a separate, restricted process: no files, no network, limited time and memory."):
-        t("The code Analytics ships for this block, read-only.")}</p>
+        ? t("It runs in a separate, restricted process: no files, no network, limited time and memory.")
+        : t("The code Analytics ships for this block, read-only.")}</p>
     </div>
       {shown > 1 && block.site && <div className="row-actions"><button type="button" className="button button-secondary button-small" onClick={() => void (diff ? setDiff(null) : compare())}>{diff ? t("Show the code") : t("Compare with {number}", { number: shown - 1 })}</button></div>}
     </div>
     {diff
-      ? <CodeDiff lines={diff} />:
-      source && <CodeEditor value={source.source} readOnly label={source.title} reveal={{ line: source.line }} />}
+      ? <CodeDiff lines={diff} />
+      : source && <CodeEditor value={source.source} readOnly label={source.title} reveal={{ line: source.line }} />}
   </section>;
 }
 
@@ -389,8 +389,8 @@ export function BlockPage({ blockId, tab, me }: { blockId: string; tab: BlockTab
   const edited = block.site && (block.versions ?? []).some((item) => item.shipped);
   async function remove() {
     const question = edited
-      ? t("Delete this site's versions of {name} and go back to Analytics' version? This cannot be undone.", { name: block!.name }):
-      t("Delete {name} and all its versions? This cannot be undone.", { name: block!.name });
+      ? t("Delete this site's versions of {name} and go back to Analytics' version? This cannot be undone.", { name: block!.name })
+      : t("Delete {name} and all its versions? This cannot be undone.", { name: block!.name });
     if (!(await confirmAction(question, { confirm: t("Delete"), danger: true }))) return;
     try {
       await api.deleteBlock(block!.family);
@@ -403,8 +403,8 @@ export function BlockPage({ blockId, tab, me }: { blockId: string; tab: BlockTab
     <Heading eyebrow={<>{!block.site && <Lock size={12} className="blk-lock" aria-label={t("Ships with PlantCraft")} />}{`${library || block.library} · ${pageId(block)} · ${madeBy(block)}`}</>} title={block.name} detail={block.summary}
       actions={<>
         {me.can_edit && (copyable
-          ? <Link to={`/blocks/new?from=${encodeURIComponent(pageId(block))}${version ? `&version=${version}` : ""}`} className="button button-secondary"><Copy size={16} />{t("Duplicate")}</Link>:
-          <button type="button" className="button button-secondary" disabled title={t("This block reads what Analytics gives it during a run: it has no code of its own to copy.")}><Copy size={16} />{t("Duplicate")}</button>)}
+          ? <Link to={`/blocks/new?from=${encodeURIComponent(pageId(block))}${version ? `&version=${version}` : ""}`} className="button button-secondary"><Copy size={16} />{t("Duplicate")}</Link>
+          : <button type="button" className="button button-secondary" disabled title={t("This block reads what Analytics gives it during a run: it has no code of its own to copy.")}><Copy size={16} />{t("Duplicate")}</button>)}
         <button type="button" className="button button-secondary" onClick={() => void api.blockFile(pageId(block), shownNumber).then(downloadBlockFile).catch((err: Error) => setError(err.message))}><Download size={16} />{t("Download the file")}</button>
         {block.site && writer && !block.used_by.length && <button type="button" className="button button-secondary" onClick={() => void remove()}><Trash2 size={16} />{edited ? t("Back to Analytics' version") : t("Delete")}</button>}
         {model && me.can_edit && <button type="button" className="button button-secondary" onClick={() => openEditor(null, undefined, model.model_id)}><Plus size={16} />{t("New algorithm with this model")}</button>}

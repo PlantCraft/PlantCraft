@@ -47,8 +47,8 @@ function ModelExamples({ onCreated }: { onCreated: () => void }) {
       const created = await api.createModelExamples();
       const waiting = created.filter((item) => !item.calibrated).map((item) => item.name);
       setNote(waiting.length
-        ? t("Created {count}. Not calibrated yet: {names} (open it and press Calibrate on the Deviation block).", { count: created.length, names: waiting.join(", ") }):
-        t("Created {count}, each calibrated on the last six hours.", { count: created.length }));
+        ? t("Created {count}. Not calibrated yet: {names} (open it and press Calibrate on the Deviation block).", { count: created.length, names: waiting.join(", ") })
+        : t("Created {count}, each calibrated on the last six hours.", { count: created.length }));
       setItems(await api.modelExamples());
       onCreated();
     } catch (err) { setNote(err instanceof Error ? err.message : String(err)); } finally { setBusy(false); }
@@ -170,19 +170,19 @@ function Stewardship({ algorithm, me, onSaved: saved }: { algorithm: Algorithm; 
         ? <select id="alg-owner" value={owner} onChange={(event) => setOwner(event.target.value)}>
           {!people.some((item) => item.username === owner) && <option value={owner}>{algorithm.owner_name || owner}</option>}
           {people.map((item) => <option key={item.username} value={item.username}>{item.name}</option>)}
-        </select>:
-        algorithm.owner_name || "—"}</dd>
+        </select>
+        : algorithm.owner_name || "—"}</dd>
       <dt>{t("Group")}</dt><dd>{editing
         ? <select id="alg-group" value={group} onChange={(event) => setGroup(event.target.value)}>
           <option value="">{t("None: every editor")}</option>
           {group && !groups.some((item) => item.id === group) && <option value={group}>{algorithm.group?.name ?? group}</option>}
           {groups.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-        </select>:
-        algorithm.group?.name ?? (algorithm.system ? t("None: read-only") : t("None: every editor"))}</dd>
+        </select>
+        : algorithm.group?.name ?? (algorithm.system ? t("None: read-only") : t("None: every editor"))}</dd>
       <dt>{t("Works on")}</dt><dd>{t(KIND_LABEL[algorithm.subject_kind])}</dd>
       <dt>{t("Labels")}</dt><dd>{editing
-        ? <input id="alg-tags" value={tags} onChange={(event) => setTags(event.target.value)} placeholder={t("control loop, data quality, digital twin")} />:
-        <Tags tags={algorithm.tags ?? []} />}</dd>
+        ? <input id="alg-tags" value={tags} onChange={(event) => setTags(event.target.value)} placeholder={t("control loop, data quality, digital twin")} />
+        : <Tags tags={algorithm.tags ?? []} />}</dd>
     </dl>
     {editing && <div className="row-actions"><button type="button" className="button button-secondary button-small" onClick={() => void save()}>{t("Save owner, group and labels")}</button><button type="button" className="button button-secondary button-small" onClick={() => setEditing(false)}>{t("Cancel")}</button></div>}
     {note && <small className="muted">{note}</small>}
@@ -228,13 +228,13 @@ function WhereItRuns({ algorithm, onSaved: saved }: { algorithm: Algorithm; onSa
       <dt>{t("Environment")}</dt><dd>{editing
         ? <select id="alg-environment" value={environment} onChange={(event) => setEnvironment(event.target.value)}>
           {environments.map((item) => <option key={item} value={item}>{item}</option>)}
-        </select>:
-        current.environment}</dd>
+        </select>
+        : current.environment}</dd>
       <dt>{t("Size")}</dt><dd>{editing
         ? <select id="alg-size" value={size} onChange={(event) => setSize(event.target.value as ComputePlacement["size"])}>
           {(Object.keys(SIZE_TEXT) as ComputePlacement["size"][]).map((item) => <option key={item} value={item}>{t(SIZE_TEXT[item])}</option>)}
-        </select>:
-        t(SIZE_TEXT[current.size])}</dd>
+        </select>
+        : t(SIZE_TEXT[current.size])}</dd>
     </dl>
     {editing && <div className="row-actions"><button type="button" className="button button-secondary button-small" onClick={() => void save()}>{t("Save where it runs")}</button><button type="button" className="button button-secondary button-small" onClick={() => setEditing(false)}>{t("Cancel")}</button></div>}
     {note && <small className="muted">{note}</small>}
@@ -257,10 +257,10 @@ function VersionsOfAlgorithm({ algorithm, me, shown, newVersion, onShow, onSaved
     versions={versions && versions.map(algorithmVersionItem)}
     shown={shown}
     onOpen={onShow}
-    actions={newVersion ? <Link to={newVersion} className="button button-primary"><PenLine size={16} />{t("New version")}</Link>:
-      algorithm.system ? <VersionLock>{t("Ships with PlantCraft: no new version here")}</VersionLock> : null}
-    footer={algorithm.system ? t("PlantCraft's own algorithms change with PlantCraft itself. Duplicate it to make an algorithm of this site from it."):
-      t("The monitors run the version in use, the newest. Opening an older one shows the page at that version; Use this version saves it again as the newest.")} />;
+    actions={newVersion ? <Link to={newVersion} className="button button-primary"><PenLine size={16} />{t("New version")}</Link>
+      : algorithm.system ? <VersionLock>{t("Ships with PlantCraft: no new version here")}</VersionLock> : null}
+    footer={algorithm.system ? t("PlantCraft's own algorithms change with PlantCraft itself. Duplicate it to make an algorithm of this site from it.")
+      : t("The monitors run the version in use, the newest. Opening an older one shows the page at that version; Use this version saves it again as the newest.")} />;
 }
 
 /** Where an algorithm is used: the loops it works on and its schedules. */
@@ -273,8 +273,8 @@ function Usage({ algorithmId }: { algorithmId: string }) {
   const { subjects } = usage;
   return <div className="panel used-by">
     <p>{subjects.every
-      ? t("Every active signal: {count} today.", { count: subjects.count }):
-      subjects.count ? t("{count} loops use it.", { count: subjects.count }) : t("No loop uses it yet: choose it on a loop's page, or in the asset's record in PlantCraft.")}</p>
+      ? t("Every active signal: {count} today.", { count: subjects.count })
+      : subjects.count ? t("{count} loops use it.", { count: subjects.count }) : t("No loop uses it yet: choose it on a loop's page, or in the asset's record in PlantCraft.")}</p>
     {!!subjects.items.length && <ul className="alg-used">{subjects.items.slice(0, 12).map((item) => <li key={item.id}>
       <Link to={item.path}><b>{item.name}</b><small>{item.caption}</small></Link>
       <Pill status={item.status} label={statusLabel(item.status)} /><Health value={item.health} />
@@ -290,8 +290,8 @@ function Schedules({ algorithmId }: { algorithmId: string }) {
   if (!usage) return null;
   return <section className="panel"><div className="panel-header"><div><h2>{t("Monitors")}</h2></div></div>
     {usage.schedules.length
-      ? <ul className="alg-schedules">{usage.schedules.map((item) => <li key={item.schedule_id}><Link to={`/schedules/${encodeURIComponent(item.schedule_id)}`}>{item.name}</Link></li>)}</ul>:
-      <p className="muted">{t("No monitor runs it yet.")} <Link to="/schedules">{t("Monitors")}</Link></p>}
+      ? <ul className="alg-schedules">{usage.schedules.map((item) => <li key={item.schedule_id}><Link to={`/schedules/${encodeURIComponent(item.schedule_id)}`}>{item.name}</Link></li>)}</ul>
+      : <p className="muted">{t("No monitor runs it yet.")} <Link to="/schedules">{t("Monitors")}</Link></p>}
   </section>;
 }
 
@@ -378,13 +378,13 @@ function InputsTab({ algorithm, read, specs, me, editable, newVersion, onSaved: 
       <TimingFields timing={timing} disabled onChange={() => undefined} />
     </section>}
     <section className="panel"><div className="panel-header"><div><h2>{t("Parameters")}</h2><p>{editable ? t("Each block's value for this algorithm: change one and save it as a new version. A value left as it is follows the block's default.") : t("Each block's settings in this version: its own value, or the block's default.")}</p></div></div>
-      {!nodes.length ? <p className="muted">{t("No block of this algorithm has parameters.")}</p>:
-        editable ? nodes.map((node) => <div key={node.id} className="blkf-row alg-node-parameters">
+      {!nodes.length ? <p className="muted">{t("No block of this algorithm has parameters.")}</p>
+        : editable ? nodes.map((node) => <div key={node.id} className="blkf-row alg-node-parameters">
           <h3>{nodeName(node, specs)} <small className="muted"><Link to={`/blocks/${encodeURIComponent(node.block)}`}>{specs[node.block]?.name ?? node.block}</Link> · <span className="pc-mono">{node.id}</span></small></h3>
           <div className="alg-node-fields">{specs[node.block].parameters.map((parameter) => <ParameterField key={parameter.name} node={node} parameter={parameter} readOnly={false}
             onSet={(value) => setDiagram((now) => setParameter(now, node.id, parameter.name, value))} />)}</div>
-        </div>):
-        <div className="blk-table-wrap"><table className="table blk-contract alg-parameters">
+        </div>)
+        : <div className="blk-table-wrap"><table className="table blk-contract alg-parameters">
           <thead><tr><th>{t("Parameter")}</th><th>{t("Value")}</th><th>{t("Description")}</th></tr></thead>
           {nodes.map((node) => <tbody key={node.id}>
             <tr className="blk-group"><th colSpan={3} scope="colgroup">{nodeName(node, specs)} <small className="muted"><Link to={`/blocks/${encodeURIComponent(node.block)}`}>{specs[node.block]?.name ?? node.block}</Link></small></th></tr>
@@ -431,8 +431,8 @@ function TestTab({ read, specs, compare }: { read: Algorithm; specs: BlockSpecs;
   if (read.subject_kind === "signal") return <section className="panel"><p className="muted">{t("A signal algorithm is tested by its runs, on Signal quality.")}</p></section>;
   const own = new Set(read.assets ?? []);
   const options = onAssets
-    ? [...choices].sort((a, b) => Number(own.has(b.id)) - Number(own.has(a.id)) || a.name.localeCompare(b.name)).map((item) => ({ id: item.id, name: item.path ? `${item.name} · ${item.path}` : item.name })):
-    loops.map((item) => ({ id: item.loop_id, name: item.name || item.loop_id }));
+    ? [...choices].sort((a, b) => Number(own.has(b.id)) - Number(own.has(a.id)) || a.name.localeCompare(b.name)).map((item) => ({ id: item.id, name: item.path ? `${item.name} · ${item.path}` : item.name }))
+    : loops.map((item) => ({ id: item.loop_id, name: item.name || item.loop_id }));
   const asset = choices.find((item) => item.id === subject);
   const reads = read.diagram.nodes.filter((node) => node.block.startsWith("input."));
   const role = (node: DiagramNode) => (node.parameters?.signal ? null : String(node.parameters?.role ?? ""));
@@ -441,8 +441,8 @@ function TestTab({ read, specs, compare }: { read: Algorithm; specs: BlockSpecs;
     try {
       if (compare?.length) {
         const once = (item: Algorithm, window?: { start: string; end: string }) => (onAssets
-          ? api.testOnAsset(item.diagram, subject, item.timing ?? DEFAULT_TIMING, window?.end ?? (end ? isoOf(end) : undefined)):
-          api.testAlgorithm(item.diagram, subject, window));
+          ? api.testOnAsset(item.diagram, subject, item.timing ?? DEFAULT_TIMING, window?.end ?? (end ? isoOf(end) : undefined))
+          : api.testAlgorithm(item.diagram, subject, window));
         const first = await once(compare[0].algorithm);
         const span = first.summary?.window ?? (first.source_start && first.source_end ? { start: first.source_start, end: first.source_end } : undefined);
         setCompared([first, ...await Promise.all(compare.slice(1).map((item) => once(item.algorithm, span)))]);
@@ -453,8 +453,8 @@ function TestTab({ read, specs, compare }: { read: Algorithm; specs: BlockSpecs;
   const blocked = read.check.valid ? "" : t("Fix the problems first.");
   return <section className="panel blkt" aria-label={t("Test")}>
     <div className="panel-header"><div>{compare
-      ? <><h2>{t("Compare")}</h2><p>{t("Runs {versions} once each on the same data, without saving anything, and shows their outputs side by side.", { versions: compare.map((item) => item.label).join(", ") })}</p></>:
-      <><h2>{t("Test")}</h2><p>{t("Runs this version once, without saving anything, and shows what every block said.")}</p></>}</div></div>
+      ? <><h2>{t("Compare")}</h2><p>{t("Runs {versions} once each on the same data, without saving anything, and shows their outputs side by side.", { versions: compare.map((item) => item.label).join(", ") })}</p></>
+      : <><h2>{t("Test")}</h2><p>{t("Runs this version once, without saving anything, and shows what every block said.")}</p></>}</div></div>
     <div className="blkt-step">
       <h3><span className="blkf-part-number pc-num" aria-hidden="true">1</span>{onAssets ? t("The asset") : t("The loop")}</h3>
       <select id="alg-test-subject" aria-label={onAssets ? t("Asset to test on") : t("Loop to test on")} value={subject} onChange={(event) => setSubject(event.target.value)}>
@@ -489,8 +489,8 @@ function TestTab({ read, specs, compare }: { read: Algorithm; specs: BlockSpecs;
       comparison={algorithmComparison(compare.map((item, index) => ({ diagram: item.algorithm.diagram, trace: compared[index]?.trace, outputs: (compared[index]?.summary as { outputs?: AlgorithmOutput[] } | undefined)?.outputs })))} />}
     {test && <p className="alg-test-verdict">
       {verdict
-        ? <><Pill status={verdict.status === "bad" ? "alarm" : verdict.status} label={resultLabel(verdict.status)} /> {verdict.message}</>:
-        test.summary && <><Pill status={test.summary.status ?? "unknown"} label={test.summary.health !== null && test.summary.health !== undefined ? t("Health {value} %", { value: Math.round(test.summary.health) }) : t("Ran")} /></>}
+        ? <><Pill status={verdict.status === "bad" ? "alarm" : verdict.status} label={resultLabel(verdict.status)} /> {verdict.message}</>
+        : test.summary && <><Pill status={test.summary.status ?? "unknown"} label={test.summary.health !== null && test.summary.health !== undefined ? t("Health {value} %", { value: Math.round(test.summary.health) }) : t("Ran")} /></>}
     </p>}
     {test?.trace && <AlgorithmDiagram algorithmId={read.algorithm_id} algorithm={read} trace={test.trace} height={520} />}
   </section>;
@@ -584,14 +584,14 @@ function NewVersion({ algorithm, from, specs, me, onSaved: saved }: { algorithm:
     <section className="panel blkf-part" id="alg-edit-diagram">
       {head(t("The diagram"), t("Drag blocks from the palette and wire an output to an input of the same type. Test runs it once, nothing saved, and shows what every wire carried."),
         algorithm.subject_kind === "signal" ? undefined : <span className="alg-edit-test">{algorithm.subject_kind === "asset"
-          ? <AssetTestControl diagram={draft.diagram} draft={{ assets: algorithm.assets ?? [], timing: draft.timing }} onTrace={setTest} disabled={blocked} />:
-          <TestControl diagram={draft.diagram} onTrace={setTest} disabled={blocked} />}</span>)}
+          ? <AssetTestControl diagram={draft.diagram} draft={{ assets: algorithm.assets ?? [], timing: draft.timing }} onTrace={setTest} disabled={blocked} />
+          : <TestControl diagram={draft.diagram} onTrace={setTest} disabled={blocked} />}</span>)}
       {catalog
         ? <div className="alg-diagram alg-edit-diagram"><BlockEditor catalog={catalog} diagram={draft.diagram} onChange={setDiagram} check={check} trace={test?.trace ?? null} blockHref={(blockId) => href(`/blocks/${encodeURIComponent(blockId)}`)}
           inspectorTools={(node) => node.block === DEVIATION_BLOCK && algorithm.subject_kind === "asset"
-            ? <CalibrateTool node={node} diagram={draft.diagram} timing={draft.timing} assets={algorithm.assets ?? []} readOnly={false} disabled={blocked} onCalibrated={setDiagram} />:
-            null} /></div>:
-        <Loading />}
+            ? <CalibrateTool node={node} diagram={draft.diagram} timing={draft.timing} assets={algorithm.assets ?? []} readOnly={false} disabled={blocked} onCalibrated={setDiagram} />
+            : null} /></div>
+        : <Loading />}
     </section>
     {algorithm.subject_kind === "asset" && <section className="panel blkf-part" id="alg-edit-window">
       {head(t("The data each run reads"))}

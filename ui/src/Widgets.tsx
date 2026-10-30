@@ -402,8 +402,8 @@ export function WidgetCard({ def, title, config, w, h, editing = false, setConfi
   return <article className={`panel pc-wg-card pc-wg-h${h}${fold?.folded ? " pc-wg-folded" : ""}`} aria-label={name} data-widget={def.id}>
     <header className="pc-wg-card-head">
       {fold
-        ? <h2><button type="button" className="pc-wg-fold" aria-expanded={!fold.folded} onClick={fold.toggle}>{label}<ChevronDown size={15} aria-hidden="true" /></button></h2>:
-        head ? head(label) : <h2>{label}</h2>}
+        ? <h2><button type="button" className="pc-wg-fold" aria-expanded={!fold.folded} onClick={fold.toggle}>{label}<ChevronDown size={15} aria-hidden="true" /></button></h2>
+        : head ? head(label) : <h2>{label}</h2>}
       {tools}
     </header>
     {!fold?.folded && <div className="pc-wg-body">{def.render ? def.render({ config: settings, w, h, rows: listRows(h), editing, setConfig }) : <RemoteWidget item={def} w={w} h={h} config={settings} />}</div>}
@@ -538,8 +538,8 @@ export function WidgetBoard({ catalog, layout, onLayout, loading, apps = [], onR
       {editing && onReset && <button type="button" className="button button-secondary button-small" onClick={() => { onReset(); setAdding(false); }}><RotateCcw size={14} /> {t("Restore the default")}</button>}
       {loading && <LoaderCircle size={14} className="spin" aria-label={t("Loading")} />}
       {editing
-        ? <button type="button" className="button button-primary button-small" onClick={() => { setEditing(false); setAdding(false); }}><Check size={14} /> {t("Done")}</button>:
-        <button type="button" className="pc-wg-customize" onClick={() => setEditing(true)} title={t("Customize this page")}><SlidersHorizontal size={14} /> {t("Customize")}</button>}
+        ? <button type="button" className="button button-primary button-small" onClick={() => { setEditing(false); setAdding(false); }}><Check size={14} /> {t("Done")}</button>
+        : <button type="button" className="pc-wg-customize" onClick={() => setEditing(true)} title={t("Customize this page")}><SlidersHorizontal size={14} /> {t("Customize")}</button>}
     </div>
     {editing && adding && <WidgetPicker catalog={catalog} used={used} appName={appName} marks={marks} onClose={() => setAdding(false)}
       onAdd={(def, size) => { onLayout(addToBoard(board, def, size)); setAdding(false); }} />}

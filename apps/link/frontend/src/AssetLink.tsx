@@ -64,8 +64,8 @@ export function AssetLinkPage({ assetId, me }: { assetId: string; me: Me }) {
       actions={<>{link.loop_id && <Link to={`/loops/${encodeURIComponent(link.loop_id)}`} className="button button-secondary">{t("Loop analysis")}</Link>}{open}</>} />
     <h2 className="section-title">{t("Results on this asset")}</h2>
     {results.length
-      ? <DataTable rows={results} columns={ASSET_RESULT_COLUMNS} rowKey={(row) => `${row.kind}:${row.id}`} onRowClick={(row) => navigate(row.path)} label={t("Results on this asset")} />:
-      <div className="panel empty"><p>{t("No algorithm has a result on it yet.")}</p></div>}
+      ? <DataTable rows={results} columns={ASSET_RESULT_COLUMNS} rowKey={(row) => `${row.kind}:${row.id}`} onRowClick={(row) => navigate(row.path)} label={t("Results on this asset")} />
+      : <div className="panel empty"><p>{t("No algorithm has a result on it yet.")}</p></div>}
     {link.quality && <div className="pc-grid">
       <div className="panel kpi-card"><span className="pc-overline">{t("Worst of its signals")}</span><Pill status={link.quality.status} label={suiteLabel(link.quality.status)} /><Quality value={link.quality.score} /></div>
       <div className="panel kpi-card"><span className="pc-overline">{t("Usable for analysis")}</span><b>{link.quality.usable === null ? "—" : link.quality.usable ? t("Yes") : t("No")}</b><small>{t("What Analytics publishes on the asset in PlantCraft.")}</small></div>

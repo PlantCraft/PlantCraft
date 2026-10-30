@@ -376,8 +376,8 @@ export function ProposalCard({ base, chatId, messageId, index, proposal }: { bas
   if (state === "discarded") return <div className="pc-proposal pc-proposal-aside"><span>{t("Put aside: {object}", { object: String(proposal.fields.title || object) })}</span></div>;
   return <form className="pc-proposal" aria-label={t("Proposed {object}", { object })} onSubmit={(event) => { event.preventDefault(); void create(); }}>
     <header><Plus size={14} aria-hidden="true" /><strong>{card?.title || t("New {object}", { object })}</strong></header>
-    {card ? fields.map((field) => <FieldInput key={field.key} field={field} value={inputs[field.key] ?? ""} disabled={busy} onChange={(value) => setInputs((current) => ({ ...current, [field.key]: value }))} />):
-      <dl>{Object.entries(proposal.fields).map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{String(value)}</dd></div>)}</dl>}
+    {card ? fields.map((field) => <FieldInput key={field.key} field={field} value={inputs[field.key] ?? ""} disabled={busy} onChange={(value) => setInputs((current) => ({ ...current, [field.key]: value }))} />)
+      : <dl>{Object.entries(proposal.fields).map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{String(value)}</dd></div>)}</dl>}
     {missing.length > 0 && <small className="pc-proposal-missing">{t("Still needed: {fields}", { fields: missing.join(", ") })}</small>}
     {error && <p className="pc-drawer-failed"><AlertTriangle size={14} /> {error}</p>}
     <footer>
@@ -405,8 +405,8 @@ function Answer({ message, base, chatId, onRetry }: { message: Message; base?: s
     </button>}
     {(open || working) && reads > 0 && <ol className="pc-drawer-step-list">{message.steps.map((step, index) => <li key={index} className={step.state}>{step.state === "error" ? <AlertTriangle size={12} /> : step.state === "ok" ? <Check size={12} /> : <LoaderCircle className="spin" size={12} />}<span><b>{t(step.title)}</b> {step.summary}</span></li>)}</ol>}
     {message.state === "failed" ? <div className="pc-drawer-failed"><AlertTriangle size={14} /> <span>{message.text || t("The answer was interrupted. Ask again.")}</span>
-      {onRetry && <button type="button" className="pc-answer-retry" onClick={onRetry}><RotateCcw size={13} aria-hidden="true" />{t("Try again")}</button>}</div>:
-      message.text && <div className={`pc-drawer-markdown${working ? " pc-answer-writing" : ""}`}>{renderMarkdown(message.text)}</div>}
+      {onRetry && <button type="button" className="pc-answer-retry" onClick={onRetry}><RotateCcw size={13} aria-hidden="true" />{t("Try again")}</button>}</div>
+      : message.text && <div className={`pc-drawer-markdown${working ? " pc-answer-writing" : ""}`}>{renderMarkdown(message.text)}</div>}
     <AnswerProgress message={message} />
     {message.charts.map((chart, index) => <AssistantChart key={index} chart={chart} base={base} height={200} />)}
     {message.state === "done" && (message.meta?.proposals ?? []).map((proposal, index) => <ProposalCard key={index} base={base} chatId={chatId} messageId={message.message_id} index={index} proposal={proposal} />)}
@@ -744,8 +744,8 @@ export function AssistantTitleButton() {
   if (!source || !state || (state.allowed === false && !demo)) return null;
   const ready = Boolean(state.available);
   const setUp = !ready && Boolean(state.can_set_up);
-  const hint = ready ? t("Ask the assistant about this page"):
-    `${t("Assistant")}: ${state.reason || t("Language models are turned off in this installation.")}${setUp ? ` ${t("Click to set it up.")}` : ""}`;
+  const hint = ready ? t("Ask the assistant about this page")
+    : `${t("Assistant")}: ${state.reason || t("Language models are turned off in this installation.")}${setUp ? ` ${t("Click to set it up.")}` : ""}`;
   function toggle() {
     if (setUp) { window.location.assign(platformPath(platformUrl, "setup/language-model")); return; }
     if (open) { closeAssistant(); return; }

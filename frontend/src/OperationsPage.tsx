@@ -145,12 +145,12 @@ function HealthStatusPage() {
     <Heading title={t("System health")} actions={<RefreshButton onClick={() => void load()} />} />
     {error && <div className="module-state module-error"><AlertTriangle /><span>{error}</span></div>}
     {status && (!status.watching
-      ? <section className="panel apps-installed"><h2><Activity size={17} /> {t("Suite health")}</h2><p className="muted">{t("Nothing to watch: this PlantCraft runs without the suite's installer.")}</p></section>:
-      <section className="panel apps-installed" aria-labelledby="ops-status-title">
+      ? <section className="panel apps-installed"><h2><Activity size={17} /> {t("Suite health")}</h2><p className="muted">{t("Nothing to watch: this PlantCraft runs without the suite's installer.")}</p></section>
+      : <section className="panel apps-installed" aria-labelledby="ops-status-title">
         <div className="ops-health-head"><h2 id="ops-status-title"><Activity size={17} /> {t("Suite health")}</h2></div>
         <p className="muted">{t("Whether each part of the suite is running, checked every 30 s. Last check: {date}.", { date: when(status.at) })}{status.held ? ` ${t("Service checks are on hold while an operation runs or the installer is silent.")}` : ""}</p>
-        {status.open.length ? <ul className="ops-incidents">{status.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small></li>)}</ul>:
-          <p className="ops-all-good"><CheckCircle2 size={15} /> {t("Everything is running.")}</p>}
+        {status.open.length ? <ul className="ops-incidents">{status.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small></li>)}</ul>
+          : <p className="ops-all-good"><CheckCircle2 size={15} /> {t("Everything is running.")}</p>}
         {status.services.length > 0 && <DataTable rows={status.services} columns={SERVICE_COLUMNS.slice(0, 2)} rowKey={(item) => item.service} searchText={(item) => item.service} searchPlaceholder={t("Filter by name")} initialSort={{ key: "service", descending: false }} label={t("Services")} />}
       </section>)}
   </div>;
@@ -372,8 +372,8 @@ function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean 
       </div>
     </div>
     <p className="muted">{t("Checked every 30 s from Docker's health checks of each service, the free disk, the backups and the last restore drill. Last check: {date}.", { date: when(health.at) })}{health.held ? ` ${t("Service checks are on hold while an operation runs or the installer is silent.")}` : ""}</p>
-    {health.open.length ? <ul className="ops-incidents">{health.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small></li>)}</ul>:
-      <p className="ops-all-good"><CheckCircle2 size={15} /> {t("Everything is running.")}</p>}
+    {health.open.length ? <ul className="ops-incidents">{health.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small></li>)}</ul>
+      : <p className="ops-all-good"><CheckCircle2 size={15} /> {t("Everything is running.")}</p>}
     {services.length > 0 && <DataTable rows={services} columns={SERVICE_COLUMNS} rowKey={(item) => item.service} searchText={(item) => item.service} searchPlaceholder={t("Filter by name")} initialSort={{ key: "service", descending: false }} label={t("Services")} />}
     {disk && <p className="muted">{t("Free disk: {size}", { size: size(disk.free_bytes) })}{disk.free_pct != null ? ` (${disk.free_pct} %)` : ""}{forecastText(health.disk_forecast, size) ? ` · ${forecastText(health.disk_forecast, size)}` : ""}</p>}
     {recent.length > 0 && <details className="ops-recent"><summary>{t("Recent incidents")}</summary>
@@ -450,8 +450,8 @@ function BackupsTable({ backups, readOnly, disabled, onVerify, onRestore }: { ba
   ];
   return <section className="panel apps-installed" aria-labelledby="ops-backups-title">
     <h2 id="ops-backups-title">{t("Backups kept")}</h2>
-    {!backups.length ? <p className="muted">{t("No backups yet. The first one runs tonight, or now with Back up now.")}</p>:
-      <DataTable rows={backups} columns={columns} rowKey={(item) => item.name} searchText={(item) => `${item.name} ${item.suite_version ?? ""} ${(item.problems ?? []).join(" ")}`} searchPlaceholder={t("Filter by name")} initialSort={{ key: "created_at", descending: true }} label={t("Backups")} />}
+    {!backups.length ? <p className="muted">{t("No backups yet. The first one runs tonight, or now with Back up now.")}</p>
+      : <DataTable rows={backups} columns={columns} rowKey={(item) => item.name} searchText={(item) => `${item.name} ${item.suite_version ?? ""} ${(item.problems ?? []).join(" ")}`} searchPlaceholder={t("Filter by name")} initialSort={{ key: "created_at", descending: true }} label={t("Backups")} />}
   </section>;
 }
 

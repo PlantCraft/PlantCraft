@@ -41,8 +41,8 @@ function LastRun({ run, signals }: { run: Run; signals: string[] }) {
     <div className="panel-header"><div><h2>{t("Results")}</h2>
       <p><RunPill run={run} /> <Link to={runPath(run)}>{run.label || t("Simulation of {when}", { when: formatAgo(run.created_at) })}</Link>{run.summary ? ` · ${run.summary}` : ""}</p></div></div>
     {busy && (run.status === "running" && typeof run.progress === "number"
-      ? <Progress value={run.progress} text={t("{n} % of the simulated time", { n: Math.round(run.progress * 100) })} />:
-      <Loading text={t("Waiting in the queue…")} />)}
+      ? <Progress value={run.progress} text={t("{n} % of the simulated time", { n: Math.round(run.progress * 100) })} />
+      : <Loading text={t("Waiting in the queue…")} />)}
     {run.status === "failed" && <ul className="mc-run-messages">{run.messages.filter((item) => item.level === "error").slice(0, 5).map((item, index) => <li key={index}>{item.text}</li>)}</ul>}
     {run.status === "done" && <ResultsPlot key={run.id} run={run} others={[]} initial={signals} />}
   </section>;
@@ -72,8 +72,8 @@ export function modelPorts(diagram: BlockDiagram, catalog: BlockCatalog): { read
 export function PortsTable({ reads, gives, code }: { reads: Port[]; gives: Port[]; code: boolean }) {
   const rows = (title: string, items: Port[]) => <>
     <tr className="mc-contract-group"><th colSpan={3}>{title}</th></tr>
-    {items.length ? items.map((item) => <tr key={`${title}-${item.name}`}><td><b>{item.label}</b><small className="pc-mono">{item.name}</small></td><td>{item.unit || "–"}</td><td>{item.detail}</td></tr>):
-      <tr><td colSpan={3} className="muted">{t("None.")}</td></tr>}
+    {items.length ? items.map((item) => <tr key={`${title}-${item.name}`}><td><b>{item.label}</b><small className="pc-mono">{item.name}</small></td><td>{item.unit || "–"}</td><td>{item.detail}</td></tr>)
+      : <tr><td colSpan={3} className="muted">{t("None.")}</td></tr>}
   </>;
   return <section className="panel" aria-label={t("What it reads and gives")}>
     <h2>{t("What it reads and gives")}</h2>
@@ -153,8 +153,8 @@ function InputsTab({ diagram, catalog, code, ...props }: SaveProps & { diagram: 
     {code && <div className="notice">{t("A model written as code: its parameters are changed in the code.")} <Link to={codePath(projectId, model)}>{t("Edit the code")}</Link></div>}
     <section className="panel"><div className="panel-header"><div><h2>{t("Parameters")}</h2>
       <p>{t("Each block's default, unless this model sets its own value; a study can set another for each simulation.")}</p></div></div></section>
-    {nodes.length === 0 ? <section className="panel"><p className="muted">{t("No block of this model has parameters.")}</p></section>:
-      nodes.map((node) => {
+    {nodes.length === 0 ? <section className="panel"><p className="muted">{t("No block of this model has parameters.")}</p></section>
+      : nodes.map((node) => {
         const spec = specs[node.block];
         return <section key={node.id} className="panel mc-node-parameters" aria-label={node.label || node.id}>
           <h2>{node.label || node.id} <small className="muted"><Link to={blockPath(node.block)}>{spec.name}</Link></small></h2>

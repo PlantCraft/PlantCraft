@@ -123,9 +123,9 @@ export default function NotebooksPage() {
       <div>
         <h2>{t("Notebooks are off")}</h2>
         <p>{t("With notebooks on, each person can analyse the plant's signals in Python, in a tab of their own: charts, statistics, comparisons. The code runs in their browser with their own access, so whoever may read a signal may analyse it, and nothing is downloaded from the internet.")}</p>
-        {!data.allowed ? <p className="muted">{t("This installation turned notebooks off (PLANTCRAFT_NOTEBOOKS=off).")}</p>:
-          isAdmin ? <a className="button button-primary" href="/setup/notebooks" onClick={setupLink}><Settings2 /> {t("Turn on in Settings")}</a>:
-            <p className="muted">{t("Ask an administrator to turn them on.")}</p>}
+        {!data.allowed ? <p className="muted">{t("This installation turned notebooks off (PLANTCRAFT_NOTEBOOKS=off).")}</p>
+          : isAdmin ? <a className="button button-primary" href="/setup/notebooks" onClick={setupLink}><Settings2 /> {t("Turn on in Settings")}</a>
+            : <p className="muted">{t("Ask an administrator to turn them on.")}</p>}
       </div>
     </section>
   </>;
@@ -273,8 +273,8 @@ function KitSteps({ kits, onError }: { kits: NotebookKits; onError: (text: strin
   const windowsSetup = !!kits.kits.find((kit) => kit.id.startsWith("windows"))?.installer;
   const howTo: Record<string, string> = {
     windows: windowsSetup
-      ? t("Windows: double-click the file. The first time, if it says \"Windows protected your PC\", choose More info, then Run anyway: it is not signed yet."):
-      t("Windows: right-click the zip, Extract All (it takes a few minutes), then double-click Install in the folder. The first time, if it says \"Windows protected your PC\", choose More info, then Run anyway: it is not signed yet."),
+      ? t("Windows: double-click the file. The first time, if it says \"Windows protected your PC\", choose More info, then Run anyway: it is not signed yet.")
+      : t("Windows: right-click the zip, Extract All (it takes a few minutes), then double-click Install in the folder. The first time, if it says \"Windows protected your PC\", choose More info, then Run anyway: it is not signed yet."),
     macos: t("macOS: open the zip and drag PlantCraft Notebooks to Applications, then open it. The first time macOS says it cannot check it: in System Settings › Privacy & Security, choose Open Anyway. It is not signed yet."),
     linux: t("Linux: unzip it where it should stay and run Install.sh."),
   };
@@ -325,8 +325,8 @@ export function ownPythonCommands(file: string, platform: string): string {
   // A "~" in quotes stays a "~" in a Unix shell; the wheel's name has no spaces.
   const wheel = windows ? `"%USERPROFILE%\\Downloads\\${file}"` : `~/Downloads/${file}`;
   return (windows
-    ? ["py -m venv plantcraft-env", "plantcraft-env\\Scripts\\activate"]:
-    ["python3 -m venv ~/plantcraft-env", "source ~/plantcraft-env/bin/activate"]
+    ? ["py -m venv plantcraft-env", "plantcraft-env\\Scripts\\activate"]
+    : ["python3 -m venv ~/plantcraft-env", "source ~/plantcraft-env/bin/activate"]
   ).concat([`pip install jupyterlab matplotlib ${wheel}`, "jupyter lab"]).join("\n");
 }
 
@@ -349,8 +349,8 @@ function PackageSteps({ data, onError }: { data: NotebooksOverview; onError: (te
     <li>{t("In a terminal, create a Python environment of its own, install the package with JupyterLab and start it (Python 3.11 or newer):")}
       <pre className="nb-code">{commands}</pre>
       <button type="button" className="button button-secondary button-small" onClick={() => copy(commands, "commands")}><Copy /> {copied === "commands" ? t("Copied") : t("Copy")}</button></li>
-    <li>{token ? <span className="nb-token"><KeyRound size={14} /> <strong>{t("Copy it now: it will not be shown again.")}</strong></span>:
-      <button type="button" className="button button-secondary button-small" onClick={() => void createToken()}><KeyRound /> {t("Create an access token")}</button>}</li>
+    <li>{token ? <span className="nb-token"><KeyRound size={14} /> <strong>{t("Copy it now: it will not be shown again.")}</strong></span>
+      : <button type="button" className="button button-secondary button-small" onClick={() => void createToken()}><KeyRound /> {t("Create an access token")}</button>}</li>
     {token && <li>{t("In a notebook, connect:")}<pre className="nb-code">{snippet}</pre>
       <button type="button" className="button button-secondary button-small" onClick={() => copy(snippet, "snippet")}><Copy /> {copied === "snippet" ? t("Copied") : t("Copy")}</button></li>}
   </ol>;
@@ -378,10 +378,10 @@ export function NotebookSettingsPage() {
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
     {!data && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
     {data && <section className="panel form-panel">
-      <FormSection id="nb-state" title={data.enabled ? t("On") : t("Off")} detail={!data.built ? t("This installation was built without notebooks (make notebooks builds them)."):
-        !data.allowed ? t("This installation turned notebooks off (PLANTCRAFT_NOTEBOOKS=off)."):
-          data.enabled ? t("Notebooks is in every person's Desk. Turning it off hides it and stops every notebook from reading the plant; what people wrote stays in their browsers."):
-            t("Turn it on when people may analyse the plant's data in Python. Nothing runs on this server: each notebook runs in its person's browser, with that person's access, and nothing is downloaded from the internet.")}>
+      <FormSection id="nb-state" title={data.enabled ? t("On") : t("Off")} detail={!data.built ? t("This installation was built without notebooks (make notebooks builds them).")
+        : !data.allowed ? t("This installation turned notebooks off (PLANTCRAFT_NOTEBOOKS=off).")
+          : data.enabled ? t("Notebooks is in every person's Desk. Turning it off hides it and stops every notebook from reading the plant; what people wrote stays in their browsers.")
+            : t("Turn it on when people may analyse the plant's data in Python. Nothing runs on this server: each notebook runs in its person's browser, with that person's access, and nothing is downloaded from the internet.")}>
         <ul className="nb-facts">
           <li>{t("Reads only: a notebook never changes anything in the plant or the suite.")}</li>
           <li>{t("Each person sees only their own notebooks; edits stay in their browser.")}</li>
@@ -405,9 +405,9 @@ function NotebookKitSwitch({ data, onChanged, onError }: { data: NotebooksOvervi
   }
   return <section className="panel form-panel">
     <FormSection id="nb-kits" icon={<Monitor size={16} />} title={t("Kit for people's computers")} detail={!kits
-      ? t("This installation has no kits: they are an optional part of the offline bundle (make notebook-kits builds them). People can still install the package in a Python of their own."):
-      kits.enabled ? t("People download Python and JupyterLab for Windows, macOS and Linux from Notebooks, set to this server. Their notebooks run on their computers and read the plant with their own token, within the limits below."):
-        t("Off: people see the package for a Python of their own. Turn it on to offer the kit ({count} systems, version {version}). It runs on their computers, never on this server.", { count: kits.kits.length, version: kits.version })}>
+      ? t("This installation has no kits: they are an optional part of the offline bundle (make notebook-kits builds them). People can still install the package in a Python of their own.")
+      : kits.enabled ? t("People download Python and JupyterLab for Windows, macOS and Linux from Notebooks, set to this server. Their notebooks run on their computers and read the plant with their own token, within the limits below.")
+        : t("Off: people see the package for a Python of their own. Turn it on to offer the kit ({count} systems, version {version}). It runs on their computers, never on this server.", { count: kits.kits.length, version: kits.version })}>
       {kits && <div className="nb-run-actions"><button type="button" className={`button ${kits.enabled ? "button-secondary" : "button-primary"}`} disabled={busy} onClick={() => void turn(!kits.enabled)}>{busy ? <LoaderCircle className="spin" /> : <Power />} {kits.enabled ? t("Turn off the kit") : t("Turn on the kit")}</button></div>}
     </FormSection>
   </section>;

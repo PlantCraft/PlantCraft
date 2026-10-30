@@ -296,13 +296,13 @@ export function SubjectHistoryPage({ groupId, subject, me }: { groupId: string; 
             <PeriodPicker value={period} onChange={setPeriod} windows={OUTPUT_WINDOWS} fixed={false} />
           </div>}
         </div>
-        {!answer.series.length ? <p className="muted">{t("This algorithm records no output in the Historian.")}</p>:
-          series === null ? <Loading />:
-          output && <div className="subject-chart">
+        {!answer.series.length ? <p className="muted">{t("This algorithm records no output in the Historian.")}</p>
+          : series === null ? <Loading />
+          : output && <div className="subject-chart">
             {(() => {
               const found = byId.get(output.id);
-              return found && found.t.length ? <OutputChart line={{ name: output.name, t: found.t, v: found.v, unit: output.unit }} marks={marks} start={start} />:
-                <p className="muted">{t("No values in this period.")}</p>;
+              return found && found.t.length ? <OutputChart line={{ name: output.name, t: found.t, v: found.v, unit: output.unit }} marks={marks} start={start} />
+                : <p className="muted">{t("No values in this period.")}</p>;
             })()}
           </div>}
       </section>
@@ -310,8 +310,8 @@ export function SubjectHistoryPage({ groupId, subject, me }: { groupId: string; 
     {tab === "runs" && (askedRun || last) && <>
       <p className="run-back"><Link to={`${base}?tab=runs`}>{t("All runs")}</Link></p>
       {shown
-        ? <Suspense fallback={<Loading />}><RunView run={shown} algorithmId={algorithmId} subject={subject} /></Suspense>:
-        <section className="panel" role="status"><p>{t("This run's diagram is no longer kept: Analytics keeps it for the last {n} runs of each target (and the runs themselves for {days} days). Its outputs are still in the Historian, on the Overview.", { n: answer.samples_kept, days: RUNS_KEPT_DAYS })}</p></section>}
+        ? <Suspense fallback={<Loading />}><RunView run={shown} algorithmId={algorithmId} subject={subject} /></Suspense>
+        : <section className="panel" role="status"><p>{t("This run's diagram is no longer kept: Analytics keeps it for the last {n} runs of each target (and the runs themselves for {days} days). Its outputs are still in the Historian, on the Overview.", { n: answer.samples_kept, days: RUNS_KEPT_DAYS })}</p></section>}
     </>}
     {tab === "runs" && !askedRun && !last && <section className="panel" aria-label={t("Runs")}>
       <div className="panel-header"><div><h2>{t("Runs")}</h2><p>{t("Each time the monitor ran on {name}, newest first. Open one to see it on the diagram with its outputs and the signals it read; the last {n} keep what each wire carried, so a block's charts draw.", { name: row.name, n: answer.samples_kept })}</p></div></div>

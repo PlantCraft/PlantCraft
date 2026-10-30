@@ -106,8 +106,8 @@ export function NoticeTools({ item, onMark, onStar, className }: { item: Notice;
     {!done && <ReadToggle seen unread={item.state === "unread"} onToggle={() => onMark(item.state === "unread" ? "read" : null)} />}
     <StarButton starred={Boolean(item.starred)} onToggle={onStar} />
     {done
-      ? <button type="button" className="co-icon" onClick={(event) => { event.stopPropagation(); onMark("read"); }} title={t("Back to the notifications")} aria-label={t("Back to the notifications")}><ArchiveRestore /></button>:
-      <button type="button" className="co-icon nt-done" onClick={(event) => { event.stopPropagation(); onMark("archived"); }} title={t("Mark as done")} aria-label={t("Mark as done")}><Check /></button>}
+      ? <button type="button" className="co-icon" onClick={(event) => { event.stopPropagation(); onMark("read"); }} title={t("Back to the notifications")} aria-label={t("Back to the notifications")}><ArchiveRestore /></button>
+      : <button type="button" className="co-icon nt-done" onClick={(event) => { event.stopPropagation(); onMark("archived"); }} title={t("Mark as done")} aria-label={t("Mark as done")}><Check /></button>}
   </span>;
 }
 
@@ -136,8 +136,8 @@ export function NoticePane({ item, onBack, onMark, onStar, onActed }: { item: No
       {item.resolved && <p className="nt-resolved"><CheckCircle2 size={15} aria-hidden="true" />{item.resolved.note || t("Resolved")}<time dateTime={item.resolved.at} title={fullWhen(item.resolved.at)}>{shortWhen(item.resolved.at)}</time></p>}
       {(item.href || item.actions.length > 0) && <div className="nt-buttons">
         {item.actions.map((action) => action.method === "POST"
-          ? <button key={action.href + action.label} type="button" className="button button-secondary" disabled={running !== null} onClick={() => void run(action.href, action.label)}>{running === action.label ? t("Working…") : action.label}</button>:
-          <Go key={action.href + action.label} to={action.href} className="button button-secondary">{action.label}</Go>)}
+          ? <button key={action.href + action.label} type="button" className="button button-secondary" disabled={running !== null} onClick={() => void run(action.href, action.label)}>{running === action.label ? t("Working…") : action.label}</button>
+          : <Go key={action.href + action.label} to={action.href} className="button button-secondary">{action.label}</Go>)}
         {item.href && <Go to={item.href} className="button button-primary" onClickCapture={() => followNotice(item)}><ExternalLink size={15} />{t("Open")}</Go>}
       </div>}
       {outcome && <p className={outcome.ok ? "nt-outcome" : "form-error"} role="status">{outcome.message}</p>}

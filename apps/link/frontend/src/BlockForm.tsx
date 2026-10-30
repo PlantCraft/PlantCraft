@@ -63,8 +63,8 @@ function PortRows({ kind, ports, readOnly, onChange }: { kind: "input" | "output
             ? <>
               <label className="blkf-check"><input type="checkbox" aria-label={label(t("required"))} checked={port.required ?? true} disabled={readOnly} onChange={(event) => set(index, { required: event.target.checked })} />{t("Required")}</label>
               <label className="blkf-check"><input type="checkbox" aria-label={label(t("several wires"))} checked={port.multiple ?? false} disabled={readOnly} onChange={(event) => set(index, { multiple: event.target.checked })} />{t("Several wires")}</label>
-            </>:
-            <label className="blkf-check"><input type="checkbox" aria-label={label(t("recorded in the historian"))} checked={port.record ?? false} disabled={readOnly} onChange={(event) => set(index, { record: event.target.checked })} />{t("Recorded in the Historian")}</label>}
+            </>
+            : <label className="blkf-check"><input type="checkbox" aria-label={label(t("recorded in the historian"))} checked={port.record ?? false} disabled={readOnly} onChange={(event) => set(index, { record: event.target.checked })} />{t("Recorded in the Historian")}</label>}
         </div>
         {kind === "input"
           ? <fieldset className="blkf-row-more blkf-also" disabled={readOnly}>
@@ -74,8 +74,8 @@ function PortRows({ kind, ports, readOnly, onChange }: { kind: "input" | "output
               return <label key={item} className="blkf-check"><input type="checkbox" aria-label={label(t("also accepts {type}", { type: t(TYPE_WORDS[item]) }))} checked={also}
                 onChange={(event) => set(index, { types: event.target.checked ? [...new Set([port.type, ...(port.types ?? []), item])] : (port.types ?? []).filter((other) => other !== item) })} />{t(TYPE_WORDS[item])}</label>;
             })}
-          </fieldset>:
-          (port.type === "number" || port.type === "series") && <div className="blkf-row-more">
+          </fieldset>
+          : (port.type === "number" || port.type === "series") && <div className="blkf-row-more">
             <Field label={t("Normal from")} className="blkf-limit"><input type="number" aria-label={label(t("normal low"))} value={port.low ?? ""} disabled={readOnly} onChange={(event) => set(index, { low: numberOrNull(event.target.value) })} /></Field>
             <Field label={t("Normal to")} className="blkf-limit"><input type="number" aria-label={label(t("normal high"))} value={port.high ?? ""} disabled={readOnly} onChange={(event) => set(index, { high: numberOrNull(event.target.value) })} /></Field>
             <Field label={t("Better when")}><select aria-label={label(t("better when"))} value={port.better ?? ""} disabled={readOnly} onChange={(event) => set(index, { better: (event.target.value || null) as BlockFilePort["better"] })}>

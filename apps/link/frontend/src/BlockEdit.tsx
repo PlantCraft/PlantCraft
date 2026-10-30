@@ -157,8 +157,8 @@ export function NewBlockPage({ me }: { me: Me }) {
       detail={file ? t("Check the form, test it on an asset, then create it: it becomes version 1.") : t("A block is one calculation with typed inputs and outputs, its parameters and its Python code. Every save is a new version with a name, and algorithms keep the version they use.")} />
     {error && <ErrorBox text={error} />}
     {file
-      ? <Workbench start={file} me={me} onCancel={() => { setFile(null); if (from) navigate("/blocks/new"); }} />:
-      from ? (error ? null : <Loading />) : <>
+      ? <Workbench start={file} me={me} onCancel={() => { setFile(null); if (from) navigate("/blocks/new"); }} />
+      : from ? (error ? null : <Loading />) : <>
         <div className="pc-grid blkn-ways">{ways.map((item) => <button key={item.id} type="button" className={`panel card blkn-way${way === item.id ? " active" : ""}`} aria-pressed={way === item.id} onClick={() => { setWay(item.id); if (item.id === "form") setFile(library ? { ...newBlockFile(), library } : newBlockFile()); }}>
           <span className="blkn-way-icon">{item.icon}</span><strong>{item.title}</strong><p>{item.text}</p>
         </button>)}</div>

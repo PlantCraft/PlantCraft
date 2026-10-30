@@ -73,9 +73,9 @@ export function BlocksPage({ me }: { me: Me }) {
   const own = new Set(catalog.libraries.filter((item) => (item as { own?: boolean }).own).map((item) => item.library));
   const siteBlocks = catalog.blocks.filter((block) => own.has(block.library));
   const chooseFolder = (value: string) => { setQuery(""); setFolder(value); rememberFolder("/blocks", value); };
-  const shown = words ? catalog.blocks.filter(matches):
-    folder ? siteBlocks.filter((block) => inFolder(folders, block.block_id, folder)):
-    catalog.blocks.filter((block) => block.library === library?.library);
+  const shown = words ? catalog.blocks.filter(matches)
+    : folder ? siteBlocks.filter((block) => inFolder(folders, block.block_id, folder))
+    : catalog.blocks.filter((block) => block.library === library?.library);
   return <>
     <Heading title={t("Blocks")} actions={me.can_edit ? <button type="button" className="button button-secondary" onClick={() => setCreating(true)}><Puzzle />{t("New block library")}</button> : undefined} />
     <label className="mc-block-search"><Search size={15} /><input type="search" value={query} placeholder={t("Search blocks")} aria-label={t("Search blocks")} onChange={(event) => setQuery(event.target.value)} /></label>
@@ -83,9 +83,9 @@ export function BlocksPage({ me }: { me: Me }) {
       <FolderColumn kind="block" list={folders} chosen={words ? "-" : folder} onChoose={chooseFolder} total={siteBlocks.length} canEdit={me.can_edit} onChanged={reloadFolders} label={t("Libraries and folders")}
         before={catalog.libraries.map((item) => <FolderButton key={item.library} active={!words && !folder && item.library === library?.library} onClick={() => { setQuery(""); choose(item.library); }} count={item.count ?? 0}>{item.name}</FolderButton>)} />
       <section>
-        {words ? <h2 className="section-title">{t("{n} blocks found", { n: shown.length })}</h2>:
-          folder ? <div className="mc-library-head"><h2>{folderName(folders, folder)}</h2><p className="muted">{folder === NO_FOLDER ? t("This site's blocks that are in no folder.") : t("This site's blocks in this folder. Move a block with Move to folder on its page.")}</p></div>:
-          library && <div className="mc-library-head"><h2>{library.name}</h2>{library.description && <p className="muted">{library.description}</p>}</div>}
+        {words ? <h2 className="section-title">{t("{n} blocks found", { n: shown.length })}</h2>
+          : folder ? <div className="mc-library-head"><h2>{folderName(folders, folder)}</h2><p className="muted">{folder === NO_FOLDER ? t("This site's blocks that are in no folder.") : t("This site's blocks in this folder. Move a block with Move to folder on its page.")}</p></div>
+          : library && <div className="mc-library-head"><h2>{library.name}</h2>{library.description && <p className="muted">{library.description}</p>}</div>}
         {shown.length ? <div className="pc-grid">{shown.map((block) => <Link key={block.block_id} to={blockPath(block.block_id)} className="panel card mc-block-card">
           <strong>{block.name}</strong><p>{block.summary}</p>
           <small className="blk-card-ports">{block.inputs.length > 0 && <span><b>{t("In")}</b><Ports ports={block.inputs} /></span>}{block.outputs.length > 0 && <span><b>{t("Out")}</b><Ports ports={block.outputs} /></span>}</small>
@@ -129,8 +129,8 @@ function UsedBy({ blockId }: { blockId: string }) {
   if (!models) return <Loading />;
   return <section className="panel" aria-label={t("Used by")}>
     <h2>{t("Models that use it")}</h2>
-    {models.length === 0 ? <p className="muted">{t("No model uses this block yet.")}</p>:
-      <table className="table"><thead><tr><th>{t("Model")}</th><th>{t("Times placed")}</th></tr></thead><tbody>{models.map((item) => <tr key={`${item.project_id}/${item.model}`}>
+    {models.length === 0 ? <p className="muted">{t("No model uses this block yet.")}</p>
+      : <table className="table"><thead><tr><th>{t("Model")}</th><th>{t("Times placed")}</th></tr></thead><tbody>{models.map((item) => <tr key={`${item.project_id}/${item.model}`}>
         <td><Link to={modelPath(item.project_id, item.model)}><b>{item.name}</b></Link>{item.example && <small>{t("Example")}</small>}</td>
         <td className="pc-num">{item.count}</td>
       </tr>)}</tbody></table>}

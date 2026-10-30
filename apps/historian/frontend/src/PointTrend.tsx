@@ -159,7 +159,7 @@ export function PointTrend({ point, signal, tag, period, onPeriod }: { point: Po
       <button type="button" className="button button-secondary button-small" onClick={download} disabled={!series?.t.length}><Download size={15} />{t("CSV")}</button>
     </div>
     {error && <ErrorBox text={error} />}
-    {figure ? (series!.t.length ? <Plot data={figure.data} layout={figure.layout} config={figure.config} style={{ width: "100%" }} useResizeHandler />:
-      <p className="muted empty">{t("No values in this range yet.")}</p>) : <Loading />}
+    {figure ? (series!.t.length ? <Plot data={figure.data} layout={figure.layout} config={figure.config} style={{ width: "100%" }} useResizeHandler />
+      : <p className="muted empty">{t("No values in this range yet.")}</p>) : <Loading />}
   </div>;
 }

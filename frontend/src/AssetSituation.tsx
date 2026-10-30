@@ -71,8 +71,8 @@ export function AssetSituation({ assetId, onActions }: { assetId: string; onActi
         {data.status && <Pill status={data.status} label={STATUS_LABELS[data.status] ?? data.status} />}
         <h2>{situationHeadline(data)}</h2>
         <p className="muted">{data.inside.total
-          ? t("What the suite's apps say about this asset, its signals and the {count} assets inside it.", { count: data.inside.total }):
-          t("What the suite's apps say about this asset and its signals.")}
+          ? t("What the suite's apps say about this asset, its signals and the {count} assets inside it.", { count: data.inside.total })
+          : t("What the suite's apps say about this asset and its signals.")}
           {data.inside.total > data.inside.included && ` ${t("The first {count} inside are included.", { count: data.inside.included })}`}</p>
       </div>
       <button type="button" className="button button-secondary button-small button-icon" title={t("Refresh")} aria-label={t("Refresh")} onClick={() => void load()}><RefreshCw /></button>

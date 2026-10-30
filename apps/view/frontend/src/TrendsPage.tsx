@@ -202,8 +202,8 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
       <aside className="panel tc-trend-list">
         <h2>{t("Saved trends")}</h2>
         <Link to="/trends" className={`tc-trend-item ${!trendId ? "active" : ""}`}><Plus size={14} /> {t("New trend")}</Link>
-        {!saved ? <Loading /> : saved.length === 0 ? <p className="muted small">{t("None yet: build one and save it.")}</p>:
-          saved.map((item) => <Link key={item.trend_id} to={`/trends/${item.trend_id}`} className={`tc-trend-item ${item.trend_id === trendId ? "active" : ""}`}>
+        {!saved ? <Loading /> : saved.length === 0 ? <p className="muted small">{t("None yet: build one and save it.")}</p>
+          : saved.map((item) => <Link key={item.trend_id} to={`/trends/${item.trend_id}`} className={`tc-trend-item ${item.trend_id === trendId ? "active" : ""}`}>
             <span>{item.name}</span><small className="muted">{periodLabel(item)} · {item.created_by ?? ""}</small>
           </Link>)}
       </aside>
@@ -245,8 +245,8 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
             {loading && <LoaderCircle size={14} className="spin" aria-label={t("Reading…")} />}
           </div>}
           {!asked.plots.length && loading && <LoaderCircle size={14} className="spin tc-trend-busy" />}
-          {!asked.plots.length ? <p className="muted tc-empty">{t("Add a signal to a plot to draw it.")}</p>:
-            data ? <>
+          {!asked.plots.length ? <p className="muted tc-empty">{t("Add a signal to a plot to draw it.")}</p>
+            : data ? <>
               <TrendChart key={full ? "full" : "page"} data={data} theme={chartTheme} filename={`${slug}${stamp}`} height={full ? Math.max(320, globalThis.innerHeight - 140) : undefined} />
               {data.range.shifted && <p className="tc-note">{t("No samples in the period: showing the newest data, up to {end}.", { end: formatDate(data.range.end) })}</p>}
               <ul className="tc-problems">{data.plots.flatMap((plot) => plot.lines).filter((line) => line.note).map((line, index) => <li key={`note-${index}`} className="tc-note-item"><b>{line.label}</b> {line.note}</li>)}{data.plots.flatMap((plot) => plot.lines).filter((line) => line.error).map((line, index) => <li key={index}><b>{line.label}</b> {line.error}</li>)}</ul>
@@ -322,8 +322,8 @@ export function TrendDialog({ title, signals, period: initial, onClose }: { titl
         {lines.length < MAX_LINES && <SignalSearch key={lines.length} value="" onPick={(signal) => setLines([...lines, { signal_id: signal.id, label: "" }])} />}
       </div>
       {error && <ErrorBox text={error} />}
-      {!lines.length ? <p className="muted tc-empty">{t("Add a signal to draw it.")}</p>:
-        data ? <>
+      {!lines.length ? <p className="muted tc-empty">{t("Add a signal to draw it.")}</p>
+        : data ? <>
           <TrendChart data={data} theme={chartTheme} filename="trend" height={Math.max(260, Math.min(460, globalThis.innerHeight - 330))} />
           {data.range.shifted && <p className="tc-note">{t("No samples in the period: showing the newest data, up to {end}.", { end: formatDate(data.range.end) })}</p>}
           <ul className="tc-problems">{data.plots.flatMap((plot) => plot.lines).filter((line) => line.error).map((line, index) => <li key={index}><b>{line.label}</b> {line.error}</li>)}</ul>

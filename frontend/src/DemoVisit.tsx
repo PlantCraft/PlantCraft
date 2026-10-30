@@ -47,8 +47,8 @@ export function DemoEntry({ ended, onEntered }: { ended: boolean; onEntered: (us
     {waiting ? <div className="demo-line" role="status" aria-live="polite">
       <LoaderCircle className="spin" size={16} />
       <span>{t("Every place is taken. You are number {position} in line: {wait}. Keep this page open.", { position: waiting.position, wait: waitText(waiting.wait_seconds) })}</span>
-    </div>:
-      <button type="button" className="button button-primary button-wide" disabled={busy} onClick={() => void ask()}>{busy ? <LoaderCircle className="spin" size={18} /> : <>{ended ? t("Enter the demo again") : t("Enter the demo")} <ArrowRight size={18} /></>}</button>}
+    </div>
+      : <button type="button" className="button button-primary button-wide" disabled={busy} onClick={() => void ask()}>{busy ? <LoaderCircle className="spin" size={18} /> : <>{ended ? t("Enter the demo again") : t("Enter the demo")} <ArrowRight size={18} /></>}</button>}
     {error && <span className="demo-error">{error}</span>}
   </div>;
 }

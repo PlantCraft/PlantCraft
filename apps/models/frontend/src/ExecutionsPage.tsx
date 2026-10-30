@@ -54,8 +54,8 @@ export function variesText(study: Pick<Study, "kind" | "spec">): string {
   const sweep: SweepItem[] = study.spec && "sweep" in study.spec ? study.spec.sweep : [];
   if (!sweep.length) return t("The model as it is");
   return sweep.map((item) => `${item.name} ${item.mode === "range"
-    ? t("{count} values from {start} to {stop}", { count: item.count ?? 0, start: item.start ?? 0, stop: item.stop ?? 0 }):
-    t("{count} values", { count: item.values?.length ?? 0 })}`).join(" × ");
+    ? t("{count} values from {start} to {stop}", { count: item.count ?? 0, start: item.start ?? 0, stop: item.stop ?? 0 })
+    : t("{count} values", { count: item.values?.length ?? 0 })}`).join(" × ");
 }
 
 function usePolled<T>(load: () => Promise<T>, key: string): [T | null, string, () => void] {
@@ -122,8 +122,8 @@ export function GroupPage({ studyId, me }: { studyId: string; me: Me }) {
     <nav className="breadcrumb"><Link to="/executions">{t("Simulations")}</Link></nav>
     <Heading eyebrow={t(GROUP_KINDS[study.kind] ?? study.kind)} title={groupName(study)}
       actions={quick
-        ? <Link to={modelPath(study.project_id, study.model)} className="button button-secondary">{t("Open the model")}</Link>:
-        <Link to={`/studies/${encodeURIComponent(study.id)}`} className="button button-secondary">{t("Open the study")}</Link>} />
+        ? <Link to={modelPath(study.project_id, study.model)} className="button button-secondary">{t("Open the model")}</Link>
+        : <Link to={`/studies/${encodeURIComponent(study.id)}`} className="button button-secondary">{t("Open the study")}</Link>} />
     <section className="panel mc-group-summary" aria-label={t("Summary")}>
       <dl className="facts">
         <div><dt>{t("Simulations")}</dt><dd><Link to={modelPath(study.project_id, study.model)}>{study.model.split(".").pop()}</Link><small className="muted"> · {study.project_name}</small></dd></div>

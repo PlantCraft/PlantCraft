@@ -273,8 +273,8 @@ function AssistantStepBody({ items }: { items: string[] }) {
     <p>{tt("Every page has its own questions for the assistant: this menu lists the ones for this page.")}</p>
     {items.length > 0 && <><p>{tt("In this app it can, for instance:")}</p><ul>{items.map((item) => <li key={item}>{item}</li>)}</ul></>}
     <p>{demo
-      ? tt("It is off in this public demo: the Assistant button at the foot of the menu opens the team's chats, each with the steps it took."):
-      tt("It reads only what you may see, shows each step it took, and changes nothing without you.")}</p>
+      ? tt("It is off in this public demo: the Assistant button at the foot of the menu opens the team's chats, each with the steps it took.")
+      : tt("It reads only what you may see, shows each step it took, and changes nothing without you.")}</p>
   </>;
 }
 

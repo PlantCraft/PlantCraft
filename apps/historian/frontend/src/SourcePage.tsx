@@ -95,8 +95,8 @@ export function SourcePage({ sourceId, me }: { sourceId: string; me: Me }) {
     </div>}
     <h2 className="section-title">{t("Signals from this source")}</h2>
     {points.length === 0
-      ? <div className="panel empty"><p>{derived ? t("No data received from this app.") : t("No signals. Browse the source to add signals.")}</p></div>:
-      <DataTable rows={points} rowKey={(row) => row.signal} label={t("Signals from this source")} columns={pointColumns()} onRowClick={(row) => navigate(pointPath(row.signal))}
+      ? <div className="panel empty"><p>{derived ? t("No data received from this app.") : t("No signals. Browse the source to add signals.")}</p></div>
+      : <DataTable rows={points} rowKey={(row) => row.signal} label={t("Signals from this source")} columns={pointColumns()} onRowClick={(row) => navigate(pointPath(row.signal))}
         searchText={(row) => `${row.signal} ${row.name} ${row.description} ${row.address}`} searchPlaceholder={t("Search tag, name or address")} />}
     {actions.dialogs}
   </>;

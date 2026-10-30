@@ -350,10 +350,10 @@ function Checklist({ action, list, canEdit, onChanged }: { action: Action; list:
       <input type="checkbox" checked={item.done} disabled={!canEdit || busy} aria-label={item.text} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { done: event.target.checked }))} />
       <span className="act-item-text">{item.text}</span>
       <span className="act-item-meta">
-        {canEdit ? <select aria-label={t("Responsible for {item}", { item: item.text })} value={item.owner ?? ""} disabled={busy} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { owner: event.target.value || null }))}><option value="">{t("Nobody")}</option>{list.people.map((person) => <option key={person.username} value={person.username}>{person.display_name}</option>)}</select>:
-          item.owner ? <PersonLink username={item.owner} name={item.owner_name} /> : null}
-        {canEdit ? <input type="date" aria-label={t("Due date of {item}", { item: item.text })} value={item.due_at ?? ""} disabled={busy} className={item.overdue ? "due-overdue" : ""} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { due_at: event.target.value || null }))} />:
-          item.due_at ? <span className={item.overdue ? "due-overdue" : "due"}><CalendarClock size={13} />{dayText(item.due_at)}</span> : null}
+        {canEdit ? <select aria-label={t("Responsible for {item}", { item: item.text })} value={item.owner ?? ""} disabled={busy} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { owner: event.target.value || null }))}><option value="">{t("Nobody")}</option>{list.people.map((person) => <option key={person.username} value={person.username}>{person.display_name}</option>)}</select>
+          : item.owner ? <PersonLink username={item.owner} name={item.owner_name} /> : null}
+        {canEdit ? <input type="date" aria-label={t("Due date of {item}", { item: item.text })} value={item.due_at ?? ""} disabled={busy} className={item.overdue ? "due-overdue" : ""} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { due_at: event.target.value || null }))} />
+          : item.due_at ? <span className={item.overdue ? "due-overdue" : "due"}><CalendarClock size={13} />{dayText(item.due_at)}</span> : null}
         {item.done && item.done_by && <small title={fullWhen(item.done_at)}>{t("done by {name}", { name: item.done_by_name ?? item.done_by })}</small>}
         {canEdit && <button type="button" className="icon-button" disabled={busy} aria-label={t("Remove {item}", { item: item.text })} onClick={() => void run(() => collabApi.deleteItem(action.action_id, item.item_id))}><Trash2 size={14} /></button>}
       </span>

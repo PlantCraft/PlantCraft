@@ -44,8 +44,8 @@ export function useOverviewLayout(page?: string, fetcher: typeof fetch = fetch):
   const save = useCallback((next: BoardItem[] | null) => {
     setLayout(next);
     const init: RequestInit = next === null
-      ? { method: "DELETE", credentials: "same-origin" }:
-      { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ widgets: next }) };
+      ? { method: "DELETE", credentials: "same-origin" }
+      : { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ widgets: next }) };
     fetcher(layoutUrl(page), init).catch(() => undefined);
   }, [page, fetcher]);
   return [layout, save];

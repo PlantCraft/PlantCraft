@@ -39,8 +39,8 @@ export function PersonPage({ username }: { username: string }) {
     <div className="pp-grid">
       <section className="panel">
         <h2 className="section-title">{t("Profile")}</h2>
-        {facts.length ? <dl className="pp-facts">{facts.map(([icon, label, value]) => <div key={label}><dt>{icon} {label}</dt><dd>{value}</dd></div>)}</dl>:
-          <p className="muted">{card.is_me ? t("Your profile is empty: add your job title, unit and how to reach you.") : t("No profile details yet.")}</p>}
+        {facts.length ? <dl className="pp-facts">{facts.map(([icon, label, value]) => <div key={label}><dt>{icon} {label}</dt><dd>{value}</dd></div>)}</dl>
+          : <p className="muted">{card.is_me ? t("Your profile is empty: add your job title, unit and how to reach you.") : t("No profile details yet.")}</p>}
         <h2 className="section-title"><Users size={15} /> {t("Groups")}</h2>
         {card.groups?.length ? <ul className="pp-apps">{card.groups.map((group) => <li key={group.group_id}><Go to={`/groups/${encodeURIComponent(group.group_id)}`}>{group.name}</Go><span className="ac-level ac-level-viewer">{group.coordinator ? `${group.kind_label} · ${t("Coordinator")}` : group.kind_label}</span></li>)}</ul> : <p className="muted">{card.is_me ? t("You are in no group yet; an administrator adds you.") : t("In no group.")}</p>}
         {card.apps && <>

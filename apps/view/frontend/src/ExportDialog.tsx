@@ -15,11 +15,11 @@ export function ExportDialog({ reportId, busy = false, onPdf, pdfHref, onClose }
     <div className="tc-export-list">
       {EXPORTS.map((item) => item.id === "pdf"
         ? onPdf
-          ? <button key={item.id} type="button" className="tc-choice tc-export" disabled={busy} onClick={onPdf}><FileText size={18} aria-hidden /><span><b>{t(item.label)}</b><small>{t(item.hint)}</small></span></button>:
-          pdfHref
-            ? <a key={item.id} className="tc-choice tc-export" href={pdfHref} target="_blank" rel="noreferrer" onClick={() => window.setTimeout(onClose, 300)}><FileText size={18} aria-hidden /><span><b>{t(item.label)}</b><small>{t("The last one made, as it was sent.")}</small></span></a>:
-            null:
-        <a key={item.id} className="tc-choice tc-export" href={exportUrl(reportId, item.id as ExportFormat)} download onClick={() => window.setTimeout(onClose, 300)}><Download size={18} aria-hidden /><span><b>{t(item.label)}</b><small>{t(item.hint)}</small></span></a>)}
+          ? <button key={item.id} type="button" className="tc-choice tc-export" disabled={busy} onClick={onPdf}><FileText size={18} aria-hidden /><span><b>{t(item.label)}</b><small>{t(item.hint)}</small></span></button>
+          : pdfHref
+            ? <a key={item.id} className="tc-choice tc-export" href={pdfHref} target="_blank" rel="noreferrer" onClick={() => window.setTimeout(onClose, 300)}><FileText size={18} aria-hidden /><span><b>{t(item.label)}</b><small>{t("The last one made, as it was sent.")}</small></span></a>
+            : null
+        : <a key={item.id} className="tc-choice tc-export" href={exportUrl(reportId, item.id as ExportFormat)} download onClick={() => window.setTimeout(onClose, 300)}><Download size={18} aria-hidden /><span><b>{t(item.label)}</b><small>{t(item.hint)}</small></span></a>)}
     </div>
     <footer><button type="button" className="button button-secondary" onClick={onClose}>{t("Close")}</button></footer>
   </Dialog>;

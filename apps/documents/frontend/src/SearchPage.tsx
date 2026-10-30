@@ -100,8 +100,8 @@ export function SearchPage({ me }: { me: Me }) {
           <footer className="muted">{t(hit.kind)} · {t("found by {how}", { how: hit.found_by.map((item) => t(FOUND_BY[item] ?? item)).join(t(" and ")) })}
             {hit.assets.length > 0 && <> · {hit.assets.slice(0, 6).map((item, index) => <span key={item}>{index ? ", " : ""}<button className="link-button" type="button" onClick={() => navigate(`/assets/${encodeURIComponent(item)}`)}>{item}</button></span>)}</>}</footer>
         </li>;
-      })}</ol>:
-      <div className="panel empty"><p>{t("No passage of the documents you may read matches.")}</p></div>)}
+      })}</ol>
+      : <div className="panel empty"><p>{t("No passage of the documents you may read matches.")}</p></div>)}
   </>;
 }
 

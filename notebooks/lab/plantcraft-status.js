@@ -17,8 +17,8 @@
       "background:#1d4ed8;color:#fff;padding:10px 16px;border-radius:8px;font:14px system-ui,sans-serif;" +
       "box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:90vw";
     banner.textContent = seenReady
-      ? "Starting Python on your computer…":
-      "Starting Python on your computer… The first time in this browser it can take up to a minute.";
+      ? "Starting Python on your computer…"
+      : "Starting Python on your computer… The first time in this browser it can take up to a minute.";
     document.body.appendChild(banner);
   }
 

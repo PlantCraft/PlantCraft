@@ -136,8 +136,8 @@ function DetailDrawer({ row, onClose, onFilter }: { row: AuditRow; onClose: () =
         <div><dt>{t("Target")}</dt><dd><code>{row.subject || "—"}</code></dd></div>
       </dl>
       <h3 className="audit-detail-title">{t("Detail")}</h3>
-      {detail ? <dl className="audit-facts">{detail.map(([key, item]) => <div key={key}><dt>{key}</dt><dd><pre>{value(item)}</pre></dd></div>)}</dl>:
-        row.detail == null ? <p className="muted">{t("No detail.")}</p> : <pre className="audit-json">{value(row.detail)}</pre>}
+      {detail ? <dl className="audit-facts">{detail.map(([key, item]) => <div key={key}><dt>{key}</dt><dd><pre>{value(item)}</pre></dd></div>)}</dl>
+        : row.detail == null ? <p className="muted">{t("No detail.")}</p> : <pre className="audit-json">{value(row.detail)}</pre>}
     </aside>
   </div>;
 }

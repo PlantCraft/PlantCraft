@@ -76,8 +76,8 @@ function fmtDate(value?: string | null) {
 
 function State({ error, label }: { error?: string; label: string }) {
   return error
-    ? <div className="module-state module-error"><AlertTriangle /><span>{error}</span></div>:
-    <div className="module-state"><LoaderCircle className="spin" /><span>{label}</span></div>;
+    ? <div className="module-state module-error"><AlertTriangle /><span>{error}</span></div>
+    : <div className="module-state"><LoaderCircle className="spin" /><span>{label}</span></div>;
 }
 
 // --- The tree ------------------------------------------------------------------
@@ -226,8 +226,8 @@ export function AssetsPage() {
         {attribute && <label className="as-search as-search-small"><input aria-label={t("Attribute value")} value={attributeValue} onChange={(event) => setAttributeValue(event.target.value)} placeholder={t("Any value")} /></label>}
         {hasResults && <label className="as-results-toggle" title={t("What apps record about each asset, such as the outputs of an Analytics monitor")}><input type="checkbox" checked={showResults} onChange={(event) => setShowResults(event.target.checked)} /> {t("Show app results")}</label>}
         {(typeId || attribute || query) && <button type="button" className="as-link-button" onClick={() => { chooseType(""); setAttribute(""); setAttributeValue(""); setQuery(""); }}><X size={13} /> {t("Clear")}</button>}
-        {chosen ? <span className="as-view-hint"><Table2 size={14} /> {t("Table of {type}", { type: chosen.name })}</span>:
-          <div className="as-levels"><span className="as-view-hint"><ListTree size={14} /> {t("Open to level")}</span>
+        {chosen ? <span className="as-view-hint"><Table2 size={14} /> {t("Table of {type}", { type: chosen.name })}</span>
+          : <div className="as-levels"><span className="as-view-hint"><ListTree size={14} /> {t("Open to level")}</span>
             <div className="segmented" role="group" aria-label={t("Open the tree to a level")}>
               {TREE_LEVELS.map((value) => <button key={value} type="button" className={level === value ? "on" : undefined} aria-pressed={level === value} title={t("Show {count} levels under the installation", { count: value })} onClick={() => showLevel(value)}>{value}</button>)}
               <button type="button" className={level === ALL_LEVELS ? "on" : undefined} aria-pressed={level === ALL_LEVELS} onClick={() => showLevel(ALL_LEVELS)}>{t("All")}</button>
@@ -235,8 +235,8 @@ export function AssetsPage() {
             <button type="button" className="button button-ghost button-small" disabled={visible !== null} onClick={() => { setLevel(0); setOpen(new Set()); }}>{t("Collapse all")}</button>
           </div>}
       </div>
-      {chosen ? <TypeTable type={chosen} items={kept} all={data.items} labels={labels} icons={icons} />:
-        roots.length ? <ul className="as-tree">{roots.map((root) => <TreeNode key={root.asset_id} asset={root} tree={tree} open={open} toggle={toggle} visible={visible} depth={0} labels={labels} icons={icons} />)}</ul> : <p className="muted">{t("No assets found.")}</p>}
+      {chosen ? <TypeTable type={chosen} items={kept} all={data.items} labels={labels} icons={icons} />
+        : roots.length ? <ul className="as-tree">{roots.map((root) => <TreeNode key={root.asset_id} asset={root} tree={tree} open={open} toggle={toggle} visible={visible} depth={0} labels={labels} icons={icons} />)}</ul> : <p className="muted">{t("No assets found.")}</p>}
     </article>
     {exporting && <ExportDialog items={data.items} rootId={data.root_id} onClose={() => setExporting(false)} />}
     {creating && <AssetForm kinds={data.kinds} types={types} assets={data.items} parentId={data.root_id} onClose={() => setCreating(false)} onSaved={(asset) => navigate(assetPath(asset.asset_id))} />}

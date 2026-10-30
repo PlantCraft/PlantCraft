@@ -365,8 +365,8 @@ backup() { # backup LABEL: stops the stack, saves data, settings and the current
     local file
     for file in .env compose.yaml bundle.env; do
         if [ -f "$PREFIX/$file" ]; then cp -p "$PREFIX/$file" "$dir/$file"; fi
-    done:
-    >"$dir/images.txt"
+    done
+    : >"$dir/images.txt"
     local ref id
     while read -r ref; do
         [ -n "$ref" ] || continue

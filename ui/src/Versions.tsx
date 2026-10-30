@@ -47,8 +47,8 @@ export function VersionsTab({ about, versions, shown, onOpen, footer, label, act
     {about}
     <section className="panel pc-versions" aria-label={label ?? t("Versions")}>
       <div className="panel-header"><div><h2>{label ?? t("Versions")}</h2><p>{t("Newest first. Saving a change makes a new version; the older ones stay to read and compare.")}</p></div>{actions && <div className="row-actions pc-versions-actions">{actions}</div>}</div>
-      {versions === null ? <p className="muted">{t("Loading…")}</p> : !versions.length ? <p className="muted">{t("No version saved yet.")}</p>:
-        <ol className="pc-version-list">{versions.map((item) => {
+      {versions === null ? <p className="muted">{t("Loading…")}</p> : !versions.length ? <p className="muted">{t("No version saved yet.")}</p>
+        : <ol className="pc-version-list">{versions.map((item) => {
           const inner = <>
             <span className="pc-version-head">
               <b className="pc-num">{t("Version {number}", { number: item.number })}</b>
@@ -61,8 +61,8 @@ export function VersionsTab({ about, versions, shown, onOpen, footer, label, act
           </>;
           return <li key={item.number} className={item.number === shown ? "active" : undefined}>
             {onOpen
-              ? <button type="button" className="pc-version" aria-pressed={item.number === shown} onClick={() => onOpen(item.number)}>{inner}</button>:
-              <div className="pc-version">{inner}</div>}
+              ? <button type="button" className="pc-version" aria-pressed={item.number === shown} onClick={() => onOpen(item.number)}>{inner}</button>
+              : <div className="pc-version">{inner}</div>}
           </li>;
         })}</ol>}
       {footer && <p className="muted small">{footer}</p>}

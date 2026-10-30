@@ -105,8 +105,8 @@ function HistorianStatus({ status, error }: { status: HomeStatus | null; error: 
   const historian = status.historian;
   return <div className="hm-status">
     <small className="hm-status-count">{historian.ok && historian.sources.length ? onlineText(historian.sources) : ""}</small>
-    {!historian.ok ? <p className="hm-status-down"><LiveDot state="offline" /> {t("The Historian does not answer: {detail}", { detail: historian.detail })}</p>:
-      <ul>{historian.sources.map((source) => <li key={source.id} title={source.detail || undefined}><LiveDot state={source.state} /><span>{source.name}<small> · {source.type}</small></span><small>{source.state === "offline" && source.detail ? source.detail : LIVE_LABELS[source.state]}</small></li>)}
+    {!historian.ok ? <p className="hm-status-down"><LiveDot state="offline" /> {t("The Historian does not answer: {detail}", { detail: historian.detail })}</p>
+      : <ul>{historian.sources.map((source) => <li key={source.id} title={source.detail || undefined}><LiveDot state={source.state} /><span>{source.name}<small> · {source.type}</small></span><small>{source.state === "offline" && source.detail ? source.detail : LIVE_LABELS[source.state]}</small></li>)}
         {!historian.sources.length && <li className="muted">{t("No connection yet.")}</li>}</ul>}
   </div>;
 }
@@ -211,7 +211,7 @@ export function AttentionPage({ data }: { data: HomeData }) {
     {!items && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
     {items && (items.length
       ? <DataTable rows={shown} columns={columns} rowKey={(item) => `${item.app}|${item.subject}|${item.kind}`} searchText={(item) => `${item.name} ${item.summary ?? ""} ${item.kind}`} searchPlaceholder={t("Filter by name")} initialSort={{ key: "status", descending: false }} label={t("Needs attention")} onRowClick={(item) => follow(item.url)}
-          toolbar={<><MultiSelect label={t("Status")} options={statusOptions} value={statuses} onChange={setStatuses} />{appOptions.length > 1 && <MultiSelect label={t("App")} options={appOptions} value={apps} onChange={setApps} />}</>} empty={t("Nothing matches the filters")} />:
-      <div className="panel hm-empty"><strong><CheckCircle2 size={16} aria-hidden="true" /> {t("Nothing needs attention")}</strong><p>{t("Once the apps run on the plant's data, what needs someone shows here, worst first.")}</p></div>)}
+          toolbar={<><MultiSelect label={t("Status")} options={statusOptions} value={statuses} onChange={setStatuses} />{appOptions.length > 1 && <MultiSelect label={t("App")} options={appOptions} value={apps} onChange={setApps} />}</>} empty={t("Nothing matches the filters")} />
+      : <div className="panel hm-empty"><strong><CheckCircle2 size={16} aria-hidden="true" /> {t("Nothing needs attention")}</strong><p>{t("Once the apps run on the plant's data, what needs someone shows here, worst first.")}</p></div>)}
   </>;
 }
