@@ -28,6 +28,7 @@ CORE = (
     "docs/api/v1/",
     "deploy/",
     ".github/",
+    ".claude/",
     "ci/",
     "dev/",
     "tests/",
