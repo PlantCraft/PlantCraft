@@ -4,7 +4,9 @@ Every release of PlantCraft View, newest first, in the
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) form. PlantCraft's `deploy/bundle.sh`
 joins it into the bundle's release notes.
 
-## [Unreleased]
+## [0.5.1] - 2026-10-30
+
+- Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).
 
 ### Added
 
