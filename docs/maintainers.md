@@ -64,7 +64,7 @@ hour.
 
 The release files are built on a machine with Docker and internet, once per processor:
 `make release-bundle` builds every app's image, the Simulator and the platform and writes
-`dist/plantcraft-<version>-linux-<arch>-bundle/` (bash 4 or newer: on macOS, `brew install
-bash`). The publisher's key signs `SHA256SUMS` where the key lives
+`dist/plantcraft-<version>-linux-<arch>-bundle/` (bash 4 and the GNU tools: on macOS,
+see [install-offline.md](install-offline.md#11-building-a-bundle-release-managers)). The publisher's key signs `SHA256SUMS` where the key lives
 ([verify-a-release.md](verify-a-release.md) says what users check), and the files go on the
 GitHub release of the tag.

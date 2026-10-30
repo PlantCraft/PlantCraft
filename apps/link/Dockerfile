@@ -99,7 +99,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 COPY --from=frontend /build/frontend/dist /app/ui
-COPY LICENSE ATTRIBUTION.md app.toml /app/
+COPY LICENSE ATTRIBUTION.md CHANGELOG.md app.toml /app/
 COPY fmus /app/fmus
 
 # Dependencies from the hash-checked wheelhouse, without network; then the SDK and PlantCraft Analytics.

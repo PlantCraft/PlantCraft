@@ -360,8 +360,18 @@ short-lived container, so a member of the `docker` group needs no `sudo`.
 
 ## 11. Building a bundle (release managers)
 
-On a machine with internet, Docker and bash 4 or newer (macOS: `brew install bash`), from a green
-`main`, once per processor. `make bundle` ships an app only when its image of this version is
+On a machine with internet, Docker, bash 4 or newer and the GNU tools (`sed -i`, `find -printf`),
+from a green `main`, once per processor. Linux has them; on macOS, install them and put them first
+on the PATH, and keep the temporary folder on a case-sensitive volume (the Notebooks kits hold
+files whose names differ only in case):
+
+```bash
+brew install bash gnu-sed findutils coreutils gnu-tar grep
+export PATH="$(brew --prefix)/opt/gnu-sed/libexec/gnubin:$(brew --prefix)/opt/findutils/libexec/gnubin:$(brew --prefix)/opt/coreutils/libexec/gnubin:$(brew --prefix)/opt/gnu-tar/libexec/gnubin:$(brew --prefix)/opt/grep/libexec/gnubin:$(brew --prefix)/bin:$PATH"
+export TMPDIR=/Volumes/<a case-sensitive APFS volume>/tmp   # or build without kits: NOTEBOOK_KITS=none
+```
+
+`make bundle` ships an app only when its image of this version is
 already built, so a release starts with `make release-bundle`:
 
 ```bash

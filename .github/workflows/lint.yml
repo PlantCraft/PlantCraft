@@ -37,6 +37,13 @@ jobs:
             (cd "$dir" && "$RUNNER_TEMP/venv/bin/ruff" check . && "$RUNNER_TEMP/venv/bin/ruff" format --check .) || status=1
           done
           exit $status
+      # Every shell script still parses (install.sh, bundle.sh, the CI scripts...).
+      - name: bash -n on every shell script
+        run: |
+          status=0
+          while IFS= read -r -d '' file; do bash -n "$file" || status=1; done \
+            < <(git ls-files -z '*.sh' deploy/install.sh)
+          exit $status
       # Parallel branches that change sdk/python or ui/ must not reuse main's version: the one who
       # merges second runs dev/sdk-version, which takes the next free one (AGENTS.md, section 6).
       - name: SDK and ui versions above main's
