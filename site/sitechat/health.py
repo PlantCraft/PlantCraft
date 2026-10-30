@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -344,12 +345,21 @@ class Notifier:
         }
         if self.site_host:
             headers["Click"] = f"https://{self.site_host}/stats"
-        if self.email:
-            headers["Email"] = self.email
+        if self.email and self._post(text, {**headers, "Email": self.email}):
+            return True
+        # ntfy.sh refuses the whole message (400) when the Email header names an address it does
+        # not mail (not verified, or e-mail off): the push still goes, without it.
+        return self._post(text, headers)
+
+    def _post(self, text: str, headers: dict[str, str]) -> bool:
         request = urllib.request.Request(self.url, data=text.encode(), headers=headers)
         try:
             urllib.request.urlopen(request, timeout=10).close()
             return True
+        except urllib.error.HTTPError as exc:  # ntfy says why in its body
+            reason = exc.read(300).decode(errors="replace").strip()
+            print(f"alert not sent: {exc} {reason}", file=sys.stderr, flush=True)
+            return False
         except Exception as exc:  # noqa: BLE001 - the watch goes on; the alert is in the log
             print(f"alert not sent: {exc}", file=sys.stderr, flush=True)
             return False
