@@ -1,0 +1,33 @@
+name: Zones
+
+# Which zones a pull request touches (CONTRIBUTING.md, "What is core and what is open"), on the
+# run's page for the reviewer. Fails when a fork changes the core and names no issue: the core
+# changes only after an issue agreed with a maintainer. A few seconds, nothing installed.
+on:
+  pull_request:
+
+concurrency:
+  group: zones-${{ github.ref }}
+  cancel-in-progress: true
+
+# Read-only token: the job only reads the diff.
+permissions:
+  contents: read
+
+jobs:
+  zones:
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          # The merge commit and its first parent, the base branch.
+          fetch-depth: 2
+      - name: Zones of the change
+        env:
+          # Through the environment, never pasted into the script: the text is a stranger's.
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_FORK: ${{ github.event.pull_request.head.repo.fork }}
+        run: |
+          git diff --name-only HEAD^1 HEAD | python3 dev/pr-zones --check | tee -a "$GITHUB_STEP_SUMMARY"
+          exit "${PIPESTATUS[1]}"

@@ -1,11 +1,108 @@
 # Architecture
 
-PlantCraft is the central app of the suite: a Python package
-(`processcraft/`) with a FastAPI backend and a React + TypeScript frontend
-(`frontend/`). State lives in one local SQLite database. The apps of the suite
-(Analytics, Historian, View, Alarms, Models) are separate programs, each in its own folder of this
-repository (`apps/<app>`) with its own image, that reach PlantCraft through API v1 only. This document explains how the code is split
-and the rules that keep it that way.
+PlantCraft is one **platform** and a set of **apps** on top of it. The platform holds what every
+app shares (people, the plant's assets and signals, the assistant, Desk, Notebooks, messages, and
+the results and events the apps publish). Each app keeps only its own objects, methods and
+workflow, runs in its own container and talks to the platform through one contract, API v1. A new
+app, official or yours, plugs in the same way.
+
+## The suite in one picture
+
+```mermaid
+flowchart TB
+    people(["People, in a browser"])
+    proxy["HTTPS proxy<br/>the only published port"]
+
+    subgraph platform["PlantCraft platform (this repository's root)"]
+        direction LR
+        core["People, sign-in and access<br/>Assets and signals<br/>Results, events, runs<br/>Messages and notifications"]
+        own["Desk (each person's day)<br/>Notebooks<br/>Assistant on every page<br/>Apps and updates"]
+    end
+
+    subgraph apps["Apps (apps/&lt;app&gt;, one container each)"]
+        direction LR
+        historian["Historian<br/>plant connections and history"]
+        analytics["Analytics<br/>signal quality, loops,<br/>blocks and algorithms"]
+        view["View<br/>dashboards, Process diagrams,<br/>reports, trends"]
+        alarms["Alarms<br/>ISA-18.2 rules and alarms"]
+        models["Models<br/>Modelica, studies, FMUs"]
+        documents["Documents<br/>manuals, P&amp;IDs, procedures"]
+        yours["Your app<br/>from templates/app"]
+    end
+
+    plant[("Plant systems<br/>OPC UA, PI Web API, MQTT,<br/>Modbus TCP, SQL, CSV")]
+
+    people --> proxy
+    proxy --> platform
+    proxy --> apps
+    apps <-->|"API v1: signed tokens, app keys"| platform
+    historian -->|"reads only, never writes"| plant
+```
+
+- **The platform is the hub; apps are the spokes.** Apps never call each other. Each one
+  publishes results and events in PlantCraft and reads what the others published there.
+- **The Historian is the data layer.** It is the only app that connects to the plant, and only to
+  read. The other apps read signals' history through PlantCraft or straight from the Historian,
+  with the same access rules.
+- **The same frame everywhere.** Every app uses `@plantcraft/ui` (sidebar, search, help, the
+  assistant, pickers, tables and charts) and `plantcraft-sdk` (server, store, access checks,
+  tests), so the suite reads as one product.
+
+## How the apps talk: one sticky valve
+
+A control valve starts sticking. This is how the apps find it, without one importing another:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Plant as Plant (OPC UA, PI)
+    participant Hist as Historian
+    participant An as Analytics
+    participant PC as PlantCraft
+    participant Al as Alarms
+    participant Vi as View
+    participant Who as Engineer
+
+    Hist->>Plant: read the loop's PV, SP and OP (read-only)
+    An->>Hist: series of the loop's signals (API v1)
+    An->>An: run the loop's algorithm (blocks): stiction found
+    An->>PC: publish a result on asset FIC-1003 (warning, score, one sentence)
+    PC-->>Al: the result is readable by every app
+    Al->>PC: a rule on that result raises an alarm, sends an event
+    PC->>Who: a notification in Messages and on Desk
+    Vi->>PC: the asset's status on the dashboard and the Process diagram
+    Who->>PC: asks the assistant "why is FIC-1003 red?"
+    PC-->>Who: answer from the result, the trend and the valve's manual (Documents)
+```
+
+What each step uses:
+
+| Step | Contract | Where it is written |
+|---|---|---|
+| Sign-in for every app | Short-lived Ed25519 tokens, checked offline against `/api/v1/keys` | [api-v1.md](api-v1.md) |
+| Work in the background | App keys issued by an administrator | [api-v1.md](api-v1.md) |
+| Signals and their history | `signal:<source>:<tag>` references, `POST /api/v1/series` | [app-standard.md](app-standard.md), section 2 |
+| Findings about the plant | Results on assets and signals (`ok`, `warning`, `alarm`, `unknown`) | [app-standard.md](app-standard.md), section 6 |
+| Things that happened | Events, declared in each app's `app.toml` | [app-standard.md](app-standard.md), section 4 |
+| What an app adds to the platform | `[contributes]` in `app.toml`: assistant uses, Desk widgets, calendar, to-dos, search, settings | [app-standard.md](app-standard.md), section 4b |
+
+## Core and extensions
+
+What is the base, and what is meant to grow:
+
+| Layer | What it is | Folders | Changes |
+|---|---|---|---|
+| **Core** | The platform, the contract and the shared code every app depends on | `processcraft/`, `frontend/`, `sdk/python/`, `ui/`, `docs/api/v1/`, `deploy/`, `.github/`, `ci/` | Additive only, after an issue agreed with a maintainer ([CONTRIBUTING.md](../CONTRIBUTING.md#what-is-core-and-what-is-open)) |
+| **Official apps** | The apps shipped with the suite | `apps/<app>/` | Inside one app, with that app's tests; never reaching into another app or the core |
+| **Content** | Methods, blocks, algorithms, alarm rule templates, model libraries, notebook examples, translations, documentation | inside the app that owns them, `docs/` | The most welcome contributions, from public references |
+| **Your apps** | Apps for one process, client or research topic | your own repository, from [`templates/app`](../templates/app) | No pull request here: they build on the published SDK and install as a signed package |
+
+## Inside the platform
+
+The rest of this page explains how the platform's own code is split and the rules that keep it
+that way. The platform is a Python package (`processcraft/`, the name before PlantCraft) with a
+FastAPI backend and a React + TypeScript frontend (`frontend/`); its state lives in one local
+SQLite database.
 
 ## Philosophy
 
@@ -51,7 +148,7 @@ monolith opens as is: the tables of the removed modules stay untouched.
 ```mermaid
 flowchart TB
     UI["Frontend<br/>React + TypeScript"]
-    Apps["Apps of the suite<br/>Link, Historian, View, ..."]
+    Apps["Apps of the suite<br/>Analytics, Historian, View, ..."]
     API["api<br/>/api and /api/v1"]
     Platform["platform<br/>workspace, sources, loops, plant map"]
     Auth["auth, audit<br/>people, tokens, app keys"]
