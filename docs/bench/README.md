@@ -178,6 +178,7 @@ First runs (cloud, 4 CPUs, demo plant with its 48 h archive, 167 plant signals x
 | C2, 10x methods | 30 | 34 | 26 | 3.4 | 25 |
 | C2, means of 60 s | 13 | 18 | 12.5 | 0.8 | 8 |
 | C2, times written at once (SDK fix) | 16 | 18 | 10 | 1.6 | 8 |
+| C2, SDK fix + Historian in 2 processes | 10 | 13 | 6.5 | 0.4 (display) | 4 |
 
 ## PlantCraft alone: 50,000 signals and 50 apps (`ci/bench/platform_scale.py`)
 
