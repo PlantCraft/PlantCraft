@@ -1,4 +1,4 @@
-"""CSV sources (owner, 2026-10-24): a file or folder another application keeps writing, checked
+"""CSV sources: a file or folder another application keeps writing, checked
 every few minutes; only rows after the newest archived value are added, and files are only read."""
 
 from __future__ import annotations

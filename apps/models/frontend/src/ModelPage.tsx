@@ -41,8 +41,8 @@ function LastRun({ run, signals }: { run: Run; signals: string[] }) {
     <div className="panel-header"><div><h2>{t("Results")}</h2>
       <p><RunPill run={run} /> <Link to={runPath(run)}>{run.label || t("Simulation of {when}", { when: formatAgo(run.created_at) })}</Link>{run.summary ? ` · ${run.summary}` : ""}</p></div></div>
     {busy && (run.status === "running" && typeof run.progress === "number"
-      ? <Progress value={run.progress} text={t("{n} % of the simulated time", { n: Math.round(run.progress * 100) })} />
-      : <Loading text={t("Waiting in the queue…")} />)}
+      ? <Progress value={run.progress} text={t("{n} % of the simulated time", { n: Math.round(run.progress * 100) })} />:
+      <Loading text={t("Waiting in the queue…")} />)}
     {run.status === "failed" && <ul className="mc-run-messages">{run.messages.filter((item) => item.level === "error").slice(0, 5).map((item, index) => <li key={index}>{item.text}</li>)}</ul>}
     {run.status === "done" && <ResultsPlot key={run.id} run={run} others={[]} initial={signals} />}
   </section>;
@@ -72,8 +72,8 @@ export function modelPorts(diagram: BlockDiagram, catalog: BlockCatalog): { read
 export function PortsTable({ reads, gives, code }: { reads: Port[]; gives: Port[]; code: boolean }) {
   const rows = (title: string, items: Port[]) => <>
     <tr className="mc-contract-group"><th colSpan={3}>{title}</th></tr>
-    {items.length ? items.map((item) => <tr key={`${title}-${item.name}`}><td><b>{item.label}</b><small className="pc-mono">{item.name}</small></td><td>{item.unit || "–"}</td><td>{item.detail}</td></tr>)
-      : <tr><td colSpan={3} className="muted">{t("None.")}</td></tr>}
+    {items.length ? items.map((item) => <tr key={`${title}-${item.name}`}><td><b>{item.label}</b><small className="pc-mono">{item.name}</small></td><td>{item.unit || "–"}</td><td>{item.detail}</td></tr>):
+      <tr><td colSpan={3} className="muted">{t("None.")}</td></tr>}
   </>;
   return <section className="panel" aria-label={t("What it reads and gives")}>
     <h2>{t("What it reads and gives")}</h2>
@@ -83,7 +83,7 @@ export function PortsTable({ reads, gives, code }: { reads: Port[]; gives: Port[
   </section>;
 }
 
-/** What the model is, as Analytics' algorithms open (owner, 2026-10-27): no results here, the
+/** What the model is, as Analytics' algorithms open: no results here, the
  * Test tab and the studies have them. */
 function Overview({ found, diagram, catalog, code }: { found: ModelDetail; diagram: BlockDiagram; catalog: BlockCatalog; code: boolean }) {
   const { reads, gives } = modelPorts(diagram, catalog);
@@ -113,7 +113,7 @@ function SaveBar({ dirty, busy, next, problem, onUndo, onSave }: { dirty: boolea
   </div>;
 }
 
-/** Where a parameter's value comes from (owner, 2026-10-27: defaults in cascade, block → model
+/** Where a parameter's value comes from (defaults in cascade, block → model
  * → study): the block's default, or this model's own value over it. */
 function ValueSource({ own, fallback }: { own: boolean; fallback: unknown }) {
   const shown = fallback === null || fallback === undefined || fallback === "" ? "–" : typeof fallback === "object" ? JSON.stringify(fallback) : String(fallback);
@@ -135,7 +135,7 @@ function useSave({ found, onSaved: saved, projectId, model }: SaveProps) {
 }
 
 /** What the model reads and gives, and every block's parameters, changed here without the
- * editor (owner, 2026-10-27: as a block's inputs and outputs; saving is a new version). */
+ * editor (as a block's inputs and outputs; saving is a new version). */
 function InputsTab({ diagram, catalog, code, ...props }: SaveProps & { diagram: BlockDiagram; catalog: BlockCatalog; code: boolean }) {
   const { found, readOnly, projectId, model, next } = props;
   const [draft, setDraft] = useState(diagram);
@@ -153,8 +153,8 @@ function InputsTab({ diagram, catalog, code, ...props }: SaveProps & { diagram: 
     {code && <div className="notice">{t("A model written as code: its parameters are changed in the code.")} <Link to={codePath(projectId, model)}>{t("Edit the code")}</Link></div>}
     <section className="panel"><div className="panel-header"><div><h2>{t("Parameters")}</h2>
       <p>{t("Each block's default, unless this model sets its own value; a study can set another for each simulation.")}</p></div></div></section>
-    {nodes.length === 0 ? <section className="panel"><p className="muted">{t("No block of this model has parameters.")}</p></section>
-      : nodes.map((node) => {
+    {nodes.length === 0 ? <section className="panel"><p className="muted">{t("No block of this model has parameters.")}</p></section>:
+      nodes.map((node) => {
         const spec = specs[node.block];
         return <section key={node.id} className="panel mc-node-parameters" aria-label={node.label || node.id}>
           <h2>{node.label || node.id} <small className="muted"><Link to={blockPath(node.block)}>{spec.name}</Link></small></h2>
@@ -169,7 +169,7 @@ function InputsTab({ diagram, catalog, code, ...props }: SaveProps & { diagram: 
   </>;
 }
 
-/** The simulation settings and where the model is kept (owner, 2026-10-27: a tab of its own, as
+/** The simulation settings and where the model is kept (a tab of its own, as
  * Analytics' algorithms; About was on Versions). Saving the settings is a new version. */
 function SettingsTab({ code, ...props }: SaveProps & { code: boolean }) {
   const { found, readOnly, next } = props;
@@ -197,7 +197,7 @@ function ModelAbout({ found }: { found: ModelDetail }) {
   </section>;
 }
 
-/** One simulation with the model's settings, a test (owner, 2026-10-27): the studies are what
+/** One simulation with the model's settings, a test: the studies are what
  * run a model for real, over its parameters. */
 function TestTab({ run, runs, signals, settings, canRun, busy, title, me, onRun, onChanged }: { run: Run | null; runs: Run[] | null; signals: string[]; settings: SimSettings; canRun: boolean; busy: boolean; title?: string; me: Me; onRun: () => void; onChanged: () => void }) {
   return <>
@@ -210,7 +210,7 @@ function TestTab({ run, runs, signals, settings, canRun, busy, title, me, onRun,
   </>;
 }
 
-/** The studies that use the model (owner, 2026-10-27: its Used by). */
+/** The studies that use the model (its Used by). */
 function UsedByTab({ studies, action }: { studies: Study[]; action: ReactNode }) {
   const columns: DataColumn<Study>[] = [
     { key: "name", label: t("Study"), sort: (study) => study.name, render: (study) => <><strong>{study.name}</strong>{study.description && <small>{study.description}</small>}</> },
@@ -242,7 +242,7 @@ export function VersionDialog({ next, title: named, busy, error, onClose, onSave
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
   const title = named ?? t("Save as version {n}", { n: next });
-  // What changed is asked every time (owner, 2026-10-27); the name is optional.
+  // What changed is asked every time; the name is optional.
   const submit = () => { if (note.trim()) onSave(name.trim(), note.trim()); };
   return <Dialog title={title} onClose={onClose} footer={<>
     <button type="button" className="button button-secondary" onClick={onClose}>{t("Cancel")}</button>

@@ -1,5 +1,5 @@
 /**
- * `/algorithms/new` (owner, 2026-10-25, round 9): a new algorithm the way a new block is made.
+ * `/algorithms/new` (round 9): a new algorithm the way a new block is made.
  * Import an algorithm file, or fill in the form (its name, what it works on and where to start
  * from) and go on in the diagram's window; the assistant's button beside the title opens it on
  * designing an algorithm.

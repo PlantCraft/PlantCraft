@@ -1,5 +1,5 @@
 /**
- * The one time zone picker of the suite (owner, 2026-10-24): a list, never a text to type. The
+ * The one time zone picker of the suite: a list, never a text to type. The
  * person's default comes first ("Local time · Sao Paulo (UTC−3)" or UTC, from their
  * Preferences), then the other of the two, then the fixed offsets UTC−1 … UTC−12 and
  * UTC+1 … UTC+14, and last, folded in its own group, the cities, for zones with daylight saving.
@@ -49,8 +49,8 @@ export function TimeZoneSelect({ value, onChange, id, name, disabled, ariaLabel 
   return (
     <select id={id} name={name} disabled={disabled} aria-label={ariaLabel} className="pc-time-zone" value={selected} onChange={(event: ChangeEvent<HTMLSelectElement>) => onChange(event.target.value)}>
       {timeZoneGroups(selected, withLocal).map((group) => group.label === null
-        ? group.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)
-        : (
+        ? group.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>):
+        (
           <optgroup key={group.label} label={group.label}>
             {group.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </optgroup>

@@ -1,7 +1,7 @@
 /** Setup › Desk (administrators): whether Desk shows its Team page (hidden by default, owner
  * 2026-10-25), and whether people may add calendars by link (Outlook,
  * Google, any .ics address), and from which servers. Off by default: the suite runs offline
- * and only reads the servers named here (owner, 2026-10-23). Importing an .ics file always works. */
+ * and only reads the servers named here. Importing an .ics file always works. */
 import { FormSection, Heading } from "@plantcraft/ui";
 import { useEffect, useState, type FormEvent } from "react";
 import { AlertTriangle, CalendarDays, LoaderCircle, ShieldCheck } from "lucide-react";

@@ -11,7 +11,7 @@ import { ErrorBox, Heading, Link, Loading, message } from "./ui";
 
 const FOUND_BY: Record<string, string> = { words: "words", meaning: "meaning" };
 
-/** Searches to start from, on the demo plant's documents (owner, 2026-10-28). */
+/** Searches to start from, on the demo plant's documents. */
 const EXAMPLES = [
   "Why does the recycle flow cycle?",
   "FV-1003 online valve test",
@@ -100,8 +100,8 @@ export function SearchPage({ me }: { me: Me }) {
           <footer className="muted">{t(hit.kind)} · {t("found by {how}", { how: hit.found_by.map((item) => t(FOUND_BY[item] ?? item)).join(t(" and ")) })}
             {hit.assets.length > 0 && <> · {hit.assets.slice(0, 6).map((item, index) => <span key={item}>{index ? ", " : ""}<button className="link-button" type="button" onClick={() => navigate(`/assets/${encodeURIComponent(item)}`)}>{item}</button></span>)}</>}</footer>
         </li>;
-      })}</ol>
-      : <div className="panel empty"><p>{t("No passage of the documents you may read matches.")}</p></div>)}
+      })}</ol>:
+      <div className="panel empty"><p>{t("No passage of the documents you may read matches.")}</p></div>)}
   </>;
 }
 

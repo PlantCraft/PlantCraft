@@ -13,7 +13,7 @@ import { Modal } from "./Modal";
 
 /** People and Specialists are two tabs of the Users page. */
 export function UserTabs({ current }: { current: "people" | "groups" | "specialists" }) {
-  // A public demo's visitor reads People and Groups only (owner, 2026-10-28).
+  // A public demo's visitor reads People and Groups only.
   const admin = useIsAdmin();
   return <PageTabs label={t("People")} href={(to) => to} navigate={navigate} tabs={[
     { to: "/users", label: t("People"), active: current === "people" },
@@ -152,11 +152,11 @@ function SpecialistForm({ data, specialist, onClose, onSaved, onDelete }: { data
             <option value="">{choices.length ? t("Choose…") : t("No provider saved yet")}</option>
             {choices.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select></label>}
-          <p className="muted">{!data.model_allowed ? t("Language models are turned off in this installation by whoever installed it.")
-            : model.source === "installation" ? `${t("The installation's language model")}: ${data.connection ? connectionState(data.connection) : "—"}.`
-            : model.source === "off" ? t("It answers from a script with what the apps published.")
-            : model.source === "provider" ? <>{t("Providers and their models are saved in")} <a href="/setup/language-model" onClick={(event) => { event.preventDefault(); navigate("/setup/language-model"); }}>{t("Settings, Language models")}</a>.</>
-            : t("The model writes the answer from the same data, following the instructions.")}</p>
+          <p className="muted">{!data.model_allowed ? t("Language models are turned off in this installation by whoever installed it."):
+            model.source === "installation" ? `${t("The installation's language model")}: ${data.connection ? connectionState(data.connection) : "—"}.`:
+            model.source === "off" ? t("It answers from a script with what the apps published."):
+            model.source === "provider" ? <>{t("Providers and their models are saved in")} <a href="/setup/language-model" onClick={(event) => { event.preventDefault(); navigate("/setup/language-model"); }}>{t("Settings, Language models")}</a>.</>:
+            t("The model writes the answer from the same data, following the instructions.")}</p>
           {model.source === "own" && data.model_allowed && <div className="sp-model-grid">
             <label>{t("Format")}<select value={model.provider} onChange={(event) => setModel({ provider: event.target.value })}>{providersOf(data).map((item) => <option key={item.id} value={item.id}>{t(item.label)}</option>)}</select></label>
             <label>{t("Model")}<input value={model.name} placeholder={data.defaults.model} onChange={(event) => setModel({ name: event.target.value })} /></label>

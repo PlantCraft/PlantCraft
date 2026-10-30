@@ -1,6 +1,6 @@
 """Build the Notebooks kits: ``python notebooks/kit/build_kit.py`` (or ``make notebook-kits``).
 
-What a person downloads from Notebooks › Run on your computer (owner, 2026-10-26: one double
+What a person downloads from Notebooks › Run on your computer (one double
 click, no administrator, no internet):
 
 - Windows: ``...-setup.exe`` (NSIS, built when ``makensis`` is here), for this user only;

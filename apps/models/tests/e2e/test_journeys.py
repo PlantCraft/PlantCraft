@@ -47,7 +47,7 @@ def _save_version(page, number, name):
 
     page.get_by_role("button", name=re.compile(f"^Save as version {number}")).click()
     dialog = page.get_by_role("dialog", name=f"Save as version {number}")
-    # What changed is asked every time; the name is optional (owner, 2026-10-27).
+    # What changed is asked every time; the name is optional.
     dialog.get_by_label("What changed").fill(f"{name}: a test change")
     dialog.get_by_label("Version name").fill(name)
     dialog.get_by_role("button", name=f"Save as version {number}").click()
@@ -77,13 +77,13 @@ def test_the_overview_shows_the_widgets(signed_in, app_url, screenshots):
     expect(page.get_by_text("The Modelica runner is not available")).to_have_count(0)
     activity = page.get_by_role("article", name="Simulations per day")
     expect(activity).to_contain_text("simulations in 14 days", timeout=SLOW)
-    # Owner, 2026-10-24: one level of menu, no sub-items.
+    # one level of menu, no sub-items.
     nav = page.locator(".pcs-nav")
     for name in ("Overview", "Models", "Studies", "Simulations", "Blocks"):
         expect(nav.get_by_role("link", name=name, exact=True)).to_be_visible()
     expect(page.locator(".pcs-nav-children")).to_have_count(0)
     _shot(page, screenshots, "0-overview")
-    # No buttons on top (owner, 2026-10-27): New model is on Models, a page of its own (round 9),
+    # No buttons on top: New model is on Models, a page of its own (round 9),
     # as Link's New block: import a file or fill in the form.
     expect(page.get_by_role("link", name="New model")).to_have_count(0)
     page.goto(f"{app_url}/model/models")
@@ -103,7 +103,7 @@ def test_the_models_page_lists_the_examples(signed_in, app_url, screenshots):
     for name in ("TankLevelControl", "HeatExchangerOutlet", "FirstOrderDeadTimeLoop"):
         expect(rows).to_contain_text(name, timeout=SLOW)
     expect(page.locator("tbody tr", has_text="TankLevelControl").first).to_contain_text("8")
-    # One kind of model: one written as code is one block (owner, 2026-10-24).
+    # One kind of model: one written as code is one block.
     expect(rows).to_contain_text("1 (code)")
     _shot(page, screenshots, "1-models")
 
@@ -112,7 +112,7 @@ def test_a_model_is_a_diagram_run_with_its_settings(signed_in, app_url, screensh
     page = signed_in
     _open_model(page, app_url)
     # Overview: what it is, no results and no Run on top; the inputs and outputs and the diagram
-    # have tabs of their own, as Analytics' algorithms (owner, 2026-10-27).
+    # have tabs of their own, as Analytics' algorithms.
     expect(page.locator(".mc-model-about")).to_contain_text("Shown by the scopes")
     expect(page.get_by_role("button", name="Run", exact=True)).to_have_count(0)
     expect(page.get_by_role("button", name="New study")).to_have_count(0)
@@ -348,7 +348,7 @@ def test_the_blocks_by_library_and_one_block(signed_in, app_url, screenshots):
     page.get_by_label("Search blocks").fill("PID")
     page.locator(".mc-block-card", has_text="PID").first.click()
     expect(page.get_by_role("heading", name="PID", exact=True)).to_be_visible(timeout=SLOW)
-    # A block's tabs, as Analytics' (owner, 2026-10-27): the Overview is its drawing and what it
+    # A block's tabs, as Analytics': the Overview is its drawing and what it
     # does, how to read it and its formula; its inputs and outputs have a tab of their own.
     about = page.get_by_role("region", name="About this block")
     expect(about).to_contain_text("How to read it")
@@ -500,7 +500,7 @@ def test_export_an_fmu(signed_in, app_url, screenshots):
     page.get_by_role("dialog").get_by_role("button", name="Export").click()
     expect(page.get_by_role("link", name="Download the FMU")).to_be_visible(timeout=SLOW)
     expect(page.locator(".pcs-content")).to_contain_text("linux64")
-    # Owner, 2026-10-24: nothing goes to Link from Models this round.
+    # nothing goes to Link from Models this round.
     expect(page.get_by_role("button", name="Publish to Link")).to_have_count(0)
     _shot(page, screenshots, "11-fmu")
 

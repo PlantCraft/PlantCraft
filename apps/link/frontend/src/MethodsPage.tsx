@@ -35,7 +35,7 @@ export function MethodPage({ methodId, me }: { methodId: string; me: Me }) {
   const properties = Object.entries(method.parameters.properties ?? {});
   const signal = method.application === "signal_quality";
   const label = method.label ?? methodLabel(method.method_id);
-  // Saving is always a new version with what changed (owner, 2026-10-27); the history stays below.
+  // Saving is always a new version with what changed; the history stays below.
   async function store(parameters: Record<string, unknown>, note: string) {
     setMessage(""); setError("");
     try {

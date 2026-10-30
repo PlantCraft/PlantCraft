@@ -169,7 +169,7 @@ def test_the_openai_format_carries_tools_both_ways(monkeypatch):
 
 
 def test_the_answers_length_goes_in_the_form_the_service_takes(monkeypatch):
-    """Owner, 2026-10-26: OpenAI's newer models refuse max_tokens ("Use 'max_completion_tokens'
+    """OpenAI's newer models refuse max_tokens ("Use 'max_completion_tokens'
     instead"); servers that speak the older form take max_tokens. The client starts from the
     form its address suggests and switches once when the service names the other."""
 
@@ -214,7 +214,7 @@ def test_the_answers_length_goes_in_the_form_the_service_takes(monkeypatch):
 
 
 def test_openai_itself_is_asked_through_responses_with_tools_and_reasoning(monkeypatch):
-    """Owner, 2026-10-26: a work on Today answered 400 "function tools with reasoning effort
+    """a work on Today answered 400 "function tools with reasoning effort
     are not supported" (gpt-6-luna in chat completions). OpenAI's own service is asked through
     its Responses API, which takes tools with reasoning; the effort is the provider's."""
 
@@ -348,7 +348,7 @@ class _Events(_Response):
 
 
 def test_the_answer_is_streamed_as_it_is_written_in_each_format(monkeypatch):
-    """Owner, 2026-10-26: "streaming da mensagem". With ``on_text`` set, each call asks for a
+    """ "streaming da mensagem". With ``on_text`` set, each call asks for a
     stream and shows the text so far; tool calls still come through whole."""
 
     streams = [

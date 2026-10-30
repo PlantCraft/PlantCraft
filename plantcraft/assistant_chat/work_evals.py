@@ -1,6 +1,6 @@
 """The evaluation of the assistant's works: each work asked the way its page asks it.
 
-Owner, 2026-10-25: "run an LLM with the prompt the application adds from the person's choice,
+"run an LLM with the prompt the application adds from the person's choice,
 and see whether the model can read that context and whether it is enough". One case per work
 (``assistant_works``): the chat starts as the button beside the page's title starts it, with
 the work, the page's id and a subject read from this installation (an asset, a loop, a signal,

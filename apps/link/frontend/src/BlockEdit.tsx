@@ -2,7 +2,7 @@
  * Making a block: `/blocks/new` (import a block file or fill in the form; the assistant's button
  * beside the title opens it on writing a block, owner 2026-10-25, round 9) and `/blocks/<id>/edit`
  * (the next version of a block, a block Link ships included). Saving a version asks for its name
- * and what changed (owner, 2026-10-23).
+ * and what changed.
  */
 import { Dialog, useAssistantPage } from "@plantcraft/ui";
 import { ChevronRight, FileUp, FormInput, Save } from "lucide-react";
@@ -157,8 +157,8 @@ export function NewBlockPage({ me }: { me: Me }) {
       detail={file ? t("Check the form, test it on an asset, then create it: it becomes version 1.") : t("A block is one calculation with typed inputs and outputs, its parameters and its Python code. Every save is a new version with a name, and algorithms keep the version they use.")} />
     {error && <ErrorBox text={error} />}
     {file
-      ? <Workbench start={file} me={me} onCancel={() => { setFile(null); if (from) navigate("/blocks/new"); }} />
-      : from ? (error ? null : <Loading />) : <>
+      ? <Workbench start={file} me={me} onCancel={() => { setFile(null); if (from) navigate("/blocks/new"); }} />:
+      from ? (error ? null : <Loading />) : <>
         <div className="pc-grid blkn-ways">{ways.map((item) => <button key={item.id} type="button" className={`panel card blkn-way${way === item.id ? " active" : ""}`} aria-pressed={way === item.id} onClick={() => { setWay(item.id); if (item.id === "form") setFile(library ? { ...newBlockFile(), library } : newBlockFile()); }}>
           <span className="blkn-way-icon">{item.icon}</span><strong>{item.title}</strong><p>{item.text}</p>
         </button>)}</div>

@@ -29,7 +29,7 @@ from plantcraft.db import Database, Migration, Store, add_columns
 MAX_PER_PERSON = 200
 # How long the code of "Connect this computer" may be traded for a token.
 PAIR_SECONDS = 120
-# The folders of JupyterLite's file browser (owner, 2026-10-25): the examples, read from here,
+# The folders of JupyterLite's file browser: the examples, read from here,
 # and the person's notebooks. ``PlantCraft`` was the person's folder until then: notebooks opened
 # from it before still open.
 FOLDER = "My notebooks"
@@ -90,7 +90,7 @@ class NotebookStore(Store):
 
     CREATE INDEX IF NOT EXISTS idx_notebooks_user ON notebooks(username, created_at);
 
-    -- "Connect this computer" (owner, 2026-10-26): a code the person's computer trades, once and
+    -- "Connect this computer": a code the person's computer trades, once and
     -- within PAIR_SECONDS, for the kit's token. Only its digest is kept.
     CREATE TABLE IF NOT EXISTS notebook_pairings (
         code_digest TEXT PRIMARY KEY,
@@ -110,7 +110,7 @@ class NotebookStore(Store):
                 },
             ),
         ),
-        # One switch (owner, 2026-10-26, D3): with Notebooks on, the kit is offered whenever the
+        # One switch (D3): with Notebooks on, the kit is offered whenever the
         # installation has one; an administrator may still take it away in Setup › Notebooks.
         Migration("kit-with-notebooks-2026-10-26", "UPDATE notebook_settings SET kit_enabled = 1"),
         # The example cards of before 2026-10-25 wrote a copy into My notebooks at each click

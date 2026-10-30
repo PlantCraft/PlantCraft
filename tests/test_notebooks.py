@@ -94,7 +94,7 @@ def test_a_notebook_of_signals_is_in_its_owners_folder_only(app, dist):  # noqa:
         assert [entry["path"] for entry in folder["content"]] == [item["path"]]
         assert folder["content"][0]["type"] == "notebook"
         # The examples are a folder too, read from here: a person's edits are kept by the browser.
-        # One folder per app (owner, 2026-10-26): PlantCraft's own, then each app's.
+        # One folder per app: PlantCraft's own, then each app's.
         folders = vera.get(f"{base}api/contents/Examples/all.json").json()["content"]
         assert [entry["name"] for entry in folders] == ["PlantCraft"]
         assert folders[0]["type"] == "directory"
@@ -238,7 +238,7 @@ def test_the_examples_run_on_any_installation(app, dist, monkeypatch):  # noqa: 
         for item in listed:
             created = vera.post("/api/notebooks", json={"kind": "example", "example": item["id"]})
             assert created.status_code == 201, created.text
-            # It opens from the Examples folder: no copy in My notebooks (owner, 2026-10-26).
+            # It opens from the Examples folder: no copy in My notebooks.
             assert created.json()["path"] == f"Examples/PlantCraft/{item['title']}.ipynb"
             notebook = vera.get(f"/notebooks/lite/files/{created.json()['path']}").json()
             assert item["title"] in notebook["cells"][0]["source"]

@@ -1,9 +1,9 @@
 """Settings › Installation (the installation's time zone) and each person's Preferences
 (``/api/me/preferences``: the language and the time zone their screens show).
 
-Times are stored and computed in UTC and shown in local time (owner, 2026-10-23). "Local time"
+Times are stored and computed in UTC and shown in local time. "Local time"
 is the installation's zone, chosen here; each person may show UTC or their own device's
-instead (owner, 2026-10-24).
+instead.
 """
 
 from __future__ import annotations

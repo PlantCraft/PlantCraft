@@ -1,4 +1,4 @@
-/** The viewer's zoom (owner, 2026-10-27: a whole plant on one page, looked at closely): which part
+/** The viewer's zoom (a whole plant on one page, looked at closely): which part
  * of the canvas is shown, kept inside it, from the whole canvas down to an eighth of it. */
 import type { ViewBox } from "./DiagramCanvas";
 

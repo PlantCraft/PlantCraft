@@ -3,7 +3,7 @@
 Everything is read through PlantCraft's API v1 with your own access, so a notebook never sees
 more than you may. Times are the plant's local time (the installation's time zone,
 ``pc.zone()``): every table's index is a time in that zone, and a time written without an offset
-means that zone too. ``pc.use_zone("UTC")`` shows them in UTC instead (owner, 2026-10-27).
+means that zone too. ``pc.use_zone("UTC")`` shows them in UTC instead.
 
 In PlantCraft's Notebooks (in the browser) there is nothing to set up. In Jupyter on your
 computer, call ``connect(url, token=...)`` once, or set ``PLANTCRAFT_URL`` and

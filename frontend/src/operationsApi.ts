@@ -55,7 +55,7 @@ export function forecastText(forecast: DiskForecast | null | undefined, size: (b
   if (forecast.days_left == null) return t("Not filling up");
   return t("Fills in about {days} days ({size} a day)", { days: Math.max(1, Math.round(forecast.days_left)), size: size(forecast.bytes_per_day) });
 }
-/** Health for everyone (owner, 2026-10-25): whether each part of the suite runs. */
+/** Health for everyone: whether each part of the suite runs. */
 export interface SuiteStatus { at?: string | null; watching: boolean; held: boolean; services: ServiceMetrics[]; open: Array<{ incident_id: number; subject: string; detail: string; opened_at: string }> }
 export interface Queued { request_id: string; action: string; name: string | null; state: string }
 

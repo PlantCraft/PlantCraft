@@ -116,7 +116,7 @@ describe("inbox", () => {
     expect(button?.querySelector(".pcs-badge")?.textContent).toBe("99+");
     // Unread messages lead the tab title.
     expect(document.title.startsWith("(99+) ")).toBe(true);
-    // It opens Messages over the page, in every app (owner, 2026-10-24): PlantCraft's page in a panel.
+    // It opens Messages over the page, in every app: PlantCraft's page in a panel.
     await act(async () => button?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 })));
     expect(opened).not.toHaveBeenCalled();
     expect(document.querySelector(".pc-messages-drawer iframe")?.getAttribute("src")).toBe("/messages?embed=1");
@@ -182,7 +182,7 @@ describe("sidebar", () => {
     const shell = (app: "processcraft" | "linkcraft") => createElement(SuiteShell, { app, nav, path: "/", href: (to: string) => to, navigate, user: { name: "Ana Lima" }, onSignOut: () => undefined, apps: [{ id: "linkcraft", name: "PlantCraft Analytics", url: "/link/" }] }, "page");
     await act(async () => root.render(shell("linkcraft")));
     const sidebar = host.querySelector("aside")!;
-    // The fold button is the last of the quick buttons (owner, 2026-10-25), never at the top.
+    // The fold button is the last of the quick buttons, never at the top.
     expect(sidebar.querySelector(".pcs-sidebar-top .pcs-fold")).toBeNull();
     expect(sidebar.querySelector(".pcs-quick > :last-child")?.getAttribute("aria-label")).toBe("Collapse the menu");
     // The apps stay closed until the app's name is clicked.
@@ -224,7 +224,7 @@ describe("sidebar", () => {
     expect(host.querySelector(".pcs-shell")?.classList.contains("pcs-collapsed")).toBe(false);
     await act(async () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "[" })); });
     expect(host.querySelector(".pcs-shell")?.classList.contains("pcs-collapsed")).toBe(true);
-    // One Help for the suite, in the person's menu, open at this app's guides (owner, 2026-10-23).
+    // One Help for the suite, in the person's menu, open at this app's guides.
     expect(sidebar.querySelector(".pcs-nav-help")).toBeNull();
     // The menu opens beside the sidebar: its arrow points right, and back while open.
     expect(sidebar.querySelector(".pcs-profile .pcs-profile-chevron")?.classList.contains("pcs-turned-back")).toBe(false);
@@ -232,7 +232,7 @@ describe("sidebar", () => {
     expect(sidebar.querySelector(".pcs-profile .pcs-profile-chevron")?.classList.contains("pcs-turned-back")).toBe(true);
     const help = [...host.querySelectorAll<HTMLAnchorElement>(".pcs-user-pop a")].find((node) => node.textContent === "Help");
     expect(help?.getAttribute("href")).toBe("/help?app=processcraft");
-    // Theme on top, then the person's pages, Help and Sign out; no About (owner, 2026-10-25).
+    // Theme on top, then the person's pages, Help and Sign out; no About.
     const menu = host.querySelector(".pcs-user-pop")!;
     expect(menu.firstElementChild?.textContent).toBe("Theme");
     const items = [...menu.querySelectorAll("[role=menuitem]")].map((node) => node.textContent);

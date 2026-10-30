@@ -1,11 +1,11 @@
 /** Setup (administrators): the settings done once, or seldom, that have no page of their own in
- * the menu. Health, Backups and Updates have their own pages (owner, 2026-10-24).
- * Only the tiles (owner, 2026-10-22): the step-by-step path and the intro text are gone. */
+ * the menu. Health, Backups and Updates have their own pages.
+ * Only the tiles: the step-by-step path and the intro text are gone. */
 import { NextSteps, type JourneyStep } from "@plantcraft/ui";
 import { t } from "./i18n";
 import { navigate } from "./nav";
 
-/** The Setup tiles, in two groups. Only what has no other place in the menu (owner, 2026-10-23):
+/** The Setup tiles, in two groups. Only what has no other place in the menu:
  * sources are the Historian's, asset types are in Assets, people, groups and specialists in Users,
  * apps and app keys in Apps. */
 export function setupGroups(): { title: string; items: JourneyStep[] }[] {

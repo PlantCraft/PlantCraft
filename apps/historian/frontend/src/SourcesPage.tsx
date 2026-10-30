@@ -125,8 +125,8 @@ export function useSourceActions(reload: () => unknown, afterRemove?: () => void
     // A retired app's source goes with its points and their history (nothing else writes them).
     const retired = !!source.retired_into;
     const question = retired
-      ? t("Remove {name} with its {count} signals and their history? This cannot be undone.", { name: sourceName(source), count: source.points })
-      : t("Remove the source {name}?", { name: source.name });
+      ? t("Remove {name} with its {count} signals and their history? This cannot be undone.", { name: sourceName(source), count: source.points }):
+      t("Remove the source {name}?", { name: source.name });
     if (!(await confirmAction(question, { confirm: t("Remove"), danger: true }))) return;
     try { await api.deleteSource(source.id, retired); afterRemove?.(); await reload(); } catch (err) { setError(err instanceof Error ? err.message : String(err)); }
   }
@@ -162,8 +162,8 @@ export function SourceActions({ source, me, actions, open, compact = false }: { 
   // An import (listed while it repeats from a folder) is set up and deleted in Imports.
   const plant = !isWritten(source.kind) && source.kind !== "calc" && source.kind !== "import";
   const tool = (label: string, title: string, icon: ReactNode, onClick: () => void, disabled = false) => compact
-    ? <button className="icon-button" aria-label={label} title={title} disabled={disabled} onClick={onClick}>{icon}</button>
-    : <button className="button button-secondary" title={title} disabled={disabled} onClick={onClick}>{icon}{label}</button>;
+    ? <button className="icon-button" aria-label={label} title={title} disabled={disabled} onClick={onClick}>{icon}</button>:
+    <button className="button button-secondary" title={title} disabled={disabled} onClick={onClick}>{icon}{label}</button>;
   return <div className="row-actions">
     {plant && me.can_edit && tool(t("Browse"), t("Browse the source's variables"), <FolderSearch size={compact ? 16 : 15} />, () => actions.setBrowsing(source))}
     {plant && me.can_edit && tool(t("Test"), t("Test the connection"), <PlugZap size={compact ? 16 : 15} className={actions.testing === source.id ? "spin" : ""} />, () => void actions.test(source), !!actions.testing)}
@@ -175,7 +175,7 @@ export function SourceActions({ source, me, actions, open, compact = false }: { 
   </div>;
 }
 
-/** The folder an import repeats from (Imports, owner 2026-10-26): such an import is listed
+/** The folder an import repeats from (Imports): such an import is listed
  * with the sources, as it keeps bringing data in; '' for any other source. */
 export function repeatsFrom(source: Source): string {
   const repeat = source.options?.repeat as { pattern?: string } | undefined;
@@ -206,8 +206,8 @@ const KIND_HINT: Record<typeof PLANT_KINDS[number], string> = {
   sql: "LIMS, MES or ERP table",
 };
 
-/** Add source, first step: which type of source (owner, 2026-10-22: the type first, then its
- * form), as a plain list (owner, 2026-10-26: whoever adds a source knows what it is). */
+/** Add source, first step: which type of source (the type first, then its
+ * form), as a plain list (whoever adds a source knows what it is). */
 function TypePicker({ onPick, onClose }: { onPick: (kind: typeof PLANT_KINDS[number]) => void; onClose: () => void }) {
   return <Dialog title={t("Add source: which type?")} onClose={onClose}>
       <ul className="type-list" aria-label={t("Source types")}>
@@ -245,8 +245,8 @@ export function SourcesPage({ me }: { me: Me }) {
     {actions.notices}
     {error && <ErrorBox text={error} />}
     {sources.length === 0
-      ? <div className="panel empty"><h2>{t("No source yet")}</h2><p>{me.is_admin ? t("Add a source, then browse it to choose the signals to archive.") : t("An administrator adds the sources.")}</p></div>
-      : <DataTable
+      ? <div className="panel empty"><h2>{t("No source yet")}</h2><p>{me.is_admin ? t("Add a source, then browse it to choose the signals to archive.") : t("An administrator adds the sources.")}</p></div>:
+      <DataTable
         rows={sources}
         rowKey={(source) => source.id}
         label={t("Sources")}

@@ -6,7 +6,7 @@ never keep a copy: they read it through API v1 (``group:<id>``). A group has a k
 department, an area of the plant, an engineering discipline or a team), may point at the asset it
 covers, and may have a coordinator, who manages its members without being an administrator.
 
-Groups form a tree (owner, 2026-10-23): each may sit under a parent group ("Operations" >
+Groups form a tree: each may sit under a parent group ("Operations" >
 "U-100 operations" > "Shift A"). The coordinator leads the group, and a leader sees the work of
 their group and of every group below it (``scope``: actions use it). A person may be in several
 groups.

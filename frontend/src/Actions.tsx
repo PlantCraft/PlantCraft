@@ -1,8 +1,8 @@
 /** Actions: follow-up tasks about assets, signals and runs (docs/collaboration.md). A Kanban
  * board by status with how long each card has been there (or a list), and a full page per
- * action (owner, 2026-10-21: a board, and a page rather than a side panel). An action goes to a
+ * action (a board, and a page rather than a side panel). An action goes to a
  * person, a group or both, and each person sees theirs, their groups' and those below a group
- * they lead, with Jira's quick filters (owner, 2026-10-23). */
+ * they lead, with Jira's quick filters. */
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from "react";
 import { AssistantTitleButton, DataTable, Heading, useAssistantPage } from "@plantcraft/ui";
 import { AlertTriangle, ArrowLeft, AtSign, CalendarClock, CheckSquare, ClipboardCheck, Clock, Columns3, Hash, List, ListChecks, LoaderCircle, MessageSquare, Pencil, Plus, Rows2, Rows3, Search, SendHorizontal, Trash2, UserRound, Users, X } from "lucide-react";
@@ -200,7 +200,7 @@ function Board({ list, showCancelled, compact, canEdit, onMove }: { list: Action
   </div>;
 }
 
-/** A column's name with how many cards it holds (owner, 2026-10-25: only the number; a late
+/** A column's name with how many cards it holds (only the number; a late
  * action is marked on its own card). */
 function ColumnHeader({ column }: { column: BoardColumn }) {
   return <header>
@@ -213,7 +213,7 @@ function ColumnHeader({ column }: { column: BoardColumn }) {
 
 /** The board's card in two lines: the title, then number, owner, due date and checklist. The
  * priority is the coloured edge. On hover (or keyboard focus) the card opens in place to show the
- * rest: the description, what it is about, who has it and since when (owner, 2026-10-25: no bare
+ * rest: the description, what it is about, who has it and since when (no bare
  * text tooltip). */
 function CompactCard({ action, canEdit }: { action: Action; canEdit: boolean }) {
   const owner = action.owner_name ?? action.owner ?? "";
@@ -350,10 +350,10 @@ function Checklist({ action, list, canEdit, onChanged }: { action: Action; list:
       <input type="checkbox" checked={item.done} disabled={!canEdit || busy} aria-label={item.text} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { done: event.target.checked }))} />
       <span className="act-item-text">{item.text}</span>
       <span className="act-item-meta">
-        {canEdit ? <select aria-label={t("Responsible for {item}", { item: item.text })} value={item.owner ?? ""} disabled={busy} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { owner: event.target.value || null }))}><option value="">{t("Nobody")}</option>{list.people.map((person) => <option key={person.username} value={person.username}>{person.display_name}</option>)}</select>
-          : item.owner ? <PersonLink username={item.owner} name={item.owner_name} /> : null}
-        {canEdit ? <input type="date" aria-label={t("Due date of {item}", { item: item.text })} value={item.due_at ?? ""} disabled={busy} className={item.overdue ? "due-overdue" : ""} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { due_at: event.target.value || null }))} />
-          : item.due_at ? <span className={item.overdue ? "due-overdue" : "due"}><CalendarClock size={13} />{dayText(item.due_at)}</span> : null}
+        {canEdit ? <select aria-label={t("Responsible for {item}", { item: item.text })} value={item.owner ?? ""} disabled={busy} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { owner: event.target.value || null }))}><option value="">{t("Nobody")}</option>{list.people.map((person) => <option key={person.username} value={person.username}>{person.display_name}</option>)}</select>:
+          item.owner ? <PersonLink username={item.owner} name={item.owner_name} /> : null}
+        {canEdit ? <input type="date" aria-label={t("Due date of {item}", { item: item.text })} value={item.due_at ?? ""} disabled={busy} className={item.overdue ? "due-overdue" : ""} onChange={(event) => void run(() => collabApi.changeItem(action.action_id, item.item_id, { due_at: event.target.value || null }))} />:
+          item.due_at ? <span className={item.overdue ? "due-overdue" : "due"}><CalendarClock size={13} />{dayText(item.due_at)}</span> : null}
         {item.done && item.done_by && <small title={fullWhen(item.done_at)}>{t("done by {name}", { name: item.done_by_name ?? item.done_by })}</small>}
         {canEdit && <button type="button" className="icon-button" disabled={busy} aria-label={t("Remove {item}", { item: item.text })} onClick={() => void run(() => collabApi.deleteItem(action.action_id, item.item_id))}><Trash2 size={14} /></button>}
       </span>

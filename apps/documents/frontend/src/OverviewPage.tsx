@@ -6,7 +6,7 @@ import { t } from "./i18n";
 import { BASE, Link, navigate } from "./nav";
 import type { DocRow, Me } from "./types";
 
-/** A new person's board (owner, 2026-10-27: "where is the document I need?"): the search box
+/** A new person's board ("where is the document I need?"): the search box
  * beside the count, then the latest documents beside those not linked to assets yet. The
  * reading widget stays in the catalog; what is being read is the notice above the board. */
 const DEFAULT_BOARD: BoardItem[] = [

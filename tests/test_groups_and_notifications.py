@@ -72,7 +72,7 @@ def test_the_coordinator_changes_the_members_and_nobody_else(signed):
 
 
 def test_groups_form_a_tree_and_a_leader_sees_below(signed):
-    """Owner, 2026-10-23: groups have a hierarchy; a person may be in several groups."""
+    """groups have a hierarchy; a person may be in several groups."""
 
     for name in ("boss", "lead", "ana", "eva"):
         _person(signed, name)
@@ -150,7 +150,7 @@ def test_an_app_notifies_a_group_in_messages(signed):
         "email_queued": 0,
         "unknown": ["user:ghost"],
     }
-    # Messages counts it among the notifications, apart from the chats (owner, 2026-10-24).
+    # Messages counts it among the notifications, apart from the chats.
     counts = ana.get("/api/v1/inbox").json()
     assert (counts["unread_messages"], counts["unread_notifications"]) == (0, 1)
     items = ana.get("/api/messages/conversations").json()["items"]
@@ -320,7 +320,7 @@ def test_the_smtp_password_never_goes_to_a_server_it_was_not_typed_for(signed):
 
 
 def test_a_group_has_its_own_conversation_that_follows_its_members(signed):
-    """Owner, 2026-10-23: chats with a group, and choosing a group when starting one."""
+    """chats with a group, and choosing a group when starting one."""
 
     ana, rui = _person(signed, "ana"), _person(signed, "rui")
     eva = _person(signed, "eva")

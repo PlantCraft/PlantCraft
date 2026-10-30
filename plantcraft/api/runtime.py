@@ -61,7 +61,7 @@ def _asset_types(value: Any) -> tuple[str, ...] | None:
     return tuple(item for item in value if isinstance(item, str))
 
 
-# The order data flows through the suite (owner, 2026-10-21), as @plantcraft/ui SUITE_ORDER:
+# The order data flows through the suite, as @plantcraft/ui SUITE_ORDER:
 # collect, analyse, model, run, and View last. Apps it does not know follow, as listed.
 SUITE_ORDER = (
     "processcraft",
@@ -130,7 +130,7 @@ class ApiRuntime:
         # app:<id>: a whole app, for the assistant an app opens on its own page ("which loops
         # are worst?"): the specialists who read that app answer from all it published.
         self.platform.refs.register("app", self._app_ref, owner="platform")
-        # chat:<id>: one of the assistant's chats, in an action or a message (owner, 2026-10-26).
+        # chat:<id>: one of the assistant's chats, in an action or a message.
         # Like a note, the link says only its kind and number; opening it shows the chat to its
         # owner and to the people it is shared with.
         self.platform.refs.register("chat", self._chat_ref, owner="platform")

@@ -163,7 +163,7 @@ export type ModelExampleCreated = { algorithm_id: string; name: string; assets: 
 export type ModelStarter = { name: string; description: string; subject_kind: "asset"; diagram: Diagram; timing: AssetTiming };
 
 /** ``GET /api/algorithms``: a block diagram that judges loops, signals or assets. */
-/** One saved version of an algorithm (owner, 2026-10-24: versions on top of its page). */
+/** One saved version of an algorithm (versions on top of its page). */
 /** ``GET /api/algorithms/repeated``: a copy from Twin that repeats another algorithm of the site. */
 export type RepeatedAlgorithm = { algorithm_id: string; name: string; same_as: { algorithm_id: string; name: string }; schedules: Array<{ schedule_id: string; name: string }> };
 export type AlgorithmVersion = { version: number; name: string; description: string; saved_at: string | null; saved_by: string; current: boolean; version_name?: string; version_note?: string };

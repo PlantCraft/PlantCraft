@@ -1,4 +1,4 @@
-/** The Overview's (/admin) answer to "is the installation healthy?" (owner, 2026-10-27): the System
+/** The Overview's (/admin) answer to "is the installation healthy?": the System
  * card (open problems, services, free disk, last backup, version, who signed in today) and the
  * last changes of the audit log. Both read what System health, Backups, Updates and the audit log
  * already keep (/api/home/system, /api/audit) and draw in the suite's widget shapes. */

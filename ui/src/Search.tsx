@@ -1,5 +1,5 @@
 /**
- * The suite's search (owner, 2026-10-23): Ctrl+K (Cmd+K on a Mac), or the search entry at the
+ * The suite's search: Ctrl+K (Cmd+K on a Mac), or the search entry at the
  * top of the sidebar, opens one box that finds a point, an asset, a dashboard, a block or a
  * person from any screen of any app. The shell asks every app the person may open, in
  * parallel, and lists the answers by app; an app that does not search (404, an older version,

@@ -6,9 +6,9 @@ import { BASE, href } from "./nav";
 // The queue's chart is the only chart here: Plotly loads with it, after the page shows.
 const Plot = lazy(() => import("@plantcraft/ui/plot").then((m) => ({ default: m.Plot })));
 
-/** A new person's board (owner, 2026-10-27: which loops and signals are bad now, and where):
+/** A new person's board (which loops and signals are bad now, and where):
  * the results by status beside the last 14 days in alarm, then the health map by area beside the
- * worst results, then the monitors and the queue (kept on the board, owner 2026-10-24). */
+ * worst results, then the monitors and the queue (kept on the board). */
 const DEFAULT_BOARD: BoardItem[] = [
   { i: "linkcraft:results", widget: "linkcraft:results", x: 0, y: 0, w: 8, h: 2 },
   { i: "linkcraft:in-alarm-history", widget: "linkcraft:in-alarm-history", x: 8, y: 0, w: 4, h: 2 },
@@ -29,6 +29,6 @@ export function OverviewPage() {
     { id: "queue", title: t("Queue"), size: "m" as const, description: t("What waits and runs now, and the queue over the last 24 hours."),
       render: () => <Suspense fallback={null}><QueueSummary url={href("/api/queue")} Plot={Plot} href={href("/executions")} /></Suspense> },
   ];
-  // No buttons on top (owner, 2026-10-27): an Overview only shows; runs start on Monitors.
+  // No buttons on top: an Overview only shows; runs start on Monitors.
   return <AppOverview app="linkcraft" name="Analytics" url={BASE} widgets={widgets} defaultLayout={DEFAULT_BOARD} />;
 }

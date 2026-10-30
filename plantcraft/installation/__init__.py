@@ -8,7 +8,7 @@ told apart and put together later. ``install.sh`` writes it once into
 one made on first use. It never changes.
 
 The time zone is where the plant's days, shifts and "today" begin, and the "Local time" every
-screen shows by default (owner, 2026-10-24). ``install.sh`` writes the server's zone into
+screen shows by default. ``install.sh`` writes the server's zone into
 ``PLANTCRAFT_TIMEZONE``; that is only the starting value: what an administrator saves here
 wins. Stored times stay UTC (``plantcraft.db.utc_text``).
 """

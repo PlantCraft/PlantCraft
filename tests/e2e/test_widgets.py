@@ -1,4 +1,4 @@
-"""The widget test page (owner, 2026-10-24): every widget of Desk and of the installed apps at
+"""The widget test page: every widget of Desk and of the installed apps at
 every size it allows, in the light and the dark theme. A widget whose content spills out of its
 card (taller or wider than the card gives it) fails here."""
 

@@ -1,4 +1,4 @@
-"""Messages' Notifications (owner, 2026-10-24): what came to a person besides conversations, read
+"""Messages' Notifications: what came to a person besides conversations, read
 like an email inbox beside the chats. Three sources:
 
 - what apps sent (``POST /api/v1/notifications``): one thread per app and ``key`` (an alarm fired,
@@ -191,7 +191,7 @@ def notification_feed(rt: Any, user: str, owner: str | None = None) -> list[dict
     marks = rt.desk.triage(owner or user)
     stars = rt.desk.marks(owner or user, "star")
     items.sort(key=lambda item: str(item.get("at") or ""), reverse=True)
-    # A public demo visit starts with the newest few unread, the rest read (owner, 2026-10-28):
+    # A public demo visit starts with the newest few unread, the rest read:
     # the same for every visitor, whatever the live plant added since the seed.
     fresh = DEMO_UNREAD if owner and VISIT_OWNER in owner else None
     for item in items:
@@ -230,7 +230,7 @@ def mark_conversation_read(
     rt: Any, user: str, owner: str, conversation_id: int, message_id: int | None = None
 ) -> None:
     """The person's read mark; a public demo visit keeps its own, so what one visitor opens
-    stays unread for the next (owner, 2026-10-28)."""
+    stays unread for the next."""
 
     if VISIT_OWNER not in owner:
         rt.workspace.messages.mark_read(conversation_id, user, message_id)

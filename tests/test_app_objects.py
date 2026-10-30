@@ -1,4 +1,4 @@
-"""The apps' objects for notebooks (owner, 2026-10-26): ``/api/v1/objects``, the reads PlantCraft
+"""The apps' objects for notebooks: ``/api/v1/objects``, the reads PlantCraft
 forwards to an app with the person's identity, the apps' examples in the Examples folder, and
 ``pc.app`` in a notebook, against a fake app inside the suite's network."""
 

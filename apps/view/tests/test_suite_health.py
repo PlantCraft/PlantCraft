@@ -65,7 +65,7 @@ def test_the_suite_keeps_one_read_only_dashboard(runtime, client, fake):
 
 
 def test_it_lives_in_the_platform_folder(runtime, client, fake):
-    """Owner, 2026-10-25: the suite's own dashboards in a folder of their own, "Platform"."""
+    """the suite's own dashboards in a folder of their own, "Platform"."""
 
     _system(fake, *SIGNALS)
     made = runtime.ensure_suite_health(force=True)

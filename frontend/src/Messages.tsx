@@ -1,5 +1,5 @@
 /** Messages: conversations between people (docs/collaboration.md). Questions for a language model go to
- * Desk's Assistant (owner, 2026-10-23), which keeps each person's chats apart. */
+ * Desk's Assistant, which keeps each person's chats apart. */
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, Bot, Check, Hash, LoaderCircle, MessageSquarePlus, MessagesSquare, Search, SendHorizontal, Star, UserPlus, Users, UsersRound, X } from "lucide-react";
 import { Avatar, errorText, fullWhen, Go, messageParts, plainMentions, ReadToggle, ReferencePicker, RefChip, resolveOption, sameDay, shortWhen, StarButton } from "./collab";
@@ -147,9 +147,9 @@ function ChatPane({ conversationId, me, contacts, onBack, onActivity, onRead, on
   const names: Record<string, ConversationMember> = Object.fromEntries(conversation.members.map((member) => [member.username, member]));
   const nameOf = (username: string) => names[username]?.display_name ?? username;
   const soloContact = solo ? contacts?.specialists.find((item) => item.username === solo.username) : undefined;
-  const subtitle: ReactNode = conversation.group_id ? <><Go to={`/groups/${encodeURIComponent(conversation.group_id)}`}>{t("Group conversation")}</Go>{` · ${t("{count} participants, who follow the group", { count: conversation.members.length })}`}</>
-    : solo ? (solo.kind === "specialist" ? <><span className="co-bot-tag">{t("Specialist")}</span>{soloContact?.subject || solo.role}</> : solo.role || `@${solo.username}`)
-    : t("{count} participants: {names}", { count: conversation.members.length, names: conversation.members.map((member) => member.username === me ? t("you") : member.display_name).join(", ") });
+  const subtitle: ReactNode = conversation.group_id ? <><Go to={`/groups/${encodeURIComponent(conversation.group_id)}`}>{t("Group conversation")}</Go>{` · ${t("{count} participants, who follow the group", { count: conversation.members.length })}`}</>:
+    solo ? (solo.kind === "specialist" ? <><span className="co-bot-tag">{t("Specialist")}</span>{soloContact?.subject || solo.role}</> : solo.role || `@${solo.username}`):
+    t("{count} participants: {names}", { count: conversation.members.length, names: conversation.members.map((member) => member.username === me ? t("you") : member.display_name).join(", ") });
   const hint = bots.length > 0 && people.length > 0 ? t("Enter sends, Shift+Enter adds a line. In a group a specialist answers when you write @{name}.", { name: bots[0].username }) : t("Enter sends, Shift+Enter adds a line. # points the message at an asset or an action.");
   return <section className="msg-chat" aria-label={t("Conversation: {title}", { title: conversation.display_title })}>
     <header className="msg-chat-head">
@@ -165,8 +165,8 @@ function ChatPane({ conversationId, me, contacts, onBack, onActivity, onRead, on
     </header>
     <div className="msg-scroll" ref={scroller} onScroll={(event) => { const box = event.currentTarget; stick.current = box.scrollHeight - box.scrollTop - box.clientHeight < 80; }}>
       {!messages.length && <div className="msg-empty-chat">
-        {solo?.kind === "specialist" ? <><Avatar name={solo.display_name} bot size="lg" /><h3>{t("Ask {name}", { name: solo.display_name })}</h3><p>{soloContact?.subject ? `${soloContact.subject}. ` : ""}{t("A specialist reads what the apps published in PlantCraft and answers here. It only reads: it never changes anything.")}</p></>
-          : <><MessagesSquare /><h3>{t("No messages yet")}</h3><p>{t("Write the first one. Name an asset (FIC-101) or use the # button to link it.")}</p></>}
+        {solo?.kind === "specialist" ? <><Avatar name={solo.display_name} bot size="lg" /><h3>{t("Ask {name}", { name: solo.display_name })}</h3><p>{soloContact?.subject ? `${soloContact.subject}. ` : ""}{t("A specialist reads what the apps published in PlantCraft and answers here. It only reads: it never changes anything.")}</p></>:
+          <><MessagesSquare /><h3>{t("No messages yet")}</h3><p>{t("Write the first one. Name an asset (FIC-101) or use the # button to link it.")}</p></>}
       </div>}
       {messages.map((message, index) => {
         const previous = messages[index - 1];
@@ -212,7 +212,7 @@ function ContactsDialog({ mode, contacts, me, exclude = [], prefill, onClose, on
   const needle = q.trim().toLowerCase();
   const match = (item: Contact) => !hidden.has(item.username) && (!needle || `${item.username} ${item.display_name} ${item.role} ${item.subject ?? ""}`.toLowerCase().includes(needle));
   const toggle = (name: string) => setChosen(chosen.includes(name) ? chosen.filter((item) => item !== name) : [...chosen, name]);
-  // Choosing a group chooses its people (owner, 2026-10-23); choosing it again leaves them out.
+  // Choosing a group chooses its people; choosing it again leaves them out.
   const groupPeople = (group: ContactGroup) => group.members.filter((name) => !hidden.has(name));
   const groupChosen = (group: ContactGroup) => groupPeople(group).length > 0 && groupPeople(group).every((name) => chosen.includes(name));
   const toggleGroup = (group: ContactGroup) => {
@@ -236,7 +236,7 @@ function ContactsDialog({ mode, contacts, me, exclude = [], prefill, onClose, on
     <Avatar name={item.display_name} bot={item.kind === "specialist"} size="sm" />
     <span><strong>{item.display_name}{item.kind === "specialist" && <span className="co-bot-tag">{t("Specialist")}</span>}{suggested.has(item.username) && <em>{t("suggested")}</em>}</strong><small>{item.kind === "specialist" ? `@${item.username}${item.subject ? ` · ${item.subject}` : ""}` : `@${item.username}${item.role ? ` · ${item.role}` : ""}`}</small></span>
     <span className="msg-check">{chosen.includes(item.username) && <Check />}</span></button></li>;
-  // Specialists answer in Desk's Assistant now (owner, 2026-10-23); Messages are between people.
+  // Specialists answer in Desk's Assistant now; Messages are between people.
   const specialists: Contact[] = [];
   const people = contacts.people.filter(match);
   const heading = mode === "add" ? t("Add people") : t("New conversation");
@@ -329,7 +329,7 @@ export function MessagesPage({ me, conversationId, onRead }: { me: string; conve
     void loadList();
   }
   const read = useCallback(() => { onRead(); void loadList(); }, [onRead, loadList]);
-  // The person's own marks (owner, 2026-10-28): a favorite, or unread again. Read again means opened:
+  // The person's own marks: a favorite, or unread again. Read again means opened:
   // the conversation's messages are marked read as when it is opened.
   const markConversation = useCallback(async (conversation: Conversation, mark: "star" | "unread", on: boolean) => {
     const id = conversation.conversation_id;
@@ -341,7 +341,7 @@ export function MessagesPage({ me, conversationId, onRead }: { me: string; conve
     } catch (err) { setError(errorText(err)); }
     void loadList();
   }, [loadList, onRead]);
-  // Two sections (owner, 2026-10-24): the chats, and the notifications read like an email inbox.
+  // Two sections: the chats, and the notifications read like an email inbox.
   const notices = conversationId === "notifications";
   const { feed, error: noticeError, mark, star, reload: reloadNotices } = useNotices(onRead);
   const [selected, setSelected] = useState<string | null>(null);
@@ -369,8 +369,8 @@ export function MessagesPage({ me, conversationId, onRead }: { me: string; conve
         {tab("/messages/notifications", t("Notifications"), unreadNotices, notices)}
       </nav>
       <label className="co-search msg-list-search"><Search /><input value={q} onChange={(event) => setQ(event.target.value)} placeholder={notices ? t("Search notifications") : t("Search conversations")} aria-label={notices ? t("Search notifications") : t("Search conversations")} /></label>
-      {notices ? <NoticeList feed={feed} error={noticeError} query={q} selected={selected} onSelect={(item) => { setSelected(item.key); if (item.state === "unread") void mark([item.key], "read"); }} onMarkAll={() => void mark((feed?.items ?? []).filter((item) => item.state === "unread").map((item) => item.key), "read")} onMark={(item, state) => { void mark([item.key], state); if (state === "archived" && item.key === selected) setSelected(null); }} onStar={(item) => void star(item.key, !item.starred)} />
-      : <>{error && <div className="form-error msg-error"><AlertTriangle size={15} /> {error}</div>}
+      {notices ? <NoticeList feed={feed} error={noticeError} query={q} selected={selected} onSelect={(item) => { setSelected(item.key); if (item.state === "unread") void mark([item.key], "read"); }} onMarkAll={() => void mark((feed?.items ?? []).filter((item) => item.state === "unread").map((item) => item.key), "read")} onMark={(item, state) => { void mark([item.key], state); if (state === "archived" && item.key === selected) setSelected(null); }} onStar={(item) => void star(item.key, !item.starred)} />:
+      <>{error && <div className="form-error msg-error"><AlertTriangle size={15} /> {error}</div>}
       <ul className="msg-conversations">
         {items === null && !error && <li className="co-center"><LoaderCircle className="spin" /></li>}
         {filtered.map((item) => { const typing = item.busy.filter((name) => name !== me); const active = String(item.conversation_id) === conversationId; return <li key={item.conversation_id} className="msg-row-item">
@@ -386,10 +386,10 @@ export function MessagesPage({ me, conversationId, onRead }: { me: string; conve
         {items !== null && !filtered.length && <li className="msg-list-empty">{q ? t("No conversation found.") : t("No conversations yet.")}</li>}
       </ul></>}
     </aside>
-    {notices ? (chosen ? <NoticePane key={chosen.key} item={chosen} onBack={() => setSelected(null)} onMark={(state) => { void mark([chosen.key], state); if (state === "archived") setSelected(null); }} onStar={() => void star(chosen.key, !chosen.starred)} onActed={() => { void reloadNotices(); onRead(); }} />
-      : <section className="msg-chat msg-chat-idle"><div className="co-center"><MessagesSquare /><h3>{t("Your notifications")}</h3><p>{t("Alarms, runs and changes others made to your actions. Open one to read it; check it when it is handled.")}</p></div></section>)
-    : conversationId ? <ChatPane key={conversationId} conversationId={conversationId} me={me} contacts={contacts} onBack={() => open(null)} onActivity={() => void loadList()} onRead={read} onMark={markConversation} />
-      : <section className="msg-chat msg-chat-idle"><div className="co-center"><MessagesSquare /><h3>{t("Your conversations")}</h3><p>{t("Talk with colleagues. Questions for the assistant go to Desk's Assistant, where each chat keeps its own subject.")}</p>{newButton}</div></section>}
+    {notices ? (chosen ? <NoticePane key={chosen.key} item={chosen} onBack={() => setSelected(null)} onMark={(state) => { void mark([chosen.key], state); if (state === "archived") setSelected(null); }} onStar={() => void star(chosen.key, !chosen.starred)} onActed={() => { void reloadNotices(); onRead(); }} />:
+      <section className="msg-chat msg-chat-idle"><div className="co-center"><MessagesSquare /><h3>{t("Your notifications")}</h3><p>{t("Alarms, runs and changes others made to your actions. Open one to read it; check it when it is handled.")}</p></div></section>):
+    conversationId ? <ChatPane key={conversationId} conversationId={conversationId} me={me} contacts={contacts} onBack={() => open(null)} onActivity={() => void loadList()} onRead={read} onMark={markConversation} />:
+      <section className="msg-chat msg-chat-idle"><div className="co-center"><MessagesSquare /><h3>{t("Your conversations")}</h3><p>{t("Talk with colleagues. Questions for the assistant go to Desk's Assistant, where each chat keeps its own subject.")}</p>{newButton}</div></section>}
     {creating && contacts && <ContactsDialog mode="new" contacts={contacts} me={me} prefill={creating} onClose={() => setCreating(null)} onSubmit={start} onOpenGroup={openGroup} />}
   </div>;
 }

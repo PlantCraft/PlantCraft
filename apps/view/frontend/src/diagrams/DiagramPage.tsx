@@ -105,7 +105,7 @@ function TimeBar({ data, window, onWindow, cursor, onCursor, end, onEnd, playbac
   </div>;
 }
 
-/** Full screen's time (owner, 2026-10-28): one button in the top strip saying what is shown
+/** Full screen's time: one button in the top strip saying what is shown
  * (Live and the period, or the instant played back); the time bar opens under it on a click
  * (stays until clicked again or elsewhere) or while the pointer rests on it. */
 function TimePopover({ summary, live, children }: { summary: string; live: boolean; children: ReactNode }) {
@@ -148,7 +148,7 @@ function Legend({ diagram }: { diagram: DiagramDraft }) {
 
 /** What a click on an element opens: another display or a dashboard (its link), a trend of its
  * signals over the display (a value, or a "trend" link), or the panel of the asset it draws
- * (owner, 2026-10-27: never away from the display only to come back). */
+ * (never away from the display only to come back). */
 export type Opened = { kind: "go"; to: string } | { kind: "trend"; signals: string[] } | { kind: "asset"; id: string };
 export function openOf(element: Element, data: DiagramData | null): Opened | null {
   const link = element.link;
@@ -163,8 +163,8 @@ export function openOf(element: Element, data: DiagramData | null): Opened | nul
 
 type Shown = DiagramDraft & { diagram_id: string; can_edit?: boolean };
 
-/** The canvas as the viewer shows it: the whole drawing, or a part of it to look at closely
- * (owner, 2026-10-27). The wheel or a double click zooms about the pointer, a drag moves a zoomed
+/** The canvas as the viewer shows it: the whole drawing, or a part of it to look at closely.
+ *The wheel or a double click zooms about the pointer, a drag moves a zoomed
  * drawing, the buttons zoom about the middle or fit the whole; a drag never opens what it started
  * on. */
 function ZoomStage({ width, height, reset, goTo, onView, children }: { width: number; height: number; reset: string; goTo?: { area: ViewBox | null; at: number }; onView?: (view: ViewBox | null) => void; children: (view: ViewBox | null, svgRef: RefObject<SVGSVGElement | null>, show: (area: ViewBox) => void) => ReactNode }) {
@@ -252,7 +252,7 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
   const [data, setData] = useState<DiagramData | null>(null);
   const [error, setError] = useState("");
   const [cursor, setCursor] = useState<number | null>(null);
-  // Full screen is the browser's own (owner, 2026-10-27), the stage alone with its trend and
+  // Full screen is the browser's own, the stage alone with its trend and
   // asset panel inside; `?screen=1` (a kiosk opened by address, no click to ask the browser
   // with) and a browser that refuses fill the window instead.
   const stage = useRef<HTMLDivElement>(null);
@@ -279,7 +279,7 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
     globalThis.history.replaceState(globalThis.history.state, "", `${globalThis.location.pathname}${search ? `?${search}` : ""}`);
   }, [pages]);
   const shown = useMemo(() => onPage(diagram, page), [diagram, page]);
-  // A plant on one page has parts (owner, 2026-10-28): tabs "Overview" (the whole drawing, the
+  // A plant on one page has parts: tabs "Overview" (the whole drawing, the
   // way back from any zoom) and one per part. The tab of the part in view is the active one.
   const parts = useMemo(() => (pages.length > 1 ? [] : (diagram.parts ?? []).flatMap((part) => { const box = areaOf(part.area); return box ? [{ ...part, box }] : []; })), [diagram.parts, pages.length]);
   const [goTo, setGoTo] = useState<{ area: ViewBox | null; at: number } | undefined>(() => {
@@ -353,7 +353,7 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
     {partTabs && !full && <div className="tc-pages dg-pages">{partTabs}</div>}
     {!full && timeBar}
     <div ref={stage} className={`dg-stage${full ? " dg-stage-full" : ""}`}>
-      {/* Full screen keeps a strip of its own on top (owner, 2026-10-28): the name, the tabs,
+      {/* Full screen keeps a strip of its own on top: the name, the tabs,
           the time and the way out, never over the drawing. */}
       {full && <div className="dg-full-bar">
         <span className="dg-full-name" title={diagram.name}>{diagram.name}</span>

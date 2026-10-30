@@ -60,7 +60,7 @@ joins it into the bundle's release notes.
 
 ### Changed
 
-- **Rules and the alarm philosophy keep "Local time" (owner, 2026-10-27).** A rule's hours and
+- **Rules and the alarm philosophy keep "Local time".** A rule's hours and
   the shift summaries default to the installation's zone (`local`, resolved through PlantCraft,
   so they follow it when it changes) instead of UTC, picked in the suite's time zone list
   instead of typed; the summary's "active since" is a local time. SDK 0.62.0.

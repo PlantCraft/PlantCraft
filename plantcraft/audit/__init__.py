@@ -15,7 +15,7 @@ from plantcraft.db import Database, Store
 MAX_DETAIL_CHARS = 20_000
 # Rows one read returns at most (the Audit page reads a period, newest first).
 MAX_ROWS = 5_000
-# The quick filters of the audit log page (owner, 2026-10-24): what people changed, who signed in
+# The quick filters of the audit log page: what people changed, who signed in
 # and out, and the sign-ins that failed or were blocked.
 KINDS = ("changes", "sign_ins", "failed")
 FAILED = ("session.sign_in_failed", "session.sign_in_blocked")

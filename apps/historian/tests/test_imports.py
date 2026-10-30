@@ -1,4 +1,4 @@
-"""CSV imports (owner, 2026-10-24): checked before anything is written, written once by the
+"""CSV imports: checked before anything is written, written once by the
 collector, the file deleted, kept until the import is deleted, and deleted with all its data."""
 
 from __future__ import annotations
@@ -234,7 +234,7 @@ def test_one_tag_in_two_imports_exports_as_two_columns(client, runtime):
     assert lines[-1].endswith(",0.87,0.97")
 
 
-# The suite's work queue and imports that repeat from a folder (owner, 2026-10-26): a heavy
+# The suite's work queue and imports that repeat from a folder: a heavy
 # file shows its progress in the Queue; a saved import reads each new file of a folder, the
 # same way, into the same signals.
 

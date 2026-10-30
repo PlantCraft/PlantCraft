@@ -1,6 +1,6 @@
 /** Setup › Audit log (administrators): who changed what in PlantCraft and in every app, and every
  * sign-in, failed sign-in and sign-out (IEC 62443-4-2 CR 2.8). Read only; the same rows download
- * as a CSV for a review. Laid out like a log explorer (owner, 2026-10-24, after Grafana's Explore):
+ * as a CSV for a review. Laid out like a log explorer (after Grafana's Explore):
  * the period and quick filters on top, the rows per hour or day as a chart (a click on a bar
  * zooms in), the table, and every row's full detail with its values to filter by. */
 import { DataTable, Heading, PeriodPicker, localOf, periodRange, type TimePeriod } from "@plantcraft/ui";
@@ -136,8 +136,8 @@ function DetailDrawer({ row, onClose, onFilter }: { row: AuditRow; onClose: () =
         <div><dt>{t("Target")}</dt><dd><code>{row.subject || "—"}</code></dd></div>
       </dl>
       <h3 className="audit-detail-title">{t("Detail")}</h3>
-      {detail ? <dl className="audit-facts">{detail.map(([key, item]) => <div key={key}><dt>{key}</dt><dd><pre>{value(item)}</pre></dd></div>)}</dl>
-        : row.detail == null ? <p className="muted">{t("No detail.")}</p> : <pre className="audit-json">{value(row.detail)}</pre>}
+      {detail ? <dl className="audit-facts">{detail.map(([key, item]) => <div key={key}><dt>{key}</dt><dd><pre>{value(item)}</pre></dd></div>)}</dl>:
+        row.detail == null ? <p className="muted">{t("No detail.")}</p> : <pre className="audit-json">{value(row.detail)}</pre>}
     </aside>
   </div>;
 }

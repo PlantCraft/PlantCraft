@@ -407,7 +407,7 @@ def test_the_assets_an_algorithm_may_name_come_with_their_path(tmp_path):
 
 
 def test_a_monitor_sets_its_own_parameter_values_on_top_of_the_algorithm(tmp_path, calibration):
-    """Defaults cascade (owner, 2026-10-27): the block's default, then the algorithm's value,
+    """Defaults cascade: the block's default, then the algorithm's value,
     then the monitor's own; the monitor keeps only what its algorithm's blocks have."""
 
     fake = unit_fake()

@@ -1,5 +1,5 @@
 /**
- * The algorithm editor, in its own window (owner, 2026-10-22: Simulink-like, the whole screen
+ * The algorithm editor, in its own window (Simulink-like, the whole screen
  * for the diagram), and the read-only diagram the other pages show. Both draw the suite's
  * `BlockEditor` (@plantcraft/ui): Link gives it the blocks, the diagram, the check and the test.
  */
@@ -70,7 +70,7 @@ const KIND_WORDS: Record<SubjectKind, string> = { loop: "on loops", signal: "on 
 
 /** The algorithm's own panel, beside the diagram when no block is selected: its name and what it
  * works on. Its texts, its assets and its data window are on its page, so the editor shows the
- * diagram alone (owner, 2026-10-24). */
+ * diagram alone. */
 function DocsPanel({ draft, setDraft, readOnly }: { draft: Draft; setDraft: (next: Draft) => void; readOnly: boolean }) {
   return <div className="alg-docs">
     <h3>{t("Algorithm")}</h3>
@@ -80,8 +80,8 @@ function DocsPanel({ draft, setDraft, readOnly }: { draft: Draft; setDraft: (nex
       <option value="loop">{t("Control loops")}</option><option value="signal">{t("Signals")}</option><option value="asset">{t("Assets (units, equipment)")}</option>
     </select></label>
     <p className="muted small">{draft.saved
-      ? t("What it is for, the assets it runs on and the data each run reads are on the algorithm's page.")
-      : t("Once it is saved, its page takes what it is for, the assets it runs on and the data each run reads.")}</p>
+      ? t("What it is for, the assets it runs on and the data each run reads are on the algorithm's page."):
+      t("Once it is saved, its page takes what it is for, the assets it runs on and the data each run reads.")}</p>
   </div>;
 }
 
@@ -176,8 +176,8 @@ function EditorLoaded({ me, start, catalog, taken }: { me: Me; start: { draft: D
       if (!draft.saved) window.history.replaceState({}, "", href(`/editor/${encodeURIComponent(saved.algorithm_id)}`));
       announceSaved(saved.algorithm_id);
       setNotice({ tone: "ok", text: draft.subject_kind === "asset"
-        ? t("Saved {when}. Its assets run this version from their next cycle.", { when: formatDate(saved.updated_at ?? new Date().toISOString()) })
-        : t("Saved {when}. Its monitors and loops run this version from now on.", { when: formatDate(saved.updated_at ?? new Date().toISOString()) }) });
+        ? t("Saved {when}. Its assets run this version from their next cycle.", { when: formatDate(saved.updated_at ?? new Date().toISOString()) }):
+        t("Saved {when}. Its monitors and loops run this version from now on.", { when: formatDate(saved.updated_at ?? new Date().toISOString()) }) });
     } catch (err) {
       setNotice({ tone: "error", text: err instanceof Error ? err.message : String(err) });
     } finally { setSaving(false); }
@@ -195,8 +195,8 @@ function EditorLoaded({ me, start, catalog, taken }: { me: Me; start: { draft: D
       {test?.summary && !test.asset_id && <span className="alg-window-test"><Pill status={test.summary.status ?? "unknown"} label={test.summary.health !== null && test.summary.health !== undefined ? t("Test: health {value} %", { value: Math.round(test.summary.health) }) : t("Test ran")} /><small>{t("{loop}, {start} to {end}", { loop: test.loop_id ?? "", start: formatDate(test.source_start), end: formatDate(test.source_end) })}</small></span>}
       <span className="alg-window-actions">
         {draft.subject_kind === "asset"
-          ? <AssetTestControl diagram={diagram} draft={draft} onTrace={setTest} disabled={check && !check.valid ? t("Fix the problems first.") : ""} />
-          : <TestControl diagram={diagram} onTrace={setTest} disabled={testDisabled} />}
+          ? <AssetTestControl diagram={diagram} draft={draft} onTrace={setTest} disabled={check && !check.valid ? t("Fix the problems first.") : ""} />:
+          <TestControl diagram={diagram} onTrace={setTest} disabled={testDisabled} />}
         {me.can_edit && draft.saved && <button type="button" className="button button-secondary" onClick={() => openEditor(null, draft.algorithm_id)}><Copy size={16} />{t("Duplicate")}</button>}
         {!readOnly && <button type="button" className="button button-primary" disabled={saving || !draft.name.trim() || !dirty || (check ? !check.valid : true)} title={check && !check.valid ? t("Fix the problems first.") : undefined} onClick={() => void save()}>
           {saving ? <LoaderCircle size={16} className="spin" /> : <Save size={16} />}{t("Save")}
@@ -210,8 +210,8 @@ function EditorLoaded({ me, start, catalog, taken }: { me: Me; start: { draft: D
     <div className="alg-window-editor">
       <BlockEditor catalog={catalog} diagram={diagram} onChange={readOnly ? undefined : edit} check={check} trace={trace} blockHref={blockHref}
         inspectorTools={(node) => node.block === DEVIATION_BLOCK && draft.subject_kind === "asset"
-          ? <CalibrateTool node={node} diagram={diagram} timing={draft.timing} assets={draft.assets} readOnly={readOnly} disabled={check && !check.valid ? t("Fix the problems first.") : ""} onCalibrated={edit} />
-          : null}
+          ? <CalibrateTool node={node} diagram={diagram} timing={draft.timing} assets={draft.assets} readOnly={readOnly} disabled={check && !check.valid ? t("Fix the problems first.") : ""} onCalibrated={edit} />:
+          null}
         aside={<DocsPanel draft={draft} setDraft={setDraft} readOnly={readOnly} />} />
     </div>
   </div>;

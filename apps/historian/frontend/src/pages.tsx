@@ -7,7 +7,7 @@ export const NAV: Array<{ to: string; label: string; icon: ShellNavItem["icon"] 
   { to: "/", label: "Overview", icon: <LayoutDashboard /> },
   { to: "/sources", label: "Sources", icon: <Database /> },
   { to: "/points", label: "Signals", icon: <Activity /> },
-  // Imports and Exports each in the sidebar (owner, 2026-10-26: no tabs under the title).
+  // Imports and Exports each in the sidebar (no tabs under the title).
   { to: "/imports", label: "Imports", icon: <FileUp /> },
   { to: "/exports", label: "Exports", icon: <FileDown /> },
   { to: "/settings", label: "Settings", icon: <SettingsIcon /> },

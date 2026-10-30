@@ -6,7 +6,7 @@ priority, a due date, a status, the references it is about (``asset:FIC-101``,
 is kept in its history with who made it. Apps never write actions: they
 link to PlantCraft's form (``/actions?new=1&ref=...``, docs/collaboration.md).
 
-Who sees an action (owner, 2026-10-23, as in Jira's assignee and team): its owner, the person
+Who sees an action (as in Jira's assignee and team): its owner, the person
 who created it, the members of its group, and the leaders above them in the group tree
 (``GroupStore.scope``); an administrator sees every action. ``Visibility`` carries that.
 """
@@ -36,7 +36,7 @@ STATUSES = {
     "in_progress": "In progress",
     "blocked": "Blocked",
     "done": "Done",
-    # The id stays "cancelled" (API v1, apps); people read "Archived" (owner, 2026-10-22).
+    # The id stays "cancelled" (API v1, apps); people read "Archived".
     "cancelled": "Archived",
 }
 OPEN_STATUSES = ("open", "in_progress", "blocked")
@@ -201,7 +201,7 @@ class ActionStore(Store):
             add_columns(
                 "follow_up_actions",
                 {
-                    # The group the action is assigned to (owner, 2026-10-23); NULL: none.
+                    # The group the action is assigned to; NULL: none.
                     "group_id": "TEXT",
                 },
             ),

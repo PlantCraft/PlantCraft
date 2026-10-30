@@ -1,4 +1,4 @@
-"""Every time in UTC (owner, 2026-10-23): one text form, whatever the server's time zone, and the
+"""Every time in UTC: one text form, whatever the server's time zone, and the
 rows written before in the server's local offset rewritten once."""
 
 from __future__ import annotations

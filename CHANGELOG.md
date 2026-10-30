@@ -9,7 +9,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
-- **The public demo starts the same for every visitor (owner, 2026-10-28).** A visit starts
+- **The public demo starts the same for every visitor.** A visit starts
   with the newest 20 notifications unread and the rest read, whatever the live plant added, and
   the seed leaves the newest message of 4 conversations unread (the Messages badge shows 4).
   Opening a conversation is now the visit's own read mark, like every other mark since the
@@ -24,7 +24,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   active one in view. System health and Backups leave their secondary columns out on a phone; a
   state, a size and a backup's name stay on one line.
 
-- **Check, seen or not, favorites (owner, 2026-10-28).** A notification gets a check (done) in its
+- **Check, seen or not, favorites.** A notification gets a check (done) in its
   row, in the quick-access panel, when it is open and on the page it opens (a small bar on the
   action or the alarm); one button turns it seen and not seen again. A conversation and an
   assistant chat can be marked unread until opened; the three take a star, favorites first.
@@ -32,7 +32,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- **The platform's Python package is `plantcraft` (owner, 2026-10-30).** The folder at the root of
+- **The platform's Python package is `plantcraft`.** The folder at the root of
   the repository, every import and `python -m plantcraft.<module>` follow the product's name, and
   the distribution is `plantcraft`. `processcraft` still runs: the console script, and inside the
   images `python -m processcraft.<module>` (`plantcraft/legacy.py`), so an older `install.sh`, a
@@ -46,7 +46,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
-- **The old name is gone from what people type and download (owner, 2026-10-30).** The command
+- **The old name is gone from what people type and download.** The command
   is `plantcraft` (`processcraft` still works), release files are
   `plantcraft-<version>-linux-<arch>-bundle.tar.gz`, `ssh-keygen` checks them as
   `release@plantcraft` (same key; a signature does not carry the name), the update page names
@@ -86,12 +86,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- **One place to navigate, one look (owner, 2026-10-27).** The side menu and the tabs are the
+- **One place to navigate, one look.** The side menu and the tabs are the
   only navigation: no Overview has buttons at its top (PlantCraft's tour moves to the person's
   menu, Analytics' Signal quality loses the button that repeated its Settings tab); top
   icon buttons and secondary buttons look the same in every app. The rules are written in
   `docs/ui-guidelines.md` and partly checked by `tests/test_visual_rules.py`.
-- **The demo's Analytics keeps three monitors** (owner, 2026-10-27): Control loop performance,
+- **The demo's Analytics keeps three monitors**: Control loop performance,
   Signal quality and the Furnaces model beside the plant. `processcraft demo seed` no longer
   writes the Valve health algorithm, its three monitors (valve health, oscillation watch, daily
   review) or Analytics' copy of the FMU Models exports; the story's texts name Control loop
@@ -206,7 +206,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   in groups). `processcraft_sdk.widgets` builds them (`bars`, `columns`, `tiles` and their parts),
   `apptest.widget_problems` checks them, `WidgetKinds.tsx` draws them ([docs/widgets.md](docs/widgets.md)).
 
-- **PlantCraft's Overview answers "is the installation healthy?" (owner, 2026-10-27).** The new
+- **PlantCraft's Overview answers "is the installation healthy?".** The new
   board is Apps online and Data connections, then **System** (problems open, free disk at the
   suite watch's thresholds, last backup, version, who signed in today; `GET /api/home/system`,
   read from what the watch and the Backups and Updates pages keep) and, for administrators,
@@ -236,7 +236,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - **Public demo: 10 places, 4 requests in flight per visit and 8 for all visits in each app** (were
   5, 2 and 4), from the multi-user load test ([docs/public-demo.md](docs/public-demo.md)).
-- **The demo tells one story, a week at Riverbend Refinery (owner, 2026-10-27).** `processcraft
+- **The demo tells one story, a week at Riverbend Refinery.** `processcraft
   demo seed` lost the code that migrated older demos (retired dashboards, renamed rules and
   folders) and speaks the glossary's names (Analytics, Historian, View). Its past is dated on
   the plant's clock. New in the story: Models' optimization study "Tune the level controller",
@@ -282,7 +282,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   freed, so a full queue ran four tasks every 20 s. An Analytics round of 2,050 loops now takes
   about 2.5 minutes on 4 vCPU.
 
-- **Every time a person reads is on their clock, never UTC (owner, 2026-10-27; `processcraft-sdk`
+- **Every time a person reads is on their clock, never UTC (`processcraft-sdk`
   0.62.0, `@processcraft/ui` 0.71.0).** The watch's messages and Desk's suggestions write the
   plant's time instead of "UTC"; the assistant is told the plant's time now and to answer in it;
   a datetime field of an assistant card reads and saves in the zone the pages show; the
@@ -309,7 +309,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
-- **The platform review's decisions (owner, 2026-10-27: "Faça as mudanças").**
+- **The platform review's decisions ("Faça as mudanças").**
   - Having an app means reading what it publishes, wherever it shows: a person reads the
     results, result history, events, runs, schedules and texts of the apps they may open (API v1
     and the assistant through it, the asset's page, Desk); administrators and app tokens read
@@ -323,7 +323,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   - The actions list resolves the references of its page once, and a link to an action reads
     only its title and status (P1, P2).
 
-- **The security audit's last four points (owner, 2026-10-26; `processcraft-sdk` 0.59.0).**
+- **The security audit's last four points (`processcraft-sdk` 0.59.0).**
   - Writing with a language model (`POST /api/v1/llm/{use}`) needs the new permission
     `write.llm` in the app's `[permissions]`, and a use of an app outside the suite's bundle
     (`PROCESSCRAFT_APPS`) starts off whatever it declares, until an administrator gives it a
@@ -383,7 +383,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   - Analytics' new-algorithm card also takes its diagram written as calls
     (`f = dq.frozen(series = pv)`), and a port name the block lacks is read as any port that fits.
 
-- **The Queue panel shows an app's compute workers (owner, 2026-10-26; `@processcraft/ui`
+- **The Queue panel shows an app's compute workers (`@processcraft/ui`
   0.67.0).** An app opened in the panel lists the workers that run its tasks (name, online or
   paused, its tasks running of the slots, environments, the largest size the machine takes), or
   says none does. `GET /api/compute/summary` gives it to anyone signed in, without hosts, labels
@@ -391,7 +391,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
-- **Each task says where it runs: environment and size (owner, 2026-10-26; processcraft-sdk
+- **Each task says where it runs: environment and size (processcraft-sdk
   0.58.0; docs/compute.md, "Environments and sizes").** A compute task carries an environment
   (the executor image with the packages its code needs; `standard` by default) and a size
   (`small` 1 CPU 1 GB, `medium` 2 CPUs 4 GB, `large` 4 CPUs 16 GB). Executors announce their
@@ -403,12 +403,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- **The Queue panel shows the apps first (owner, 2026-10-26; `@processcraft/ui` 0.66.0).** Mine
+- **The Queue panel shows the apps first (`@processcraft/ui` 0.66.0).** Mine
   and Running now made the panel too long: it now lists each app's numbers, with a "mine" mark
   where the person has work waiting or running, and an app opened lists its work (progress,
   Cancel, what ended in the last day) and links to its own page. `jobsByApp` replaces
   `mergeJobs`.
-- **The suite's words (owner, 2026-10-26; `@processcraft/ui` 0.62.0; docs/glossary.md).** The
+- **The suite's words (`@processcraft/ui` 0.62.0; docs/glossary.md).** The
   app Link is called **Analytics** in the suite's menu, the tab titles, search and the docs; its
   id, route `/link/` and package keep their names until the brand's final name (BACKLOG D5b). The
   frame says **Queues** (was Work queues), the search finds **signals** and a block's input
@@ -440,15 +440,15 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   a table's last column stretched Apps, Users, Compute and Backups to 500-850 px wide on a phone;
   it stays inside the table's own scroll now.
 
-- **A page's work answers from the page (owner, 2026-10-26):** the assistant reads the
+- **A page's work answers from the page:** the assistant reads the
   page's sections and its tools, and never asks the person to paste what is on their page (six
   of 45 works evaluated with a small model did).
-- **The assistant counts long lists and says when a restart cut an answer (owner, 2026-10-26).**
+- **The assistant counts long lists and says when a restart cut an answer.**
   - A tool answer too long for the model keeps whole items and says the total. Before, text cut
     mid-list was counted as 28 of 50 valves.
   - An answer cut by a restart of PlantCraft says so, with Try again.
   - Alarms' rules tell "enabled" apart from how many alarms they have.
-- **The assistant after twenty real questions (owner, 2026-10-26).**
+- **The assistant after twenty real questions.**
   - "Which alarms are active?" reads Alarms' alarms as they are now (`list_app_objects` with
     `where active=true`), not older results.
   - A tool call a model writes as text is left out of the answer; an answer with nothing else
@@ -457,7 +457,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   - "Yesterday" comes with its bounds in the plant's time zone, never the last 24 hours, and
     `read_series` carries each signal's unit.
   - The model answers in the language the person writes in, and names the card's own button.
-- **The assistant after its first real-model check (owner, 2026-10-26; `@processcraft/ui`
+- **The assistant after its first real-model check (`@processcraft/ui`
   0.61.0).**
   - Asked in any chat to create a block, a small model now gets one tool per kind, with its
     fields typed and its instructions. Before, it sent a block's inputs as text or as an object
@@ -474,7 +474,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
-- **Models on the compute workers (owner, 2026-10-26; [docs/compute.md](docs/compute.md)).**
+- **Models on the compute workers ([docs/compute.md](docs/compute.md)).**
   PlantCraft Models' Modelica runner is now an executor of the compute workers:
   `modelcraft-executor` (the `modelcraft-runner` image, user 10020, no network) takes its jobs
   from `data/compute-jobs/modelcraft/` through `compute-gateway`, here and on other machines
@@ -494,7 +494,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   and the executors, nothing listening). `python -m processcraft_sdk.compute executor` takes the
   installed package's version when `--version` is left out.
 
-- **The Queue lists the work, not only numbers (owner, 2026-10-26; `processcraft-sdk` 0.54.0,
+- **The Queue lists the work, not only numbers (`processcraft-sdk` 0.54.0,
   `@processcraft/ui` 0.65.0; [docs/quick-access.md](docs/quick-access.md)).** The Queue panel
   shows Mine (what the person started, with its progress, step and Cancel, and what ended in the
   last day), Running now and By app. PlantCraft answers the runs part (`GET /api/v1/queue`); the
@@ -506,7 +506,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   and `VersionLock` says, with a closed lock, why an object gets no new version (PlantCraft's
   own).
 
-- **Settings › Compute and the installation's own worker (owner, 2026-10-26; `processcraft-sdk`
+- **Settings › Compute and the installation's own worker (`processcraft-sdk`
   0.56.0; [docs/compute.md](docs/compute.md)).** Administrators see the compute workers at
   `/setup/compute`: state, the apps and versions each runs with its free slots, the machine's
   load and memory, tasks of the last 24 hours; they add a worker (its one-time code and command
@@ -516,7 +516,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   so it starts enrolled. The gateway writes `gateway.json` when PlantCraft answers its heartbeat,
   for its healthcheck.
 
-- **Compute workers (owner, 2026-10-26; `processcraft-sdk` 0.55.0).** The apps hand the code
+- **Compute workers (`processcraft-sdk` 0.55.0).** The apps hand the code
   people write to a pool of compute workers instead of running it in their own containers
   ([docs/compute.md](docs/compute.md)). PlantCraft keeps the queue of compute tasks
   (`processcraft.compute`): API v1 `/api/v1/compute/...` for the apps (`write.compute`, an app
@@ -531,7 +531,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   memory limits, cancel), `python -m processcraft_sdk.compute gateway|executor`.
 
 - **One protocol for the quick-access bar; notifications that act and settle for everyone
-  (owner, 2026-10-26; `processcraft-sdk` 0.53.0, `@processcraft/ui` 0.63.0;
+  (`processcraft-sdk` 0.53.0, `@processcraft/ui` 0.63.0;
   [docs/quick-access.md](docs/quick-access.md)).** A notification's button can run the call in
   the app that sent it, as the person (`"method": "POST"`, only under that app's own prefix):
   Acknowledge in a notification acknowledges the alarm. `POST /api/v1/notifications/resolve`
@@ -586,10 +586,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   for the whole rule. Schedules say what they run on (`subjects`), so a rule over an execution
   follows its assets. The rules of an older Alarms are rewritten as Simple rules once
   (migration `rules-as-diagrams`). Suggested limits are gone.
-- **Five more cases in the assistant's Evaluate (owner, 2026-10-26):** yesterday's average of a
+- **Five more cases in the assistant's Evaluate:** yesterday's average of a
   signal asked as "yesterday", a time series of the last 24 hours asked in words, the installed
   apps, a Link block identified by its title, and how many of an app's results are in alarm.
-- **The assistant's chats are organised like ChatGPT's (owner, 2026-10-26).** A person puts
+- **The assistant's chats are organised like ChatGPT's.** A person puts
   chats in their own groups, archives them and reads the archive, and shares a chat like a
   dashboard (everyone, or people and groups): the others read it and continue it in a copy. A
   chat is a ref (`chat:<id>`), so its link or reference goes in an action or a message
@@ -604,7 +604,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   audited). New examples: `Examples/Models` (models and their runs, simulate a model) and
   `Examples/Historian` (raw samples and means, export a long period). Every app runs its
   examples' cells in its tests as a notebook runs them (`apptest.run_examples`).
-- **Every app's objects in a notebook, one format (owner, 2026-10-26; `processcraft-sdk`
+- **Every app's objects in a notebook, one format (`processcraft-sdk`
   0.48.0).** `pc.app("link").blocks()`, `.get("block", id)` and `.run(...)`: an app declares its
   kinds in `[[contributes.objects]]` and its examples and runtime in `[contributes.notebooks]`
   (`processcraft_sdk.server.objects`, `processcraft_sdk.notebooks`), and PlantCraft forwards a
@@ -615,14 +615,14 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   `Examples/Analytics`: run a block, write and test a block, run an algorithm, loop health. The
   Examples folder has one folder per app; PlantCraft's own four examples replace the six
   overlapping ones. The browser and the kit carry pydantic for the apps' runtimes.
-- **PlantCraft Notebooks, opened from PlantCraft (owner, 2026-10-26).** The kit becomes an app:
+- **PlantCraft Notebooks, opened from PlantCraft.** The kit becomes an app:
   a Windows setup (NSIS, for the user only), a macOS app and a Linux folder with `Install.sh`,
   with the examples inside. It answers `plantcraft-notebooks://` links: "Connect this computer"
   trades a one-time code (`POST /api/notebooks/pair`, `/api/notebooks/pair/redeem`, two
   minutes, once) for the kit's token, so nobody copies a token; "Open on my computer" and, by
   choice, every "Open in a notebook" open JupyterLab on the computer, synchronized, with a strip
   saying where it runs. JupyterLab runs in the background on 127.0.0.1 with a password of its own.
-- **Each page offers its own works (owner, 2026-10-26; `processcraft-sdk` 0.47.0,
+- **Each page offers its own works (`processcraft-sdk` 0.47.0,
   `@processcraft/ui` 0.55.0).** The generic "What needs attention here?" no longer shows on every
   page; "Explain this page" is the suite's only one, and each page offers what fits it: a list
   finds and creates its objects, an object page explains, changes or copies that object
@@ -668,7 +668,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- **Notebooks on your computer, without the traps (owner, 2026-10-26).** With Notebooks on, the
+- **Notebooks on your computer, without the traps.** With Notebooks on, the
   kit is offered whenever the installation has one (one switch; an administrator may still take
   it away), so nobody lands on a bare wheel. "Use my own Python instead" gives the whole commands
   (a virtual environment, as PEP 668 asks on macOS and Linux) and warns that pip refuses a
@@ -702,7 +702,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   high), and a provider's **Test** now offers the model a tool, as the assistant does, so this
   kind of refusal shows there.
 
-- **OpenAI's newer models answer again (owner, 2026-10-26).** They refuse `max_tokens` ("Use
+- **OpenAI's newer models answer again.** They refuse `max_tokens` ("Use
   'max_completion_tokens' instead", 400 in Settings › Language models › Test). The OpenAI client
   sends `max_completion_tokens` to OpenAI's own address and `max_tokens` to compatible servers on
   the plant's network, and switches once when the service names the other form.
@@ -732,7 +732,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   `apptest.permission_problems` fails an app's test run on one its `app.toml` does not
   declare. Link, Historian, View, Alarms, Models and the starter template vendor SDK 0.43.0,
   which sends `[permissions]` with the contributions, so PlantCraft holds each to them.
-- **An app's token is held to its `[permissions]` (scale review E4, owner 2026-10-25).** Every
+- **An app's token is held to its `[permissions]` (scale review E4).** Every
   API v1 route names the permission it needs (`processcraft_sdk.scopes`); an app's own service
   token gets `403` on a route it did not ask for. A packaged app is held to its signed manifest,
   an external app to what the administrator granted at registration (by default it reads the
@@ -775,14 +775,14 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   `port` defaults to 8000 (each app listens in its own container, so ports are never shared
   out) and `uid` to one made from the app id (20000-59999); only the prefix must be free on the
   installation. The installer no longer refuses two apps with the same port or user.
-- **The installation's id (scale review E11, owner 2026-10-25).** Every installation names
+- **The installation's id (scale review E11).** Every installation names
   itself with a UUID that never changes, so a company's plants and sites can be told apart and
   put together later: `install.sh` writes `PROCESSCRAFT_INSTALLATION_ID` once (installations
   from before get theirs on the next upgrade), `GET /api/v1/installation` and Setup ›
   Installation answer it as `id`, and every backup's manifest carries `installation_id`.
   `processcraft-sdk` 0.42.0: `client.installation_id()`.
 - **Every app's Overview is a board of widgets like Desk's Today, and the apps publish many more
-  (owner 2026-10-25).** Desk's Today offers the widgets of every installed app; an app's Overview
+  .** Desk's Today offers the widgets of every installed app; an app's Overview
   offers only its own; each person arranges theirs. `processcraft-sdk` 0.41.0:
   `[[contributes.widgets]]` gains `kind` (`number`, `list`, `split`, `series`, `facts`), `pick`
   (a widget about one thing the person picks, with `<id>/options` and `?item=`) and `multiple`;
@@ -797,7 +797,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   execution, a point's last hour, the alarm rate, one model, a saved trend...) and name a
   finished-looking default board.
 
-- **The assistant's works (owner, 2026-10-25, plan "Assistant on every page", step F1).**
+- **The assistant's works (plan "Assistant on every page", step F1).**
   `processcraft-sdk` 0.37.0: `[[contributes.assistant.works]]` (`AssistantWork`, `WorkField`,
   `check_fields`, `fields_schema`): what the assistant does on each page, ask or create, declared
   as data. PlantCraft: `processcraft/assistant_works` (registry of PlantCraft's and the apps'
@@ -828,13 +828,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   assistant (admins, as the New asset button) or ask how the tree is organized and what is missing;
   one asset: how it is doing now, plot its main signals, what the apps concluded (these were the
   page's tasks). Both pages carry the assistant's button beside the title.
-- **Evaluate works (owner, 2026-10-25).** Settings › Language models › Evaluate works asks each of
+- **Evaluate works.** Settings › Language models › Evaluate works asks each of
   the assistant's works the way its page asks it, with the context PlantCraft builds for a person
   and a subject read from this installation, and checks that the model reads it: an answer that
   reads the plant and names the page's subject, or a card with the object's fields. Each case
   shows the context sent and the card proposed (`assistant_chat/work_evals.py`,
   `POST /api/assistant/evals` with `suite: "works"`).
-- **The assistant on more pages (owner, 2026-10-25, evening).** Desk's Today, Needs attention,
+- **The assistant on more pages (evening).** Desk's Today, Needs attention,
   Types, Help and Executions; the Historian's points and sources; Alarms' active alarms,
   performance and journal; View's dashboards, reports and trends; Link's signal quality; Models'
   models, studies and a study: one ask work each, about what the page shows. A page that sends
@@ -846,7 +846,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **llm-egress (step F0b):** the suite's one way out to a language model in the cloud, only to the
   hosts of the providers an administrator added (docs/security-guide.md). Clearer errors from a
   model service (401 key, 404 model or address, 429 limit or credit, name not resolved).
-- **The assistant's button beside every page's title (owner 2026-10-25, Link and Models round 9).**
+- **The assistant's button beside every page's title (Link and Models round 9).**
   `@processcraft/ui` 0.47.0: `Heading` draws `AssistantTitleButton` beside the title on every page
   of every app, where the shell draws the assistant's panel and the installation offers a model;
   it opens the same panel as the sidebar's, on the page's tasks (`useAssistantPage`), and
@@ -908,7 +908,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 ### Added
 
 - `processcraft-sdk` 0.32.0 and API v1: **an app writes with a language model through
-  PlantCraft** (owner, 2026-10-25). Each `[[contributes.llm]]` use gets its own line in Setup ›
+  PlantCraft**. Each `[[contributes.llm]]` use gets its own line in Setup ›
   Language models (`<app id>:<id>`, with what it sends), where an administrator gives it the
   default, another model or none. `client.llm(use, messages)` (`POST /api/v1/llm/{use}`):
   PlantCraft picks the model, keeps the key, counts the calls per plant day
@@ -916,7 +916,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- **Settings › Language models, in the order it is set up** (owner, 2026-10-25). First the
+- **Settings › Language models, in the order it is set up**. First the
   providers: the same vendor may come more than once, each with its own key; each model is
   tested when the provider is saved. Then **Models by use**: the default and, for each part of
   the suite that writes with a model (the Assistant now; apps will add theirs), the default,
@@ -968,7 +968,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   Historian, kept in PlantCraft without one. SDK `put_series_runs`, `series_runs`,
   `series_run_list`, `processcraft_sdk.derived.typed_value` and `RunIn`, shared with
   `FakeProcessCraft`.
-- **Notebooks kit: JupyterLab on your own computer** (owner, 2026-10-25, phase 3). Notebooks ›
+- **Notebooks kit: JupyterLab on your own computer** (phase 3). Notebooks ›
   Run on your computer offers a zip for Windows (x64), macOS (Apple silicon) and Linux (x64),
   130 to 180 MB: a portable Python 3.12 with JupyterLab, numpy, pandas, scipy and matplotlib (the
   browser's versions) and `plantcraft-notebook`, opened with two double-clicks ("Configure
@@ -981,7 +981,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   token ends and when the server has a newer kit. Off until an administrator turns it on
   (Setup › Notebooks); an optional part of the offline bundle (`notebook-kits/`,
   `make notebook-kits`, every file pinned by SHA-256).
-- **Notebooks: run in the browser or on your computer** (owner, 2026-10-25, phase 2). Desk ›
+- **Notebooks: run in the browser or on your computer** (phase 2). Desk ›
   Notebooks has two blocks. "Run in the browser" installs Python into the browser once with its
   progress (`GET /api/notebooks/files`; about 130 MB, 15 s on a local network), checks it is still
   there on the next visit and then only offers "Open JupyterLab"; its limits are listed in red.
@@ -1000,7 +1000,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   hide them unless asked ("Show app results"). SDK `sync_result_assets`,
   `remove_result_assets`, `assets(results=True)` and `parse_result_assets`, shared with
   `FakeProcessCraft`.
-- **Limits for each person on API v1** (Notebooks plan, owner 2026-10-25): what one person's
+- **Limits for each person on API v1** (Notebooks plan): what one person's
   notebooks, scripts and assistants ask the plant for is limited, 120 requests a minute and 2
   reads at once by default, set in Setup › Notebooks (`PUT /api/notebooks/limits`, audited).
   Counted: every request with an access token (`pcat_`, one budget per token) and the series
@@ -1030,7 +1030,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   installation's health). An undeclared kind is still recorded, logged once and listed as
   `undeclared`; `FakeProcessCraft` refuses it, so a typo fails in the app's tests. An app may
   write about itself with the subject `app:<its id>`.
-- **Preferences** in the person's menu (owner, 2026-10-24): where times are shown (Local time,
+- **Preferences** in the person's menu: where times are shown (Local time,
   UTC, or this device when it is elsewhere) and the language, saved for the account.
 - **Setup › Installation**: the installation's time zone, picked from a list, saved in PlantCraft
   (it wins over `PROCESSCRAFT_TIMEZONE`); every app reads it from `GET /api/v1/installation`.
@@ -1078,7 +1078,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   people and how each is doing today. The demo adds an IT and automation team led by the
   administrator, and who is away or busy today.
 
-- `@processcraft/ui` 0.41.0, the sidebar and the page's top (owner, 2026-10-25, round 8): the fold
+- `@processcraft/ui` 0.41.0, the sidebar and the page's top (round 8): the fold
   button is the last of the quick buttons at the bottom, so it stays where it was clicked; the
   list of apps floats over the sidebar and the page, as wide as its names (the sidebar no longer
   scrolls sideways); the person's menu arrow points to the side it opens. The four quick panels
@@ -1132,7 +1132,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   follows its own box, not only the window, so it redraws when the sidebar folds, a panel opens
   or a dashboard grid lays out again (View's trend cards drew 4 px past their card on the Mac
   mini after round 8).
-- `@processcraft/ui` 0.39.0, the suite's frame (owner, 2026-10-24, sidebar round 8): PlantCraft
+- `@processcraft/ui` 0.39.0, the suite's frame (sidebar round 8): PlantCraft
   draws the sidebar once and the apps run beside it as content only, in a same-origin iframe, so
   switching apps never loads the sidebar again and every app shows the platform's sidebar. The
   proxy (`deploy/proxy/Caddyfile`, and the routes the installer writes for an app installed later)
@@ -1140,7 +1140,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   pages and where it is (`FramedShell`), the frame asks it to go to a page or open its assistant
   or tour (`AppFrames`). The last three apps stay loaded; an app on an older ui opens on its own
   page (`?pc-frame=off`). Icons an app sends are cleaned to SVG shapes.
-- `@processcraft/ui` 0.38.0, the sidebar's round 8 (owner, 2026-10-24): four quick buttons above
+- `@processcraft/ui` 0.38.0, the sidebar's round 8: four quick buttons above
   the person, all alike: Messages and Notifications (each with its own unread count), the
   Assistant (a spark, like the others) and the work queues (an hourglass with what runs and
   waits). Each opens the same panel (`SidePanel`), out from under the sidebar's edge on the left
@@ -1151,7 +1151,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   person's earlier chats under it to continue one. Every chat is kept, private to the person, in
   Desk's Assistant (Full page opens it there); closing the panel no longer deletes it.
 
-- Desk's Team, round 7 (owner, 2026-10-24; docs/desk.md): for every member of a group, not only
+- Desk's Team, round 7 (docs/desk.md): for every member of a group, not only
   its leader. People (away or busy by their calendar, without saying why; open and late actions;
   a chat button), the group's actions on a board by status or by person (a leader drags a card to
   hand it over or change its status), the week ahead, the day's shift handover note (shared with
@@ -1159,12 +1159,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   mentions; the `#` picker offers a person their notes and to-dos. The demo seeds a shared note,
   U-100's shift-start list and handover, and the visitor's to-dos and a weekly meeting (the
   visitor sits in U-100 operations). The tour visits Team.
-- Desk's Notes, round 7 (owner, 2026-10-24; docs/desk.md): notes private until shared with
+- Desk's Notes, round 7 (docs/desk.md): notes private until shared with
   people or groups, in a Tiptap editor (MIT; loaded only on `/notes`) with headings, lists, a
   checklist and `#` mentions of assets and actions; saved as one types; the line under the cursor
   becomes a to-do or an action (with its mentions); a calendar event has an **Event note**.
   `/api/desk/notes` (a note comes with its mentions resolved); table `desk_notes`.
-- Desk's To-do, round 7 (owner, 2026-10-24; docs/desk.md): in the place of Routines and the day's
+- Desk's To-do, round 7 (docs/desk.md): in the place of Routines and the day's
   checklist. My day, Planned, All and Done; lists of one's own and a group's shared lists, each
   with a colour; a to-do has a date, a repeat (every day, on weekdays, on some days), steps and
   notes, changes order by dragging (or Alt and an arrow key) and turns into an action when it
@@ -1172,7 +1172,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   `desk_todo_lists`. The checklists and routines of before became to-dos once, with nothing
   lost; `/api/desk/checklist` and `/api/desk/routines` are gone, `/routines` leads to `/todo`,
   and Today's checklist card is now **My day**.
-- Desk's calendar, round 7 (owner, 2026-10-24; docs/desk.md): events of each person's own, made
+- Desk's calendar, round 7 (docs/desk.md): events of each person's own, made
   by a click or a drag on the calendar (or **New event**), moved and stretched by dragging,
   repeated every day, on weekdays, every week or every month, laid out in the plant's time zone
   (`/api/desk/events`, table `desk_events`). The apps' scheduled runs start hidden and the runs
@@ -1203,13 +1203,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   - Health, Backups and Updates are three pages under Administration (`/health`, `/backups`,
     `/updates`); the backup schedule moved from Setup into Backups. `/operations` and
     `/setup/backups` lead to the new pages.
-- Desk's visual widgets (owner, 2026-10-24; docs/desk.md): world clocks (up to six time zones),
+- Desk's visual widgets (docs/desk.md): world clocks (up to six time zones),
   the month (a dot on each busy day; a day opens the calendar on it, now with a day view), today
   as a timeline with a line at now, actions as a board (drag a card to move it), unread chat
   messages and a quick note saved as you type. Today's top is only the greeting, the date and the
   time. A new person's Desk starts in whole rows. `/widgets` draws every widget at every size it
   allows; `tests/e2e/test_widgets.py` fails when one spills out of its card.
-- The assistant on every page (owner, 2026-10-23; docs/assistant.md, `@processcraft/ui` 0.32.0):
+- The assistant on every page (docs/assistant.md, `@processcraft/ui` 0.32.0):
   one **Assistant** button at the top right of every page of every app opens a side panel on the
   right, over the page. It first asks what the person wants to do: the tasks the page's developer
   declared with `useAssistantPage({place, context, tasks})` (each with the instructions the model
@@ -1220,7 +1220,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   The panel's chat is not kept unless the person continues it in Desk; closing the panel deletes it.
   The assistant's mark (a small box with a spark) is the same everywhere. The apps take
   `processcraft-sdk` 0.22.0 with it.
-- One Help for the suite (owner, 2026-10-23): Help left the apps' menus for the person's menu; it
+- One Help for the suite: Help left the apps' menus for the person's menu; it
   opens PlantCraft's Help at that app's guides, with every app the person may open at the top. The
   assistant reads PlantCraft's guides with a new `read_help` tool.
 - The assistant's evaluation (Settings › Language models › Evaluate): questions whose right answer is
@@ -1230,13 +1230,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- `@processcraft/ui` 0.37.0 (owner, 2026-10-24, Models round 7): `BlockEditor` draws models that
+- `@processcraft/ui` 0.37.0 (Models round 7): `BlockEditor` draws models that
   are integrated over time. `allowLoops` lets wires close feedback loops (a controller reading the
   level it moves), "Arrange" lays such loops out left to right, and the port type `real` (a value
   continuous in time, Models' signals) has its colour and label. New blocks are named in
   snake_case of their kind (`first_order`), so the names are valid Modelica. The legend names
   the kinds of wire the catalog has.
-- Widgets have fixed sizes (owner, 2026-10-24; docs/widgets.md, `@processcraft/ui` 0.36.0): each
+- Widgets have fixed sizes (docs/widgets.md, `@processcraft/ui` 0.36.0): each
   declares one to three sizes, 1 to 3 rows high (`sizes`; standard ones from `size`), and draws
   what fits each one (`rows`, `listRows`, `bodyPixels`). Dragging only moves a card; its gear
   picks the size with a preview. A size saved before becomes the closest allowed. "Add a widget"
@@ -1247,7 +1247,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   (`alarm`, `run`, `action`, `info`) and carries up to three buttons (`{"label", "href"}`, paths
   of the suite) beside Open (docs/api-v1.md). The suite's messages button counts unread
   notifications with the chats when the platform sends them apart (`unreadCount`).
-- Messages has two sections (owner, 2026-10-24): **Chats** and **Notifications**, read like an
+- Messages has two sections: **Chats** and **Notifications**, read like an
   email inbox. Notifications gather what apps send (one thread per app and `key`, unread again on
   each new event, with its priority, category and up to three buttons), changes others made to the
   person's actions and alarms on the assets they follow; filters (All, Unread, Alarms, Actions,
@@ -1256,22 +1256,22 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   its widget shows the unread notifications and opens Messages over Desk. `GET /api/v1/inbox`
   counts `unread_notifications` apart from `unread_messages` (chats only); the suite's messages button
   shows both together.
-- `@processcraft/ui` 0.33.0 (owner, 2026-10-24): Messages and the Assistant cross every app. One
+- `@processcraft/ui` 0.33.0: Messages and the Assistant cross every app. One
   row above the person's name holds **Messages** (with its unread count), the **Assistant** and the
   fold button; Messages opens PlantCraft's Messages over the page, in a panel on the right, without
   leaving the app (`MessagesDrawer.tsx`, `/messages?embed=1`), and closing it returns to the same
   screen. The Assistant's button left the top right of the pages for that row. Desk's menu no longer
   lists Messages and the Assistant; `/messages` and `/assistant` stay as their full pages.
-- The assistant is for the platform only (owner, 2026-10-23): in Desk and in the side panel it
+- The assistant is for the platform only: in Desk and in the side panel it
   helps with PlantCraft and the plant and politely declines anything else (translations, general
   texts, general knowledge); in the side panel it keeps to the page and the task chosen. Desk's
   first questions are about the plant and the platform, and the evaluation's last case checks
   that a translation is declined.
-- Interface language: English only for now (owner, 2026-10-23). Portuguese is switched off until
+- Interface language: English only for now. Portuguese is switched off until
   the interface settles: the platform answers in English whatever the browser asks, and no
   language picker is shown (sign-in, user menu, tour). The catalogs stay;
   `PROCESSCRAFT_TRANSLATIONS=1` and `TRANSLATIONS` in `frontend/src/i18n.ts` bring them back.
-- Times are stored and computed in UTC and shown in local time (owner, 2026-10-23): the plant's
+- Times are stored and computed in UTC and shown in local time: the plant's
   time zone (`PROCESSCRAFT_TIMEZONE`, which the platform hands to every page in the
   `processcraft_time_zone` cookie) or, chosen in the user menu (Times: Plant / This device), the
   device's own. Dates, charts (Plotly draws the UTC times at the zone's wall clock), period
@@ -1332,7 +1332,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- Visual identity (owner, 2026-10-23; `docs/brand.md`; `@processcraft/ui` 0.28.0): Inter (variable,
+- Visual identity (`docs/brand.md`; `@processcraft/ui` 0.28.0): Inter (variable,
   optical sizes) and JetBrains Mono replace IBM Plex, self-hosted inside the package
   (`ui/src/fonts/`, OFL), with one type scale (page title 28 Bold, section 20, highlight 16,
   body 14, card label 13, caption 12, numbers 28 SemiBold). Neutral greys (`#F5F5F7` canvas,
@@ -1349,7 +1349,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   loop); Twin's mark is gone (its machine ids map to Link). `dev/brand-logos` writes the logo
   files, the favicon and the link preview (`docs/images/social.svg`, `social.png`).
 
-- Every time in UTC (owner, 2026-10-23; `processcraft-sdk` 0.20.0): PlantCraft and the SDK store and answer
+- Every time in UTC (`processcraft-sdk` 0.20.0): PlantCraft and the SDK store and answer
   times as `2026-10-23T14:05:09.123Z` (`processcraft_sdk.utc`: `utc_iso`, `normalize_times`),
   whatever the server's time zone; text order is time order, so SQL filters compare them right
   across offsets (before, a row written at `-03:00` and a cutoff at `+00:00` could compare
@@ -1361,7 +1361,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
-- **Assistant** in Desk (owner, 2026-10-23; docs/assistant.md): each person keeps many chats with
+- **Assistant** in Desk (docs/assistant.md): each person keeps many chats with
   the installation's language model (or an active specialist), each on its own subject, from a
   translation to "plot FIC-101 yesterday". The model reads the plant only through the MCP
   server's read-only tools, as the person who asks (API v1 in the process, a token issued at each
@@ -1372,7 +1372,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   **Ask the assistant** opens a new Desk chat about the object (`assistantUrl`) instead of a
   Messages conversation.
 
-- **Desk**, each person's day, is the suite's first screen (owner, 2026-10-23; docs/desk.md):
+- **Desk**, each person's day, is the suite's first screen (docs/desk.md):
   Today (widgets each person arranges: coming days, actions, inbox, checklist, suggestions,
   followed assets, team, plus every app's widgets), Inbox (done and snooze), Calendar (month,
   week and list with FullCalendar; actions, checklist, routines, alarms on followed assets,
@@ -1396,27 +1396,27 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   `matches`, `search_answer`) writes an app's `GET /api/search` in the suite's format, and
   `suite_api` answers the frame's `GET /api/search` and `GET /api/queue` probes with "nothing"
   for an app that does not pass its own, so no app answers them with a 404.
-- Search the whole suite (owner, 2026-10-23; `docs/app-standard.md` section 10): Ctrl+K (Cmd+K)
+- Search the whole suite (`docs/app-standard.md` section 10): Ctrl+K (Cmd+K)
   on any screen, or the search entry at the top of every app's sidebar, finds a point, an asset,
   a dashboard, a block or a person. `@processcraft/ui` 0.25.0 `SuiteSearch` asks every app at
   once (`GET <prefix>api/search?q=`, format `plantcraft-search/1`) and lists the answers by app;
   PlantCraft answers for assets, people, groups and the actions the person sees
   (`GET /api/search`). The apps answer for their own objects as they take ui 0.25.0.
-- The suite's work queues in every app's sidebar (owner, 2026-10-23): `@processcraft/ui` 0.25.0
+- The suite's work queues in every app's sidebar: `@processcraft/ui` 0.25.0
   `SuiteQueueButton` sums what runs and waits in every app that serves `GET <prefix>api/queue`
   ("4 running · 12 waiting"), turns to attention when the oldest item waited 30 minutes or an
   item failed, and opens each app's numbers with a link to its executions.
-- An asset's **Situation** tab (owner, 2026-10-23): what every app published about the asset,
+- An asset's **Situation** tab: what every app published about the asset,
   its signals and the assets inside it (alarms, Link's diagnoses, models...), worst first and
   by app, with links into each app, the open actions, the latest events and the runs that
   covered it (`GET /api/assets/<id>/situation`).
-- `ci/e2e-upgrade.sh` (owner, 2026-10-23; `docs/operations.md` section 3): a released bundle
+- `ci/e2e-upgrade.sh` (`docs/operations.md` section 3): a released bundle
   installed with data, updated to what the checkouts build now and rolled back, with a
   fingerprint through the APIs (`ci/upgrade/fingerprint.py`: every list's ids, a closed past
   hour of signal values, the results, the audit log) that must keep everything. Run it before
   every release: `FROM_BUNDLE=<released bundle> make e2e-upgrade`.
 
-- Notebooks (owner, 2026-10-23; `docs/en/notebooks.md`): Jupyter inside PlantCraft, off until an
+- Notebooks (`docs/en/notebooks.md`): Jupyter inside PlantCraft, off until an
   administrator turns it on. JupyterLite with a pruned Pyodide 0.27.6 (numpy, pandas, scipy,
   matplotlib) is built into the image by `notebooks/build.py` (`make notebooks`, pins and
   SHA-256 in `notebooks/pins.json`, about 130 MB) and served at `/notebooks/lite/` to viewers and
@@ -1446,7 +1446,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   opens the incident `queue:<service>` in "Suite health" when items wait and the oldest has
   waited over 30 minutes (two ticks), with its recovery (`docs/operations.md`, section 4).
 
-- A work queue looks the same in every app (owner, 2026-10-23): `processcraft-sdk` 0.17.0
+- A work queue looks the same in every app: `processcraft-sdk` 0.17.0
   `processcraft_sdk.server.queue` (`QueueNow`, `QueueMetrics` keeping a sample every 15 s for
   30 days, `QueueSampler`, `queue_answer`, format `plantcraft-queue/1`) and `@processcraft/ui`
   0.22.0 `QueuePanel` and `QueueSummary` (the numbers of now and the items in the queue, running
@@ -1468,7 +1468,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   (the Instrumentation and control group only) holds "Loop detail", from View's template. The
   dashboards earlier demos seeded ("Valves under watch", "Furnaces and their twin", the unit
   overview, repeats) are removed while nobody changed them since; edited ones stay.
-- The platform is **PlantCraft** (owner, 2026-10-23): every name a person reads (interface, help,
+- The platform is **PlantCraft**: every name a person reads (interface, help,
   installer, documents) says PlantCraft, and the OPC UA plant simulator is the **Simulator**.
   Package names, `PROCESSCRAFT_*` variables, URLs, app ids and the installation folder are
   unchanged. `@processcraft/ui` 0.21.0 (the lockup, `APP_NAMES`, `appFullName`; `appShortName`
@@ -1672,7 +1672,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- ProcessCraft Twin leaves the suite (owner, 2026-10-22): its twins run in ProcessCraft Link as
+- ProcessCraft Twin leaves the suite: its twins run in ProcessCraft Link as
   algorithms on assets. The installation, bundle, menu, CI runners and suite registries no longer
   carry `twincraft`; `/twin/` opens Link's algorithms and `--with-twincraft` means LinkCraft. An
   upgrade turns the `twincraft` profile into `linkcraft` and LinkCraft takes in Twin's uploaded
@@ -1807,7 +1807,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   online, data connections, worst first, your apps) and those each installed app publishes
   under `<prefix>/api/widgets`, so nothing depends on a given app being installed.
 - Setup > Backups: the backup and restore drill schedule moved from Operations, which now only
-  watches and acts (owner, 2026-10-21: the two overlapped).
+  watches and acts (the two overlapped).
 - `@processcraft/ui` 0.11.0: `DataTable` (sort by any column, filter, pages of 25/50/100, a
   checkbox per row with actions on the rows ticked) and `WidgetBoard`; Help, the tour and About
   in the user menu, which closes on a click outside; the apps in the order data flows
@@ -1869,7 +1869,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - `@processcraft/ui` 0.14.0: Help is the last entry of every app's pages in the left sidebar (the
   app's own guides, inside the app), no longer in the user menu; the tour's last step says so.
 - Setup shows only its tiles, in three groups (plant and data, people and apps, settings); the
-  four-step path and the intro text are gone (owner, 2026-10-22). "Import plant map" is now
+  four-step path and the intro text are gone. "Import plant map" is now
   **Configuration file** (sources, signals, assets and loops); App keys explain what they are for.
 - Dialogs keep the same side margins for their fields as for their header and footer.
 - The menu has two groups: Work (Home, Assets, Actions) and, for administrators, Administration

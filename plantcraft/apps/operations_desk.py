@@ -23,7 +23,7 @@ NAME = re.compile(r"^\d{8}-\d{6}-[a-z][a-z0-9-]{1,30}$")
 SETTINGS_FILE = "ops-settings.json"
 TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 # "local" is the installation's time zone (Setup › Installation), resolved for the installer
-# into ``local_zone`` each time the schedule or that zone is saved (owner, 2026-10-25).
+# into ``local_zone`` each time the schedule or that zone is saved.
 DEFAULTS = {
     "enabled": True,
     "daily_at": "02:00",

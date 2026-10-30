@@ -238,7 +238,7 @@ starts from the [app template](../templates/app).
 | Add people and groups, decide who opens which app | [User guide](en/user-guide.md), People |
 | Certificates, backups, updates, the firewall | [install-offline.md](install-offline.md), [Running the suite](en/running-the-suite.md) |
 | Run calculations on other machines | [Compute workers](compute.md) |
-| Turn on a language model, or the MCP server | [Assistant](assistant.md), [assistant-access.md](assistant-access.md) |
+| Turn on the assistant (off until you connect a model), or the MCP server | [Turn it on](assistant.md#turn-it-on), [assistant-access.md](assistant-access.md) |
 | Hand the installation to IT and OT security | [Security guide](security-guide.md) ([português](pt-BR/security-guide.md)) |
 
 ## Remove it

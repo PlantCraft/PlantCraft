@@ -365,8 +365,8 @@ backup() { # backup LABEL: stops the stack, saves data, settings and the current
     local file
     for file in .env compose.yaml bundle.env; do
         if [ -f "$PREFIX/$file" ]; then cp -p "$PREFIX/$file" "$dir/$file"; fi
-    done
-    : >"$dir/images.txt"
+    done:
+    >"$dir/images.txt"
     local ref id
     while read -r ref; do
         [ -n "$ref" ] || continue
@@ -476,7 +476,7 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
         log "Settings renamed to PLANTCRAFT_* in $env"
     fi
     # Installations from before 0.4 kept UTC on every upgrade: nobody chose it, so the server's
-    # zone is adopted (owner, 2026-10-25, D2). What Setup › Installation saves wins over this.
+    # zone is adopted (D2). What Setup › Installation saves wins over this.
     zone="$(env_get PLANTCRAFT_TIMEZONE "$env")"
     if [ -z "$zone" ] || [ "$zone" = "UTC" ]; then
         local server_zone

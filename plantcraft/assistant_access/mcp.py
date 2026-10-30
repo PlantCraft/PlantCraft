@@ -31,7 +31,7 @@ MAX_LIST = 200
 # Points per signal a read_series answer aims at when no step is given.
 TARGET_POINTS = 1_000
 # The most points one history read may ask for (signals × steps): an assistant reads trends, not
-# raw archives; a bigger read is refused with the step that fits (owner, 2026-10-23: no question
+# raw archives; a bigger read is refused with the step that fits (no question
 # may load the plant's whole history).
 MAX_READ_POINTS = 20_000
 MAX_SERIES = 20

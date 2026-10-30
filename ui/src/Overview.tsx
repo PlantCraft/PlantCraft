@@ -44,8 +44,8 @@ export function useOverviewLayout(page?: string, fetcher: typeof fetch = fetch):
   const save = useCallback((next: BoardItem[] | null) => {
     setLayout(next);
     const init: RequestInit = next === null
-      ? { method: "DELETE", credentials: "same-origin" }
-      : { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ widgets: next }) };
+      ? { method: "DELETE", credentials: "same-origin" }:
+      { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ widgets: next }) };
     fetcher(layoutUrl(page), init).catch(() => undefined);
   }, [page, fetcher]);
   return [layout, save];
@@ -58,7 +58,7 @@ export type AppOverviewProps = {
   name: string;
   /** Where the app is served (`/link/`): its published widgets are read from `<url>api/widgets`. */
   url: string;
-  /** No longer drawn: the page's top is its title and buttons only (owner, 2026-10-25). */
+  /** No longer drawn: the page's top is its title and buttons only. */
   intro?: string;
   /** The app's main actions, at the right of the heading. */
   actions?: ReactNode;

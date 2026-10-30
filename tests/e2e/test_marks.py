@@ -1,4 +1,4 @@
-"""A person's own marks in the browser (owner, 2026-10-28): a notification checked done from its row
+"""A person's own marks in the browser: a notification checked done from its row
 and from the page it opened, seen and not seen with one button, favorites in the notifications and
 the conversations."""
 

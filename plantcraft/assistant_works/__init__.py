@@ -1,4 +1,4 @@
-"""The assistant's works (owner, 2026-10-25): what the assistant does on each page, declared as
+"""The assistant's works: what the assistant does on each page, declared as
 data, and the context it gets when a person picks one (``docs/assistant.md``, "Works").
 
 A work is declared once: PlantCraft's own in ``PLATFORM_WORKS``, an app's in its ``app.toml``
@@ -178,7 +178,7 @@ class WorkRegistry:
         return next((work for work in self.all() if work.key == key), None)
 
     def creatable(self, level: str | None, apps: set[str] | None = None) -> list[Work]:
-        """The create works a free chat may propose (owner, 2026-10-26: asked in any chat, a
+        """The create works a free chat may propose (asked in any chat, a
         new block comes as a card that opens its form filled in): offered to ``level``, of an
         app the person may open, and not about one page's object (no ``{subject}``)."""
 

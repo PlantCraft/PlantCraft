@@ -38,7 +38,7 @@ export function appDisplayName(app: AnyAppId, name?: string | null): string {
 
 /**
  * The platform's brand, written once. The tab title and the tab icon of every app use it
- * (tabTitle.ts), the lockups (Brand.tsx) and the full names below (owner, 2026-10-23: the platform
+ * (tabTitle.ts), the lockups (Brand.tsx) and the full names below (the platform
  * is PlantCraft; ids, packages and URLs keep processcraft).
  */
 export const BRAND_NAME = "PlantCraft";
@@ -50,7 +50,7 @@ export const BRAND_NAME = "PlantCraft";
  */
 export const APP_NAMES: Record<AppId, string> = {
   processcraft: BRAND_NAME,
-  // Each person's day: the suite's first page (owner, 2026-10-23), served by the platform.
+  // Each person's day: the suite's first page, served by the platform.
   desk: "Desk",
   linkcraft: "Analytics",
   dashcraft: "View",
@@ -93,7 +93,7 @@ export const APP_ID_BY_MACHINE_ID: Record<string, AppId> = {
   trendcraft: "dashcraft",
   simulator: "simcraft",
   // The Simulator was `plantcraft` until its 0.5.0: the platform took the name (2026-10-27).
-  // The Twin was retired into Link (owner, 2026-10-22).
+  // The Twin was retired into Link.
   twincraft: "linkcraft",
   twin: "linkcraft",
 };
@@ -133,7 +133,7 @@ const f = (d: string): GlyphPart => ({ tag: "path", attrs: { d }, fill: true });
 /** The glyphs, drawn on the 32 grid in the ISA-5.1 line-art spirit of the PlantCraft mark. */
 export const APP_GLYPHS: Record<AppId, GlyphPart[]> = {
   // Control valve on a process line, driven by an instrument bubble; the valve carries the mark,
-  // the stem is short so it never reads as a figure at 16 px (owner, 2026-10-23).
+  // the stem is short so it never reads as a figure at 16 px.
   processcraft: [
     s("M4 21h4M24 21h4", 2.4),
     s("M16 21V13.6"),

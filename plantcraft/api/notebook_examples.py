@@ -1,4 +1,4 @@
-"""The Examples folder: one folder per app, PlantCraft's own first (owner, 2026-10-26).
+"""The Examples folder: one folder per app, PlantCraft's own first.
 
 ``Examples/PlantCraft`` holds the platform's examples (``templates``); every app that declares
 ``[contributes.notebooks] examples`` gets ``Examples/<app>`` (``Examples/Analytics``) with the ones

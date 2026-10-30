@@ -227,7 +227,7 @@ def test_method_defaults_need_an_admin(runtime, fake):
 
 
 def test_saving_defaults_is_a_new_version_with_what_changed(runtime, fake):
-    """Owner, 2026-10-27: every save of the defaults is a version with a description; old ones
+    """every save of the defaults is a version with a description; old ones
     can be deleted, never the one in use."""
 
     url = "/link/api/methods/pv_variability/defaults"

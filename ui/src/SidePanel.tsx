@@ -1,11 +1,11 @@
 /**
- * The panels the sidebar's quick buttons open (owner, 2026-10-24, round 8): Messages,
+ * The panels the sidebar's quick buttons open (round 8): Messages,
  * Notifications, the Assistant and the work queues all open the same panel. It slides out from
  * under the sidebar's edge over the page and folds back the same way; its width and header are
  * the same everywhere (the title, "Full page", close).
  *
  * One panel at a time for the whole page: opening one closes the others (`claimPanel`). Going from
- * one panel straight to another only swaps what is inside (round 8, owner 2026-10-25): the panel
+ * one panel straight to another only swaps what is inside (round 8): the panel
  * that closes goes at once and the one that opens does not slide in, so the frame seems to stay.
  */
 import { Maximize2, X } from "lucide-react";
@@ -52,7 +52,7 @@ export function panelSwapping(now = Date.now()): boolean { return now < swapUnti
 export function closeAllPanels() { panels.forEach((panel) => panel.close()); }
 
 /**
- * Going to another page or app closes the quick panel that was open (owner, 2026-10-25), as the
+ * Going to another page or app closes the quick panel that was open, as the
  * list of apps and the person's menu already close. `where` names the page; the first one closes
  * nothing.
  */
@@ -115,7 +115,7 @@ export type SidePanelProps = {
   onFull?: () => void;
   /** Buttons of the panel's own, before "Full page". */
   actions?: ReactNode;
-  /** No longer used: every panel has the same width (owner, 2026-10-25). */
+  /** No longer used: every panel has the same width. */
   size?: "narrow" | "wide";
   /** Folding back: drawn, but no longer a dialog anyone can use. */
   leaving?: boolean;

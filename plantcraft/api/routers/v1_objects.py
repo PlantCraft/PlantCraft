@@ -1,6 +1,6 @@
 """HTTP routes: API v1's objects of the apps, for notebooks (docs/api-v1.md, "Apps' objects").
 
-One format for every app (owner, 2026-10-26): an app declares its kinds in
+One format for every app: an app declares its kinds in
 ``[[contributes.objects]]`` and serves them at ``<prefix>api/objects/<kind>``
 (``plantcraft_sdk.server.objects``); PlantCraft lists what each app offers and forwards the
 reads with the person's identity (``plantcraft.api.app_proxy``), so a notebook reads Link's blocks
@@ -8,7 +8,7 @@ or Models' models with the same access token and the same per-person limits as t
 What runs on the person's computer comes from ``/notebooks/runtime``: nothing a notebook runs
 runs on the server. The one write is ``POST .../objects/<kind>/run`` for a kind the app runs
 itself (``run = "app"``: a simulation in its queue), which the app refuses unless its
-administrator switched notebook runs on (owner, 2026-10-26, D4).
+administrator switched notebook runs on (D4).
 """
 
 from __future__ import annotations

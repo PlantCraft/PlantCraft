@@ -137,7 +137,7 @@ def mark_notifications(
     return {"state": payload.state, "keys": len(payload.keys)}
 
 
-# Favorites and unread again (owner, 2026-10-28) -------------------------------------------------
+# Favorites and unread again -------------------------------------------------
 
 # A notification (``notice:``, ``action:``, ``result:``), a conversation or an assistant chat.
 MARK_KEY = re.compile(r"^(notice|action|result):.{1,290}$|^(conversation|chat):\d{1,12}$")

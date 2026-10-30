@@ -1,4 +1,4 @@
-"""The assistant's chats in Desk (owner, 2026-10-23): each person's own conversations with a
+"""The assistant's chats in Desk: each person's own conversations with a
 language model, apart from Messages, which stay between people.
 
 A person keeps many chats, each on its own subject: a text to translate or correct, a question
@@ -10,7 +10,7 @@ Tables (this module owns them): ``assistant_chats`` and ``assistant_chat_message
 keeps the steps the model took (each tool call, as the person can read it), the charts it drew
 (the values come from the plant's history, never from the model) and the references it read.
 
-A chat opened from the assistant's side panel in a page (owner, 2026-10-23: "Ask the assistant"
+A chat opened from the assistant's side panel in a page ("Ask the assistant"
 beside a result, an alarm, an asset) carries that place's ``context`` for the model and is not
 kept (``kept = 0``): it is not listed in Desk and is deleted a day later, unless the person
 continues it in Desk (``keep``).
@@ -98,7 +98,7 @@ class ChatStore(Store):
         ),
         # The work the person picked on the page (assistant_works, 2026-10-25).
         Migration("work", add_columns("assistant_chats", {"work": "TEXT NOT NULL DEFAULT ''"})),
-        # The history as people keep it (owner, 2026-10-26): a group of the person's own, archived
+        # The history as people keep it: a group of the person's own, archived
         # or not, and the people, groups or everyone it is shared with (read-only).
         Migration(
             "history",

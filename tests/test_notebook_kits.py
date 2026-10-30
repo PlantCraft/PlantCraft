@@ -96,7 +96,7 @@ def test_files_added_to_a_zip_keep_every_entry_before_them(shelf):
 
 
 def test_the_kit_comes_with_notebooks_until_an_administrator_takes_it_away(app, dist, shelf):  # noqa: F811
-    """One switch (owner, 2026-10-26): Notebooks on offers the kit the installation has."""
+    """One switch: Notebooks on offers the kit the installation has."""
 
     with TestClient(app):
         admin = _turn_on(app)
@@ -297,7 +297,7 @@ def test_connect_this_computer_trades_a_one_time_code_for_the_token(
     shelf,
     monkeypatch,
 ):
-    """No token is copied (owner, 2026-10-26): the page's link carries a code that works once,
+    """No token is copied: the page's link carries a code that works once,
     for two minutes, and the app on the computer keeps the token in the vault."""
 
     with TestClient(app):
@@ -346,7 +346,7 @@ def test_a_connection_code_connects_the_app_with_one_paste(
     shelf,
     monkeypatch,
 ):
-    """No link from the page (owner, 2026-10-27): the person copies one line, the app opened
+    """No link from the page: the person copies one line, the app opened
     unconnected asks for it, checks the CA by its SHA-256 and keeps the token in the vault."""
 
     with TestClient(app):

@@ -1,5 +1,5 @@
 /**
- * The suite's persistent frame (owner, 2026-10-24, round 8): inside an installation PlantCraft
+ * The suite's persistent frame (round 8): inside an installation PlantCraft
  * draws the sidebar once and every app runs inside it as content only, in a same-origin iframe,
  * so switching apps never reloads the sidebar and every app shows the platform's current one.
  * Each app keeps its own server, package and version; run alone it draws its own sidebar.

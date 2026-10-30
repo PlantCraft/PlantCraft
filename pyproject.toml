@@ -84,5 +84,5 @@ extend-exclude = ["frontend", "apps", "simulator", "site"]
 
 [tool.ruff.lint]
 # Keep the gate small: real errors (pyflakes), import order, and no time without a time zone
-# (DTZ: everything in UTC, owner 2026-10-23).
+# (DTZ: everything in UTC).
 select = ["F", "I", "DTZ"]

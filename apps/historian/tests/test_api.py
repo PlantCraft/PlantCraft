@@ -399,7 +399,7 @@ def test_invalid_input_is_rejected_clearly(client, loaded):
 
 
 def test_csv_sources_are_archived_and_browsed_from_their_files(pc, loaded, tmp_path):
-    # Owner, 2026-10-24: a CSV source is a file (or folder) another application keeps writing;
+    # a CSV source is a file (or folder) another application keeps writing;
     # the collector archives its rows, so its points are in mode archive.
     path = tmp_path / "lab.csv"
     path.write_text(
@@ -567,7 +567,7 @@ def test_a_retired_apps_source_is_marked_and_removed_with_its_points(client, pc,
     assert client.delete("/hist/api/sources/app-cpmcraft?with_points=true").status_code == 204
     assert "app-cpmcraft" not in {s["id"] for s in client.get("/hist/api/sources").json()}
     assert not runtime.catalog.points(source_id="app-cpmcraft")
-    # Twin's source goes on the next start (owner, 2026-10-23).
+    # Twin's source goes on the next start.
     assert runtime.catalog.drop_retired() == ["app-twincraft"]
     assert runtime.catalog.drop_retired() == []
 

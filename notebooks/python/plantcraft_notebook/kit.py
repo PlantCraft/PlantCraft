@@ -4,7 +4,7 @@ The installer (``notebooks/kit/build_kit.py``: a Windows setup, a macOS app, a L
 ``install.sh``) puts a portable Python with JupyterLab on the computer and runs ``install``, which
 registers the ``plantcraft-notebooks://`` link with the system and copies the examples.
 
-The person connects it once with a connection code (owner, 2026-10-27): Notebooks › Run on your
+The person connects it once with a connection code: Notebooks › Run on your
 computer › Create a connection code gives one line with the server's address, a read-only token
 of their own and the SHA-256 of the local certificate authority. Opened unconnected, the app asks
 for it in a small window ("Configure token" asks in a terminal), fetches the CA and keeps it only

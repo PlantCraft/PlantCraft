@@ -218,7 +218,7 @@ def test_a_public_demo_visit_exports_but_saves_no_choice(runtime, fake, plant):
 
 
 def test_each_step_keeps_the_aggregate_chosen(client, plant):
-    """First, last, lowest, highest or mean per step (owner, 2026-10-21)."""
+    """First, last, lowest, highest or mean per step."""
 
     base = {"signals": ["plant:TI-100.PV"], **PERIOD, "step_seconds": 600}
     raw, _ = _zip(client.post("/hist/api/export", json={"signals": ["plant:TI-100.PV"], **PERIOD}))

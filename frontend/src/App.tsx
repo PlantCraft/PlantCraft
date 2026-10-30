@@ -1,4 +1,4 @@
-/** The platform's front end: sign-in, then two apps in one page (owner, 2026-10-23): Desk, each
+/** The platform's front end: sign-in, then two apps in one page: Desk, each
  * person's day, at "/", and PlantCraft, the suite's setup and administration, at "/admin". */
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Activity, AlertTriangle, ArrowRight, Building2, CalendarDays, ChevronDown, ClipboardCheck, CloudDownload, DatabaseBackup, Languages, LayoutDashboard, LoaderCircle, LockKeyhole, Network, Package, ListTodo, Settings2, StickyNote, ShieldCheck, SlidersHorizontal, Sun, UserRound, Users, XCircle } from "lucide-react";
@@ -65,7 +65,7 @@ function Login({ onLogin, publicDemo, demoEnded, installation }: { onLogin: (use
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [methods, setMethods] = useState<SignInMethods | null>(null);
-  // A public demo hides the account form behind its button (owner, 2026-10-28: show there is a
+  // A public demo hides the account form behind its button (show there is a
   // sign-in without scaring visitors); `?account` opens it at once.
   const [accountOpen, setAccountOpen] = useState(() => new URLSearchParams(window.location.search).has("account"));
   const showForm = !publicDemo || accountOpen;
@@ -91,7 +91,7 @@ function Login({ onLogin, publicDemo, demoEnded, installation }: { onLogin: (use
       <section className="login-form-wrap">
         <form className="login-card" onSubmit={submit}>
           <BrandMark className="login-mark" size={48} />
-          {/* A public demo (owner, 2026-10-28): two buttons, the demo first; "Sign in" opens the
+          {/* A public demo: two buttons, the demo first; "Sign in" opens the
               team's form, which also shows a working installation. */}
           {publicDemo && <>
             <h1>{t("Demo")}</h1>
@@ -193,7 +193,7 @@ function Page({ path, data, username, onInboxChange }: { path: string; data: Hom
   if (path === "/data") return <SourcesPage data={data} />;
   if (path === "/asset-import") return <AssetImportPage />;
   if (path === "/asset-import/review") return <AssetImportReview />;
-  // Hidden from the menu (owner, 2026-10-20): each app shows its own runs; kept for a later return.
+  // Hidden from the menu: each app shows its own runs; kept for a later return.
   if (path === "/executions") return access.can_edit ? <Suspense fallback={PAGE_LOADING}><ExecutionsPage /></Suspense> : <NoAccess />;
   if (path === "/users") return canSee(access, "administration") ? <Suspense fallback={PAGE_LOADING}><UsersPage /></Suspense> : <NoAccess />;
   if (path === "/users/groups") return canSee(access, "administration") ? <Suspense fallback={PAGE_LOADING}><GroupsPage /></Suspense> : <NoAccess />;
@@ -217,7 +217,7 @@ function Page({ path, data, username, onInboxChange }: { path: string; data: Hom
   return <NotFound />;
 }
 
-/** Sources and signals belong to the Historian (owner, 2026-10-23): /data opens its pages, or says to install it. */
+/** Sources and signals belong to the Historian: /data opens its pages, or says to install it. */
 function SourcesPage({ data }: { data: HomeData }) {
   const url = sourcesUrl(data);
   const query = window.location.search;
@@ -256,7 +256,7 @@ function frameKey(key: "[" | "k") {
 
 function Shell({ username, canSwitch, onLogout, path }: { username: string; canSwitch: boolean; onLogout: () => void; path: string }) {
   const { data, loading, error, load } = useHome();
-  // The suite's frame (round 8, owner 2026-10-24): an app's address is drawn here, beside this
+  // The suite's frame (round 8): an app's address is drawn here, beside this
   // sidebar, in an iframe; the apps opened stay loaded while the person is on PlantCraft's pages.
   const [frame, setFrame] = useState<FrameState | null>(null);
   const [lastApp, setLastApp] = useState<{ prefix: string; url: string } | null>(null);
@@ -268,7 +268,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const admin = canSee(access, "users");
   const adminView = canSee(access, "administration");
   // Notebooks are in everyone's Desk once an administrator turned them on (always for admins,
-  // who find there how to turn them on); the switch is in Setup › Notebooks (owner, 2026-10-24).
+  // who find there how to turn them on); the switch is in Setup › Notebooks.
   const [notebooksOn, setNotebooksOn] = useState(false);
   useEffect(() => {
     if (access.level === "dashboards") return;
@@ -289,9 +289,9 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   if (EMBEDDED) return <EmbeddedMessages path={path} data={data} username={username} onRead={bumpInbox} />;
   const desk = isDeskPath(path);
   // Desk: the person's day. PlantCraft: the plant's assets for everyone; the rest is administration.
-  // Messages and the Assistant are not Desk pages any more (owner, 2026-10-24): their buttons above the
+  // Messages and the Assistant are not Desk pages any more: their buttons above the
   // person's name open them over any screen; /messages and /assistant stay as their full pages.
-  // PlantCraft (owner, 2026-10-25): what everyone uses on top, with no section name; the rest is
+  // PlantCraft: what everyone uses on top, with no section name; the rest is
   // administration, with Setup last (the suite's rule: an app's settings close its menu).
   const administration = t("Administration");
   const deskNav: ShellNavItem[] = [
@@ -300,9 +300,9 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
     { to: "/calendar", label: t("Calendar"), icon: <CalendarDays /> },
     { to: "/todo", label: t("To-do"), icon: <ListTodo /> },
     { to: "/notes", label: t("Notes"), icon: <StickyNote /> },
-    // Team is hidden until an administrator shows it in Setup › Desk (owner, 2026-10-25).
+    // Team is hidden until an administrator shows it in Setup › Desk.
     ...(teamOn ? [{ to: "/team", label: t("Team"), icon: <Users /> }] : []),
-    // Notebooks last, the most complex; the Python logo says what they are (owner, 2026-10-27).
+    // Notebooks last, the most complex; the Python logo says what they are.
     ...(admin || notebooksOn ? [{ to: "/notebooks", label: t("Notebooks"), icon: <PythonMark /> }] : []),
   ];
   const nav: ShellNavItem[] = desk ? deskNav : [
@@ -310,7 +310,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
     { to: "/assets", label: t("Assets"), icon: <Network />, match: (current) => current === "/assets" || current.startsWith("/assets/") || current.startsWith("/asset-import") || current.startsWith("/asset-types") },
     { to: "/health", label: t("System health"), icon: <Activity /> },
     { to: "/preferences", label: t("Preferences"), icon: <SlidersHorizontal /> },
-    // A public demo's visitor reads People, Apps and Backups too (owner, 2026-10-28).
+    // A public demo's visitor reads People, Apps and Backups too.
     ...(adminView ? [
       { to: "/users", label: t("People"), icon: <Users />, section: administration },
       { to: "/apps", label: t("Apps"), icon: <Package />, section: administration },

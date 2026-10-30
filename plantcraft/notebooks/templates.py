@@ -95,7 +95,7 @@ Run each cell with **Shift + Enter**. `pc` reads the plant with your own access:
 
 
 # Examples ------------------------------------------------------------------------------
-# Ready notebooks that show how to use the plant's data (owner, 2026-10-24: "colocar exemplos";
+# Ready notebooks that show how to use the plant's data ("colocar exemplos";
 # 2026-10-26: four, none repeated, in Examples/PlantCraft beside each app's folder). They find
 # their own signals and assets, so they run on any installation, the demo included.
 

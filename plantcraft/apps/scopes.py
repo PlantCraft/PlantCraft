@@ -1,6 +1,6 @@
 """What each app's token may do in API v1: its ``[permissions]``, held to every route.
 
-Where an app's permissions come from (scale review E4, owner 2026-10-25):
+Where an app's permissions come from (scale review E4):
 
 - **An app installed from a package** (the Apps page, the catalog, ``install.sh --add``): the
   permissions of its signed manifest, the list the administrator saw before the install.

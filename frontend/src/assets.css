@@ -313,7 +313,7 @@ a.ty-row:hover { background: var(--pc-surface-2); }
 .as-situation-run { display: flex; align-items: center; gap: 8px; }
 @media (max-width: 1080px) { .as-situation-grid { grid-template-columns: 1fr; } }
 
-/* Assets › Import: the last import and its undo (owner, 2026-10-24). */
+/* Assets › Import: the last import and its undo. */
 .ai-last h2 { display: flex; align-items: center; gap: 8px; }
 .ai-last p { margin: 0 0 6px; }
 .ai-confirm { margin-top: 10px; padding: 12px 14px; border: 1px solid var(--pc-problem-border, var(--pc-border)); border-radius: var(--pc-radius-md); background: var(--pc-problem-fill); display: grid; gap: 10px; }

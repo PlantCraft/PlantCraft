@@ -1,8 +1,8 @@
 /** Groups of people (Users › Groups for administrators, /groups/<id> for everyone): a name for
  * several people that every app can notify, filter by or make the owner of something. Each group
  * has a kind (a department, an area of the plant, a discipline or a team) and may have a
- * coordinator, who changes its members (owner, 2026-10-22). Groups form a tree, and a coordinator
- * leads their group and sees the work of every group below it (owner, 2026-10-23). */
+ * coordinator, who changes its members. Groups form a tree, and a coordinator
+ * leads their group and sees the work of every group below it. */
 import { AlertTriangle, LoaderCircle, MessagesSquare, Pencil, Plus, ShieldCheck, Trash2, UserRound, Users } from "lucide-react";
 import { DataTable } from "@plantcraft/ui";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
@@ -169,9 +169,9 @@ export function GroupPage({ groupId }: { groupId: string }) {
     <div className="pp-grid">
       <section className="panel">
         <h2 className="section-title"><Users size={15} /> {t("Members")}</h2>
-        {editing ? <div className="form-grid gr-edit"><MemberPicker people={people} value={members} locked={group.coordinator} onChange={setMembers} /><footer><button type="button" className="button button-secondary" onClick={() => setEditing(false)}>{t("Cancel")}</button><button type="button" className="button button-primary" onClick={() => void save()}>{t("Save")}</button></footer></div>
-          : group.members.length ? <ul className="gr-list">{group.members.map((member) => <li key={member.username}><Avatar name={member.display_name} size="sm" /><PersonLink username={member.username} name={member.display_name} />{member.username === group.coordinator && <span className="gr-kind gr-kind-team">{t("Coordinator")}</span>}{!member.active && <span className="muted">{t("Deactivated")}</span>}</li>)}</ul>
-          : <p className="muted">{t("Nobody yet.")}</p>}
+        {editing ? <div className="form-grid gr-edit"><MemberPicker people={people} value={members} locked={group.coordinator} onChange={setMembers} /><footer><button type="button" className="button button-secondary" onClick={() => setEditing(false)}>{t("Cancel")}</button><button type="button" className="button button-primary" onClick={() => void save()}>{t("Save")}</button></footer></div>:
+          group.members.length ? <ul className="gr-list">{group.members.map((member) => <li key={member.username}><Avatar name={member.display_name} size="sm" /><PersonLink username={member.username} name={member.display_name} />{member.username === group.coordinator && <span className="gr-kind gr-kind-team">{t("Coordinator")}</span>}{!member.active && <span className="muted">{t("Deactivated")}</span>}</li>)}</ul>:
+          <p className="muted">{t("Nobody yet.")}</p>}
       </section>
       <section className="panel">
         <h2 className="section-title"><UserRound size={15} /> {t("About")}</h2>

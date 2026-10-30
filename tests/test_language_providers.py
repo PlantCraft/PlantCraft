@@ -1,6 +1,6 @@
 # ruff: noqa: F811  (the fixture ``signed`` comes from test_collaboration.py)
 """Setup › Language models: several providers, each with its models, and each specialist
-answering with the provider and model it was given (owner, 2026-10-22)."""
+answering with the provider and model it was given."""
 
 from __future__ import annotations
 

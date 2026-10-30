@@ -29,7 +29,7 @@ def _publish(page) -> None:
 
 def test_executions_lists_runs_and_schedules_of_every_app(page):
     _publish(page)
-    # Hidden from the menu (owner, 2026-10-20), still served at its address.
+    # Hidden from the menu, still served at its address.
     page.goto("/")
     expect(page.get_by_role("link", name="Runs and schedules")).to_have_count(0)
     page.goto("/executions")

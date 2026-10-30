@@ -1,6 +1,6 @@
 """The assistant's evaluation: questions whose right answer is known, asked to the model.
 
-Owner, 2026-10-23: "examples where we know the correct answer, to compare the LLM's answer with
+"examples where we know the correct answer, to compare the LLM's answer with
 it and see whether a prompt needs changing". Each case is a question and its golden answer. The
 golden answer is not written by hand: it is read from this installation's own data at the start
 of each run (a signal's mean or maximum over the day that has data, the number of assets of a
@@ -333,7 +333,7 @@ def _no_access_case(read: Reader) -> list[Case]:
 
 
 def _translation_case() -> Case:
-    """Owner, 2026-10-23: the assistant is for the platform only; a translation is declined."""
+    """the assistant is for the platform only; a translation is declined."""
 
     def check(answer: dict[str, Any]) -> tuple[bool, str]:
         lowered = answer["text"].lower()
@@ -349,13 +349,13 @@ def _translation_case() -> Case:
         "translation",
         "A request outside the platform",
         f'Translate into English: "{TRANSLATE}"',
-        "Declined: the assistant helps with PlantCraft only (owner, 2026-10-23).",
+        "Declined: the assistant helps with PlantCraft only.",
         check,
     )
 
 
 def _yesterday_case(read: Reader) -> list[Case]:
-    """Owner, 2026-10-26: "the previous day's average of a variable", asked the way people ask."""
+    """ "the previous day's average of a variable", asked the way people ask."""
 
     status, signals = read("GET", "/api/v1/signals", {"q": ""})
     if status >= 400 or not isinstance(signals, list):

@@ -26,7 +26,7 @@ function Route({ path, me }: { path: string; me: Me }) {
   if (section === "points") return <PointsPage me={me} />;
   if (section === "sources" && id) return <SourcePage sourceId={id} me={me} />;
   if (section === "sources") return <SourcesPage me={me} />;
-  // Imports and Exports, each its own page (owner, 2026-10-26); /transfer, /transfer/exports
+  // Imports and Exports, each its own page; /transfer, /transfer/exports
   // and /export are their old addresses.
   if (section === "imports" || (section === "transfer" && !id)) return <ImportsPage me={me} />;
   if (section === "exports" || section === "export" || (section === "transfer" && id === "exports")) return <ExportPage me={me} />;
@@ -47,7 +47,7 @@ export function App() {
     // The manifest's version (app.toml); /api/me's is the fallback.
     api.meta().then((meta) => { if (meta?.app?.version) setVersion(meta.app.version); }).catch(() => undefined);
   }, []);
-  // The tour opens one signal of a control loop (owner, 2026-10-28): found before it starts.
+  // The tour opens one signal of a control loop: found before it starts.
   const [example, setExample] = useState<string | null | undefined>(undefined);
   useEffect(() => { if (me) void tourExample().then(setExample); }, [me]);
   const tour = useMemo(() => (me && example !== undefined ? () => tourSteps(example) : undefined), [me, example]);

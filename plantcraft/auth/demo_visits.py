@@ -6,7 +6,7 @@ frees. A visit lasts while it is used: each sign of use (``POST /api/demo/heartb
 ``active``) moves its end ``minutes`` ahead, so it ends ``minutes`` after its last use, or when its
 visitor signs out. A visitor unused for ``idle_minutes`` gives up their place, but only to someone
 waiting. No cap per address: behind the demo's proxy and tunnel, every visitor can seem to come
-from one (owner, 2026-10-28: that locked visitors out).
+from one (that locked visitors out).
 
 In the database, not in memory, so every server process sees the same places. Every visit is
 the same read-only visitor account: the place is what is counted, not the person.

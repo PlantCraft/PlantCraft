@@ -1,4 +1,4 @@
-/** Setup › Language models, in the order an administrator sets them up (owner, 2026-10-25):
+/** Setup › Language models, in the order an administrator sets them up:
  * first the providers (the same vendor may come more than once, each with its own key), then
  * the model each use writes with: the default, and each part of the suite that uses a model,
  * the apps' own included. Choosing a default is what turns models on; the first model that
@@ -39,9 +39,9 @@ export function connectionState(connection: Pick<LanguageModel, "enabled" | "rea
 export function KeyField({ set, hint, mode, onMode, value, onValue, optional }: { set: boolean; hint: string | null; mode: "keep" | "replace" | "remove"; onMode: (mode: "keep" | "replace" | "remove") => void; value: string; onValue: (value: string) => void; optional?: boolean }) {
   return <div className="field-span sp-key">
     <span className="act-label">{t("API key")}{optional ? ` ${t("(optional)")}` : ""}</span>
-    {set && mode === "keep" ? <div className="sp-key-saved"><span>{hint ? t("Saved key ending in …{hint}", { hint: hint.replace("…", "") }) : t("A key is saved")}</span><button type="button" className="button button-secondary" onClick={() => onMode("replace")}>{t("Replace")}</button><button type="button" className="button button-secondary" onClick={() => onMode("remove")}>{t("Remove")}</button></div>
-      : mode === "remove" ? <div className="sp-key-saved"><span>{t("The saved key will be removed when you save.")}</span><button type="button" className="button button-secondary" onClick={() => onMode("keep")}>{t("Keep it")}</button></div>
-      : <div className="sp-key-saved"><input type="password" autoComplete="new-password" value={value} onChange={(event) => onValue(event.target.value)} placeholder={set ? t("New key") : t("Paste the key")} aria-label={t("API key")} />{set && <button type="button" className="button button-secondary" onClick={() => { onValue(""); onMode("keep"); }}>{t("Cancel")}</button>}</div>}
+    {set && mode === "keep" ? <div className="sp-key-saved"><span>{hint ? t("Saved key ending in …{hint}", { hint: hint.replace("…", "") }) : t("A key is saved")}</span><button type="button" className="button button-secondary" onClick={() => onMode("replace")}>{t("Replace")}</button><button type="button" className="button button-secondary" onClick={() => onMode("remove")}>{t("Remove")}</button></div>:
+      mode === "remove" ? <div className="sp-key-saved"><span>{t("The saved key will be removed when you save.")}</span><button type="button" className="button button-secondary" onClick={() => onMode("keep")}>{t("Keep it")}</button></div>:
+      <div className="sp-key-saved"><input type="password" autoComplete="new-password" value={value} onChange={(event) => onValue(event.target.value)} placeholder={set ? t("New key") : t("Paste the key")} aria-label={t("API key")} />{set && <button type="button" className="button button-secondary" onClick={() => { onValue(""); onMode("keep"); }}>{t("Cancel")}</button>}</div>}
     <small className="muted">{t("Stored beside the database, never shown again.")}</small>
   </div>;
 }
@@ -132,8 +132,8 @@ export function LanguageModelPage() {
     {!data && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
     {data && <section className="panel form-panel">
       <FormSection id="lm-providers" title={t("1. Providers")} detail={<><p>{t("Where the models run, each with its address, its key and the models it serves. The same vendor may come more than once, for example OpenAI with two keys, or a local server beside a company gateway.")}</p><p>{t("The models only read: they never change anything in the plant or the suite.")}</p></>}>
-        {data.providers.length ? <div className="lm-providers">{data.providers.map((provider) => <ProviderCard key={provider.provider_id} provider={provider} isDefault={provider.provider_id === data.settings.provider_id} defaultModel={data.settings.model} allowed={allowed} onTested={() => void reload()} onEdit={() => setEditing(provider)} onRemove={() => void remove(provider)} />)}</div>
-          : <div className="empty-state lm-empty"><Server /><strong>{t("Add the first provider")}</strong><p>{t("Nothing works with a language model until a provider is added: a name, its address, its key if it needs one and the models it serves. Each model is tested when you save, and the first that answers becomes the default.")}</p>{addButton}</div>}
+        {data.providers.length ? <div className="lm-providers">{data.providers.map((provider) => <ProviderCard key={provider.provider_id} provider={provider} isDefault={provider.provider_id === data.settings.provider_id} defaultModel={data.settings.model} allowed={allowed} onTested={() => void reload()} onEdit={() => setEditing(provider)} onRemove={() => void remove(provider)} />)}</div>:
+          <div className="empty-state lm-empty"><Server /><strong>{t("Add the first provider")}</strong><p>{t("Nothing works with a language model until a provider is added: a name, its address, its key if it needs one and the models it serves. Each model is tested when you save, and the first that answers becomes the default.")}</p>{addButton}</div>}
       </FormSection>
       {data.providers.length > 0 && <form onSubmit={saveSettings}>
         <FormSection id="lm-uses" title={t("2. Models by use")} detail={t("The default, and what each part of the suite writes with: the default, another model or off. Apps that write with a model add their own lines here when they are installed.")}>

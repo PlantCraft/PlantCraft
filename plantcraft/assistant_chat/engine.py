@@ -386,7 +386,7 @@ def cites_in(payload: Any) -> dict[int, str]:
 
 
 def linked_citations(text: str, cited: dict[int, str]) -> str:
-    """Each [n] of the answer as a link to the passage it cites (owner, 2026-10-27: a citation
+    """Each [n] of the answer as a link to the passage it cites (a citation
     opens the document at that part); a number no tool gave stays as written."""
 
     if not cited or not text:
@@ -831,7 +831,7 @@ class ChatEngine:
             def shown(steps: list, charts: list, refs: list) -> None:
                 self.store.update(message_id, steps=steps, charts=charts, refs=refs[:MAX_REFS])
 
-            # The text as the model writes it (owner, 2026-10-26: "streaming da mensagem"),
+            # The text as the model writes it ("streaming da mensagem"),
             # kept a few times a second for the page that polls; each call starts from "".
             written = {"at": 0.0}
 

@@ -20,7 +20,7 @@ export function unreadCount(counts: InboxCounts | null | undefined): number {
   return counts.unread_messages + (counts.unread_notifications ?? 0);
 }
 
-/** Every 15 s while the page is visible (owner, 2026-10-26: an alarm must reach people at once). */
+/** Every 15 s while the page is visible (an alarm must reach people at once). */
 export const INBOX_POLL_MS = 15_000;
 
 /** What the sidebar knows: the counts (null: no badge) and whether the person may not use Messages. */
@@ -60,8 +60,8 @@ export function urgentFrom(raw: unknown): UrgentNotice | null {
         const action = entry as Record<string, unknown> | null;
         if (!action || typeof action.label !== "string" || typeof action.href !== "string" || !action.href.startsWith("/") || action.href.startsWith("//")) return [];
         return [{ label: action.label, href: action.href, method: action.method === "POST" ? "POST" as const : "GET" as const }];
-      }).slice(0, 3)
-    : [];
+      }).slice(0, 3):
+    [];
   const text = (value: unknown) => (typeof value === "string" ? value : undefined);
   const href = text(item.href);
   return { key: item.key, title: item.title, detail: text(item.detail), priority: text(item.priority) ?? "high", priority_label: text(item.priority_label) ?? null, from: text(item.from), at: text(item.at), href: href && href.startsWith("/") && !href.startsWith("//") ? href : null, actions };

@@ -1,6 +1,6 @@
 /**
  * A source's page: what it is, how it is read, the defaults it gives its points, and the points.
- * Every source has one, the series an app writes too (owner, 2026-10-22: "a button to understand
+ * Every source has one, the series an app writes too ("a button to understand
  * the other sources and what their points are").
  */
 import { DataTable, useSuiteApps } from "@plantcraft/ui";
@@ -95,8 +95,8 @@ export function SourcePage({ sourceId, me }: { sourceId: string; me: Me }) {
     </div>}
     <h2 className="section-title">{t("Signals from this source")}</h2>
     {points.length === 0
-      ? <div className="panel empty"><p>{derived ? t("No data received from this app.") : t("No signals. Browse the source to add signals.")}</p></div>
-      : <DataTable rows={points} rowKey={(row) => row.signal} label={t("Signals from this source")} columns={pointColumns()} onRowClick={(row) => navigate(pointPath(row.signal))}
+      ? <div className="panel empty"><p>{derived ? t("No data received from this app.") : t("No signals. Browse the source to add signals.")}</p></div>:
+      <DataTable rows={points} rowKey={(row) => row.signal} label={t("Signals from this source")} columns={pointColumns()} onRowClick={(row) => navigate(pointPath(row.signal))}
         searchText={(row) => `${row.signal} ${row.name} ${row.description} ${row.address}`} searchPlaceholder={t("Search tag, name or address")} />}
     {actions.dialogs}
   </>;

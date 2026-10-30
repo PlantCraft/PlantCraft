@@ -35,7 +35,7 @@ export function App() {
   useEffect(() => {
     api.me().then(setMe).catch((err: Error) => setError(err.message));
   }, []);
-  // The tour opens one document (owner, 2026-10-28): found before it starts.
+  // The tour opens one document: found before it starts.
   const [example, setExample] = useState<string | null | undefined>(undefined);
   useEffect(() => { if (me) void tourExample().then(setExample); }, [me]);
   const tour = useMemo(() => (me && example !== undefined ? () => tourSteps(example) : undefined), [me, example]);

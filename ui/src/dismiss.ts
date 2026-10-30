@@ -1,5 +1,5 @@
 /**
- * Everything that floats over the page closes the same way (owner, 2026-10-25): the person's menu,
+ * Everything that floats over the page closes the same way: the person's menu,
  * the list of apps and the quick panels close on Escape and on a click anywhere outside them,
  * including a click on an app's page inside the frame's iframe (the click lands in another
  * document, so this window only sees its focus leave for that iframe).

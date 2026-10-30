@@ -19,7 +19,7 @@ const DEFAULT_BOARD: BoardItem[] = [
 /** Models' first page, in the frame of every app's Overview (`AppOverview`, the board of Desk's
  * Today): the widgets Models declares in app.toml and serves (simulations per day, the latest
  * study, the models, runs and studies, one model, the runner), arranged by each person; above
- * them, a notice only while the runner is down. No buttons on top (owner, 2026-10-27): the side
+ * them, a notice only while the runner is down. No buttons on top: the side
  * menu goes to the models, and New model is on Models. */
 export function OverviewPage(_props: { me: Me }) {
   const [runner, setRunner] = useState<RunnerState | null>(null);

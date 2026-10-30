@@ -114,7 +114,7 @@
 	# installed app takes its prefix from the routes below.
 	import /etc/caddy/apps/*.caddy
 
-	# The suite's frame (owner, 2026-10-24, round 8; ui frame.ts): a page a signed-in person
+	# The suite's frame (round 8; ui frame.ts): a page a signed-in person
 	# opens under an app's prefix is PlantCraft's, which keeps the sidebar and loads the app beside
 	# it in an iframe (that request is the app's: Sec-Fetch-Dest iframe). Not the apps' API and
 	# files, not a page asked for on its own (pc-frame=off: an app on an older ui), not a visitor

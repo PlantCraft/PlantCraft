@@ -1,4 +1,4 @@
-"""The apps' objects in a notebook: one format for every app (owner, 2026-10-26).
+"""The apps' objects in a notebook: one format for every app.
 
 Each app of the suite says what it offers notebooks (``[[contributes.objects]]`` in its
 ``app.toml``) and PlantCraft lists it at ``/api/v1/objects``; this module builds everything from

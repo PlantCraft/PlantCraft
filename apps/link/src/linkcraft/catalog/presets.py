@@ -74,7 +74,7 @@ class PresetStore(Store):
         PRIMARY KEY (method_id, number)
     );
 
-    -- Every saved version of an algorithm, as it was saved (owner, 2026-10-24: versions on top).
+    -- Every saved version of an algorithm, as it was saved (versions on top).
     CREATE TABLE IF NOT EXISTS algorithm_versions (
         algorithm_id TEXT NOT NULL,
         version INTEGER NOT NULL,

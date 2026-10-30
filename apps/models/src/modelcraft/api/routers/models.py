@@ -251,7 +251,7 @@ class BlockDefaults(BaseModel):
 
     # A parameter's new default, by its name (a number, a boolean, a list or an expression).
     values: dict[str, Any] = Field(min_length=1, max_length=200)
-    # What changed is asked every time (owner, 2026-10-27); the name is optional.
+    # What changed is asked every time; the name is optional.
     version_name: str = Field(default="", max_length=120)
     version_note: str = Field(min_length=1, max_length=2000)
     base_updated_at: str | None = Field(default=None, max_length=64)
@@ -535,7 +535,7 @@ def _model_or_404(rt, project_id: str, model: str) -> tuple[dict, dict[str, Any]
 
 
 def _code_block(text: str, item: dict[str, Any], name: str) -> dict[str, Any] | None:
-    """A model written as code, as the one block of its diagram (owner, 2026-10-24: one kind of
+    """A model written as code, as the one block of its diagram (one kind of
     model): its real inputs and outputs are its ports, its public parameters its settings."""
 
     found = class_elements(text, item["name"])

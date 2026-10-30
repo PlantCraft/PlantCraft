@@ -1,4 +1,4 @@
-"""A schedule's calendar: when it runs, as a person says it (owner, 2026-10-24).
+"""A schedule's calendar: when it runs, as a person says it.
 
 Every N minutes or hours (on some weekdays, between two times), every N days at one or more times,
 every N weeks on chosen weekdays, every N months on a day of the month or on "the first Monday",

@@ -1,4 +1,4 @@
-"""Administration (owner, 2026-10-24): Health, Backups and Updates are separate pages, Setup keeps
+"""Administration: Health, Backups and Updates are separate pages, Setup keeps
 only the settings done once, and the old addresses land on the new pages."""
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ def test_health_backups_and_updates_are_their_own_pages(page):
 
 
 def test_plantcraft_menu_puts_setup_last_and_the_team_page_is_a_switch(page):
-    """Owner, 2026-10-25: Overview, Assets, Health and Preferences on top for everyone, no "Plant"
+    """Overview, Assets, Health and Preferences on top for everyone, no "Plant"
     heading; administration below, Setup last. Team shows in Desk once Setup › Desk turns it on."""
 
     page.goto("/admin")

@@ -16,7 +16,7 @@ import { DEFAULT_STYLE, EMPTY_VIEW, MAX_LINES, MAX_PLOTS, chipText, periodLabel,
 import type { LineStyle, Me, Trend, TrendAgg, TrendData, TrendLineSpec, TrendPeriod, TrendView } from "./types";
 import { ErrorBox, Heading, Link, Loading } from "./ui";
 
-/** The chart's own theme (owner, 2026-10-23): "auto" follows the platform; light or dark fixes
+/** The chart's own theme: "auto" follows the platform; light or dark fixes
  * it, the PNG included, to send a chart whatever theme the page is in. Kept per browser. */
 export type ChartTheme = "auto" | BrandTheme;
 const CHART_THEME_KEY = "dashcraft.chart-theme";
@@ -114,7 +114,7 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
   const [view, setView] = useState<TrendView>(EMPTY_VIEW);
   const [data, setData] = useState<TrendData | null>(null);
   const [loading, setLoading] = useState(false);
-  // Full screen (owner, 2026-10-21): the chart panel alone, Esc leaves.
+  // Full screen: the chart panel alone, Esc leaves.
   const chartRef = useRef<HTMLDivElement>(null);
   const [full, setFull] = useState(false);
   // View's work here (app.toml): explain the trend on screen.
@@ -202,8 +202,8 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
       <aside className="panel tc-trend-list">
         <h2>{t("Saved trends")}</h2>
         <Link to="/trends" className={`tc-trend-item ${!trendId ? "active" : ""}`}><Plus size={14} /> {t("New trend")}</Link>
-        {!saved ? <Loading /> : saved.length === 0 ? <p className="muted small">{t("None yet: build one and save it.")}</p>
-          : saved.map((item) => <Link key={item.trend_id} to={`/trends/${item.trend_id}`} className={`tc-trend-item ${item.trend_id === trendId ? "active" : ""}`}>
+        {!saved ? <Loading /> : saved.length === 0 ? <p className="muted small">{t("None yet: build one and save it.")}</p>:
+          saved.map((item) => <Link key={item.trend_id} to={`/trends/${item.trend_id}`} className={`tc-trend-item ${item.trend_id === trendId ? "active" : ""}`}>
             <span>{item.name}</span><small className="muted">{periodLabel(item)} · {item.created_by ?? ""}</small>
           </Link>)}
       </aside>
@@ -245,8 +245,8 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
             {loading && <LoaderCircle size={14} className="spin" aria-label={t("Reading…")} />}
           </div>}
           {!asked.plots.length && loading && <LoaderCircle size={14} className="spin tc-trend-busy" />}
-          {!asked.plots.length ? <p className="muted tc-empty">{t("Add a signal to a plot to draw it.")}</p>
-            : data ? <>
+          {!asked.plots.length ? <p className="muted tc-empty">{t("Add a signal to a plot to draw it.")}</p>:
+            data ? <>
               <TrendChart key={full ? "full" : "page"} data={data} theme={chartTheme} filename={`${slug}${stamp}`} height={full ? Math.max(320, globalThis.innerHeight - 140) : undefined} />
               {data.range.shifted && <p className="tc-note">{t("No samples in the period: showing the newest data, up to {end}.", { end: formatDate(data.range.end) })}</p>}
               <ul className="tc-problems">{data.plots.flatMap((plot) => plot.lines).filter((line) => line.note).map((line, index) => <li key={`note-${index}`} className="tc-note-item"><b>{line.label}</b> {line.note}</li>)}{data.plots.flatMap((plot) => plot.lines).filter((line) => line.error).map((line, index) => <li key={index}><b>{line.label}</b> {line.error}</li>)}</ul>
@@ -259,7 +259,7 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
   </>;
 }
 
-/** A trend over another page (owner, 2026-10-27): a click on a value of a process display draws
+/** A trend over another page: a click on a value of a process display draws
  * its signals here, with the period, the interval and each line's settings as in Trends, without
  * leaving the display; "Open in Trends" goes on with it there (to save it, add subplots).
  * Rendered where it is opened, so it shows inside a full-screen display too. */
@@ -322,8 +322,8 @@ export function TrendDialog({ title, signals, period: initial, onClose }: { titl
         {lines.length < MAX_LINES && <SignalSearch key={lines.length} value="" onPick={(signal) => setLines([...lines, { signal_id: signal.id, label: "" }])} />}
       </div>
       {error && <ErrorBox text={error} />}
-      {!lines.length ? <p className="muted tc-empty">{t("Add a signal to draw it.")}</p>
-        : data ? <>
+      {!lines.length ? <p className="muted tc-empty">{t("Add a signal to draw it.")}</p>:
+        data ? <>
           <TrendChart data={data} theme={chartTheme} filename="trend" height={Math.max(260, Math.min(460, globalThis.innerHeight - 330))} />
           {data.range.shifted && <p className="tc-note">{t("No samples in the period: showing the newest data, up to {end}.", { end: formatDate(data.range.end) })}</p>}
           <ul className="tc-problems">{data.plots.flatMap((plot) => plot.lines).filter((line) => line.error).map((line, index) => <li key={index}><b>{line.label}</b> {line.error}</li>)}</ul>

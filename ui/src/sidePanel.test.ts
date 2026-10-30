@@ -18,7 +18,7 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("one panel at a time, swapped in place (round 8, owner 2026-10-25)", () => {
+describe("one panel at a time, swapped in place (round 8)", () => {
   it("swaps only when another panel was open, here or in the app inside the frame", () => {
     let queues = false;
     registerPanel("queues", () => { queues = false; }, () => queues);
@@ -55,7 +55,7 @@ describe("the work queues' button", () => {
   });
 });
 
-describe("the page's top (owner, 2026-10-25)", () => {
+describe("the page's top", () => {
   it("is the title and the buttons only: nothing above or under the title", () => {
     const html = renderToStaticMarkup(createElement(Heading, { eyebrow: "Link", title: "Loops", detail: "Every loop of the plant.", actions: createElement("button", null, "New loop") }));
     expect(html).toBe('<div class="page-heading"><div class="page-heading-title"><h1>Loops</h1></div><div class="heading-actions"><button>New loop</button></div></div>');
@@ -98,7 +98,7 @@ describe("the quick buttons", () => {
   });
 });
 
-describe("what floats closes on a click outside it (owner, 2026-10-25)", () => {
+describe("what floats closes on a click outside it", () => {
   it("closes a panel on a click on the page or into an iframe, not on the quick buttons or its own pickers", async () => {
     vi.useFakeTimers();
     const host = document.createElement("div");

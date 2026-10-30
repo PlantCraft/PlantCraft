@@ -296,7 +296,7 @@ def test_the_question_is_searched_before_the_model_answers(documents):
 
 
 def test_a_page_about_an_asset_searches_about_it_and_each_citation_opens_its_passage(documents):
-    """Owner, 2026-10-27: a question about a loop in Analytics reads its documents; each [n] of
+    """a question about a loop in Analytics reads its documents; each [n] of
     the answer opens the document at the passage it cites."""
 
     rt = documents.app.state.runtime

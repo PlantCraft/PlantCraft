@@ -232,7 +232,7 @@ def _present_message(rt: Any, message: dict[str, Any], viewer: str) -> dict[str,
 
 def _trends_page(rt: Any) -> str:
     """The page that opens a new trend, of the app that declares the ``trend`` kind (View's
-    /dash/trends/{id}): it also takes ?signal=&start=&end= (owner, 2026-10-26: a chart of the
+    /dash/trends/{id}): it also takes ?signal=&start=&end= (a chart of the
     chat goes on in Trends)."""
 
     declared = getattr(rt.platform.refs, "declared", None)
@@ -247,7 +247,7 @@ def _trend_link(page: str, chart: dict[str, Any]) -> str:
 
 
 def _with_marks(chat: dict[str, Any], stars: set[str], unread: set[str]) -> dict[str, Any]:
-    """The person's own marks on a chat (owner, 2026-10-28): a favorite, unread until opened."""
+    """The person's own marks on a chat: a favorite, unread until opened."""
 
     key = f"chat:{chat['chat_id']}"
     return {**chat, "starred": key in stars, "unread": key in unread}
@@ -268,9 +268,10 @@ def status(request: Request, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
             "allowed": False,
             "reason": t(
                 "The assistant does not answer in this public demo. Open the team's chats below to "
-                "see what it does."
+                "see what it does; in your own installation, an administrator connects a model in "
+                "Setup › Language models."
             ),
-            # The pages still show what it would do there (owner, 2026-10-28).
+            # The pages still show what it would do there.
             "demo": True,
         }
     kept = rt.assistant.store.chats(user)
@@ -294,9 +295,9 @@ def status(request: Request, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
         # An administrator is pointed to Setup, Language models, when the assistant is off.
         "can_set_up": is_admin(rt, user),
         "chats": [listed(item) for item in kept if not item["archived"]],
-        # The ones the person archived (owner, 2026-10-26), apart: the side panel lists only the rest.
+        # The ones the person archived, apart: the side panel lists only the rest.
         "archived": [listed(item) for item in kept if item["archived"]],
-        # Other people's chats shared with this person (owner, 2026-10-26), read-only.
+        # Other people's chats shared with this person, read-only.
         "shared": [listed(item, user) for item in shared],
     }
 
@@ -542,7 +543,7 @@ def rename(chat_id: int, payload: ChatRename, user: CurrentUser, rt: Runtime) ->
 @router.put("/chats/{chat_id}/sharing")
 @open_to("viewer")
 def share(chat_id: int, payload: ChatSharing, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
-    """Who else may read the chat (owner, 2026-10-26: "share a chat like a dashboard"): everyone,
+    """Who else may read the chat ("share a chat like a dashboard"): everyone,
     people or groups of the workspace. They read it as it is and may continue it in a copy of
     their own; nobody else writes in it."""
 

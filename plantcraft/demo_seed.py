@@ -10,7 +10,7 @@ the browser, so the story only uses what the apps already offer. One plant, Rive
    three weeks of their past.
 2. Historian: the Simulator's last 48 hours archived, the lab's analyses (a CSV source) and a
    finished test run imported.
-3. Analytics: loops with their criticality and three monitors (owner, 2026-10-27): Control loop
+3. Analytics: loops with their criticality and three monitors: Control loop
    performance on every loop, Signal quality on every signal and the process model beside the
    plant (Furnaces says TIC-1209 drifts), with 48 hours of results replayed.
 4. View: Plant overview (public link), Control room (pages in kiosk mode) and Loop detail, four
@@ -249,7 +249,7 @@ GROUPS = [
         "members": ["ana.lima", "carlos.menezes"],
     },
 ]
-# The scripted "Valve specialist" of earlier demos (owner, 2026-10-28: it no longer makes sense
+# The scripted "Valve specialist" of earlier demos (it no longer makes sense
 # next to the assistant): removed, with the conversation it took part in.
 RETIRED_SPECIALIST = "valve.expert"
 
@@ -737,7 +737,7 @@ def _heading(text: str) -> dict[str, Any]:
 
 
 # The group's shift-start list: one to-do every weekday, the others once a week on their own day
-# (owner, 2026-10-28: the calendar was full of the same three items every day).
+# (the calendar was full of the same three items every day).
 SHIFT_TODOS = (
     ("Read the logbook", "weekdays", []),
     ("Walk the furnace area", "days", [1]),
@@ -836,7 +836,7 @@ VISITOR_TODOS = (
 )
 
 
-# The visitor's own calendar (owner, 2026-10-28: fewer items, real ones, not the same every
+# The visitor's own calendar (fewer items, real ones, not the same every
 # day): one meeting every weekday, one every week, one every month, and a few one-off days.
 # (title, days ahead, start, end, repeat); an end of None is an all-day event.
 VISITOR_EVENTS = (
@@ -1059,7 +1059,7 @@ def team_day(suite: Suite, passwords: dict[str, str]) -> None:
 
 # The story's links ---------------------------------------------------------------------------
 
-# Everything the team writes points at what it is about (owner, 2026-10-27: "conectar tudo"): an
+# Everything the team writes points at what it is about ("conectar tudo"): an
 # action names the document it follows, the dashboard that shows it and the chat that explained
 # it; a message links the action it opened. Texts write ``{{name}}`` (or ``{{name|label}}``) for
 # such a thing: a document by its number, a dashboard or report by its name, an action, chat or
@@ -1333,8 +1333,8 @@ OPEN_ACTIONS: list[dict[str, Any]] = [
             ),
         ],
     },
-    # The visitor's own, so Desk's "My actions" is not empty for whoever enters the demo
-    # (owner, 2026-10-27): an operator's part in the three stories above, one in each column.
+    # The visitor's own, so Desk's "My actions" is not empty for whoever enters the demo:
+    # an operator's part in the three stories above, one in each column.
     # Whoever comments must see the action: its creator, its owner or a member of its group.
     {
         "title": "Hold the FIC-1003 flow during the valve test",
@@ -1717,7 +1717,7 @@ PAST_CONVERSATIONS: list[dict[str, Any]] = [
             (7, 10, 45, "ana.lima", "Yes, it reads the report and lists the loops; I'll check it."),
         ],
     },
-    # More of the team's talk (owner, 2026-10-28: about fifteen conversations, the visitor in them).
+    # More of the team's talk (about fifteen conversations, the visitor in them).
     {
         "title": "Night shift handover: U-200",
         "members": ["marina.costa", "juliana.rocha"],
@@ -1958,7 +1958,7 @@ def past(
     return written
 
 
-# How many chat messages wait for a visitor (owner, 2026-10-28): a few, the rest read.
+# How many chat messages wait for a visitor: a few, the rest read.
 VISITOR_UNREAD = 4
 
 
@@ -1983,7 +1983,7 @@ def visitor_unread(workspace: Any) -> int:
     return min(len(waiting), VISITOR_UNREAD)
 
 
-# What Alarms sent the visitor over the last days (owner, 2026-10-28: the demo's notifications
+# What Alarms sent the visitor over the last days (the demo's notifications
 # should be mostly alarms, then the other apps, not action changes): (days ago, hour, minute, priority, key, title,
 # what happened, rule). Written as Alarms writes them; the live rules add more as the plant runs.
 VISITOR_ALARMS = (
@@ -2297,7 +2297,7 @@ ASSISTANT_CHATS: list[dict[str, Any]] = [
         ],
         "shared": False,
     },
-    # More of the team's chats (owner, 2026-10-28: about twenty, from several apps).
+    # More of the team's chats (about twenty, from several apps).
     {
         "owner": "ana.lima",
         "title": "Which loops got worse this week?",
@@ -3023,7 +3023,7 @@ def _folders(dash: Http) -> dict[str, str]:
 
 
 def dashcraft(dash: Http) -> None:
-    """Three example dashboards (owner, 2026-10-23: "só uns 3 exemplos"): Plant overview with a
+    """Three example dashboards ("só uns 3 exemplos"): Plant overview with a
     public link, Control room (three pages turning in kiosk mode) and Loop detail, from View's
     own template."""
 
@@ -3764,7 +3764,7 @@ def _diagram_specs(suite: Suite) -> list[dict[str, Any]]:
     return [json.loads(path.read_text(encoding="utf-8")) for path in sorted(folder.glob("*.json"))]
 
 
-# View's saved trends (owner, 2026-10-28: well-named ones a visitor opens, not a test).
+# View's saved trends (well-named ones a visitor opens, not a test).
 def _loop_lines(tag: str, *roles: str) -> list[dict[str, Any]]:
     return [
         {"signal_id": f"plantcraft:CPM.Loops.{tag}.{role}", "label": f"{tag} {role}"}
@@ -3813,7 +3813,7 @@ def view_trends(dash: Http) -> None:
     """View's saved trends; run again, it adds only the missing ones."""
 
     listed = _items(dash.get("/api/trends"), "trends")
-    # A test trend left on the demo gets a name a visitor understands (owner, 2026-10-28).
+    # A test trend left on the demo gets a name a visitor understands.
     for item in listed:
         if str(item.get("name") or "").strip().lower() in TEST_TREND_NAMES:
             dash.put(f"/api/trends/{item['trend_id']}", {**item, "name": RENAMED_TEST_TREND})
@@ -3914,7 +3914,7 @@ PRESSURE_LOOP = "PIC-1202"
 PRESSURE_QUANTILE = 0.98
 
 
-# The example rules (owner, 2026-10-24: "uns 5 alarmes, só para ter como exemplo"; round 11:
+# The example rules ("uns 5 alarmes, só para ter como exemplo"; round 11:
 # one in Python too): what the apps report becomes an alarm only by a rule,
 # and one rule covers a whole unit.
 def _simple(*conditions: dict[str, Any], clear_after: float = 0.0) -> dict[str, Any]:
@@ -4260,7 +4260,7 @@ MODEL_RUNS = [
     ("PlantCraftExamples.HeatExchangerOutlet", "Base case"),
     ("PlantCraftExamples.FirstOrderDeadTimeLoop", "Base case"),
 ]
-# Grid studies the demo leaves ready to compare (owner, 2026-10-24: "a tank of several sizes").
+# Grid studies the demo leaves ready to compare ("a tank of several sizes").
 MODEL_STUDIES = [
     {
         "model": "PlantCraftExamples.TankLevelControl",

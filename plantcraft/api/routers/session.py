@@ -35,7 +35,7 @@ def _session_payload(username: str | None, rt: Any, request: Request) -> dict[st
     shown = access.as_dict() if access else None
     if shown is not None:
         # The administration pages this person reads: an administrator's, and the public demo
-        # visitor's, read-only (owner, 2026-10-28; api/deps.py, AdminView).
+        # visitor's, read-only (api/deps.py, AdminView).
         visitor = (demo := public_demo()) is not None and username == demo.username
         shown["admin_view"] = bool(access and access.is_admin) or visitor
     return {

@@ -806,10 +806,11 @@ STAND_IN_PLANTCRAFT = """
 """
 
 
-# PlantCraft Models' runner without its image: a process that sleeps, with no network.
-STAND_IN_MODELCRAFT_RUNNER = """
-  modelcraft-executor:
-    image: processcraft:{version}
+# An executor without its image (its app's, or Models' runner): a process that sleeps, with no
+# network.
+STAND_IN_EXECUTOR = """
+  {name}:
+    image: processcraft:{{version}}
     command: ["python", "-c", "import time; time.sleep(10 ** 9)"]
     healthcheck:
       test: ["CMD", "python", "-c", "pass"]
@@ -955,9 +956,10 @@ def stack(tmp_path_factory: pytest.TempPathFactory):
                 stand_ins.append(
                     STAND_IN_APP.format(name=app, version="{version}", prefix=app_prefix, port=port)
                 )
-        runner_image = f"{MODELCRAFT_RUNNER_IMAGE}:{_app_version('modelcraft')}"
-        if _docker("image", "inspect", runner_image, check=False).returncode:
-            stand_ins.append(STAND_IN_MODELCRAFT_RUNNER)
+        for name, app in EXECUTORS.items():
+            image = MODELCRAFT_RUNNER_IMAGE if name == MODELCRAFT_RUNNER else app
+            if _docker("image", "inspect", f"{image}:{_app_version(app)}", check=False).returncode:
+                stand_ins.append(STAND_IN_EXECUTOR.format(name=name))
         database = _services()[HISTCRAFT_DB]["image"].removeprefix("${HISTCRAFT_DB_IMAGE:-")
         database = os.environ.get("HISTCRAFT_DB_IMAGE") or database.removesuffix("}")
         if _docker("image", "inspect", database, check=False).returncode != 0:

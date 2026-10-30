@@ -1,6 +1,6 @@
 """One run of an algorithm on one asset.
 
-A schedule chooses the algorithm and the assets it runs on (owner, 2026-10-24: schedules and
+A schedule chooses the algorithm and the assets it runs on (schedules and
 algorithms are independent; the algorithm's own assets are only where it is tested), and every
 run is an execution of the queue
 (``engine.service``), like any other. A run reads its window, runs the diagram with the blocks'

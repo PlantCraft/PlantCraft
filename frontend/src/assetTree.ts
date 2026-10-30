@@ -1,4 +1,4 @@
-/** How far the asset tree opens (owner, 2026-10-24): "Open to level N" shows the installation and N
+/** How far the asset tree opens: "Open to level N" shows the installation and N
  * levels under it, so level 1 lists the installation's units and level 2 what each unit holds. A
  * person's choice is kept in this browser; opening a folder by hand works as before. */
 

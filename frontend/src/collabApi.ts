@@ -15,7 +15,7 @@ export interface Conversation {
   /** A group's own conversation: its participants follow the group. */
   group_id?: string | null;
   busy: string[]; members: ConversationMember[]; last_message: LastMessage | null; created_at: string; updated_at: string;
-  /** The person's own marks (owner, 2026-10-28): a favorite, and unread again until opened. */
+  /** The person's own marks: a favorite, and unread again until opened. */
   starred?: boolean; marked_unread?: boolean;
 }
 export interface ResolvedRef { ref: string; kind: string; id: string; kind_label: string; title: string; href: string | null; exists: boolean }
@@ -52,7 +52,7 @@ export interface ItemChange { text?: string; owner?: string | null; due_at?: str
 export interface Action {
   action_id: Id; title: string; description: string; status: ActionStatus; status_label: string; priority: string; priority_label: string;
   owner: string | null; owner_name: string | null; due_at: string | null; overdue: boolean; refs: ResolvedRef[];
-  /** The group it is assigned to (owner, 2026-10-23). */
+  /** The group it is assigned to. */
   group_id?: string | null; group_name?: string | null;
   created_by: string; created_by_name: string; created_at: string; updated_at: string; completed_at: string | null; history?: ActionHistory[];
   /** When it took its current status (its last status change, else its creation). */

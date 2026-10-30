@@ -1,5 +1,5 @@
 /**
- * The hover note of a widget's marks (owner, 2026-10-27: "I pass over the squares and cannot see
+ * The hover note of a widget's marks ("I pass over the squares and cannot see
  * what they are"): a square of a map, a column, a bar, a part of a split, a point of a trend says
  * what it is, where it belongs and its value, at once and in the suite's style (a browser's
  * `title` waits a second and is easy to miss).

@@ -72,7 +72,7 @@ function NavigationButton({ element, label }: { element: SymbolElement; label: s
 
 /** A vessel's contents: the level goes over its straight part (`pc-level`) and the liquid fills
  * the vessel's own outline below it, heads and cone included, with the surface drawn as a line
- * (owner, 2026-10-27: "a rectangle that does not follow the tank"). A drawing without an outline
+ * ("a rectangle that does not follow the tank"). A drawing without an outline
  * keeps the rectangle. */
 function Liquid({ level, fraction, outline, size: [width, bottom], clip }: { level: { x: number; y: number; w: number; h: number }; fraction: number; outline: string | null; size: [number, number]; clip: string }) {
   const share = Math.max(0, Math.min(1, fraction));
@@ -124,8 +124,8 @@ const SymbolView = memo(function SymbolView({ element, def, show, selected, onDo
     {nav ? <NavigationButton element={element} label={label} /> : <>
       <g transform={`translate(${element.x} ${element.y}) ${turn} ${flip}`}>
         {/* A unit block is its own rectangle, so its corners stay round however it is stretched. */}
-        {def?.id === "shape.panel" ?<rect className="dg-drawing pc-state dg-panel" width={element.w} height={element.h} rx={8} />
-        : def ? <>
+        {def?.id === "shape.panel" ?<rect className="dg-drawing pc-state dg-panel" width={element.w} height={element.h} rx={8} />:
+        def ? <>
           <svg width={element.w} height={element.h} viewBox={`0 0 ${def.w} ${def.h}`} preserveAspectRatio={fit} overflow="visible" className="dg-drawing" dangerouslySetInnerHTML={{ __html: def.svg }} />
           {level && fraction != null && <svg width={element.w} height={element.h} viewBox={`0 0 ${def.w} ${def.h}`} preserveAspectRatio={fit} overflow="visible" className="dg-level">
             <Liquid level={level} fraction={fraction} outline={outline} size={[def.w, def.h]} clip={clip} />

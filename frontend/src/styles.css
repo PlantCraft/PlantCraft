@@ -173,7 +173,7 @@
 .language-select select:focus-visible { outline: none; border-color: var(--pc-focus); box-shadow: var(--pc-focus-ring); }
 .language-select-field > svg { position: absolute; right: 9px; pointer-events: none; color: var(--pc-text-3); }
 
-/* Preferences: where times are shown, one card per choice (owner, 2026-10-24). */
+/* Preferences: where times are shown, one card per choice. */
 .pref-choices { display: grid; gap: 8px; }
 .pref-choice { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); cursor: pointer; }
 .pref-choice input { margin-top: 3px; }

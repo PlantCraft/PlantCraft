@@ -1,5 +1,5 @@
 /**
- * Desk's visual widgets (owner, 2026-10-24: "widgets mais visuais"): world clocks, the month at a
+ * Desk's visual widgets ("widgets mais visuais"): world clocks, the month at a
  * glance, the day as a timeline, the actions as a board, unread chats and a quick note. Each draws
  * what fits the size it was given (WidgetContext's w, h, rows), so none spills out of its card.
  */

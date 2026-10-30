@@ -5,7 +5,7 @@ Each message may carry references (``kind:id``) to platform objects, so a
 conversation can point at a loop, a signal, an action or an execution.
 Reading is tracked per participant by the last message id they saw.
 
-A group of people (``plantcraft/groups``) has its own conversation (owner, 2026-10-23): its
+A group of people (``plantcraft/groups``) has its own conversation: its
 participants follow the group, so whoever joins the group finds it in Messages and whoever
 leaves stops receiving it (``sync``, run before anyone reads their conversations).
 """

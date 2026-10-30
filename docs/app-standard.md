@@ -28,7 +28,7 @@ come) follows this one standard: the same metadata, the same repository layout, 
 package, the same runtime settings, the same way to name assets and signals, and one way to talk
 to PlantCraft and to other apps. A reader who knows one app knows them all; the installer, the
 launcher and the security guide treat every app the same ("bem padronizada para não virar uma
-bagunça", owner, 2026-10-19).
+bagunça").
 
 Apps are **independent**: each runs alone against PlantCraft, none needs another to work. They
 are linked only by what they publish in PlantCraft (section 6). They look like one product
@@ -220,7 +220,7 @@ skip = ["logs/"]                    # left out; anything not named is copied as 
 
 ## 4b. What an app adds to PlantCraft: `[contributes]`
 
-Owner, 2026-10-25 ("Padronizar contratos entre apps e PlantCraft"): a new app must reach every
+A new app must reach every
 place of the platform **without a change to the platform**. So an app declares, in its
 `app.toml`, everything PlantCraft draws for it, and PlantCraft draws from the declarations
 without knowing the app. The manifest has three groups, each with one role:
@@ -830,7 +830,7 @@ belongs in the package.
 
 ## 11. Analytics
 
-Analytics is the analysis app of the suite (D9, owner 2026-10-20). It works on **signals** (data
+Analytics is the analysis app of the suite (D9). It works on **signals** (data
 quality) and **loops** (control performance). Its analyses are `@method`s; a **protocol** wires
 methods as blocks (inputs: signals, assets and asset roles; methods; combinations such as
 worst-of; outputs: results, derived series in Historian, messages) and runs on a **schedule**;

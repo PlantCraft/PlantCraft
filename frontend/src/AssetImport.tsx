@@ -76,7 +76,7 @@ interface StartStep { app: string; app_name: string; id: string; title: string; 
 interface StartDone { summary: string; counts: Record<string, number>; open: string | null }
 type StepState = { state: "running" } | { state: "done"; done: StartDone } | { state: "failed"; error: string };
 
-/** The newest import applied, kept so it can be taken back once (owner, 2026-10-24). */
+/** The newest import applied, kept so it can be taken back once. */
 export type LastImport = { import_id: number; at: string; actor: string; summary: { created?: number; updated?: number; relations?: number }; undone_at: string | null; undone_by: string | null; can_undo: boolean };
 export const exportUrl = (kind: string, root: string) => `/api/asset-file/export.${kind}${root ? `?root=${enc(root)}` : ""}`;
 

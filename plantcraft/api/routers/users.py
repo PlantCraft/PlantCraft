@@ -105,7 +105,7 @@ def _account(rt: Any, user: dict[str, Any]) -> dict[str, Any]:
         # local, ldap or oidc: a person from the company directory signs in there.
         "auth_source": user.get("auth_source") or "local",
         "environment_admin": rt.auth.enabled and user["username"] == rt.auth.username,
-        # A person may be in several groups (owner, 2026-10-23).
+        # A person may be in several groups.
         "groups": [item["group_id"] for item in rt.workspace.groups.of(user["username"])],
         "asset_scope": user.get("asset_scope"),
         # What they see in the end: their roots and their limited groups'; None: the whole plant.

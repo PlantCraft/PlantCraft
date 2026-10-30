@@ -45,7 +45,7 @@ SYSTEM_RETENTION_DAYS = 90
 # Calculated points (``catalog.expressions``): one source, created with its first point; the
 # collector evaluates each point's formula (its address) on its scan and archives the result.
 CALC_SOURCE = "calc"
-# Apps merged into another (owner, 2026-10-22): their derived sources stay readable, marked with
+# Apps merged into another: their derived sources stay readable, marked with
 # the app that took over, and an admin may remove them. Twin's are removed on start (owner,
 # 2026-10-23): Link writes its own series since 0.3.0.
 RETIRED_APPS = {"twincraft": "linkcraft", "cpmcraft": "linkcraft", "datacraft": "linkcraft"}
@@ -173,7 +173,7 @@ SOURCE_OPTIONS: dict[str, dict[str, Any]] = {
         "warnings": 0,
         # How the file is read (sources.csv_table.ReadOptions), used again for the next file.
         "read": {},
-        # The folder the import repeats from (owner, 2026-10-26): {"pattern", "check_minutes",
+        # The folder the import repeats from: {"pattern", "check_minutes",
         # "by"}; empty when only a person adds its files. Set by the server only.
         "repeat": {},
         # Each file imported into it, newest first: at, by, file_name, rows, values, start_ms,

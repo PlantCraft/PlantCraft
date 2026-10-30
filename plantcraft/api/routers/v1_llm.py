@@ -1,4 +1,4 @@
-"""API v1: an app writes with a language model through PlantCraft (owner, 2026-10-25).
+"""API v1: an app writes with a language model through PlantCraft.
 
 An app declares each use in ``[[contributes.llm]]`` of its ``app.toml``; PlantCraft keeps it
 with the rest of what the app adds (``plantcraft.apps.contributions``), and Settings › Language

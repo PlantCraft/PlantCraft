@@ -176,7 +176,7 @@ def bearer_token(request: Request) -> str:
 # A person's access token (``pcat_...``) reads API v1 from a notebook on their own computer
 # (docs/en/notebooks.md): reads only, and the series reads, which are a POST. The one request a
 # notebook may send: ask an app to run an object in its own queue (a simulation), which the app
-# refuses unless its administrator switched notebook runs on (owner, 2026-10-26, D4). An app's
+# refuses unless its administrator switched notebook runs on (D4). An app's
 # assistant tool is a read sent as a POST too (``[[contributes.assistant.tools]]``, read-only).
 _TOKEN_WRITES = {"/api/v1/series"}
 _TOKEN_RUN = re.compile(r"^/api/v1/apps/[a-z][a-z0-9_-]{0,39}/objects/[a-z][a-z0-9-]{0,40}/run$")

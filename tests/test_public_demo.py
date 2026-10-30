@@ -115,7 +115,7 @@ def test_editors_and_the_administrator_still_write(suite):
 
 
 def test_language_models_are_only_for_the_people_an_administrator_created(suite, monkeypatch):
-    """Owner, 2026-10-25: the demo keeps the assistant for real accounts; visitors never reach
+    """the demo keeps the assistant for real accounts; visitors never reach
     a model, and neither do the apps' uses (a visitor's click could set them off)."""
 
     app, admin = suite
@@ -195,7 +195,7 @@ def test_the_visitor_sees_the_teams_actions(suite):
 
 
 def test_the_visitor_reads_the_administration_and_changes_nothing(suite):
-    """Owner, 2026-10-28: a visitor sees People, Apps and Backups to know the platform."""
+    """a visitor sees People, Apps and Backups to know the platform."""
 
     app, _admin = suite
     visitor = _signed(app, "demo")

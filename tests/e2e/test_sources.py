@@ -9,7 +9,7 @@ from playwright.sync_api import expect
 
 
 def test_sources_and_signals_point_to_the_historian(page):
-    """Owner, 2026-10-23: plant data belongs to the Historian, not to the platform."""
+    """plant data belongs to the Historian, not to the platform."""
 
     page.goto("/data")
     expect(
@@ -19,7 +19,7 @@ def test_sources_and_signals_point_to_the_historian(page):
 
 
 def test_an_asset_import_is_applied_and_undone(page, tmp_path):
-    """Setup's Configuration file is gone (owner, 2026-10-24): the asset import remains, and the
+    """Setup's Configuration file is gone: the asset import remains, and the
     last import can be undone once, after a confirmation on the page."""
 
     page.goto("/data/import")  # the old address lands on the asset import

@@ -1,4 +1,4 @@
-"""The Overview's two widgets about the whole plant (owner, 2026-10-27: which loops and signals
+"""The Overview's two widgets about the whole plant (which loops and signals
 are bad now, and where):
 
 - ``in-alarm-history``: how many loops and signals were in alarm, and in warning, each day of the
@@ -8,7 +8,7 @@ are bad now, and where):
 - ``health-map``: one square per result (an asset of any type, a control loop being one, and a
   signal), coloured by its latest status, grouped by the area of the asset it belongs to (the
   parent asset in PlantCraft's tree, its parent beside it when two areas share a name), each
-  square opening its page. Loops are not a group of their own (owner, 2026-10-27).
+  square opening its page. Loops are not a group of their own.
 
 Both read each table once per answer, never once per loop. A past day does not change, so it
 is read again every six hours (a replay may fill one in). Days are the installation's.

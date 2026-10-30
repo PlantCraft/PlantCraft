@@ -347,7 +347,7 @@ def layout(user: CurrentUser, rt: Runtime, page: str | None = None) -> dict[str,
 
 
 @router.put("/api/home/layout")
-# Each person arranges their own pages, readers too (owner, 2026-10-23: Desk is everyone's).
+# Each person arranges their own pages, readers too (Desk is everyone's).
 @open_to("viewer")
 def save_layout(
     body: LayoutIn, user: CurrentUser, rt: Runtime, page: str | None = None

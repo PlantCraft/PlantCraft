@@ -1,5 +1,5 @@
 # ruff: noqa: F811  (the fixtures come from test_collaboration.py, test_quick_access.py, test_demo_visits.py)
-"""What a person marks for themselves (owner, 2026-10-28): a notification done (the check), seen
+"""What a person marks for themselves: a notification done (the check), seen
 or not seen again with one button, a favorite; a conversation or an assistant chat unread again
 or a favorite. A public demo visit keeps its own marks: the next visitor starts as seeded."""
 
@@ -137,8 +137,8 @@ def test_a_demo_visit_marks_for_itself_only(demo_app):
 
 
 def test_a_demo_visit_reads_a_conversation_for_itself_only(demo_app):
-    """Opening a conversation is the visit's read: the next visitor finds it unread as seeded
-    (owner, 2026-10-28), and the seed leaves the newest few unread for every visit."""
+    """Opening a conversation is the visit's read: the next visitor finds it unread as seeded,
+    and the seed leaves the newest few unread for every visit."""
 
     from plantcraft.demo_seed import VISITOR_UNREAD, visitor_unread
 

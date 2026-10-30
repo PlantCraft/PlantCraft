@@ -3,7 +3,7 @@ computer; ``notebooks/kit/build_kit.py`` builds them).
 
 The bundle carries them as an optional part, ``notebook-kits/`` (mounted read-only at
 ``/notebook-kits``; ``PLANTCRAFT_NOTEBOOK_KITS`` names another folder), with ``kits.json``, their
-list. They are offered whenever Notebooks are on (owner, 2026-10-26); an administrator may take them
+list. They are offered whenever Notebooks are on; an administrator may take them
 away in Settings › Notebooks.
 
 A kit is sent with two files added to it on the way: ``plantcraft.json``, the address the person
@@ -27,7 +27,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-# A kit's token: longer than an assistant's (owner, 2026-10-25, D5); the kit warns a week before.
+# A kit's token: longer than an assistant's (D5); the kit warns a week before.
 KIT_TOKEN_DAYS = 90
 KITS_DIR = "/notebook-kits"
 BUILT_DIR = "/data/notebook-kits"

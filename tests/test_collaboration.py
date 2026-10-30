@@ -404,7 +404,7 @@ def test_viewers_comment_but_do_not_create_actions(signed):
 
 
 def test_each_person_sees_their_actions_their_groups_and_below(signed):
-    """Owner, 2026-10-23: an action goes to a person or a group; a leader sees below."""
+    """an action goes to a person or a group; a leader sees below."""
 
     boss, lead, ana, eva = (_person(signed, name) for name in ("boss", "lead", "ana", "eva"))
     for body in (

@@ -33,7 +33,7 @@ from plantcraft_sdk.server.settings import env_flag
 DEFAULT_USER = "demo"
 DEFAULT_RATE = 600
 DEFAULT_SEATS = 10
-# A visit unused this long ends (owner, 2026-10-28: no clock while it is used; a tab forgotten for
+# A visit unused this long ends (no clock while it is used; a tab forgotten for
 # days must not hold a place).
 DEFAULT_MINUTES = 30
 DEFAULT_IDLE_MINUTES = 5

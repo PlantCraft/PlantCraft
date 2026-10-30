@@ -12,7 +12,7 @@ const LINE_MS = 5_000;
 /** How often the visit's frame says it is alive and renews the apps' token (it lives 2 minutes). */
 const HEARTBEAT_MS = 30_000;
 
-/** The public demo's way in, its only one (owner, 2026-10-28: one short line and one button, nothing
+/** The public demo's way in, its only one (one short line and one button, nothing
  * that scares a first visitor): enter, or wait in line until a place frees. The platform's tour
  * opens inside; the guides by role are in the menu under the visitor's name. */
 export function DemoEntry({ ended, onEntered }: { ended: boolean; onEntered: (username: string) => void }) {
@@ -47,14 +47,14 @@ export function DemoEntry({ ended, onEntered }: { ended: boolean; onEntered: (us
     {waiting ? <div className="demo-line" role="status" aria-live="polite">
       <LoaderCircle className="spin" size={16} />
       <span>{t("Every place is taken. You are number {position} in line: {wait}. Keep this page open.", { position: waiting.position, wait: waitText(waiting.wait_seconds) })}</span>
-    </div>
-      : <button type="button" className="button button-primary button-wide" disabled={busy} onClick={() => void ask()}>{busy ? <LoaderCircle className="spin" size={18} /> : <>{ended ? t("Enter the demo again") : t("Enter the demo")} <ArrowRight size={18} /></>}</button>}
+    </div>:
+      <button type="button" className="button button-primary button-wide" disabled={busy} onClick={() => void ask()}>{busy ? <LoaderCircle className="spin" size={18} /> : <>{ended ? t("Enter the demo again") : t("Enter the demo")} <ArrowRight size={18} /></>}</button>}
     {error && <span className="demo-error">{error}</span>}
   </div>;
 }
 
 /** When the visit's place is given back unless the visitor comes back: nothing shows while they use
- * the demo (owner, 2026-10-28: no clock); a visit left unused for its minutes (30) ends, so a tab
+ * the demo (no clock); a visit left unused for its minutes (30) ends, so a tab
  * forgotten for days does not hold a place, and the last 5 of them say so. Says it is alive every
  * 30 s (with whether the visitor used the page), which also renews the apps' token. */
 export const WARN_SECONDS = 5 * 60;

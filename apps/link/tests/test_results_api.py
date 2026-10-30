@@ -62,7 +62,7 @@ def test_the_results_report_is_a_pdf_of_any_filter(client, analysed):
 
 
 def test_runs_of_every_algorithm_are_one_history(checked, sq_client):
-    """Signal quality rounds and loop runs on one list (owner, 2026-10-21: no split)."""
+    """Signal quality rounds and loop runs on one list (no split)."""
 
     answer = sq_client.get("/link/api/runs").json()
     assert answer["total"] == len(answer["items"]) >= 1

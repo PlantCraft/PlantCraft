@@ -4,7 +4,7 @@ Everything Link runs is an execution, a row of ``analysis_jobs`` (``engine.jobs`
 algorithm on a loop, a round (every loop, or Signal quality on every signal), an algorithm on an
 asset, or the past replayed. The schedules queue them when due (``Scheduler``), a person queues
 them from a page, and the workers (``Dispatcher``) run them, highest priority first: a person's
-request, then the schedules, then a replay (owner, 2026-10-23).
+request, then the schedules, then a replay.
 
 The engine runs apart from the pages (``LINKCRAFT_ENGINE``, ``engine.process``): a long round or
 a thousand executions at midnight never slow the interface down. The interface only writes to

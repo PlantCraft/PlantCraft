@@ -37,8 +37,8 @@ NEEDED = {
 # The period each example is calibrated on when it is created (the plant ran normally).
 CALIBRATION = pd.Timedelta(hours=6)
 # The examples a demo plant gets by itself (the loop process twins stay in the library: a twin per
-# loop is too many for a first look, owner 2026-10-24), and how often each runs: the model beside
-# the plant every hour (owner, 2026-10-27).
+# loop is too many for a first look), and how often each runs: the model beside
+# the plant every hour.
 DEMO_EXAMPLES = ("Furnaces",)
 EXAMPLE_MINUTES = 60.0
 

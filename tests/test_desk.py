@@ -748,7 +748,7 @@ def test_the_demo_seed_fills_desk_once(signed):
     team = visitor.get("/api/desk/team").json()["group"]
     assert team["handover"] is not None and team["lists"][0]["name"] == demo_seed.SHIFT_LIST
     assert team["lists"][0]["open"] == 3
-    # One to-do every weekday, the others once a week (owner, 2026-10-28).
+    # One to-do every weekday, the others once a week.
     shift = [i for i in visitor.get("/api/desk/todos?view=all").json()["items"] if i["list_id"]]
     assert sorted((item["repeat"], tuple(item["days"])) for item in shift) == [
         ("days", (1,)),
@@ -785,7 +785,7 @@ def test_the_demo_seed_writes_the_visitors_desk_into_the_store(signed):
     today = datetime.now().astimezone().date()
     events = [item["title"] for item in store.events(demo_seed.VISITOR, today, today)]
     assert events == ["Shift handover"]
-    # Owner, 2026-10-28: a few real items, each repeat once (daily, weekly, monthly, one-off).
+    # a few real items, each repeat once (daily, weekly, monthly, one-off).
     ahead = store.events(demo_seed.VISITOR, today, today + timedelta(days=30))
     assert sorted(item["title"] for item in ahead) == sorted(
         spec[0] for spec in demo_seed.VISITOR_EVENTS
@@ -794,7 +794,7 @@ def test_the_demo_seed_writes_the_visitors_desk_into_the_store(signed):
 
 
 def test_the_team_page_is_hidden_until_an_administrator_shows_it(signed):
-    """Owner, 2026-10-25: Desk lists Team only after Setup › Desk turns it on."""
+    """Desk lists Team only after Setup › Desk turns it on."""
 
     ana = _person(signed, "ana")
     assert ana.get("/api/desk/team-page").json() == {"enabled": False}
@@ -806,7 +806,7 @@ def test_the_team_page_is_hidden_until_an_administrator_shows_it(signed):
 
 
 def test_the_demo_gives_the_visitor_actions_of_their_own():
-    """Owner, 2026-10-27: whoever enters the demo sees actions in Desk's "My actions"; one in
+    """whoever enters the demo sees actions in Desk's "My actions"; one in
     each column of the board, each following an action of the team seeded before it."""
 
     from plantcraft import demo_seed

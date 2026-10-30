@@ -1,5 +1,5 @@
 # ruff: noqa: F811  (the fixture ``signed`` comes from test_collaboration.py)
-"""The assistant's works (owner, 2026-10-25): declared as data per page, offered by the button
+"""The assistant's works: declared as data per page, offered by the button
 beside the page's title, a context in fixed sections, and "create" works that only propose: the
 person creates the object with one click, through the object's own route."""
 
@@ -411,7 +411,7 @@ def test_an_app_offers_a_platform_work_on_its_own_pages():
 
 
 def test_a_work_sends_only_its_context_and_names_the_pages_object_in_its_form(signed):
-    """Owner, 2026-10-26: each question with its own context, and works on the object a page
+    """each question with its own context, and works on the object a page
     shows ("help me change this block"). A work keeps the facts and view it names; a form or
     route holding "{subject}" gets the id of the chat's object."""
 

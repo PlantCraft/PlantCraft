@@ -301,7 +301,7 @@ def with_node_parameters(
     config: Mapping[str, Any] | None, overrides: Mapping[str, Any] | None
 ) -> dict[str, Any]:
     """An algorithm's configuration with a monitor's own parameter values on top: the block's
-    default, then the algorithm's value, then the monitor's (owner, 2026-10-27). ``overrides``
+    default, then the algorithm's value, then the monitor's. ``overrides``
     is ``{node id: {parameter: value}}``; a node the diagram does not have is left out."""
 
     config = dict(config or {})

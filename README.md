@@ -32,7 +32,7 @@ plant has a problem, and plan the fix with your team.
 - **LLM-first: ask, don't build.** Every page has an assistant that proposes the block, the
   algorithm, the alarm rule or the model with its fields filled in, and answers questions from
   the plant's own data, results and documents. Your own AI can read the plant too, through a
-  read-only MCP server ([assistant access](docs/assistant-access.md)).
+  read-only MCP server ([assistant access](docs/assistant-access.md)). It is off until an administrator connects a model: [turn it on](docs/assistant.md#turn-it-on).
 - **Fast: value in days, not months.** The demo suite installs from the offline bundle in about
   ten minutes, and Analytics checks every loop and signal from its first round, the worst first,
   each with a sentence that says why ([sizing](docs/en/sizing.md)).

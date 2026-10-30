@@ -1,6 +1,6 @@
 /**
  * `/editor/<project>/<class>`: a model's diagram editor in a window of its own, as Link's
- * algorithm editor (owner, 2026-10-24). The palette holds the blocks of the libraries; wires go
+ * algorithm editor. The palette holds the blocks of the libraries; wires go
  * from an output to an input, feedback loops included; the simulation settings sit beside the
  * diagram. Save writes the diagram into the model's Modelica text and tells the model's page.
  * A model written as code shows its one block here; its code is changed in the code editor.

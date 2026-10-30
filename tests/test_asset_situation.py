@@ -1,5 +1,5 @@
 # ruff: noqa: F811  (the fixture ``signed`` comes from test_collaboration.py)
-"""An asset's Situation (owner, 2026-10-23): what every app published about the asset, its
+"""An asset's Situation: what every app published about the asset, its
 signals and the assets inside it, worst first and by app, with events, runs and open actions."""
 
 from __future__ import annotations

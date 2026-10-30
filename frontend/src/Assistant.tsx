@@ -1,11 +1,11 @@
 /**
- * Desk's Assistant (owner, 2026-10-23): each person's own chats with a language model, apart
+ * Desk's Assistant: each person's own chats with a language model, apart
  * from Messages (which stay between people). Many chats at once, each on its own subject, all
- * about the plant and the platform: it declines anything else (owner, 2026-10-23). The model reads the plant only through
+ * about the plant and the platform: it declines anything else. The model reads the plant only through
  * read-only tools, as the person who asks; each answer shows what it read (steps), the charts it
  * drew from the plant's history and the objects it used.
  *
- * The history (owner, 2026-10-26: "like ChatGPT's"): groups of the person's own, archived chats
+ * The history ("like ChatGPT's"): groups of the person's own, archived chats
  * apart, and a chat shared like a dashboard with people, groups or everyone, who read it and
  * continue in a copy of their own. Its reference (`chat:<id>`) goes in an action or a message.
  */
@@ -96,8 +96,8 @@ function AnswerBody({ message, onRetry }: { message: ChatMessage; onRetry?: () =
     <Steps message={message} />
     {failed
       ? <div className="asst-failed"><AlertTriangle size={15} /> <span>{message.text || t("The answer was interrupted. Ask again.")}</span>
-        {onRetry && <button type="button" className="button button-secondary asst-retry" onClick={onRetry}><RotateCcw size={14} />{t("Try again")}</button>}</div>
-      : message.text && <div className={`asst-markdown${working ? " pc-answer-writing" : ""}`}>{renderMarkdown(message.text)}</div>}
+        {onRetry && <button type="button" className="button button-secondary asst-retry" onClick={onRetry}><RotateCcw size={14} />{t("Try again")}</button>}</div>:
+      message.text && <div className={`asst-markdown${working ? " pc-answer-writing" : ""}`}>{renderMarkdown(message.text)}</div>}
     <AnswerProgress message={message} />
     {message.charts.map((chart, index) => <AssistantChart key={index} chart={chart} />)}
     {message.state === "done" && (message.meta?.proposals ?? []).map((proposal, index) => <ProposalCard key={index} chatId={message.chat_id} messageId={message.message_id} index={index} proposal={proposal} />)}
@@ -254,23 +254,23 @@ function ChatPane({ chatId, onChanged }: { chatId: number; onChanged: () => void
       <span className="asst-avatar"><Bot /></span>
       <div className="asst-chat-title">
         {editing !== null
-          ? <input autoFocus value={editing} maxLength={120} onChange={(event) => setEditing(event.target.value)} onBlur={() => void rename()} onKeyDown={(event) => { if (event.key === "Enter") void rename(); if (event.key === "Escape") setEditing(null); }} aria-label={t("Chat title")} />
-          : chat.mine === false ? <strong>{chat.title}</strong>
-          : <button type="button" className="asst-title-button" onClick={() => setEditing(chat.title)} title={t("Rename")}><strong>{chat.title}</strong><Pencil size={12} /></button>}
+          ? <input autoFocus value={editing} maxLength={120} onChange={(event) => setEditing(event.target.value)} onBlur={() => void rename()} onKeyDown={(event) => { if (event.key === "Enter") void rename(); if (event.key === "Escape") setEditing(null); }} aria-label={t("Chat title")} />:
+          chat.mine === false ? <strong>{chat.title}</strong>:
+          <button type="button" className="asst-title-button" onClick={() => setEditing(chat.title)} title={t("Rename")}><strong>{chat.title}</strong><Pencil size={12} /></button>}
         <small>{chat.mine === false ? t("Shared by {name}", { name: chat.owner_name ?? chat.owner ?? "" }) : chat.profile_name}{chat.ref_view && <> · <RefChip item={chat.ref_view} /></>}{chat.shared?.length ? <> · <Share2 size={11} /> {t("Shared")}</> : null}</small>
       </div>
       <StarButton starred={Boolean(chat.starred)} onToggle={() => { const on = !chat.starred; setChat({ ...chat, starred: on }); collabApi.mark(`chat:${chat.chat_id}`, "star", on).then(onChanged).catch((err) => setError(errorText(err))); }} />
     </header>
     <div className="asst-scroll" ref={scroller} onScroll={(event) => { const box = event.currentTarget; stick.current = box.scrollHeight - box.scrollTop - box.clientHeight < 80; }}>
       {messages.map((message) => message.role === "user"
-        ? <div key={message.message_id} className="asst-row asst-mine"><div className="asst-bubble">{message.text}</div></div>
-        : <div key={message.message_id} className="asst-row asst-answer"><span className="asst-avatar asst-avatar-sm"><Sparkles /></span><div className="asst-answer-body"><AnswerBody message={message} onRetry={chat.mine !== false && !busy && message === messages[messages.length - 1] && message.state === "failed" ? () => void retry() : undefined} /></div></div>)}
+        ? <div key={message.message_id} className="asst-row asst-mine"><div className="asst-bubble">{message.text}</div></div>:
+        <div key={message.message_id} className="asst-row asst-answer"><span className="asst-avatar asst-avatar-sm"><Sparkles /></span><div className="asst-answer-body"><AnswerBody message={message} onRetry={chat.mine !== false && !busy && message === messages[messages.length - 1] && message.state === "failed" ? () => void retry() : undefined} /></div></div>)}
     </div>
     {error && <div className="form-error asst-error"><AlertTriangle size={15} /> {error}</div>}
     {chat.mine === false
       ? <div className="asst-readonly"><span>{t("You are reading a chat {name} shared. To ask more, continue it as your own.", { name: chat.owner_name ?? chat.owner ?? "" })}</span>
-        <button type="button" className="button button-primary" disabled={busy} onClick={() => void continueCopy()}><CopyPlus size={15} />{t("Continue in a copy")}</button></div>
-      : <Composer busy={busy || working} onSend={send} placeholder={working ? t("Wait for the answer…") : t("Ask a follow-up")} autoFocus />}
+        <button type="button" className="button button-primary" disabled={busy} onClick={() => void continueCopy()}><CopyPlus size={15} />{t("Continue in a copy")}</button></div>:
+      <Composer busy={busy || working} onSend={send} placeholder={working ? t("Wait for the answer…") : t("Ask a follow-up")} autoFocus />}
   </section>;
 }
 
@@ -296,8 +296,8 @@ function NewChat({ status, onStarted }: { status: AssistantStatus; onStarted: ()
   if (!status.available) return <section className="asst-chat asst-new">
     <div className="asst-center asst-off"><Bot size={34} /><h2>{t("The assistant is off")}</h2><p>{status.reason}</p>
       {admin
-        ? <p><a className="button button-secondary" href="/setup/language-model" onClick={(event) => { event.preventDefault(); navigate("/setup/language-model"); }}>{t("Set up the language model")}</a></p>
-        : <p className="muted small">{t("An administrator turns it on in Settings › Language models.")}</p>}
+        ? <p><a className="button button-secondary" href="/setup/language-model" onClick={(event) => { event.preventDefault(); navigate("/setup/language-model"); }}>{t("Set up the language model")}</a></p>:
+        <p className="muted small">{t("An administrator turns it on in Settings › Language models.")}</p>}
     </div>
   </section>;
   return <section className="asst-chat asst-new">
@@ -356,15 +356,15 @@ export default function AssistantPage({ chatId }: { chatId: number | "new" | nul
         <h2>{group.folder ? <><FolderInput size={12} /> {group.folder}</> : t(GROUP_LABELS[group.key])}</h2>
         <ul>{group.chats.map((chat) => <li key={chat.chat_id} className={`${chat.chat_id === chatId ? "active" : ""}${chat.unread ? " asst-unread" : ""}`.trim() || undefined}>
           {renaming?.id === chat.chat_id
-            ? <input className="asst-rename" autoFocus value={renaming.title} maxLength={120} onChange={(event) => setRenaming({ id: chat.chat_id, title: event.target.value })} onBlur={() => void saveTitle()} onKeyDown={(event) => { if (event.key === "Enter") void saveTitle(); if (event.key === "Escape") setRenaming(null); }} aria-label={t("Chat title")} />
-            : <a href={`/assistant/${chat.chat_id}`} onClick={(event) => { event.preventDefault(); navigate(`/assistant/${chat.chat_id}`); }}>
+            ? <input className="asst-rename" autoFocus value={renaming.title} maxLength={120} onChange={(event) => setRenaming({ id: chat.chat_id, title: event.target.value })} onBlur={() => void saveTitle()} onKeyDown={(event) => { if (event.key === "Enter") void saveTitle(); if (event.key === "Escape") setRenaming(null); }} aria-label={t("Chat title")} />:
+            <a href={`/assistant/${chat.chat_id}`} onClick={(event) => { event.preventDefault(); navigate(`/assistant/${chat.chat_id}`); }}>
             <strong>{chat.working && <LoaderCircle className="spin" size={12} />}{chat.title}{chat.shared?.length ? <Share2 size={11} aria-label={t("Shared")} /> : null}</strong>
             <small>{chat.mine === false ? t("Shared by {name}", { name: chat.owner_name ?? chat.owner ?? "" }) : chat.profile_name} · {formatAgo(chat.updated_at)}</small>
           </a>}
           <StarButton starred={Boolean(chat.starred)} className={`asst-tool${chat.starred ? " asst-keep" : ""}`} onToggle={() => { collabApi.mark(`chat:${chat.chat_id}`, "star", !chat.starred).then(load).catch((err) => setError(errorText(err))); }} />
           {chat.mine === false
-            ? <button type="button" className="asst-tool" onClick={() => void copyText(`${window.location.origin}/assistant/${chat.chat_id}`)} title={t("Copy link")} aria-label={t("Copy link")}><Copy size={14} /></button>
-            : <ChatMenu chat={chat} folders={folders} onChanged={load} onRename={() => setRenaming({ id: chat.chat_id, title: chat.title })} onDelete={() => void remove(chat)} />}
+            ? <button type="button" className="asst-tool" onClick={() => void copyText(`${window.location.origin}/assistant/${chat.chat_id}`)} title={t("Copy link")} aria-label={t("Copy link")}><Copy size={14} /></button>:
+            <ChatMenu chat={chat} folders={folders} onChanged={load} onRename={() => setRenaming({ id: chat.chat_id, title: chat.title })} onDelete={() => void remove(chat)} />}
         </li>)}</ul>
       </section>)}
     </aside>

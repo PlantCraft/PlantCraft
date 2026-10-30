@@ -74,7 +74,7 @@ def plant_timezone(*, fresh: bool = False) -> Any:
 
 def resolve_zone(name: str | None) -> Any:
     """The zone a saved setting means: ``local`` (or nothing, or an unknown name) is the
-    installation's (owner, 2026-10-25: a schedule follows the installation when it changes)."""
+    installation's (a schedule follows the installation when it changes)."""
 
     from zoneinfo import ZoneInfo
 

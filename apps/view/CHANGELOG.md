@@ -8,14 +8,14 @@ joins it into the bundle's release notes.
 
 ### Added
 
-- **Full screen keeps a strip of its own** (owner, 2026-10-28). A process display in full screen
+- **Full screen keeps a strip of its own**. A process display in full screen
   has a top strip with its name, its page or part tabs, one time button and the way out; the
   drawing starts below it, never under it. The time button says what is shown (Live and the
   period, or the instant played back) and opens the period, playback and Live under it on a
   click or while the pointer rests on it. Playback keeps playing when the display goes full
   screen or back.
 
-- **Parts of a process display** (owner, 2026-10-28). A large page names its parts; the viewer
+- **Parts of a process display**. A large page names its parts; the viewer
   shows tabs over it, **Overview** (the whole drawing) and one per part, that zoom there, full
   screen too, with `?part=` in the address. The demo's Riverbend plant has its seven parts, and
   the seed gives them to the one-page display of the day before.
@@ -37,7 +37,7 @@ joins it into the bundle's release notes.
 
 ### Added
 
-- **A process display opens over itself** (owner, 2026-10-27). A click on a value draws its trend
+- **A process display opens over itself**. A click on a value draws its trend
   in a window (period, interval, line settings and CSV as in Trends, **Open in Trends** to go on);
   a click on a piece of equipment opens its panel beside the drawing (values, signals, its
   dashboards, **Asset page**) instead of a dashboard page. **Full screen** is the browser's own,
@@ -47,7 +47,7 @@ joins it into the bundle's release notes.
   moves a zoomed drawing, and buttons zoom in, out and back to the whole drawing; a drag never
   opens what it started on. A new link, **a part of this drawing**, zooms to an area of the same
   page ("x, y, width, height"), so a large drawing has buttons that take you to each part.
-- **Demo: Riverbend plant on one page** (owner, 2026-10-27). The seven parts of the plant sit
+- **Demo: Riverbend plant on one page**. The seven parts of the plant sit
   side by side on a 4800 x 2700 page; each off-page button zooms to the part it names. The seed
   redraws a demo display it made earlier with pages; one someone changed is left alone.
 
@@ -158,7 +158,7 @@ joins it into the bundle's release notes.
   Markdown), as on the report's page.
 - **Public link tables keep one line per link**: what it opens, its kind and who created it in
   columns of their own.
-- **A shorter Overview (owner, 2026-10-27).** A new person's board is the dashboards beside the
+- **A shorter Overview.** A new person's board is the dashboards beside the
   reports, then the trend changed last across the page; public links and one dashboard stay in
   "Add a widget". Each report says when it goes out next ("Next: Mon 08:00", on the plant's
   clock) or "Not scheduled", its dot how the last send went; without a saved trend the trend card
@@ -168,7 +168,7 @@ joins it into the bundle's release notes.
 
 - **A dashboard's link opens the dashboard.** A `#dashboard:` reference in a message, an action or
   a note opened the list of dashboards; it opens the dashboard itself now.
-- **Times on the person's clock (owner, 2026-10-27).** A fixed period in Trends is labelled in the
+- **Times on the person's clock.** A fixed period in Trends is labelled in the
   zone the pages show; the CSV of a panel and of a trend write their times on that clock, name
   the zone in the header ("time (UTC−3)") and in the file name. ui 0.71.0, SDK 0.62.0.
 
@@ -193,7 +193,7 @@ joins it into the bundle's release notes.
 
 ### Added
 
-- **Trends opens the assistant's chart** (owner, 2026-10-26): `/trends?signal=A&signal=B&start=&end=`
+- **Trends opens the assistant's chart**: `/trends?signal=A&signal=B&start=&end=`
   starts a new trend with those signals over that period; the app declares the `trend` ref kind
   so the assistant's charts link here (Open in Trends).
 

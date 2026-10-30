@@ -199,7 +199,7 @@ def test_the_linux_kit_reads_the_plant_and_opens_jupyterlab(page, shelf, tmp_pat
 )
 @pytest.mark.skipif(not sys.platform.startswith("linux"), reason="the Linux kit")
 def test_connect_this_computer_then_open_a_notebook_from_plantcraft(page, shelf, tmp_path, server):
-    """Owner, 2026-10-26: no command and no token to copy. The page's links reach the installed
+    """no command and no token to copy. The page's links reach the installed
     app, which connects with a one-time code and opens the notebook in its JupyterLab."""
 
     assert page.request.put(

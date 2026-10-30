@@ -295,7 +295,7 @@ def test_a_trend_with_two_subplots_is_saved_and_reopened(signed_in, app_url, scr
     expect(chart).to_have_count(2)
     full = page.get_by_role("button", name="Full screen")
     expect(full).to_be_visible()
-    # Above the chart, clear of Plotly's own buttons (owner, 2026-10-23).
+    # Above the chart, clear of Plotly's own buttons.
     modebar = page.locator(".tc-trend-chart .modebar-container").bounding_box()
     button = full.bounding_box()
     assert modebar and button and button["y"] + button["height"] <= modebar["y"]
@@ -382,7 +382,7 @@ def test_the_overview_is_widgets_and_the_dashboards_have_their_page(
     # The page's top is its title and buttons only (ui 0.41.0): no line above or under the title.
     expect(page.locator(".page-heading .eyebrow, .page-heading p")).to_have_count(0)
     titles = page.locator(".pc-wg-card .pc-wg-card-head h2")
-    # Saved trends first, then the lists, each row a name and when it changed (owner, 2026-10-27).
+    # Saved trends first, then the lists, each row a name and when it changed.
     expect(titles).to_have_text(
         ["Saved trends", "Dashboards", "Reports", "Process displays", "Public links"]
     )

@@ -1,8 +1,8 @@
 """PlantCraft's own works, page by page (docs/assistant.md, "Works"; plan "Assistant on every
-page", owner 2026-10-25). Each page names itself in ``useAssistantPage({page:
+page"). Each page names itself in ``useAssistantPage({page:
 "processcraft:<id>"})``; the create routes are the pages' own.
 
-Owner, 2026-10-26: each page offers what fits it, not the same questions everywhere. "Explain
+each page offers what fits it, not the same questions everywhere. "Explain
 this page" is the suite's own on every page (ui); a list page adds finding and creating its
 objects, an object page explaining, changing or copying that object and its own questions
 (docs/assistant.md, "Works on each page"). Each work keeps only the page's facts it needs

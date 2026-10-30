@@ -204,7 +204,7 @@ sizes = [{ w = 4, h = 2 }, { w = 6, h = 2 }, { w = 6, h = 3 }]
 
 # Notebooks (PlantCraft docs/en/notebooks.md, "The apps' objects"): models and their runs read
 # with pc.app("models"); a simulation asked from a notebook runs in Models' queue, only when an
-# administrator switches it on (owner, 2026-10-26, D4).
+# administrator switches it on (D4).
 [[contributes.objects]]
 kind = "model"
 title = "Models"

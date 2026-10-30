@@ -124,7 +124,7 @@ end Plant;
 
 
 def test_a_system_is_built_from_the_projects_own_components():
-    """Owner, 2026-10-21: blocks of one's own, connected into a plant and run together. A
+    """blocks of one's own, connected into a plant and run together. A
     project class goes into a system's diagram as a library class does, before the system's
     annotation, and its connectors connect."""
 

@@ -18,6 +18,24 @@ or a local one: any OpenAI-compatible server such as vLLM, Ollama or LM Studio, 
 API). `PLANTCRAFT_LLM=off` forbids models in the whole installation, and a public demo never
 uses one.
 
+## Turn it on
+
+The assistant is off in a new installation: nothing leaves the plant's network until an
+administrator chooses a model. To turn it on:
+
+1. Sign in as an administrator and open **Setup › Language models** (Desk › Assistant shows the
+   button when it is off).
+2. Add a provider: a model on your own machines (any OpenAI-compatible server such as Ollama,
+   vLLM or LM Studio), the company's own endpoint, or Anthropic's API with a key.
+3. Press **Test**. The first model that answers becomes the default.
+4. Optionally, in **Models by use**, pick another model per use (the Assistant, the Help, the
+   apps' own uses) or turn one off.
+
+The assistant then answers in Desk › Assistant and in the side panel of every page, as the
+person who asks, reading only what that person may open. `PLANTCRAFT_LLM=off` in `.env` keeps
+models off in the whole installation, whatever Setup says. The public demo shows recorded chats
+only: its visitors never reach a model.
+
 ## What the model can read
 
 The model has no database access. It reads the plant through the same read-only tools as the
@@ -37,7 +55,7 @@ their history, events, runs, follow-up actions and the texts the apps wrote for 
 
 ## Tools the apps add
 
-Owner, 2026-10-26 (plan "Documents", D7): an app gives the assistant a read-only tool of its own
+An app gives the assistant a read-only tool of its own
 without a change to PlantCraft. It declares the tool in its `app.toml` and serves it under its
 prefix; PlantCraft lists it to the model as `<app id>_<id>` beside its own tools, in Desk's
 assistant, the side panel and the MCP server (`plantcraft/assistant_access/app_tools.py`).
@@ -154,7 +172,7 @@ of name to description is read as a list. A proposal the check refuses shows as 
 
 ## The side panel: the assistant on every page
 
-Owner, 2026-10-23: the platform will be used mostly by talking to it, so the assistant is offered
+the platform will be used mostly by talking to it, so the assistant is offered
 on every page, the same way in every app, and each page says what it can do there.
 
 - **One button.** **Assistant**, a spark like the other quick buttons, one of the four above the
@@ -190,7 +208,7 @@ on every page, the same way in every app, and each page says what it can do ther
 In the interface these are **tasks** (docs/glossary.md); the code, the API and `app.toml` keep
 the word `works`.
 
-Owner, 2026-10-25 (plan "Assistant on every page"): every page title has the assistant's button
+Every page title has the assistant's button
 on its right (ui `AssistantTitleButton`); clicking it lists the **works** of that page. A work is
 either **ask** (the assistant reads and explains) or **create** (it talks with the person until
 the object's fields are known and proposes it; the person creates it with one click). Choosing a
@@ -352,7 +370,7 @@ or a specialist's instructions.
 
 ### Evaluate works: each work as its page asks it
 
-Owner, 2026-10-25: "run the model with the context the application adds from the person's
+"run the model with the context the application adds from the person's
 choice, and see whether it can read that context and whether the context is enough".
 **Evaluate works** (`plantcraft/assistant_chat/work_evals.py`) makes one case per work offered
 to an administrator, PlantCraft's and the installed apps':

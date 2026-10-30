@@ -28,7 +28,7 @@
 .nb-place { border: 0; margin: 10px 0 4px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; }
 .nb-place legend { padding: 0; margin-bottom: 4px; color: var(--pc-text-2); }
 .nb-place label { display: inline-flex; gap: 6px; align-items: center; }
-/* Where notebooks run: two cards, the chosen one opens its panel below (owner, 2026-10-27). */
+/* Where notebooks run: two cards, the chosen one opens its panel below. */
 .nb-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
 .nb-choice-card { padding: 14px 16px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: inherit; font: inherit; text-align: left; display: flex; gap: 12px; align-items: center; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, background .15s ease; }
 .nb-choice-card:hover { border-color: var(--pc-primary); }

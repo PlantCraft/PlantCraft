@@ -77,7 +77,7 @@ def health(_admin: AdminView, rt: Runtime) -> dict[str, Any]:
     return rt.watch.overview()
 
 
-# What everyone may see of Health (owner, 2026-10-25): whether each part of the suite runs. The
+# What everyone may see of Health: whether each part of the suite runs. The
 # disk, the backups, the certificates and the services' resources stay with the administrators.
 STATUS_CHECKS = ("service:", "queue:")
 SERVICE_FIELDS = ("service", "name", "state", "health", "started_at")

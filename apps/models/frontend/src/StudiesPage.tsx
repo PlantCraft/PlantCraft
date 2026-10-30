@@ -1,5 +1,5 @@
 /**
- * `/studies`: every study; `/studies/<id>`: one study on one page (owner, 2026-10-24: no tabs).
+ * `/studies`: every study; `/studies/<id>`: one study on one page (no tabs).
  * Its runs ranked by the indicator chosen, the best first; their results overlaid, coloured by a
  * varied parameter, with the envelope of all of them; an indicator against a parameter; the runs
  * themselves; the settings; the statistics; and the export for Jupyter.
@@ -64,8 +64,8 @@ export function StudiesPage({ me }: { me: Me }) {
   if (!studies) return <Loading />;
   return <>
     <Heading title={t("Studies")} actions={<Link to={newInFolder("/studies/new", folder)} className="button button-primary"><Plus />{t("New study")}</Link>} />
-    {studies.length === 0 ? <div className="panel empty"><FlaskConical /><h2>{t("No study yet")}</h2><p className="muted">{t("Press New study and choose a model.")}</p></div>
-      : <div className="pc-folder-layout">
+    {studies.length === 0 ? <div className="panel empty"><FlaskConical /><h2>{t("No study yet")}</h2><p className="muted">{t("Press New study and choose a model.")}</p></div>:
+      <div className="pc-folder-layout">
         <FolderColumn kind="study" list={folders} chosen={folder} onChoose={(value) => { setFolder(value); rememberFolder("/studies", value); }} total={studies.length} canEdit={me.can_edit} onChanged={reloadFolders} />
         <section>
           {folder && <div className="pc-folder-head"><h2>{folderName(folders, folder)}</h2></div>}
@@ -376,8 +376,8 @@ function Ranking({ study, runs, names }: { study: Study; runs: Run[]; names: str
         </select>
       </label>
     </div>
-    {best ? <p className="mc-best-line"><Trophy aria-hidden="true" /> {t("Best: {run}, {value}", { run: best.label || variantText(best.variant) || best.id, value: reading(value(best)) })}</p>
-      : <p className="muted">{t("No simulation has finished with this indicator yet.")}</p>}
+    {best ? <p className="mc-best-line"><Trophy aria-hidden="true" /> {t("Best: {run}, {value}", { run: best.label || variantText(best.variant) || best.id, value: reading(value(best)) })}</p>:
+      <p className="muted">{t("No simulation has finished with this indicator yet.")}</p>}
     {ranked.length > 0 && <div className="table-wrap"><table className="table mc-rank-table">
       <thead><tr><th className="numeric">#</th><th>{t("Simulation")}</th>{swept.map((name) => <th key={name} className="numeric pc-mono">{sweptLabel(name)}</th>)}
         <th className="numeric">{t(STATISTIC_WORDS[statistic])}</th>{shown.map((item) => <th key={item} className="numeric">{t(STATISTIC_WORDS[item])}</th>)}<th className="numeric">{t("Run time")}</th></tr></thead>
@@ -533,9 +533,9 @@ export function NewStudyPage() {
     <Heading eyebrow={t("Study")} title={like ? t("Run the study again") : t("New study")}
       detail={t("A model simulated over every combination of the values its inputs and parameters take, compared side by side.")} />
     {error && <ErrorBox text={error} />}
-    {!models ? <Loading /> : !choice.model ? <section className="panel mc-study-section"><div className="form-grid">{field}</div><p className="muted small">{t("Choose the model to study.")}</p></section>
-      : !inputs ? <Loading />
-      : <StudyForm key={`${choice.project}/${choice.model}`} projectId={choice.project} models={inputs.models} model={choice.model} like={like}
+    {!models ? <Loading /> : !choice.model ? <section className="panel mc-study-section"><div className="form-grid">{field}</div><p className="muted small">{t("Choose the model to study.")}</p></section>:
+      !inputs ? <Loading />:
+      <StudyForm key={`${choice.project}/${choice.model}`} projectId={choice.project} models={inputs.models} model={choice.model} like={like}
         parameters={inputs.parameters} settings={inputs.settings} indicators={inputs.indicators} modelField={field}
         onClose={() => navigate(like ? `/studies/${like.id}` : "/studies")} onStarted={(found) => void started(found)} />}
   </>;

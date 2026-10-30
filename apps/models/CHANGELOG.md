@@ -16,7 +16,7 @@ joins it into the bundle's release notes.
 
 ### Changed
 
-- **A block's page has the tabs of an Analytics block** (owner, 2026-10-27): Overview is its drawing
+- **A block's page has the tabs of an Analytics block**: Overview is its drawing
   and About this block (What it does, How to read it, Formula, written anew for the 28 blocks
   Models ships, as headed parts of the class's Documentation); its ports and parameters moved to
   Inputs and outputs. **Duplicate** works on any block, the shipped ones too: the copy goes to the
@@ -24,7 +24,7 @@ joins it into the bundle's release notes.
   block's **defaults** change on Inputs and outputs: `PUT /api/catalog/<block>/defaults` writes
   them in its declarations, a new version with what changed (required). The Simulations pages lost
   their Studies button (it is in the side menu).
-- **A model's page has the tabs of an Analytics algorithm** (owner, 2026-10-27): Overview (what it
+- **A model's page has the tabs of an Analytics algorithm**: Overview (what it
   is, no results), Inputs and outputs (what it reads and gives, and every block's parameters, each
   saying whether it is the block's default or the model's own value), Diagram, Test (was Run: one
   simulation, a check; the studies run a model for real), Used by (its studies, was Studies),
@@ -171,7 +171,7 @@ owner review, round 9)
   included.
 
 - processcraft-sdk 0.28 (an app without an app key reports its conditions).
-- Models has Link's pages (owner, 2026-10-24, round 8). The menu is Overview · Blocks · Models ·
+- Models has Link's pages (round 8). The menu is Overview · Blocks · Models ·
   Studies · Executions. A model's page has tabs: Overview (what it is, what it reads and what its
   scopes show, its last run), Diagram (a preview, with Open the editor), Inputs and parameters
   (every block's parameters and the simulation settings, saved on the page), Run (its runs) and
@@ -195,7 +195,7 @@ owner review, round 9)
 
 ### Changed
 
-- Models works like Simulink (owner, 2026-10-24, round 7): a model is a block diagram in the
+- Models works like Simulink (round 7): a model is a block diagram in the
   suite's editor (`@processcraft/ui` 0.37.0, feedback loops) with its simulation settings beside
   it (start, stop, solver, step, tolerance); Run simulates it and plots its scopes. Menu
   Overview · Models · Studies · Executions · Blocks; Projects, Simulations and Exports pages are

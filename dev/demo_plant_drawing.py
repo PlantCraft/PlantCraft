@@ -1157,7 +1157,7 @@ def effluent():
 
 
 TILE_W, TILE_H = 1600, 900
-# Where each part of the plant sits on the one page (owner, 2026-10-27: the whole process
+# Where each part of the plant sits on the one page (the whole process
 # together, looked at closely with the viewer's zoom): the crude's way left to right, top to
 # bottom, the utilities and effluent centred under it. Column, row of each 1600 x 900 tile.
 LAYOUT = {
@@ -1170,7 +1170,7 @@ LAYOUT = {
     "utilities": (1, 2),
 }
 
-# The tabs over the drawing (owner, 2026-10-28: "Overview" and a way to each part), in LAYOUT's
+# The tabs over the drawing ("Overview" and a way to each part), in LAYOUT's
 # reading order.
 PART_NAMES = {
     "preheat": "Preheat and furnace",

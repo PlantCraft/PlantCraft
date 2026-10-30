@@ -60,7 +60,7 @@
 .tc-list-card:hover { border-color: var(--pc-primary); }
 .tc-list-main { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .tc-list-main h2 { margin: 0 0 4px; font-size: var(--pc-fs-base, 15px); }
-/* A long description stays two lines with "…" so a card keeps its height (owner, 2026-10-27). */
+/* A long description stays two lines with "…" so a card keeps its height. */
 .tc-list-main p { margin: 0; color: var(--pc-text-3); font-size: var(--pc-fs-sm); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .tc-list-main > svg { flex-shrink: 0; margin-top: 2px; }
 .tc-chips { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
@@ -135,7 +135,7 @@ body.tc-screen .pcs-content, body.tc-screen .content { max-width: none; padding:
 /* Folders of the dashboards list (round 6), and the dialogs of a folder and a new dashboard. */
 .tc-find { display: flex; align-items: center; gap: 8px; max-width: 420px; margin: 0 0 16px; padding: 0 10px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text-3); }
 .tc-find input { flex: 1; border: 0; background: transparent; padding: 8px 0; box-shadow: none; }
-/* Each folder is its own band (owner, 2026-10-25): a line above, its name and count, then its cards. */
+/* Each folder is its own band: a line above, its name and count, then its cards. */
 .tc-folder { position: relative; margin: 0 0 24px; padding-top: 12px; border-top: 1px solid var(--pc-border); }
 .tc-folder > summary { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 2px 112px 12px 0; cursor: pointer; list-style: none; color: var(--pc-text-2); }
 .tc-folder-count { padding: 0 7px; border-radius: 999px; background: var(--pc-surface-3, var(--pc-surface-2)); color: var(--pc-text-2); font-size: var(--pc-fs-xs); font-weight: 600; line-height: 1.6; }

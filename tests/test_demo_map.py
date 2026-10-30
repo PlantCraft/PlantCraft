@@ -30,7 +30,7 @@ ROLES = ("pv", "sp", "op", "mode", "secondary")
 RECORD_KEYS = ("loop_type", "criticality", "action", "controller")
 
 
-# The demo is a refinery of four units (owner, 2026-10-22: realistic names, equipment inside the
+# The demo is a refinery of four units (realistic names, equipment inside the
 # areas, loop records filled). The plant itself is the installation's root: the seed names it.
 UNITS = {
     "U-100": (

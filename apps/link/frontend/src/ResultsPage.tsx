@@ -1,5 +1,5 @@
 /**
- * Results (owner, 2026-10-23): the latest result of every algorithm on every asset it runs on, on
+ * Results: the latest result of every algorithm on every asset it runs on, on
  * one list, whatever the algorithm: the asset and its type, the algorithm and its version, the
  * status in the suite's words, the headline measure, the finding, when, and the algorithm's tags.
  * The filters are the algorithm, the tag, the asset type, the responsible group and the status;
@@ -118,10 +118,10 @@ export function ResultsPage({ me: _me }: { me: Me }) {
     />
     <ResultTabs runs={false} />
     {error && <ErrorBox text={error} />}
-    {!data ? (error ? null : <Loading text={t("Loading results…")} />)
-      : data.total === 0 && !filtered
-        ? <div className="panel empty"><h2>{t("No results yet")}</h2><p>{t("Results appear after the first run of an algorithm: Signal quality, a loop's algorithm or an algorithm on assets.")}</p></div>
-        : <DataTable
+    {!data ? (error ? null : <Loading text={t("Loading results…")} />):
+      data.total === 0 && !filtered
+        ? <div className="panel empty"><h2>{t("No results yet")}</h2><p>{t("Results appear after the first run of an algorithm: Signal quality, a loop's algorithm or an algorithm on assets.")}</p></div>:
+        <DataTable
           rows={data.items}
           columns={columns}
           rowKey={(row) => `${row.kind}:${row.id}`}
@@ -174,8 +174,8 @@ export function RunHistoryPage({ me }: { me: Me }) {
       detail={t("Every run of every algorithm, newest first. Monitors live on each algorithm's page.")} />
     <ResultTabs runs />
     {error && <ErrorBox text={error} />}
-    {!rows ? (error ? null : <Loading />)
-      : <DataTable
+    {!rows ? (error ? null : <Loading />):
+      <DataTable
         rows={shown}
         columns={columns}
         rowKey={(row) => row.id}

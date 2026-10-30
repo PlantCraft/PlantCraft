@@ -22,8 +22,8 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
       title: tt("Welcome to PlantCraft"),
       body: <>
         <p>{data.public_demo && readOnly
-          ? tt("A live demo on a simulated refinery with 50 control loops. Nothing you change is saved.")
-          : tt("One place for your plant's data, and a family of apps that work on it.")}</p>
+          ? tt("A live demo on a simulated refinery with 50 control loops. Nothing you change is saved."):
+          tt("One place for your plant's data, and a family of apps that work on it.")}</p>
         <p>{tt("Two minutes around the suite: use Next, or the arrow keys.")}</p>
       </>,
     },
@@ -59,13 +59,13 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
     }] : []),
     {
       path: "/",
-      // The panels open, so the step shows what is in them (owner, 2026-10-28).
+      // The panels open, so the step shows what is in them.
       target: ".pc-messages-drawer",
       onShow: openPanel(".pcs-quick .pcs-messages", ".pc-messages-drawer"),
       title: tt("Messages"),
       body: <p>{demo
-        ? tt("The quick buttons at the foot of the menu open a panel over any app. Messages: the team talks here about FIC-1003, the sticking valve.")
-        : tt("The quick buttons at the foot of the menu open a panel over any app. Messages: talk with a person or a whole group about an asset or a finding.")}</p>,
+        ? tt("The quick buttons at the foot of the menu open a panel over any app. Messages: the team talks here about FIC-1003, the sticking valve."):
+        tt("The quick buttons at the foot of the menu open a panel over any app. Messages: talk with a person or a whole group about an asset or a finding.")}</p>,
     },
     {
       path: "/",
@@ -80,8 +80,8 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
       onShow: openPanel('[data-tour="assistant-button"]', ".pc-assistant-panel"),
       title: tt("The assistant"),
       body: <p>{data.public_demo && readOnly
-        ? tt("Ask about any page in plain words; it reads the plant's data and documents and shows each step it took. It is off in this demo, but open it to read the team's chats.")
-        : tt("Ask about any page in plain words; it reads the plant's data and documents and shows each step it took.")}</p>,
+        ? tt("Ask about any page in plain words; it reads the plant's data and documents and shows each step it took. It is off in this demo, but open it to read the team's chats."):
+        tt("Ask about any page in plain words; it reads the plant's data and documents and shows each step it took.")}</p>,
     },
     // Like every app's tour: the questions of this page (the journey test, 2026-10-28).
     assistantTourStep("/", [
@@ -123,7 +123,7 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
     title: tt("System health"),
     body: <p>{tt("Whether every app and data source is running, each with its state and what it last said.")}</p>,
   });
-  // The administration (owner, 2026-10-28): shown to administrators, and to a public demo's
+  // The administration: shown to administrators, and to a public demo's
   // visitor, who reads it without changing anything.
   if (admin) steps.push(
     {
@@ -158,8 +158,8 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
     title: tt("Now the apps"),
     body: <>
       {apps.length
-        ? <ul>{apps.map((app) => <li key={app.id}><b>{appLabel(app.id, app.name)}</b>: {appPurpose(appIdFor(app.id), tt).replace(/\.$/, "").replace(/^./, (first) => first.toLowerCase())}</li>)}</ul>
-        : <p>{tt("No app is installed yet. An administrator adds them on the Apps page.")}</p>}
+        ? <ul>{apps.map((app) => <li key={app.id}><b>{appLabel(app.id, app.name)}</b>: {appPurpose(appIdFor(app.id), tt).replace(/\.$/, "").replace(/^./, (first) => first.toLowerCase())}</li>)}</ul>:
+        <p>{tt("No app is installed yet. An administrator adds them on the Apps page.")}</p>}
       <p>{tt("Open one to go on: each starts with its own short tour. You can take this tour again from the menu under your name.")}</p>
     </>,
   });

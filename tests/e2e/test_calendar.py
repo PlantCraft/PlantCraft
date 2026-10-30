@@ -1,4 +1,4 @@
-"""Desk's calendar (owner, 2026-10-24): an event made by dragging over the hours, repeated,
+"""Desk's calendar: an event made by dragging over the hours, repeated,
 moved by dragging (the whole series moves) and deleted; the apps' runs start hidden."""
 
 from __future__ import annotations

@@ -140,7 +140,7 @@ def _present_conversation(
 
 
 def _with_marks(conversation: dict[str, Any], stars: set[str], unread: set[str]) -> dict[str, Any]:
-    """The person's own marks on a conversation (owner, 2026-10-28): a favorite, and unread again
+    """The person's own marks on a conversation: a favorite, and unread again
     (at least one unread until they open it)."""
 
     key = f"conversation:{conversation['conversation_id']}"

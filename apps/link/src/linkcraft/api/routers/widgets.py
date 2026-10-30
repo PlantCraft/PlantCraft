@@ -258,7 +258,7 @@ def widget(
 
 def _subject(rt: Any, root: str, item: str | None, scope: Any) -> dict[str, Any]:
     """One subject of one schedule: its latest result and each output of it (a specific
-    execution, owner 2026-10-25). Without a choice, the first subject in alarm or warning."""
+    execution). Without a choice, the first subject in alarm or warning."""
 
     schedules = {entry["schedule_id"]: entry for entry in rt.jobs.list_schedules()}
     wanted_schedule, _, wanted_subject = (item or "").partition("/")

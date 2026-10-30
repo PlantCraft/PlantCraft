@@ -28,7 +28,7 @@ export function NotebookButton({ signals, start, end, step, disabled }: { signal
   useEffect(() => { void notebooksUrl().then(setBase); }, []);
   // At most 200 signals in one notebook (PlantCraft's limit).
   if (!base || disabled || !signals.length || signals.length > 200 || !start || !end) return null;
-  // Notebooks work in a tab of their own (owner, 2026-10-24): the Historian stays open here.
+  // Notebooks work in a tab of their own: the Historian stays open here.
   return <a className="button button-secondary" href={notebookHref(base, signals, start, end, step)} target="_blank" rel="noreferrer"
     title={t("A notebook that already loads these tags over this period (Python in your browser)")}><PythonMark size={16} /> {t("Open in a notebook")}</a>;
 }

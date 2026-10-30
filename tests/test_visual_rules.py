@@ -1,6 +1,6 @@
 """The suite's visual rules that a few lines of reading can hold (docs/ui-guidelines.md).
 
-Navigation happens only through the side menu and the tabs (owner, 2026-10-27): an Overview has no
+Navigation happens only through the side menu and the tabs: an Overview has no
 buttons at its top, and no button at the top of a page goes to a page the menu already lists.
 """
 

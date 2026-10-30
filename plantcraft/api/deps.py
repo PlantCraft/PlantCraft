@@ -312,7 +312,7 @@ AdminUser = Annotated[str, Depends(administrator)]
 
 def administration_reader(username: CurrentUser, rt: Runtime) -> str:
     """An administrator, or the public demo's visitor: a visitor sees the administration pages
-    (people and groups, apps, backups) to know the platform, read-only (owner, 2026-10-28); every
+    (people and groups, apps, backups) to know the platform, read-only; every
     change there still needs an administrator."""
 
     demo = public_demo()

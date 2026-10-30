@@ -30,7 +30,7 @@ def test_engineer_edits_a_loop_record_and_it_shows_in_history(page):
 
 
 def test_an_asset_page_has_tabs_and_no_links_that_lead_nowhere(page):
-    """Owner, 2026-10-21: the asset page redone in tabs; the "Open in" links are gone."""
+    """the asset page redone in tabs; the "Open in" links are gone."""
 
     page.goto("/assets/FIC-101")
     expect(page.get_by_role("navigation", name="Open in")).to_have_count(0)
@@ -88,7 +88,7 @@ def test_a_role_binds_a_signal_picked_by_its_api_v1_id(page):
 
 
 def test_an_asset_shows_its_situation_and_ctrl_k_finds_it(page):
-    """Owner, 2026-10-23: the Situation tab, and the suite's search from any screen."""
+    """the Situation tab, and the suite's search from any screen."""
 
     page.goto("/assets/FIC-101?tab=situation")
     tabs = page.get_by_role("navigation", name="Asset")

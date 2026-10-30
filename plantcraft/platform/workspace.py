@@ -63,9 +63,9 @@ class Workspace(Store):
         self.installation = InstallationStore(db)
         self.notebooks = NotebookStore(db)
         self.groups = GroupStore(db, self.users)
-        # A group's conversation follows its members (messages <-> groups, owner 2026-10-23).
+        # A group's conversation follows its members (messages <-> groups).
         self.messages.groups = self.groups
-        # Every stored time in UTC (owner, 2026-10-23): rows from before are rewritten once.
+        # Every stored time in UTC: rows from before are rewritten once.
         if not self.migrated(UTC_TIMES):
             self.record_migration(UTC_TIMES, {"rewritten": normalize_times(db)})
 

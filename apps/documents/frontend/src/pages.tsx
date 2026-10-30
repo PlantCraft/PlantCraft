@@ -11,7 +11,7 @@ export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
   { to: "/", label: "Overview", icon: <LayoutDashboard />, match: (path) => path === "/" },
   {
     to: "/documents",
-    // The same name as the page's title (owner, 2026-10-28).
+    // The same name as the page's title.
     label: "Documents",
     icon: <FileText />,
     match: (path) => path === "/documents" || path.startsWith("/documents/") || path.startsWith("/assets/") || path.startsWith("/folders/"),
@@ -50,7 +50,7 @@ export function tourSteps(example: string | null = null): TourStep[] {
       body: tt("Every document you may read, by folder: folders say who reads and who changes them. An editor sends files here; each one is read in the background and linked to the assets its tags name."),
     },
   ];
-  // No step opens a document (owner, 2026-10-28: its text says little in a tour).
+  // No step opens a document (its text says little in a tour).
   steps.push(
     {
       path: example ? "/search?q=valve+stiction" : "/search",

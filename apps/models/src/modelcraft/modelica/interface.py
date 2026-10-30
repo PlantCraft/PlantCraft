@@ -95,7 +95,7 @@ def _text(raw: str) -> str:
     return " ".join(html.unescape(raw).split(" ")).strip()
 
 
-# The parts of a block's documentation the Blocks page shows (owner, 2026-10-27: as Analytics'
+# The parts of a block's documentation the Blocks page shows (as Analytics'
 # blocks): the text before the first heading is what it does; an ``<h4>`` names each other part.
 SECTIONS = {"how to read it": "reading", "formula": "formula"}
 

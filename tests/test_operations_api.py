@@ -110,7 +110,7 @@ def test_the_watch_tells_the_admins_as_system(world):
         sign_in(world.client(), "eng", "password-123").get("/api/operations/health").status_code
         == 403
     )
-    # Everyone sees whether each part runs (owner, 2026-10-25); never the disk or the backups.
+    # Everyone sees whether each part runs; never the disk or the backups.
     seen = sign_in(world.client(), "eng", "password-123").get("/api/operations/status")
     assert seen.status_code == 200
     status = seen.json()

@@ -1,4 +1,4 @@
-"""Desk: each person's day, the suite's first page (owner, 2026-10-23).
+"""Desk: each person's day, the suite's first page.
 
 Desk is an app of the suite served by the platform itself (docs/desk.md). What every app shares
 stays where it is: actions, conversations, groups, results and events. Desk keeps only what is
@@ -54,7 +54,7 @@ WINDOW_BEFORE = timedelta(days=92)
 WINDOW_AFTER = timedelta(days=400)
 COLORS = ("#6a3d9a", "#0a64b2", "#00726b", "#9c4419", "#80591a", "#4a5a6e")
 TRIAGE_STATES = ("done", "snoozed", "read", "unread")
-# What a person marks on a notification, a conversation or an assistant chat (owner, 2026-10-28):
+# What a person marks on a notification, a conversation or an assistant chat:
 # a favorite, or unread again until they open it. A public demo visit also keeps what it read
 # (``read``, ``conversation:<id>@<message id>``): the account's own read marks are every visitor's.
 MARKS = ("star", "unread", "read")
@@ -423,7 +423,7 @@ def suggest(
     now: datetime | None = None,
     limit: int = 8,
 ) -> list[dict[str, str]]:
-    """The day's suggestions, worst first, each with its reason (owner, 2026-10-23: suggestions,
+    """The day's suggestions, worst first, each with its reason (suggestions,
     not orders). ``actions`` are the open ones the person owns; ``followed`` the current results
     about assets they follow (with ``open_actions``); ``conversations`` theirs."""
 
@@ -1623,7 +1623,7 @@ class DeskStore(Store):
         return self.settings()
 
     def team_page(self) -> bool:
-        """Desk's Team page is hidden until an administrator shows it (owner, 2026-10-25: its use
+        """Desk's Team page is hidden until an administrator shows it (its use
         is not clear yet; nothing it reads is lost meanwhile)."""
 
         with self._lock, self._connect() as connection:

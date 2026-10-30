@@ -1,5 +1,5 @@
 /**
- * The trend on a point's page: one signal looked at closely (owner, 2026-10-24: "more options in
+ * The trend on a point's page: one signal looked at closely ("more options in
  * this chart, like a trend, for one signal"). Values as recorded or as averages, the min–max band
  * of each average, the archived values as dots, the compression's deviation around them, and the
  * same period a while earlier. Several signals together belong in View's Trends.
@@ -159,7 +159,7 @@ export function PointTrend({ point, signal, tag, period, onPeriod }: { point: Po
       <button type="button" className="button button-secondary button-small" onClick={download} disabled={!series?.t.length}><Download size={15} />{t("CSV")}</button>
     </div>
     {error && <ErrorBox text={error} />}
-    {figure ? (series!.t.length ? <Plot data={figure.data} layout={figure.layout} config={figure.config} style={{ width: "100%" }} useResizeHandler />
-      : <p className="muted empty">{t("No values in this range yet.")}</p>) : <Loading />}
+    {figure ? (series!.t.length ? <Plot data={figure.data} layout={figure.layout} config={figure.config} style={{ width: "100%" }} useResizeHandler />:
+      <p className="muted empty">{t("No values in this range yet.")}</p>) : <Loading />}
   </div>;
 }

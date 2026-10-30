@@ -6,11 +6,11 @@ import { Blocks, BookOpen, CalendarClock, LayoutDashboard, ListOrdered, Workflow
 /** The suite frame's navigation, in the suite's page order. */
 export const NAV = [
   { to: "/", label: "Overview", icon: createElement(LayoutDashboard, { size: 16 }), match: (path: string) => path === "/" },
-  // In the order of the work (owner, 2026-10-24): blocks make algorithms, schedules run them, Executions shows what they concluded.
+  // In the order of the work: blocks make algorithms, schedules run them, Executions shows what they concluded.
   { to: "/blocks", label: "Blocks", icon: createElement(Blocks, { size: 16 }), match: (path: string) => path.startsWith("/blocks") || path.startsWith("/methods") },
   { to: "/algorithms", label: "Algorithms", icon: createElement(Workflow, { size: 16 }), match: (path: string) => path.startsWith("/algorithms") },
   { to: "/schedules", label: "Monitors", icon: createElement(CalendarClock, { size: 16 }), match: (path: string) => path.startsWith("/schedules") },
-  // Executions and Results are one page (owner, 2026-10-24): schedule, then asset, then its history.
+  // Executions and Results are one page: schedule, then asset, then its history.
   { to: "/executions", label: "Results", icon: createElement(ListOrdered, { size: 16 }), match: (path: string) => ["/executions", "/results", "/runs", "/signals", "/loops", "/assets"].some((prefix) => path.startsWith(prefix)) },
 ];
 

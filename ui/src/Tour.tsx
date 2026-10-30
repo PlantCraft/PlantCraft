@@ -245,14 +245,14 @@ export function tourClosing(): TourStep {
   };
 }
 
-/** The step every app's tour has (owner, 2026-10-28): the assistant's menu on one page, open,
+/** The step every app's tour has: the assistant's menu on one page, open,
  * with a few things it does in this app (`items`, already translated with `tt()`); in a public
  * demo it says the model is off and where the team's chats are. `path` must be a page with the
  * assistant's title button. */
 export function assistantTourStep(path: string, items: string[] = []): TourStep {
   return {
     path,
-    // The menu itself, open, so the step shows this page's questions (owner, 2026-10-28: not the icon).
+    // The menu itself, open, so the step shows this page's questions (not the icon).
     // Without a menu (no model, outside a demo) the button itself.
     target: '.pc-title-assistant-menu, [data-tour="assistant-title"]:not([aria-haspopup])',
     title: tt("The assistant on this page"),
@@ -273,8 +273,8 @@ function AssistantStepBody({ items }: { items: string[] }) {
     <p>{tt("Every page has its own questions for the assistant: this menu lists the ones for this page.")}</p>
     {items.length > 0 && <><p>{tt("In this app it can, for instance:")}</p><ul>{items.map((item) => <li key={item}>{item}</li>)}</ul></>}
     <p>{demo
-      ? tt("It is off in this public demo: the Assistant button at the foot of the menu opens the team's chats, each with the steps it took.")
-      : tt("It reads only what you may see, shows each step it took, and changes nothing without you.")}</p>
+      ? tt("It is off in this public demo: the Assistant button at the foot of the menu opens the team's chats, each with the steps it took."):
+      tt("It reads only what you may see, shows each step it took, and changes nothing without you.")}</p>
   </>;
 }
 
@@ -292,7 +292,7 @@ function phoneMenu(element: Element) {
 
 /** A step's ``onShow`` that opens a quick panel (Messages, Notifications, the assistant) or a menu
  * (the apps, the user's) by its button, so the step shows what is in it, and closes it when the
- * step goes (owner, 2026-10-28). */
+ * step goes. */
 export function openPanel(button: string, panel: string): () => () => void {
   return () => {
     const find = () => document.querySelector<HTMLElement>(button);

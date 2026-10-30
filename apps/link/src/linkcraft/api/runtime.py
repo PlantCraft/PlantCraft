@@ -446,7 +446,7 @@ class Runtime(PlatformRuntime):
         return True
 
     def migrate_asset_schedules(self) -> int:
-        """Schedules and algorithms are independent (owner, 2026-10-24): a schedule chooses the
+        """Schedules and algorithms are independent: a schedule chooses the
         algorithm and its assets. The schedules Link once made by itself for each algorithm on
         assets (kind "cycle", every ``timing.cycle_seconds``) become ordinary schedules on the
         assets the algorithm named, at least every ``MIN_MIGRATED_MINUTES``. Returns how many

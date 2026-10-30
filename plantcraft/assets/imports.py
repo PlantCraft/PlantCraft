@@ -1,4 +1,4 @@
-"""What each asset import changed, so the last one can be undone (owner, 2026-10-24: importing a
+"""What each asset import changed, so the last one can be undone (importing a
 file into a plant already set up must never leave it worse with no way back).
 
 ``platform/assetfile.py`` writes one row per applied import: the assets it created, the values

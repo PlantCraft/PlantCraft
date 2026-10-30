@@ -56,7 +56,7 @@ function kindLabel(kind: string): string {
   return kind.replace(/_/g, " ");
 }
 
-/** An asset's Situation tab (owner, 2026-10-23): alarms, Link's diagnoses, models and actions
+/** An asset's Situation tab: alarms, Link's diagnoses, models and actions
  * of one asset, its signals and what is inside it, on one page, worst first. */
 export function AssetSituation({ assetId, onActions }: { assetId: string; onActions: () => void }) {
   const [data, setData] = useState<Situation | null>(null);
@@ -71,8 +71,8 @@ export function AssetSituation({ assetId, onActions }: { assetId: string; onActi
         {data.status && <Pill status={data.status} label={STATUS_LABELS[data.status] ?? data.status} />}
         <h2>{situationHeadline(data)}</h2>
         <p className="muted">{data.inside.total
-          ? t("What the suite's apps say about this asset, its signals and the {count} assets inside it.", { count: data.inside.total })
-          : t("What the suite's apps say about this asset and its signals.")}
+          ? t("What the suite's apps say about this asset, its signals and the {count} assets inside it.", { count: data.inside.total }):
+          t("What the suite's apps say about this asset and its signals.")}
           {data.inside.total > data.inside.included && ` ${t("The first {count} inside are included.", { count: data.inside.included })}`}</p>
       </div>
       <button type="button" className="button button-secondary button-small button-icon" title={t("Refresh")} aria-label={t("Refresh")} onClick={() => void load()}><RefreshCw /></button>

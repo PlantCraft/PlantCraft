@@ -1,7 +1,7 @@
 /**
- * Desk's first page, "Today" (owner, 2026-10-23): each person's day as widgets on the suite's
+ * Desk's first page, "Today": each person's day as widgets on the suite's
  * grid, the same board every Overview uses (WidgetBoard in @plantcraft/ui), arranged by each
- * person. At the top only the greeting, the date and the time (owner, 2026-10-24). Desk's widgets
+ * person. At the top only the greeting, the date and the time. Desk's widgets
  * (coming days, the month, the day's timeline, clocks, actions as a list or a board, notifications,
  * unread chats, My day's to-dos, a quick note, suggestions, followed assets, team), the platform's and
  * those each installed app publishes. Each widget has fixed sizes and draws what fits each one;
@@ -118,7 +118,7 @@ function snoozeDay(): string {
   return isoDay(addDays(new Date(), 1));
 }
 
-/** Messages' unread notifications (owner, 2026-10-24): alarms, runs and changes to the person's
+/** Messages' unread notifications: alarms, runs and changes to the person's
  * actions; one opens Messages over Desk, at its Notifications. */
 function NotificationsWidget({ rows }: { rows: number }) {
   const { data, error } = useEvery("notifications", () => collabApi.notifications(), []);

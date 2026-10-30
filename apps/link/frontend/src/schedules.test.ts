@@ -106,7 +106,7 @@ describe("schedules", () => {
   });
 });
 
-describe("a monitor's parameters (owner, 2026-10-27)", () => {
+describe("a monitor's parameters", () => {
   it("say where each value comes from: the monitor, then the algorithm, then the block", () => {
     expect(parameterSource(2, 3)).toBe("monitor");
     expect(parameterSource(2, undefined)).toBe("algorithm");

@@ -217,7 +217,7 @@ def asset_situation(
     rt: Runtime,
     inside: bool = True,
 ) -> dict[str, Any]:
-    """Everything the suite's apps say about one asset, on one page (owner, 2026-10-23): the
+    """Everything the suite's apps say about one asset, on one page: the
     results they published about it, its signals and (with ``inside``) the assets inside it,
     worst first and grouped by app (alarms, Link's diagnoses, models...); the latest events;
     the runs that covered it; the open actions about it."""

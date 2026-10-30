@@ -118,7 +118,7 @@ def test_a_data_read_failure_is_tried_again_then_fails_with_the_reason(tmp_path)
 
 
 def test_a_schedule_s_retries_wait_count_and_give_up_before_its_next_occurrence(tmp_path):
-    """A schedule says how its executions try again (owner, 2026-10-25, as Elipse EPM): how many
+    """A schedule says how its executions try again (as Elipse EPM): how many
     more tries, how far apart, and to give up when the next occurrence comes first."""
 
     jobs = _jobs(tmp_path)
@@ -543,7 +543,7 @@ def test_an_execution_says_how_many_tries_its_schedule_gives():
 
 def test_latest_finished_keeps_each_subjects_newest_ended_run(tmp_path):
     """The Overview's Monitors and Results read one row per subject straight from SQLite (it
-    decoded every run before: 4-12 s on the Mac mini, owner 2026-10-27)."""
+    decoded every run before: 4-12 s on the Mac mini)."""
 
     jobs = _jobs(tmp_path)
     schedule = _interval(jobs)

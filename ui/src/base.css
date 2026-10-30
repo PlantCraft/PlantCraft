@@ -71,7 +71,7 @@ button, input, select, textarea { font: inherit; }
 }
 
 /* Page heading and sections ------------------------------------------------------------ */
-/* The top of every page (owner, 2026-10-25, round 8): the title at the left and the page's buttons at
+/* The top of every page (round 8): the title at the left and the page's buttons at
    the right, in a band of one height, so the buttons sit at the same place on every page. Nothing
    above the title and nothing under it: the sidebar already says where the person is. Pages that
    still write a line above (.eyebrow, .breadcrumb) or under the title draw it no more; a line that
@@ -279,7 +279,7 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 .pc-follow-up-empty svg { flex: none; margin-top: 2px; }
 
 /* Forms and dialogs -------------------------------------------------------------------
-   One form layout for the suite (owner, 2026-10-24). Each field is its label above the control
+   One form layout for the suite. Each field is its label above the control
    and an optional line of help below (<small>); .form-grid sets fields two to a row, one when the
    form is narrower than about 500 px, and .field-span gives a field the whole row. A long form is
    cut in .form-section blocks: the section's title and one paragraph at the left, its fields at
@@ -409,7 +409,7 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 /* Overview widgets --------------------------------------------------------------------- */
 .pc-wg-head { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 10px; min-height: 28px; flex-wrap: wrap; }
 .pc-wg-hint { margin: 0 auto 0 0; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
-/* Customize is seldom used (owner, 2026-10-23): a quiet text button, not a primary action. */
+/* Customize is seldom used: a quiet text button, not a primary action. */
 .pc-wg-customize { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 0; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-3); font: inherit; font-size: var(--pc-fs-sm); cursor: pointer; }
 .pc-wg-customize:hover, .pc-wg-customize:focus-visible { background: var(--pc-surface-3); color: var(--pc-text); }
 .pc-wg-card { margin: 0; height: 100%; padding: 14px 16px; display: flex; flex-direction: column; overflow: hidden; }
@@ -626,7 +626,7 @@ a.pc-wg-square:hover, a.pc-wg-square:focus-visible, span.pc-wg-square:hover, spa
 /* The side panel over the page, on the right; the page stays usable beside it. */
 /* The quick panels (SidePanel.tsx, round 8): out from under the sidebar's edge, over the page. */
 .pc-drawer { position: fixed; top: 0; bottom: 0; left: var(--pcs-sidebar, 0px); z-index: calc(var(--pc-z-nav) - 1); width: min(760px, calc(100vw - var(--pcs-sidebar, 0px))); background: var(--pc-surface); border-right: 1px solid var(--pc-border-subtle); box-shadow: 20px 0 50px color-mix(in srgb, var(--pc-shadow-color, #000) 18%, transparent); display: flex; flex-direction: column; animation: pc-panel-in .2s cubic-bezier(.2, .8, .2, 1); }
-/* One width for every quick panel (owner, 2026-10-25); -wide is the older name of the same width. */
+/* One width for every quick panel; -wide is the older name of the same width. */
 .pc-side-panel-wide { width: min(760px, calc(100vw - var(--pcs-sidebar, 0px))); }
 /* Opened in place of another panel: it is already there, no slide-in. */
 .pc-side-panel-still { animation: none; }

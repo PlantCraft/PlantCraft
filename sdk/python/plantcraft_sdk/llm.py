@@ -1,4 +1,4 @@
-"""An app writes with a language model through PlantCraft (owner, 2026-10-25).
+"""An app writes with a language model through PlantCraft.
 
 The app declares each use in ``[[contributes.llm]]`` of its ``app.toml``
 (``plantcraft_sdk.contributes.LlmUse``); Setup › Language models lists it as

@@ -1,4 +1,4 @@
-/** The words of a search marked in a passage, as a search engine shows them (owner, 2026-10-27):
+/** The words of a search marked in a passage, as a search engine shows them:
  * the part of the passage around the first word found, with every word of the search in bold. */
 import type { ReactNode } from "react";
 

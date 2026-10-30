@@ -1,5 +1,5 @@
 /**
- * An object's versions in a tab of their own (owner, 2026-10-25, round 9): Link's blocks and
+ * An object's versions in a tab of their own (round 9): Link's blocks and
  * algorithms, Models' blocks and models. On top, what the object is ("About": who owns it, its
  * tags, who made it), then every version, newest first, each with its name, what changed, who
  * saved it and when. Opening a version shows it in the other tabs (the page decides how).
@@ -47,8 +47,8 @@ export function VersionsTab({ about, versions, shown, onOpen, footer, label, act
     {about}
     <section className="panel pc-versions" aria-label={label ?? t("Versions")}>
       <div className="panel-header"><div><h2>{label ?? t("Versions")}</h2><p>{t("Newest first. Saving a change makes a new version; the older ones stay to read and compare.")}</p></div>{actions && <div className="row-actions pc-versions-actions">{actions}</div>}</div>
-      {versions === null ? <p className="muted">{t("Loading…")}</p> : !versions.length ? <p className="muted">{t("No version saved yet.")}</p>
-        : <ol className="pc-version-list">{versions.map((item) => {
+      {versions === null ? <p className="muted">{t("Loading…")}</p> : !versions.length ? <p className="muted">{t("No version saved yet.")}</p>:
+        <ol className="pc-version-list">{versions.map((item) => {
           const inner = <>
             <span className="pc-version-head">
               <b className="pc-num">{t("Version {number}", { number: item.number })}</b>
@@ -61,8 +61,8 @@ export function VersionsTab({ about, versions, shown, onOpen, footer, label, act
           </>;
           return <li key={item.number} className={item.number === shown ? "active" : undefined}>
             {onOpen
-              ? <button type="button" className="pc-version" aria-pressed={item.number === shown} onClick={() => onOpen(item.number)}>{inner}</button>
-              : <div className="pc-version">{inner}</div>}
+              ? <button type="button" className="pc-version" aria-pressed={item.number === shown} onClick={() => onOpen(item.number)}>{inner}</button>:
+              <div className="pc-version">{inner}</div>}
           </li>;
         })}</ol>}
       {footer && <p className="muted small">{footer}</p>}

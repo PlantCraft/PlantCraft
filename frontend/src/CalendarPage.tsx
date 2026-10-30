@@ -1,5 +1,5 @@
 /**
- * Desk › Calendar (owner, 2026-10-23; round 7 2026-10-24): everything with a date in one
+ * Desk › Calendar (round 7 2026-10-24): everything with a date in one
  * calendar, month, week, day or list (FullCalendar, MIT): the person's own events (a click or a
  * drag on the calendar makes one; they move, stretch and repeat), their actions and their
  * groups' by due date (dragging one changes its due date), their to-dos (a repeated one on each day ahead), alarms
@@ -252,8 +252,8 @@ function AddCalendar({ links, onDone, onClose }: { links: boolean; onDone: () =>
       </> : <>
         <label>{t("Link (https:// or webcal://)")}<input id="dk-cal-url" value={url} maxLength={2000} onChange={(event) => setUrl(event.target.value)} placeholder="https://outlook.office365.com/owa/calendar/…/calendar.ics" /></label>
         <p className="muted small">{links
-          ? t("In Outlook: Settings › Calendar › Shared calendars › Publish a calendar, then copy the ICS link. In Google Calendar: the calendar's settings › Secret address in iCal format. It is read again every 15 minutes.")
-          : t("Calendar links are off: PlantCraft may run with no internet. An administrator turns them on in Settings › Calendars and names the servers allowed. Until then, import an .ics file.")}</p>
+          ? t("In Outlook: Settings › Calendar › Shared calendars › Publish a calendar, then copy the ICS link. In Google Calendar: the calendar's settings › Secret address in iCal format. It is read again every 15 minutes."):
+          t("Calendar links are off: PlantCraft may run with no internet. An administrator turns them on in Settings › Calendars and names the servers allowed. Until then, import an .ics file.")}</p>
       </>}
       {error && <p className="form-error">{error}</p>}
       <footer>
