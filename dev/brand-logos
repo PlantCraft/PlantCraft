@@ -26,9 +26,13 @@ GAP = 11.0
 INK = {"light": "#1d1d1f", "dark": "#f5f5f7"}
 
 
-def mark_inner() -> str:
+TILE = {"light": "#2e5a88", "dark": "#3d78b6"}  # Steel Blue; the dark value holds on black
+
+
+def mark_inner(theme: str = "light") -> str:
     svg = (ROOT / "docs/images/apps/processcraft.svg").read_text()
-    return re.sub(r"^.*?</title>|</svg>\s*$", "", svg, flags=re.S)
+    inner = re.sub(r"^.*?</title>|</svg>\s*$", "", svg, flags=re.S)
+    return inner.replace(f'fill="{TILE["light"]}"', f'fill="{TILE[theme]}"', 1)
 
 
 def outline(
@@ -53,7 +57,7 @@ def lockup(theme: str) -> str:
     width = round(end + 1)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} 32" width="{width * 2}" height="64" '
-        f'role="img" aria-label="PlantCraft"><title>PlantCraft</title>{mark_inner()}'
+        f'role="img" aria-label="PlantCraft"><title>PlantCraft</title>{mark_inner(theme)}'
         f'<path fill="{INK[theme]}" d="{plant}{craft}"/></svg>\n'
     )
 
@@ -62,10 +66,10 @@ def social() -> str:
     """The link preview: the lockup, one line on what the suite is, and the app family."""
     inner = mark_inner()
     apps = ROOT / "docs/images/apps"
-    ids = ["desk", "histcraft", "linkcraft", "dashcraft", "alarmcraft", "modelcraft", "simcraft"]
+    ids = ["desk", "histcraft", "linkcraft", "dashcraft", "alarmcraft", "modelcraft", "doccraft"]
     plant, x = outline("Plant", 400, 240, size=92, baseline=270)
     craft, _ = outline("Craft", 600, x, size=92, baseline=270)
-    line, _ = outline("An open suite of industrial software for process engineers", 400, 96, size=34, baseline=362)
+    line, _ = outline("The open suite for process plants", 400, 96, size=34, baseline=362)
     tiles = "".join(
         f'<g transform="translate({96 + i * 92} 440) scale(2.25)">'
         + re.sub(r"^.*?</title>|</svg>\s*$", "", (apps / f"{app}.svg").read_text(), flags=re.S)

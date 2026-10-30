@@ -26,9 +26,11 @@ colour, font or radius.
 
 <img src="images/logo.svg" alt="PlantCraft logo" width="300">
 
-The mark is a control loop the way an engineer draws one in ISA-5.1: a
-**control valve** (the bowtie) on a **process line**, driven by an
-**instrument bubble**. It says what the product does, and it reads at 16 px.
+The mark is the letters **P** and **C** drawn as a **control valve** on a **process line**
+(2026-10-30): the bowl of the P is the valve triangle, the line runs into the P and out of
+the open C, the way the valve sits on a P&ID. It reads as the name and as plant equipment
+at once, and it holds at 16 px. Ready-made PNGs, the LinkedIn avatar and banner are in
+[`brand/`](../brand/).
 
 | File | Use |
 | --- | --- |
@@ -45,7 +47,7 @@ the name as outlines and need no font; `dev/brand-logos` writes them from
 
 - Keep clear space around the lockup equal to half the mark's height.
 - Minimum size: mark 16 px; lockup 96 px wide.
-- The tile is always PlantCraft Blue `#0A66D0` with a white glyph. On a single-colour
+- The tile is always Steel Blue (`#2E5A88`; `#3D78B6` on dark backgrounds) with a white glyph. On a single-colour
   medium (engraving, fax, one-colour print) use the glyph alone in black or white.
 - Do not recolour the tile, add gradients, shadows, highlights or outlines,
   rotate the mark, or set the name in another typeface.
@@ -117,14 +119,18 @@ app's mark and nothing else.
 
 | App | Machine id | Colour | Light | Dark | Glyph |
 | --- | --- | --- | --- | --- | --- |
-| PlantCraft | `processcraft` (app id) | PlantCraft Blue | `#0A66D0` | `#1F74D8` | Control valve on a line, instrument bubble |
-| Desk | `desk` | Logbook Plum | `#6A3D9A` | `#7B4CAD` | Calendar page with a check |
-| Link | `linkcraft` | Loop Teal | `#00726B` | `#08857D` | One block in a feedback loop |
-| View | `dashcraft` | Chart Indigo | `#3442A6` | `#3F52B8` | Trend on a chart frame under a dashed limit |
-| Simulator | `simcraft` | Equipment Olive | `#56661A` | `#647722` | Column with trays, feed and product lines |
-| Alarms | `alarmcraft` | Annunciator Wine | `#9C2B4F` | `#B0395F` | Annunciator bell over a dashed limit line |
-| Historian | `histcraft` | Archive Bronze | `#80591A` | `#926722` | Data cylinder on a time axis |
-| Models | `modelcraft` | Copper | `#9C4419` | `#AE5023` | Transfer block with a step response, input and output |
+| PlantCraft | `processcraft` (app id) | Steel Blue | `#2E5A88` | `#3D78B6` | P and C as a control valve on a line |
+| Desk | `desk` | Logbook Plum | `#5B3A7E` | `#8B62B7` | Console with the day's checklist |
+| Analytics | `linkcraft` | Loop Teal | `#1B5753` | `#28807A` | Two blocks connected |
+| View | `dashcraft` | Chart Indigo | `#333D85` | `#636EC3` | Trend on a chart frame under a dashed limit |
+| Alarms | `alarmcraft` | Annunciator Wine | `#882F4C` | `#C14C72` | Bell |
+| Historian | `histcraft` | Archive Bronze | `#755625` | `#946D2F` | Data cylinder |
+| Models | `modelcraft` | Copper | `#8A4A2B` | `#B15F37` | Distillation column with trays, feed, top and bottom lines |
+| Documents | `doccraft` | Manual Slate | `#415A6F` | `#577894` | Page with a folded corner and lines of text |
+| Simulator | `simcraft` | Equipment Olive | `#536020` | `#6A7B29` | Column (the plant simulator; not shown in the family) |
+
+Tile colours were toned toward Steel Blue on 2026-10-30: same hues, less saturation. Dark values
+are the lightest that keep 4.5:1 under the white glyph, so tiles also hold on black.
 
 ### Glyph grammar
 
@@ -151,7 +157,7 @@ app's mark and nothing else.
 ## Colour
 
 Colour follows the high-performance HMI approach (ISA-101): surfaces are calm
-neutral greys; **PlantCraft Blue** marks what you can act on; the status hues
+neutral greys; **Steel Blue** marks what you can act on; the status hues
 are **reserved for state** and never used for decoration, so an operator's eye
 goes straight to the abnormal.
 
@@ -159,13 +165,13 @@ goes straight to the abnormal.
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `--pc-primary` | `#0A66D0` | `#1F74D8` | Buttons, selection, links |
-| `--pc-primary-hover` | `#0853AB` | `#3385EE` | Hover and pressed |
-| `--pc-primary-text` | `#0A5FC2` | `#6AA8FF` | Links and accents as text |
-| `--pc-primary-soft` | `#E8F1FC` | `#10243F` | Selected rows, active tabs |
-| `--pc-focus` | `#2477DC` | `#3D8BFD` | Focus outline |
+| `--pc-primary` | `#2E5A88` | `#3D78B6` | Buttons, selection, links |
+| `--pc-primary-hover` | `#264B71` | `#4F88C2` | Hover and pressed |
+| `--pc-primary-text` | `#2B5582` | `#7FA6D1` | Links and accents as text |
+| `--pc-primary-soft` | `#E8EEF5` | `#1C2A3B` | Selected rows, active tabs |
+| `--pc-focus` | `#44729F` | `#7FA6D1` | Focus outline |
 | `--pc-chrome-bg` | `#1C1C1E` | `#1C1C1E` | Sidebar (graphite in both themes) |
-| `--pc-chrome-accent` | `#3D8BFD` | `#3D8BFD` | Current page and app in the sidebar |
+| `--pc-chrome-accent` | `#7FA6D1` | `#7FA6D1` | Current page and app in the sidebar |
 
 Blue is the one hue a control system does not spend on alarms (red, amber,
 yellow) or running state (green), so the brand never competes with a process

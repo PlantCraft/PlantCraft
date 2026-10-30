@@ -7,6 +7,18 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Changed
+
+- **New look: the PC valve logo and Steel Blue (owner, 2026-10-30).** The mark is now the
+  letters P and C drawn as a control valve on a process line; the brand colour moves from
+  `#0A66D0` to Steel Blue `#2E5A88` (`#3D78B6` on dark), across buttons, links, selection, focus
+  and the sidebar accent. App tiles keep their hues, toned toward the new blue, with dark values
+  that hold on black. New app marks: Analytics (two connected blocks), Models (a distillation
+  column), Desk (console with the day's checklist), Alarms (a bell without the limit line),
+  Historian (the data cylinder without the time axis), Documents (a page without the
+  magnifier). The family image no longer shows the plant simulator, which is not an app. New
+  [`brand/`](brand/) folder with PNG logos and the LinkedIn avatar and banner.
+
 ### Added
 
 - **The public demo starts the same for every visitor.** A visit starts

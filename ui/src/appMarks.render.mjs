@@ -10,17 +10,20 @@ mkdirSync(out, { recursive: true });
 
 for (const id of APP_IDS) writeFileSync(join(out, `${id}.svg`), `${markSvg(id, "light", 64)}\n`);
 
+// The family image shows the apps people open; the plant simulator is not one of them.
+const FAMILY = APP_IDS.filter((id) => id !== "simcraft");
+
 function family(theme) {
   const cell = 132;
   const tile = 72;
   const pad = 32;
-  const width = pad * 2 + cell * APP_IDS.length;
+  const width = pad * 2 + cell * FAMILY.length;
   const height = 184;
   const bg = theme === "dark" ? "#000000" : "#f5f5f7";
   const ink = theme === "dark" ? "#f5f5f7" : "#1d1d1f";
   const sub = theme === "dark" ? "#98989d" : "#6e6e73";
   const font = "Inter, system-ui, -apple-system, Segoe UI, sans-serif";
-  const items = APP_IDS.map((id, i) => {
+  const items = FAMILY.map((id, i) => {
     const x = pad + i * cell + (cell - tile) / 2;
     const cx = pad + i * cell + cell / 2;
     const scale = tile / 32;
