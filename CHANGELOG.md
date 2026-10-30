@@ -5,11 +5,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 `deploy/bundle.sh` joins this file with every module's `CHANGELOG.md` into the bundle's
 `RELEASE-NOTES.md` (`docs/operations.md`, section 3).
 
-## [Unreleased]
+## [0.5.1] - 2026-10-30
 
 ### Changed
 
-- **New look: the PC valve logo and Steel Blue (owner, 2026-10-30).** The mark is now the
+- **New look: the PC valve logo and Steel Blue.** The mark is now the
   letters P and C drawn as a control valve on a process line; the brand colour moves from
   `#0A66D0` to Steel Blue `#2E5A88` (`#3D78B6` on dark), across buttons, links, selection, focus
   and the sidebar accent. App tiles keep their hues, toned toward the new blue, with dark values
@@ -50,6 +50,21 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   images `python -m processcraft.<module>` (`plantcraft/legacy.py`), so an older `install.sh`, a
   rollback to 0.5.0 and the Backups page keep driving every version's installer image. Image and
   service names, data folders, the app id, cookies and stored ids are unchanged.
+
+- **Contributing is one clear path.** The README leads with how the suite fits together and how
+  to contribute (commands moved to `docs/development.md`). Issue forms for a bug, an idea, a
+  question and a change to the core; `.github/labels.yml` is the label set a workflow keeps on the
+  repository; `docs/maintainers.md` is how issues and pull requests are answered, and a Claude
+  Code skill (`.claude/skills/review-contribution`) checks whether a pull request fits. The
+  agent rules and module pages are written for any contributor: no dated notes, no internal
+  codes, and STATUS and devlog pages start fresh (the CHANGELOG is the record).
+
+- **Analytics says what it is:** scheduled monitors, diagnostics and KPIs for signals and control
+  loops, in its card, the guides and the site. The name stays.
+
+- **Turn the assistant on in four steps.** `docs/assistant.md` opens with them (it is off until an
+  administrator connects a model), linked from the README and the install guide; the public
+  demo's assistant says so too.
 
 - **Architecture in pictures and the zones of a contribution.** `docs/architecture.md` opens with
   the suite in one diagram, how the apps talk (one sticky valve) and what is core and what is open;
