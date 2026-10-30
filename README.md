@@ -122,7 +122,7 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md). Everyone in the proje
 
 PlantCraft is in alpha. If it helps you, ⭐ **star the repository** and tell us what you run it on.
 
-News and release notes: [X](https://x.com/plantcraft_io) · [YouTube](https://www.youtube.com/@plantcraft_io) · [plantcraft.io](https://plantcraft.io).
+News and release notes: [LinkedIn](https://www.linkedin.com/company/plantcraft_io) · [X](https://x.com/plantcraft_io) · [YouTube](https://www.youtube.com/@plantcraft_io) · [plantcraft.io](https://plantcraft.io).
 
 
 ## License
