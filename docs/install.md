@@ -84,6 +84,10 @@ Compare the key on the first line with the one on the release page (OpenSSH fing
 `SHA256:9l/yDgR8/Pzel1pncxrXz2IGCIhFirKpDT78tO49fG8`). If either check fails, do not use the
 bundle.
 
+On a first install, `install.sh` checks the signature again and then warns "the key above came
+with this bundle: compare its key id…". That is expected: it is the same key you just compared
+above.
+
 ## Linux
 
 The supported platform for a plant: Ubuntu 22.04+, Debian 12+, RHEL, Rocky or Alma 9+, at
@@ -119,8 +123,9 @@ sleeps, and Docker Desktop runs the containers inside a virtual machine.
    ./install.sh --all-apps --demo --prefix ~/PlantCraft
    ```
 
-4. Open https://localhost and sign in as `admin` with the password the installer printed at
-   the end (it is shown once, and kept in `~/PlantCraft/data/initial-admin-password`). Your
+4. Open the address the installer printed at the end (`https://<your-mac>.local/`: the
+   certificate names the Mac, so `https://localhost` is refused) and sign in as `admin` with the
+   password it printed (it is shown once, and kept in `~/PlantCraft/data/initial-admin-password`). Your
    browser warns about the local certificate authority the first time: trust
    `~/PlantCraft/local-ca-root.crt` in Keychain Access, or give the proxy your own certificate
    ([install-offline.md](install-offline.md), section 6).

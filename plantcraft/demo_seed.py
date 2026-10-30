@@ -4599,7 +4599,8 @@ def run(suite: Suite) -> int:
         log(f"guides by role: {guide_links(workspace, suite, admin, links)} pages they open")
     log(f"links: {len(links.refs)} documents, dashboards, reports, chats, actions and talks")
     log(
-        f"done. Visitors sign in as '{VISITOR}' (read-only)"
+        f"done. The read-only visitor account is '{VISITOR}' (the sign-in page offers it"
+        " only on a public demo, install.sh --public-demo)"
         + (f"; failed: {', '.join(failed)}" if failed else "")
     )
     return 1 if failed else 0
