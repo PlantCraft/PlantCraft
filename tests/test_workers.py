@@ -17,6 +17,7 @@ import pytest
 
 from plantcraft.db import Database, Store
 from plantcraft.ops.workers import Leader, first_only, startup, worker_count
+from plantcraft_sdk.server.store import journal_mode
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -30,6 +31,18 @@ def test_worker_count_follows_the_data_layer():
     assert worker_count({"PLANTCRAFT_WORKERS": "99"}, cpus=12) == 8
     assert worker_count({"PLANTCRAFT_WORKERS": "0"}, cpus=12) == 1
     assert worker_count({"PLANTCRAFT_WORKERS": "many"}, cpus=12) == 1
+
+
+def test_one_process_where_sqlite_cannot_use_wal(tmp_path, monkeypatch):
+    # A Docker Desktop bind mount (or a share): locks do not hold between processes there.
+    histcraft = {"HISTCRAFT_URL": "http://h/hist", "PLANTCRAFT_WORKERS": "4"}
+    journal_mode.cache_clear()
+    monkeypatch.setenv("PLANTCRAFT_SQLITE_JOURNAL", "truncate")
+    assert worker_count(histcraft, cpus=12, folder=tmp_path) == 1
+    journal_mode.cache_clear()
+    monkeypatch.setenv("PLANTCRAFT_SQLITE_JOURNAL", "wal")
+    assert worker_count(histcraft, cpus=12, folder=tmp_path) == 4
+    journal_mode.cache_clear()
 
 
 def test_one_leader_at_a_time(tmp_path):

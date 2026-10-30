@@ -1,7 +1,7 @@
 # Same checks as CI. `make ci` must be green before every push (AGENTS.md, section 4).
 .PHONY: ci deps lint format test catalog build serve loops image smoke lock
 
-PYTHON ?= python
+PYTHON ?= $(shell command -v python >/dev/null 2>&1 && echo python || echo python3)
 
 ci: deps lint catalog test build
 

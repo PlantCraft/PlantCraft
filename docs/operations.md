@@ -342,6 +342,9 @@ review). PlantCraft therefore starts `PLANTCRAFT_WORKERS` processes (`python -m
 plantcraft.api.serve`, the image's command; `plantcraft --workers N` locally). `auto`, the
 default, is 2 to 4 (the CPUs, at most 4) when Historian is the data layer (`HISTCRAFT_URL`), and 1
 while PlantCraft reads plant sources itself, because that history cache lives in the process.
+Always 1 when the data folder is where SQLite cannot use WAL (a Docker Desktop bind mount on
+macOS or Windows, a network share, FUSE), whatever `PLANTCRAFT_WORKERS` says: file locks there do
+not hold between processes, and several of them writing a new database corrupted it.
 What the processes share, and how (`plantcraft.ops.workers`):
 
 | Shared | How |

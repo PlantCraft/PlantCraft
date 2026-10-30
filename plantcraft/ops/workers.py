@@ -25,6 +25,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
+from plantcraft_sdk.server.store import journal_mode
+
 LOGGER = logging.getLogger(__name__)
 MAX_WORKERS = 8
 # A process waiting to lead asks again this often.
@@ -36,15 +38,26 @@ except ImportError:  # pragma: no cover - Windows
     fcntl = None  # type: ignore[assignment]
 
 
-def worker_count(environ: dict[str, str] | None = None, cpus: int | None = None) -> int:
+def worker_count(
+    environ: dict[str, str] | None = None,
+    cpus: int | None = None,
+    folder: str | Path | None = None,
+) -> int:
     """How many server processes to start.
 
     ``PLANTCRAFT_WORKERS`` is a number (1 to 8) or ``auto`` (the default): 1 while PlantCraft
     reads plant sources itself (its history cache lives in the process), else the CPUs up to 4,
     at least 2.
+
+    Always 1 when the database's ``folder`` is where SQLite cannot use WAL (a Docker Desktop
+    bind mount, a share, FUSE: ``plantcraft_sdk.server.store.journal_mode``): file locks there do
+    not hold between processes, and several writers corrupted a new database (macOS install
+    test, 0.5.1).
     """
 
     environ = os.environ if environ is None else environ
+    if folder is not None and journal_mode(Path(folder)) != "WAL":
+        return 1
     value = (environ.get("PLANTCRAFT_WORKERS") or "auto").strip().lower()
     if value != "auto":
         try:

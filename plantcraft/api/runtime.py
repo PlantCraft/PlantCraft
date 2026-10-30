@@ -47,6 +47,24 @@ LOGGER = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SCENARIO = PROJECT_ROOT / "scenarios" / "generic_demo.json"
+
+
+def scenario_from_environment() -> DashboardScenario:
+    """The scenario ``PLANTCRAFT_SCENARIO`` names, with ``PLANTCRAFT_DATA_FILE`` applied."""
+
+    return load_scenario(
+        Path(os.environ.get("PLANTCRAFT_SCENARIO", str(DEFAULT_SCENARIO))),
+        project_root=PROJECT_ROOT,
+        data_override=os.environ.get("PLANTCRAFT_DATA_FILE") or None,
+    )
+
+
+def data_folder() -> Path:
+    """The folder of the installation's database (``startup``, ``worker_count``)."""
+
+    return Path(scenario_from_environment().storage.sqlite_path).parent
+
+
 # History people and apps usually open first; filled in the background at start.
 PREWARM_HOURS = 48
 # How often the leader gives back the tasks of workers that stopped answering.
@@ -261,12 +279,7 @@ class ApiRuntime:
 
     @classmethod
     def from_environment(cls) -> ApiRuntime:
-        scenario_path = Path(os.environ.get("PLANTCRAFT_SCENARIO", str(DEFAULT_SCENARIO)))
-        scenario = load_scenario(
-            scenario_path,
-            project_root=PROJECT_ROOT,
-            data_override=os.environ.get("PLANTCRAFT_DATA_FILE") or None,
-        )
+        scenario = scenario_from_environment()
         # Server processes start together: one at a time fills in what a first start writes.
         with startup(Path(scenario.storage.sqlite_path).parent):
             return cls(scenario, AuthConfig.from_environment())

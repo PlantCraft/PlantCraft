@@ -243,13 +243,14 @@ def main(argv: list[str] | None = None) -> int:
         threading.Timer(1.2, webbrowser.open, args=(f"http://{args.host}:{args.port}",)).start()
     import uvicorn
 
+    from plantcraft.api.runtime import data_folder
     from plantcraft.ops.workers import worker_count
 
     uvicorn.run(
         "plantcraft.api.app:app",
         host=args.host,
         port=args.port,
-        workers=args.workers if args.workers else worker_count(),
+        workers=args.workers if args.workers else worker_count(folder=data_folder()),
         proxy_headers=True,
         # The suite's JSON logs (plantcraft_sdk.server.logs); requests are logged by the app.
         log_config=None,

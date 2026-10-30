@@ -73,6 +73,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **A new install on macOS or Windows starts.** On a Docker Desktop bind mount several
+  PlantCraft processes wrote a new database at once and corrupted it ("database disk image is
+  malformed"): file locks do not hold between processes there. PlantCraft now runs one process
+  wherever SQLite cannot use WAL, whatever `PLANTCRAFT_WORKERS` says. Building a release works
+  with `python3` only (macOS) in every app's Makefile too.
+
 - **View no longer runs out of memory with many viewers.** Its short cache kept expired
   diagram data until it held 4,096 entries; on the public demo View reached its 2 GiB limit and
   was stopped (2026-10-29). Expired data now leaves at once, and viewers asking for the same
