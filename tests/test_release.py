@@ -72,6 +72,37 @@ def test_versions_order_like_semver():
         release.version_key("latest")
 
 
+def _install_sh_version_ge(newer: str, older: str) -> bool:
+    """install.sh's own ``version_ge``, run by bash on its own."""
+
+    script = Path(__file__).resolve().parents[1] / "deploy" / "install.sh"
+    text = script.read_text(encoding="utf-8")
+    start = text.index("version_ge() {")
+    body = text[start : text.index("\n}\n", start) + 3]
+    done = subprocess.run(
+        ["bash", "-c", f'{body}\nversion_ge "$1" "$2"', "-", newer, older], check=False
+    )
+    return done.returncode == 0
+
+
+@pytest.mark.parametrize(
+    "a,b",
+    [
+        ("0.5.1", "0.5.1-rc3"),
+        ("0.5.1-rc3", "0.5.1-rc2"),
+        ("0.5.1-rc.10", "0.5.1-rc.9"),
+        ("0.6.0-rc1", "0.5.1"),
+        ("0.10.0", "0.9.9"),
+        ("29.9.2", "24.0"),
+    ],
+)
+def test_install_sh_orders_versions_as_the_release_check_does(a, b):
+    assert _install_sh_version_ge(a, b) and not _install_sh_version_ge(b, a)
+    assert _install_sh_version_ge(a, a)
+    if a in ("0.5.1", "0.6.0-rc1", "0.10.0"):  # the suite's own versions
+        assert release.version_key(a) > release.version_key(b)
+
+
 def test_the_changelog_entry_of_a_version():
     assert release.changelog_entry(CHANGELOG, "0.2.0") == "### Added\n\n- Backups."
     assert release.changelog_entry(CHANGELOG, "0.1.0") == "- First."

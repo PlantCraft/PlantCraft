@@ -171,7 +171,19 @@ confirm() {
 }
 
 # True when version $1 >= version $2.
-version_ge() { [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -n 1)" = "$2" ]; }
+# version_ge A B: A is B or newer, as SemVer orders them (plantcraft/apps/release.py, version_key):
+# a release candidate comes before its release (0.5.1-rc3 < 0.5.1), which sort -V alone reverses.
+version_ge() {
+    local a="${1%%+*}" b="${2%%+*}"
+    local core_a="${a%%-*}" core_b="${b%%-*}"
+    if [ "$core_a" != "$core_b" ]; then
+        [ "$(printf '%s\n%s\n' "$core_b" "$core_a" | sort -V | head -n 1)" = "$core_b" ]
+        return
+    fi
+    [ "$a" != "$core_a" ] || return 0 # A is the release itself
+    [ "$b" != "$core_b" ] || return 1 # B is the release, A one of its candidates
+    [ "$(printf '%s\n%s\n' "${b#*-}" "${a#*-}" | sort -V | head -n 1)" = "${b#*-}" ]
+}
 
 check_docker() {
     command -v docker >/dev/null 2>&1 || die "Docker is not installed (docs/install-offline.md, section 1)."
@@ -715,6 +727,20 @@ prepare_data() {
     "
 }
 
+# The containers of an installation already here, removed (data, settings, images and volumes
+# stay) with the compose files that made them, before the new ones are copied. A container kept
+# from an earlier run can hold its name while `up` makes the new one ("already in use"), seen
+# when the same version is installed again with other image tags.
+remove_containers() {
+    stack_exists || return 0
+    log "Removing the current containers (data, settings and images stay)"
+    local out
+    out="$(compose down --remove-orphans 2>&1)" || {
+        printf '%s\n' "$out" >&2
+        die "the current containers could not be removed (the reason is above). Data and settings are unchanged."
+    }
+}
+
 start_stack() {
     log "Starting the suite and waiting for every container to be healthy (up to ${WAIT_SECONDS}s)"
     # The proxy reads certs/ when it starts: recreate it so that a new certificate takes effect.
@@ -874,6 +900,7 @@ do_install() {
         if [ "$UPDATE_APPLYING" = 0 ]; then check_signature "$version"; fi
     fi
     docker image inspect "processcraft:$version" >/dev/null 2>&1 || die "image processcraft:$version is not loaded."
+    remove_containers
     copy_files
     set_file_modes
     write_env "$version" "$plant_version"

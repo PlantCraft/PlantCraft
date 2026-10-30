@@ -5,6 +5,18 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 `deploy/bundle.sh` joins this file with every module's `CHANGELOG.md` into the bundle's
 `RELEASE-NOTES.md` (`docs/operations.md`, section 3).
 
+## [Unreleased]
+
+### Fixed
+
+- **Installing again, or a release after its candidates, works without a manual step.**
+  `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the
+  update from a release candidate to its release was refused as going back; versions now order
+  as the release check does (`0.5.1-rc3` < `0.5.1`). Before starting the containers of a new or
+  repeated install, `install.sh` removes the ones already there (data, settings, images and
+  backups stay), so a container left from an earlier run can no longer hold its name
+  ("already in use") and need `docker compose down` by hand.
+
 ## [0.5.1] - 2026-10-30
 
 ### Changed

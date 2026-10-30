@@ -80,6 +80,8 @@ class Reader:
     data_cache: TtlCache | None = None
     meta_cache: TtlCache | None = None
     clock: Callable[[], datetime] = field(default=_utc_now)
+    # Answers this request already read in one batch (``results_of``), by ``result``'s key.
+    known: dict[tuple[str, str], Any] = field(default_factory=dict)
 
     def _cached(self, cache: TtlCache | None, key: tuple, load: Callable[[], Any]) -> Any:
         return cache.get(key, load) if cache is not None else load()
@@ -128,12 +130,48 @@ class Reader:
     def result(self, subject: str, kind: str) -> dict[str, Any] | None:
         """The latest result of ``kind`` (``<app>.<name>``) about ``subject``, or None."""
 
+        if (subject, kind) in self.known:
+            return self.known[(subject, kind)]
         rows = self._cached(
             self.data_cache,
             ("result", subject, kind),
             lambda: self.client.results([subject], kind=kind),
         )
         return rows[0] if rows else None
+
+    def results_of(self, subjects: list[str], kind: str) -> None:
+        """The latest ``kind`` about many subjects in one request, for ``result`` to answer from;
+        a subject the answer does not name is asked on its own later."""
+
+        wanted = list(dict.fromkeys(subjects))
+        rows = self._cached(
+            self.data_cache,
+            ("results", tuple(wanted), kind),
+            lambda: list(self.client.results(wanted, kind=kind)),
+        )
+        for row in rows:
+            if row.get("subject") in wanted:
+                self.known[(row["subject"], kind)] = row
+
+    def recent(self, signal_ids: list[str], seconds: int) -> dict[str, dict[str, Any]]:
+        """Each signal's newest point of the last ``seconds``, from one raw batch read: what
+        ``value(..., "last", ...)`` answers one signal at a time. A signal with no point in
+        that time, or a failed one, is left out."""
+
+        end = self.clock()
+        batch = self._cached(
+            self.data_cache,
+            ("recent", tuple(signal_ids), seconds),
+            lambda: self.client.series_many(
+                signal_ids, end - timedelta(seconds=seconds), end, None
+            ),
+        )
+        found: dict[str, dict[str, Any]] = {}
+        for item in batch.get("series") or []:
+            stamps, values = item.get("t") or [], item.get("v") or []
+            if stamps and values and values[-1] is not None:
+                found[item["signal"]] = {"value": values[-1], "at": stamps[-1]}
+        return found
 
     def events(self, kind: str, limit: int) -> list[dict[str, Any]]:
         """The latest ``limit`` events of ``kind`` (oldest first, as API v1 answers)."""
@@ -441,6 +479,15 @@ def _resolve_derived(
         )
     meta = {**found, "kind": found.get("kind") or "number"}
     return Resolved(label, str(found["id"]), meta, asset=asset_id)
+
+
+def result_subject(item: Any, context: str | None = None) -> str | None:
+    """The subject ``read_result`` asks about for ``item``: its signal, else its asset."""
+
+    if item.signal_id is not None:
+        return signal_ref(item.signal_id)
+    asset_id = context if item.asset_id == CONTEXT else item.asset_id
+    return asset_ref(asset_id) if asset_id else None
 
 
 def read_result(
