@@ -263,5 +263,7 @@
     document.addEventListener("keydown", function (ev) {
       if (ev.key === "Escape" && !panel.hidden) close();
     });
+    // plantcraft.io/#talk (the demo's "Talk to us") opens the contact form at once.
+    if (location.hash === "#talk") open("contact");
   });
 })();

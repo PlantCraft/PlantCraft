@@ -59,11 +59,16 @@ class PublicDemo:
     queries_total: int = DEFAULT_QUERIES_TOTAL
     # Who may read the visits' numbers (GET /api/demo/stats); empty: nobody.
     stats_key: str = ""
+    # Where a visitor reaches the team (the site's contact form); empty: no "Talk to us" button.
+    contact_url: str = ""
 
-    def as_dict(self) -> dict[str, int]:
-        """What the sign-in page says about the demo (never the visitor's password)."""
+    def as_dict(self) -> dict[str, int | str]:
+        """What the sign-in page and the visit say about the demo (never the visitor's password)."""
 
-        return {"seats": self.seats, "minutes": self.minutes}
+        settings: dict[str, int | str] = {"seats": self.seats, "minutes": self.minutes}
+        if self.contact_url:
+            settings["contact_url"] = self.contact_url
+        return settings
 
     def token_claim(self, visit: str, ends: float) -> dict[str, object]:
         """The ``demo`` claim of a visit's tokens: the apps show their editors (nothing saves)
@@ -103,7 +108,15 @@ def public_demo() -> PublicDemo | None:
             "PLANTCRAFT_PUBLIC_DEMO_QUERIES_TOTAL", DEFAULT_QUERIES_TOTAL, 1, 512
         ),
         stats_key=os.environ.get("PLANTCRAFT_PUBLIC_DEMO_STATS_KEY", "").strip(),
+        contact_url=_contact_url(os.environ.get("PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL", "")),
     )
+
+
+def _contact_url(value: str) -> str:
+    """An https address or nothing: the button opens it in a new tab."""
+
+    value = value.strip()
+    return value if value.startswith("https://") else ""
 
 
 class RateLimiter:

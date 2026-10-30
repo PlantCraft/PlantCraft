@@ -69,6 +69,16 @@ def test_the_sign_in_page_offers_the_demo_never_its_password(suite):
     assert answer["public_demo"] == {"seats": 10, "minutes": 30}
 
 
+def test_the_visit_offers_the_teams_contact_only_at_an_https_address(monkeypatch):
+    monkeypatch.setenv("PLANTCRAFT_PUBLIC_DEMO", "true")
+    monkeypatch.delenv("PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL", raising=False)
+    assert "contact_url" not in public_demo().as_dict()
+    monkeypatch.setenv("PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL", "javascript:alert(1)")
+    assert "contact_url" not in public_demo().as_dict()
+    monkeypatch.setenv("PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL", " https://plantcraft.io/#talk ")
+    assert public_demo().as_dict()["contact_url"] == "https://plantcraft.io/#talk"
+
+
 def test_visitors_cannot_write_even_in_conversations(suite):
     app, _admin = suite
     for username in ("demo",):

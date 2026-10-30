@@ -9,7 +9,7 @@ export type AccessLevel = "admin" | "editor" | "viewer" | "dashboards";
 /** `admin_view`: reads the administration pages (People, Apps, Backups): administrators, and a
  * public demo's visitor, read-only. */
 export interface AccessInfo { level: AccessLevel; label: string; applications: string[] | null; can_edit: boolean; is_admin: boolean; admin_view?: boolean; }
-export interface SessionInfo { authenticated: boolean; username?: string | null; display_name?: string | null; role?: string | null; can_switch_user?: boolean; is_admin?: boolean; access?: AccessInfo | null; public_demo?: { seats: number; minutes: number } | null; demo_visit?: { seconds_left: number; minutes: number } | null; installation?: Installation | null; }
+export interface SessionInfo { authenticated: boolean; username?: string | null; display_name?: string | null; role?: string | null; can_switch_user?: boolean; is_admin?: boolean; access?: AccessInfo | null; public_demo?: { seats: number; minutes: number; contact_url?: string } | null; demo_visit?: { seconds_left: number; minutes: number } | null; installation?: Installation | null; }
 /** The installation the sign-in page names: its plant and version. */
 export interface Installation { name: string; version: string }
 /** What a person says about themselves; every field may be empty. */

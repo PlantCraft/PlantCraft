@@ -289,6 +289,8 @@ demo() {
     # The site's stats page reads the demo's visits with this key.
     stats_secrets
     set_env PLANTCRAFT_PUBLIC_DEMO_STATS_KEY "$(cat "$CONF/demo-stats-key")"
+    # The visit's "Talk to us" button opens the site's contact form.
+    set_env PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL "https://$SITE_HOST/#talk"
     "$SUITE/install.sh" --yes
     log "demo at https://127.0.0.1/ (https://$DEMO_HOST through the tunnel)"
 }

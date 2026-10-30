@@ -91,6 +91,14 @@
 /* At the bottom, where no page puts its title (at the top it covered Desk's greeting); on a phone
    the tour's card, a sheet at the bottom too, sits above it (site test, 2026-10-27). */
 @media (max-width: 560px) { .demo-visit-note { display: none; } body:has(.demo-visit-bar) .pct-card { bottom: 60px !important; } }
+/* The visit's "Talk to us" (DemoContact): bottom right, under the guide's pill and card. */
+.demo-contact { position: fixed; right: 16px; bottom: 16px; z-index: 985; padding: 7px 13px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-accent); box-shadow: 0 6px 20px rgb(0 0 0 / 0.18); display: inline-flex; align-items: center; gap: 7px; font-size: var(--pc-fs-sm); font-weight: 600; text-decoration: none; }
+.demo-contact:hover { filter: brightness(1.08); }
+body:has(.demo-guide-pill) .demo-contact { bottom: 60px; }
+body:has(.demo-guide-card) .demo-contact { display: none; }
+.demo-ended-contact { color: var(--pc-primary-text); display: inline-flex; align-items: center; gap: 4px; font-weight: 600; text-decoration: none; }
+.demo-ended-contact:hover { text-decoration: underline; }
+@media (max-width: 1100px) { body:has(.demo-visit-bar) .demo-contact { bottom: 56px; } body:has(.demo-visit-bar):has(.demo-guide-pill) .demo-contact { bottom: 100px; } }
 /* The demo's guides by role (DemoGuide.tsx): the roles on the demo card and in the picker, and the
    guide's card at the bottom right, above the apps' frames. */
 .demo-guide-ask { color: var(--pc-text-2); font-weight: 600; }

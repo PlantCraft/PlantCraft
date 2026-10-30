@@ -8,7 +8,7 @@ import { BrandMark } from "./Brand";
 import { DemoUsers, HelpPage, NoAccess, NotFound } from "./CorePages";
 import { DemoGuide, startGuide } from "./DemoGuide";
 import { NoticeFollowUp } from "./NoticeFollowUp";
-import { DemoEntry, DemoVisitBar } from "./DemoVisit";
+import { DemoContact, DemoEntry, DemoVisitBar } from "./DemoVisit";
 import type { DemoVisitInfo, PublicDemoInfo } from "./demoApi";
 import { directoryApi, ssoStartUrl, type SignInMethods } from "./directoryApi";
 import { EMBEDDED, isMessagesPath, navigate, openOutside } from "./nav";
@@ -95,7 +95,7 @@ function Login({ onLogin, publicDemo, demoEnded, installation }: { onLogin: (use
               team's form, which also shows a working installation. */}
           {publicDemo && <>
             <h1>{t("Demo")}</h1>
-            <DemoEntry ended={demoEnded ?? false} onEntered={onLogin} />
+            <DemoEntry ended={demoEnded ?? false} contactUrl={publicDemo.contact_url} onEntered={onLogin} />
             {!accountOpen && <button type="button" className="button button-secondary button-wide" onClick={() => setAccountOpen(true)}>{t("Sign in")}</button>}
             {accountOpen && <div className="login-divider"><span>{t("or sign in with an account")}</span></div>}
           </>}
@@ -509,6 +509,7 @@ function PlatformApp() {
     <SessionContext.Provider value={{ isAdmin: auth.isAdmin ?? false, access: auth.access }}>
       {logoutError && <div className="inline-error">{logoutError}</div>}
       {auth.demoVisit && <DemoVisitBar visit={auth.demoVisit} onEnded={demoEnded} onLeave={() => void logout()} />}
+      {auth.demoVisit && auth.publicDemo?.contact_url && <DemoContact url={auth.publicDemo.contact_url} />}
       {auth.access?.level === "dashboards" ? <DashboardsOnly onLogout={logout} /> : <><Shell username={auth.username} canSwitch={auth.canSwitch ?? false} onLogout={logout} path={path} /><DemoGuide /><NoticeFollowUp path={path} /></>}
     </SessionContext.Provider>
   );

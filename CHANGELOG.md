@@ -21,6 +21,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **"Talk to us" in the public demo.** A visit shows a small button at the bottom right on every
+  page, the apps included, that opens the site's contact form in a new tab
+  (`PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL`, an https address; `deploy/cloud/vm.sh` points it at
+  `plantcraft.io/#talk`, which opens the form at once). The page after a visit ends offers it
+  too. Without the setting nothing shows.
+
 - **The public demo starts the same for every visitor.** A visit starts
   with the newest 20 notifications unread and the rest read, whatever the live plant added, and
   the seed leaves the newest message of 4 conversations unread (the Messages badge shows 4).
