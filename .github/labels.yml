@@ -1,0 +1,20 @@
+# The repository's labels. The Labels workflow creates or updates them from this file on main;
+# a label missing here is left alone (removing one is a maintainer's hand).
+- {name: bug, color: d73a4a, description: Something does not work as the docs or the screen say}
+- {name: idea, color: a2eeef, description: Something the suite should do, or do differently}
+- {name: question, color: d876e3, description: How to install, connect or use the suite}
+- {name: core, color: 0a66d0, description: Touches the core; needs a maintainer's agreement first}
+- {name: proposal, color: c5def5, description: An approach to agree on before the pull request}
+- {name: "app: analytics", color: 34c759, description: PlantCraft Analytics}
+- {name: "app: historian", color: 34c759, description: PlantCraft Historian}
+- {name: "app: view", color: 34c759, description: PlantCraft View}
+- {name: "app: alarms", color: 34c759, description: PlantCraft Alarms}
+- {name: "app: models", color: 34c759, description: PlantCraft Models}
+- {name: "app: documents", color: 34c759, description: PlantCraft Documents}
+- {name: "app: simulator", color: 34c759, description: PlantCraft Simulator}
+- {name: install, color: fbca04, description: Installing, updating or running the suite}
+- {name: docs, color: 0075ca, description: Guides and documentation}
+- {name: upstream, color: 8e8e93, description: Waiting on a library or tool outside the project}
+- {name: good first issue, color: 7057ff, description: A small, well-described start for a new contributor}
+- {name: help wanted, color: 008672, description: A maintainer would welcome a pull request}
+- {name: "needs info", color: ffd60a, description: Waiting on the reporter}

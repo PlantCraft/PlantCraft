@@ -15,8 +15,10 @@ few days and nothing reaches the core without an agreed plan. The zones are in
      `app: models`, `app: documents`, `app: simulator`, `docs`, `install`;
    - kind: `bug`, `idea`, `question`; plus `upstream` when the cause is in a dependency (keep it
      open until that dependency ships the fix), `good first issue` when a newcomer can take it.
+   The labels live in `.github/labels.yml`; the Labels workflow creates them on main, and the
+   issue forms (bug, idea, question, change to the core) add the kind by themselves.
 3. **A core idea** gets a short plan in the issue (what changes, what stays compatible) before
-   anyone writes code. The owner agrees in the issue; the pull request then links it.
+   anyone writes code. A maintainer agrees in the issue; the pull request then links it.
 4. Close with the reason: fixed (link the pull request), duplicate (link the other), or not
    planned (one sentence why).
 

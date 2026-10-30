@@ -8,7 +8,7 @@ The Zones workflow runs it on every pull request and writes the summary on the r
 reviewer, a person or an agent, sees at once whether a change stays in one app or reaches the
 core. With ``--check`` it fails when a pull request from a fork (``PR_FORK=true``) changes the
 core and its description (``PR_BODY``) names no issue (``#123``): the core changes only after an
-issue agreed with a maintainer. The owner's own pull requests are not held to it.
+issue agreed with a maintainer. Maintainers' own pull requests are not held to it.
 """
 
 from __future__ import annotations
@@ -88,7 +88,7 @@ def summary(paths: list[str]) -> tuple[dict[str, list[str]], str]:
         )
     if "core" in zones:
         lines.append(
-            "Touches the **core**: it needs an issue agreed with a maintainer and the owner's "
+            "Touches the **core**: it needs an issue agreed with a maintainer and a maintainer's "
             "review."
         )
     return zones, "\n".join(lines).rstrip() + "\n"

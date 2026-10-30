@@ -23,7 +23,7 @@ everything on top of it is open to grow. Before you start, find where your chang
 
 | Zone | Folders | Open an issue first? | What a pull request needs |
 |---|---|---|---|
-| **Core** | `plantcraft/`, `frontend/`, `sdk/python/`, `ui/`, `docs/api/v1/`, `deploy/`, `.github/`, `ci/`, `dev/`, `AGENTS.md` | **Yes**, and wait for a maintainer to agree on the approach | An additive change (nothing that existing apps or installations rely on breaks), with its tests; the owner reviews it ([CODEOWNERS](.github/CODEOWNERS)) |
+| **Core** | `plantcraft/`, `frontend/`, `sdk/python/`, `ui/`, `docs/api/v1/`, `deploy/`, `.github/`, `ci/`, `dev/`, `AGENTS.md` | **Yes**, and wait for a maintainer to agree on the approach | An additive change (nothing that existing apps or installations rely on breaks), with its tests; a maintainer reviews it ([CODEOWNERS](.github/CODEOWNERS)) |
 | **Official apps** | `apps/<app>/`, `simulator/`, `templates/app/` | For a new feature or a new dependency, yes; for a bug fix, no | Stays inside one app, `make ci` green in that app's folder, no import from another app or from the platform's code |
 | **Content** | Methods, blocks, algorithms, alarm rule templates, model libraries and notebook examples inside the app that owns them; `docs/`; translations | No | A public reference for every method, tests on known answers, the description format checks green |
 | **Your own app** | Your own repository, from [`templates/app`](templates/app/README.md) | No | Nothing here: it builds on the published SDK and installs as a signed package |
@@ -47,7 +47,7 @@ same rules apply, and you should be able to explain every line.
 4. Open the pull request against `main`: one change, and why it is needed. CI runs the lint and
    security checks on it; the full tests run on `main`.
 5. A maintainer reviews it, usually within a few days. Paths listed in
-   [.github/CODEOWNERS](.github/CODEOWNERS) wait for the owner's review
+   [.github/CODEOWNERS](.github/CODEOWNERS) wait for a maintainer's review
    ([Pull requests](#pull-requests)). What a reviewer checks is in
    [docs/maintainers.md](docs/maintainers.md).
 
@@ -160,7 +160,7 @@ product English in sentence case ("Add source", not "Add Source").
 - Keep each pull request focused on one change and describe why it is needed.
 - Include tests for behaviour changes and update the documentation in `docs/`.
 - A change to a path in [.github/CODEOWNERS](.github/CODEOWNERS) (sign-in, permissions, the
-  assistant, the stores, the sandbox, the installer, CI, dependencies) waits for the owner's
+  assistant, the stores, the sandbox, the installer, CI, dependencies) waits for a maintainer's
   review; dependency bumps come alone, and binary files from outside are not accepted
   ([docs/contributing-safety.md](docs/contributing-safety.md)).
 - By contributing, you agree that your contribution is licensed under the

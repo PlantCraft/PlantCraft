@@ -10,7 +10,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: The suite's version (Updates page or `release.json`) and the app, e.g. "0.4.0, Link"
+      description: The suite's version (Updates page or `release.json`) and the app, e.g. "0.5.1, Analytics"
     validations:
       required: true
   - type: textarea

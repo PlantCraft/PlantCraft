@@ -1,0 +1,34 @@
+name: Labels
+
+# Keeps the repository's labels as .github/labels.yml says, so issue forms, the Zones check and
+# the triage in docs/maintainers.md all use the same names. Runs on main when the file changes.
+on:
+  push:
+    branches: [main]
+    paths: [".github/labels.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    if: github.repository == 'PlantCraft/PlantCraft'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Create or update each label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY' | while IFS=$'\t' read -r name color description; do
+          import yaml
+          for label in yaml.safe_load(open(".github/labels.yml")):
+              print(f"{label['name']}\t{label['color']}\t{label['description']}")
+          PY
+            gh label create "$name" --color "$color" --description "$description" --force
+          done
