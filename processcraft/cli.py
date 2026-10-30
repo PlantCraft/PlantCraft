@@ -45,7 +45,7 @@ def _users(argv: list[str]) -> int:
     from processcraft.config import load_scenario
     from processcraft.platform.workspace import Workspace
 
-    parser = argparse.ArgumentParser(prog="processcraft users")
+    parser = argparse.ArgumentParser(prog="plantcraft users")
     parser.add_argument(
         "--scenario",
         type=Path,
@@ -152,7 +152,7 @@ def _demo(argv: list[str]) -> int:
 
     from processcraft.api.runtime import DEFAULT_SCENARIO
 
-    parser = argparse.ArgumentParser(prog="processcraft demo")
+    parser = argparse.ArgumentParser(prog="plantcraft demo")
     parser.add_argument("command", choices=["reset", "seed"])
     parser.add_argument(
         "--scenario",
@@ -182,7 +182,7 @@ def _pi(argv: list[str]) -> int:
     default = os.environ.get("PLANTCRAFT_SCENARIO") or str(
         PROJECT_ROOT / "scenarios" / "opcua_demo.json"
     )
-    parser = argparse.ArgumentParser(prog="processcraft pi")
+    parser = argparse.ArgumentParser(prog="plantcraft pi")
     commands = parser.add_subparsers(dest="command", required=True)
     check = commands.add_parser("check", help=t("tests network, authentication, tags and loops"))
     check.add_argument("--scenario", type=Path, default=Path(default))

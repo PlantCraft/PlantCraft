@@ -86,10 +86,8 @@ def suite(tmp_path_factory):
             environment[f"{app}_VERSION"] = "0.0.0-none"
         environment["SIMCRAFT_VERSION"] = "0.0.0-none"
         _run(str(DEPLOY / "bundle.sh"), env=environment, timeout=3600)
-        bundles[version] = ROOT / "dist" / f"processcraft-{version}-linux-{ARCH}-bundle"
-        (ROOT / "dist" / f"processcraft-{version}-linux-{ARCH}-bundle.tar.gz").unlink(
-            missing_ok=True
-        )
+        bundles[version] = ROOT / "dist" / f"plantcraft-{version}-linux-{ARCH}-bundle"
+        (ROOT / "dist" / f"plantcraft-{version}-linux-{ARCH}-bundle.tar.gz").unlink(missing_ok=True)
 
     prefix = work / "install"
     prefix.mkdir()
@@ -168,9 +166,9 @@ def suite(tmp_path_factory):
             _run("docker", "image", "rm", line, check=False)
     for version in VERSIONS:
         shutil.rmtree(
-            ROOT / "dist" / f"processcraft-{version}-linux-{ARCH}-bundle", ignore_errors=True
+            ROOT / "dist" / f"plantcraft-{version}-linux-{ARCH}-bundle", ignore_errors=True
         )
-        (ROOT / "dist" / f"processcraft-{version}-linux-{ARCH}-bundle.tar.gz.sha256").unlink(
+        (ROOT / "dist" / f"plantcraft-{version}-linux-{ARCH}-bundle.tar.gz.sha256").unlink(
             missing_ok=True
         )
     shutil.rmtree(work, ignore_errors=True)

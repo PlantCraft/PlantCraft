@@ -47,19 +47,21 @@ SUMS = "SHA256SUMS"
 SIGNATURE = "SHA256SUMS.sig"
 # OpenSSH signatures (PROTOCOL.sshsig): the namespace ssh-keygen uses for files.
 SSH_NAMESPACE = "file"
-SSH_IDENTITY = "release@{publisher}"
+# The name ssh-keygen prints; a label only (a signature does not carry it), so it is the product's
+# name while the publisher id and its key files keep the old one.
+SSH_IDENTITY = "release@plantcraft"
 ARCHITECTURES = ("amd64", "arm64")
 VERSION = re.compile(r"^(\d{1,4})\.(\d{1,4})\.(\d{1,6})(?:-([0-9A-Za-z.-]{1,40}))?$")
 COMPONENT = re.compile(r"^[a-z][a-z0-9-]{1,39}$")
 NAMES = {
     "processcraft": "PlantCraft",
-    "linkcraft": "LinkCraft",
-    "dashcraft": "DashCraft",
-    "histcraft": "HistCraft",
+    "linkcraft": "PlantCraft Analytics",
+    "dashcraft": "PlantCraft View",
+    "histcraft": "PlantCraft Historian",
     "alarmcraft": "PlantCraft Alarms",
     "modelcraft": "PlantCraft Models",
     "doccraft": "PlantCraft Documents",
-    "simcraft": "Simulator",
+    "simcraft": "PlantCraft Simulator",
 }
 
 
@@ -279,7 +281,7 @@ def allowed_signers(public: Any, publisher: str) -> str:
     from cryptography.hazmat.primitives import serialization
 
     key = public.public_bytes(serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
-    identity = SSH_IDENTITY.format(publisher=publisher)
+    identity = SSH_IDENTITY
     return f'{identity} namespaces="{SSH_NAMESPACE}" {key.decode()}'
 
 

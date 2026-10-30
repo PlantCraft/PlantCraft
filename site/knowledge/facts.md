@@ -13,6 +13,16 @@ with AI: creating things and asking questions go through an assistant on every p
 The goal: engineers should not lose their time building methods, blocks and analyses. They should
 quickly find where the plant has a problem, and discuss and plan the solution with their team.
 
+## The name
+
+PlantCraft was called ProcessCraft until 27 October 2026, before it was published. It is the same
+product. The old name still shows in some places in the code (the Python package
+`processcraft`, image names, ids inside an installation), kept so existing installations keep
+working; the command is `plantcraft` and the release files are `plantcraft-<version>-...`. The
+apps are PlantCraft Historian, Analytics, View, Alarms, Models and Documents, with Desk and
+Notebooks built in and the Simulator as the demo plant. Analytics was called Link (and before
+that CPMCraft and DataCraft), and View was called TrendCraft and Dashboards.
+
 ## The four pillars
 
 1. **Open.** All the code and every method is open, under the Apache License 2.0. Anyone may use,

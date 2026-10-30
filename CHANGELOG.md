@@ -32,6 +32,15 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **The old name is gone from what people type and download (owner, 2026-10-30).** The command
+  is `plantcraft` (`processcraft` still works), release files are
+  `plantcraft-<version>-linux-<arch>-bundle.tar.gz`, `ssh-keygen` checks them as
+  `release@plantcraft` (same key; a signature does not carry the name), the update page names
+  every app with its current name (Analytics, View, Historian, Simulator) and the user guides say
+  Analytics and View where they still said Link and Dashboards. The site's chat knows the former
+  names. The Python package, images, services and data ids keep `processcraft`, so installations
+  and their data do not change.
+
 - **Running from source says which Python to use (#10).** The demo from source is tested on
   Python 3.12 and 3.13, and on 3.15 asyncua, the OPC UA library, fails to read, so signals show
   no values. The README and the install guide now say 3.12 or 3.13 (the Simulator needs 3.12),

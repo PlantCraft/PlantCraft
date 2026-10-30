@@ -119,14 +119,14 @@ make -C "$ROOT" bundle SIMCRAFT_SRC="$SIMCRAFT_SRC" SIMCRAFT_VERSION="$SIMCRAFT_
     >"$LOGS/bundle.log" 2>&1 || die "make bundle: $LOGS/bundle.log"
 ARCH="$(docker info --format '{{.Architecture}}')"
 case "$ARCH" in x86_64) ARCH=amd64 ;; aarch64) ARCH=arm64 ;; esac
-archive="$ROOT/dist/processcraft-$VERSION-linux-$ARCH-bundle.tar.gz"
+archive="$ROOT/dist/plantcraft-$VERSION-linux-$ARCH-bundle.tar.gz"
 [ -f "$archive" ] || die "no bundle at $archive"
 
 step "unpacking and checking the bundle"
 rm -rf "$WORK/bundle"
 mkdir -p "$WORK/bundle"
 tar -xzf "$archive" -C "$WORK/bundle"
-bundle="$WORK/bundle/processcraft-$VERSION-linux-$ARCH-bundle"
+bundle="$WORK/bundle/plantcraft-$VERSION-linux-$ARCH-bundle"
 (cd "$bundle" && sha256sum --quiet -c SHA256SUMS) || die "the bundle's SHA256SUMS do not match"
 for app in linkcraft dashcraft histcraft alarmcraft modelcraft doccraft simcraft; do
     grep -q "$app" "$bundle/bundle.env" || die "the bundle has no $app image: $LOGS/bundle.log"

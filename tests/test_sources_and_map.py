@@ -313,7 +313,7 @@ def test_import_is_idempotent_and_loops_become_loop_assets(client, second_csv):
         item["sheet"] == "loops"
         and "protocol" in item["message"]
         and "criticality" not in item["message"]
-        and "LinkCraft" in item["message"]
+        and "PlantCraft Analytics" in item["message"]
         for item in preview["issues"]
     )
     first = _apply(client, payload)

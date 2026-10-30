@@ -52,7 +52,7 @@ To run the components separately:
 
 ```bash
 simcraft loops serve
-processcraft --scenario scenarios/opcua_demo.json --browser
+plantcraft --scenario scenarios/opcua_demo.json --browser
 ```
 
 ## The loops

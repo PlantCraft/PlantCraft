@@ -2,7 +2,7 @@
 
 A **report** is a document over one period, written like a notebook: cells of text in Markdown,
 the same panels as a dashboard (KPIs, dials, trends, bars, tables, scatter) and the events the apps
-wrote (alarms, Link's findings). View makes it into a **PDF** on a schedule and sends it to people
+wrote (alarms, Analytics' findings). View makes it into a **PDF** on a schedule and sends it to people
 and groups in **Messages › Notifications**, with the PDF one click away. Every PDF made is kept,
 so what was sent can be read again as it was. It also downloads as **Word**, a **web page** and
 **Markdown**, and opens by a **public link**.

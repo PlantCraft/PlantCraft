@@ -54,6 +54,8 @@ e2e = [
 ]
 
 [project.scripts]
+plantcraft = "processcraft.cli:main"
+# The command's name before PlantCraft was renamed (2026-10-27); scripts that call it keep working.
 processcraft = "processcraft.cli:main"
 
 [tool.pytest.ini_options]

@@ -45,7 +45,7 @@ asset).
 
 ```text
 browser ── proxy ─┬─ /        PlantCraft         users, sign-in, assets, signals, results, events
-                  ├─ /hist/   HistCraft            connections and history
+                  ├─ /hist/   PlantCraft Historian  connections and history
                   └─ /alarm/  PlantCraft Alarms  alarms, occurrences, journal (own SQLite)
 PlantCraft Alarms ── PlantCraft API v1 (plantcraft-sdk) ──> assets, signals, series;
                                                     results, events, runs, schedules, audit

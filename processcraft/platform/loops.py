@@ -384,7 +384,7 @@ class LoopsSection:
                 self.name,
                 None,
                 t(
-                    "Loop settings are kept by the app that analyses loops (LinkCraft) and were "
+                    "Loop settings are kept by the app that analyses loops (PlantCraft Analytics) and were "
                     "ignored here: {columns}. Set them in that app.",
                     columns=", ".join(sorted(ignored)),
                 ),

@@ -42,7 +42,7 @@ python -m venv .venv && . .venv/bin/activate
 make deps                                  # plantcraft-sdk from vendor/, then PlantCraft Historian
 (cd frontend && npm ci && npm run build)   # the interface, served under /hist/
 
-# In PlantCraft: PLANTCRAFT_APPS=histcraft=/hist/ processcraft --port 8060
+# In PlantCraft: PLANTCRAFT_APPS=histcraft=/hist/ plantcraft --port 8060
 export PLANTCRAFT_URL=http://127.0.0.1:8060
 histcraft serve --port 8100                # http://127.0.0.1:8100/hist/ (collects too)
 ```

@@ -11,7 +11,7 @@ Each release has, per processor (`linux-amd64` for x86_64, `linux-arm64` for 64-
 
 | File | What it is |
 |---|---|
-| `processcraft-<version>-linux-<arch>-bundle.tar.gz` | The bundle: container images, `compose.yaml`, `install.sh`, SBOMs, documentation |
+| `plantcraft-<version>-linux-<arch>-bundle.tar.gz` | The bundle: container images, `compose.yaml`, `install.sh`, SBOMs, documentation |
 | `....tar.gz.sha256` | The SHA-256 hash of the bundle |
 | `....tar.gz.sha256.sig` | The publisher's Ed25519 signature over that hash |
 
@@ -29,7 +29,7 @@ at least two of these places: this page, the release page, and
 |---|---|
 | Key id (what `install.sh` prints) | `af2643fa16867976` |
 | OpenSSH fingerprint (`ssh-keygen -l`) | `SHA256:9l/yDgR8/Pzel1pncxrXz2IGCIhFirKpDT78tO49fG8` |
-| The line for `ssh-keygen` | `release@processcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE` |
+| The line for `ssh-keygen` | `release@plantcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE` |
 
 Keep a copy of the key apart from the bundles you receive (for example on the plant's admin
 workstation): a bundle carries its own copy of the key, and a key that travels with the file it
@@ -42,15 +42,15 @@ holds the three files. The first line writes the publisher's key: compare it wit
 before you go on.
 
 ```bash
-echo 'release@processcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
-    > processcraft.allowed_signers
-B=processcraft-0.5.0-linux-amd64-bundle.tar.gz
-ssh-keygen -Y verify -f processcraft.allowed_signers -I release@processcraft -n file \
-    -s $B.sha256.sig < $B.sha256      # Good "file" signature for release@processcraft ...
-sha256sum -c $B.sha256               # processcraft-...tar.gz: OK   (macOS: shasum -a 256 -c $B.sha256)
+echo 'release@plantcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
+    > plantcraft.allowed_signers
+B=plantcraft-0.5.0-linux-amd64-bundle.tar.gz
+ssh-keygen -Y verify -f plantcraft.allowed_signers -I release@plantcraft -n file \
+    -s $B.sha256.sig < $B.sha256      # Good "file" signature for release@plantcraft ...
+sha256sum -c $B.sha256               # plantcraft-...tar.gz: OK   (macOS: shasum -a 256 -c $B.sha256)
 ```
 
-Both lines must say so: `Good "file" signature for release@processcraft` from the first, `OK`
+Both lines must say so: `Good "file" signature for release@plantcraft` from the first, `OK`
 from the second. Only then unpack the bundle and install it ([install.md](install.md)).
 
 ## Check the bundle on Windows

@@ -126,7 +126,7 @@ copy):
 | Surge level (`surge_level`) | averaging levels | `surge_drum` |
 | Temperature or pressure loop (`temperature_loop`) | temperature, pressure and composition loops, by default | `temperature_control`, `pressure_control`, `composition_control` |
 | Signal quality (`signal_quality`) | every signal | the system protocol Signal quality |
-| Unit twin (`unit_twin`) | assets with a process model (none until a copy names them) | a PlantCraft Twin twin |
+| Unit twin (`unit_twin`) | assets with a process model (none until a copy names them) | a digital twin of the unit |
 
 Each algorithm row carries `author`, `owner`/`owner_name`, `tags`, `group_id` and `version`
 (`catalog/presets.py`). A save increments the version; `algorithm_versions` keeps each one with
@@ -198,12 +198,12 @@ algorithm keeps it, versioned with the diagram. A period needs at most 500 runs.
 
 ### Twins as algorithms
 
-A PlantCraft Twin twin is an algorithm on assets (`assets/twins.py`): each input and measured
+A digital twin is an algorithm on assets (`assets/twins.py`): each input and measured
 output a Signal block (a scale or an offset becomes a Gain and offset block), the twin's FMU a
 model block with its parameters and start parameters, the residuals into a Deviation block with
 the twin's confidence, share, persistence, centring and calibration, its activity band a *Unit
 in operation* block, and the result a result (`Model deviation`) and a message. Its cycle,
-horizon and step are the algorithm's timing. PlantCraft Twin's oracle passes in Analytics with the
+horizon and step are the algorithm's timing. The oracle of the retired Twin app passes in Analytics with the
 same floors (`tests/oracles/test_twin_oracle.py`): the load disturbance and the drifting sensor
 found and named on every run, healthy twins quiet on 97 % of them.
 
@@ -229,7 +229,7 @@ delete one no algorithm uses.
 
 When the Simulator demo plant's loops are in PlantCraft, **Add the plant's model examples**
 (Algorithms, editors; `GET` and `POST /api/models/examples`, `assets/examples.py`) creates the
-example twins PlantCraft Twin used to offer, as algorithms on assets on the built-in models:
+example twins the retired Twin app used to offer, as algorithms on assets on the built-in models:
 `example_furnaces` on the furnace loops' area (TIC-1104, TIC-1209 and FIC-1210 predicted from
 their valves, result `linkcraft.out_model_deviation`), `example_fic_1001_process` and
 `example_lic_1010_process` on their loops. Each is calibrated on the six hours up to the plant's

@@ -26,7 +26,7 @@ for a colleague without an account.
   loop detail, a unit overview) or from an exported file; **Config** keeps tags, the window it
   opens with, a shared cursor, a kiosk mode and the last 30 versions.
 - **Reports** (`/reports`): a document of notes, the same panels and the period's events (alarms,
-  Link's findings) over one period, made into a PDF every day, week or month and sent to people
+  Analytics' findings) over one period, made into a PDF every day, week or month and sent to people
   and groups in Messages; every PDF sent is kept on the report's **Sent** tab, and the coming
   sends show on Desk's calendar. Download PDF and Send now make one at any time.
 - **Public links**: read-only, one dashboard each, revocable, shown once.
@@ -71,7 +71,7 @@ python -m venv .venv && . .venv/bin/activate
 make deps                                  # plantcraft-sdk from vendor/, then PlantCraft View
 (cd frontend && npm ci && npm run build)   # the interface, served under /dash/
 
-# In PlantCraft: PLANTCRAFT_APPS=dashcraft=/dash/ processcraft --port 8060,
+# In PlantCraft: PLANTCRAFT_APPS=dashcraft=/dash/ plantcraft --port 8060,
 # then an admin creates an app key for dashcraft (Settings, or POST /api/app-keys).
 export PLANTCRAFT_URL=http://127.0.0.1:8060
 export PLANTCRAFT_APP_KEY=...            # or PLANTCRAFT_APP_KEY_FILE=/path/to/key

@@ -132,7 +132,7 @@ install from the offline bundle instead: see
 A self-contained demo on a CSV file, without OPC UA:
 
 ```bash
-processcraft --scenario scenarios/generic_demo.json --browser
+plantcraft --scenario scenarios/generic_demo.json --browser
 ```
 
 For a production installation (PI Web API, Kerberos, systemd, backups) see
@@ -142,14 +142,14 @@ For a production installation (PI Web API, Kerberos, systemd, backups) see
 
 | Command | What it does |
 | --- | --- |
-| `processcraft [--scenario FILE] [--data-file CSV] [--host H] [--port P] [--browser] [--no-prewarm] [--no-sign-in]` | Start PlantCraft (API and interface); a host other than 127.0.0.1 needs sign-in on |
-| `processcraft users list` | List people who can sign in |
-| `processcraft users add USER --name NAME [--role R] [--access LEVEL] [--apps a,b] [--admin]` | Create a person (`admin`, `editor`, `viewer` or `dashboards`) |
-| `processcraft users password USER` | Set a password (or from `PLANTCRAFT_PASSWORD`) |
-| `processcraft users access USER LEVEL [--apps a,b]` | Change the access level and apps |
-| `processcraft users admin USER [--off]` | Grant or remove admin access |
-| `processcraft pi check [--hours H] [--report FILE]` | Test network, authentication, tags and loops of a PI Web API source |
-| `processcraft demo reset` | Forget the workspace; the next start recreates it |
+| `plantcraft [--scenario FILE] [--data-file CSV] [--host H] [--port P] [--browser] [--no-prewarm] [--no-sign-in]` | Start PlantCraft (API and interface); a host other than 127.0.0.1 needs sign-in on |
+| `plantcraft users list` | List people who can sign in |
+| `plantcraft users add USER --name NAME [--role R] [--access LEVEL] [--apps a,b] [--admin]` | Create a person (`admin`, `editor`, `viewer` or `dashboards`) |
+| `plantcraft users password USER` | Set a password (or from `PLANTCRAFT_PASSWORD`) |
+| `plantcraft users access USER LEVEL [--apps a,b]` | Change the access level and apps |
+| `plantcraft users admin USER [--off]` | Grant or remove admin access |
+| `plantcraft pi check [--hours H] [--report FILE]` | Test network, authentication, tags and loops of a PI Web API source |
+| `plantcraft demo reset` | Forget the workspace; the next start recreates it |
 
 Every subcommand takes `--scenario` (default: `PLANTCRAFT_SCENARIO`).
 

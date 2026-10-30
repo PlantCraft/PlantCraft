@@ -9,4 +9,4 @@ without an account.
   dashboard is deleted.
 - The list shows when each link was created and last opened.
 - An administrator can turn public links off for the whole installation
-  (`DASHCRAFT_PUBLIC_LINKS=false`); they also need the Dashboards app key.
+  (`DASHCRAFT_PUBLIC_LINKS=false`); they also need the View app key.

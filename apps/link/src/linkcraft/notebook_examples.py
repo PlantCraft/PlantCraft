@@ -186,7 +186,7 @@ def _loop_health() -> list[dict[str, Any]]:
             """
 health = pc.results(app="linkcraft", kind="loop_health")
 if health.empty:
-    print("No loop health yet: let Link's loop round run once.")
+    print("No loop health yet: let Analytics' loop round run once.")
 else:
     table = health.sort_values("value")[["subject", "status", "value", "summary"]]
     table.head(15)

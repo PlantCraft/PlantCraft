@@ -263,12 +263,12 @@ demo() {
     command -v docker >/dev/null || die "run vm.sh setup first"
     version="$(python3 -c "import tomllib; print(tomllib.load(open('$SRC/pyproject.toml', 'rb'))['project']['version'])")"
     arch="$(dpkg --print-architecture)"
-    archive="$SRC/dist/processcraft-$version-linux-$arch-bundle.tar.gz"
+    archive="$SRC/dist/plantcraft-$version-linux-$arch-bundle.tar.gz"
     log "building the bundle $version for $arch here (20 to 40 min the first time; logs in $SRC/dist/e2e-bundle/logs)"
     (cd "$SRC" && ci/e2e-bundle.sh --bundle-only)
     rm -rf "$SRC/dist/vm-bundle" && mkdir -p "$SRC/dist/vm-bundle"
     tar -xzf "$archive" -C "$SRC/dist/vm-bundle"
-    bundle="$SRC/dist/vm-bundle/processcraft-$version-linux-$arch-bundle"
+    bundle="$SRC/dist/vm-bundle/plantcraft-$version-linux-$arch-bundle"
     [ -f "$bundle/SHA256SUMS.sig" ] || sign=(--allow-unsigned)
     if [ -x "$SUITE/install.sh" ]; then
         log "updating the suite in $SUITE"

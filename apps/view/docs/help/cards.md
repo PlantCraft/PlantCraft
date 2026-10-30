@@ -63,11 +63,11 @@ fills the window, with zoom, pan, reset and a picture download. Esc closes it. T
 its own **Full screen** button above the chart.
 
 **Results of other apps.** Stat, bar and table panels can also show what another installed app
-published about an asset or signal, such as Link's loop health or signal quality: pick the asset, then the
+published about an asset or signal, such as Analytics' loop health or signal quality: pick the asset, then the
 result under "Shows". The colour is the app's own status (OK, Warning, Critical), not the panel's
 thresholds; the value is its score out of 100. A result its app has not refreshed in time shows as
 stale and unknown. On a trend panel the same choice draws the result's history, when its app
-archives it (Link keeps each loop's health over time).
+archives it (Analytics keeps each loop's health over time).
 
 **Windows** go from seconds to 366 days. A trend draws at most about 600 points per line, each
 the mean of its step. When a window holds no samples, a trend shows the newest data it finds and
