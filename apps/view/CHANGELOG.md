@@ -4,6 +4,17 @@ Every release of PlantCraft View, newest first, in the
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) form. PlantCraft's `deploy/bundle.sh`
 joins it into the bundle's release notes.
 
+## [Unreleased]
+
+### Fixed
+
+- **A process display opens in under a second.** The demo's Riverbend plant has 289 bindings,
+  and View read each value and app result one at a time (about 250 requests, 2.8 to 4.9 s each
+  time its short cache had expired). It now reads every signal's newest point in one batch of
+  the last two minutes, each app result kind in one request, and the rest side by side: 0.4 to
+  0.5 s on the same installation, with the same values and states. A signal quiet for longer
+  still asks for its last value on its own.
+
 ## [0.5.1] - 2026-10-30
 
 - **Memory stays bounded under many viewers.** View's short cache let expired values go only

@@ -13,6 +13,9 @@ an old number never shows as a healthy plant.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable, Iterable
+from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -28,11 +31,17 @@ from dashcraft.query.cards import (
     _value,
     read_result,
     resolve,
+    result_subject,
     trend_step,
 )
 
 # A value older than this is stale: drawn grey, never as normal.
 STALE_SECONDS = 900
+# PlantCraft reads in flight at once for one diagram.
+READERS = 8
+# The newest point of each signal is read in one batch over this many seconds before now; a
+# signal quiet for longer (or a window shorter) asks for its last value on its own.
+RECENT_SECONDS = 120
 
 
 def _number(value: Any) -> float | None:
@@ -78,6 +87,34 @@ def judge(slot: str, binding: dict[str, Any], row: dict[str, Any]) -> dict[str, 
     return out
 
 
+def _side_by_side(
+    pool: ThreadPoolExecutor, work: Callable[[Any], Any], args: Iterable[Any]
+) -> list[Any]:
+    """``work`` of each argument on the pool, in order, each in a copy of the caller's context
+    (its language); the first failure is raised, as a plain loop would."""
+
+    futures = [pool.submit(copy_context().run, work, arg) for arg in args]
+    return [future.result() for future in futures]
+
+
+def _newest(reader: Reader, resolved: Iterable[Resolved], seconds: int) -> dict[str, Any]:
+    """The value now of every resolved signal with a point in the last ``seconds``, in one read;
+    the others (and all of them when that read fails) are asked one by one."""
+
+    ids = list(
+        dict.fromkeys(one.signal_id for one in resolved if one.error is None and one.signal_id)
+    )
+    if not ids:
+        return {}
+    try:
+        found = reader.recent(ids, seconds)
+    except Unauthorized:
+        raise
+    except PlantCraftError:
+        return {}
+    return {signal: {**point, "error": None} for signal, point in found.items()}
+
+
 def read_diagram(
     reader: Reader,
     diagram: dict[str, Any],
@@ -98,40 +135,68 @@ def read_diagram(
     live = end is None
     end = (end or reader.clock()).astimezone(timezone.utc)
     start = end - timedelta(seconds=seconds)
-    resolved: dict[tuple[Any, ...], Resolved] = {}
-    rows: list[dict[str, Any]] = []
-    wanted: list[str] = []
+    parsed: list[tuple[str, str, CardItem | None]] = []
     for element_id, slot, binding in bindings(diagram):
         try:
-            item = CardItem.model_validate(binding.get("item") or {})
+            parsed.append((element_id, slot, CardItem.model_validate(binding.get("item") or {})))
         except ValueError:
-            rows.append(
-                {
-                    "element": element_id,
-                    "slot": slot,
+            parsed.append((element_id, slot, None))
+    # Each binding is a read or two of PlantCraft (its signal, its value now, an app's result):
+    # a plant display has hundreds, so they run side by side, each signal resolved once.
+    keys = list(
+        dict.fromkeys(
+            (item.signal_id, item.asset_id, item.role)
+            for _, _, item in parsed
+            if item is not None and item.result is None
+        )
+    )
+    items = {
+        (item.signal_id, item.asset_id, item.role): item
+        for _, _, item in parsed
+        if item is not None and item.result is None
+    }
+    with ThreadPoolExecutor(max_workers=READERS) as pool:
+        found = _side_by_side(pool, lambda key: resolve(reader, items[key], None, False), keys)
+        resolved = dict(zip(keys, found, strict=True))
+        newest = _newest(reader, resolved.values(), min(seconds, RECENT_SECONDS)) if live else {}
+        groups: dict[str, list[str]] = {}
+        for _, _, item in parsed:
+            subject = result_subject(item) if item is not None and item.result else None
+            if subject:
+                groups.setdefault(item.result, []).append(subject)
+        for kind, subjects in groups.items():
+            try:
+                reader.results_of(subjects, kind)
+            except Unauthorized:
+                raise
+            except PlantCraftError:
+                pass  # each binding asks on its own and shows its own failure
+
+        def row_of(entry: tuple[str, str, CardItem | None]) -> dict[str, Any]:
+            element_id, slot, item = entry
+            base: dict[str, Any] = {"element": element_id, "slot": slot}
+            if item is None:
+                return {
+                    **base,
                     "label": "",
                     "error": t("This binding names no signal."),
                     "state": "unknown",
                 }
-            )
-            continue
-        base: dict[str, Any] = {"element": element_id, "slot": slot}
-        if item.result is not None:
-            found = read_result(reader, item, None, False)
-            row = {**base, **found, "history": False}
-        else:
-            key = (item.signal_id, item.asset_id, item.role)
-            if key not in resolved:
-                resolved[key] = resolve(reader, item, None, False)
-            one = resolved[key]
+            if item.result is not None:
+                return {**base, **read_result(reader, item, None, False), "history": False}
+            one = resolved[(item.signal_id, item.asset_id, item.role)]
             row = {**base, **one.base(), "value": None, "at": None}
-            if one.error is None and one.signal_id:
-                if live:
-                    got = _value(reader, one, "last", window)
-                    row.update(value=got["value"], at=got["at"], error=got["error"])
-                if one.meta.get("kind") != "text":
-                    wanted.append(one.signal_id)
-        rows.append(row)
+            if live and one.error is None and one.signal_id:
+                got = newest.get(one.signal_id) or _value(reader, one, "last", window)
+                row.update(value=got["value"], at=got["at"], error=got["error"])
+            return row
+
+        rows = _side_by_side(pool, row_of, parsed)
+    wanted = [
+        one.signal_id
+        for one in resolved.values()
+        if one.error is None and one.signal_id and one.meta.get("kind") != "text"
+    ]
     series: dict[str, dict[str, Any]] = {}
     unique = list(dict.fromkeys(wanted))
     if unique:

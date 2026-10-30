@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+import time
 from datetime import timedelta
 
 import pytest
@@ -9,6 +11,7 @@ from plantcraft_sdk.asset_scope import forget
 
 from dashcraft.diagrams.model import DiagramPayload, Limits
 from dashcraft.diagrams.read import judge, read_diagram
+from dashcraft.query.cards import Reader
 from tests.conftest import client_for
 from tests.plant import NOW, publish_loop_health
 
@@ -400,3 +403,109 @@ def test_a_large_page_names_its_parts_as_tabs() -> None:
     ):
         with pytest.raises(ValidationError):
             DiagramPayload(name="Plant", parts=parts)
+
+
+class _SlowPlant:
+    """PlantCraft answering every read after ``delay`` seconds, counting reads in flight."""
+
+    def __init__(self, delay: float = 0.02):
+        self.delay, self.flying, self.most = delay, 0, 0
+        self.lock = threading.Lock()
+
+    def _wait(self) -> None:
+        with self.lock:
+            self.flying += 1
+            self.most = max(self.most, self.flying)
+        time.sleep(self.delay)
+        with self.lock:
+            self.flying -= 1
+
+    def signal(self, signal_id):
+        self._wait()
+        return {"id": signal_id, "name": signal_id, "unit": "%"}
+
+    def value(self, signal_id, agg, window):
+        self._wait()
+        return {"value": float(signal_id.rsplit("-", 1)[1]), "at": None}
+
+    def results(self, subjects, kind):
+        self._wait()
+        return [{"status": "ok", "score": 90, "at": None}]
+
+    def series_many(self, signals, start, end, step):
+        return {"series": [], "errors": []}
+
+
+def test_a_large_display_reads_its_bindings_side_by_side():
+    count = 60
+    elements = [
+        {"type": "value", "id": f"v{n}", "item": {"signal_id": f"sim:TI-{n}"}} for n in range(count)
+    ] + [
+        {
+            "type": "value",
+            "id": "health",
+            "item": {"signal_id": "sim:TI-0", "result": "linkcraft.loop_health"},
+        }
+    ]
+    plant = _SlowPlant()
+    started = time.monotonic()
+    data = read_diagram(Reader(plant), {"elements": elements}, "1h")
+    seconds = time.monotonic() - started
+    values = [row["value"] for row in data["bindings"][:count]]
+    assert values == [float(n) for n in range(count)]  # in drawing order
+    assert data["bindings"][-1]["state"] == "ok"
+    # 121 reads of 20 ms one after another take 2.4 s; side by side they take a fraction of it.
+    assert plant.most > 1 and seconds < 1.2
+
+
+class _BatchPlant(_SlowPlant):
+    """Answers the newest points and the results of many subjects in one read each."""
+
+    def __init__(self):
+        super().__init__(delay=0)
+        self.calls: list[str] = []
+
+    def value(self, signal_id, agg, window):
+        self.calls.append("value")
+        return super().value(signal_id, agg, window)
+
+    def asset(self, asset_id):
+        return {"id": asset_id, "name": asset_id.upper()}
+
+    def results(self, subjects, kind):
+        self.calls.append("results")
+        return [
+            {"subject": subject, "status": "ok", "score": 90, "at": None} for subject in subjects
+        ]
+
+    def series_many(self, signals, start, end, step):
+        self.calls.append(f"series step={step}")
+        quiet = {"sim:TI-3"}  # nothing in the last two minutes: asked on its own
+        return {
+            "series": [
+                {"signal": signal, "t": ["2026-10-30T20:00:00Z"], "v": [float(signal[7:]) + 0.5]}
+                for signal in signals
+                if signal not in quiet and step is None
+            ],
+            "errors": [],
+        }
+
+
+def test_a_display_reads_values_now_and_results_in_one_batch_each():
+    elements = [
+        {"type": "value", "id": f"v{n}", "item": {"signal_id": f"sim:TI-{n}"}} for n in range(6)
+    ] + [
+        {
+            "type": "value",
+            "id": f"h{n}",
+            "item": {"asset_id": f"loop-{n}", "result": "linkcraft.loop_health"},
+        }
+        for n in range(4)
+    ]
+    plant = _BatchPlant()
+    data = read_diagram(Reader(plant), {"elements": elements}, "1h")
+    values = [row["value"] for row in data["bindings"][:6]]
+    assert values == [0.5, 1.5, 2.5, 3.0, 4.5, 5.5]  # TI-3 from its own last value
+    assert [row["state"] for row in data["bindings"][6:]] == ["ok"] * 4
+    assert plant.calls.count("value") == 1 and plant.calls.count("results") == 1
+    assert "series step=None" in plant.calls
