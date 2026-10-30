@@ -43,8 +43,10 @@ numbers. Both ship with the suite in [`ui/src/fonts/`](../ui/src/fonts/).
 
 | File | Use |
 | --- | --- |
-| [`linkedin/avatar-400.png`](linkedin/avatar-400.png) | LinkedIn page logo |
-| [`linkedin/banner-1128x191@3x.png`](linkedin/banner-1128x191@3x.png) | LinkedIn page banner; text on the right so the page logo never covers it |
+| [`social/avatar-400.png`](social/avatar-400.png) | Profile picture (LinkedIn, GitHub, YouTube, X) |
+| [`social/banner-1128x191@3x.png`](social/banner-1128x191@3x.png) | LinkedIn page banner; text on the right so the page logo never covers it |
+| [`social/x-header-1500x500.png`](social/x-header-1500x500.png) | X (Twitter) header |
+| [`social/youtube-banner-2560x1440.png`](social/youtube-banner-2560x1440.png) | YouTube banner; the text sits inside the 1546 x 423 area every device shows |
 
 Marketing pieces are dark: Ink background, white text, Steel Blue text value `#7FA6D1` as the
 only colour, and real screens of the plant as the image.
