@@ -53,7 +53,7 @@ recorded. Long periods and many signals are read in parts.
 
 ## The apps' objects
 
-Every app reads the same way in a notebook (owner, 2026-10-26): `pc.app(...)` with the app's
+Every app reads the same way in a notebook: `pc.app(...)` with the app's
 name, and its objects by kind. What each app offers is in `pc.apps()`.
 
 ```python
@@ -184,7 +184,7 @@ browser.
 - **The kit** is an optional part of the offline bundle (`notebook-kits/`, about 450 MB for the
   three systems), built by `make notebook-kits` (`make bundle` builds them too; on the Mac mini, every deploy that changes them) (`notebooks/kit/build_kit.py`: python-build-standalone
   and every wheel pinned by SHA-256 in `notebooks/kit/pins.json` and `requirements.txt`). It is
-  offered whenever Notebooks are on and the installation has it (owner, 2026-10-26: one switch);
+  offered whenever Notebooks are on and the installation has it;
   an administrator may take it away in Settings › Notebooks › Kit for people's computers. PlantCraft adds the server's address and, with the local certificate authority,
   its root certificate to each zip as it sends it; never a token. Each download is in the audit
   log (`notebooks.kit_download`), each kit token too (`assistant_token.create`). A kit runs on

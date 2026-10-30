@@ -12,7 +12,7 @@ assistant is asked to write (``prompts.new_block_prompt``)::
       "tags": ["fouling"],
       "origin": "user",                          # user | assistant | import | plantcraft | modelcraft-fmu
       "version": {"number": 3, "name": "Adaptive window", "description": "..."},
-      "author": "jonathan", "owner": "jonathan",
+      "author": "ana.lima", "owner": "ana.lima",
       "docs": {"summary": "...", "description": "...", "reading": "...", "formula": "...",
                "assumptions": [], "limitations": [], "references": []},
       "inputs": [{"port": "duty", "type": "series", "label": "Duty", "unit": "kW",

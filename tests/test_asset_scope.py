@@ -1,4 +1,4 @@
-"""A person sees only their part of the plant (docs/asset-scope.md, decision D2, 2026-10-27).
+"""A person sees only their part of the plant (docs/asset-scope.md).
 
 An administrator gives a person, or a group, the roots of the asset tree they see. Everything
 the platform keeps about the plant follows: the tree, an asset's page, its signals and their

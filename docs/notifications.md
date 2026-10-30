@@ -13,13 +13,13 @@ them and what they allow.
    (a path of the suite, `/alarm/...`) and whether email is wanted ([api-v1.md](api-v1.md)).
 2. Groups are expanded to their active members; each person receives one message in their
    conversation with the app (its robot user carries the app's name, "Alarms"). Messages lists it
-   under **Notifications**, beside the chats (owner, 2026-10-24), and the suite's messages button
+   under **Notifications**, beside the chats, and the suite's messages button
    counts it.
    - **One thread per key.** The same app and `key` (`alarm:12:3`: fired, reminded, escalated,
      cleared) is one entry with its history, unread again on each new send.
    - **Read like an email inbox.** Unread in bold; filters All, Unread, Favorites, Alarms,
      Actions, Runs and Done, and a search; opening an entry marks it seen. Each row and the open
-     entry carry the person's own buttons (owner, 2026-10-28): one that turns seen into not seen
+     entry carry the person's own buttons: one that turns seen into not seen
      and back, a star (a favorite keeps its star when the thread gets a new event) and the
      **check**, which marks it done: out of the list until something new happens to it. **Open**
      leaves a small bar on the page it opens (an action, an alarm) with the same check, so it is

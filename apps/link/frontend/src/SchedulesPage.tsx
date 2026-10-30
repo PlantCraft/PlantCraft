@@ -525,7 +525,7 @@ export function SchedulePage({ scheduleId, me }: { scheduleId: string | null; me
       detail={round ? t("In turn: one run works through every target, one after another.") : t("Which algorithm runs, on which assets, when, what it does if it fails and who answers for it.")}
       actions={<>
         {scheduleId && me.can_edit && <button type="button" className="button button-secondary" onClick={run(() => api.runSchedule(scheduleId), t("Queued: it runs ahead of the monitors."))}><Play size={16} />{t("Run now")}</button>}
-        {/* Link publishes, the Alarms app decides (owner decision D6): its rule opens filled in for this schedule. */}
+        {/* Link publishes, the Alarms app decides: its rule opens filled in for this schedule. */}
         {scheduleId && schedule && scheduleId !== "round-signal_quality" && <a className="button button-secondary" href={alarmRuleHref(scheduleId, schedule.name)}><BellPlus size={16} />{t("Create alarm rule")}</a>}
       </>} />
     {error && <ErrorBox text={error} />}

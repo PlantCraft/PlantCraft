@@ -4,7 +4,7 @@
 
 Every known shortfall of PlantCraft (the central app), ranked by user impact. Each app's gaps are in its own `apps/<app>/docs/gaps.md`.
 `B` marks a blocker for the next stage. When a gap closes, delete its row in the same commit and
-log it in `ROADMAP.md`.
+note it in `CHANGELOG.md`.
 
 | Id | Product | Gap | Impact | B | Estimate |
 |---|---|---|---|---|---|

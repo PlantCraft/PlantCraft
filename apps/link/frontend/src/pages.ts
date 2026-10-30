@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { api } from "./api";
 import { Blocks, BookOpen, CalendarClock, LayoutDashboard, ListOrdered, Workflow } from "lucide-react";
 
-/** The suite frame's navigation, in the suite's page order (owner decision D9). */
+/** The suite frame's navigation, in the suite's page order. */
 export const NAV = [
   { to: "/", label: "Overview", icon: createElement(LayoutDashboard, { size: 16 }), match: (path: string) => path === "/" },
   // In the order of the work (owner, 2026-10-24): blocks make algorithms, schedules run them, Executions shows what they concluded.

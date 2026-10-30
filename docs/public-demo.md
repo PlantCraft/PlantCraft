@@ -8,8 +8,7 @@ installation holding real plant data.
 
 ## A visit
 
-The sign-in page of a public demo has one way in (owner, 2026-10-28: more than one scares a
-visitor): the title **Demo**, one line saying what it is, **Enter the demo**, and a plain **Sign in**
+The sign-in page of a public demo has one way in: the title **Demo**, one line saying what it is, **Enter the demo**, and a plain **Sign in**
 button that opens the team's own sign-in form (and single sign-on), so a visitor sees there is a
 sign-in without facing a form; `/?account` opens the form at once. Each visit
 is the read-only visitor account `demo`, in one of a few places at once:
@@ -40,8 +39,7 @@ the site's private `/stats` page reads it (`site/README.md`).
 
 ## Guides by role
 
-A demo convinces when it shows each visitor what matters to their job, in their words (owner,
-2026-10-27). The way in no longer asks for the role (2026-10-28, one button only): a visit opens
+A demo convinces when it shows each visitor what matters to their job, in their words. The way in no longer asks for the role (2026-10-28, one button only): a visit opens
 with the platform's tour (Desk, its quick buttons, then PlantCraft), whose last step points to
 **Guided demo by role** in the menu under the visitor's name: control room operator, process
 engineer, control and instrumentation engineer, maintenance and reliability, plant or area

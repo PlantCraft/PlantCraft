@@ -101,7 +101,7 @@ input. Times are ISO 8601 with offset; series timestamps are UTC.
 | `POST /api/v1/series/retire` | An app's service token only. Body `{"signals": ["app-<app id>:<name>"...]}` (1 to 500, its own source only, else 403 and nothing retired): the series it no longer writes stop being listed and read, `{"retired": [ids], "errors"}` |
 | `POST /api/v1/audit` | Body `{"action", "subject", "detail"}`; the user comes from the token: `{"id"}` |
 
-Signal ids are `<source id>:<tag>` (since 2026-10-20, decision D2 of `docs/app-standard.md`):
+Signal ids are `<source id>:<tag>` (`docs/app-standard.md`):
 `scenario:FIC-101.PV` for the scenario's own source, `pi:FIC1001.PV` for an added source with
 id `pi`. Clients URL-encode the id in a path (`quote(id, safe="")`); `:` needs no encoding, `/`,
 spaces and `\` do. See "Signal ids" below.
@@ -572,7 +572,7 @@ keeps them in `fake.links.calendar` and `fake.links.todos` (`fake.tick_todo` tic
 ## Language models (added 2026-10-25)
 
 An app writes with a language model only through PlantCraft, which keeps the keys and addresses
-and picks the model (owner, 2026-10-25). Each use is declared in `[[contributes.llm]]`
+and picks the model. Each use is declared in `[[contributes.llm]]`
 ([app-standard.md](app-standard.md) section 4b) and listed in Settings › Language models as
 `<app id>:<id>`, where an administrator gives it the default model, another provider's model or
 none; a use declared `default = "off"` has no model until one is chosen. Since the security

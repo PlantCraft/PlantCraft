@@ -371,7 +371,7 @@ class ApiRuntime:
         """The apps whose results, events, runs and schedules ``username`` reads (those they
         may open, with the platform's own); ``None`` for an administrator, who reads all.
         One rule for every way a person reads them: API v1, the asset's page, Desk, the
-        assistant (review decision D1, 2026-10-27)."""
+        assistant."""
 
         from plantcraft.api.deps import user_access
         from plantcraft.api.identity import visible_apps

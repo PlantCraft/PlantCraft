@@ -4,7 +4,7 @@ Decided by the owner on 2026-10-20 (post-MVP step 7): people and specialists tal
 **Messages**, follow-up **actions** live in PlantCraft, and **specialists** are robot users
 configured in PlantCraft. Every app of the suite shows the same messages button in its sidebar
 (`@plantcraft/ui`), which opens PlantCraft's Messages over the page, in a panel on the right,
-without leaving the app (owner, 2026-10-24; `/messages?embed=1`); **Full page** opens `/messages`.
+without leaving the app; **Full page** opens `/messages`.
 
 Since 2026-10-23 specialists answer in Desk's **Assistant** ([assistant.md](assistant.md)), where
 each person keeps many chats with a language model; new conversations in Messages are between

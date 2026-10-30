@@ -83,7 +83,7 @@ MAX_SCHEDULE_ASSETS = 2000
 # Marks the demo plant's example twins as added once (``Runtime.add_model_examples``).
 EXAMPLES_MARK = "model-examples"
 EXAMPLES_RETRY_SECONDS = 600
-# Runs per subject and schedule that keep their full detail (owner decision D7).
+# Runs per subject and schedule that keep their full detail.
 DETAIL_KEPT = 50
 # How often Link looks for schedules that stopped running (``ScheduleEvents.check_stalled``).
 STALL_CHECK_SECONDS = 300
@@ -214,7 +214,7 @@ class Runtime(PlatformRuntime):
         # The schedules, the queue and its workers (``engine.service``); in a process of their
         # own unless ``settings.engine`` is "inline" (``start``).
         self.engine = Engine(self, slots=settings.workers or None)
-        # What the Alarms app hears about the schedules (owner decision D6).
+        # What the Alarms app hears about the schedules.
         self.events = ScheduleEvents(self, self.db)
         self._engine_process: Any = None
         self.jobs.ensure_round_schedule(

@@ -4,7 +4,7 @@ Every app's first page is its **Overview**. PlantCraft's Overview is a page of w
 each person arranges (Customize: add, move, pick a size, remove; saved per person by
 `GET/PUT/DELETE /api/home/layout`). The catalog is PlantCraft's own widgets plus those
 each installed app publishes, so the Overview never depends on a given app: an app that is
-not installed, or does not publish widgets, adds nothing (owner, 2026-10-21).
+not installed, or does not publish widgets, adds nothing.
 
 ## Every app's Overview
 
@@ -24,7 +24,7 @@ person sees every widget of the app, the page's own first, unless the app names 
 
 Every board (each Overview, Desk's Today) draws on `CardGrid` from `@plantcraft/ui`: 12
 columns, rows of 91 px and a 14 px gap, the sizes of View's dashboards, on react-grid-layout
-(owner, 2026-10-23: one grid for every page of cards). A saved layout is a list of placements:
+. A saved layout is a list of placements:
 
 ```json
 {"widgets": [{"i": "desk:actions", "widget": "desk:actions", "x": 0, "y": 0, "w": 4, "h": 3,
@@ -37,7 +37,7 @@ own settings (4000 characters at most). Below 720 px the cards stack in reading 
 
 ### Fixed sizes
 
-Widgets have fixed sizes (owner, 2026-10-24): each declares one to three sizes, small to large,
+Widgets have fixed sizes: each declares one to three sizes, small to large,
 1 to 3 rows high, and draws what fits each one. Dragging a card only moves it; its gear picks
 the size, with a preview. A size saved before (or one the widget no longer allows) becomes the
 closest allowed. A widget that declares only `size` gets the standard ones:
@@ -110,10 +110,10 @@ The eight shapes (`plantcraft_sdk.widgets` builds each; `WidgetKinds.tsx` draws 
 
 A list row says what its time is: the time goes in the line below the name with its word
 ("Updated 5 h ago", "Started 2 min ago", "Next: Mon 08:00"), never as a bare "5 h ago" in the
-value, where nobody can tell what happened then (owner, 2026-10-27). The value is for a figure
+value, where nobody can tell what happened then. The value is for a figure
 that reads on its own ("Health 30 %", "3 of 8"). `apptest.widget_problems` fails a bare time.
 
-Every mark says what it is on hover and on keyboard focus (owner, 2026-10-27), drawn by the
+Every mark says what it is on hover and on keyboard focus, drawn by the
 ui from the data alone, nothing to add: a square of `tiles` its label, its group and each part
 of its `detail` (split on " · ", so "Collecting · Feed flow" is two lines); a column of
 `columns` its hour or day and each stack's count; a bar its label, detail and value; a part of

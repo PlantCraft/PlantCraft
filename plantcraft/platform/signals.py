@@ -1,4 +1,4 @@
-"""Signal ids of API v1: ``<source id>:<tag>`` (``docs/app-standard.md``, decision D2).
+"""Signal ids of API v1: ``<source id>:<tag>`` (``docs/app-standard.md``).
 
 Inside PlantCraft a signal is still its tag: each tag is read from the one
 source that owns it (``SourceRegistry.source_of``: its route, else the

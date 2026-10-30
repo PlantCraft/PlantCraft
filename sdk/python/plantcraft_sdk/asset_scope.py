@@ -1,5 +1,5 @@
 """The part of the plant a person sees, for an app that answers from its own store
-(PlantCraft's docs/asset-scope.md, decision D2, 2026-10-27).
+(PlantCraft's docs/asset-scope.md).
 
 PlantCraft gives a person, or a group, the roots of the asset tree they see; the person's token
 carries them in the claim ``assets`` (absent: the whole plant). API v1 already answers that

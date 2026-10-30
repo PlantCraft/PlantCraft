@@ -76,7 +76,7 @@ class DashboardStore(Store):
             "2026-10-26-report-links",
             add_columns("dashboard_shares", {"target": "TEXT NOT NULL DEFAULT 'dashboard'"}),
         ),
-        # 2026-10-27 (review decision D4): a link lasts what its author chose (90 days unless
+        # 2026-10-27: a link lasts what its author chose (90 days unless
         # said otherwise); links made before stay until revoked (``expires_at`` empty).
         Migration(
             "2026-10-27-link-expiry", add_columns("dashboard_shares", {"expires_at": "TEXT"})

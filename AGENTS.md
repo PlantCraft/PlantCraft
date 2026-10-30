@@ -8,15 +8,13 @@ still picks which apps it runs. An external app lives in its publisher's own rep
 builds on the published SDK and ui. **This file is the suite's single source of rules**: every module's own
 `AGENTS.md` is short, points here, and adds only what is particular to that module (section 10).
 
-Names (decision D10, 2026-10-20): only the platform carries the Craft brand. A module is
+Names: only the platform carries the Craft brand. A module is
 **PlantCraft <name>** in documents (PlantCraft Analytics, Historian, View, Alarms, Models,
 Documents, Simulator; the names people see are in [docs/glossary.md](docs/glossary.md)) and just
-**<name>** inside the suite. PlantCraft is the final name (BACKLOG D5b, 2026-10-27; it was
-ProcessCraft, rename-plantcraft: keep): the SDK is `plantcraft-sdk` (`plantcraft_sdk`), the ui
+**<name>** inside the suite. The platform was called ProcessCraft until 0.5.0: the SDK is `plantcraft-sdk` (`plantcraft_sdk`), the ui
 `@plantcraft/ui`, the settings `PLANTCRAFT_*` (the old names are still read). App ids, images and
 prefixes keep their lowercase `<function>craft` form for good, the Simulator is `simcraft`, and
-each app's folder is its short name (`apps/link`). `dev/rename-plantcraft` brings a branch made
-before the rename to the new names. Code and identifiers are in English; user-facing text is written
+each app's folder is its short name (`apps/link`). Code and identifiers are in English; user-facing text is written
 in English and translated to Brazilian Portuguese (section 3, "One language source").
 
 The suite is built with AI coding agents (Claude Code), in the open: see
@@ -30,7 +28,7 @@ code. Read this file first, then `docs/STATUS.md`; the map of the suite is
 2. Read `docs/STATUS.md`: current focus, next task, blockers, last devlog entries.
 3. Read `ROADMAP.md` (readiness per product) and `docs/gaps.md` (ranked work list). Pick work from there.
 4. Read the `SPEC.md` and `ROADMAP.md` of the product you touch (section 2).
-5. Work autonomously. Stop and ask only for **owner decisions** (section 9).
+5. Work autonomously. Stop and ask only for **maintainer decisions** (section 9).
 
 ## 2. Map and layers
 
@@ -48,7 +46,7 @@ apps/link apps/historian apps/view          the official apps, one folder each (
 apps/alarms apps/models apps/documents      version, make ci, workflow in .github/workflows/<app>.yml)
 simulator/                                  PlantCraft Simulator, the OPC UA plant (own version and image)
 templates/app/                              StarterCraft, the app template (its own repository at release)
-deploy/ ci/ dev/                            the suite's installer and bundle, CI on the Mac mini, dev tools
+deploy/ ci/ dev/                            the suite's installer and bundle, CI, dev tools
 ```
 
 PlantCraft is the central app only (2026-10-19). Each module is its own app, in its own folder
@@ -62,7 +60,7 @@ reserved.
 Each module's folder holds its `SPEC.md` and `ROADMAP.md` (template:
 `docs/product-template-SPEC.md`); PlantCraft's are at the root of this repository.
 
-**Every app follows `docs/app-standard.md`** (decided by the owner, 2026-10-19): the same
+**Every app follows `docs/app-standard.md`**: the same
 `app.toml`, folder layout, image, settings and references (`asset:<id>`,
 `signal:<source>:<tag>`, `run:<app>/<id>`). Apps link only through what they publish in
 PlantCraft, **results** and **events** (API v1), and report their runs and schedules there;
@@ -90,7 +88,7 @@ suite table (section 7); `tests/test_suite_table.py` holds `deploy/compose.yaml`
 
 - **Read-only on plant systems.** No product writes to a DCS, PLC, PI or OPC UA server. The only
   write path is to the simulator (the Simulator); model-based control runs against simulation only.
-  Any new write path is an owner decision.
+  Any new write path is a maintainer decision.
 - **Bad data never crashes.** NaN, gaps, constant signals, empty windows, wrong units, a dead
   source, a malformed CSV or plant map: every method returns a result marked insufficient or
   not usable with a reason a person can act on, never an exception or a 500. Unfinished features
@@ -148,7 +146,7 @@ Our clients are industrial plants: nothing gets installed unless IT and OT secur
   when the text is produced (not at import). Keys live in `plantcraft/i18n/locales/pt-BR.json`.
 - Frontend: `import { t, locale } from "./i18n"`, `t("Save")`; keys in
   `frontend/src/locales/pt-BR.json`. Use `locale` for `Intl` and `localeCompare`.
-- Until the MVP ships the product is English only (owner decision, 2026-10-19): wrap new strings
+- Until the MVP ships the product is English only: wrap new strings
   in `t()`, but a pt-BR entry is optional. `tests/test_i18n.py` checks the entries that exist.
 - Help pages live in `docs/en/` and `docs/pt-BR/` under the same file name.
 
@@ -156,7 +154,7 @@ Our clients are industrial plants: nothing gets installed unless IT and OT secur
 
 - **This repository is public.** Every commit, branch name, pull request, review and comment is
   published the moment it is pushed. Only public information and methods go in; the words that
-  must never be published (the owner's list, repository secret `BANNED_WORDS`, never committed)
+  must never be published (a maintainer's list, repository secret `BANNED_WORDS`, never committed)
   appear nowhere, not even in a commit message. The Security workflow checks the tree and the
   commit messages of every pull request; check yours against the list before pushing.
 - We study paid tools (AVEVA PI, Seeq, TrendMiner, Control Station, Honeywell, ABB, Aspen,
@@ -208,7 +206,7 @@ Then:
 ### Quick interface changes (the person is waiting to see them)
 
 When the person asks for small interface changes (a color, a label, a spacing), show each one on
-the Mac mini's suite in seconds with `dev/preview` and run the slow steps once for the whole batch
+the project's test server in seconds with `dev/preview` and run the slow steps once for the whole batch
 with `dev/ship` (`dev/README.md`). Every app follows the same loop with these tools.
 
 ## 5. Oracles (public test data)
@@ -247,7 +245,7 @@ The full plan, with roles and the GitHub organisation, is
 - Inside this repository, shared files (`plantcraft/api/app.py`, the frontend router, the
   locale catalogs, `pyproject.toml`) get small, surgical edits; re-read before editing. Add new
   code in a **new module** instead of growing a shared file.
-- **CI cadence (owner, 2026-10-26).** A pull request runs only Lint and Security; run `make ci` of
+- **CI cadence.** A pull request runs only Lint and Security; run `make ci` of
   every folder you touched (`dev/ship`) before merging, that is the gate. The tests and e2e run on
   main about four times a day (ci/macmini/README.md); when one fails, the merge that broke it is
   fixed or reverted at once.
@@ -277,7 +275,7 @@ numbers are measured (tests, oracles) where possible and labelled "estimated" wh
 - A product appears in the default install only when it passes its oracles and its main journey
   end to end. Until then it is marked "preview".
 
-## 9. Owner decisions (stop and ask)
+## 9. Maintainer decisions (stop and ask)
 
 Licensing, making the repository or anything else public, publishing a release or the site,
 deploying the demo, new remotes, secrets and API keys, any write path to a plant system, deleting

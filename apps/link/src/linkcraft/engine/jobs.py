@@ -620,7 +620,7 @@ class JobStore(Store):
     def prune_detail(self, *, keep: int = 50) -> int:
         """Keep the full detail (each method's result, the configuration it ran with) of the
         newest ``keep`` ended runs per subject and schedule; older runs keep their summary
-        (owner decision D7: the long history is in the Historian). Runs thinned."""
+        (the long history is in the Historian). Runs thinned."""
 
         with self._lock, self._connect() as connection:
             old = [

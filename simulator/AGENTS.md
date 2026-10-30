@@ -20,7 +20,7 @@ English. **This folder is PlantCraft Simulator**, the OPC UA plant simulator; it
 3. Read `ROADMAP.md` (readiness per area) and `docs/gaps.md` (ranked work list). Pick work from there.
 4. Read `SPEC.md`, and `docs/opcua-interface.md` if you touch anything a client sees (namespace,
    NodeIds, history, timestamps, status codes).
-5. Work autonomously. Stop and ask only for **owner decisions** (section 9).
+5. Work autonomously. Stop and ask only for **maintainer decisions** (section 9).
 
 ## 2. Map and layers
 
@@ -56,7 +56,7 @@ docs/                    interface, contracts, scientific model, validation, rel
   benchmark modules and the benchmark never imports `loops`. `tests/test_architecture.py` fails
   on any import that goes up a layer or crosses between them.
 - **The namespace URI is `urn:processcraft:plantcraft`.** It is part of the benchmark identity
-  (manifest, checkpoint). Changing it is an owner decision and a new `benchmark_version`.
+  (manifest, checkpoint). Changing it is a maintainer decision and a new `benchmark_version`.
 - **NodeIds are a public contract.** `CPM.Loops.<LOOP>.<SIGNAL>` (read by PlantCraft's demo
   scenario) and the benchmark's catalog-owned `Plant.*` ids. Add nodes; never rename or remove
   one without a release note and a line in `docs/STATUS.md` for PlantCraft.
@@ -71,7 +71,7 @@ docs/                    interface, contracts, scientific model, validation, rel
 ### Never break the plant, never break the user (outranks feature work)
 
 - **PlantCraft Simulator is the suite's only write target**, and today it accepts no writes: every node
-  is read-only. A writable node (for ModelCraft/MPC against simulation) is an owner decision.
+  is read-only. A writable node (for ModelCraft/MPC against simulation) is a maintainer decision.
 - **Deterministic.** The same seed, start time and settings give the same values on the same
   platform. Randomness comes only from seeded, documented functions.
 - **Bad states are explicit.** Faults show as values, status codes and gaps a client can see
@@ -161,7 +161,7 @@ Oracle data is never committed; a new oracle is a new pin.
 - Versions `0.x` while alpha. This folder releases its own image (`simcraft:<version>`);
   PlantCraft's `make bundle` assembles the offline suite bundle from green `main` branches.
 
-## 9. Owner decisions (stop and ask)
+## 9. Maintainer decisions (stop and ask)
 
 Licensing, making anything public, publishing a release, new remotes, secrets, any write path
 (writable nodes), changing the namespace URI or a NodeId, translating the benchmark catalog

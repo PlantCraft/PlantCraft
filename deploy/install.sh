@@ -38,8 +38,8 @@
 # It never downloads anything: images come from images.tar in this bundle.
 set -Eeuo pipefail
 # Settings named before the rename to PlantCraft (2026-10-27) still count, as PLANTCRAFT_*.
-for former in $(compgen -e | grep '^PROCESSCRAFT_' || true); do # rename-plantcraft: keep
-    current="PLANTCRAFT_${former#PROCESSCRAFT_}" # rename-plantcraft: keep
+for former in $(compgen -e | grep '^PROCESSCRAFT_' || true); do
+    current="PLANTCRAFT_${former#PROCESSCRAFT_}"
     [ -n "${!current+set}" ] || export "$current=${!former}"
 done
 unset former current
@@ -465,13 +465,13 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
         env_set PLANTCRAFT_HOSTNAME "$(default_hostnames)" "$env"
         env_set PLANTCRAFT_TIMEZONE "$(server_time_zone)" "$env"
     fi
-    # Settings were PROCESSCRAFT_* until the rename to PlantCraft (2026-10-27). In such a .env, # rename-plantcraft: keep
+    # Settings were PROCESSCRAFT_* until the rename to PlantCraft (2026-10-27). In such a .env,
     # PLANTCRAFT_VERSION is the Simulator's (it was `plantcraft` until its 0.5.0): it moves first.
-    if grep -q '^PROCESSCRAFT_' "$env"; then # rename-plantcraft: keep
+    if grep -q '^PROCESSCRAFT_' "$env"; then
         env_rename PLANTCRAFT_VERSION SIMCRAFT_VERSION "$env"
         local former
-        for former in $(sed -n 's/^\(PROCESSCRAFT_[A-Z0-9_]*\)=.*/\1/p' "$env" | sort -u); do # rename-plantcraft: keep
-            env_rename "$former" "PLANTCRAFT_${former#PROCESSCRAFT_}" "$env" # rename-plantcraft: keep
+        for former in $(sed -n 's/^\(PROCESSCRAFT_[A-Z0-9_]*\)=.*/\1/p' "$env" | sort -u); do
+            env_rename "$former" "PLANTCRAFT_${former#PROCESSCRAFT_}" "$env"
         done
         log "Settings renamed to PLANTCRAFT_* in $env"
     fi

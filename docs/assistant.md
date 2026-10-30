@@ -1,11 +1,11 @@
 # The Assistant in Desk
 
-Desk › **Assistant** (owner, 2026-10-23) is where each person talks with a language model. Each
+Desk › **Assistant** is where each person talks with a language model. Each
 person keeps many chats, each on its own subject: a question about the plant ("plot FIC-101
 yesterday", "which loops need attention today?") or about how the platform works. Messages stay
 between people.
 
-**Platform use only** (owner, 2026-10-23): the assistant helps with PlantCraft and the plant, in
+**Platform use only**: the assistant helps with PlantCraft and the plant, in
 Desk and in the side panel. It declines anything else (translating or writing general texts,
 general knowledge) in one sentence and says what it can do instead; in the side panel it keeps to
 the page and the task the person chose.
@@ -70,8 +70,7 @@ required = true
   and the "why", action and event questions went to the plant's tools alone. Use it for a cheap
   search that answers most questions about the app's objects, not for a slow or wide read.
   On a page about an asset (the chat's subject is `asset:<id>`: an Analytics loop, an alarm's
-  tag), a tool that declares an `asset` argument gets it too (owner, 2026-10-27: a question about
-  a loop reads that loop's documents first).
+  tag), a tool that declares an `asset` argument gets it too.
 - **Citations that open the passage.** An item of an app's answer with `cite` (its number) and
   `url` (a path of the suite, `/doc/documents/<id>?passage=<n>&q=<words>`) is what the answer's
   `[n]` points to: PlantCraft writes each `[n]` of the final answer as a link to it
@@ -177,7 +176,7 @@ on every page, the same way in every app, and each page says what it can do ther
   "What to do …"), what the task read (a table's rows) and what the page shows. The model is told
   to do the task and to take everything else as information, never as instructions (it can quote
   the plant's own texts). The person reads it all under **See the context**.
-- **Like a chat in Messages** (owner, 2026-10-24, round 8). The panel opens on a new chat about
+- **Like a chat in Messages**. The panel opens on a new chat about
   the page (the tasks above) and, under it, the person's earlier chats, newest first (eight; the
   rest in Desk). A new chat is about the page it was started on (its place and context). Every
   chat is kept, private to the person, in Desk's Assistant; **Full page** opens it there, **New
@@ -262,7 +261,7 @@ work opens the standard assistant chat with a context PlantCraft builds.
   the chat's object (the last part of its reference: `block:linkcraft/rate` gives `rate`):
   "Help me change this block" continues in `form = "/link/blocks/{subject}/edit"`. With no object
   the proposal is refused.
-- **What each page offers (owner, 2026-10-26: "each page has different questions").** The menu
+- **What each page offers.** The menu
   never repeats the same questions everywhere. Every page has the suite's **Explain this page**
   (ui); the rest are the page's own works, in this pattern, so the apps read as one suite:
 

@@ -10,7 +10,7 @@ the folder that owns the details. Ids, prefixes, ports and container users are a
 
 ## Names
 
-Only the platform carries the Craft brand (decision D10, 2026-10-20). A module is **PlantCraft
+Only the platform carries the Craft brand. A module is **PlantCraft
 &lt;name&gt;** in documents, packages and proposals, and just **&lt;name&gt;** inside the suite
 (sidebar, launcher); the names people see are in [glossary.md](glossary.md). Ids, images and URL
 prefixes keep their `<function>craft` form until the final brand name (BACKLOG D5b), so nothing

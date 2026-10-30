@@ -3,7 +3,7 @@
 > **Updated:** 2026-10-20
 
 Every known shortfall of PlantCraft Analytics, ranked by user impact. `B` marks a blocker for the next stage.
-When a gap closes, delete its row in the same change and log it in `ROADMAP.md`. Ids continue the
+When a gap closes, delete its row in the same change and note it in `CHANGELOG.md`. Ids continue the
 monolith's numbering for the PlantCraft Analytics rows (G1, G3).
 
 | Id | Gap | Impact | B |

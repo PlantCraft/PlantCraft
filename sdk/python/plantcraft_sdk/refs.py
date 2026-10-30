@@ -5,7 +5,7 @@ Kind       Form                          Example
 =========  ============================  ==============================
 asset      ``asset:<asset id>``          ``asset:u200-fic1001``
 signal     ``signal:<source id>:<tag>``  ``signal:pi:FIC1001.PV``
-person     ``user:<user name>``          ``user:jonathan``
+person     ``user:<user name>``          ``user:ana.lima``
 run        ``run:<app id>/<run id>``     ``run:linkcraft/2026-10-19-0600``
 =========  ============================  ==============================
 

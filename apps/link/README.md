@@ -4,7 +4,7 @@
 
 Signal quality and control loop performance for process plants, as an app of the
 [PlantCraft](https://github.com/PlantCraft/PlantCraft) suite. PlantCraft Analytics is the former
-CPMCraft and DataCraft made one app (owner decision D9).
+CPMCraft and DataCraft made one app.
 
 PlantCraft Analytics checks every signal of a plant for bad data, and every control loop for oscillation,
 sticking, saturation and manual mode, on a cadence, and says why. The loop methods read the

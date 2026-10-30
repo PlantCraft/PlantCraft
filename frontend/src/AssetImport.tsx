@@ -203,7 +203,7 @@ export function AssetImportPage() {
   </>;
 }
 
-/** Assets › Import › Draft a new plant (owner decision D5, 2026-10-27): the first tree drafted from
+/** Assets › Import › Draft a new plant: the first tree drafted from
  * the plant's tags, placed by its documents and, for what stays unsure, a language model. The
  * draft opens on the review page like a file: nothing is written until it is applied. */
 function DraftPanel({ anchor }: { anchor: string }) {

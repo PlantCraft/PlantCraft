@@ -48,7 +48,7 @@ runs every day), View's report exports, notebook runs asked of an app.
   its queue (else `<app>/executions`).
 - **The panel.** The Queue button opens each app's numbers first (running of its workers,
   waiting, the oldest wait, failures in the last hour), with a "mine" mark when the person has
-  work waiting or running there (owner, 2026-10-26: the overview before the detail). Opening an
+  work waiting or running there. Opening an
   app lists its work by name, newest first: what waits or runs, with its progress, step and
   Cancel, and what ended in the last day, then a link to the app's own page of its queue.
   Above its work, an app that sends tasks to the suite's compute workers (docs/compute.md) shows

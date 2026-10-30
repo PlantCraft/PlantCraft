@@ -26,11 +26,11 @@ The Zones check writes, on the pull request's run page, which zones it touches. 
 
 | Check | Pass when |
 |---|---|
-| Zone | One zone. A core change links an issue the owner agreed to (the check fails a fork's core change without one) |
+| Zone | One zone. A core change links an issue a maintainer agreed to (the check fails a fork's core change without one) |
 | Scope | One change; no unrelated formatting, renames or dependency bumps |
 | Contract | API v1 only grows (`make api-contract` shows no removal); apps import only the SDK |
 | Tests | New behaviour has tests; `make ci` green in each folder it touches (root, `apps/<app>`) |
-| Safety | No network call, no write to the plant, no secret, no binary from outside; paths in [CODEOWNERS](../.github/CODEOWNERS) get the owner's review |
+| Safety | No network call, no write to the plant, no secret, no binary from outside; paths in [CODEOWNERS](../.github/CODEOWNERS) get a maintainer's review |
 | Methods | A public reference, tests on a known answer, the description format |
 | Docs | User-visible changes update `docs/`, the CHANGELOG and the pt-BR catalog |
 
@@ -51,7 +51,7 @@ Claude Code session on this repository, ask:
 
 It reads the pull request, runs the checks above and the `make ci` of the folders it touches,
 and answers with the verdict, the reasons and a draft reply for the contributor. Nothing is
-posted or merged without the owner.
+posted or merged without a maintainer.
 
 ## Releases
 

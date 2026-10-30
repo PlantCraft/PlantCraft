@@ -2,14 +2,14 @@
 
 **Read the suite's rules first**: the repository's root `AGENTS.md` (`../../AGENTS.md`), the single
 source of rules for the platform and every app. This file adds only
-what is particular to PlantCraft Analytics; where the two differ, ask the owner which one wins and fix the other.
+what is particular to PlantCraft Analytics; where the two differ, ask a maintainer which one wins and fix the other.
 
 This folder is **PlantCraft Analytics** (`linkcraft`, prefix `/link/`, port 8140, uid 10012):
 Checks every signal for bad data and every control loop for oscillation, sticking and manual mode, and says why.
 
 ## What PlantCraft Analytics is (above every block and algorithm)
 
-Owner's governing principle (2026-10-22): the philosophy of the app matters more than any one
+Governing principle: the philosophy of the app matters more than any one
 block or algorithm, and every change keeps to it and refines it. PlantCraft Analytics is an engine of
 **monitoring algorithms** that run on their own, routinely, over the plant's assets and return an
 explained verdict:
@@ -27,7 +27,7 @@ explained verdict:
    Historian as described series, so Trends, Dashboards and the assistant read them.
 
 Control loop performance (CPM) and data quality are only the first block libraries. A change that
-breaks one of these points needs the owner's decision first. Methods and checks are **blocks**
+breaks one of these points needs a maintainer's decision first. Methods and checks are **blocks**
 and protocols are **algorithms**: diagrams of blocks (`docs/blocks-and-algorithms.md`).
 
 ## Start here
@@ -73,7 +73,7 @@ deploy/         requirements.in/.lock: hashed dependencies of the Docker image (
 - **Site block code never runs in Link's process.** Blocks written on a site (library `custom`)
   go through `blocks/sandbox.py`: the AST check, then a separate restricted process (no files,
   no network, memory and time limits). Never call their `run` directly, never widen
-  `ALLOWED_MODULES` or allow underscore names without the owner's decision, and keep versions
+  `ALLOWED_MODULES` or allow underscore names without a maintainer's decision, and keep versions
   immutable (a change is a new version; `docs/blocks-and-algorithms.md`, "Site blocks").
 - **The interface frame is `@plantcraft/ui`** (`SuiteShell`, `HelpBrowser`, tokens, fonts,
   marks); never copy its pieces here. If the frame lacks something, note it for PlantCraft.

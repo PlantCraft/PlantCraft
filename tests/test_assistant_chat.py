@@ -194,7 +194,7 @@ def test_a_person_groups_archives_and_shares_a_chat_and_others_continue_it_in_a_
         item["text"] for item in view["messages"]
     ]
     # The answers were read with the owner's access: only an administrator shares with
-    # everyone (review decision D3); she shares her copy with people or groups.
+    # everyone; she shares her copy with people or groups.
     own = f"/api/assistant/chats/{copy.json()['chat_id']}/sharing"
     assert ana.put(own, json={"grants": ["everyone"]}).status_code == 403
     assert ana.put(own, json={"grants": ["user:admin"]}).status_code == 200

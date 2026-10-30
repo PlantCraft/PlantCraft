@@ -1,4 +1,4 @@
-"""What part of the plant a person sees: their asset scope (docs/asset-scope.md, decision D2).
+"""What part of the plant a person sees: their asset scope (docs/asset-scope.md).
 
 A person, and a group, may be given the roots of the asset tree they see ("U-100", "Utilities").
 A person sees the assets under their own roots and under the roots of their groups that have

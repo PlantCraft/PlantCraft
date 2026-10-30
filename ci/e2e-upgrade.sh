@@ -78,9 +78,9 @@ else
 fi
 [ -f "$from_dir/bundle.env" ] || die "$from_dir is not a bundle (no bundle.env)"
 (cd "$from_dir" && sha256sum --quiet -c SHA256SUMS) || die "the released bundle's SHA256SUMS do not match"
-# A bundle made before the rename to PlantCraft names the platform's version PROCESSCRAFT_VERSION # rename-plantcraft: keep
+# A bundle made before the rename to PlantCraft names the platform's version PROCESSCRAFT_VERSION
 # (its PLANTCRAFT_VERSION is the Simulator's).
-FROM_VERSION="$(env_of PROCESSCRAFT_VERSION "$from_dir/bundle.env")" # rename-plantcraft: keep
+FROM_VERSION="$(env_of PROCESSCRAFT_VERSION "$from_dir/bundle.env")"
 FROM_VERSION="${FROM_VERSION:-$(env_of PLANTCRAFT_VERSION "$from_dir/bundle.env")}"
 # The Simulator is built from this checkout: 0.5.0 renamed it (plantcraft -> simcraft), so the
 # released image no longer fits the new compose file.

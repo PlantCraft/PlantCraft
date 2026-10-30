@@ -84,7 +84,7 @@ the format, the rules and a worked example; `blocks/guide.py`).
   (`BlockStore.create(..., shipped=True)`), the palette lists it from then on, and the algorithms
   that use the block keep version 1 until they are updated. Deleting the site's versions goes back
   to Analytics'. **Duplicate** still makes a separate block under a new id.
-- **The block page** (owner D15–D17, 2026-10-26): Overview (the block's documentation only),
+- **The block page**: Overview (the block's documentation only),
   Inputs and outputs (inputs, outputs and parameters in one table), Code (one version's
   calculation; a version after the first compares with the one before), Test (the block on an
   asset's last window, each input read from a role or a signal id, every output drawn; nothing
@@ -130,7 +130,7 @@ copy):
 
 Each algorithm row carries `author`, `owner`/`owner_name`, `tags`, `group_id` and `version`
 (`catalog/presets.py`). A save increments the version; `algorithm_versions` keeps each one with
-its own `version_name` and `version_note` (owner D19, 2026-10-26). The algorithm's page has a
+its own `version_name` and `version_note`. The algorithm's page has a
 block's tabs (Overview, Inputs and outputs, Diagram, Test, Used by, Versions), opens at any
 version (`?version=N`, with a banner and **Use this version**, which saves that version again as
 the newest, since the monitors run the newest), and one **New version** form: what it is, the
@@ -253,7 +253,7 @@ it is.
 
 ## Recorded outputs
 
-What each run keeps in the Historian is the monitor's choice (owner, 2026-10-25, D6). A
+What each run keeps in the Historian is the monitor's choice. A
 monitor on assets lists its algorithm's recorded ports in **Recorded outputs**, one row each:
 record it or not, and for how long, with what it costs before it is saved (values a day and
 the space they take on all its assets; one year for what is kept forever).

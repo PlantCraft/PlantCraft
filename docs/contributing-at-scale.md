@@ -1,7 +1,7 @@
 # Contributing at scale: many people and agents, no conflicts
 
 > **Updated:** 2026-10-21 · Status: plan. The repositories are private and under one personal
-> account today; the organisation below is set up when the owner decides (AGENTS.md, section 9).
+> account today; the organisation below is set up when a maintainer decides (AGENTS.md, section 9).
 
 The suite is meant to grow fast: many contributors, most of them working with an AI agent, each
 on a module of their own, with little human review in between. That only works if the structure
@@ -17,7 +17,7 @@ keeps changes apart and the checks catch what reviewers would. This page is how.
   picks it up in its own PR with `dev/revendor`. Nobody edits a vendored file. The version
   number is taken at merge time by `dev/sdk-version` (main's next free one), never by hand.
 - **Contracts are additive.** API v1, the app standard and the SDK add fields and functions; they
-  do not rename or remove inside a major version. A breaking change is an owner decision with a
+  do not rename or remove inside a major version. A breaking change is a maintainer decision with a
   migration for every module in the same release.
 - **Assigned once.** Ids, prefixes, ports and container users live in the suite table
   ([app-standard.md](app-standard.md), section 7). A new module takes the next row in a
@@ -42,23 +42,23 @@ line-by-line read:
 A human reviews what the gates cannot judge: product decisions, wording people read, new
 dependencies, and anything in section 9 of AGENTS.md. A change to a path `.github/CODEOWNERS`
 guards (sign-in, permissions, the assistant's tools, the stores, the sandbox, the installer, CI,
-the agents' rules and the tests that hold them) is always read by the owner, gates or not: a
+the agents' rules and the tests that hold them) is always read by a maintainer, gates or not: a
 hostile pull request can weaken a gate too ([contributing-safety.md](contributing-safety.md)).
 
 ## 3. Roles
 
 | Role | Who | May |
 |---|---|---|
-| Owner | the project lead | Owner decisions (AGENTS.md section 9), releases, the suite table, the rules |
+| Owner | the project lead | Maintainer decisions (AGENTS.md section 9), releases, the suite table, the rules |
 | Maintainer | one or two per module | Merge PRs in their module when CI is green; review module PRs from others |
 | Platform maintainer | few, trusted | Merge in `processcraft` (SDK, UI, API v1, the standard); every module depends on it |
 | Contributor | anyone invited | Open PRs; an agent session counts as the person who runs it |
 
 Every PR names the person responsible, even when an agent wrote it.
 
-## 4. The GitHub organisation (when the owner sets it up)
+## 4. The GitHub organisation (when a maintainer sets it up)
 
-- **One organisation** (the platform's name), all repositories private until the owner opens
+- **One organisation** (the platform's name), all repositories private until a maintainer opens
   them (after the institutional clearance and a pilot).
 - **Two repositories** (decided 2026-10-23): `PlantCraft`, the whole suite (the platform at the
   root, every official app in `apps/<app>`, the Simulator in `simulator/`), and
@@ -91,4 +91,4 @@ Every PR names the person responsible, even when an agent wrote it.
    `ROADMAP.md`, `docs/` (`STATUS.md`, `gaps.md`, `devlog.md`, `help/`), `vendor/`.
 3. The server from `plantcraft_sdk.server`, the interface on `@plantcraft/ui`, the tests on
    `plantcraft_sdk.apptest`; `make ci` green.
-4. A first PR that passes every gate, then the owner adds it to the bundle.
+4. A first PR that passes every gate, then a maintainer adds it to the bundle.

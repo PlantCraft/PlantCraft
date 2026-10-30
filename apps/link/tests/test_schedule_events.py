@@ -1,4 +1,4 @@
-"""What Link tells the Alarms app (owner decision D6, 2026-10-24; only changes since Alarms
+"""What Link tells the Alarms app (only changes since Alarms
 round 11): a subject's state when it changes, a failed run once per run of its schedule and a
 schedule that stopped once per schedule, each with its schedule and owner. What each run
 computed is series, not events."""

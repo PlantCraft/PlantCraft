@@ -1,5 +1,5 @@
 # ruff: noqa: F811  (the fixtures admin, eng and viewer come from test_asset_model.py)
-"""Assets › Import › Draft a plant (owner decision D5, 2026-10-27): a new plant's first tree drafted
+"""Assets › Import › Draft a plant: a new plant's first tree drafted
 from its tags by rules, the plant's documents and, for what stays unsure, a language model, then
 reviewed on the import's own page. The demo plant's map is the answer key: the draft is built
 from its 205 tags alone, as an OPC UA browse lists them, with the passages a real Documents finds

@@ -1,6 +1,6 @@
 # Desk: each person's day
 
-Desk is the suite's first screen (owner, 2026-10-23): each person's own workspace, with what
+Desk is the suite's first screen: each person's own workspace, with what
 they have to do, what came to them and what they follow, arranged as they like. It is built
 into the platform (same container, same database, served at `/`); PlantCraft's own pages
 (Overview, Assets, Settings, People, Apps, System health, Backups, Updates) moved under `/admin` and the PlantCraft
@@ -26,7 +26,7 @@ Today uses `WidgetBoard` from `@plantcraft/ui`, the board every Overview uses, o
 `CardGrid` (12 columns, the same row height and gap as View's dashboards, react-grid-layout).
 **Customize** is a discreet text button; in edit mode a widget moves by its title, has a gear
 for its settings (title, size, the widget's own fields, with a preview) and an X. Sizes are
-fixed (owner, 2026-10-24): each widget has one to three, 1 to 3 rows high, and draws what fits.
+fixed: each widget has one to three, 1 to 3 rows high, and draws what fits.
 "Add a widget" opens a window with the apps at the left and their widgets, previewed, at the
 right. A widget marked `multiple` can be added more than once with other settings (two "My
 actions": mine and my groups'). See [widgets.md](widgets.md).
@@ -51,7 +51,7 @@ dismissed per person (`desk_triage`).
 
 ## To-do
 
-To-do (owner, round 7, 2026-10-24) has the shape of Microsoft To Do and the Mac's Reminders. A
+To-do has the shape of Microsoft To Do and the Mac's Reminders. A
 one-line box adds a to-do (to My day, to the list open, or due today in Planned). A to-do has a
 date, a repeat (every day, Monday to Friday, or on some days of the week), up to 30 steps, notes
 and a list; **My day** holds what is due by today (late ones too), what the person picked for
@@ -77,7 +77,7 @@ The items a routine had put on past days, left undone, went: the repeated to-do 
 
 ## Notes
 
-Notes (owner, round 7, 2026-10-24) have the shape of Apple Notes and OneNote, in an editor of
+Notes have the shape of Apple Notes and OneNote, in an editor of
 their own (Tiptap, MIT; loaded only on this page). A note has a title and a body with headings,
 bulleted and numbered lists, a **checklist**, quotes and code, and `#` mentions: typing `#` lists
 the assets and actions the person can see (the same list as Messages' references), and a
@@ -95,11 +95,10 @@ server keeps the body as Tiptap's JSON and its plain text (for search and the li
 
 ## Team
 
-Team is **hidden** until an administrator shows it in Settings › Desk (owner, 2026-10-25: its use is
-not clear yet); the page still opens at `/team`. `GET /api/desk/team-page` says whether Desk lists
+Team is **hidden** until an administrator shows it in Settings › Desk; the page still opens at `/team`. `GET /api/desk/team-page` says whether Desk lists
 it, `PUT` (administrators) changes it.
 
-Team (owner, round 7, 2026-10-24) answers "how is my group today, and who can take this?". Every
+Team answers "how is my group today, and who can take this?". Every
 member sees their groups, a leader also the groups under the ones they lead, and an administrator
 every group (round 8), with the same rights as a leader; a picker at the top changes group.
 **All groups** (the default with more than one group) puts every group side by side: its open and

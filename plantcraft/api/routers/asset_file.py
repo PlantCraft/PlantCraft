@@ -6,7 +6,7 @@ read (``/read``, the file as the request body), reviewed and edited on its own p
 (``/review``), then applied (``/apply``): the last two take the document as JSON. The newest
 applied import can be undone (``/last-import``, ``/undo``).
 
-A new plant's first tree can be drafted instead of written (``/draft``, owner decision D5): from a
+A new plant's first tree can be drafted instead of written (``/draft``): from a
 source's tags or a tag spreadsheet (``/draft/tags``), placed by the plant's documents when
 PlantCraft Documents is installed and by a language model when one is chosen for "Plant draft"
 (``plantcraft/platform/plantdraft.py``). The draft opens on the same review page.

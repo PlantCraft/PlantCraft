@@ -38,7 +38,7 @@ simulation servers and process training simulators; their public pages are still
 | Process | Plant-wide coupling between units | Downs and Vogel 1993 | done (benchmark) | `tests/test_model.py` |
 | Process | Ground truth of every injected fault, kept apart from the data | category | done (benchmark truth artifact) | `tests/test_dataset.py` |
 | Process | Offline datasets with manifest and digests | category | done (benchmark) | `tests/test_contracts.py` |
-| Control | Writable setpoints, modes and outputs from a client | category | missing: read-only today; an owner decision (G4) | |
+| Control | Writable setpoints, modes and outputs from a client | category | missing: read-only today; a maintainer decision (G4) | |
 | Alarms | Alarms and conditions events | Part 9 | missing (G8) | |
 | Address space | Import or export a NodeSet2 model | Part 6 | missing (G9) | |
 | Replay | Replay a recorded CSV as live tags | category | missing (G10) | |

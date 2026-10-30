@@ -549,7 +549,7 @@ def share(chat_id: int, payload: ChatSharing, user: CurrentUser, rt: Runtime) ->
     _owned(rt, chat_id, user)
     if "everyone" in payload.grants and _level(rt, user) != "admin":
         # The answers were read with the owner's access: shown to the whole workspace they
-        # would carry documents and results others may not read (review decision D3).
+        # would carry documents and results others may not read.
         raise HTTPException(
             status_code=403, detail=t("Only an administrator shares a chat with everyone.")
         )

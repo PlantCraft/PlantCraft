@@ -1,6 +1,6 @@
 # Asset scope: who sees which part of the plant
 
-> **Added:** 2026-10-27 (owner decision D2 of the final platform review)
+> **Added:** 0.5.0
 
 Access has three axes. The **level** says what a person may do (dashboards, viewer, editor,
 admin). The **apps** say where. The **asset scope** says which part of the plant: a contractor of

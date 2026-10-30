@@ -14,7 +14,7 @@ every few seconds (``version`` changes on every write) and never writes them.
   and kept 90 days (docs/data-layer.md).
 - A **point** is one signal of a source: its tag (unique in its source), its address
   on the server, how it is read and how it is compressed. Its signal id, the one
-  PlantCraft and every app use, is ``<source id>:<tag>`` (API v1, decision D2).
+  PlantCraft and every app use, is ``<source id>:<tag>`` (API v1).
 - A point's **mode** says where its history comes from (docs/data-layer.md): read
   from the source on each request (``source``), collected and archived here
   (``archive``), or both. Empty means the source's mode, and an empty source mode

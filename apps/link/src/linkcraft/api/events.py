@@ -1,4 +1,4 @@
-"""What Link tells the Alarms app about its schedules (owner decision D6, 2026-10-24; only
+"""What Link tells the Alarms app about its schedules (only
 changes since Alarms round 11, 2026-10-26).
 
 Link does not decide who is notified: it publishes events and the Alarms app turns them into

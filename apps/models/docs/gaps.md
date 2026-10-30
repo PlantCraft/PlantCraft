@@ -3,7 +3,7 @@
 > **Updated:** 2026-10-23
 
 Every known shortfall of PlantCraft Models, ranked by user impact. `B` marks a blocker for the next stage.
-When a gap closes, delete its row in the same change and log it in `ROADMAP.md`.
+When a gap closes, delete its row in the same change and note it in `CHANGELOG.md`.
 
 | Id | Gap | Impact | B |
 |---|---|---|---|
@@ -18,4 +18,4 @@ When a gap closes, delete its row in the same change and log it in `ROADMAP.md`.
 | G3 | No connection routing (orthogonal lines that avoid components, editable points): large diagrams get crossed lines | low | |
 | G7 | No member completion or go to definition in the editor | low | |
 | G8 | No Git for projects | low | |
-| G10 | Portuguese catalog for `t()` (parked by the owner: English first) | low | |
+| G10 | Portuguese catalog for `t()` (parked by a maintainer: English first) | low | |

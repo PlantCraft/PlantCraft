@@ -99,7 +99,7 @@ Machine ids served today map to the family in `APP_ID_BY_MACHINE_ID`
   platform mark is the only element that reaches the margin).
 - One-colour media: the glyph alone in black or white (`variant="glyph"`).
 
-### Names (owner, 2026-10-20)
+### Names
 
 Only the platform carries the Craft brand. An app is **PlantCraft <name>** in documents, packages
 and proposals (PlantCraft Analytics, PlantCraft Historian, PlantCraft View, PlantCraft Alarms,

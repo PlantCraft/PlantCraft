@@ -1,7 +1,7 @@
 """A new plant drafted from its tags: the first asset tree, reviewed on Assets › Import.
 
 Creating hundreds of loops, instruments, valves and equipment by hand is the slowest part of
-starting PlantCraft on a new plant (owner decision D5, 2026-10-27). The draft does it in three
+starting PlantCraft on a new plant. The draft does it in three
 passes, each one optional after the first, and writes nothing: it is an asset-file document
 (``assetfile.py``) that opens on the import's review page, where a person checks it, leaves out
 what is wrong and applies it (and can undo it).
