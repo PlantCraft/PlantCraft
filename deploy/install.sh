@@ -1666,7 +1666,11 @@ do_show_config() {
         printf '  %-36s %-28s %-28s %s\n' "$key" "${want:-(empty)}" "${have:-(empty)}" "$state"
     done
     if [ -n "$CONF_APPS" ]; then
-        printf '  %-36s %-28s %-28s\n' "COMPOSE_PROFILES (apps)" "$(printf '%s' "$CONF_APPS" | xargs | tr ' ' ',')" "$(env_get COMPOSE_PROFILES "$env")"
+        want="$(printf '%s' "$CONF_APPS" | xargs | tr ' ' ',')"
+        have="$(env_get COMPOSE_PROFILES "$env" | tr ',' '\n' | grep -v '^demo$' | paste -sd, -)"
+        state=""
+        [ "$want" = "$have" ] || state="differs"
+        printf '  %-36s %-28s %-28s %s\n' "COMPOSE_PROFILES (apps)" "$want" "${have:-(empty)}" "$state"
     fi
 }
 

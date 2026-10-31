@@ -118,7 +118,9 @@ fi
 
 # 2. Docker --------------------------------------------------------------------------------------
 docker_ok=0
-if ! command -v docker >/dev/null 2>&1; then
+if [ "$wsl" = 1 ] && [[ "$(command -v docker 2>/dev/null)" == /mnt/* ]]; then
+    add FAIL "Docker Engine" "Windows' docker.exe ($(command -v docker))" "a Docker Engine inside this Linux" "Windows' PATH reaches Docker Desktop here: add [interop] appendWindowsPath=false to /etc/wsl.conf, run wsl --terminate, then install.sh --install-docker."
+elif ! command -v docker >/dev/null 2>&1; then
     add FAIL "Docker Engine" "not installed" ">= $MIN_DOCKER" "Install Docker Engine (the bundle's docker/ folder, or docs/install-offline.md section 1)."
 elif ! docker info >/dev/null 2>&1; then
     add FAIL "Docker Engine" "installed, daemon not reachable" "running, and this user may use it" "Start Docker; run as root or as a member of the docker group."
@@ -262,7 +264,7 @@ fi
 # Report -----------------------------------------------------------------------------------------
 if [ "$JSON" = 1 ]; then
     esc() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
-    printf '{"apps":"%s","fails":%d,"warnings":%d,"checks":[' "$(esc "$APP_IDS")" "$FAILS" "$WARNS"
+    printf '{"apps":"%s","fails":%d,"warnings":%d,"checks":[' "$(esc "$(printf '%s' "$APP_IDS" | xargs)")" "$FAILS" "$WARNS"
     first=1
     for r in "${RESULTS[@]}"; do
         IFS='|' read -r s n f w h i <<<"$r"
