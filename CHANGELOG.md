@@ -279,6 +279,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **The release bundle carries the setup wizard.** `deploy/bundle.sh` left `wizard/` out, so the
+  documented `sudo python3 wizard/wizard.py` found nothing in a bundle.
+
 - **Interface pass, second round** (every page clicked like a person, light, dark and phone):
   the platform's windows (new action, calendar event, messages, people, asset forms) close with
   Escape, keep Tab inside and give focus back, like the ui's `Dialog`; Installed apps is a section
