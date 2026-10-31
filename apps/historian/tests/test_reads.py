@@ -7,7 +7,10 @@ token, even without access to the Historian app. Nothing else gets in, and nothi
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
+from plantcraft_sdk.contract import parse_times
+from plantcraft_sdk.wire import MEDIA_TYPE, read_binary
 
 from histcraft.catalog.models import PointIn
 from tests.conftest import client_for
@@ -31,7 +34,7 @@ def app(runtime, fake):
 
 
 def test_the_reads_answer_as_the_data_routes(pc, app, loaded):  # noqa: F811
-    assert app.get(f"{V1}/reads").json() == {"api": 1}
+    assert app.get(f"{V1}/reads").json() == {"api": 1, "formats": ["pcs1"]}
     for path, params in (
         ("/signals", {}),
         ("/signals", {"q": "mode"}),
@@ -125,3 +128,27 @@ def test_a_batch_reads_the_archive_in_one_go(app, loaded, monkeypatch):  # noqa:
     assert len(answer["series"]) == 42 and not answer["errors"]
     # one archive read for the batch; only the bare tag is looked up on its own
     assert calls == {"read": 0, "read_many": 1, "find": 1}
+
+
+def test_the_binary_answer_holds_the_json_answer(app, loaded):  # noqa: F811
+    """``Accept: application/x-plantcraft-series``: the same series, errors and order, as
+    millisecond times and floats (NaN for null) instead of text."""
+
+    signals = ["plant:TI-100.PV", "missing", "plant:FIC-101.MODE", "plant:Area/1/TT"]
+    for step in (None, 60, 3600):
+        body = {"signals": signals, **WINDOW, "step": step}
+        text = app.post(f"{V1}/series", json=body).json()
+        answer = app.post(f"{V1}/series", json=body, headers={"Accept": MEDIA_TYPE})
+        assert answer.headers["content-type"].startswith(MEDIA_TYPE)
+        series, errors = read_binary(answer.content)
+        assert errors == text["errors"]
+        assert [item["signal"] for item in series] == [item["signal"] for item in text["series"]]
+        for mine, theirs in zip(series, text["series"], strict=True):
+            assert mine["kind"] == theirs["kind"]
+            stamps = parse_times(theirs["t"]).as_unit("ms").asi8
+            assert np.array_equal(np.asarray(mine["t"]), stamps)
+            if isinstance(mine["v"], np.ndarray):
+                wanted = np.array([np.nan if v is None else v for v in theirs["v"]], dtype=float)
+                assert np.array_equal(mine["v"], wanted, equal_nan=True)
+            else:
+                assert mine["v"] == theirs["v"]

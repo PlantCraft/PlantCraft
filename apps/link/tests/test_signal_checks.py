@@ -14,7 +14,7 @@ from tests.signal_plant import base, times
 SIGNAL = {"id": "X", "kind": "number", "low": 0.0, "high": 100.0, "roles": [], "settings": {}}
 
 
-def verdict(values, signal=None, reference=None, settings=None):
+def verdict(values, signal=None, reference=None, settings=None, quality=None):
     signal = {**SIGNAL, **(signal or {})}
     index = times()
     return assess(
@@ -25,6 +25,7 @@ def verdict(values, signal=None, reference=None, settings=None):
             "start": index[0],
             "end": index[-1],
             "checks": plan(signal, settings or SignalQualitySettings()),
+            "quality": quality,
         }
     )
 
@@ -81,6 +82,30 @@ def test_a_gap_lowers_coverage():
     assert found["metrics"]["gap_count"] == 1
     assert 0.9 < found["metrics"]["coverage"] < 0.95
     assert found["status"] == "warning"
+
+
+def change(position, code):
+    return {"t": times()[position].isoformat(), "quality": code}
+
+
+def test_the_sources_quality_reaches_availability():
+    values = base(4)
+    clean = result(verdict(values, quality=[]), "sq_availability")
+    assert clean["status"] == "ok" and clean["metrics"]["quality_uncertain"] == 0
+    # A tenth of the window substituted: those values are present but not data.
+    substituted = [change(1000, "substituted"), change(1000 + len(values) // 10, "good")]
+    found = result(verdict(values, quality=substituted), "sq_availability")
+    assert 0.88 < found["metrics"]["coverage"] < 0.91
+    assert 0.09 < found["metrics"]["quality_substituted"] < 0.11
+    assert found["status"] == "warning" and found["metrics"]["gap_count"] == 0
+    # Uncertain since the window began (the state at its start comes first): doubtful data,
+    # a warning, never unusable.
+    uncertain = [{"t": "2000-01-01T00:00:00+00:00", "quality": "uncertain"}]
+    doubtful = result(verdict(values, quality=uncertain), "sq_availability")
+    assert doubtful["metrics"]["quality_uncertain"] == 1.0
+    assert doubtful["metrics"]["coverage"] == 1.0 and doubtful["status"] == "warning"
+    # Without quality from the source the check is as before.
+    assert "quality_bad" not in result(verdict(values), "sq_availability")["metrics"]
 
 
 def test_no_samples_at_all_is_bad_not_a_crash():

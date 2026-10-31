@@ -129,19 +129,45 @@ def _safe_relative(path: Any) -> bool:
     return ".." not in PurePosixPath(path).parts
 
 
-def sqlite_copy(source: Path, target: Path) -> dict[str, int]:
+def sqlite_open(source: Path) -> sqlite3.Connection:
+    """A read-only connection to ``source`` that holds one read snapshot from now on.
+
+    In WAL mode the snapshot costs the apps nothing (writers go on beside it) and the copy taken
+    from it later is the database as it was at this instant. ``take`` opens every database of the
+    installation this way first, in a few milliseconds, so the backup holds the whole suite at one
+    moment: a reference from one app to another (``run:<app>/<id>``) never points past the copy.
+    A database not in WAL (Docker Desktop's bind mounts, a share) is not held: there a held read
+    would stop its app's writes for the whole backup, so it is copied on its own, in one step.
+    """
+
+    reader = sqlite3.connect(f"file:{source}?mode=ro", uri=True, timeout=60, isolation_level=None)
+    try:
+        reader.execute("PRAGMA busy_timeout = 60000")
+        if reader.execute("PRAGMA journal_mode").fetchone()[0].lower() == "wal":
+            reader.execute("BEGIN")
+            reader.execute("SELECT COUNT(*) FROM sqlite_master").fetchone()
+    except sqlite3.Error:
+        reader.close()
+        raise
+    return reader
+
+
+def sqlite_copy(
+    source: Path, target: Path, reader: sqlite3.Connection | None = None
+) -> dict[str, int]:
     """Copy one database with SQLite's online backup; returns its rows per table.
 
-    Raises ``SnapshotError`` when the copy fails ``integrity_check``.
+    ``reader`` is the connection ``sqlite_open`` gave (its snapshot is what is copied); without
+    it one is opened now. The copy is one step: a backup in steps starts again whenever another
+    process commits between two of them, and a busy app (a commit every few milliseconds) kept
+    it from ever finishing. Raises ``SnapshotError`` when the copy fails ``integrity_check``.
     """
 
     target.parent.mkdir(parents=True, exist_ok=True)
-    # Read-only with the WAL as the app left it: the copy holds every committed transaction.
-    reader = sqlite3.connect(f"file:{source}?mode=ro", uri=True, timeout=60)
+    reader = reader or sqlite_open(source)
     writer = sqlite3.connect(target)
     try:
-        reader.execute("PRAGMA busy_timeout = 60000")
-        reader.backup(writer, pages=4096, sleep=0.01)
+        reader.backup(writer)
         # One self-contained file (no -wal beside it); the app turns WAL on again when it opens.
         writer.execute("PRAGMA journal_mode = DELETE")
     finally:
@@ -183,6 +209,21 @@ def _sqlite_side_file(path: Path) -> bool:
     return False
 
 
+def _copy_one(source: Path, target: Path, reader: sqlite3.Connection | None) -> dict[str, Any]:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    entry: dict[str, Any] = {"kind": "file"}
+    if reader is not None:
+        entry = {"kind": "sqlite", "tables": sqlite_copy(source, target, reader)}
+    else:
+        shutil.copy2(source, target)
+    status = source.stat()
+    if os.geteuid() == 0:
+        os.chown(target, status.st_uid, status.st_gid)
+    os.chmod(target, status.st_mode & 0o7777)
+    entry.update(size=target.stat().st_size, sha256=sha256(target))
+    return entry
+
+
 def _copy_tree(install: Path, stage: Path, skip: tuple[str, ...]) -> dict[str, dict[str, Any]]:
     files: dict[str, dict[str, Any]] = {}
     sources = [install / name for name in SETTINGS if (install / name).is_file()]
@@ -199,25 +240,28 @@ def _copy_tree(install: Path, stage: Path, skip: tuple[str, ...]) -> dict[str, d
                     if not _skipped(PurePosixPath((here / name).relative_to(install)), skip)
                 )
                 sources += [here / name for name in sorted(names)]
-    for source in sources:
-        relative = PurePosixPath(source.relative_to(install))
-        if _skipped(relative, skip) or source.is_symlink() or not source.is_file():
-            continue
-        if _sqlite_side_file(source):
-            continue
-        target = stage / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        entry: dict[str, Any] = {"kind": "file"}
-        if is_sqlite(source):
-            entry = {"kind": "sqlite", "tables": sqlite_copy(source, target)}
-        else:
-            shutil.copy2(source, target)
-        status = source.stat()
-        if os.geteuid() == 0:
-            os.chown(target, status.st_uid, status.st_gid)
-        os.chmod(target, status.st_mode & 0o7777)
-        entry.update(size=target.stat().st_size, sha256=sha256(target))
-        files[relative.as_posix()] = entry
+    sources = [
+        source
+        for source in sources
+        if not _skipped(PurePosixPath(source.relative_to(install)), skip)
+        and not source.is_symlink()
+        and source.is_file()
+        and not _sqlite_side_file(source)
+    ]
+    # Every database's snapshot first, together: the backup is the suite at one instant.
+    readers: dict[Path, sqlite3.Connection] = {}
+    try:
+        for source in sources:
+            if is_sqlite(source):
+                readers[source] = sqlite_open(source)
+        for source in sources:
+            relative = PurePosixPath(source.relative_to(install))
+            files[relative.as_posix()] = _copy_one(
+                source, stage / relative, readers.pop(source, None)
+            )
+    finally:
+        for reader in readers.values():
+            reader.close()
     # Folders keep their owners and modes too (each app owns its own).
     for directory in sorted(path for path in stage.rglob("*") if path.is_dir()):
         original = install / directory.relative_to(stage)

@@ -24,7 +24,9 @@ export interface OperationsOverview {
   schedule: Schedule & { state: { last_daily?: string; last_drill?: string } };
   installer: { online: boolean; last_seen: string | null };
 }
-export interface ServiceMetrics { service: string; name?: string; state: string; health: string; exit_code?: number | null; status?: string; restarts?: number | null; started_at?: string | null; cpu_pct?: number | null; mem_bytes?: number | null; mem_limit_bytes?: number | null; mem_pct?: number | null }
+export interface ServiceMetrics { service: string; name?: string; state: string; health: string; exit_code?: number | null; status?: string; restarts?: number | null; started_at?: string | null; cpu_pct?: number | null; mem_bytes?: number | null; mem_limit_bytes?: number | null; mem_pct?: number | null; cpu_limit?: number | null }
+/** The machine as Docker sees it and the profile install.sh applied (--machine). */
+export interface MachineInfo { cpus: number | null; memory_bytes: number | null; profile: string | null; size: string | null; max_cpus: string | null; max_memory: string | null }
 export interface Incident { incident_id: number; check_key: string; subject: string; detail: string; opened_at: string; closed_at: string | null; notified: number }
 export interface SuiteHealth {
   at: string | null;
@@ -33,7 +35,7 @@ export interface SuiteHealth {
   checks: { key: string; subject: string; bad: boolean; detail: string }[];
   open: Incident[];
   recent: Incident[];
-  metrics: { at: string; services: ServiceMetrics[]; disk: { total_bytes: number; free_bytes: number; free_pct: number | null } | null; error: string | null } | null;
+  metrics: { at: string; services: ServiceMetrics[]; disk: { total_bytes: number; free_bytes: number; free_pct: number | null } | null; error: string | null; machine?: MachineInfo | null } | null;
   conversation_id: number | null;
   /** How fast the disk fills (a line through a week of hourly samples); null for the first day. */
   disk_forecast?: DiskForecast | null;
