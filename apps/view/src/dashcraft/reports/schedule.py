@@ -10,10 +10,11 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, date, datetime, time, timedelta
+from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dashcraft.i18n import t
-from dashcraft.reports.model import WEEKDAYS, Schedule
+from dashcraft.reports.model import WEEKDAYS, EventTrigger, Schedule
 
 WEEKDAY_NAMES = {
     "mon": "Monday",
@@ -123,9 +124,88 @@ def closed_period(
     return instant(start), instant(end)
 
 
+MAX_EVENT_DAYS = 31
+# Reports one tick makes for one report's events (a burst after a long stop waits a tick).
+MAX_EVENT_RUNS = 5
+
+
+def _at(event: dict[str, Any]) -> datetime | None:
+    try:
+        at = datetime.fromisoformat(str(event.get("at") or "").replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return at if at.tzinfo else at.replace(tzinfo=UTC)
+
+
+def _payload_start(event: dict[str, Any]) -> datetime | None:
+    payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+    for key in ("start", "started_at"):
+        if payload.get(key):
+            found = _at({"at": payload[key]})
+            if found is not None:
+                return found
+    return None
+
+
+def event_periods(
+    trigger: EventTrigger,
+    ends: list[dict[str, Any]],
+    starts: list[dict[str, Any]],
+    since: datetime,
+    fallback_seconds: int,
+    limit: int = MAX_EVENT_RUNS,
+) -> list[tuple[datetime, datetime, dict[str, Any]]]:
+    """The periods new end events close, oldest first: ``(start, end, end event)`` for each
+    event of ``trigger.end_kind`` after ``since`` (about ``trigger.subject`` when set). The start
+    is the newest start event about the same subject before the end (and after the end before
+    it), else the end event's payload ``start``, else ``fallback_seconds`` before the end; never
+    more than ``MAX_EVENT_DAYS`` before it."""
+
+    def wanted(event: dict[str, Any]) -> bool:
+        return not trigger.subject or str(event.get("subject") or "") == trigger.subject
+
+    timed_ends = sorted(
+        ((at, e) for e in ends if wanted(e) and (at := _at(e)) is not None),
+        key=lambda pair: pair[0],
+    )
+    timed_starts = [(at, s) for s in starts if wanted(s) and (at := _at(s)) is not None]
+    previous_end: dict[str, datetime] = {}
+    found: list[tuple[datetime, datetime, dict[str, Any]]] = []
+    for end, event in timed_ends:
+        subject = str(event.get("subject") or "")
+        floor = previous_end.get(subject)
+        previous_end[subject] = end
+        # Run stamps keep milliseconds: an end within one of the last look is the one made.
+        if end < since + timedelta(milliseconds=1):
+            continue
+        candidates = [
+            at
+            for at, s in timed_starts
+            if str(s.get("subject") or "") == subject
+            and at < end
+            and (floor is None or at >= floor)
+        ]
+        start = max(candidates) if candidates else _payload_start(event)
+        if start is None or start >= end:
+            start = end - timedelta(seconds=fallback_seconds)
+        start = max(start, end - timedelta(days=MAX_EVENT_DAYS))
+        found.append((start, end, event))
+        if len(found) >= limit:
+            break
+    return found
+
+
 def cadence(schedule: Schedule) -> str:
     """In people's words: "Every day at 06:00", "Every Monday at 07:00", "Off"."""
 
+    timed = _timed(schedule)
+    if schedule.on_event is None:
+        return timed
+    when = t("When {kind} happens", kind=schedule.on_event.end_kind)
+    return when if not schedule.on else t("{timed}; and {when}", timed=timed, when=when.lower())
+
+
+def _timed(schedule: Schedule) -> str:
     if schedule.every == "day":
         return t("Every day at {at}", at=schedule.at)
     if schedule.every == "week":
