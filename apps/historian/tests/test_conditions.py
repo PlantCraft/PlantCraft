@@ -96,6 +96,7 @@ def test_the_conditions_ride_on_the_metrics_with_the_catalog(runtime):
             "source.disconnected",
             "point.no_data",
             "archive.disk_low",
+            "annotation.added",  # an instant, posted by the signal's page
         ]
     finally:
         runtime.shutdown()

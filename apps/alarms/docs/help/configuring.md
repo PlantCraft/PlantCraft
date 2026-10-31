@@ -67,3 +67,23 @@ deadband, delay or count needs work.
 **Turn off** on the rule's page stops it: its alarms are out of service until it is turned on.
 Deleting a rule ends its alarms; their journal stays. Changing a rule's logic ends its active
 alarms and judges again from then on.
+
+## Import the DCS alarm list
+
+**Import alarm list** on Rules reads the alarm list exported from the DCS (the master alarm
+database): a CSV file, or Excel saved as .xlsx. **Template** gives a file with the columns Alarms
+reads. Each row is one alarm on one signal:
+
+- **tag** (the signal, by its id or its name in the DCS, like `FIC-1001.PV`) and **type**: HH,
+  HI, LO or LL (PVHI, HIHI, LOLO and the like are read too);
+- **limit**, and optionally unit, **priority** (critical, high, medium, low, or 1 the most
+  urgent to 4), deadband, on-delay (seconds, `2 min` or `00:00:10`), description, cause,
+  consequence, action and enabled.
+
+Reading the file changes nothing. The review lists what an apply would do: **new** rules,
+**changed** ones (field by field, before and after), **removed** ones (alarms an earlier import
+made that the list no longer has) and rows that could not be read, with their line. Untick what
+should not change and **Apply**. A removed alarm's rule is turned off, never deleted. What
+people set in Alarms itself (where, who is notified, owner, area) stays. A rule someone changed
+after the file was read is left as it is and listed: read the file again to see it. Rules
+written by hand are never touched. Each import is matched alarm by alarm by its tag and type.

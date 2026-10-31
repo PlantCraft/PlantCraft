@@ -477,6 +477,9 @@ def get_rule(rule_id: str, rt: RuntimeDep, user: CurrentUser) -> dict[str, Any]:
 def change_rule(rule_id: str, body: RuleChange, rt: RuntimeDep, user: EditorUser) -> dict[str, Any]:
     before = rule_or_404(rt, rule_id)
     draft = RuleDraft.model_validate(body.model_dump(exclude={"base_updated_at"}))
+    if draft.external_id is None:
+        # The editors do not send it: an imported rule stays matched to its alarm list.
+        draft.external_id = before.get("external_id")
     guard_code(draft, user, before)
     try:
         rule = rt.rules.update(

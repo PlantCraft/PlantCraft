@@ -17,13 +17,20 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
-from plantcraft.db import Store
+from plantcraft.db import Store, list_index
 
 MAX_TEXT = 20000
 
 
+# Texts by subject: app_knowledge_subjects, kept by triggers (plantcraft.db.list_index).
+_SUBJECTS, _FILL_SUBJECTS = list_index(
+    "app_knowledge", ("app_id", "ref"), "subjects_json", "app_knowledge_subjects"
+)
+
+
 class KnowledgeStore(Store):
-    SCHEMA = """
+    SCHEMA = (
+        """
     CREATE TABLE IF NOT EXISTS app_knowledge (
         app_id TEXT NOT NULL,
         ref TEXT NOT NULL,
@@ -39,6 +46,10 @@ class KnowledgeStore(Store):
 
     CREATE INDEX IF NOT EXISTS idx_app_knowledge_ref ON app_knowledge(ref);
     """
+        + _SUBJECTS
+    )
+    # The side table filled once from the texts already kept (2026-10-31).
+    MIGRATIONS = (_FILL_SUBJECTS,)
 
     @staticmethod
     def _row(row: Any) -> dict[str, Any]:
@@ -106,7 +117,8 @@ class KnowledgeStore(Store):
             rows = connection.execute(
                 """
                 SELECT * FROM app_knowledge
-                WHERE ref = ? OR EXISTS (SELECT 1 FROM json_each(subjects_json) WHERE value = ?)
+                WHERE ref = ? OR (app_id, ref) IN (
+                    SELECT app_id, ref FROM app_knowledge_subjects WHERE subject = ?)
                 ORDER BY ref = ? DESC, updated_at DESC
                 LIMIT 20
                 """,

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import time
 
+import numpy as np
 import pytest
 
 from modelcraft.runs import optimize
@@ -193,3 +194,47 @@ def test_cancel_an_optimization_and_it_goes_on_after_a_restart(tmp_path, fake):
             )
     finally:
         again.shutdown()
+
+
+def pi_loop(values: dict[str, float], stop: float = 300.0, dt: float = 0.1) -> dict:
+    """The example FirstOrderDeadTimeLoop, simulated here (Euler, 0.1 s): a PI with output
+    limits ±5 and anti-windup on a process of gain 2, lag 20 s and dead time 5 s, setpoint
+    stepping to 1 at 10 s. Its measurement's indicators, as a study reads them."""
+
+    from modelcraft.runs.studies import settling
+
+    k, ti = values["controller.k"], values["controller.Ti"]
+    steps = int(stop / dt) + 1
+    times = np.arange(steps) * dt
+    delay = [0.0] * int(round(5.0 / dt))
+    state = integral = 0.0
+    pv = np.zeros(steps)
+    for index, now in enumerate(times):
+        error = (1.0 if now >= 10.0 else 0.0) - delay[0]
+        output = k * (error + integral / ti)
+        if -5.0 < output < 5.0:
+            integral += error * dt
+        pv[index] = delay[0]
+        state += dt * (2.0 * min(max(output, -5.0), 5.0) - state) / 20.0
+        delay = [*delay[1:], state]
+    return {"run_id": "", "indicators": {"dead_time.y": {"final": pv[-1], **settling(times, pv)}}}
+
+
+def test_the_example_optimization_tunes_the_pi_for_the_least_iae():
+    """M2: the example optimization Models seeds, run against the loop it tunes."""
+
+    from modelcraft.api.runtime import EXAMPLE_OPTIMIZATION
+
+    spec = EXAMPLE_OPTIMIZATION["spec"]["optimization"]
+    optimize.check(spec)
+    found = optimize.run(spec, pi_loop)
+    best = found["best"]
+    assert found["status"] == "done" and best["feasible"]
+    assert len(found["evaluations"]) <= 40
+    start = pi_loop({item["name"]: item["start"] for item in spec["variables"]})
+    assert best["objective"] < 0.4 * start["indicators"]["dead_time.y"]["iae"]
+    tuned = pi_loop(best["values"])["indicators"]["dead_time.y"]
+    assert tuned["overshoot"] <= 10.0 + 0.1
+    # Beside the SIMC rule for this process (k = T / (K (tau_c + theta)) = 1.0, Ti = 20 s).
+    assert best["values"]["controller.k"] == pytest.approx(1.2, abs=0.15)
+    assert best["values"]["controller.Ti"] == pytest.approx(21.0, abs=3.0)

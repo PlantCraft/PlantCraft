@@ -9,6 +9,7 @@ runs are kept here and simply not reported.
 
 from __future__ import annotations
 
+import copy
 import logging
 from datetime import UTC, datetime, timedelta
 from importlib import resources
@@ -59,6 +60,35 @@ EXAMPLE_STUDY = {
         "options": {"start": 0.0, "stop": 900.0, "intervals": 450},
         "sweep": [{"name": "controller.k", "mode": "list", "values": [2, 4, 8]}],
         "indicators": ["tank.level"],
+    },
+}
+# The example optimization: the first order plus dead time loop's PI tuned for the least IAE,
+# from a sluggish start, with the overshoot kept to 10 %. On that process (gain 2, lag 20 s,
+# dead time 5 s) it ends near k 1.2 and Ti 21 s in about 35 simulations, beside the SIMC rule's
+# k 1.0 and Ti 20 s (Skogestad 2003, tests/test_optimize.py checks it on the same loop).
+EXAMPLE_OPTIMIZATION = {
+    "model": "PlantCraftExamples.FirstOrderDeadTimeLoop",
+    "name": "Example: tune the PI for the least IAE",
+    "description": "The PI controller's gain and integral time that bring the loop to its new "
+    "setpoint with the least integral of absolute error (IAE), overshooting by 10 % at most. "
+    "Made by Models as an example: open it to follow the optimizer, or tune your own loop the "
+    "same way with Find the best values.",
+    "spec": {
+        "options": {"start": 0.0, "stop": 300.0, "intervals": 600, "overrides": {}},
+        "sweep": [],
+        "indicators": ["dead_time.y"],
+        "optimization": {
+            "variables": [
+                {"name": "controller.k", "start": 0.4, "min": 0.1, "max": 4.0},
+                {"name": "controller.Ti", "start": 60.0, "min": 2.0, "max": 100.0},
+            ],
+            "objective": {"variable": "dead_time.y", "statistic": "iae", "goal": "minimize"},
+            "constraints": [
+                {"variable": "dead_time.y", "statistic": "overshoot", "op": "<=", "value": 10.0}
+            ],
+            "method": "cobyla",
+            "max_simulations": 60,
+        },
     },
 }
 # Example projects of earlier versions -> the package that took their place: the project is kept
@@ -248,12 +278,17 @@ class Runtime(PlatformRuntime):
                 )
 
     def seed_example_study(self) -> dict[str, Any] | None:
-        """The example study, queued once (at the first start, or when it was deleted): its
-        simulations run with the queue, so it is ready to read a moment after the install."""
+        """The example study and the example optimization, each queued once (at the first start,
+        or when it was deleted): their simulations run with the queue, so they are ready to read
+        a moment after the install. Returns the example study when it was queued now."""
 
+        self._seed_example(EXAMPLE_OPTIMIZATION, self.workbench.start_optimization)
+        return self._seed_example(EXAMPLE_STUDY, self.workbench.start_study)
+
+    def _seed_example(self, example: dict[str, Any], start: Any) -> dict[str, Any] | None:
         if any(
-            study["name"] == EXAMPLE_STUDY["name"] and study.get("created_by") == SYSTEM
-            for study in self.runs.studies(model=EXAMPLE_STUDY["model"])
+            study["name"] == example["name"] and study.get("created_by") == SYSTEM
+            for study in self.runs.studies(model=example["model"])
         ):
             return None
         project = next(
@@ -267,17 +302,17 @@ class Runtime(PlatformRuntime):
         if project is None:
             return None
         try:
-            return self.workbench.start_study(
+            return start(
                 project["id"],
-                EXAMPLE_STUDY["model"],
-                name=EXAMPLE_STUDY["name"],
-                description=EXAMPLE_STUDY["description"],
-                spec=EXAMPLE_STUDY["spec"],
+                example["model"],
+                name=example["name"],
+                description=example["description"],
+                spec=copy.deepcopy(example["spec"]),
                 by=SYSTEM,
                 max_runs=self.settings.study_max_runs,
             )
         except Exception:  # an example never stops the app from starting
-            LOGGER.exception("The example study could not be queued")
+            LOGGER.exception("The example %r could not be queued", example["name"])
             return None
 
     def start(self) -> None:

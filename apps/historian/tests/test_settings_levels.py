@@ -228,3 +228,17 @@ def test_profiles_set_the_compression(tmp_path):
     assert (back["profile"], back["deviation"], back["exception"]) == ("", 0.2, 0.1)
     with pytest.raises(ValueError):
         PointPatch(profile="coarse")
+
+
+def test_a_point_keeps_its_minimum_time_between_values(tmp_path):
+    from histcraft.collector.service import _compressor
+
+    _, catalog = _catalog(tmp_path)
+    _source(catalog)
+    catalog.add_points([PointIn(tag="FAST", source_id="plant", low=0, high=100, min_seconds=5)])
+    assert catalog.point("plant:FAST")["min_seconds"] == 5
+    assert _compressor(catalog.point("plant:FAST")).min_seconds == 5.0
+    cleared = catalog.update_point("plant:FAST", PointPatch(min_seconds=None))
+    assert cleared["min_seconds"] is None and _compressor(cleared).min_seconds == 0.0
+    catalog.add_points([PointIn(tag="OTHER", source_id="plant")])
+    assert _compressor(catalog.point("plant:OTHER")).min_seconds == 0.0
