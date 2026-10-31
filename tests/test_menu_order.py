@@ -32,7 +32,7 @@ def test_each_app_menu_ends_with_its_settings():
 
 def test_plantcraft_menu_ends_with_setup():
     text = (ROOT / "frontend/src/App.tsx").read_text(encoding="utf-8")
-    start = text.index("const nav: ShellNavItem[] = desk ? deskNav : [")
+    start = text.index("const nav: ShellNavItem[] = desk ? deskNav : operating ? opsNav : [")
     body = text[start : text.index("\n  ];", start)]
     labels = re.findall(r'label: t\("([^"]+)"\)', body)
     assert labels[:4] == ["Overview", "Assets", "System health", "Preferences"], labels

@@ -1,0 +1,125 @@
+/* Operations (status, load, logs, load alerts): the suite's tokens only (ui/src/tokens.css). */
+
+/* Status: the machine's line and each service's load against its limit. */
+.ops-host { display: flex; flex-wrap: wrap; gap: var(--pc-space-2); margin: var(--pc-space-2) 0; }
+.ops-host .apps-chip { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.ops-load { display: grid; gap: 4px; min-width: 96px; font-variant-numeric: tabular-nums; }
+.ops-meter { height: 5px; border-radius: var(--pc-radius-pill); background: var(--pc-surface-3); overflow: hidden; }
+.ops-meter i { display: block; height: 100%; border-radius: inherit; background: var(--pc-primary); }
+.ops-meter i.ops-meter-warning { background: var(--pc-attention-text); }
+.ops-meter i.ops-meter-critical { background: var(--pc-problem-text); }
+.ops-load-warning { color: var(--pc-attention-text); font-weight: 700; }
+.ops-load-critical { color: var(--pc-problem-text); font-weight: 700; }
+
+/* Logs */
+.ops-log-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--pc-space-3); padding: var(--pc-space-4); margin-bottom: var(--pc-space-3); }
+.ops-log-filters > label { display: grid; gap: 4px; min-width: 0; font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
+.ops-log-filters > label > select, .ops-log-filters > label > input { min-width: 150px; }
+.ops-log-text { flex: 1 1 240px; }
+.ops-log-text input { width: 100%; }
+.ops-log-services { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 0; margin: 0; padding: 0; flex: 1 1 100%; }
+.ops-log-services legend { float: left; margin-right: var(--pc-space-2); font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
+.ops-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-pill); font-size: var(--pc-fs-xs); color: var(--pc-text-2); background: var(--pc-surface); cursor: pointer; }
+.ops-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.ops-chip:focus-within { outline: 2px solid var(--pc-primary); outline-offset: 1px; }
+.ops-chip-on { border-color: var(--pc-primary); color: var(--pc-text); background: var(--pc-primary-soft); }
+.ops-level { font-family: var(--pc-font-mono); font-size: var(--pc-fs-xs); font-weight: 700; color: var(--pc-text-3); }
+.ops-level-warning { color: var(--pc-attention-text); }
+.ops-level-error { color: var(--pc-problem-text); }
+.ops-time, .ops-request { font-family: var(--pc-font-mono); font-size: var(--pc-fs-xs); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ops-message { display: block; max-width: 72ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ops-missing { margin-bottom: var(--pc-space-3); }
+.ops-top { padding: var(--pc-space-3) var(--pc-space-4); margin-bottom: var(--pc-space-3); }
+.ops-top h2 { font-size: var(--pc-fs-sm); margin: 0 0 var(--pc-space-2); }
+.ops-top ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ops-top li { display: grid; grid-template-columns: 3.5em 6.5em 7em minmax(0, 1fr); gap: var(--pc-space-2); align-items: baseline; font-size: var(--pc-fs-sm); }
+.ops-top-count { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+.ops-top-app { color: var(--pc-text-3); }
+.ops-top-message { all: unset; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--pc-font-mono); font-size: var(--pc-fs-xs); }
+.ops-top-message:hover, .ops-top-message:focus-visible { text-decoration: underline; }
+@media (max-width: 640px) {
+  /* A phone: the message wraps instead of widening the table, the time takes two lines. */
+  .ops-message { white-space: normal; overflow-wrap: anywhere; max-width: none; }
+  .ops-time { white-space: normal; }
+  .ops-log-filters > label { flex: 1 1 140px; }
+  .ops-log-filters > label > select, .ops-log-filters > label > input { min-width: 0; width: 100%; }
+  .ops-top li { grid-template-columns: 3em minmax(0, 1fr); }
+  .ops-top li .ops-level, .ops-top li .ops-top-app { display: none; }
+}
+.ops-record { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px var(--pc-space-3); margin: 0 0 var(--pc-space-3); font-size: var(--pc-fs-sm); }
+.ops-record dt { color: var(--pc-text-3); }
+.ops-record dd { margin: 0; overflow-wrap: anywhere; }
+.ops-record-pair { display: contents; }
+.ops-record-text { margin: 0 0 var(--pc-space-3); padding: var(--pc-space-3); border-radius: var(--pc-radius-md); background: var(--pc-surface-2); font-family: var(--pc-font-mono); font-size: var(--pc-fs-xs); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 40vh; overflow: auto; }
+.ops-record-error { color: var(--pc-problem-text); }
+
+/* Load alerts */
+.ops-limits { padding: var(--pc-space-4); display: grid; gap: var(--pc-space-3); max-width: 1040px; }
+.ops-limits-grid { display: grid; gap: var(--pc-space-2); margin: var(--pc-space-3) 0; }
+.ops-limits-head, .ops-limits-row { display: grid; grid-template-columns: minmax(12em, 1fr) 9em 9em; gap: var(--pc-space-3); align-items: center; }
+.ops-limits-head span { font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 700; }
+.ops-limits-row > span strong { display: block; }
+.ops-limits-row > span small { color: var(--pc-text-3); }
+.ops-limits-cell, .ops-limits-minutes { display: inline-flex; align-items: center; gap: 6px; }
+.ops-limits-cell input, .ops-limits-minutes input { width: 5.5em; text-align: right; font-variant-numeric: tabular-nums; }
+.ops-limits-minutes > span:first-child { font-weight: 600; margin-right: 4px; }
+.ops-limits-footer { display: flex; justify-content: flex-end; align-items: center; gap: var(--pc-space-2); flex-wrap: wrap; }
+.ops-saved { display: inline-flex; align-items: center; gap: 5px; color: var(--pc-good-text); margin-right: auto; }
+@media (max-width: 640px) {
+  .ops-limits-head, .ops-limits-row { grid-template-columns: minmax(0, 1fr) 1fr 1fr; gap: var(--pc-space-2); }
+  .ops-limits-cell input { width: 4.5em; }
+}
+
+/* Requests and Partners */
+.ops-intro { margin: -4px 0 var(--pc-space-3); max-width: 80ch; }
+.ops-request-title { display: block; font-weight: 600; }
+.ops-waiting { color: var(--pc-attention-text); font-weight: 700; }
+.ops-ask { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pc-space-3); }
+.ops-ask > label { display: grid; gap: 4px; font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; min-width: 0; }
+.ops-ask > label:first-child, .ops-ask-text { grid-column: 1 / -1; }
+.ops-ask textarea { resize: vertical; font: inherit; font-size: var(--pc-fs-md); }
+.ops-month { display: inline-flex; align-items: center; gap: 6px; font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
+.ops-month input { height: 36px; }
+.ops-empty { display: flex; gap: var(--pc-space-3); align-items: flex-start; padding: var(--pc-space-4); margin-bottom: var(--pc-space-3); }
+.ops-empty svg { color: var(--pc-primary-text); flex: none; }
+.ops-empty p { margin: 4px 0 8px; }
+.ops-companies { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--pc-space-3); margin-bottom: var(--pc-space-3); }
+.ops-company { padding: var(--pc-space-4); display: grid; gap: var(--pc-space-2); align-content: start; }
+.ops-company header { display: flex; align-items: center; justify-content: space-between; gap: var(--pc-space-2); flex-wrap: wrap; }
+.ops-company h2 { margin: 0; font-size: var(--pc-fs-lg); }
+.ops-company .apps-chip-bad { border-color: var(--pc-problem-border); color: var(--pc-problem-text); background: var(--pc-problem-soft); }
+.ops-company p { margin: 0; }
+.ops-company-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pc-space-2) var(--pc-space-3); margin: 0; }
+.ops-company-facts dt { font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
+.ops-company-facts dd { margin: 2px 0 0; font-variant-numeric: tabular-nums; }
+.ops-company-people { list-style: none; margin: 0; padding: var(--pc-space-2) 0 0; border-top: 1px solid var(--pc-border); display: grid; gap: 4px; font-size: var(--pc-fs-sm); }
+.ops-company-people li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ops-company-people .apps-chip { padding: 1px 7px; }
+.ops-hours { padding: var(--pc-space-3) var(--pc-space-4); }
+.ops-hours h2 { font-size: var(--pc-fs-md); margin: 0 0 var(--pc-space-2); }
+.ops-hours h2 small { font-weight: 500; margin-left: 6px; }
+@media (max-width: 640px) {
+  .ops-ask { grid-template-columns: minmax(0, 1fr); }
+  .ops-companies { grid-template-columns: minmax(0, 1fr); }
+}
+.ops-incident-ask { margin-left: 6px; font-size: var(--pc-fs-xs); font-weight: 600; }
+
+/* Requests' targets (plantcraft/actions/sla.py) */
+.ops-sla { font-variant-numeric: tabular-nums; }
+.ops-sla-warn { border-color: var(--pc-attention-border); color: var(--pc-attention-text); background: var(--pc-attention-soft); }
+.ops-sla-bad, .apps-chip-bad { border-color: var(--pc-problem-border); color: var(--pc-problem-text); background: var(--pc-problem-soft); }
+.ops-sla-good, .apps-chip-good { border-color: var(--pc-good-border); color: var(--pc-good-text); background: var(--pc-good-soft); }
+.apps-chip-good svg { vertical-align: -2px; }
+.ops-targets-open { margin-left: auto; }
+.ops-targets { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.ops-targets th, .ops-targets td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--pc-border); }
+.ops-targets input { width: 100%; max-width: 120px; }
+
+/* The month's approval of the hours */
+.ops-company-approval { margin: 10px 0 4px; }
+.ops-approval { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ops-plant-hours { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 12px; }
+
+/* Temporary support access */
+.ops-support-note { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--pc-attention-border); border-radius: 8px; background: var(--pc-attention-soft); color: var(--pc-attention-text); }
+.act-time-locked { color: var(--pc-text-3); display: inline-flex; padding: 4px; }

@@ -20,6 +20,8 @@ from typing import Any
 from plantcraft_sdk import jwt
 from plantcraft_sdk.contract import CENTRAL_AUDIENCE, ISSUER
 
+VERIFIED_CACHE_SIZE = 4096
+
 LOGGER = logging.getLogger(__name__)
 # Retired public keys kept listed (newest first). Tokens live at most an hour,
 # so a key retired twice ago is long unused; a few are kept for safety.
@@ -56,6 +58,9 @@ class KeyRing:
         self._private = None
         self.kid = ""
         self._retired: list[dict[str, str]] = []
+        # (token, audience) -> (claims, exp, kid): tokens already verified, until they expire
+        # (the signature check cost about 0.2 ms on every request of an app).
+        self._verified: dict[tuple[str, str], tuple[dict[str, Any], float, str]] = {}
         self._load()
 
     @classmethod
@@ -162,4 +167,19 @@ class KeyRing:
     def verify(self, token: str, audience: str = CENTRAL_AUDIENCE) -> dict[str, Any]:
         """The token's claims; raises ``plantcraft_sdk.jwt.TokenError``."""
 
-        return jwt.decode(token, self.jwks(), audience)
+        keys = self.jwks()
+        hit = self._verified.get((token, audience))
+        if hit is not None:
+            claims, expires, kid = hit
+            if time.time() <= expires + jwt.LEEWAY_SECONDS and kid in jwt.key_ids(keys):
+                return dict(claims)
+            self._verified.pop((token, audience), None)
+        claims = jwt.decode(token, keys, audience)
+        if len(self._verified) >= VERIFIED_CACHE_SIZE:
+            try:
+                self._verified.pop(next(iter(self._verified)))
+            except (StopIteration, KeyError, RuntimeError):
+                pass
+        kid = str(jwt.unverified_header(token).get("kid") or "")
+        self._verified[(token, audience)] = (dict(claims), float(claims.get("exp") or 0), kid)
+        return claims

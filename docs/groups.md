@@ -9,7 +9,9 @@ it as `group:<id>`, the same way they refer to a person as `user:<username>`.
 | Field | Example | What it is for |
 |---|---|---|
 | Name | U-100 operations | Shown in pickers, on profiles and in messages |
-| Kind | `department`, `area`, `discipline` or `team` | A part of the organization with its manager, an area of the plant (a unit, a shift), an engineering discipline, any other team |
+| Kind | `department`, `area`, `discipline`, `team` or `company` | A part of the organization with its manager, an area of the plant (a unit, a shift), an engineering discipline, any other team, or an outside company working at the plant (an integrator, a contractor) |
+| Last day of access (company) | `2026-12-31` | From the next day nobody in the company, or in a group under it, signs in, and their open sessions end (`GroupStore.access_ended`); empty: no end |
+| Sponsor at the plant (company) | `rui.planta` | The plant's person who answers for the company (never one of its members); shown in Operations › Partners |
 | Under (optional) | `operations` | The group it sits under: groups form a tree |
 | Description | Control room and field operators, all shifts | One line about the group |
 | Asset (optional) | `U-100` | The part of the asset tree an area group covers (a label: it limits nothing) |

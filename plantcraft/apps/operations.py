@@ -50,6 +50,7 @@ from typing import Any
 from plantcraft.apps import historian_backup
 from plantcraft.apps.historian_backup import HistorianBackup, HistorianBackupError
 from plantcraft.apps.installer import Docker, InstallError, json_lines
+from plantcraft.files import write_atomic
 from plantcraft.ops import snapshot
 
 DRIVER = "processcraft-ops"
@@ -279,6 +280,63 @@ def env_values(path: Path) -> dict[str, str]:
     return values
 
 
+CPU_LIMIT = re.compile(r'^\s*cpus:\s*"\$\{([A-Z][A-Z0-9_]*_CPUS):-([0-9.]+)\}"', re.MULTILINE)
+
+
+def host_cpus() -> int:
+    try:
+        return len(os.sched_getaffinity(0)) or 1
+    except (AttributeError, OSError):
+        return os.cpu_count() or 1
+
+
+def fit_cpu_limits(install: Path, cpus: int | None = None) -> dict[str, str]:
+    """Every ``${KEY:-default}`` CPU limit of compose.yaml capped at this host's CPU count, in
+    ``.env`` (install.sh's fit_cpu_limits): Docker refuses a container whose limit is above the
+    host's CPUs, and a backup brings the limits of the machine it was made on.
+    Returns the keys it changed, with their old value."""
+
+    cpus = cpus or host_cpus()
+    try:
+        compose = (install / "compose.yaml").read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    env_file = install / ".env"
+    current = env_values(env_file)
+    changed: dict[str, str] = {}
+    for key, default in sorted(set(CPU_LIMIT.findall(compose))):
+        value = current.get(key) or default
+        try:
+            over = float(value) > cpus
+        except ValueError:
+            continue
+        if over:
+            changed[key] = value
+    if not changed:
+        return {}
+    try:
+        lines = env_file.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        lines = []
+    kept, written = [], set()
+    for line in lines:
+        key = line.partition("=")[0].strip()
+        if key in changed:
+            if key not in written:
+                kept.append(f"{key}={cpus}")
+                written.add(key)
+            continue
+        kept.append(line)
+    kept += [f"{key}={cpus}" for key in changed if key not in written]
+    status = env_file.stat() if env_file.exists() else None
+    env_file.write_text("\n".join(kept) + "\n", encoding="utf-8")
+    if status is not None:
+        os.chmod(env_file, status.st_mode & 0o7777)
+        if os.geteuid() == 0:
+            os.chown(env_file, status.st_uid, status.st_gid)
+    return changed
+
+
 class Driver:
     """Runs one operation against the installation at ``install_dir`` (as root, no network)."""
 
@@ -313,11 +371,8 @@ class Driver:
     def _write_json(self, path: Path, value: Any) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         self._hand_over(path.parent)
-        partial = path.with_name(f".{path.name}.{uuid.uuid4().hex[:8]}")
-        partial.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        partial.chmod(0o644)
-        self._hand_over(partial)
-        partial.replace(path)
+        write_atomic(path, json.dumps(value, indent=2, sort_keys=True) + "\n", mode=0o644)
+        self._hand_over(path)
 
     def log(self, message: str) -> None:
         print(f"[{self.clock().strftime('%H:%M:%S')}] {message}", flush=True)
@@ -329,10 +384,7 @@ class Driver:
     def _journal_write(self, value: dict[str, Any]) -> None:
         folder = self.journal.parent
         folder.mkdir(mode=0o700, exist_ok=True)
-        partial = folder / f".current.{uuid.uuid4().hex[:8]}"
-        partial.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        partial.chmod(0o600)
-        partial.replace(self.journal)
+        write_atomic(self.journal, json.dumps(value, indent=2, sort_keys=True) + "\n")
 
     def phase(self, phase: str, **fields: Any) -> None:
         """Write the journal before each step: a driver that stops is finished or undone."""
@@ -530,8 +582,7 @@ class Driver:
             current = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             current = {}
-        path.write_text(json.dumps({**current, **fields}, indent=2, sort_keys=True) + "\n")
-        path.chmod(0o600)
+        write_atomic(path, json.dumps({**current, **fields}, indent=2, sort_keys=True) + "\n")
 
     # Backup --------------------------------------------------------------------------------
 
@@ -912,6 +963,10 @@ class Driver:
             self.phase("restoring files")
             snapshot.restore(folder, self.install, aside)
             self._status(aside, state="aside", restored_from=name)
+            # A backup from a bigger machine asks for more CPUs than this one has.
+            cpus = host_cpus()
+            for key, value in fit_cpu_limits(self.install, cpus).items():
+                self.log(f"{key}={value} is more than the {cpus} CPUs of this host: using {cpus}")
             missing = self.retag(manifest.get("images") or [])
             if missing:
                 raise OperationError(f"images no longer on this host: {', '.join(missing)}")

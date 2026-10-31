@@ -189,3 +189,4 @@
 .ac-scope-chosen { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
 .ac-scope-chip { padding: 2px 8px; border: 1px solid var(--pc-border); border-radius: 999px; background: var(--pc-surface-2); color: var(--pc-text-2); font-size: var(--pc-fs-xs); cursor: pointer; }
 .ac-scope-tree { max-height: 220px; overflow: auto; }
+.gr-kind-company { color: var(--pc-attention-text); background: var(--pc-attention-soft); }

@@ -25,6 +25,8 @@ DIST = ROOT / "frontend" / "dist" / "index.html"
 
 playwright_api = pytest.importorskip("playwright.sync_api")
 ADMIN_PASSWORD = "e2e-admin-secret"
+# The application the server runs, for a test that drives its runtime (the suite watch's tick).
+APP = None
 
 
 def _free_port() -> int:
@@ -63,6 +65,8 @@ def server(tmp_path_factory):
 
     port = _free_port()
     app = create_app()
+    global APP
+    APP = app
     config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning")
     instance = uvicorn.Server(config)
     thread = threading.Thread(target=instance.run, daemon=True)
@@ -160,6 +164,13 @@ def _sign_in(context) -> None:
         "/api/login", data={"username": "admin", "password": ADMIN_PASSWORD}
     )
     assert response.ok, response.text()
+
+
+@pytest.fixture()
+def runtime(server):
+    """The server's runtime, for a test that drives it (the suite watch's tick)."""
+
+    return APP.state.runtime
 
 
 @pytest.fixture()

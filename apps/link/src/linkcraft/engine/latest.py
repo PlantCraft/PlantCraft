@@ -14,6 +14,9 @@ from plantcraft_sdk.utc import utc_iso
 
 from linkcraft.db import Store
 
+# A thinning call takes at most this many more days of history (``thin_history``).
+THIN_STEP_DAYS = 1.0
+
 
 class LatestStore(Store):
     SCHEMA = """
@@ -76,6 +79,12 @@ class LatestStore(Store):
         subject_kind TEXT NOT NULL,
         day TEXT NOT NULL,
         PRIMARY KEY (application_id, subject_kind, day)
+    );
+
+    -- How far back each table's history is thinned to a point an hour (``thin_history``).
+    CREATE TABLE IF NOT EXISTS history_thinned (
+        name TEXT PRIMARY KEY,
+        upto TEXT NOT NULL
     );
     """
 
@@ -443,6 +452,40 @@ class LatestStore(Store):
                     )
         return removed
 
+    def thin_history(self, *, full_days: float, step_days: float = THIN_STEP_DAYS) -> int:
+        """Past ``full_days`` before each application's newest data, keep each subject's last
+        health point of every hour; the rows deleted. At most ``step_days`` more a call, so
+        the first pass over months of rounds spreads over the hourly ticks.
+
+        A round every 10 minutes leaves 144 points a loop a day: 2,050 loops for 90 days were
+        16 GB here (0.6.0 aging test F9). An hour's last point keeps each day's last status
+        and the trend of a loop's month, at a sixth of the rows.
+        """
+
+        removed = 0
+        with self._lock, self._connect() as connection:
+            groups = connection.execute(
+                "SELECT application_id, subject_kind, MIN(source_end) AS oldest,"
+                " MAX(source_end) AS newest FROM subject_health GROUP BY application_id, subject_kind"
+            ).fetchall()
+            for group in groups:
+                newest, oldest = str(group["newest"]), str(group["oldest"])
+                name = f"subject_health:{group['application_id']}:{group['subject_kind']}"
+                window = thin_window(connection, name, oldest, newest, full_days, step_days)
+                if window is None:
+                    continue
+                start, end = window
+                removed += connection.execute(
+                    "DELETE FROM subject_health WHERE application_id = ? AND subject_kind = ?"
+                    " AND source_end >= ? AND source_end < ? AND rowid NOT IN ("
+                    " SELECT rowid FROM (SELECT rowid, MAX(source_end) FROM subject_health"
+                    " WHERE application_id = ? AND subject_kind = ? AND source_end >= ?"
+                    " AND source_end < ? GROUP BY subject_id, substr(source_end, 1, 13)))",
+                    (group["application_id"], group["subject_kind"], start, end) * 2,
+                ).rowcount
+                mark_thinned(connection, name, end)
+        return removed
+
     def _row(self, row: Any, *, results: bool = False) -> dict[str, Any]:
         item = dict(row)
         item["summary"] = self._loads(item.pop("summary_json", None), {})
@@ -491,3 +534,57 @@ def _forget_days(connection: Any, application_id: str, subject_kind: str, ends: 
                 f"DELETE FROM {table} WHERE application_id = ? AND subject_kind = ? AND day = ?",  # noqa: S608
                 (application_id, subject_kind, day),
             )
+
+
+def _stamp_like(sample: str, moment: datetime) -> str:
+    """``moment`` written as ``sample`` is (``T`` or a space; ``Z``, an offset or none), to
+    compare stored texts chronologically."""
+
+    separator = "T" if "T" in sample else " "
+    text = moment.astimezone(UTC).replace(tzinfo=None).isoformat(sep=separator, timespec="seconds")
+    if sample.endswith("Z"):
+        return text + "Z"
+    if "+" in sample[19:] or sample[19:].count("-"):
+        return text + "+00:00"
+    return text
+
+
+def _when(text: str) -> datetime:
+    moment = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
+
+
+def thin_window(
+    connection: Any,
+    name: str,
+    oldest: str,
+    newest: str,
+    full_days: float,
+    step_days: float,
+    write: Any = None,
+) -> tuple[str, str] | None:
+    """The stored-time window ``[start, end)`` to thin now, on whole hours: from where the
+    last pass stopped (else the oldest row) up to ``full_days`` before ``newest``, at most
+    ``step_days`` long; None when there is nothing older to thin."""
+
+    try:
+        cut = (_when(newest) - timedelta(days=full_days)).replace(minute=0, second=0, microsecond=0)
+        row = connection.execute(
+            "SELECT upto FROM history_thinned WHERE name = ?", (name,)
+        ).fetchone()
+        start = _when(row[0]) if row else _when(oldest).replace(minute=0, second=0, microsecond=0)
+    except ValueError:
+        return None
+    end = min(cut, start + timedelta(days=step_days))
+    if end <= start:
+        return None
+    write = write or (lambda moment: _stamp_like(newest, moment))
+    return write(start), write(end)
+
+
+def mark_thinned(connection: Any, name: str, upto: str) -> None:
+    connection.execute(
+        "INSERT INTO history_thinned (name, upto) VALUES (?, ?)"
+        " ON CONFLICT(name) DO UPDATE SET upto = excluded.upto",
+        (name, upto),
+    )

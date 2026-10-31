@@ -11,6 +11,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from plantcraft_sdk.files import write_json
+
 # What the browser hides unless asked: documentation, internal packages, and Utilities (files,
 # system calls: the policy refuses them, so offering them would only lead to a refusal).
 HIDDEN_PARTS = {"UsersGuide", "Internal", "Obsolete", "ModelicaReference", "Utilities"}
@@ -68,12 +70,7 @@ class LibraryIndex:
             return None
 
     def save(self, path: Path) -> None:
-        temporary = path.with_suffix(".tmp")
-        temporary.write_text(
-            json.dumps({"version": self.version, "classes": list(self.classes.values())}),
-            encoding="utf-8",
-        )
-        temporary.replace(path)
+        write_json(path, {"version": self.version, "classes": list(self.classes.values())})
 
     def __len__(self) -> int:
         return len(self.classes)

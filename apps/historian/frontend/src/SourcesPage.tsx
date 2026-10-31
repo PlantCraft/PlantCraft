@@ -417,7 +417,7 @@ function BrowseDialog({ source, onClose, onAdded }: { source: Source; onClose: (
           <span className="muted">{t("{count} variables", { count: result.variables.length })}</span>
         </div>
         <div className="table-scroll"><table className="table">
-          <thead><tr><th /><th>{t("Tag")}</th><th>{t("Path")}</th><th>{t("Type")}</th><th>{t("Unit")}</th><th>{t("Range")}</th></tr></thead>
+          <thead><tr><th><span className="sr-only">{t("Select")}</span></th><th>{t("Tag")}</th><th>{t("Path")}</th><th>{t("Type")}</th><th>{t("Unit")}</th><th>{t("Range")}</th></tr></thead>
           <tbody>{shown.slice(0, 500).map((item) => {
             const archived = known.has(item.address);
             return <tr key={item.address} className={archived ? "" : "clickable"} onClick={() => !archived && toggle(item.address)}>

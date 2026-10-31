@@ -8,19 +8,30 @@ timeline of every asset it is about. Each person reaches only the actions they s
 
 from __future__ import annotations
 
+import logging
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from plantcraft.actions import OPEN_STATUSES, PRIORITIES, STATUSES, VIEWS, choices
-from plantcraft.api.deps import CurrentUser, Runtime, open_to
+from plantcraft.actions import (
+    KINDS,
+    OPEN_STATUSES,
+    PRIORITIES,
+    REQUEST_CATEGORIES,
+    STATUSES,
+    VIEWS,
+    choices,
+)
+from plantcraft.api.deps import CurrentUser, Runtime, open_to, user_access
 from plantcraft.api.deps import action_visibility as visibility
 from plantcraft.api.routers.messages import present_ref
+from plantcraft.config import plant_today
 from plantcraft.i18n import t
 from plantcraft.refs import find_refs
 
 router = APIRouter()
+LOGGER = logging.getLogger(__name__)
 
 VIEW_LABELS = {
     "visible": "All I can see",
@@ -32,6 +43,8 @@ VIEW_LABELS = {
 Priority = Literal["low", "medium", "high", "critical"]
 Status = Literal["open", "in_progress", "blocked", "done", "cancelled"]
 View = Literal["visible", "mine", "groups", "created"]
+Kind = Literal["action", "request"]
+Category = Literal["error", "slow", "access", "data", "change", "other"]
 
 
 class ActionDraft(BaseModel):
@@ -42,6 +55,26 @@ class ActionDraft(BaseModel):
     group_id: str | None = Field(default=None, max_length=60)
     due_at: str | None = Field(default=None, max_length=10)
     refs: list[Annotated[str, Field(max_length=400)]] = Field(default_factory=list, max_length=12)
+    kind: Kind = "action"
+    category: Category | None = None
+
+
+class RequestDraft(BaseModel):
+    """What anyone signed in asks of IT or an integrator (Operations › Requests)."""
+
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(default="", max_length=4000)
+    category: Category = "other"
+    priority: Priority = "medium"
+    group_id: str | None = Field(default=None, max_length=60)
+    refs: list[Annotated[str, Field(max_length=400)]] = Field(default_factory=list, max_length=12)
+
+
+class HoursDraft(BaseModel):
+    hours: float = Field(gt=0, le=24)
+    day: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    note: str = Field(default="", max_length=300)
+    billable: bool = True
 
 
 class ActionUpdate(ActionDraft):
@@ -85,6 +118,7 @@ def _present(
         store = rt.workspace.actions
         item["history"] = store.history(action["action_id"])
         item["items"] = store.items(action["action_id"])
+        item["hours"] = _with_locks(rt, store.hours(action["action_id"]))
         # #asset:FIC-101 or #user:ana.lima in the description and the comments, resolved once.
         texts = [action["description"]] + [
             entry["text"] for entry in item["history"] if entry["kind"] == "comment"
@@ -143,6 +177,7 @@ def list_actions(
     group: Annotated[list[str] | None, Query(max_length=40)] = None,
     view: View = "visible",
     mine: bool = False,
+    kind: Kind | None = None,
 ) -> dict[str, Any]:
     """The actions this person sees; ``view`` narrows them like Jira's quick filters:
     ``mine`` (they own), ``groups`` (assigned to their groups), ``created`` (by them)."""
@@ -157,6 +192,7 @@ def list_actions(
         visible=seen,
         view="mine" if mine else view,
         group_ids=list(group) if group else None,
+        kind=kind,
     )
     mine_groups = rt.workspace.groups.scope(user)["groups"]
     page_refs = list(dict.fromkeys(ref for item in items for ref in item["refs"]))
@@ -179,6 +215,8 @@ def list_actions(
             for item in rt.workspace.groups.list()
         ],
         "views": [{"id": key, "label": t(VIEW_LABELS[key])} for key in VIEWS],
+        "kinds": choices(KINDS),
+        "categories": choices(REQUEST_CATEGORIES),
         "everything": seen.everything,
     }
 
@@ -195,12 +233,83 @@ def create_action(payload: ActionDraft, user: CurrentUser, rt: Runtime) -> dict[
             group_id=_group(rt, payload.group_id),
             due_at=payload.due_at,
             refs=payload.refs,
+            kind=payload.kind,
+            category=payload.category,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    _publish(
-        rt, "action.created", action, user, t("Action created: {title}", title=action["title"])
+    _created(rt, action, user)
+    return _present(rt, action, user, history=True)
+
+
+def _created(rt: Any, action: dict[str, Any], user: str) -> None:
+    summary = (
+        t("Request: {title}", title=action["title"])
+        if action["kind"] == "request"
+        else t("Action created: {title}", title=action["title"])
     )
+    _publish(rt, "action.created", action, user, summary)
+    if action["kind"] == "request":
+        _tell_queue(rt, action, user)
+
+
+def _tell_queue(rt: Any, action: dict[str, Any], user: str) -> None:
+    """A new request reaches who answers it: its queue's members (the administrators when it has
+    none), in Messages from "Operations", and by email to those who asked for email; never the
+    person who asked. A failure here never loses the request."""
+
+    if action["group_id"]:
+        recipients = [f"group:{action['group_id']}"]
+    else:
+        recipients = [
+            f"user:{item['username']}"
+            for item in rt.workspace.users.list_users(kind="person")
+            if (access := user_access(rt, item["username"])) is not None and access.is_admin
+        ]
+    asker = rt.workspace.users.get_user(user) or {}
+    try:
+        people, _unknown = rt.notifications.expand(recipients)
+        rt.notifications.notify(
+            "operations",
+            "Operations",
+            recipients=[f"user:{name}" for name in people if name != user],
+            title=t("Request #{id}: {title}", id=action["action_id"], title=action["title"]),
+            text=t(
+                "{person} asked ({category}).",
+                person=asker.get("display_name") or user,
+                category=action.get("category_label") or "",
+            ),
+            priority=action["priority"],
+            url=f"/actions/{action['action_id']}",
+            email=True,
+            refs=[f"action:{action['action_id']}"],
+            key=f"request:{action['action_id']}",
+            category="request",
+        )
+    except (PermissionError, ValueError):
+        LOGGER.warning("request %s: the queue was not told", action["action_id"], exc_info=True)
+
+
+@router.post("/api/requests", status_code=201)
+@open_to("viewer")
+def ask(payload: RequestDraft, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
+    """A request to IT or an integrator, open to anyone who signs in (a viewer too: the people
+    who use the suite are the ones who need help). Its queue is the group chosen."""
+
+    try:
+        action = rt.workspace.actions.create(
+            title=payload.title,
+            actor=user,
+            description=payload.description,
+            priority=payload.priority,
+            group_id=_group(rt, payload.group_id),
+            refs=payload.refs,
+            kind="request",
+            category=payload.category,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    _created(rt, action, user)
     return _present(rt, action, user, history=True)
 
 
@@ -210,10 +319,19 @@ def get_action(action_id: int, user: CurrentUser, rt: Runtime) -> dict[str, Any]
 
 
 @router.put("/api/actions/{action_id}")
+@open_to("viewer")
 def update_action(
     action_id: int, payload: ActionUpdate, user: CurrentUser, rt: Runtime
 ) -> dict[str, Any]:
-    _get(rt, action_id, user)
+    """Editors change any action they see; the Operations role (IT, an integrator's team) also
+    answers requests, whatever its access level."""
+
+    current = _get(rt, action_id, user)
+    access = user_access(rt, user)
+    if not (access and access.at_least("editor")) and not (
+        access and access.can_operate and current["kind"] == "request"
+    ):
+        raise HTTPException(status_code=403, detail=t("Your access is read-only."))
     try:
         action, previous = rt.workspace.actions.update(
             action_id,
@@ -226,6 +344,7 @@ def update_action(
             group_id=_group(rt, payload.group_id),
             due_at=payload.due_at,
             refs=payload.refs,
+            category=payload.category,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -301,4 +420,81 @@ def delete_item(action_id: int, item_id: int, user: CurrentUser, rt: Runtime) ->
         rt.workspace.actions.delete_item(action_id, item_id, actor=user)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=t("Checklist item not found.")) from exc
+    return _present(rt, _get(rt, action_id), user, history=True)
+
+
+def _company_id(rt: Any, username: str) -> str | None:
+    companies = rt.workspace.groups.companies_of(username)
+    return companies[0]["group_id"] if companies else None
+
+
+def _with_locks(rt: Any, entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Each entry with ``locked``: its month is approved for its person's company."""
+
+    store = rt.workspace.actions
+    for entry in entries:
+        entry["locked"] = store.month_approved(entry["day"], _company_id(rt, entry["username"]))
+    return entries
+
+
+def _month_open(rt: Any, day: str, username: str) -> None:
+    """409 when the month of ``day`` is approved for the company of ``username`` (the plant's
+    own people when they are in none): its hours are closed (Operations › Partners)."""
+
+    if rt.workspace.actions.month_approved(day, _company_id(rt, username)):
+        raise HTTPException(
+            status_code=409,
+            detail=t(
+                "The hours of {month} are approved; an administrator reopens the month to change them.",
+                month=day[:7],
+            ),
+        )
+
+
+@router.post("/api/actions/{action_id}/hours", status_code=201)
+@open_to("viewer")
+def log_hours(
+    action_id: int, payload: HoursDraft, user: CurrentUser, rt: Runtime
+) -> dict[str, Any]:
+    """Time spent on an action the person sees (an integrator's team logs it on a request, often
+    without being an editor)."""
+
+    _get(rt, action_id, user)
+    _month_open(rt, payload.day or plant_today(), user)
+    try:
+        rt.workspace.actions.add_hours(
+            action_id,
+            actor=user,
+            hours=payload.hours,
+            day=payload.day,
+            note=payload.note,
+            billable=payload.billable,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return _present(rt, _get(rt, action_id), user, history=True)
+
+
+@router.delete("/api/actions/{action_id}/hours/{entry_id}")
+@open_to("viewer")
+def delete_hours(action_id: int, entry_id: int, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
+    """One's own entry; an administrator removes anyone's."""
+
+    _get(rt, action_id, user)
+    entry = next(
+        (item for item in rt.workspace.actions.hours(action_id) if item["entry_id"] == entry_id),
+        None,
+    )
+    if entry is None:
+        raise HTTPException(status_code=404, detail=t("Time entry not found."))
+    access = user_access(rt, user)
+    if entry["username"] != user and not (access and access.is_admin):
+        raise HTTPException(
+            status_code=403, detail=t("Only who logged the time, or an administrator, removes it.")
+        )
+    _month_open(rt, entry["day"], entry["username"])
+    rt.workspace.actions.delete_hours(action_id, entry_id)
+    rt.workspace.audit.record(
+        user, "action.hours.deleted", f"action:{action_id}", entry, app_id="processcraft"
+    )
     return _present(rt, _get(rt, action_id), user, history=True)

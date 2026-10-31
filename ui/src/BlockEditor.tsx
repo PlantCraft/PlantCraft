@@ -207,7 +207,7 @@ function BlockNodeView({ id, data, selected }: NodeProps<BlockFlowNode>) {
           {label !== spec.name && <small>{spec.name}</small>}
         </span>
         {issues.length > 0 && <AlertTriangle size={13} className="be-node-alert" aria-label={issues.join(" ")} />}
-        {light && <i className={`be-light be-status-${light.status}`} data-status={light.status} aria-label={light.text} />}
+        {light && <i className={`be-light be-status-${light.status}`} data-status={light.status} role="img" aria-label={light.text} />}
       </header>
       {spec.image && <img className="be-node-image" src={spec.image} alt="" draggable={false} loading="lazy" />}
       <div className="be-ports">

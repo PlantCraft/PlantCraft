@@ -35,6 +35,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from plantcraft.files import write_atomic
+
 if TYPE_CHECKING:  # the driver imports this module
     from plantcraft.apps.operations import Driver
 
@@ -137,8 +139,7 @@ class HistorianBackup:
         if value or not create:
             return value or None
         value = uuid.uuid4().hex
-        path.write_text(value + "\n", encoding="utf-8")
-        path.chmod(0o644)
+        write_atomic(path, value + "\n", mode=0o644)
         return value
 
     # Backup ----------------------------------------------------------------------------

@@ -116,7 +116,10 @@ RefOption    {ref, kind, kind_label, title, detail}
 
 | Route | Body | Answer |
 |---|---|---|
-| `GET /api/actions?status=&owner=&ref=&q=&view=&group=` | | `{items: Action[], statuses, priorities, people, groups, views, everything}` |
+| `GET /api/actions?status=&owner=&ref=&q=&view=&group=&kind=` | | `{items: Action[], statuses, priorities, people, groups, views, everything, kinds, categories}` |
+| `POST /api/requests` | `{title, description?, category, priority?, group_id?, refs?}` | a request (`Action` of kind `request`, 201); open to viewers |
+| `POST /api/actions/{id}/hours` | `{hours, day?, note?, billable?}` | `Action` with `hours` (201); anyone who sees it |
+| `DELETE /api/actions/{id}/hours/{entry}` | | `Action`; who logged it, or an admin (audited) |
 | `POST /api/actions` | `ActionDraft` | `Action` (201) |
 | `GET /api/actions/{id}` | | `Action` with `history` |
 | `PUT /api/actions/{id}` | `ActionDraft` + `status` | `Action` |
@@ -129,12 +132,15 @@ RefOption    {ref, kind, kind_label, title, detail}
 
 ```text
 ActionDraft {title, description="", priority="medium", owner=null, group_id=null,
-             due_at=null (YYYY-MM-DD), refs: string[] = []}
+             due_at=null (YYYY-MM-DD), refs: string[] = [], kind="action"|"request",
+             category=null (a request's: error, slow, access, data, change, other)}
 Action      {action_id, title, description, status, status_label, priority, priority_label,
              owner, owner_name, group_id, group_name, due_at, overdue, refs: [resolved ref as in Message],
              created_by, created_by_name, created_at, updated_at, completed_at,
-             history?: [{kind: "created"|"changed"|"status"|"comment", text, actor,
-                         actor_name, created_at}]}
+             kind, kind_label, category, category_label, first_response_at, hours_logged,
+             hours?: [{entry_id, username, display_name, day, hours, note, billable}],
+             history?: [{kind: "created"|"changed"|"status"|"comment"|"checklist"|"hours", text,
+                         actor, actor_name, created_at}]}
 statuses / priorities: [{id, label}];  people: [{username, display_name}]
 ```
 

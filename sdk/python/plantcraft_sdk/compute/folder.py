@@ -32,6 +32,8 @@ from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from plantcraft_sdk import files
+
 PROTOCOL = 1
 QUEUE, WORK, DONE = "queue", "work", "done"
 HEARTBEAT = "runner.json"
@@ -243,9 +245,9 @@ def prepare(app_dir: Path) -> None:
 
 
 def write_json(path: Path, value: Any) -> None:
-    temporary = path.with_name(f".{path.name}.tmp")
-    temporary.write_text(json.dumps(value), encoding="utf-8")
-    temporary.replace(path)
+    """``value`` in ``path`` whole or not at all (``plantcraft_sdk.files``)."""
+
+    files.write_json(path, value)
 
 
 def read_json(path: Path) -> dict[str, Any] | None:

@@ -9,6 +9,41 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
+  app switcher, for administrators and for a new **Operations** role (Users: IT, or an
+  integrator's team, without making them administrators). **Status** shows every app's CPU and
+  memory against its own limit (Docker's "344 %" is now "86 %, 3.4 of 4 CPUs"), the machine's
+  CPU, memory and load, the free disk and the incidents. **Logs** reads every server's log in one
+  list, with period, level, text, request and app filters, the most frequent warnings and errors,
+  the whole record, "Same request in every app" and CSV export. **Load alerts** tells the
+  administrators (Suite health, and an event for Alarms) when an app or the machine stays above a
+  level: CPU or memory 80 % (warning) and 95 % (critical), or errors logged a minute, held 5
+  minutes; levels changed on the page (`docs/operations.md`, section 4).
+- **Requests: anyone asks IT or an integrator for help, from any app.** "Ask for help" in the
+  person's menu of every app opens a short form (what, which kind of problem, who should answer)
+  with the app and page filled in; a log record and an open incident have "Open a request".
+  A request is an action of kind `request` with a category, a queue (told at once in Messages,
+  and by email to those who want it) and its first answer timed;
+  Operations › Requests lists them (waiting for a first answer in amber), and the Operations role
+  answers them whatever its access level. Time is logged on any request or action (hours on a
+  day, note, billable or not).
+- **Partners: the companies working at the plant.** A group of the new kind **Company** has its
+  coordinator on its side, its teams under it, a sponsor at the plant and a last day of access:
+  from the next day nobody in it signs in (the sign-in says why) and their sessions end.
+  Operations › Partners shows each company's people, teams, access, open requests and the month's
+  hours, and exports the month's time report as CSV.
+- **Request targets.** A first answer and a resolution target per priority (an administrator
+  changes them); the resolution clock stops while a request is Blocked. Requests shows the time
+  left or how late, and counts the late ones.
+- **The month's hours approved.** After a month ends, an administrator or the company's sponsor
+  approves its hours on Partners; that month's entries are then closed until an administrator
+  reopens it.
+- **Temporary support access.** An administrator gives a person Operations for up to 72 hours,
+  for a reason and often a request; it ends by itself or with "End now", the person is told, and
+  both are in the audit log.
+- The public demo's visitors no longer see the server logs.
+- SDK: `GET /api/ops/logs` on every server (`plantcraft_sdk.server.logread`), read with the `ops`
+  scope.
 - **Images in an app's language model calls** (SDK 0.86.0). `POST /api/v1/llm/{use}` takes
   images in a user's turn (PNG, JPEG, WebP or GIF, at most 4 a call, 5 MB each), and
   `client.llm(use, question, images=[png])` sends them. They reach Anthropic as image blocks and
@@ -38,6 +73,22 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **State files are written whole or not at all, everywhere (storage tests, 2026-10-31).**
+  `plantcraft-sdk` 0.91.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
+  unique temporary file created with its final mode, `fsync`, then a rename, so a process killed
+  mid-write leaves the old file, never half a JSON (71 of 100 kills broke a `write_text` file).
+  The platform's `plantcraft.files` and Models' `modelcraft.atomic` now use it, and so do the
+  state files that still wrote in place or through a shared temporary name: the operations
+  journal and status, the Operations desk requests, installed app files, the egress allowlist,
+  the industrial data key (now private from the first byte), the Historian's CSV sources and
+  import files, Analytics' block files and compute answers, Models' jobs, results, runner state
+  and library cache, and the SDK compute folder's files.
+- **Tokens are verified once, not on every request.** PlantCraft and every app keep the tokens they
+  already verified until they expire (at most 4096), so a request no longer checks the Ed25519
+  signature again: 0.25 ms down to 0.008 ms in an app (`plantcraft-sdk` 0.89.0) and 0.25 ms down to
+  0.015 ms in PlantCraft. Revocation, the expiry and the signing key are still checked every time.
+- **`./install.sh --security-check` runs in 1.5 s instead of 3.9 s:** one `docker inspect` for all
+  containers and networks, and the backup's listing read while the other checks run.
 - **The machine profile gives the Historian 1 GB on `small` and 1.5 GB on `medium`.** With 2
   processes its peak under the 0.6.0 load test C2 reached 780 to 910 MiB, above the 768m `small`
   gave it (plan B, 2026-10-31). The Historian also keeps the archive chunks it decoded, so reads
@@ -126,6 +177,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **The assistant no longer says it created what it only prepared** (security test D11). After
+  it proposes an action, an event or another object, "I created" in its answer becomes "I
+  prepared": only the card's button creates it. The tool's answer and the instructions say so too.
 - **Signing out ends the browser's token in every app too.** The 12-minute token carries the
   SHA-256 of its session (`sid` claim). After sign-out PlantCraft refuses it at once, and
   `GET /api/v1/auth/revoked` lists the session (`sessions`), so the apps refuse it within 10 s
@@ -141,6 +195,27 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **`ci/e2e-upgrade.sh` stops at once when it cannot read the admin password.** On Linux the
+  installation's password file is readable by root only, and the test found out after an 11-minute
+  build; it now asks for root before anything starts. `docs/install.md` names the release key id
+  (`af2643fa16867976`) that `install.sh` prints next to the fingerprint.
+- **A backup restores on a machine with fewer CPUs (2026-10-31 VM test).** A backup carries the
+  `.env` of the server it was made on, so restoring a 4-CPU server's backup on a 2-CPU one failed
+  to start ("range of CPUs is from 0.01 to 2.00") and returned to the state before it. The restore
+  now caps every CPU limit of `compose.yaml` at the host's CPU count before the suite starts, as
+  `install.sh` already did on install and update.
+- **Accessibility: no WCAG AA finding left in the suite's frame.** An axe-core sweep of 35 pages
+  (desktop and phone, every app, 2026-10-31) found no critical issue and five small ones, all in
+  shared parts: the count badges on the sidebar had white on red or light blue (3.5:1 and 2.5:1;
+  now 5.4:1 and 6.7:1, `--pc-chrome-problem`), the tour card's head counted as a second page
+  banner, the frame's `main` around an app had no name of its own, To-do, Notes and Messages
+  jumped from `h1` to `h3`, a table column with only buttons had an empty header (now "Actions"
+  for screen readers, in `DataTable` and Historian's sources), and the block editor's status
+  lights had a label but no role (`role="img"`).
+- **The demo journeys (`tests/e2e_suite`) follow the current sign-in page and tour.** They still
+  looked for "Public demo" / "A visit lasts" (the visit clock went away on 2026-10-28), for the
+  older "read-only" refusal and for the tour's last step "Your apps"; 13 of 15 failed on a VM
+  after the update from 0.5.1, all from the first. 15 of 15 pass on main.
 - **Installer, from the first tries on Windows 11 (WSL) and a clean Linux VM.** The setup
   wizard asks the apps before the requirements (it stopped on a memory FAIL for apps you would
   have left out), starts from an installation file already there, says on its first screens when

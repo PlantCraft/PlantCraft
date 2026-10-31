@@ -165,8 +165,8 @@ function ChatPane({ conversationId, me, contacts, onBack, onActivity, onRead, on
     </header>
     <div className="msg-scroll" ref={scroller} onScroll={(event) => { const box = event.currentTarget; stick.current = box.scrollHeight - box.scrollTop - box.clientHeight < 80; }}>
       {!messages.length && <div className="msg-empty-chat">
-        {solo?.kind === "specialist" ? <><Avatar name={solo.display_name} bot size="lg" /><h3>{t("Ask {name}", { name: solo.display_name })}</h3><p>{soloContact?.subject ? `${soloContact.subject}. ` : ""}{t("A specialist reads what the apps published in PlantCraft and answers here. It only reads: it never changes anything.")}</p></>
-          : <><MessagesSquare /><h3>{t("No messages yet")}</h3><p>{t("Write the first one. Name an asset (FIC-101) or use the # button to link it.")}</p></>}
+        {solo?.kind === "specialist" ? <><Avatar name={solo.display_name} bot size="lg" /><h2>{t("Ask {name}", { name: solo.display_name })}</h2><p>{soloContact?.subject ? `${soloContact.subject}. ` : ""}{t("A specialist reads what the apps published in PlantCraft and answers here. It only reads: it never changes anything.")}</p></>
+          : <><MessagesSquare /><h2>{t("No messages yet")}</h2><p>{t("Write the first one. Name an asset (FIC-101) or use the # button to link it.")}</p></>}
       </div>}
       {messages.map((message, index) => {
         const previous = messages[index - 1];
@@ -387,9 +387,9 @@ export function MessagesPage({ me, conversationId, onRead }: { me: string; conve
       </ul></>}
     </aside>
     {notices ? (chosen ? <NoticePane key={chosen.key} item={chosen} onBack={() => setSelected(null)} onMark={(state) => { void mark([chosen.key], state); if (state === "archived") setSelected(null); }} onStar={() => void star(chosen.key, !chosen.starred)} onActed={() => { void reloadNotices(); onRead(); }} />
-      : <section className="msg-chat msg-chat-idle"><div className="co-center"><MessagesSquare /><h3>{t("Your notifications")}</h3><p>{t("Alarms, runs and changes others made to your actions. Open one to read it; check it when it is handled.")}</p></div></section>)
+      : <section className="msg-chat msg-chat-idle"><div className="co-center"><MessagesSquare /><h2>{t("Your notifications")}</h2><p>{t("Alarms, runs and changes others made to your actions. Open one to read it; check it when it is handled.")}</p></div></section>)
     : conversationId ? <ChatPane key={conversationId} conversationId={conversationId} me={me} contacts={contacts} onBack={() => open(null)} onActivity={() => void loadList()} onRead={read} onMark={markConversation} />
-      : <section className="msg-chat msg-chat-idle"><div className="co-center"><MessagesSquare /><h3>{t("Your conversations")}</h3><p>{t("Talk with colleagues. Questions for the assistant go to Desk's Assistant, where each chat keeps its own subject.")}</p>{newButton}</div></section>}
+      : <section className="msg-chat msg-chat-idle"><div className="co-center"><MessagesSquare /><h2>{t("Your conversations")}</h2><p>{t("Talk with colleagues. Questions for the assistant go to Desk's Assistant, where each chat keeps its own subject.")}</p>{newButton}</div></section>}
     {creating && contacts && <ContactsDialog mode="new" contacts={contacts} me={me} prefill={creating} onClose={() => setCreating(null)} onSubmit={start} onOpenGroup={openGroup} />}
   </div>;
 }

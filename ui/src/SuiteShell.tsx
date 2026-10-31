@@ -12,7 +12,7 @@
  * a `tour` gets the guided tour: it opens by itself the first time the person opens the app, and
  * from the user menu ("Take the tour") or `startTour()` after that.
  */
-import { BookOpen, Check, ChevronDown, ChevronRight, Compass, LogOut, Menu, MessagesSquare, Monitor, Moon, PanelLeft, SlidersHorizontal, Sun, UserRound, X } from "lucide-react";
+import { BookOpen, Check, ChevronDown, ChevronRight, Compass, LifeBuoy, LogOut, Menu, MessagesSquare, Monitor, Moon, PanelLeft, SlidersHorizontal, Sun, UserRound, X } from "lucide-react";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { appDisplayName, appIdFor, appLabel, type AnyAppId, type AppId } from "./appMarks.js";
 import { AssistantHost, AssistantTopButton, pageContext, useOpenAssistant } from "./AssistantDrawer.js";
@@ -198,7 +198,7 @@ export const ADMIN_PATH = "admin";
  * the Historian that collects, the apps that analyse, model and run, View where results are
  * seen, and PlantCraft last (configuration, seldom opened).
  */
-export const SUITE_ORDER = ["desk", "histcraft", "linkcraft", "modelcraft", "alarmcraft", "doccraft", "simcraft", "dashcraft", "processcraft"];
+export const SUITE_ORDER = ["desk", "histcraft", "linkcraft", "modelcraft", "alarmcraft", "doccraft", "simcraft", "dashcraft", "operations", "processcraft"];
 
 function suiteRank(entry: SuiteApp): number {
   const at = SUITE_ORDER.indexOf(appIdFor(entry.id) ?? "");
@@ -326,7 +326,7 @@ const THEMES: Array<{ value: ThemeChoice; label: string; icon: ReactNode }> = [
   { value: "system", label: "System", icon: <Monitor size={15} /> },
 ];
 
-function UserMenu({ user, version, extra, profileHref, onProfile, preferencesHref, onPreferences, helpHref, onHelp, onSignOut, onTour, collapsed }: { user: ShellUser | null; version?: string | null; extra?: ReactNode; profileHref?: string; onProfile?: () => void; preferencesHref?: string; onPreferences?: () => void; helpHref?: string | null; onHelp?: () => void; onSignOut: () => void; onTour?: () => void; collapsed: boolean }) {
+function UserMenu({ user, version, extra, profileHref, onProfile, preferencesHref, onPreferences, helpHref, onHelp, askHref, onAsk, onSignOut, onTour, collapsed }: { user: ShellUser | null; version?: string | null; extra?: ReactNode; profileHref?: string; onProfile?: () => void; preferencesHref?: string; onPreferences?: () => void; helpHref?: string | null; onHelp?: () => void; askHref?: string | null; onAsk?: () => void; onSignOut: () => void; onTour?: () => void; collapsed: boolean }) {
   const [open, setOpen] = useState(false);
   const [theme, setChoice] = useState<ThemeChoice>(themeChoice);
   const root = useRef<HTMLDivElement | null>(null);
@@ -369,6 +369,12 @@ function UserMenu({ user, version, extra, profileHref, onProfile, preferencesHre
             <a role="menuitem" className="pcs-menu-link" href={helpHref} onClick={(event) => { if (!onHelp || event.metaKey || event.ctrlKey) return; event.preventDefault(); setOpen(false); onHelp(); }}>
               <BookOpen size={15} />
               <span>{t("Help")}</span>
+            </a>
+          )}
+          {askHref && user && (
+            <a role="menuitem" className="pcs-menu-link" href={askHref} onClick={(event) => { if (!onAsk || event.metaKey || event.ctrlKey) return; event.preventDefault(); setOpen(false); onAsk(); }}>
+              <LifeBuoy size={15} />
+              <span>{t("Ask for help")}</span>
             </a>
           )}
           {onTour && (
@@ -500,6 +506,9 @@ function FullShell(props: SuiteShellProps) {
   // app's own page for old links.
   const help: ShellNavItem | null = null;
   const suiteHelp = helpTo === null ? null : platformUrl(entries, `help?app=${encodeURIComponent(appIdFor(app) ?? app)}`);
+  // "Ask for help" (Operations › Requests on PlantCraft): the form, with this app and page in it.
+  const askPage = `ops/requests?new=1&from=${encodeURIComponent(appDisplayName(app, appName))}&page=${encodeURIComponent(path)}`;
+  const suiteAsk = helpTo === null ? null : platformUrl(entries, askPage);
   const local = localApps.includes("processcraft") || localApps.includes("desk");
   const contentRef = useRef<HTMLElement | null>(null);
   const content = useCallback(() => contentRef.current, []);
@@ -542,7 +551,7 @@ function FullShell(props: SuiteShellProps) {
             </button>
           </div>
           <div className="pcs-account">
-            <UserMenu user={user} version={version} extra={userMenuExtra} profileHref={platformUrl(entries, "people/me")} onProfile={onOpenProfile} preferencesHref={platformUrl(entries, "preferences")} onPreferences={onOpenPreferences} helpHref={suiteHelp} onHelp={local ? () => navigate(`/help?app=${encodeURIComponent(appIdFor(app) ?? app)}`) : undefined} onSignOut={onSignOut} onTour={onTour ?? (tourSteps?.length ? tour.start : undefined)} collapsed={collapsed} />
+            <UserMenu user={user} version={version} extra={userMenuExtra} profileHref={platformUrl(entries, "people/me")} onProfile={onOpenProfile} preferencesHref={platformUrl(entries, "preferences")} onPreferences={onOpenPreferences} helpHref={suiteHelp} onHelp={local ? () => navigate(`/help?app=${encodeURIComponent(appIdFor(app) ?? app)}`) : undefined} askHref={suiteAsk} onAsk={local ? () => navigate(`/${askPage}`) : undefined} onSignOut={onSignOut} onTour={onTour ?? (tourSteps?.length ? tour.start : undefined)} collapsed={collapsed} />
           </div>
         </div>
       </aside>
@@ -553,7 +562,7 @@ function FullShell(props: SuiteShellProps) {
           <span className="pcs-mobile-only pcs-top-app"><AppLockup app={app} name={appName} size={26} /></span>
           <div className="pcs-top-actions">{actions}</div>
         </header>
-        <main className={`pcs-content${fill ? " pcs-content-fill" : ""}`} ref={contentRef}>{children}</main>
+        <main className={`pcs-content${fill ? " pcs-content-fill" : ""}`} ref={contentRef} aria-label={appName}>{children}</main>
       </div>
       {inbox && !inboxState.forbidden && urgentDue(urgent) && <UrgentToast key={urgent.key} notice={urgent} onOpen={openNotifications} onChanged={messagesRead} />}
       {arrived > 0 && inbox && !inboxState.forbidden && !urgentDue(urgent) && (

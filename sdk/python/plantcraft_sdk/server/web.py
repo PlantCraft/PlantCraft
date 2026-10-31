@@ -23,7 +23,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
@@ -31,14 +31,17 @@ from pydantic import ValidationError
 from plantcraft_sdk.auth import AuthError, User, wants_html
 from plantcraft_sdk.client import PlantCraftError
 from plantcraft_sdk.i18n import t
+from plantcraft_sdk.server import logread
 from plantcraft_sdk.server.access import CurrentUser
 from plantcraft_sdk.server.demo import DemoVisitLimit
 from plantcraft_sdk.server.files import AppFiles
+from plantcraft_sdk.server.logs import current_file
 from plantcraft_sdk.server.memory import Releaser
 from plantcraft_sdk.server.ops import RequestLog, can_read_metrics, metrics
 from plantcraft_sdk.server.origin import SameSiteWrites
 from plantcraft_sdk.server.queue import FORMAT as QUEUE_FORMAT
 from plantcraft_sdk.server.search import search_answer
+from plantcraft_sdk.utc import parse_instant
 
 
 def _openapi() -> bool:
@@ -164,6 +167,40 @@ def suite_api(
         if not can_read_metrics(user):
             raise HTTPException(status_code=403, detail=t("Only an administrator can do this."))
         return metrics(files.app_id, version)
+
+    @api.get("/api/ops/logs", include_in_schema=False)
+    def ops_logs(
+        user: CurrentUser,
+        since: str | None = None,
+        until: str | None = None,
+        level: str | None = None,
+        text: str | None = Query(default=None, max_length=200),
+        request_id: str | None = Query(default=None, max_length=64),
+        logger: str | None = Query(default=None, max_length=200),
+        limit: int = Query(default=logread.DEFAULT_LIMIT, ge=1, le=logread.MAX_LIMIT),
+    ) -> dict[str, Any]:
+        """This server's own log, newest first (PlantCraft's Operations › Logs reads it)."""
+
+        if not can_read_metrics(user):
+            raise HTTPException(status_code=403, detail=t("Only an administrator can do this."))
+        bounds = {}
+        for name, value in (("since", since), ("until", until)):
+            moment = parse_instant(value) if value else None
+            if value and moment is None:
+                raise HTTPException(status_code=422, detail=t("Use an ISO 8601 time."))
+            bounds[name] = moment
+        if level and level.upper() not in logread.LEVELS:
+            raise HTTPException(status_code=422, detail=t("Unknown log level."))
+        found = logread.read_logs(
+            current_file(),
+            level=level,
+            text=text,
+            request_id=request_id,
+            logger=logger,
+            limit=limit,
+            **bounds,
+        )
+        return {"app": files.app_id, "version": version, **found}
 
     if status_route:
 

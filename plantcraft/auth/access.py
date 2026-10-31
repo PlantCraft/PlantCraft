@@ -15,6 +15,11 @@ listed ``application_id`` values. Administrators always see every application.
 App roles: a person may have another role in a given app than their level gives
 (``viewer`` or ``editor``: an engineer who only reads the Historian, an operator
 who edits in Alarms). Administrators edit everywhere.
+
+Operations: an app role on ``operations`` (Desk-like built-in app, docs/operations.md section 4)
+lets someone who is not an administrator open Operations: the suite's status, load and logs
+(the plant's IT, an integrator's support). It changes nothing else: backups, updates and the
+load limits stay with the administrators.
 """
 
 from __future__ import annotations
@@ -31,6 +36,8 @@ LEVEL_LABELS = {
     "dashboards": "Dashboards only",
 }
 _RANK = {level: index for index, level in enumerate(ACCESS_LEVELS)}
+# The built-in Operations app (status, load, logs): its id in a person's app roles.
+OPERATIONS_APP = "operations"
 
 
 def level_label(level: str) -> str:
@@ -75,6 +82,12 @@ class Access:
         return self.level == "admin"
 
     @property
+    def can_operate(self) -> bool:
+        """May open Operations (status, load, logs): an administrator, or an Operations role."""
+
+        return self.is_admin or any(app_id == OPERATIONS_APP for app_id, _ in self.app_roles)
+
+    @property
     def can_edit(self) -> bool:
         return self.at_least("editor")
 
@@ -90,5 +103,6 @@ class Access:
             "applications": list(self.applications) if self.applications is not None else None,
             "app_roles": dict(self.app_roles),
             "can_edit": self.can_edit,
+            "can_operate": self.can_operate,
             "is_admin": self.is_admin,
         }

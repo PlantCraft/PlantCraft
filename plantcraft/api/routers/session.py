@@ -41,6 +41,9 @@ def _session_payload(username: str | None, rt: Any, request: Request) -> dict[st
         # visitor's, read-only (api/deps.py, AdminView).
         visitor = (demo := public_demo()) is not None and username == demo.username
         shown["admin_view"] = bool(access and access.is_admin) or visitor
+        # Temporary support access: when it ends (the shell says so).
+        grant = rt.workspace.support_access.active(username) if username else None
+        shown["support_until"] = grant["ends_at"] if grant else None
     return {
         "authenticated": bool(username),
         "username": username,
@@ -117,6 +120,16 @@ def login(
                 audit_sign_in(rt, request, username, "session.sign_in_failed", reason="password")
                 raise HTTPException(status_code=401, detail=t("Incorrect username or password."))
             username = found
+        ended = None if admin else rt.workspace.groups.access_ended(username)
+        if ended:
+            audit_sign_in(rt, request, username, "session.sign_in_failed", reason="access_ended")
+            raise HTTPException(
+                status_code=403,
+                detail=t(
+                    "Your company's access ended on {date}. Ask your sponsor at the plant to extend it.",
+                    date=ended,
+                ),
+            )
         method = "admin" if admin else "local" if local else "ldap"
         audit_sign_in(rt, request, username, "session.sign_in", method=method)
     elif not rt.workspace.users.is_person(username):

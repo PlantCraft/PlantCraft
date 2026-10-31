@@ -6,7 +6,7 @@ import { accessApi, EMPTY_PROFILE, type UserDraft } from "./accessApi";
 import { AssetScopeField } from "./AssetScopeField";
 import { PersonLink } from "./collab";
 import { t } from "./i18n";
-import { useAdminView } from "./session";
+import { OPERATIONS_APP, useAdminView } from "./session";
 import type { AccessLevel, AppRole, Profile, UserAccount, UserAccounts } from "./types";
 import { UserTabs } from "./Specialists";
 import "./access.css";
@@ -52,7 +52,7 @@ export function UsersPage() {
   useEffect(() => { if (isAdmin) void load(); }, [isAdmin, load]);
 
   if (!isAdmin) return <div className="module-state module-error"><AlertTriangle /><span>{t("Only admins manage users.")}</span></div>;
-  const appName = (id: string) => data?.applications.find((app) => app.application_id === id)?.name ?? id;
+  const appName = (id: string) => (id === OPERATIONS_APP ? t("Operations") : data?.applications.find((app) => app.application_id === id)?.name ?? id);
 
   async function toggle(user: UserAccount) {
     const off = user.active;
@@ -165,6 +165,11 @@ function UserForm({ data, user, onClose, onSaved }: { data: UserAccounts; user: 
               <option value="editor">{ROLE_LABELS.editor}</option>
             </select>
           </div>; })}
+        </fieldset>
+        <fieldset className="field-span ac-fieldset" disabled={draft.access_level === "admin"}>
+          <legend>{t("Operations")}</legend>
+          <label className="ac-check"><input type="checkbox" checked={draft.access_level === "admin" || Boolean(draft.app_roles?.[OPERATIONS_APP])} onChange={(event) => { const next = { ...(draft.app_roles ?? {}) }; if (event.target.checked) next[OPERATIONS_APP] = "viewer"; else delete next[OPERATIONS_APP]; setDraft({ ...draft, app_roles: next }); }} /> {t("Opens Operations: the suite's status, load and logs")}</label>
+          <p className="ac-hint">{t("For the plant's IT or an integrator's support team. Backups, updates and the load alert levels stay with the administrators.")}</p>
         </fieldset>
       </div>
       <footer><button type="button" className="button button-secondary" onClick={onClose}>{t("Cancel")}</button><button className="button button-primary" disabled={busy}>{busy && <LoaderCircle className="spin" size={15} />} {user ? t("Save") : t("Create user")}</button></footer>

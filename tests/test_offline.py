@@ -36,6 +36,8 @@ NETWORK_MODULES = {
     # The suite's health: GET /api/ops/metrics of the suite's own servers, at their Compose
     # services inside the installation's network (PLANTCRAFT_OPS_URLS may name others).
     "plantcraft/watch/recorder.py",
+    # Operations › Logs: GET /api/ops/logs of those same servers, with the same short ops token.
+    "plantcraft/watch/logs.py",
     # Corporate sign-in, only when an admin turns it on (off by default; the installation forbids
     # it with PLANTCRAFT_CORPORATE_LOGIN=off): the company's directory and sign-in provider,
     # inside the plant's network (docs/corporate-login.md).

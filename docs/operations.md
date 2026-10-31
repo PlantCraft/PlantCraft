@@ -120,10 +120,13 @@ PlantCraft is down. A backup does not start with less free space than twice the 
 plus the Historian's part (its database size for a full copy, a twentieth of it for an
 incremental).
 
-**Off the server (planned).** A copy on the same disk does not survive the disk. Backups leave the server
-encrypted (AES-256-GCM, key from the admin's backup passphrase with scrypt; the passphrase is never
-stored): to `PLANTCRAFT_BACKUP_EXPORT_DIR` (a NAS or USB disk mounted on the host) and through
-the Download button. Local copies stay unencrypted, root only (`0700`).
+**Off the server.** A copy on the same disk does not survive the disk. `install.sh
+--export-backup <name> --passphrase-file FILE [--out PATH]` writes one backup encrypted (AES-256,
+key from the passphrase with PBKDF2, 600,000 rounds; the passphrase is never stored). Local copies
+stay unencrypted, root only (`0700`): they hold `.env`, the app keys, the initial admin password,
+the database password and the local certificate authority's private key, so a plain copy of
+`backups/` must not leave the server. Planned: export to `PLANTCRAFT_BACKUP_EXPORT_DIR` and through
+the Download button.
 
 **Restore.** On the Backups page (`/backups`; `/operations` and `/setup/backups` lead there since 2026-10-24) the admin picks a backup, confirms with their password
 and types its name. The driver checks it (the Historian's chain too) before anything stops, sets the current state aside (`before-restore`), stops the suite, restores images, settings and data,
@@ -131,6 +134,15 @@ rebuilds the Historian's database from its chain (`pg_combinebackup`, then `pg_v
 the result), starts it, and waits for every service to be healthy; if one is not, it returns to
 `before-restore` by itself and says why. Meanwhile the proxy shows a maintenance page with the
 progress. Command line: `install.sh --backup`, `--list-backups`, `--restore <name>`, `--drill`.
+
+**Restore on another server.** Copy the whole chain to the new server's `backups/` (an incremental
+needs every backup it names in `needed_by`; `--list-backups` shows them), install the same version
+there, then `--restore <name>`. CPU limits above the new host's CPU count are lowered to it before
+the suite starts (a 4-CPU server's backup restores on a 2-CPU one). The backup brings the old
+server's name (`PLANTCRAFT_HOSTNAME`), certificates and `installation_id`: set
+`PLANTCRAFT_HOSTNAME` in `.env` to the new server's names and run `install.sh` again (it applies
+the settings and issues the certificates), and retire the old server, which now shares the
+installation's identity.
 
 ## 3. Updates
 
@@ -213,7 +225,11 @@ history; uploading a bundle there to update is the next step, through the same d
 **Metrics.** The installer writes Docker's view every 30 s to `data/installer/status/metrics.json`
 (`plantcraft.apps.installer.Installer.metrics`): for each container its state, health, exit
 code, restarts, start time, CPU and memory (`docker compose ps`, `inspect`, `stats`), and the
-free disk of the install folder. Docker runs every service's health check, which calls its
+free disk of the install folder. Docker's CPU is a percentage of one core (`cpu_pct`, 344 for
+3.4 cores), so each service also carries `cpus` (its limit, `HostConfig.NanoCpus`, else the
+machine's) and `cpu_load_pct`, the share of that limit (0 to 100). `host` is the machine itself,
+read from `/proc` (`plantcraft.apps.host_usage`): `cpus`, `cpu_pct` (between two reads),
+`mem_pct`, `mem_total_bytes`, `mem_used_bytes`, `load_1m`. Docker runs every service's health check, which calls its
 `/healthz`, so `health` is each server's own answer seen from outside it. Every server also
 answers `GET /api/ops/metrics` (SDK, `plantcraft_sdk.server.ops`) to an admin or a token with the
 `ops` scope: version, uptime, warnings and errors logged, requests, server errors, p95 latency.
@@ -222,7 +238,8 @@ answers `GET /api/ops/metrics` (SDK, `plantcraft_sdk.server.ops`) to an admin or
 writes the suite's health to the Historian's reserved source `system`, shown as "System"
 ("Sistema"), which only PlantCraft writes (`POST /api/v1/data/system`; the Historian's
 `docs/data-layer.md`), kept 90 days. Signals: `system:<service>.up` (1 running and healthy),
-`.cpu_pct`, `.mem_mb`, `.mem_pct`, `.restarts` for every container in `metrics.json`;
+`.cpu_pct` (share of its CPU limit when the installer gives it), `.mem_mb`, `.mem_pct`,
+`.restarts` for every container in `metrics.json`; `system:host.cpu_pct`, `.mem_pct`;
 `.latency_ms` (p95), `.errors`, `.warnings` (logged per minute) for every server that answers
 `GET /api/ops/metrics` (PlantCraft's own in-process; the others at their Compose service with a
 two-minute token of the `ops` scope: `histcraft`, `linkcraft`, `dashcraft`, `alarmcraft`,
@@ -268,13 +285,103 @@ reaches the administrators.
 | `drill` | the last restore drill failed | 1 tick |
 | `queue:<service>` | items waiting and the oldest has waited over 30 minutes: the queue does not drain | 2 ticks |
 | `cert:<id>` | a certificate expires in under 30 days or has expired (one reminder under 7 days) | 1 tick |
+| `load:<service>`, `load:host` | CPU (of its limit) or memory over the warning level (80 %) | 5 minutes |
+| `load_critical:<service>`, `load_critical:host` | the same over the critical level (95 %) | 5 minutes |
+| `errors:<service>`, `errors_critical:<service>` | errors logged a minute over 2 (critical 5) | 5 minutes |
+
+**Load alerts** (`plantcraft.watch.load`). The levels above are stored in `watch_state`
+(`load_limits`) and changed on Operations › Load alerts (`GET`/`PUT /api/operations/limits`,
+changes by admins only, audited `operations.limits`): on or off, warning and critical for CPU,
+memory and errors a minute, and the minutes a level must hold (1 to 120; a short peak, a report
+or a backup, says nothing). An incident ends once the value is 5 points under its level (errors:
+a fifth of it), so a value on the line does not flap. Warnings are posted with 🟠, critical ones
+with 🔴, and are events `processcraft.load.high`, `load.critical`, `errors.high`,
+`errors.critical`. Errors a minute come from each server's `GET /api/ops/metrics`, read by the
+recorder. Load checks hold still like the services' during an operation.
 
 While the driver runs an operation (at most 6 h) or the installer is silent, the services'
 and queues' checks hold still: neither opened nor closed. A service or queue that leaves the
 suite (an app removed) ends its incident without a message. An update (done, returned, rolled back) is announced once,
-when less than 24 h old. `PLANTCRAFT_WATCH=false` turns the watch off. The Health page (`/health`) shows
-the last check, the open and recent incidents and every service's state, CPU, memory and
-restarts (`GET /api/operations/health`, admins only).
+when less than 24 h old. `PLANTCRAFT_WATCH=false` turns the watch off.
+
+**Operations, the built-in app** (2026-10-31). Like Desk, Operations is part of PlantCraft and
+sits in the app switcher, for administrators and for people given the **Operations** role
+(Users, a checkbox beside the apps; stored as the app role `operations`, `Access.can_operate`;
+IT or an integrator's team that keeps the suite running without being an administrator). Pages:
+**Status** (`/health`: the last check, open and recent incidents, the machine's CPU, memory, load
+and free disk, every service's state, CPU and memory against its limit with the levels' colours,
+restarts; `GET /api/operations/health`, which carries the `limits`), **Logs** (`/ops/logs`, below),
+**Requests**, **Partners** and **Support access** (below), **Load alerts** (`/ops/alerts`); Backups and Updates stay
+for administrators. The Operations
+role reads; installing, updating, restoring and changing levels stay with administrators.
+
+**Requests** (`/ops/requests`, Operations › Requests). What the people of the suite ask of IT or
+an integrator: an action of kind `request` (`plantcraft.actions`), with a category (something
+not working, slow, access, data, a change, other), a queue (the group that answers it: IT, a
+company) and `first_response_at`, set the first time someone other than who asked comments,
+changes it or logs time. A new request reaches who answers it: its queue's members (the
+administrators when it has none) get a notification from "Operations" in Messages, and an email
+when they asked for email. Anyone who signs in asks, a viewer too (`POST /api/requests`): "Ask for
+help" in the person's menu of every app (`@plantcraft/ui` SuiteShell) opens the form with the app
+and page filled in; a log record and an open incident have "Open a request". Who asked follows
+theirs; the Operations role sees and answers every request (status and edit too, whatever its
+access level: `Visibility.requests`); each request is an action on its own page, with its
+comments, checklist and **time**: hours on a day, a note, billable or not
+(`POST /api/actions/{id}/hours`, by whoever sees it; removed by who logged it or an admin).
+
+**Partners** (`/ops/partners`, `GET /api/operations/partners?month=`,
+`GET /api/operations/hours?month=&company=`, audited `operations.hours.read`). The companies
+working at the plant: a group of kind `company` (docs/groups.md) with its teams (groups under it),
+people, coordinator on its side, sponsor at the plant, last day of access (no end, active, ending in
+30 days, ended: from the next day nobody in it signs in, and the sign-in says why) and open
+requests; the hours its people logged in the month (an entry counts for the company of who logged
+it; the plant's own people are "Plant"), with the month's report exported as CSV.
+
+**Targets** (`plantcraft.actions.sla`; `GET`/`PUT /api/operations/targets`, the change audited
+`operations.targets`). Each priority has a first answer target and a resolution target, in hours
+on the clock, day and night (defaults: critical 1 h and 8 h, high 4 h and 24 h, medium 8 h and
+72 h, low 24 h and 168 h); an administrator changes them on Requests › Targets. The first answer
+runs from the request to `first_response_at`; the resolution from the request to Done, **without
+the time it spent Blocked** (waiting for who asked, or a third party: the request's status
+history says when). Every request carries `sla` (`response`, `resolution`: target, minutes used,
+`running`, `at_risk` from 75 %, `met` or `breached`, the due time while it runs, `paused`). The
+Requests list shows the target that matters now (the first answer until there is one) and counts
+the late ones; the request's page shows both. An archived request has none. A target changed
+applies to the open requests at once.
+
+**The month's approval** (`POST /api/operations/hours/approve` `{month, company}`, audited
+`operations.hours.approved`; `POST /api/operations/hours/reopen`, administrators, audited
+`operations.hours.reopened`). Once a month has ended, a company's hours are approved by an
+administrator or by the company's sponsor at the plant (the plant's own people's hours by an
+administrator), on its Partners card; the approval keeps who, when and the total. From then on no
+entry of that month is added or removed for that company's people (409: an administrator reopens
+the month first), and the request's page shows those entries locked.
+
+**Support access** (`/ops/support`, `plantcraft.auth.support_access`; `GET
+/api/operations/support-access`, `POST /api/operations/support-access/grants`
+`{username, hours, reason, action_id}`, `DELETE .../grants/{id}`; audited
+`operations.support_access.granted` and `.ended`). An administrator lets a person into Operations
+for up to 72 hours, for a reason and often a request (its page links here with the request
+filled in): while it lasts the person has the Operations role (status, load, logs, every
+request) and nothing else changes; they are told in Messages and by email, and Status says until
+when. It ends by itself, or earlier with "End now". It cannot be given to someone whose company's
+access ended.
+
+The public demo's visitor opens Operations read-only, without Logs (a public server's logs name
+its visitors).
+
+**Reading the logs** (`GET /api/operations/logs`, audited `operations.logs.read`). One list of
+every server's records, newest first: PlantCraft reads its own file, and asks every running
+server's `GET /api/ops/logs` (SDK, `plantcraft_sdk.server.logread`, with a two-minute token of
+the `ops` scope, in parallel, 8 s each). Filters, applied by each server on its own file:
+`services`, a period (`hours`, default 6, at most 31 days, or `since`/`until`), the lowest
+`level`, `text` (in the message, the logger or the error), `request_id`, `logger`, `limit` (at most
+1000). Each server reads its rotated files newest first and stops at the first record older than
+the period, at most 64 MB scanned. The answer has `records` (each with its `service`),
+`truncated`, `services` (the running ones), `missing` (a server down or older than this endpoint:
+its logs stay on its disk and in the diagnostic bundle), and `top`, the most frequent warnings and
+errors with numbers and ids folded (`#`). The page shows it as a table, opens a record whole,
+follows one request through every app ("Same request in every app") and exports CSV.
 
 **Certificates** (`plantcraft.certificates`, B17, 2026-10-25). A certificate that expires stops
 a connection without a word on any screen, so Health lists every one the suite uses, read once an

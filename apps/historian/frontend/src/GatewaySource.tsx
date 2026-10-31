@@ -66,7 +66,7 @@ function Registers({ registers, onChange }: { registers: Register[]; onChange: (
   return <div className="formula registers">
     <span className="registers-title">{t("Registers and coils")}</span>
     <table className="table compact">
-      <thead><tr><th>{t("Name")}</th><th>{t("Type")}</th><th>{t("Address")}</th><th>{t("Data type")}</th><th>{t("Byte order")}</th><th>{t("Scale")}</th><th /></tr></thead>
+      <thead><tr><th>{t("Name")}</th><th>{t("Type")}</th><th>{t("Address")}</th><th>{t("Data type")}</th><th>{t("Byte order")}</th><th>{t("Scale")}</th><th><span className="sr-only">{t("Actions")}</span></th></tr></thead>
       <tbody>{registers.map((item, index) => {
         const word = item.type === "holding_register" || item.type === "input_register";
         const dataType = item.data_type ?? "INT16";

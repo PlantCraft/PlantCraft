@@ -443,3 +443,21 @@ def test_a_work_sends_only_its_context_and_names_the_pages_object_in_its_form(si
     _chat, view = _ask(signed, "Change it", work="processcraft:change-action", page=page)
     [card] = view["messages"][-1]["meta"]["proposals"]
     assert card["card"]["form"] == "/actions/42/edit"
+
+
+def test_an_answer_that_proposed_says_prepared_not_created() -> None:
+    """D11 (2026-10-31): after a proposal the model wrote "I created an action"; only the card's
+    button creates it."""
+
+    from plantcraft.assistant_chat.engine import prepared_not_created
+
+    assert prepared_not_created("I created an action for P-101.") == (
+        "I prepared an action for P-101."
+    )
+    assert prepared_not_created("I've added a note and we have registered an event.") == (
+        "I've prepared a note and we have prepared an event."
+    )
+    assert prepared_not_created("Criei uma ação.") == "Preparei uma ação."
+    assert prepared_not_created("The pump was created in 2019.") == (
+        "The pump was created in 2019."
+    )

@@ -16,6 +16,7 @@ from plantcraft.audit import AuditStore
 from plantcraft.auth.app_keys import AppKeyStore
 from plantcraft.auth.demo_visits import DemoVisits
 from plantcraft.auth.sessions import EndedSessions
+from plantcraft.auth.support_access import SupportAccessStore
 from plantcraft.auth.throttle import LoginThrottle
 from plantcraft.auth.usage import UsageStore
 from plantcraft.auth.users import UserStore
@@ -65,6 +66,7 @@ class Workspace(Store):
         self.installation = InstallationStore(db)
         self.notebooks = NotebookStore(db)
         self.groups = GroupStore(db, self.users)
+        self.support_access = SupportAccessStore(db)
         # A group's conversation follows its members (messages <-> groups).
         self.messages.groups = self.groups
         # Every stored time in UTC: rows from before are rewritten once.
