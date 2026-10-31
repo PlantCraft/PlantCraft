@@ -117,6 +117,9 @@ export const operationsApi = {
   },
   approveHours: (month: string, company: string | null) => requestJson<HoursApproval>("/api/operations/hours/approve", post({ month, company })),
   reopenHours: (month: string, company: string | null) => requestJson<{ reopened: HoursApproval }>("/api/operations/hours/reopen", post({ month, company })),
+  uptime: () => requestJson<UptimeAnswer>("/api/operations/uptime"),
+  planMaintenance: (draft: { reason: string; hours: number; services: string[] | null; starts_at: string | null }) => requestJson<MaintenanceWindow>("/api/operations/maintenance/windows", post(draft)),
+  endMaintenance: (windowId: number) => requestJson<MaintenanceWindow>(`/api/operations/maintenance/windows/${windowId}`, { method: "DELETE" }),
   targets: () => requestJson<TargetsAnswer>("/api/operations/targets"),
   setTargets: (targets: TargetsAnswer["targets"]) => requestJson<TargetsAnswer>("/api/operations/targets", { method: "PUT", body: JSON.stringify({ targets }) }),
   supportAccess: () => requestJson<{ grants: SupportGrant[]; max_hours: number }>("/api/operations/support-access"),
@@ -150,3 +153,8 @@ export interface HoursEntry {
   company_id?: string | null; company_name?: string | null;
 }
 export interface HoursReport { month: string; first: string; last: string; entries: HoursEntry[]; hours: number; billable_hours: number; approvals?: HoursApproval[] }
+
+/** A maintenance window: the watch keeps quiet about its apps (null: every app) while it lasts. */
+export interface MaintenanceWindow { window_id: number; starts_at: string; ends_at: string; services: string[] | null; reason: string; created_by: string; created_at: string; ended_by: string | null; ended_at: string | null }
+export interface UptimeRow { service: string; uptime: Record<"24h" | "7d" | "30d", number | null>; down_seconds: Record<"24h" | "7d" | "30d", number>; outages: Record<"24h" | "7d" | "30d", number> }
+export interface UptimeAnswer { at: string; since: string | null; services: UptimeRow[]; windows: MaintenanceWindow[] }

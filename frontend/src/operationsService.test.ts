@@ -31,3 +31,19 @@ describe("Operations, targets and support access", () => {
     expect(readGrantPrefill("?x=1")).toBeNull();
   });
 });
+
+import { uptimeText, uptimeTone, windowState } from "./OperationsUptime";
+
+describe("Operations, uptime", () => {
+  it("reads uptime and maintenance windows", () => {
+    expect(uptimeText(100)).toBe("100 %");
+    expect(uptimeText(99.5)).toBe("99.50 %");
+    expect(uptimeText(null)).toBe("—");
+    expect(uptimeTone(98.2)).toBe("warn");
+    expect(uptimeTone(90)).toBe("bad");
+    const now = Date.parse("2026-10-31T12:00:00Z");
+    expect(windowState({ starts_at: "2026-10-31T13:00:00Z", ends_at: "2026-10-31T15:00:00Z", ended_at: null }, now)).toBe("planned");
+    expect(windowState({ starts_at: "2026-10-31T11:00:00Z", ends_at: "2026-10-31T15:00:00Z", ended_at: null }, now)).toBe("active");
+    expect(windowState({ starts_at: "2026-10-31T11:00:00Z", ends_at: "2026-10-31T15:00:00Z", ended_at: "2026-10-31T11:30:00Z" }, now)).toBe("ended");
+  });
+});

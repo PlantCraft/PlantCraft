@@ -87,6 +87,21 @@ def test_operations_shows_the_load_the_logs_and_the_alert_levels(page, runtime):
     expect(row.locator(".ops-load-warning")).to_have_count(1)
     _shot(page, "1-status")
 
+    # Uptime by app, and a maintenance window that keeps the watch quiet about the Historian.
+    uptime = page.get_by_role("region", name="Uptime")
+    expect(uptime.get_by_role("row").filter(has_text="histcraft")).to_contain_text("100 %")
+    uptime.get_by_role("button", name="Plan maintenance").click()
+    dialog = page.get_by_role("dialog")
+    dialog.get_by_label("What for").fill("Historian upgrade")
+    dialog.get_by_label("histcraft").check()
+    dialog.get_by_role("button", name="Plan", exact=True).click()
+    window = uptime.get_by_role("list", name="Maintenance windows")
+    expect(window).to_contain_text("In maintenance")
+    expect(window).to_contain_text("Historian upgrade")
+    _shot(page, "14-uptime-maintenance")
+    window.get_by_role("button", name="End now").click()
+    expect(window).to_contain_text("Ended")
+
     nav = page.locator("nav.pcs-nav")
     nav.get_by_role("link", name="Logs", exact=True).click()
     expect(page.get_by_role("heading", level=1, name="Logs", exact=True)).to_be_visible()
