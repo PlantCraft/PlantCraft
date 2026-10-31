@@ -16,8 +16,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-
-from modelcraft.atomic import write_json
+from plantcraft_sdk.files import write_json
 
 MAX_VARIABLES = 20_000
 MAX_ROWS = 400_000

@@ -18,11 +18,12 @@ person typed can add a line, a table or another plugin.
 from __future__ import annotations
 
 import json
-import os
 import secrets
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+
+from plantcraft_sdk.files import write_atomic
 
 from histcraft.catalog.gateway import byte_order_of, register_words
 from histcraft.catalog.models import GATEWAY_KINDS
@@ -56,12 +57,7 @@ def _private(path: Path, text: str) -> None:
     """Write ``text`` to ``path`` readable by its owner only, replacing it at once."""
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-        handle.write(text)
-    os.chmod(temporary, 0o600)
-    os.replace(temporary, path)
+    write_atomic(path, text, mode=0o600)
 
 
 def gateway_token(data_dir: Path) -> str:

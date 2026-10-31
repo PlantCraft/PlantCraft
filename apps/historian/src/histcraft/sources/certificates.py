@@ -28,6 +28,7 @@ from asyncua.crypto.cert_gen import (
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.oid import ExtendedKeyUsageOID
+from plantcraft_sdk.files import write_atomic
 
 from histcraft.i18n import t
 
@@ -92,11 +93,7 @@ def renew(data_dir: Path) -> Path:
     cert_path, key_path = identity(data_dir)
     cert, key = _new_identity()
     for path, data, mode in ((key_path, key, 0o600), (cert_path, cert, 0o644)):
-        temporary = path.with_name(f".{path.name}.{os.getpid()}.new")
-        descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
-        with os.fdopen(descriptor, "wb") as handle:
-            handle.write(data)
-        os.replace(temporary, path)
+        write_atomic(path, data, mode=mode)
     return cert_path
 
 

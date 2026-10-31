@@ -21,7 +21,6 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   the evidence report for an audit (IEC 62443-4-2 CR 7.6 RE 1): scope, settings in force without
   secrets, results by requirement, exceptions and the hashes of the checks that ran
   (`docs/security-guide.md`).
-
 - **Uptime by app and maintenance windows.** Operations › Status shows each app's uptime over
   24 hours, 7 and 30 days, from the watch's incidents and without planned maintenance. An
   administrator plans a maintenance window (now or later, every app or some, up to 72 hours):
@@ -40,7 +39,6 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **Partners for a company's sponsor.** A sponsor at the plant without the Operations role opens
   Operations with Requests and Partners only, sees the companies they sponsor and approves their
   months' hours.
-
 - **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
   app switcher, for administrators and for a new **Operations** role (Users: IT, or an
   integrator's team, without making them administrators). **Status** shows every app's CPU and
@@ -102,6 +100,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   server (127.0.0.1, a random key per start): apps, requirements for those apps, machine and
   load, network and security, review of the file, install log. Tried on Windows 11 (WSL): it
   checks first that it runs from a complete release bundle, and a failed install can go back.
+- `plantcraft-sdk` and API v1: **the value of a window that closed earlier.**
+  `GET /api/v1/signals/{id}/value` takes an optional `end` (ISO 8601, never later than now);
+  PlantCraft answers it from its local data layer or passes it to the Historian, and the SDK's
+  client and fake take it too. View's reports over whole calendar periods read through it.
 
 ### Changed
 
@@ -116,7 +118,6 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   (react-grid-layout) and the asset pages were in the script every page of the platform loads.
   They now load with their own page: 758 KB to 509 KB for the sign-in and for every page but the
   Desk and the assets (Notes 1,267 to 1,026 KB, To-do 851 to 610 KB).
-
 - **Operations suggests the machine profile that fits.** When the machine, within the installation's
   `MAX_CPUS`/`MAX_MEMORY`, fits another profile than the one applied (more memory added, a
   profile pinned by hand), suite health names it and the command that applies it
@@ -169,7 +170,6 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   in the meantime. In Analytics, opening Blocks loads 1.15 MB of script instead of 2.5 MB and
   Algorithms 0.7 MB instead of 2.1 MB; a page whose chart shows at once (Signal, Loop) is drawn
   first and gets Plotly right after.
-
 - **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
   went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
   the chunks 0.6 s). `plantcraft-sdk` 0.85.0 adds `plantcraft_sdk.wire`, a binary answer for
@@ -228,35 +228,20 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   limit).
 - **`install.sh` fits every CPU limit to small hosts**, also the ones left at their default in
   `compose.yaml` (a 2-CPU machine stopped on `LINKCRAFT_EXECUTOR_CPUS`, default 4).
-
-### Security
-
-- **The security check includes Lynis and OpenSCAP when the host has them** (`PC-HOST-05`,
-  `PC-HOST-06`). As root it runs `lynis audit system --quick` and the SCAP Security Guide's CIS
-  level 1 (or standard) profile. Otherwise it reads their last report. A host without them reports
-  `na`; nothing is required.
-- **A daily limit on what the assistant reads for each person, and extraction flags in the audit
-  log** (backlog B13). Each tool call counts the signals it reads. Past
-  `PLANTCRAFT_ASSISTANT_DAILY_READS` (2000 a day) the assistant reads nothing more for that person
-  until the next day, and the audit log records `assistant.read_limit`. One answer that reads
-  more than `PLANTCRAFT_ASSISTANT_BULK_SIGNALS` (60) signals is recorded as
-  `assistant.bulk_read`. Both show with a warning mark in Settings › Audit. The count starts from
-  the day's audit records, so a restart does not reset it.
-- **The assistant no longer says it created what it only prepared** (security test D11). After
-  it proposes an action, an event or another object, "I created" in its answer becomes "I
-  prepared": only the card's button creates it. The tool's answer and the instructions say so too.
-- **Signing out ends the browser's token in every app too.** The 12-minute token carries the
-  SHA-256 of its session (`sid` claim). After sign-out PlantCraft refuses it at once, and
-  `GET /api/v1/auth/revoked` lists the session (`sessions`), so the apps refuse it within 10 s
-  (`plantcraft-sdk` 0.84.0). The person's other sessions keep working.
-- **`./install.sh --security-check`: 36 checks with stable ids, a score and machine-readable
-  output.** Each check (`PC-CTR-01` and so on) has a severity, the evidence it saw, how to fix it
-  and its IEC 62443-4-2 and NIST SP 800-53 references; `--format json|junit|sarif`, `--skip`, and
-  exit code 1 on a failure (docs/security-guide.md, "Security check").
-- **Fresher proxy and installer images.** The proxy moves to Caddy 2.11.6 and upgrades its Alpine
-  packages at build, and the installer's Docker CLI and Compose to 29.9.2. Trivy counted 3
-  critical and 84 high fixable findings in the proxy, and 3 and 87 in the installer, all in the old
-  Go binaries and curl.
+- **A backup copies every app's SQLite at one instant, in one step.** The online copy went in
+  steps of 4,096 pages and started again at every commit of another process: with 7 databases
+  (1.5 GB) and the apps committing 20 times a second it had not finished after 16 minutes, and
+  each database was copied at its own moment. A backup now opens a read snapshot of every
+  database first (WAL: the apps keep writing) and copies each from it in one step: 28 s with the
+  apps writing, every database at the same instant (`ci/bench/storage/backup_bench.py`).
+- **The notification feed is 36× faster.** Desk's feed and the notifications panel read every
+  message of a person's conversations to find the notifications; a partial index on those rows
+  takes a year of notifications for 300 people (620,000 messages) from 9.7 to 0.27 ms (p95 16.7
+  to 0.47 ms), for 23 MB. An existing database builds it in under a second at start.
+- **The demo's plant data loads beside the rest of the seed.** The Historian's 48-hour backfill,
+  Analytics' replay and the alarms' replay start right after the plant map and run beside the
+  people, groups, dashboards, reports, diagrams and documents, which do not read them; alarms and
+  models still wait for the plant's data.
 
 ### Fixed
 
@@ -273,7 +258,6 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   the Historian for about 750 cells with each cell's low and high (hourly rollups past a week):
   a day in 0.02 s and 67 KB, a week in 0.13 s, the same spikes. Text signals, and signals the
   Historian gives no extremes for, are still read raw and cut as before.
-
 - **`install.sh --uninstall --purge` no longer deletes another installation's images.** With
   two installations on one Docker (test and production), purging one removed the image tags the
   other's containers were created from, and the other could not start again. Purge now keeps
@@ -322,12 +306,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   and highest value, in time order, so every spike, trip and step is drawn at its full height
   with the same number of points (`plantcraft/industrial_data/thinning.py`; Historian and direct
   sources alike). Values that are not numbers (states) still keep every n-th point.
-
 - **Long tables sort by a text column in a fraction of a second (`@plantcraft/ui`).** The
   suite's table compared texts with `localeCompare` and its options, which builds a collator
   for every comparison: 100,000 rows sorted by tag took 13.4 s in the browser. One collator for all
   comparisons gives the same order (numbers in names in order, case and accents aside) in 0.4 s.
-
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the
   update from a release candidate to its release was refused as going back; versions now order
@@ -335,6 +317,61 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   repeated install, `install.sh` removes the ones already there (data, settings, images and
   backups stay), so a container left from an earlier run can no longer hold its name
   ("already in use") and need `docker compose down` by hand.
+
+### Security
+
+- **The security check includes Lynis and OpenSCAP when the host has them** (`PC-HOST-05`,
+  `PC-HOST-06`). As root it runs `lynis audit system --quick` and the SCAP Security Guide's CIS
+  level 1 (or standard) profile. Otherwise it reads their last report. A host without them reports
+  `na`; nothing is required.
+- **A daily limit on what the assistant reads for each person, and extraction flags in the audit
+  log** (backlog B13). Each tool call counts the signals it reads. Past
+  `PLANTCRAFT_ASSISTANT_DAILY_READS` (2000 a day) the assistant reads nothing more for that person
+  until the next day, and the audit log records `assistant.read_limit`. One answer that reads
+  more than `PLANTCRAFT_ASSISTANT_BULK_SIGNALS` (60) signals is recorded as
+  `assistant.bulk_read`. Both show with a warning mark in Settings › Audit. The count starts from
+  the day's audit records, so a restart does not reset it.
+- **The assistant no longer says it created what it only prepared** (security test D11). After
+  it proposes an action, an event or another object, "I created" in its answer becomes "I
+  prepared": only the card's button creates it. The tool's answer and the instructions say so too.
+- **Signing out ends the browser's token in every app too.** The 12-minute token carries the
+  SHA-256 of its session (`sid` claim). After sign-out PlantCraft refuses it at once, and
+  `GET /api/v1/auth/revoked` lists the session (`sessions`), so the apps refuse it within 10 s
+  (`plantcraft-sdk` 0.84.0). The person's other sessions keep working.
+- **`./install.sh --security-check`: 36 checks with stable ids, a score and machine-readable
+  output.** Each check (`PC-CTR-01` and so on) has a severity, the evidence it saw, how to fix it
+  and its IEC 62443-4-2 and NIST SP 800-53 references; `--format json|junit|sarif`, `--skip`, and
+  exit code 1 on a failure (docs/security-guide.md, "Security check").
+- **Fresher proxy and installer images.** The proxy moves to Caddy 2.11.6 and upgrades its Alpine
+  packages at build, and the installer's Docker CLI and Compose to 29.9.2. Trivy counted 3
+  critical and 84 high fixable findings in the proxy, and 3 and 87 in the installer, all in the old
+  Go binaries and curl.
+- **Four ways out of the code sandbox closed (security test D8).** Block code (Analytics) and
+  rule code (Alarms) could reach a shell in the app's container through a `match` class pattern
+  (now refused), pandas' pickle reader, pandas' expression engine reading attributes by name, and
+  pandas' optional-import helper. Alarms' rule code now also runs in a container of its own
+  (`alarmcraft-sandbox`: the same image, no network, no secret, no app data), reached through a
+  Unix socket (`plantcraft_sdk.sandbox_remote`).
+- **Sign-out ends the session on the server.** Every sign-in gets a random session id, and
+  sign-out ends it: a copied cookie stops working at once.
+- **A fair sign-in throttle.** A doubling wait per name and address (5 free tries, then 15 s up
+  to 15 minutes) and a cap per address (100 in 15 minutes) against password spraying; nobody can
+  lock the administrator out from another address. A refusal answers 429 with `Retry-After`.
+- **Sign-in no longer tells which usernames exist (security test D3).** An unknown name answered
+  in 15 ms and a known one in 200 ms; an unknown name now costs a password check too.
+- `GET /api/users` gives people who are not administrators names and roles only (no e-mail,
+  phone, access, sign-in source or asset scope).
+- `openapi.json` is served only with `PLANTCRAFT_OPENAPI=true`, by the platform and the apps,
+  and the apps refuse cookie writes from another site (`Sec-Fetch-Site`), as the platform does.
+- `install.sh` checks `SHA256SUMS.sig` with the server's own OpenSSL before `docker load`, and
+  `--export-backup NAME --passphrase-file FILE` writes an AES-256 copy of a backup.
+- **Junk input answers 4xx, not 500 (fuzzing).** An id larger than SQLite stores answers 404,
+  broken characters 422, and the administrator's sign-in takes names outside ASCII; in the apps a
+  model check failing inside a route answers 422, and a 4xx from PlantCraft passes through instead
+  of becoming a 502.
+- The assistant shows links to other sites in its answers as text with their address;
+  PlantCraft's own links stay links.
+- `pyasn1` 0.6.5 (4 CVEs: quadratic CPU on crafted BER/DER, which directory sign-in decodes).
 
 ## [0.5.1] - 2026-10-30
 

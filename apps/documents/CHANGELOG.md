@@ -70,6 +70,10 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 - `tools/llm_vision_eval.py --dexpi DIR --xml DIR` scores a vision model on public P&IDs against
   their DEXPI XML (`tools/dexpi_truth.py`), next to the classical reader on the same files.
 
+### Fixed
+
+- A diagram's page no longer shows the library's top buttons.
+
 ### Security
 
 - **A document that looks confidential is kept from the assistant** (security test D11). When
@@ -79,6 +83,9 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   editor turns the switch back on in the document's settings when that was wrong.
 - Drawings are read in the same worker process as the text of the file, with the same limits:
   120 s, a memory budget, no network and no file writes.
+- Files are read in a worker process with a time limit (120 s) and a memory limit, no network
+  and no file writes, and a refused query value answers 422.
+- `pypdf` 6.21.4 (7 CVEs: crafted PDFs that loop or eat memory).
 
 ## [0.5.1] - 2026-10-30
 

@@ -25,7 +25,8 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
-from modelcraft.atomic import write_json
+from plantcraft_sdk.files import write_json
+
 from modelcraft.i18n import t
 from modelcraft.modelica.source import find, flatten, outline, policy
 from modelcraft.omc import results

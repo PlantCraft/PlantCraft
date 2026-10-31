@@ -38,6 +38,11 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 - **The loop page shows where the controller output spent the window**, as the share of the
   window in each 5% band. A loop that lives near 0 or 100% is saturated, and one squeezed into a
   few percent has little room left.
+- **A Virtual sensor algorithm.** A Kalman filter and a sensor drift estimate on a PV and its
+  valve, both recorded as series, with the drift judged by a limit check; the Block library's
+  **Virtual sensors** gives the estimators as blocks. The first order plus dead time fit behind
+  them is refined on the simulated response, which finds the gain within 1% on a known loop
+  (it called a smooth process an integrator before).
 
 ### Changed
 
@@ -57,12 +62,23 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   levels off. Freed space is reused, and the file only shrinks after `VACUUM`.
 - The Overview keeps its answer 3 s per asset scope: with 50 people on it during a round its p95
   went from 2.0 to 0.15 s (0.6.0 load test C4 with an account per person).
+- **The stiction screen finds stiction behind a smooth controller.** Beside the stick-slip
+  pattern, each regular half cycle of OP and PV is fitted with a sine and a triangle (He et al.,
+  2007), and a triangular cycle is stiction evidence; half cycles may spread up to half their
+  mean, and a normalised OP skips the 0-100 saturation check. On the public SACAC loops it
+  finds 12 of 13 stiction cases and judges 21 of 27 loops right (0 of 13 before); the oracle is
+  pinned by sha256 and never committed, since the data declares no licence.
 
 ### Fixed
 
 - A round or the signal checks that could not reach the plant's data (the Historian restarting,
   for one) are tried again in 30 s, then 2 min, as one loop's run already was, instead of ending
   in an error until the next occurrence (0.6.0 load test C6, 2026-10-31).
+
+### Security
+
+- Block code can no longer leave the sandbox through a `match` class pattern or pandas' pickle
+  reader, expression engine and optional-import helper (security test D8).
 
 ## [0.5.1] - 2026-10-30
 

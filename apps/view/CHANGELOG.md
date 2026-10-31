@@ -17,6 +17,16 @@ joins it into the bundle's release notes.
   the most urgent priority: a square with 1 for critical, a triangle with 2 for high, a diamond
   with 3 for medium and a circle with 4 for low. Colour is only the third cue, so the mark still
   reads without colour.
+- **Assistant sections in reports.** A report section the language model writes from the
+  latest loop, signal-quality and alarm results and the period's events about the assets an
+  editor picks (checkboxes, or a description the model turns into a pick). The requirements are
+  an editable prompt; feedback on an edition goes to the model, which proposes the next
+  requirements, kept version by version. Tags and dates the text gives that the facts do not are
+  flagged in the section. Two new language model uses, `report-write` and `report-tune`, are off
+  until an administrator gives them a model.
+- **Reports over whole calendar periods.** A scheduled report can cover the last whole day,
+  week, two weeks, month or quarter on the plant's clock, with every read pinned to the period's
+  end.
 
 ### Fixed
 
