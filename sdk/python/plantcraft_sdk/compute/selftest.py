@@ -13,6 +13,8 @@ import socket
 import time
 from pathlib import Path
 
+from plantcraft_sdk.files import write_json
+
 
 def answer(job_dir: Path) -> None:
     job = json.loads((job_dir / "job.json").read_text(encoding="utf-8"))
@@ -32,4 +34,4 @@ def answer(job_dir: Path) -> None:
         result = {"status": "done", "sum": sum(float(value) for value in numbers)}
     else:
         result = {"status": "error", "error": f"unknown action {action!r}"}
-    (job_dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
+    write_json(job_dir / "result.json", result)

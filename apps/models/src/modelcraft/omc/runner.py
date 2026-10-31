@@ -77,6 +77,22 @@ class JobError(ValueError):
 # Checking a job ----------------------------------------------------------------------------
 
 
+def write_json(path: Path, value: object) -> None:
+    """``value`` as JSON in ``path``, whole or not at all: the standard library's version of
+    ``plantcraft_sdk.files.write_json`` (this runner imports nothing else)."""
+
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.{time.monotonic_ns()}.partial")
+    try:
+        with open(temporary, "x", encoding="utf-8") as file:
+            file.write(json.dumps(value))
+            file.flush()
+            os.fsync(file.fileno())
+        temporary.replace(path)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+
+
 def class_name(value: object) -> str:
     if not isinstance(value, str) or len(value) > 400 or not CLASS_NAME.match(value):
         raise JobError("not a Modelica class name")
@@ -513,7 +529,7 @@ def execute(
         script.write_text(script_for(job, job_dir, libraries, built=built), encoding="utf-8")
     except (JobError, OSError, ValueError) as exc:
         result = {"status": "refused", "error": str(exc), "seconds": 0.0}
-        (job_dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
+        write_json(job_dir / "result.json", result)
         return result
     log, stopped = run_omc(omc, script, job_dir, timeout, memory_mb)
     if key and not built and not stopped:
@@ -538,7 +554,7 @@ def execute(
     if job.get("kind") == "sweep":
         result["variant_seconds"] = variant_seconds(out, len(job.get("variants") or []))
         result["built"] = "cache" if built else "now"
-    (job_dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
+    write_json(job_dir / "result.json", result)
     return result
 
 
@@ -589,9 +605,7 @@ class Runner:
             "memory_mb": self.memory_mb,
             "at": time.time(),
         }
-        temporary = self.jobs / ".runner.json.tmp"
-        temporary.write_text(json.dumps(state), encoding="utf-8")
-        temporary.replace(self.jobs / "runner.json")
+        write_json(self.jobs / "runner.json", state)
 
     def claim(self) -> Path | None:
         for entry in sorted((self.jobs / "queue").iterdir(), key=lambda path: path.name):
@@ -613,9 +627,9 @@ class Runner:
                 cache=self.cache,
             )
         except Exception as exc:  # noqa: BLE001 - a job never stops the runner
-            (job_dir / "result.json").write_text(
-                json.dumps({"status": "error", "error": f"runner error: {type(exc).__name__}"}),
-                encoding="utf-8",
+            write_json(
+                job_dir / "result.json",
+                {"status": "error", "error": f"runner error: {type(exc).__name__}"},
             )
         target = self.jobs / "done" / job_dir.name
         shutil.rmtree(target, ignore_errors=True)

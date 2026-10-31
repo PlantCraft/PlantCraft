@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from plantcraft.apps.manager import AppError, AppSettings
+from plantcraft.files import write_atomic
 from plantcraft.config import plant_timezone, valid_zone
 from plantcraft.i18n import t
 
@@ -165,7 +166,4 @@ class OperationsDesk:
     @staticmethod
     def _write(path: Path, value: Any) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        partial = path.with_name(f".{path.name}.partial")
-        partial.write_text(json.dumps(value, indent=2), encoding="utf-8")
-        partial.chmod(0o640)
-        partial.replace(path)
+        write_atomic(path, json.dumps(value, indent=2), mode=0o640)

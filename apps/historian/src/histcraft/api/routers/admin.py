@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Path, Query, Request, Response
 from plantcraft_sdk.contract import ContractError, series_range
+from plantcraft_sdk.files import write_atomic
 from pydantic import BaseModel, Field
 
 from histcraft.api.deps import (
@@ -261,7 +262,7 @@ async def upload_csv(
     folder = runtime.settings.data_dir / FILES_DIR
     folder.mkdir(parents=True, exist_ok=True)
     target = folder / f"{stem}.csv"
-    target.write_bytes(data)
+    write_atomic(target, data)  # the collector reads the folder: never half a file
     rows = data.count(b"\n") - 1
     runtime.audit(user, "source.file", target.name, {"bytes": size, "columns": len(head.columns)})
     return {"path": str(target.resolve()), "columns": len(head.columns), "rows": max(rows, 0)}

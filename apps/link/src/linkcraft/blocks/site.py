@@ -19,6 +19,7 @@ from typing import Any
 
 import pandas as pd
 from plantcraft_sdk.blocks import Block, NoData, Result
+from plantcraft_sdk.files import write_json
 
 from linkcraft.blocks import sandbox
 from linkcraft.blocks.files import BlockFile, read_file, spec_of, split_pinned
@@ -141,11 +142,7 @@ def write(block_id: str, file: BlockFile) -> None:
     if path.is_file():
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    scratch = path.with_suffix(".tmp")
-    scratch.write_text(
-        json.dumps(file.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    scratch.replace(path)
+    write_json(path, file.model_dump(mode="json"), ensure_ascii=False, indent=2)
 
 
 def load(block_id: str) -> Block | None:

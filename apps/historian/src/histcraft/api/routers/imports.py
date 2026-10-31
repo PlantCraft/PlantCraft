@@ -27,6 +27,7 @@ from typing import Annotated, Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response
+from plantcraft_sdk.files import write_atomic, write_json
 from plantcraft_sdk.server.queue import queue_answer
 from pydantic import BaseModel, Field, ValidationError
 
@@ -149,7 +150,7 @@ async def check_import(
         pending = _folder(runtime, "pending")
         _clean_pending(pending)
         token = secrets.token_hex(16)
-        (pending / f"{token}.csv").write_bytes(data)
+        write_atomic(pending / f"{token}.csv", data)
         meta = {
             "file_name": file_name,
             "bytes": size,
@@ -158,7 +159,7 @@ async def check_import(
             "user": user.username,
             "options": read.model_dump(),
         }
-        (pending / f"{token}.json").write_text(json.dumps(meta), encoding="utf-8")
+        write_json(pending / f"{token}.json", meta)
     return {
         "token": token,
         "file_name": file_name,
@@ -244,15 +245,13 @@ def create_import(body: ImportIn, runtime: RuntimeDep, user: EditorUser) -> dict
         import_id = _new_import(runtime, body.name or meta["file_name"], table, run, saved, user)
     # The collector writes the values and deletes the file (collector.imports).
     data_path.replace(_folder(runtime) / f"{import_id}.csv")
-    (_folder(runtime) / f"{import_id}.json").write_text(
-        json.dumps(
-            {
-                "timezone": meta["timezone"],
-                "file_name": meta["file_name"],
-                "options": read.model_dump(),
-            }
-        ),
-        encoding="utf-8",
+    write_json(
+        _folder(runtime) / f"{import_id}.json",
+        {
+            "timezone": meta["timezone"],
+            "file_name": meta["file_name"],
+            "options": read.model_dump(),
+        },
     )
     meta_path.unlink(missing_ok=True)
     runtime.audit(

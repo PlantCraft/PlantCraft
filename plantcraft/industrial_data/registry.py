@@ -30,6 +30,7 @@ from pydantic import ValidationError
 
 from plantcraft.config import DataSourceConfig
 from plantcraft.db import Database, Store
+from plantcraft.files import write_atomic
 from plantcraft.i18n import t
 from plantcraft.industrial_data.cache import build_cached_source
 from plantcraft.industrial_data.service import IndustrialData
@@ -93,11 +94,8 @@ class SecretBox:
             if not key:
                 key = Fernet.generate_key()
                 self.path.parent.mkdir(parents=True, exist_ok=True)
-                self.path.write_bytes(key)
-                try:
-                    self.path.chmod(0o600)
-                except OSError:
-                    pass
+                # Created private: the key is never readable by others, not even for a moment.
+                write_atomic(self.path, key)
             self._fernet = Fernet(key)
         return self._fernet
 

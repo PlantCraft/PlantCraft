@@ -73,6 +73,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **State files are written whole or not at all, everywhere (storage tests, 2026-10-31).**
+  `plantcraft-sdk` 0.91.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
+  unique temporary file created with its final mode, `fsync`, then a rename, so a process killed
+  mid-write leaves the old file, never half a JSON (71 of 100 kills broke a `write_text` file).
+  The platform's `plantcraft.files` and Models' `modelcraft.atomic` now use it, and so do the
+  state files that still wrote in place or through a shared temporary name: the operations
+  journal and status, the Operations desk requests, installed app files, the egress allowlist,
+  the industrial data key (now private from the first byte), the Historian's CSV sources and
+  import files, Analytics' block files and compute answers, Models' jobs, results, runner state
+  and library cache, and the SDK compute folder's files.
 - **Tokens are verified once, not on every request.** PlantCraft and every app keep the tokens they
   already verified until they expire (at most 4096), so a request no longer checks the Ed25519
   signature again: 0.25 ms down to 0.008 ms in an app (`plantcraft-sdk` 0.89.0) and 0.25 ms down to
