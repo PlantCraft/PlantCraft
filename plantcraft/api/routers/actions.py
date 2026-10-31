@@ -26,6 +26,7 @@ from plantcraft.actions import (
 from plantcraft.api.deps import CurrentUser, Runtime, open_to, user_access
 from plantcraft.api.deps import action_visibility as visibility
 from plantcraft.api.routers.messages import present_ref
+from plantcraft.config import plant_today
 from plantcraft.i18n import t
 from plantcraft.refs import find_refs
 
@@ -117,7 +118,7 @@ def _present(
         store = rt.workspace.actions
         item["history"] = store.history(action["action_id"])
         item["items"] = store.items(action["action_id"])
-        item["hours"] = store.hours(action["action_id"])
+        item["hours"] = _with_locks(rt, store.hours(action["action_id"]))
         # #asset:FIC-101 or #user:ana.lima in the description and the comments, resolved once.
         texts = [action["description"]] + [
             entry["text"] for entry in item["history"] if entry["kind"] == "comment"
@@ -422,6 +423,34 @@ def delete_item(action_id: int, item_id: int, user: CurrentUser, rt: Runtime) ->
     return _present(rt, _get(rt, action_id), user, history=True)
 
 
+def _company_id(rt: Any, username: str) -> str | None:
+    companies = rt.workspace.groups.companies_of(username)
+    return companies[0]["group_id"] if companies else None
+
+
+def _with_locks(rt: Any, entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Each entry with ``locked``: its month is approved for its person's company."""
+
+    store = rt.workspace.actions
+    for entry in entries:
+        entry["locked"] = store.month_approved(entry["day"], _company_id(rt, entry["username"]))
+    return entries
+
+
+def _month_open(rt: Any, day: str, username: str) -> None:
+    """409 when the month of ``day`` is approved for the company of ``username`` (the plant's
+    own people when they are in none): its hours are closed (Operations › Partners)."""
+
+    if rt.workspace.actions.month_approved(day, _company_id(rt, username)):
+        raise HTTPException(
+            status_code=409,
+            detail=t(
+                "The hours of {month} are approved; an administrator reopens the month to change them.",
+                month=day[:7],
+            ),
+        )
+
+
 @router.post("/api/actions/{action_id}/hours", status_code=201)
 @open_to("viewer")
 def log_hours(
@@ -431,6 +460,7 @@ def log_hours(
     without being an editor)."""
 
     _get(rt, action_id, user)
+    _month_open(rt, payload.day or plant_today(), user)
     try:
         rt.workspace.actions.add_hours(
             action_id,
@@ -462,6 +492,7 @@ def delete_hours(action_id: int, entry_id: int, user: CurrentUser, rt: Runtime) 
         raise HTTPException(
             status_code=403, detail=t("Only who logged the time, or an administrator, removes it.")
         )
+    _month_open(rt, entry["day"], entry["username"])
     rt.workspace.actions.delete_hours(action_id, entry_id)
     rt.workspace.audit.record(
         user, "action.hours.deleted", f"action:{action_id}", entry, app_id="processcraft"

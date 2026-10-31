@@ -299,7 +299,7 @@ IT or an integrator's team that keeps the suite running without being an adminis
 **Status** (`/health`: the last check, open and recent incidents, the machine's CPU, memory, load
 and free disk, every service's state, CPU and memory against its limit with the levels' colours,
 restarts; `GET /api/operations/health`, which carries the `limits`), **Logs** (`/ops/logs`, below),
-**Requests** and **Partners** (below), **Load alerts** (`/ops/alerts`); Backups and Updates stay
+**Requests**, **Partners** and **Support access** (below), **Load alerts** (`/ops/alerts`); Backups and Updates stay
 for administrators. The Operations
 role reads; installing, updating, restoring and changing levels stay with administrators.
 
@@ -324,6 +324,36 @@ people, coordinator on its side, sponsor at the plant, last day of access (no en
 30 days, ended: from the next day nobody in it signs in, and the sign-in says why) and open
 requests; the hours its people logged in the month (an entry counts for the company of who logged
 it; the plant's own people are "Plant"), with the month's report exported as CSV.
+
+**Targets** (`plantcraft.actions.sla`; `GET`/`PUT /api/operations/targets`, the change audited
+`operations.targets`). Each priority has a first answer target and a resolution target, in hours
+on the clock, day and night (defaults: critical 1 h and 8 h, high 4 h and 24 h, medium 8 h and
+72 h, low 24 h and 168 h); an administrator changes them on Requests › Targets. The first answer
+runs from the request to `first_response_at`; the resolution from the request to Done, **without
+the time it spent Blocked** (waiting for who asked, or a third party: the request's status
+history says when). Every request carries `sla` (`response`, `resolution`: target, minutes used,
+`running`, `at_risk` from 75 %, `met` or `breached`, the due time while it runs, `paused`). The
+Requests list shows the target that matters now (the first answer until there is one) and counts
+the late ones; the request's page shows both. An archived request has none. A target changed
+applies to the open requests at once.
+
+**The month's approval** (`POST /api/operations/hours/approve` `{month, company}`, audited
+`operations.hours.approved`; `POST /api/operations/hours/reopen`, administrators, audited
+`operations.hours.reopened`). Once a month has ended, a company's hours are approved by an
+administrator or by the company's sponsor at the plant (the plant's own people's hours by an
+administrator), on its Partners card; the approval keeps who, when and the total. From then on no
+entry of that month is added or removed for that company's people (409: an administrator reopens
+the month first), and the request's page shows those entries locked.
+
+**Support access** (`/ops/support`, `plantcraft.auth.support_access`; `GET
+/api/operations/support-access`, `POST /api/operations/support-access/grants`
+`{username, hours, reason, action_id}`, `DELETE .../grants/{id}`; audited
+`operations.support_access.granted` and `.ended`). An administrator lets a person into Operations
+for up to 72 hours, for a reason and often a request (its page links here with the request
+filled in): while it lasts the person has the Operations role (status, load, logs, every
+request) and nothing else changes; they are told in Messages and by email, and Status says until
+when. It ends by itself, or earlier with "End now". It cannot be given to someone whose company's
+access ended.
 
 The public demo's visitor opens Operations read-only, without Logs (a public server's logs name
 its visitors).

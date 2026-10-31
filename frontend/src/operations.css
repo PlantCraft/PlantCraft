@@ -103,3 +103,23 @@
   .ops-companies { grid-template-columns: minmax(0, 1fr); }
 }
 .ops-incident-ask { margin-left: 6px; font-size: var(--pc-fs-xs); font-weight: 600; }
+
+/* Requests' targets (plantcraft/actions/sla.py) */
+.ops-sla { font-variant-numeric: tabular-nums; }
+.ops-sla-warn { border-color: var(--pc-attention-border); color: var(--pc-attention-text); background: var(--pc-attention-soft); }
+.ops-sla-bad, .apps-chip-bad { border-color: var(--pc-problem-border); color: var(--pc-problem-text); background: var(--pc-problem-soft); }
+.ops-sla-good, .apps-chip-good { border-color: var(--pc-good-border); color: var(--pc-good-text); background: var(--pc-good-soft); }
+.apps-chip-good svg { vertical-align: -2px; }
+.ops-targets-open { margin-left: auto; }
+.ops-targets { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.ops-targets th, .ops-targets td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--pc-border); }
+.ops-targets input { width: 100%; max-width: 120px; }
+
+/* The month's approval of the hours */
+.ops-company-approval { margin: 10px 0 4px; }
+.ops-approval { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ops-plant-hours { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 12px; }
+
+/* Temporary support access */
+.ops-support-note { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--pc-attention-border); border-radius: 8px; background: var(--pc-attention-soft); color: var(--pc-attention-text); }
+.act-time-locked { color: var(--pc-text-3); display: inline-flex; padding: 4px; }

@@ -1,13 +1,13 @@
 /** Administration › Health, Backups and Updates (administrators): the suite's health, backups and
  * their checks, restore, the restore drill, the schedule, and updates. */
-import { Activity, AlertTriangle, ArchiveRestore, CalendarClock, CheckCircle2, DatabaseBackup, Download, FlaskConical, History, LoaderCircle, RefreshCw, ShieldCheck, ShieldQuestion, Sparkles, X } from "lucide-react";
+import { Activity, AlertTriangle, ArchiveRestore, CalendarClock, CheckCircle2, DatabaseBackup, Download, FlaskConical, History, KeyRound, LoaderCircle, RefreshCw, ShieldCheck, ShieldQuestion, Sparkles, X } from "lucide-react";
 import { type DataColumn, DataTable, displayTimeZone, FormSection, formatDate, Heading, timeZoneLabel, saveFile, TimeZoneSelect } from "@plantcraft/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { locale, t } from "./i18n";
 import { navigate } from "./nav";
 import { askUrl } from "./OperationsRequests";
 import { forecastText, operationsApi, type Backup, type Certificate, type Operation, type OperationsOverview, type ServiceMetrics, type Schedule, type SuiteHealth, type SuiteStatus } from "./operationsApi";
-import { useAdminView, useCanOperate, useIsAdmin } from "./session";
+import { useAccess, useAdminView, useCanOperate, useIsAdmin } from "./session";
 import "./access.css";
 import "./apps.css";
 import "./operations.css";
@@ -124,11 +124,13 @@ const EYEBROW = () => <><Activity size={14} /> {t("Operations")}</>;
 export function HealthPage() {
   const ops = useOperations(true);
   const canAct = useIsAdmin();
+  const supportUntil = useAccess().support_until;
   if (!ops.isAdmin && !ops.operate) return <HealthStatusPage />;
   const { data, health } = ops;
   return <div className="apps-page">
     <Heading eyebrow={<EYEBROW />} title={t("Status")} detail={t("The suite watches itself every 30 seconds and tells the administrators in Messages when a part of it stops or is loaded.")}
       actions={<>{canAct && <DiagnosticsButton />}<RefreshButton onClick={() => void ops.load()} /></>} />
+    {supportUntil && <div className="ops-support-note" role="status"><KeyRound size={15} /> {t("You have support access to Operations until {when}.", { when: formatDate(supportUntil) })}</div>}
     {ops.isAdmin ? <Notices ops={ops} /> : ops.error ? <div className="form-error" role="alert"><AlertTriangle size={15} /> {ops.error}</div> : null}
     {data && <section className="apps-status" aria-label={t("State")}>
       <span className={`apps-chip ${data.installer.online ? "apps-chip-on" : "apps-chip-warn"}`}>{data.installer.online ? t("Installer running") : t("Installer not running: requests wait until it starts")}</span>

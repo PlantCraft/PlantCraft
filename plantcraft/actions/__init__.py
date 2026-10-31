@@ -28,6 +28,8 @@ from plantcraft.db import Migration, Store, add_columns
 from plantcraft.i18n import t
 from plantcraft.refs import parse_ref
 
+from .sla import Targets, check_targets, request_sla
+
 # English constants; read them through ``t()``.
 # A checklist entry of the history is stored as "<verb>:<item>" and read in the reader's language.
 CHECKLIST_VERBS = {
@@ -244,6 +246,25 @@ class ActionStore(Store):
     );
 
     CREATE INDEX IF NOT EXISTS idx_follow_up_action_hours ON follow_up_action_hours(day);
+
+    -- Requests' service targets by priority (plantcraft.actions.sla); none stored: the defaults.
+    CREATE TABLE IF NOT EXISTS follow_up_request_targets (
+        priority TEXT PRIMARY KEY,
+        response_minutes INTEGER NOT NULL,
+        resolution_minutes INTEGER NOT NULL,
+        updated_by TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
+
+    -- A month's hours approved for a company ('' for the plant's own people): closed to changes.
+    CREATE TABLE IF NOT EXISTS follow_up_hours_months (
+        month TEXT NOT NULL,
+        company TEXT NOT NULL DEFAULT '',
+        hours REAL NOT NULL,
+        approved_by TEXT NOT NULL,
+        approved_at TEXT NOT NULL,
+        PRIMARY KEY (month, company)
+    );
     """
 
     MIGRATIONS = (
@@ -871,4 +892,135 @@ class ActionStore(Store):
                 item["due_at"] and item["due_at"] < today and item["status"] in OPEN_STATUSES
             )
             items.append(item)
+        requests = [item for item in items if item["kind"] == "request"]
+        if requests:
+            targets = self.targets()
+            statuses = self._statuses([int(item["action_id"]) for item in requests])
+            for item in requests:
+                item["sla"] = request_sla(item, statuses.get(int(item["action_id"]), []), targets)
         return items
+
+    def _statuses(self, action_ids: list[int]) -> dict[int, list[tuple[str, str]]]:
+        """Every status change of these actions, oldest first: {id: [(time, status), ...]}."""
+
+        found: dict[int, list[tuple[str, str]]] = {}
+        for start in range(0, len(action_ids), 500):
+            chunk = action_ids[start : start + 500]
+            with self._lock, self._connect() as connection:
+                rows = connection.execute(
+                    f"""
+                    SELECT action_id, text, created_at FROM follow_up_action_history
+                    WHERE kind = 'status' AND action_id IN ({",".join("?" for _ in chunk)})
+                    ORDER BY created_at, entry_id
+                    """,
+                    chunk,
+                ).fetchall()
+            for row in rows:
+                found.setdefault(int(row["action_id"]), []).append((row["created_at"], row["text"]))
+        return found
+
+    # Service targets and the month's approval -------------------------------
+
+    def targets(self) -> Targets:
+        """The requests' targets by priority: the stored ones over the defaults."""
+
+        with self._lock, self._connect() as connection:
+            rows = connection.execute("SELECT * FROM follow_up_request_targets").fetchall()
+        minutes = dict(Targets.defaults().minutes)
+        for row in rows:
+            if row["priority"] in minutes:
+                minutes[row["priority"]] = (
+                    int(row["response_minutes"]),
+                    int(row["resolution_minutes"]),
+                )
+        return Targets(minutes)
+
+    def set_targets(self, payload: dict[str, Any], *, actor: str) -> Targets:
+        """Replaces every priority's targets (``check_targets``); ``ValueError`` if invalid."""
+
+        targets = check_targets(payload)
+        now = self._now()
+        with self._lock, self._write() as connection:
+            connection.executemany(
+                """
+                INSERT INTO follow_up_request_targets
+                (priority, response_minutes, resolution_minutes, updated_by, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(priority) DO UPDATE SET response_minutes = excluded.response_minutes,
+                    resolution_minutes = excluded.resolution_minutes,
+                    updated_by = excluded.updated_by, updated_at = excluded.updated_at
+                """,
+                [
+                    (key, first, second, actor, now)
+                    for key, (first, second) in targets.minutes.items()
+                ],
+            )
+        return targets
+
+    def approvals(self, month: str) -> dict[str, dict[str, Any]]:
+        """The month's approved hours by company ('' for the plant): who, when, how many."""
+
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT approval.*, person.display_name FROM follow_up_hours_months AS approval
+                LEFT JOIN workspace_users AS person ON person.username = approval.approved_by
+                WHERE approval.month = ?
+                """,
+                (month,),
+            ).fetchall()
+        return {
+            row["company"]: {
+                "month": row["month"],
+                "company": row["company"] or None,
+                "hours": float(row["hours"]),
+                "approved_by": row["approved_by"],
+                "approved_by_name": row["display_name"] or row["approved_by"],
+                "approved_at": row["approved_at"],
+            }
+            for row in rows
+        }
+
+    def approve_month(
+        self, month: str, company: str | None, *, hours: float, actor: str
+    ) -> dict[str, Any]:
+        """Closes the month's hours of ``company`` (None: the plant's own); ``ValueError`` when
+        already approved or the month has not ended."""
+
+        if month >= plant_today()[:7]:
+            raise ValueError(t("A month is approved once it has ended."))
+        key = company or ""
+        if key in self.approvals(month):
+            raise ValueError(t("These hours are already approved."))
+        with self._lock, self._write() as connection:
+            connection.execute(
+                """
+                INSERT INTO follow_up_hours_months (month, company, hours, approved_by, approved_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (month, key, round(float(hours), 2), actor, self._now()),
+            )
+        return self.approvals(month)[key]
+
+    def reopen_month(self, month: str, company: str | None) -> dict[str, Any]:
+        """Opens an approved month again; ``KeyError`` when it was not approved."""
+
+        key = company or ""
+        found = self.approvals(month).get(key)
+        if found is None:
+            raise KeyError(month)
+        with self._lock, self._write() as connection:
+            connection.execute(
+                "DELETE FROM follow_up_hours_months WHERE month = ? AND company = ?", (month, key)
+            )
+        return found
+
+    def month_approved(self, day: str, company: str | None) -> bool:
+        """Whether the hours of ``day``'s month are approved for ``company``."""
+
+        with self._lock, self._connect() as connection:
+            row = connection.execute(
+                "SELECT 1 FROM follow_up_hours_months WHERE month = ? AND company = ?",
+                (day[:7], company or ""),
+            ).fetchone()
+        return row is not None

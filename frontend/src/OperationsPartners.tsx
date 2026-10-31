@@ -3,15 +3,15 @@
  * sponsor at the plant, the last day of its access, its open requests and the hours its people
  * logged this month; below, the month's time report, exported as CSV for the month's review.
  * See docs/operations.md, section 4. */
-import { AlertTriangle, Building2, Download, LoaderCircle } from "lucide-react";
+import { AlertTriangle, BadgeCheck, Building2, Download, LoaderCircle } from "lucide-react";
 import { type DataColumn, DataTable, Heading, saveFile } from "@plantcraft/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { hoursText } from "./actionsBoard";
 import { dayText, errorText, Go, PersonLink } from "./collab";
 import { t } from "./i18n";
-import { operationsApi, type Company, type HoursEntry, type HoursReport, type PartnersAnswer } from "./operationsApi";
+import { operationsApi, type Company, type HoursApproval, type HoursEntry, type HoursReport, type PartnersAnswer } from "./operationsApi";
 import { monthRange } from "./OperationsRequests";
-import { useIsAdmin } from "./session";
+import { useIsAdmin, useUsername } from "./session";
 import "./apps.css";
 import "./operations.css";
 
@@ -53,6 +53,31 @@ export function PartnersPage() {
     Promise.all([operationsApi.partners(month || undefined), operationsApi.hours(month || undefined)]).then(([found, hours]) => { setPartners(found); setReport(hours); setError(""); if (!month) setMonth(found.month); }, (err) => setError(errorText(err)));
   }, [month]);
   const companies = partners?.companies ?? [];
+  const me = useUsername();
+  const [approving, setApproving] = useState(false);
+  const [notice, setNotice] = useState("");
+  const reload = () => Promise.all([operationsApi.partners(month || undefined), operationsApi.hours(month || undefined)]).then(([found, hours]) => { setPartners(found); setReport(hours); }, (err) => setError(errorText(err)));
+  /** Approves (or, for an administrator, reopens) a month's hours of a company, or the plant's. */
+  async function decide(company: string | null, approve: boolean) {
+    if (!partners) return;
+    setApproving(true);
+    try {
+      if (approve) await operationsApi.approveHours(partners.month, company);
+      else await operationsApi.reopenHours(partners.month, company);
+      setNotice(""); setError("");
+      await reload();
+    } catch (err) { setNotice(errorText(err)); } finally { setApproving(false); }
+  }
+  const approval = (item: { approval?: HoursApproval | null }, company: string | null, sponsor: string | null) => {
+    if (!partners) return null;
+    if (item.approval) return <span className="ops-approval">
+      <span className="apps-chip apps-chip-good"><BadgeCheck size={13} /> {t("Approved by {person}, {date}", { person: item.approval.approved_by_name, date: dayText(item.approval.approved_at.slice(0, 10)) })}</span>
+      {admin && <button type="button" className="button button-ghost" disabled={approving} onClick={() => void decide(company, false)}>{t("Reopen")}</button>}
+    </span>;
+    if (!partners.closable) return <span className="muted ops-approval">{t("Approved after the month ends")}</span>;
+    if (admin || (sponsor && sponsor === me)) return <button type="button" className="button button-secondary ops-approve" disabled={approving} onClick={() => void decide(company, true)}><BadgeCheck size={15} /> {t("Approve the month's hours")}</button>;
+    return <span className="muted ops-approval">{t("Not approved yet")}</span>;
+  };
   return <div className="apps-page ops-partners">
     <Heading title={t("Partners")} actions={<>
       <label className="ops-month"><span>{t("Month")}</span><input type="month" value={month} onChange={(event) => event.target.value && setMonth(event.target.value)} /></label>
@@ -62,16 +87,18 @@ export function PartnersPage() {
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
     {!partners && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
     {partners && !companies.length && <section className="panel ops-empty"><Building2 size={22} /><div><strong>{t("No company yet")}</strong><p className="muted">{t("A company is a group of kind Company in People › Groups: its coordinator on its side, its teams as groups under it, the last day of its access and its sponsor at the plant.")}</p>{admin && <Go to="/users/groups">{t("Open Groups")}</Go>}</div></section>}
-    {companies.length > 0 && <div className="ops-companies">{companies.map((company) => <CompanyCard key={company.group_id} company={company} />)}</div>}
+    {companies.length > 0 && <div className="ops-companies">{companies.map((company) => <CompanyCard key={company.group_id} company={company} approval={approval(company, company.group_id, company.sponsor)} />)}</div>}
+    {notice && <div className="form-error" role="alert"><AlertTriangle size={15} /> {notice}</div>}
     {report && <section className="panel ops-hours" aria-labelledby="ops-hours-title">
       <h2 id="ops-hours-title">{t("Time logged")} <small className="muted">{monthRange(report.first, report.last)} · {hoursText(report.hours)} · {t("{hours} billable", { hours: hoursText(report.billable_hours) })}</small></h2>
+      {partners?.plant && partners.plant.hours > 0 && <div className="ops-plant-hours"><span>{t("The plant's own people: {hours}", { hours: hoursText(partners.plant.hours) })}</span>{approval(partners.plant, null, null)}</div>}
       <DataTable rows={report.entries} columns={HOURS_COLUMNS} rowKey={(item) => String(item.entry_id)} label={t("Time logged")} initialSort={{ key: "day", descending: true }}
         searchText={(item) => `${item.title} ${item.display_name} ${item.company_name ?? ""} ${item.note}`} searchPlaceholder={t("Filter the time")} empty={t("No time logged this month.")} />
     </section>}
   </div>;
 }
 
-function CompanyCard({ company }: { company: Company }) {
+function CompanyCard({ company, approval }: { company: Company; approval: ReactNode }) {
   const state = companyState(company);
   return <article className="panel ops-company" aria-label={company.name}>
     <header>
@@ -86,6 +113,7 @@ function CompanyCard({ company }: { company: Company }) {
       <div><dt>{t("Open requests")}</dt><dd>{company.open_requests}</dd></div>
       <div><dt>{t("Time this month")}</dt><dd>{hoursText(company.hours)}{company.hours > 0 && <small className="muted"> · {t("{hours} billable", { hours: hoursText(company.billable_hours) })}</small>}</dd></div>
     </dl>
+    <div className="ops-company-approval">{approval}</div>
     {company.people.length > 0 && <ul className="ops-company-people">{company.people.map((person) => <li key={person.username}>
       <PersonLink username={person.username} name={person.display_name} />
       {person.coordinator && <small className="apps-chip">{t("Coordinator")}</small>}

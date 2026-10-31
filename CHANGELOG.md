@@ -32,6 +32,15 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   from the next day nobody in it signs in (the sign-in says why) and their sessions end.
   Operations › Partners shows each company's people, teams, access, open requests and the month's
   hours, and exports the month's time report as CSV.
+- **Request targets.** A first answer and a resolution target per priority (an administrator
+  changes them); the resolution clock stops while a request is Blocked. Requests shows the time
+  left or how late, and counts the late ones.
+- **The month's hours approved.** After a month ends, an administrator or the company's sponsor
+  approves its hours on Partners; that month's entries are then closed until an administrator
+  reopens it.
+- **Temporary support access.** An administrator gives a person Operations for up to 72 hours,
+  for a reason and often a request; it ends by itself or with "End now", the person is told, and
+  both are in the audit log.
 - The public demo's visitors no longer see the server logs.
 - SDK: `GET /api/ops/logs` on every server (`plantcraft_sdk.server.logread`), read with the `ops`
   scope.

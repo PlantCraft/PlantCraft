@@ -227,3 +227,92 @@ def test_a_request_is_asked_answered_timed_and_counted_for_its_company(page):
     expect(hours).to_contain_text("Raised the read timeout")
     expect(hours).to_contain_text("Tuned the Historian's read pool")
     _shot(page, "9-partners")
+
+
+def test_targets_the_month_s_approval_and_support_access(page):
+    # A request's target is on its row and its page; an administrator changes the targets.
+    _person(page, "lia.suporte", "Lia Suporte", access_level="viewer")
+    _person(page, "rui.planta", "Rui Planta", access_level="editor")
+    asked = page.request.post(
+        "/api/requests", data={"title": "Alarms stopped after the update", "priority": "high"}
+    )
+    assert asked.ok, asked.text()
+    request_id = asked.json()["action_id"]
+    page.goto("/ops/requests")
+    row = page.get_by_role("row").filter(has_text="Alarms stopped after the update")
+    expect(row).to_contain_text("left")
+    page.get_by_role("button", name="Targets").click()
+    dialog = page.get_by_role("dialog")
+    dialog.get_by_label("High · First answer (h)").fill("2")
+    _shot(page, "10-targets")
+    dialog.get_by_role("button", name="Save targets").click()
+    expect(page.get_by_role("dialog")).to_have_count(0)
+    page.goto(f"/actions/{request_id}")
+    expect(page.get_by_text("First answer target")).to_be_visible()
+    expect(page.locator(".act-facts")).to_contain_text("2 h")
+
+    # Support access from the request's page: Lia opens Operations until it ends.
+    page.get_by_role("link", name="Give someone Operations for a few hours").click()
+    dialog = page.get_by_role("dialog")
+    dialog.get_by_label("Person").select_option("lia.suporte")
+    dialog.get_by_label("Why").fill("Alarms stopped after the update")
+    expect(dialog.get_by_label("Request number (optional)")).to_have_value(str(request_id))
+    dialog.get_by_role("button", name="Give access").click()
+    row = page.get_by_role("row").filter(has_text="Lia Suporte")
+    expect(row).to_contain_text("ends in 4 h")
+    _shot(page, "11-support-access")
+    base = page.url.split("/ops/")[0]
+    other = page.context.browser.new_context(base_url=base)
+    try:
+        lia = other.new_page()
+        lia.request.post(
+            "/api/login", data={"username": "lia.suporte", "password": "e2e-person-123"}
+        )
+        lia.goto("/health")
+        expect(lia.get_by_role("status").filter(has_text="support access")).to_be_visible()
+        expect(lia.get_by_role("link", name="Logs")).to_be_visible()
+        # Ended early: Operations closes again for her.
+        row.get_by_role("button", name="End now").click()
+        expect(row).to_contain_text("ended early")
+        assert lia.request.get("/api/operations/health").status == 403
+    finally:
+        other.close()
+
+    # Last month's hours of a company, approved by its sponsor's administrator: closed.
+    first = datetime.now(timezone.utc).date().replace(day=1)
+    last_month_day = (first - timedelta(days=1)).isoformat()
+    company = page.request.post("/api/groups", data={
+        "name": "Beta Controls", "group_id": "beta", "kind": "company",
+        "coordinator": "lia.suporte", "members": ["lia.suporte"], "sponsor": "rui.planta",
+    })  # fmt: skip
+    assert company.ok or company.status == 409, company.text()
+    other = page.context.browser.new_context(base_url=base)
+    try:
+        signed = other.request.post(
+            "/api/login", data={"username": "lia.suporte", "password": "e2e-person-123"}
+        )
+        assert signed.ok, signed.text()
+        # Hers: what she worked on last month (she sees the requests she asked).
+        request_id = other.request.post(
+            "/api/requests", data={"title": "Alarm engine checkup"}
+        ).json()["action_id"]
+        logged = other.request.post(
+            f"/api/actions/{request_id}/hours",
+            data={"hours": 3, "day": last_month_day, "note": "Restarted the alarm engine"},
+        )
+        assert logged.ok, logged.text()
+        page.goto("/ops/partners")
+        page.get_by_label("Month").fill(last_month_day[:7])
+        card = page.get_by_role("article", name="Beta Controls")
+        expect(card).to_contain_text("3 h")
+        card.get_by_role("button", name="Approve the month's hours").click()
+        expect(card).to_contain_text("Approved by")
+        _shot(page, "12-hours-approved")
+        late = other.request.post(
+            f"/api/actions/{request_id}/hours", data={"hours": 1, "day": last_month_day}
+        )
+        assert late.status == 409
+    finally:
+        other.close()
+    page.goto(f"/actions/{request_id}")
+    expect(page.locator(".act-time-locked")).to_have_count(1)

@@ -18,11 +18,21 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from plantcraft.actions import OPEN_STATUSES
-from plantcraft.api.deps import AdminUser, AdminView, CurrentUser, OperationsView, Runtime
+from plantcraft.actions.sla import Targets
+from plantcraft.api.deps import (
+    AdminUser,
+    AdminView,
+    CurrentUser,
+    OperationsView,
+    Runtime,
+    open_to,
+    user_access,
+)
 from plantcraft.api.identity import issue_user_token
 from plantcraft.apps.manager import AppError
 from plantcraft.auth.public_demo import public_demo
-from plantcraft.config import plant_today
+from plantcraft.auth.support_access import MAX_HOURS as SUPPORT_MAX_HOURS
+from plantcraft.config import plant_clock, plant_today
 from plantcraft.i18n import t
 from plantcraft.platform.datalayer import DataLayerError
 from plantcraft_sdk.server import logread
@@ -406,7 +416,21 @@ def partners(
                 ),
             }
         )
-    return {"month": month, "today": today, "companies": found}
+    approvals = rt.workspace.actions.approvals(month)
+    for company in found:
+        company["approval"] = approvals.get(company["group_id"])
+    plant = [entry for entry in entries if entry["company_id"] is None]
+    return {
+        "month": month,
+        "today": today,
+        # A month is approved once it has ended (``ActionStore.approve_month``).
+        "closable": month < today[:7],
+        "companies": found,
+        "plant": {
+            "hours": round(sum(entry["hours"] for entry in plant), 2),
+            "approval": approvals.get(""),
+        },
+    }
 
 
 @router.get("/hours")
@@ -433,4 +457,169 @@ def hours(
         "entries": entries,
         "hours": round(sum(entry["hours"] for entry in entries), 2),
         "billable_hours": round(sum(entry["hours"] for entry in entries if entry["billable"]), 2),
+        "approvals": list(rt.workspace.actions.approvals(month).values()),
     }
+
+
+# The month's approval of the hours -----------------------------------------------------------
+
+
+class MonthApproval(BaseModel):
+    month: str = Field(pattern=MONTH)
+    # A company's group id; None: the plant's own people.
+    company: str | None = Field(default=None, max_length=60)
+
+
+def _approver(rt: Any, user: str, company: str | None) -> None:
+    """An administrator approves any month; a company's sponsor at the plant approves its own."""
+
+    access = user_access(rt, user)
+    if access is not None and access.is_admin:
+        return
+    if company:
+        group = rt.workspace.groups.get(company)
+        if group and group.get("kind") == "company" and group.get("sponsor") == user:
+            return
+    raise HTTPException(
+        status_code=403,
+        detail=t("An administrator, or the company's sponsor at the plant, approves its hours."),
+    )
+
+
+@router.post("/hours/approve")
+@open_to("viewer")
+def approve_hours(payload: MonthApproval, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
+    """Closes a month's hours for a company (or the plant): no entry of that month is added or
+    removed after, until an administrator reopens it. Kept with who approved and the total."""
+
+    if payload.company:
+        group = rt.workspace.groups.get(payload.company)
+        if group is None or group.get("kind") != "company":
+            raise HTTPException(status_code=404, detail=t("Company not found."))
+    _approver(rt, user, payload.company)
+    month, first, last = _month_bounds(payload.month)
+    entries = _entries_by_company(rt, rt.workspace.actions.hours_between(first, last))
+    total = sum(entry["hours"] for entry in entries if entry["company_id"] == payload.company)
+    try:
+        approval = rt.workspace.actions.approve_month(
+            month, payload.company, hours=total, actor=user
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    _audit(rt, user, "operations.hours.approved", approval)
+    return approval
+
+
+@router.post("/hours/reopen")
+def reopen_hours(payload: MonthApproval, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    """Opens an approved month again (a correction): the approval is in the audit log."""
+
+    try:
+        approval = rt.workspace.actions.reopen_month(payload.month, payload.company)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=t("These hours are not approved.")) from exc
+    _audit(rt, admin, "operations.hours.reopened", approval)
+    return {"reopened": approval}
+
+
+# The requests' service targets -------------------------------------------------------------
+
+
+@router.get("/targets")
+def targets(_user: CurrentUser, rt: Runtime) -> dict[str, Any]:
+    """The first answer and resolution targets of requests, by priority, in hours."""
+
+    return {
+        "targets": rt.workspace.actions.targets().as_dict(),
+        "defaults": Targets.defaults().as_dict(),
+    }
+
+
+@router.put("/targets")
+def set_targets(payload: dict[str, Any], admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    before = rt.workspace.actions.targets().as_dict()
+    try:
+        value = rt.workspace.actions.set_targets(payload.get("targets") or {}, actor=admin)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    _audit(rt, admin, "operations.targets", {"before": before, "after": value.as_dict()})
+    return {"targets": value.as_dict(), "defaults": Targets.defaults().as_dict()}
+
+
+# Temporary support access ------------------------------------------------------------------
+
+
+class SupportGrant(BaseModel):
+    username: str = Field(min_length=1, max_length=120)
+    hours: float = Field(gt=0, le=SUPPORT_MAX_HOURS)
+    reason: str = Field(min_length=1, max_length=300)
+    action_id: int | None = None
+
+
+@router.get("/support-access")
+def support_access(_reader: OperationsView, rt: Runtime) -> dict[str, Any]:
+    """The grants in force and those of the last 30 days."""
+
+    return {"grants": rt.workspace.support_access.recent(), "max_hours": SUPPORT_MAX_HOURS}
+
+
+@router.post("/support-access/grants", status_code=201)
+def grant_support_access(payload: SupportGrant, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    """Lets a person into Operations for a few hours, for a reason (often a request); they are
+    told, and it is in the audit log."""
+
+    users = rt.workspace.users
+    username = payload.username.strip().lower()
+    if not users.is_active_person(username):
+        raise HTTPException(status_code=404, detail=t("Person not found."))
+    target = user_access(rt, username)
+    if target is not None and target.is_admin:
+        raise HTTPException(status_code=409, detail=t("An administrator opens Operations already."))
+    if rt.workspace.groups.access_ended(username):
+        raise HTTPException(
+            status_code=409, detail=t("This person's company access ended: extend it first.")
+        )
+    if payload.action_id is not None and rt.workspace.actions.get(payload.action_id) is None:
+        raise HTTPException(status_code=404, detail=t("Action not found."))
+    try:
+        grant = rt.workspace.support_access.grant(
+            username,
+            hours=payload.hours,
+            reason=payload.reason,
+            actor=admin,
+            action_id=payload.action_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    _audit(rt, admin, "operations.support_access.granted", grant)
+    try:
+        rt.notifications.notify(
+            "operations",
+            "Operations",
+            recipients=[f"user:{username}"],
+            title=t("You have support access to Operations"),
+            text=t(
+                "Until {end}: {reason}",
+                end=plant_clock(parse_instant(grant["ends_at"])),
+                reason=grant["reason"],
+            ),
+            priority="medium",
+            url=f"/actions/{payload.action_id}" if payload.action_id else "/health",
+            email=True,
+            key=f"support-access:{grant['grant_id']}",
+        )
+    except (PermissionError, ValueError):
+        pass
+    return grant
+
+
+@router.delete("/support-access/grants/{grant_id}")
+def end_support_access(grant_id: int, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    try:
+        grant = rt.workspace.support_access.end(grant_id, actor=admin)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=t("Access not found.")) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    _audit(rt, admin, "operations.support_access.ended", grant)
+    return grant

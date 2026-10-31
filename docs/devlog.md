@@ -17,6 +17,13 @@ know that the code and `CHANGELOG.md` do not say. One short entry per change wor
   checked on every request (one indexed query; the tree only once a company has ended). Hours
   count for the company of who logged them, not of the queue: what an integrator bills is their
   people's time.
+- Request targets are computed when read, from the status history, not stored: a target changed
+  applies at once, and nothing has to tick. The clock is the calendar's (plants run day and
+  night); Blocked, an existing status, is the pause, so the API v1 status list stays as it was.
+  Temporary support access adds the Operations role in `user_access` while a grant lasts (one
+  indexed query per request), so every check that reads `can_operate` follows it and it ends
+  without a job. Operations is not a framed app: it is left out of the frame prefixes, or `/health`
+  would load the platform again inside a frame.
 
 ## 0.5.1
 

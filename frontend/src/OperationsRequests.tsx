@@ -3,15 +3,16 @@
  * answers it), its first answer timed, and the time spent on it. Anyone signed in asks ("Ask for
  * help" in every app's menu opens the form here) and sees their own; Operations sees them all.
  * See docs/operations.md, section 4. */
-import { AlertTriangle, LifeBuoy, LoaderCircle, Plus } from "lucide-react";
+import { AlertTriangle, LifeBuoy, LoaderCircle, Plus, Timer } from "lucide-react";
 import { type DataColumn, DataTable, Dialog, Heading } from "@plantcraft/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { dayText, errorText, fullWhen, PersonLink, shortWhen } from "./collab";
-import { collabApi, type Action, type ActionList } from "./collabApi";
+import { dayText, errorText, fullWhen, Go, PersonLink, shortWhen } from "./collab";
+import { collabApi, type Action, type ActionList, type SlaClock } from "./collabApi";
 import { hoursText } from "./actionsBoard";
 import { t } from "./i18n";
 import { navigate } from "./nav";
-import { useCanOperate } from "./session";
+import { operationsApi, type Priority, type TargetsAnswer } from "./operationsApi";
+import { useCanOperate, useIsAdmin } from "./session";
 import "./apps.css";
 import "./collab.css";
 import "./operations.css";
@@ -48,6 +49,48 @@ export function answerTime(request: Pick<Action, "created_at" | "first_response_
   return { text, waiting: !request.first_response_at };
 }
 
+/** A length of time in minutes as people read it ("45 min", "3 h", "2 days"). */
+export function minutesText(minutes: number): string {
+  const value = Math.max(0, Math.round(minutes));
+  return value < 60 ? t("{count} min", { count: value }) : value < 48 * 60 ? t("{count} h", { count: Math.round(value / 60) }) : t("{count} days", { count: Math.round(value / 1440) });
+}
+
+/** One target as a chip: "2 h left", "late by 3 h", "met", "paused · 5 h left". */
+export function slaText(clock: SlaClock | null | undefined): { text: string; tone: "" | "warn" | "bad" | "good" } | null {
+  if (!clock) return null;
+  const left = clock.target_minutes - clock.used_minutes;
+  if (clock.state === "met") return { text: t("met"), tone: "good" };
+  if (clock.state === "breached") return { text: t("late by {time}", { time: minutesText(-left) }), tone: "bad" };
+  const text = t("{time} left", { time: minutesText(left) });
+  if (clock.paused) return { text: t("paused · {text}", { text }), tone: "" };
+  return { text, tone: clock.state === "at_risk" ? "warn" : "" };
+}
+
+/** The target that matters now: the first answer until there is one, then the resolution. */
+export function currentTarget(request: Pick<Action, "sla" | "first_response_at">): { label: string; clock: SlaClock } | null {
+  if (!request.sla) return null;
+  if (!request.first_response_at && request.sla.response.state !== "met") return { label: t("First answer"), clock: request.sla.response };
+  return { label: t("Resolution"), clock: request.sla.resolution };
+}
+
+function SlaChip({ clock }: { clock: SlaClock | null | undefined }) {
+  const shown = slaText(clock);
+  if (!shown) return <span className="muted">—</span>;
+  return <span className={`apps-chip ops-sla${shown.tone ? ` ops-sla-${shown.tone}` : ""}`}>{shown.text}</span>;
+}
+
+/** A request's two targets, for its page: target, where it stands. */
+export function RequestTargets({ request }: { request: Action }) {
+  const admin = useIsAdmin();
+  if (!request.sla) return null;
+  const support = new URLSearchParams({ new: "1", request: String(request.action_id), ...(request.owner ? { user: request.owner } : {}) });
+  return <>
+    {admin && OPEN.includes(request.status) && <div><span>{t("Support access")}</span><strong><Go to={`/ops/support?${support.toString()}`}>{t("Give someone Operations for a few hours")}</Go></strong></div>}
+    <div><span>{t("First answer target")}</span><strong>{minutesText(request.sla.response.target_minutes)} <SlaChip clock={request.sla.response} /></strong></div>
+    <div><span>{t("Resolution target")}</span><strong>{minutesText(request.sla.resolution.target_minutes)} <SlaChip clock={request.sla.resolution} />{(request.sla.resolution.paused_minutes ?? 0) > 0 && <small className="muted"> · {t("{time} blocked, not counted", { time: minutesText(request.sla.resolution.paused_minutes ?? 0) })}</small>}</strong></div>
+  </>;
+}
+
 const COLUMNS: DataColumn<Action>[] = [
   { key: "id", label: "#", className: "act-id", sort: (item) => Number(item.action_id), render: (item) => <span className="muted">{item.action_id}</span> },
   { key: "title", label: t("Request"), sort: (item) => item.title, render: (item) => <><strong className="ops-request-title">{item.title}</strong><small className="apps-sub">{item.category_label}</small></> },
@@ -55,6 +98,8 @@ const COLUMNS: DataColumn<Action>[] = [
   { key: "queue", label: t("Queue"), phone: "hide", sort: (item) => item.group_name ?? "", filter: { value: (item) => item.group_name ?? t("No queue") }, render: (item) => item.group_name ?? <span className="muted">—</span> },
   { key: "status", label: t("Status"), sort: (item) => OPEN.indexOf(item.status), filter: { value: (item) => item.status_label }, render: (item) => <span className={`act-status act-status-${item.status}`}>{item.status_label}</span> },
   { key: "answer", label: t("First answer"), sort: (item) => item.first_response_at ?? "~", render: (item) => { const time = answerTime(item); return <span className={time.waiting && OPEN.includes(item.status) ? "ops-waiting" : ""} title={item.first_response_at ? fullWhen(item.first_response_at) : undefined}>{time.waiting ? t("waiting {time}", { time: time.text }) : t("after {time}", { time: time.text })}</span>; } },
+  { key: "target", label: t("Target"), sort: (item) => { const now = currentTarget(item); return now ? now.clock.used_minutes / now.clock.target_minutes : -1; }, filter: { value: (item) => { const now = currentTarget(item); return now ? (now.clock.state === "breached" ? t("Late") : now.clock.state === "at_risk" ? t("At risk") : now.clock.state === "met" ? t("Met") : t("On time")) : t("No target"); } },
+    render: (item) => { const now = currentTarget(item); return now ? <span title={now.label}><SlaChip clock={now.clock} /><small className="apps-sub">{now.label}</small></span> : <span className="muted">—</span>; } },
   { key: "time", label: t("Time"), phone: "hide", className: "num", sort: (item) => item.hours_logged ?? 0, render: (item) => (item.hours_logged ? hoursText(item.hours_logged) : "—") },
   { key: "asked_at", label: t("Asked"), phone: "hide", sort: (item) => item.created_at, render: (item) => <time dateTime={item.created_at} title={fullWhen(item.created_at)}>{shortWhen(item.created_at)}</time> },
 ];
@@ -82,6 +127,9 @@ export function RequestsPage() {
   }, []);
   const items = list?.items ?? [];
   const waiting = items.filter((item) => !item.first_response_at && OPEN.includes(item.status)).length;
+  const late = items.filter((item) => OPEN.includes(item.status) && currentTarget(item)?.clock.state === "breached").length;
+  const admin = useIsAdmin();
+  const [targeting, setTargeting] = useState(false);
   return <div className="apps-page ops-requests">
     <Heading title={t("Requests")} actions={<button type="button" className="button button-primary" onClick={() => setAsking({ title: "", text: "", category: "other" })}><Plus size={15} /> {t("New request")}</button>} />
     <p className="muted ops-intro">{operate ? t("What the people of the suite asked of IT and the integrators. A request is an action: open one to answer, change its status or log the time spent.") : t("What you asked of IT or an integrator, and their answers.")}</p>
@@ -91,12 +139,15 @@ export function RequestsPage() {
         <button type="button" className={!open ? "active" : ""} aria-pressed={!open} onClick={() => setOpen(false)}>{t("All")}</button>
       </div>
       {waiting > 0 && <span className="apps-chip apps-chip-warn">{t("{count} waiting for a first answer", { count: waiting })}</span>}
+      {late > 0 && <span className="apps-chip apps-chip-bad">{t("{count} late", { count: late })}</span>}
+      {operate && <button type="button" className="button button-secondary ops-targets-open" onClick={() => setTargeting(true)}><Timer size={15} /> {t("Targets")}</button>}
     </div>
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
     {!list && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
     {list && <DataTable rows={items} columns={COLUMNS} rowKey={(item) => String(item.action_id)} label={t("Requests")} onRowClick={(item) => navigate(`/actions/${encodeURIComponent(String(item.action_id))}`)}
       searchText={(item) => `${item.title} ${item.created_by_name} ${item.category_label ?? ""}`} searchPlaceholder={t("Filter requests")} initialSort={{ key: "asked_at", descending: true }}
       empty={open ? t("No open requests.") : t("No requests yet.")} />}
+    {targeting && <TargetsDialog editable={admin} onClose={() => setTargeting(false)} onSaved={() => { setTargeting(false); void load(); }} />}
     {asking && list && <AskDialog list={list} prefill={asking} onClose={() => setAsking(null)} onAsked={(action) => { setAsking(null); navigate(`/actions/${encodeURIComponent(String(action.action_id))}`); }} />}
   </div>;
 }
@@ -134,4 +185,42 @@ export function AskDialog({ list, prefill, onClose, onAsked }: { list: ActionLis
 /** The month's day range as people read it ("Oct 1 – Oct 31"). */
 export function monthRange(first: string, last: string): string {
   return `${dayText(first)} – ${dayText(last)}`;
+}
+
+const PRIORITY_ORDER: Priority[] = ["critical", "high", "medium", "low"];
+const PRIORITY_LABEL: Record<Priority, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
+
+/** The requests' targets by priority, in hours: the first answer and the resolution (Blocked
+ * time not counted). Administrators change them; Operations reads them. */
+export function TargetsDialog({ editable, onClose, onSaved }: { editable: boolean; onClose: () => void; onSaved: () => void }) {
+  const [answer, setAnswer] = useState<TargetsAnswer | null>(null);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    operationsApi.targets().then((found) => {
+      setAnswer(found);
+      setDraft(Object.fromEntries(PRIORITY_ORDER.flatMap((key) => [[`${key}.response`, String(found.targets[key].response_hours)], [`${key}.resolution`, String(found.targets[key].resolution_hours)]])));
+    }, (err) => setError(errorText(err)));
+  }, []);
+  async function save() {
+    const targets = Object.fromEntries(PRIORITY_ORDER.map((key) => [key, { response_hours: Number(draft[`${key}.response`]?.replace(",", ".")), resolution_hours: Number(draft[`${key}.resolution`]?.replace(",", ".")) }])) as TargetsAnswer["targets"];
+    setBusy(true);
+    try { await operationsApi.setTargets(targets); onSaved(); } catch (err) { setError(errorText(err)); setBusy(false); }
+  }
+  return <Dialog title={t("Request targets")} onClose={onClose} onSubmit={editable ? () => void save() : undefined}
+    footer={<><button type="button" className="button button-secondary" onClick={onClose}>{editable ? t("Cancel") : t("Close")}</button>{editable && <button className="button button-primary" disabled={busy || !answer}>{busy ? <LoaderCircle className="spin" size={15} /> : null} {t("Save targets")}</button>}</>}>
+    <p className="muted">{t("Hours on the clock, day and night. The resolution clock stops while a request is Blocked: waiting for who asked, or for a third party.")}</p>
+    {!answer && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
+    {answer && <table className="ops-targets">
+      <thead><tr><th>{t("Priority")}</th><th>{t("First answer (h)")}</th><th>{t("Resolution (h)")}</th></tr></thead>
+      <tbody>{PRIORITY_ORDER.map((key) => <tr key={key}>
+        <th scope="row">{t(PRIORITY_LABEL[key])}</th>
+        {(["response", "resolution"] as const).map((part) => <td key={part}>{editable
+          ? <input inputMode="decimal" value={draft[`${key}.${part}`] ?? ""} aria-label={`${t(PRIORITY_LABEL[key])} · ${part === "response" ? t("First answer (h)") : t("Resolution (h)")}`} onChange={(event) => setDraft((now) => ({ ...now, [`${key}.${part}`]: event.target.value }))} />
+          : <span>{draft[`${key}.${part}`]}</span>}</td>)}
+      </tr>)}</tbody>
+    </table>}
+    {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
+  </Dialog>;
 }

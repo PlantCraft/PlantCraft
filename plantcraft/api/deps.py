@@ -6,13 +6,14 @@ import hashlib
 import re
 import time
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Annotated, Any, TypeVar
 
 from fastapi import Depends, HTTPException, Request, status
 
 from plantcraft.actions import Visibility
 from plantcraft.api.runtime import ApiRuntime
-from plantcraft.auth.access import Access
+from plantcraft.auth.access import OPERATIONS_APP, Access
 from plantcraft.auth.public_demo import public_demo
 from plantcraft.desk import VISIT_OWNER
 from plantcraft.i18n import t
@@ -142,6 +143,13 @@ def user_access(rt: ApiRuntime, username: str | None) -> Access | None:
     if access is None and not rt.auth.enabled:
         # Sign-in off with no people at all: the local operator.
         return Access("admin")
+    if (
+        access is not None
+        and not access.can_operate
+        and rt.workspace.support_access.active(username)
+    ):
+        # Temporary support access (plantcraft.auth.support_access): Operations while it lasts.
+        access = replace(access, app_roles=(*access.app_roles, (OPERATIONS_APP, "viewer")))
     return access
 
 

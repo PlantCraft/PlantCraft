@@ -1,7 +1,7 @@
 /** The platform's front end: sign-in, then two apps in one page: Desk, each
  * person's day, at "/", and PlantCraft, the suite's setup and administration, at "/admin". */
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { Activity, AlertTriangle, ArrowRight, Building2, CalendarDays, ChevronDown, ClipboardCheck, CloudDownload, DatabaseBackup, Gauge, Languages, LayoutDashboard, LifeBuoy, ListTodo, LoaderCircle, LockKeyhole, Network, Package, ScrollText, Settings2, ShieldCheck, SlidersHorizontal, StickyNote, Sun, UserRound, Users, XCircle } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, Building2, CalendarDays, ChevronDown, ClipboardCheck, CloudDownload, DatabaseBackup, Gauge, KeyRound, Languages, LayoutDashboard, LifeBuoy, ListTodo, LoaderCircle, LockKeyhole, Network, Package, ScrollText, Settings2, ShieldCheck, SlidersHorizontal, StickyNote, Sun, UserRound, Users, XCircle } from "lucide-react";
 import { announceMessagesChanged, AppFrames, appPrefix, claimPanel, isFramed, otherPanelOpen, PythonMark, sanitizeIcon, SuiteShell, toApp, toFrame, FRAME_ATTR, FRAME_OFF, type FrameState, type ShellNavItem, type SuiteApp } from "@plantcraft/ui";
 import { api, requestJson, UNAUTHORIZED_EVENT } from "./api";
 import { BrandMark } from "./Brand";
@@ -38,6 +38,7 @@ const LogsPage = lazy(() => import("./OperationsLogs").then((module) => ({ defau
 const LoadAlertsPage = lazy(() => import("./OperationsLimits").then((module) => ({ default: module.LoadAlertsPage })));
 const RequestsPage = lazy(() => import("./OperationsRequests").then((module) => ({ default: module.RequestsPage })));
 const PartnersPage = lazy(() => import("./OperationsPartners").then((module) => ({ default: module.PartnersPage })));
+const SupportPage = lazy(() => import("./OperationsSupport").then((module) => ({ default: module.SupportPage })));
 const LanguageModelPage = lazy(() => import("./LanguageModel"));
 const AssistantAccessPage = lazy(() => import("./AssistantAccess"));
 const ExecutionsPage = lazy(() => import("./Executions"));
@@ -145,7 +146,7 @@ function LanguageSelect() {
 
 // Old addresses that moved (2026-10-20): Settings left, Users and App keys split.
 const MOVED: Record<string, string> = { "/settings": "/admin", "/settings/users": "/users", "/app-keys": "/apps/keys", "/data/import": "/asset-import", "/operations": "/health", "/setup/backups": "/backups", "/inbox": "/messages/notifications", "/routines": "/todo" };
-const EXACT_PATHS = ["/", "/widgets", "/admin", "/attention", "/calendar", "/todo", "/notes", "/team", "/assets", "/data", "/asset-import", "/asset-import/review", "/executions", "/users", "/users/groups", "/users/specialists", "/apps/keys", "/apps", "/setup", "/setup/language-model", "/setup/assistant-access", "/setup/email", "/setup/calendars", "/setup/corporate-login", "/health", "/ops/logs", "/ops/alerts", "/ops/requests", "/ops/partners", "/backups", "/updates", "/help", "/messages", "/actions", "/setup/audit", "/setup/notebooks", "/setup/compute", "/setup/installation", "/setup/apps", "/preferences", "/notebooks", "/assistant", "/assistant/new"];
+const EXACT_PATHS = ["/", "/widgets", "/admin", "/attention", "/calendar", "/todo", "/notes", "/team", "/assets", "/data", "/asset-import", "/asset-import/review", "/executions", "/users", "/users/groups", "/users/specialists", "/apps/keys", "/apps", "/setup", "/setup/language-model", "/setup/assistant-access", "/setup/email", "/setup/calendars", "/setup/corporate-login", "/health", "/ops/logs", "/ops/alerts", "/ops/requests", "/ops/partners", "/ops/support", "/backups", "/updates", "/help", "/messages", "/actions", "/setup/audit", "/setup/notebooks", "/setup/compute", "/setup/installation", "/setup/apps", "/preferences", "/notebooks", "/assistant", "/assistant/new"];
 /** The id after a prefix ("/messages/12" -> "12"), or null. */
 function idAfter(path: string, prefix: string) {
   return path.startsWith(prefix) && path.length > prefix.length ? decodeURIComponent(path.slice(prefix.length)) : null;
@@ -156,7 +157,7 @@ export function isDeskPath(path: string) {
 }
 /** Operations, built in like Desk: the suite's status, load and logs, its backups and updates
  * (docs/operations.md, section 4). Its pages keep the addresses they had in PlantCraft. */
-export const OPERATIONS_PATHS = ["/health", "/ops/logs", "/ops/requests", "/ops/partners", "/ops/alerts", "/backups", "/updates"];
+export const OPERATIONS_PATHS = ["/health", "/ops/logs", "/ops/requests", "/ops/partners", "/ops/support", "/ops/alerts", "/backups", "/updates"];
 export function isOperationsPath(path: string) {
   return OPERATIONS_PATHS.includes(path);
 }
@@ -222,6 +223,7 @@ function Page({ path, data, username, onInboxChange }: { path: string; data: Hom
   // Everyone asks for help and follows their own requests; Operations sees them all.
   if (path === "/ops/requests") return <Suspense fallback={PAGE_LOADING}><RequestsPage /></Suspense>;
   if (path === "/ops/partners") return operate ? <Suspense fallback={PAGE_LOADING}><PartnersPage /></Suspense> : <NoAccess />;
+  if (path === "/ops/support") return operate ? <Suspense fallback={PAGE_LOADING}><SupportPage people={data.users.filter((item) => item.username !== username)} /></Suspense> : <NoAccess />;
   if (path === "/ops/alerts") return operate ? <Suspense fallback={PAGE_LOADING}><LoadAlertsPage /></Suspense> : <NoAccess />;
   if (path === "/backups") return canSee(access, "administration") ? <Suspense fallback={PAGE_LOADING}><BackupsPage /></Suspense> : <NoAccess />;
   if (path === "/updates") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><UpdatesPage /></Suspense> : <NoAccess />;
@@ -333,6 +335,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
     ...(demoVisitor ? [] : [{ to: "/ops/logs", label: t("Logs"), icon: <ScrollText /> }]),
     { to: "/ops/requests", label: t("Requests"), icon: <LifeBuoy /> },
     { to: "/ops/partners", label: t("Partners"), icon: <Building2 /> },
+    { to: "/ops/support", label: t("Support access"), icon: <KeyRound /> },
     { to: "/ops/alerts", label: t("Load alerts"), icon: <Gauge /> },
     ...(adminView ? [{ to: "/backups", label: t("Backups"), icon: <DatabaseBackup />, section: administration }] : []),
     ...(admin ? [{ to: "/updates", label: t("Updates"), icon: <CloudDownload />, section: administration }] : []),

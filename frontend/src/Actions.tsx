@@ -5,7 +5,7 @@
  * they lead, with Jira's quick filters. */
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from "react";
 import { AssistantTitleButton, DataTable, Heading, useAssistantPage } from "@plantcraft/ui";
-import { AlertTriangle, ArrowLeft, AtSign, CalendarClock, CheckSquare, ClipboardCheck, Clock, Columns3, Hash, List, ListChecks, LoaderCircle, MessageSquare, Pencil, Plus, Rows2, Rows3, Search, SendHorizontal, Trash2, UserRound, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, AtSign, CalendarClock, CheckSquare, ClipboardCheck, Clock, Columns3, Hash, List, ListChecks, LoaderCircle, Lock, MessageSquare, Pencil, Plus, Rows2, Rows3, Search, SendHorizontal, Trash2, UserRound, Users, X } from "lucide-react";
 import { boardColumns, hoursText, timeText, type BoardColumn } from "./actionsBoard";
 import { Avatar, dayText, errorText, fullWhen, Go, MentionText, optionFromRef, PersonLink, plainMentions, ReferencePicker, RefChip, resolveOption, shortWhen } from "./collab";
 import { collabApi, type Action, type ActionDraft, type ActionItem, type ActionList, type ActionStatus, type ActionView, type Id, type RefOption } from "./collabApi";
@@ -13,6 +13,7 @@ import { t } from "./i18n";
 import { navigate } from "./nav";
 import { READ_ONLY, useAccess, useCanEdit, useIsAdmin, useUsername } from "./session";
 import { Modal } from "./Modal";
+import { RequestTargets } from "./OperationsRequests";
 
 export const DEFAULT_OPEN_STATUSES = ["open", "in_progress", "blocked"];
 
@@ -318,6 +319,7 @@ function ActionPage({ actionId, list, canEdit, onEdit, onChanged }: { actionId: 
           <div><span>{t("Status")}</span><strong><StatusBadge action={action} /></strong></div>
           {action.kind === "request" && <div><span>{t("Category")}</span><strong>{action.category_label ?? "—"}</strong></div>}
           {action.kind === "request" && <div><span>{t("First answer")}</span><strong>{action.first_response_at ? fullWhen(action.first_response_at) : <span className="muted">{t("Waiting")}</span>}</strong></div>}
+          {action.kind === "request" && <RequestTargets request={action} />}
           {(action.hours_logged ?? 0) > 0 && <div><span>{t("Time logged")}</span><strong>{hoursText(action.hours_logged ?? 0)}</strong></div>}
           <div><span>{t("Priority")}</span><strong><span className={`priority-pill priority-${action.priority}`}>{action.priority_label}</span></strong></div>
           <div><span>{t("Owner")}</span><strong><PersonLink username={action.owner} name={action.owner_name} /></strong></div>
@@ -363,7 +365,7 @@ function TimeLog({ action, onChanged }: { action: Action; onChanged: (action: Ac
       <span>{dayText(entry.day)}</span>
       <PersonLink username={entry.username} name={entry.display_name} />
       <span className="act-time-note">{entry.note}{!entry.billable && <small className="muted"> · {t("not billable")}</small>}</span>
-      {(entry.username === me || admin) && <button type="button" className="icon-button" disabled={busy} onClick={() => void remove(entry.entry_id)} aria-label={t("Remove this time")} title={t("Remove this time")}><Trash2 size={14} /></button>}
+      {entry.locked ? <span className="act-time-locked" title={t("Its month's hours are approved")} aria-label={t("Its month's hours are approved")}><Lock size={14} /></span> : (entry.username === me || admin) && <button type="button" className="icon-button" disabled={busy} onClick={() => void remove(entry.entry_id)} aria-label={t("Remove this time")} title={t("Remove this time")}><Trash2 size={14} /></button>}
     </li>)}</ul>}
     <form className="act-time-form" onSubmit={add} aria-label={t("Log time")}>
       <input inputMode="decimal" value={hours} onChange={(event) => setHours(event.target.value)} placeholder={t("Hours")} aria-label={t("Hours")} />

@@ -41,6 +41,9 @@ def _session_payload(username: str | None, rt: Any, request: Request) -> dict[st
         # visitor's, read-only (api/deps.py, AdminView).
         visitor = (demo := public_demo()) is not None and username == demo.username
         shown["admin_view"] = bool(access and access.is_admin) or visitor
+        # Temporary support access: when it ends (the shell says so).
+        grant = rt.workspace.support_access.active(username) if username else None
+        shown["support_until"] = grant["ends_at"] if grant else None
     return {
         "authenticated": bool(username),
         "username": username,

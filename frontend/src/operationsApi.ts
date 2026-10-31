@@ -113,7 +113,21 @@ export const operationsApi = {
     const text = params.toString();
     return requestJson<HoursReport>(`/api/operations/hours${text ? `?${text}` : ""}`);
   },
+  approveHours: (month: string, company: string | null) => requestJson<HoursApproval>("/api/operations/hours/approve", post({ month, company })),
+  reopenHours: (month: string, company: string | null) => requestJson<{ reopened: HoursApproval }>("/api/operations/hours/reopen", post({ month, company })),
+  targets: () => requestJson<TargetsAnswer>("/api/operations/targets"),
+  setTargets: (targets: TargetsAnswer["targets"]) => requestJson<TargetsAnswer>("/api/operations/targets", { method: "PUT", body: JSON.stringify({ targets }) }),
+  supportAccess: () => requestJson<{ grants: SupportGrant[]; max_hours: number }>("/api/operations/support-access"),
+  grantSupport: (draft: { username: string; hours: number; reason: string; action_id?: number | null }) => requestJson<SupportGrant>("/api/operations/support-access/grants", post(draft)),
+  endSupport: (grantId: number) => requestJson<SupportGrant>(`/api/operations/support-access/grants/${grantId}`, { method: "DELETE" }),
 };
+
+/** A month's hours approved for a company (null company: the plant's own people). */
+export interface HoursApproval { month: string; company: string | null; hours: number; approved_by: string; approved_by_name: string; approved_at: string }
+export type Priority = "critical" | "high" | "medium" | "low";
+export interface TargetsAnswer { targets: Record<Priority, { response_hours: number; resolution_hours: number }>; defaults: TargetsAnswer["targets"] }
+/** Temporary support access: Operations for a person until `ends_at`. */
+export interface SupportGrant { grant_id: number; username: string; display_name: string; reason: string; action_id: number | null; granted_by: string; granted_by_name: string; starts_at: string; ends_at: string; ended_by: string | null; ended_at: string | null; active: boolean }
 
 /** A company working at the plant (a group of kind "company"), as Operations › Partners shows it. */
 export interface Company {
@@ -125,11 +139,12 @@ export interface Company {
   teams: Array<{ group_id: string; name: string; members: number }>;
   people: Array<{ username: string; display_name: string; active: boolean; teams: string[]; coordinator: boolean }>;
   open_requests: number; hours: number; billable_hours: number;
+  approval?: HoursApproval | null;
 }
-export interface PartnersAnswer { month: string; today: string; companies: Company[] }
+export interface PartnersAnswer { month: string; today: string; companies: Company[]; /** The month has ended: its hours may be approved. */ closable?: boolean; plant?: { hours: number; approval: HoursApproval | null } }
 export interface HoursEntry {
   entry_id: number; action_id: number; title: string; kind: string; category: string | null; group_id: string | null;
   username: string; display_name: string; day: string; hours: number; note: string; billable: boolean; created_at: string;
   company_id?: string | null; company_name?: string | null;
 }
-export interface HoursReport { month: string; first: string; last: string; entries: HoursEntry[]; hours: number; billable_hours: number }
+export interface HoursReport { month: string; first: string; last: string; entries: HoursEntry[]; hours: number; billable_hours: number; approvals?: HoursApproval[] }
