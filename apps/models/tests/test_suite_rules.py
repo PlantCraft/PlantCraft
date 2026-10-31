@@ -27,6 +27,7 @@ FLOORS = tomllib.loads((ROOT / "tests" / "floors.toml").read_text(encoding="utf-
 LAYERS = {
     "i18n": -1,
     "config": 0,
+    "atomic": 0,
     "meta": 0,
     "examples": 0,
     "notebook_examples": 0,
