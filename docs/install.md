@@ -196,6 +196,27 @@ If port 443 is taken on Windows (IIS, another proxy), set `PLANTCRAFT_HTTPS_PORT
 `~/plantcraft/.env` and run `./install.sh` again. Docker Desktop must be running for the suite to
 answer; it starts the containers again on its own.
 
+### Windows without Docker Desktop (draft, not tested yet)
+
+Docker Desktop needs a paid subscription in companies of 250 people or more, or US$10 million
+of revenue or more. Two free ways give the suite the same Linux containers:
+
+- **Docker Engine inside WSL (recommended).** Steps 2, 4, 5 and 6 above, without Docker Desktop.
+  Ubuntu 24.04 in WSL starts systemd by default (otherwise add `[boot]` `systemd=true` to
+  `/etc/wsl.conf` and run `wsl --shutdown`). Install with the Docker Engine the bundle carries:
+
+  ```bash
+  sudo apt-get install -y iptables     # the one package Docker needs from Ubuntu
+  sudo ./install.sh --install-docker --all-apps --demo --prefix ~/plantcraft
+  ```
+
+  The suite runs while the Ubuntu window of WSL is open; to keep it running, start WSL with
+  Windows (a Task Scheduler entry `wsl -d Ubuntu --exec /bin/true` at sign-in).
+- **Rancher Desktop** (SUSE, Apache 2.0) with **Container engine: dockerd (moby)** in its
+  Preferences, instead of Docker Desktop in step 1; then the steps above as written.
+
+`./install.sh --check` names the Docker it found and warns when it is Docker Desktop.
+
 **Notebooks on Windows.** People who want JupyterLab on their own computer install the
 PlantCraft Notebooks kit from the Notebooks page: a setup for the current user only, no
 administrator and no Docker, installed in about two minutes ([Notebooks](en/notebooks.md)).
