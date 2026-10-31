@@ -42,6 +42,7 @@ import os
 import re
 import secrets
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -4537,49 +4538,74 @@ def run(suite: Suite) -> int:
     )
     plant_map(admin, suite)
     archive_signals(admin, suite)
-    passwords = people(admin, suite)
-    groups(admin, suite.admin)
-    workspace = _workspace()
-    retire_specialist(admin, workspace)
-    steps = [
-        (
+    # Every app's client now, on this thread: the admin session is not shared across threads.
+    clients = {app_id: suite.app(admin, app_id) for app_id in suite.apps}
+    platform = Http(suite.processcraft, token=admin.post("/api/v1/auth/token")["token"])
+    failed: list[str] = []
+    cast_ready = threading.Event()
+
+    def step(app_id: str, work: Any) -> None:
+        client = clients.get(app_id)
+        if client is None:
+            log(f"{app_id} is not installed: skipped")
+            return
+        try:
+            work(client)
+        except SeedError as error:
+            failed.append(app_id)
+            log(f"WARNING {app_id}: {error}")
+
+    def data_chain() -> None:
+        """The plant's data, which waits on long jobs (the Historian's 48 h backfill, Analytics'
+        rounds, the alarms' replay): on its own thread, beside the people, View and Documents,
+        which do not read it."""
+
+        step(
             "histcraft",
-            lambda client, _suite: (
-                histcraft(client, _suite),
+            lambda client: (
+                histcraft(client, suite),
                 histcraft_lab(client),
                 histcraft_import(client),
                 histcraft_calc(client),
             ),
-        ),
-        ("linkcraft", linkcraft),
-        ("dashcraft", lambda client, _suite: dashcraft(client)),
-        ("linkcraft", link_models),
-        ("alarmcraft", alarmcraft),
-        ("dashcraft", lambda client, _suite: view_reports(client)),
-        ("dashcraft", lambda client, _suite: view_trends(client)),
-        ("dashcraft", view_diagrams),
-        (
+        )
+        step("linkcraft", lambda client: linkcraft(client, suite))
+        step("linkcraft", lambda client: link_models(client, suite))
+        # Alarm rules and models name the cast and its groups.
+        cast_ready.wait()
+        step("alarmcraft", lambda client: alarmcraft(client, suite))
+        step(
             "modelcraft",
-            lambda client, _suite: modelcraft(
-                client,
-                _suite,
-                suite.app(admin, "linkcraft"),
-                Http(suite.processcraft, token=admin.post("/api/v1/auth/token")["token"]),
-            ),
-        ),
-        ("doccraft", doccraft),
-    ]
-    failed = []
-    for app_id, step in steps:
-        client = suite.app(admin, app_id)
-        if client is None:
-            log(f"{app_id} is not installed: skipped")
-            continue
+            lambda client: modelcraft(client, suite, clients.get("linkcraft"), platform),
+        )
+
+    crashed: list[BaseException] = []
+
+    def guarded() -> None:
         try:
-            step(client, suite)
-        except SeedError as error:
-            failed.append(app_id)
-            log(f"WARNING {app_id}: {error}")
+            data_chain()
+        except BaseException as error:  # noqa: BLE001 - raised again on the main thread
+            crashed.append(error)
+        finally:
+            cast_ready.set()
+
+    data = threading.Thread(target=guarded, name="demo-data", daemon=True)
+    data.start()
+    try:
+        passwords = people(admin, suite)
+        groups(admin, suite.admin)
+        workspace = _workspace()
+        retire_specialist(admin, workspace)
+    finally:
+        cast_ready.set()
+    step("dashcraft", dashcraft)
+    step("dashcraft", view_reports)
+    step("dashcraft", view_trends)
+    step("dashcraft", lambda client: view_diagrams(client, suite))
+    step("doccraft", lambda client: doccraft(client, suite))
+    data.join()
+    if crashed:
+        raise crashed[0]
     # What the team wrote, last: it links what the apps now hold (Links).
     links = story_links(suite, admin)
     if workspace is None:
