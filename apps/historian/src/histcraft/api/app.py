@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from plantcraft_sdk.app_manifest import parse_manifest
 from plantcraft_sdk.server import web
 from plantcraft_sdk.server.objects import notebooks_router
+from plantcraft_sdk.server.workers import startup
 
 from histcraft import APP_ID, __version__
 from histcraft.api.routers import (
@@ -47,7 +48,11 @@ def _manifest():
 
 
 def create_app(runtime: Runtime | None = None) -> FastAPI:
-    runtime = runtime or Runtime(Settings.from_environment())
+    if runtime is None:
+        settings = Settings.from_environment()
+        # Several server processes start together: one at a time opens the databases.
+        with startup(settings.data_dir):
+            runtime = Runtime(settings)
     api = web.suite_api(
         runtime,
         title="PlantCraft Historian",
