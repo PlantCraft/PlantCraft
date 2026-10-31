@@ -502,6 +502,22 @@ class DocumentStore(Store):
                     ),
                 )
 
+    def update_diagram(self, rev_id: str, page: int, result: dict[str, Any]) -> None:
+        """One page's result read again (by the language model)."""
+
+        with self._lock, self._connect() as connection:
+            connection.execute(
+                "UPDATE diagrams SET items = ?, relations = ?, result = ? "
+                "WHERE rev_id = ? AND page = ?",
+                (
+                    len(result.get("items") or []),
+                    len(result.get("relations") or []),
+                    json.dumps(result),
+                    rev_id,
+                    page,
+                ),
+            )
+
     def diagrams(
         self, doc_ids: set[str] | None = None, *, full: bool = False
     ) -> list[dict[str, Any]]:
@@ -677,16 +693,23 @@ class DocumentStore(Store):
                 return []
         return [row[0] for row in rows]
 
-    def allowed_ids(self, folders: set[str] | None, assistant: bool) -> np.ndarray | None:
-        """The passages a search may return (``None``: all of them)."""
+    def allowed_among(
+        self, ids: list[int], folders: set[str] | None, assistant: bool
+    ) -> set[int] | None:
+        """Which of these passages a search may return (``None``: all of them). The search asks
+        for its best few hundred by meaning, not for every passage of the library: on 100,000
+        passages that is a small query instead of reading every id (150 ms a search)."""
 
         if folders is None and not assistant:
             return None
+        if not ids:
+            return set()
         query = (
             "SELECT p.passage_id FROM passages p JOIN documents d ON d.doc_id = p.doc_id "
-            "LEFT JOIN folders o ON o.folder_id = d.folder_id WHERE 1 = 1"
+            "LEFT JOIN folders o ON o.folder_id = d.folder_id "
+            f"WHERE p.passage_id IN ({','.join('?' * len(ids))})"
         )
-        params: list[Any] = []
+        params: list[Any] = list(ids)
         if folders is not None:
             query += f" AND d.folder_id IN ({','.join('?' * len(folders)) or 'NULL'})"
             params.extend(sorted(folders))
@@ -694,7 +717,7 @@ class DocumentStore(Store):
             query += " AND d.assistant = 1 AND COALESCE(o.assistant, 1) = 1"
         with self._lock, self._connect() as connection:
             rows = connection.execute(query, params).fetchall()
-        return np.array([row[0] for row in rows], dtype=np.int64)
+        return {row[0] for row in rows}
 
     def doc_assets(self, doc_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
         """Each document's assets (``document_assets`` rows), by document id."""

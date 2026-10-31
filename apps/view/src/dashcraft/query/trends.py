@@ -14,10 +14,19 @@ from dashcraft.query.cards import Reader, _newest_sample, resolve, trend_step
 
 
 def _read(
-    reader: Reader, signals: list[str], start: Any, end: Any, step: int | None
+    reader: Reader,
+    signals: list[str],
+    start: Any,
+    end: Any,
+    step: int | None,
+    *,
+    extremes: bool = False,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
     try:
-        batch = reader.client.series_many(signals, start, end, step)
+        if extremes:
+            batch = reader.client.series_many(signals, start, end, step, extremes=True)
+        else:
+            batch = reader.client.series_many(signals, start, end, step)
     except Unauthorized:
         raise
     except PlantCraftError as exc:
@@ -31,6 +40,9 @@ def _read(
     }
     return answers, failures
 
+
+# The extremes the Historian gives per cell for a min or max line (``extremes``).
+BAND = {"min": "low", "max": "high"}
 
 # Raw samples one line may bring to be summarised here (min, max, last, first).
 MAX_RAW_SAMPLES = 200_000
@@ -75,14 +87,20 @@ def _empty(answers: dict[Any, dict[str, Any]]) -> bool:
 
 
 def _read_groups(
-    reader: Reader, groups: dict[int, list[str]], start: Any, end: Any
+    reader: Reader,
+    groups: dict[int, list[str]],
+    start: Any,
+    end: Any,
+    banded: set[int] | None = None,
 ) -> tuple[dict[tuple[int, str], dict[str, Any]], dict[tuple[int, str], str]]:
-    """Each interval's signals in one batch: answers and failures keyed by (step, signal)."""
+    """Each interval's signals in one batch: answers and failures keyed by (step, signal).
+    The intervals in ``banded`` (a min or max line) also ask for each cell's extremes."""
 
     answers: dict[tuple[int, str], dict[str, Any]] = {}
     failures: dict[tuple[int, str], str] = {}
     for step, signals in groups.items():
-        found, failed = _read(reader, signals, start, end, step or None)
+        extremes = bool(step) and step in (banded or set())
+        found, failed = _read(reader, signals, start, end, step or None, extremes=extremes)
         answers.update({(step, signal): item for signal, item in found.items()})
         failures.update({(step, signal): text for signal, text in failed.items()})
     return answers, failures
@@ -112,6 +130,9 @@ def read_view(reader: Reader, view: TrendView) -> dict[str, Any]:
 
     plots: list[dict[str, Any]] = []
     groups: dict[int, list[str]] = {}
+    # Intervals with a min or max line: the Historian gives each cell's extremes beside the
+    # means, from its hourly rollups, instead of every raw sample summarised here.
+    banded = {step_of(line) for plot in view.plots for line in plot.lines if line.agg in BAND}
     resolved_plots = []
     for plot in view.plots:
         resolved = [
@@ -129,12 +150,12 @@ def read_view(reader: Reader, view: TrendView) -> dict[str, Any]:
     failures: dict[tuple[int, str], str] = {}
     shifted = False
     if groups:
-        answers, failures = _read_groups(reader, groups, start, end)
+        answers, failures = _read_groups(reader, groups, start, end, banded)
         if period.mode == "relative" and not failures and _empty(answers):
             every = sorted({signal for signals in groups.values() for signal in signals})
             anchor = _newest_sample(reader, every)
             if anchor is not None and anchor < end - timedelta(seconds=step or 1):
-                moved = _read_groups(reader, groups, anchor - (end - start), anchor)
+                moved = _read_groups(reader, groups, anchor - (end - start), anchor, banded)
                 if not moved[1]:
                     answers, failures = moved
                     start, end, shifted = anchor - (end - start), anchor, True
@@ -151,6 +172,7 @@ def read_view(reader: Reader, view: TrendView) -> dict[str, Any]:
             and step_of(spec)
             and item.meta.get("kind") != "text"
             and (step_of(spec), item.signal_id) in answers
+            and BAND.get(spec.agg) not in answers[(step_of(spec), item.signal_id)]
         }
     )
     if other:
@@ -179,6 +201,8 @@ def read_view(reader: Reader, view: TrendView) -> dict[str, Any]:
                     # A state (a mode, a running/stopped flag): its label per interval, drawn
                     # as a band of states under the lines (journey review 2026-10-23).
                     line["agg"] = "last" if own else "recorded"
+                elif own and BAND.get(spec.agg) in answer:
+                    line["v"] = list(answer[BAND[spec.agg]])
                 elif own and spec.agg != "mean":
                     samples = raw.get(item.signal_id)
                     if samples is None or len(samples.get("t") or []) > MAX_RAW_SAMPLES:

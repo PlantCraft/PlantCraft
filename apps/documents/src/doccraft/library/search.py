@@ -82,14 +82,7 @@ class Searcher:
             vector = self.embedder.query(query)
             if vector.shape[0] == matrix.shape[1]:
                 scores = matrix @ vector
-                allowed = self.store.allowed_ids(folders, assistant)
-                if allowed is not None:
-                    scores = np.where(np.isin(ids, allowed), scores, -np.inf)
-                top = np.argsort(-scores)[:CANDIDATES]
-                for rank, index in enumerate(top):
-                    if not np.isfinite(scores[index]):
-                        break
-                    passage_id = int(ids[index])
+                for rank, passage_id in enumerate(self._best(ids, scores, folders, assistant)):
                     ranked[passage_id] = ranked.get(passage_id, 0.0) + 1.0 / (RRF_K + rank + 1)
                     by.setdefault(passage_id, []).append("meaning")
 
@@ -116,6 +109,33 @@ class Searcher:
             hits.append(Hit(row, score, by[passage_id]))
         hits.sort(key=lambda hit: -hit.score)
         return hits[: max(1, min(limit, 50))]
+
+    def _best(
+        self, ids: np.ndarray, scores: np.ndarray, folders: set[str] | None, assistant: bool
+    ) -> list[int]:
+        """The ``CANDIDATES`` best passages by meaning among those the person may read: the
+        ranking is walked in chunks, and only each chunk's passages are checked."""
+
+        chunk = CANDIDATES * 10
+        if len(scores) > chunk:  # the first chunk alone is usually enough: no full sort
+            first = np.argpartition(-scores, chunk)[:chunk]
+            order = first[np.argsort(-scores[first], kind="stable")]
+        else:
+            order = np.argsort(-scores, kind="stable")
+        best: list[int] = []
+        seen: set[int] = set()
+        start = 0
+        while start < len(order):
+            part = [int(ids[i]) for i in order[start : start + chunk] if int(ids[i]) not in seen]
+            seen.update(part)
+            allowed = self.store.allowed_among(part, folders, assistant)
+            best += part if allowed is None else [p for p in part if p in allowed]
+            if len(best) >= CANDIDATES:
+                break
+            start += chunk
+            if start >= len(order) and len(order) < len(scores):
+                order = np.argsort(-scores, kind="stable")  # few allowed: walk all of them
+        return best[:CANDIDATES]
 
 
 def fts_query(text: str) -> str:

@@ -101,19 +101,23 @@ def test_only_the_collector_reader_talks_to_plant_servers():
 
 def test_the_server_writes_only_derived_series_to_the_archive():
     """The collector writes collected values (docs/boundary.md); the API writes only the series
-    apps compute (``POST /api/v1/data/derived`` and ``/derived/runs``), never plant points."""
+    apps compute (``POST /api/v1/data/derived`` and ``/derived/runs``) and laboratory results
+    (``POST /api/v1/lab``), never plant points."""
 
     writes = ("append(", "put_snapshots(", "set_state(", "compact(", "prune(", "delete_points(")
     derived = {"put_snapshots("}
     for path in (PACKAGE / "api").rglob("*.py"):
         text = path.read_text(encoding="utf-8")
         for call in writes:
-            if path.name == "data.py" and call in derived:
+            # Laboratory results are written here too (``lab.py``): people or the LIMS give them.
+            if path.name in ("data.py", "lab.py") and call in derived:
                 continue
             assert f"archive.{call}" not in text, f"{path.name} writes the archive: {call}"
     data = (PACKAGE / "api" / "routers" / "data.py").read_text(encoding="utf-8")
     assert data.count("archive.replace(") == 1 and data.count("archive.put_run(") == 1
     assert data.count("archive.put_snapshots(") == 2
+    lab = (PACKAGE / "api" / "routers" / "lab.py").read_text(encoding="utf-8")
+    assert lab.count("archive.replace(") == 1 and lab.count("archive.put_snapshots(") == 1
 
 
 def test_no_api_route_answers_without_a_token(runtime, fake):

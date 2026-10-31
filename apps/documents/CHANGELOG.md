@@ -27,6 +27,12 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   two pieces of equipment with a nozzle at each end, and each instrument loop with its valves
   and the equipment it measures. No graphics; what was marked Wrong is left out. The help page
   now explains Diagrams and the plant map.
+- **A scan read again by the language model.** On a scanned diagram an editor may ask
+  **Read again with the language model**: the page's image and what the drawing reader found go
+  to the model an administrator gives the new use `diagram-read` (Setup › Language models; off
+  until then, and the app now asks for `write.llm`). The tags and lines it adds are kept with
+  medium certainty and "read by the language model; check it", to be checked on the map. On the
+  demo scans gpt-5-mini read the lines with precision 0.93 and recall 0.97, where OCR reads none.
 - **From the map to the plant.** An item PlantCraft already has opens its asset, its signals
   (the Historian's) and what the suite's apps say about it, from the item's card on the map.
 - `tools/llm_vision_eval.py --dexpi DIR --xml DIR` scores a vision model on public P&IDs against
@@ -43,6 +49,15 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ### Changed
 
+- **Search is faster for people who see some folders and for the assistant.** The search no
+  longer reads the id of every passage the person may see. It checks only its best few hundred
+  passages by meaning. With 100,000 passages, a search with specific words takes 16 ms instead
+  of 191 ms, and a search with common words takes 190 ms instead of 360 ms. The results are
+  the same.
+- **Scans are read three times faster.** The search for instrument bubbles counts each ring of
+  points as whole shifted copies of the page instead of letting every dark pixel vote: the same
+  bubbles, found in 0.46 s instead of 5.2 s on a demo sheet. A scanned demo P&ID is now read in
+  2.3 s instead of 6.8 s, with the same tags on all 14 sheets.
 - **The library's table on one line (fine pass 2026-10-28).** Number, unit and when it was sent
   no longer wrap; Assets names the first asset and how many more (all on hover); the description
   never widens the title; the Rev. column left the list (the document's page has its revisions).

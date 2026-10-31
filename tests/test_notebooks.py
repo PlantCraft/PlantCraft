@@ -161,10 +161,15 @@ def test_a_notebook_needs_what_it_loads(app, dist):  # noqa: F811
 def _routed(client: TestClient):
     """``plantcraft_notebook`` on a computer, its requests answered by the test app."""
 
-    def send(self, method, path, body):
-        headers = {"Authorization": f"Bearer {self.token}", "Content-Type": "application/json"}
+    def send(self, method, path, body, accept="application/json"):
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+            "Accept": accept,
+        }
         answer = client.request(method, path, content=body, headers=headers)
-        return answer.status_code, answer.text, answer.headers.get("retry-after", "")
+        retry = answer.headers.get("retry-after", "")
+        return answer.status_code, answer.content, retry, answer.headers.get("content-type", "")
 
     return send
 
@@ -176,7 +181,7 @@ def test_the_package_reads_the_plant_with_a_persons_access_token(app, dist, monk
         token = vera.post("/api/assistant-access/mine", json={"label": "laptop"}).json()["token"]
         signal = _signal(vera)
         reader = TestClient(app)
-        monkeypatch.setattr(pc.Client, "_computer", _routed(reader))
+        monkeypatch.setattr(pc.Client, "_fetch", _routed(reader))
         pc.connect("http://testserver", token=token)
         assert pc.me()["username"] == "vera"
         assert signal in pc.signals().index
@@ -233,7 +238,7 @@ def test_the_examples_run_on_any_installation(app, dist, monkeypatch):  # noqa: 
             vera.post("/api/notebooks", json={"kind": "example", "example": "x"}).status_code == 422
         )
         token = vera.post("/api/assistant-access/mine", json={"label": "examples"}).json()["token"]
-        monkeypatch.setattr(pc.Client, "_computer", _routed(TestClient(app)))
+        monkeypatch.setattr(pc.Client, "_fetch", _routed(TestClient(app)))
         pc.connect("http://testserver", token=token)
         for item in listed:
             created = vera.post("/api/notebooks", json={"kind": "example", "example": item["id"]})
@@ -277,3 +282,39 @@ def test_the_copies_the_old_example_cards_wrote_are_dropped(tmp_path):
     with store._write() as connection:
         _drop_example_copies(connection)
     assert [item["name"] for item in store.list("vera")] == ["My analysis.ipynb"]
+
+
+def test_the_binary_answer_reads_as_the_json_one():
+    import numpy as np
+
+    from plantcraft_sdk import wire
+
+    stamps = np.array([1_760_000_000_000, 1_760_000_000_250, 1_760_000_001_000], dtype=np.int64)
+    writer = wire.BinaryWriter()
+    writer.numbers("plant:A", "number", stamps, np.array([1.5, np.nan, -2.0]))
+    writer.labels("plant:MODE", "text", stamps[:2], ["AUTO", None])
+    as_json = {
+        "series": [
+            {
+                "signal": "plant:A",
+                "kind": "number",
+                "t": [
+                    "2025-10-09T08:53:20+00:00",
+                    "2025-10-09T08:53:20.250000+00:00",
+                    "2025-10-09T08:53:21+00:00",
+                ],
+                "v": [1.5, None, -2.0],
+            },
+            {
+                "signal": "plant:MODE",
+                "kind": "text",
+                "t": ["2025-10-09T08:53:20+00:00", "2025-10-09T08:53:20.250000+00:00"],
+                "v": ["AUTO", None],
+            },
+        ],
+        "errors": [],
+    }
+    for binary, text in zip(pc._binary_columns(writer.body([])), pc._columns(as_json), strict=True):
+        pd.testing.assert_series_equal(binary, text, check_dtype=binary.name != "plant:MODE")
+    with pytest.raises(pc.PlantCraftError):
+        pc._binary_columns(b"JSON")
