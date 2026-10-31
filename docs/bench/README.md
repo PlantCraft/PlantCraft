@@ -148,6 +148,38 @@ Its containers keep the images they were created with when the suite in developm
 same names; `check` says so. Two suites at plant scale need about twice the memory: keep the one
 in development on the demo plant while the frozen one carries the bench.
 
+## Extreme load on the Historian (`ci/bench/extreme.py`)
+
+What many methods reading at the same moment do to the Historian, while people use the suite
+(0.6.0 scenarios). It adds nothing to the plant: it starts Analytics' loop round and signal
+checks together, as their schedules do at the top of the hour, and at that moment `--methods`
+other reads of what a round reads (the plant's signals over `--hours`, raw or in means of
+`--step` s, four requests at once, as Analytics does), while `--people` open a trend, a display's
+newest values and Analytics' overview every few seconds.
+
+```bash
+python3 ci/bench/extreme.py --prefix P --scenario C1           # today's load
+python3 ci/bench/extreme.py --prefix P --scenario C2           # ten times the methods
+python3 ci/bench/extreme.py --prefix P --scenario C2 --step 60 # the methods read means
+python3 ci/bench/extreme.py --compare
+```
+
+The report gives each caller's p50/p95 and statuses (503: the read budget was full; 504:
+PlantCraft gave up), how long each container stayed at a full core, and the rounds' times, in
+`results/<host>-<time>-extreme-<scenario>[-label].md`. To imitate a smaller machine, set the
+containers' limits in the installation's `.env` (`HISTCRAFT_CPUS`, `HISTCRAFT_MEMORY`,
+`LINKCRAFT_CPUS`...) or run it in a virtual machine of that size.
+
+First runs (cloud, 4 CPUs, demo plant with its 48 h archive, 167 plant signals x 24 h):
+
+| | round s | checks s | 10 methods s | person trend p95 s | Historian at a full core s |
+|---|---|---|---|---|---|
+| C1, today | 7 | 11 | | 0.1 | 4 |
+| C2, 10x methods | 30 | 34 | 26 | 3.4 | 25 |
+| C2, means of 60 s | 13 | 18 | 12.5 | 0.8 | 8 |
+| C2, times written at once (SDK fix) | 16 | 18 | 10 | 1.6 | 8 |
+| C2, SDK fix + Historian in 2 processes | 10 | 13 | 6.5 | 0.4 (display) | 4 |
+
 ## PlantCraft alone: 50,000 signals and 50 apps (`ci/bench/platform_scale.py`)
 
 Scale review E14 (2026-10-25). It runs from a checkout, with no Docker: PlantCraft in one
