@@ -8,6 +8,13 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **Two signal checks, rate of change (`sq_rate`) and transmitter fault levels (`sq_ne43`).**
+  Rate of change counts the changes, measured over at least a minute, that are faster than the
+  process can move: an absolute limit per minute, or half of the range per minute by default. NE 43
+  reads a 4-20 mA signal on its range as NAMUR NE 43 does. 3.8 to 20.5 mA is measurement, and
+  3.6 mA or less, 21 mA or more, is the transmitter reporting its own fault: any fault level is a
+  warning, over 1% of the values is bad, and saturation beyond the measuring range is a warning.
+  Both need the signal's limits (or, for the rate, a limit of its own), and otherwise do not apply.
 - **Source quality, a signal check (`sq_source_quality`).** It shows how much of the window the
   source itself marked bad, substituted or uncertain, per signal, from the per-sample quality
   PlantCraft returns (OPC UA, PI and Canary keep one with every value). Bad or substituted time

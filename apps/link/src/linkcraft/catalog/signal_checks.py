@@ -41,6 +41,10 @@ ACTIONS = {
     "substituted value.",
     "sq_spikes": "Check wiring, grounding and the transmitter; a filter may hide the cause.",
     "sq_range": "Check the instrument's range, its units and the limits recorded for the tag.",
+    "sq_ne43": "Check the transmitter: at these current levels it reports its own fault or a "
+    "measurement beyond its range.",
+    "sq_rate": "Check the instrument, its wiring and the data path: the process cannot move "
+    "that fast.",
     "sq_noise": "Check the transmitter's damping, the impulse lines and electrical noise.",
     "sq_resolution": "Check the historian's compression deadband and the tag's recorded precision.",
     "sq_drift": "Calibrate the instrument against a reference measurement.",

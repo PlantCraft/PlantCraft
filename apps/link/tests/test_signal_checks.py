@@ -331,3 +331,37 @@ def test_a_csv_source_signal_is_sampled_once_synced(tmp_path):
     assert is_sampled(store.get("plant:FI-1")) is False
     # An older database gains the column in place.
     assert SignalStore(Database(tmp_path / "link.db")).get("lab:VISC")["source_kind"] == "csv"
+
+
+def test_ne43_fault_levels_and_saturation():
+    values = base(5)  # inside 0 to 100
+    clean = result(verdict(values), "sq_ne43")
+    assert clean["status"] == "ok" and clean["metrics"]["failure_count"] == 0
+    faulty = values.copy()
+    faulty.iloc[100:300] = -3.0  # 3.52 mA: the transmitter's low fault level
+    faulty.iloc[400:410] = 102.0  # 20.32 mA: still measurement
+    faulty.iloc[500:510] = 104.0  # 20.64 mA: saturated beyond the measuring range
+    found = result(verdict(faulty), "sq_ne43")
+    assert found["metrics"]["failure_count"] == 200
+    assert found["metrics"]["saturated_count"] == 10
+    assert found["status"] == "bad"
+    saturated = values.copy()
+    saturated.iloc[500:510] = 104.0
+    assert result(verdict(saturated), "sq_ne43")["status"] == "warning"
+    no_limits = result(verdict(values, {"low": None, "high": None}), "sq_ne43")
+    assert no_limits["status"] == "not_applicable"
+
+
+def test_rate_of_change_finds_steps_faster_than_the_process():
+    values = base(6)
+    assert result(verdict(values), "sq_rate")["status"] == "ok"
+    jumping = values.copy()
+    jumping.iloc[2000:2100:2] = jumping.iloc[2000:2100:2] + 90.0  # 90% of the span and back
+    found = result(verdict(jumping), "sq_rate")
+    assert found["metrics"]["fast_count"] >= 50 and found["status"] == "bad"
+    assert found["events"][0]["details"]["rate_per_minute"] > found["metrics"]["limit_per_minute"]
+    # An absolute limit the plant knows wins over the span.
+    loose = {"settings": {"parameters": {"sq_rate": {"max_rate_per_minute": 1e6}}}}
+    assert result(verdict(jumping, loose), "sq_rate")["status"] == "ok"
+    no_limits = result(verdict(values, {"low": None, "high": None}), "sq_rate")
+    assert no_limits["status"] == "not_applicable"
