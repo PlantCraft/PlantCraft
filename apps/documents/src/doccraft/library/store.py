@@ -7,6 +7,7 @@
 | ``revisions`` | one file of a document (``Rev. C``): its SHA-256 in ``files/``, format, pages and where its reading stands (queued, indexed, failed, superseded) |
 | ``document_assets`` | the assets a document is about: given by a person, or suggested from the tags found in it and then confirmed |
 | ``passages`` | the passages of each indexed revision: text, pages, headings, the assets of the tags in it, its vector |
+| ``diagrams`` | the pages of a revision that are diagrams (P&IDs): sheet, unit and what the drawing reader found on them (items and relations, as JSON) |
 | ``passages_fts`` | the FTS5 index of the passages (BM25), with diacritics folded so "válvula" finds "valvula" |
 
 The original files are kept apart, under ``files/`` of the data folder, named by their SHA-256;
@@ -98,6 +99,20 @@ class DocumentStore(Store):
         vector BLOB
     );
     CREATE INDEX IF NOT EXISTS passages_rev ON passages (rev_id, seq);
+    CREATE TABLE IF NOT EXISTS diagrams (
+        rev_id TEXT NOT NULL REFERENCES revisions(rev_id) ON DELETE CASCADE,
+        doc_id TEXT NOT NULL,
+        page INTEGER NOT NULL,
+        sheet TEXT NOT NULL DEFAULT '',
+        title TEXT NOT NULL DEFAULT '',
+        unit TEXT NOT NULL DEFAULT '',
+        source TEXT NOT NULL DEFAULT '',
+        items INTEGER NOT NULL DEFAULT 0,
+        relations INTEGER NOT NULL DEFAULT 0,
+        result TEXT NOT NULL,
+        PRIMARY KEY (rev_id, page)
+    );
+    CREATE INDEX IF NOT EXISTS diagrams_doc ON diagrams (doc_id);
     CREATE VIRTUAL TABLE IF NOT EXISTS passages_fts USING fts5(
         text, section, title,
         tokenize = 'unicode61 remove_diacritics 2'
@@ -452,6 +467,77 @@ class DocumentStore(Store):
                     (rev["doc_id"], asset, mentions),
                 )
         self.version += 1
+
+    # Diagrams (P&ID pages) and what was read on them
+
+    def store_diagrams(self, rev_id: str, pages: list[dict[str, Any]]) -> None:
+        rev = self.revision(rev_id)
+        if rev is None:
+            return
+        with self._lock, self._connect() as connection:
+            connection.execute("DELETE FROM diagrams WHERE rev_id = ?", (rev_id,))
+            for page in pages:
+                connection.execute(
+                    "INSERT INTO diagrams (rev_id, doc_id, page, sheet, title, unit, source, items, "
+                    "relations, result) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        rev_id,
+                        rev["doc_id"],
+                        int(page.get("page") or 1),
+                        page.get("sheet") or "",
+                        page.get("title") or "",
+                        page.get("unit") or "",
+                        page.get("source") or "",
+                        len(page.get("items") or []),
+                        len(page.get("relations") or []),
+                        json.dumps(page),
+                    ),
+                )
+
+    def diagrams(
+        self, doc_ids: set[str] | None = None, *, full: bool = False
+    ) -> list[dict[str, Any]]:
+        """The diagram pages of the documents' current revisions (``doc_ids``: those a person
+        may read; None: all)."""
+
+        columns = (
+            "g.*"
+            if full
+            else (
+                "g.rev_id, g.doc_id, g.page, g.sheet, g.title, g.unit, g.source, g.items, g.relations"
+            )
+        )
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                f"SELECT {columns}, d.title AS doc_title, d.number AS doc_number, "
+                "r.format AS format, r.filename AS filename FROM diagrams g "
+                "JOIN revisions r ON r.rev_id = g.rev_id JOIN documents d ON d.doc_id = g.doc_id "
+                "WHERE r.status = 'indexed' ORDER BY g.unit, g.sheet, d.number, g.page"
+            ).fetchall()
+        out = []
+        for row in rows:
+            item = dict(row)
+            if doc_ids is not None and item["doc_id"] not in doc_ids:
+                continue
+            if full:
+                item["result"] = json.loads(item["result"])
+            out.append(item)
+        return out
+
+    def diagram(self, rev_id: str, page: int) -> dict[str, Any] | None:
+        with self._lock, self._connect() as connection:
+            row = connection.execute(
+                "SELECT g.*, d.title AS doc_title, d.number AS doc_number, r.format AS format, "
+                "r.filename AS filename, r.sha256 AS sha256 FROM diagrams g "
+                "JOIN revisions r ON r.rev_id = g.rev_id JOIN documents d ON d.doc_id = g.doc_id "
+                "WHERE g.rev_id = ? AND g.page = ?",
+                (rev_id, page),
+            ).fetchone()
+        if row is None:
+            return None
+        item = dict(row)
+        item["result"] = json.loads(item["result"])
+        return item
 
     def _drop_passages(
         self, connection: Any, rev_id: str | None = None, doc_id: str | None = None

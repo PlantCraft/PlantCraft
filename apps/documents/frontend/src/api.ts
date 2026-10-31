@@ -1,6 +1,6 @@
 import { createApiClient, jsonBody, query, type HelpEntry, type HelpPage } from "@plantcraft/ui";
 import { href } from "./nav";
-import type { Doc, DocRow, Folder, Hit, Me, Passage, SendFields } from "./types";
+import type { Diagram, DiagramRow, Doc, DocRow, Folder, Hit, Me, Passage, PlantMap, SendFields } from "./types";
 
 const client = createApiClient({ app: "doccraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -36,6 +36,12 @@ export const api = {
     href(`/api/documents/${id(docId)}/file${query({ revision: options.revision, inline: options.inline ? "true" : undefined })}`) + (options.inline && options.page ? `#page=${options.page}` : ""),
   search: (body: { query: string; asset?: string; kind?: string; folder?: string; limit?: number }) =>
     request<{ query: string; passages: Hit[] }>("/api/search", jsonBody("POST", body)),
+  diagrams: () => request<DiagramRow[]>("/api/diagrams"),
+  diagram: (revId: string, page: number) => request<Diagram>(`/api/diagrams/${id(revId)}/${page}`),
+  /** The page drawn as a picture by the server (never the file itself in the page). */
+  diagramImage: (revId: string, page: number) => href(`/api/diagrams/${id(revId)}/${page}/image`),
+  plantMap: () => request<PlantMap>("/api/plant-map"),
+  assetFileUrl: () => href("/api/plant-map/asset-file"),
   help: () => request<HelpEntry[]>("/api/help"),
   helpPage: (pageId: string) => request<HelpPage>(`/api/help/${id(pageId)}`),
 };
