@@ -466,6 +466,123 @@ def test_a_counting_section_ranks_its_groups_in_every_format(client, fake):
     assert run["status"] == "done" and run["problems"] == 0
 
 
+def _alarm_performance(fake) -> None:
+    """Alarms' hourly result for FIC-101's area, as ``alarmcraft.monitor.performance_results``
+    writes it."""
+
+    from tests.plant import ALARM_KEY
+
+    def reading(total: int) -> dict:
+        return {
+            "start": "2026-09-30T12:00:00+00:00",
+            "end": "2026-10-01T12:00:00+00:00",
+            "total": total,
+            "figures": [
+                {
+                    "id": "per_hour",
+                    "label": "Average alarms per hour",
+                    "value": 3.5,
+                    "target": "≤ 6 (≤ 12 manageable)",
+                    "status": "ok",
+                },
+                {
+                    "id": "flood",
+                    "label": "Time in flood",
+                    "value": 2.1,
+                    "unit": "%",
+                    "target": "< 1 %",
+                    "status": "warning",
+                },
+            ],
+            "eemua": {"level": "stable", "average_per_10min": 0.58, "peak_per_10min": 14},
+            "floods": [
+                {
+                    "start": "2026-10-01T08:00:00+00:00",
+                    "end": "2026-10-01T08:30:00+00:00",
+                    "minutes": 30,
+                    "alarms": 31,
+                    "peak": 14,
+                }
+            ],
+            "flood_count": 1,
+            "flood_minutes": 30,
+            "acknowledge": [
+                {"priority": "high", "count": 4, "median_seconds": 45.0, "p90_seconds": 600.0}
+            ],
+            "mean_ack_seconds": 120.0,
+            "unacked": 2,
+            "priorities": [],
+            "top": [
+                {
+                    "alarm_id": "a1",
+                    "name": "FIC-101 PV high",
+                    "count": 30,
+                    "share": 35.7,
+                    "priority": "high",
+                    "chattering": True,
+                }
+            ],
+            "fleeting": [],
+            "stale": 0,
+            "chattering": 1,
+        }
+
+    alarms = fake.client(None, app="alarmcraft", key=ALARM_KEY)
+    receipt = alarms.put_results(
+        [
+            {
+                "subject": "asset:fic-101",
+                "kind": "alarm_performance",
+                "status": "warning",
+                "summary": "84 alarms in 24 h, EEMUA 191 stable, 1 floods",
+                "detail": {
+                    "alarms": 3,
+                    "url": "/alarm/performance",
+                    "periods": {"24h": reading(84), "7d": reading(500), "30d": reading(2000)},
+                },
+                "expires_at": "2026-10-02T12:00:00+00:00",
+            }
+        ]
+    )
+    assert not receipt["errors"], receipt
+
+
+def test_an_alarm_performance_section_reads_what_alarms_publishes_in_every_format(client, fake):
+    sections = [
+        {"section_id": "alarms", "kind": "alarms", "alarms": {"asset_id": "fic-101"}},
+        {"section_id": "none", "kind": "alarms", "alarms": {"asset_id": "lic-102"}},
+    ]
+    rid = client.post("/dash/api/reports", json=report(sections=sections)).json()["report_id"]
+    _alarm_performance(fake)
+    # Where Alarms published nothing: the section says why, the report is still made.
+    missing = client.get(f"/dash/api/reports/{rid}/sections/none").json()
+    assert "Alarms has published no alarm performance" in missing["error"]
+    read = client.get(f"/dash/api/reports/{rid}/sections/alarms").json()
+    assert read["error"] is None and read["data"]["period"] == "24h"
+    assert read["data"]["reading"]["total"] == 84
+    text = client.get(f"/dash/api/reports/{rid}/export/md").text
+    assert "EEMUA 191 level Stable (average 0.58 and peak 14 alarms per 10 minutes)" in text
+    assert "Alarms raised: 84. Floods: 1 (30 min)." in text
+    for words in (
+        "Time in flood",
+        "FIC-101 PV high (chattering)",
+        "Time to acknowledge",
+        "45 s",
+        "10 min",
+        "None: every alarm stayed long enough to be read.",
+    ):
+        assert words in text, words
+    for form in ("docx", "html"):
+        assert client.get(f"/dash/api/reports/{rid}/export/{form}").status_code == 200
+    run = client.post(f"/dash/api/reports/{rid}/pdf").json()
+    assert run["status"] == "done" and run["problems"] == 1  # lic-102: nothing published
+    # A week's report reads the 7 days; a 3-day one the closest that covers it, and says so.
+    week = client.post("/dash/api/report-preview", json={"section": sections[0], "period": "3d"})
+    assert week.json()["data"]["period"] == "7d" and not week.json()["data"]["exact"]
+    with pytest.raises(ValidationError):
+        Section.model_validate({"section_id": "x", "kind": "alarms"})
+
+
 # Reports an event makes (V5) ------------------------------------------------------------
 
 

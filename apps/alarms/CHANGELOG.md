@@ -8,6 +8,7 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Alarm performance published as a result.** Every hour, Alarms publishes the Performance page's reading over the last 24 hours, 7 days and 30 days as an `alarm_performance` result on the site and on each area. Other apps can read it without calling Alarms; View's reports print it. Each result expires after two hours.
 - **Limits by grade.** A Simple condition can take a limit for each product grade, with a fixed limit for any grade the list does not name. The grade being made comes from a signal holding its code, or from the latest event naming it (an MES grade change, payload field `grade`). The alarm's page says which grade and which limit apply. In Blocks, the new Grade limit block feeds the Compare's new optional Limit input.
 - A late source (`histcraft.source.late`, an integration that stopped delivering) holds back the
   *no data* alarms of its signals, as a disconnected source already did.
@@ -30,6 +31,7 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- **A read-only visitor opening a rule no longer gets a 403 in the console.** The rule editor shows the read-only notice without asking for the assets, types and monitors that only editors may read.
 - The flood count reads only the last minutes of the outbox (index on its time): 0.08 ms a person instead of 4 to 15 ms with 30 days and 300,000 notices, on every notifier cycle during a flood.
 - A new rule no longer asks the server for its sentence before its first condition is complete
   (it answered 422 in the browser's console); an alarm's Acknowledge and Shelve are as tall as the

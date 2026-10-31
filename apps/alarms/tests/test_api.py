@@ -142,6 +142,19 @@ def test_a_cycle_raises_records_and_publishes(runtime, fake, client):
     result = fake.links.results[("alarmcraft", "asset:FIC-1001", "alarm_state")]
     assert result["status"] == "alarm"
     assert fake.links.runs and fake.links.schedules["alarmcraft"]
+    # Each area's alarm performance (ISA-18.2), for View's reports: the site and the area.
+    found = {
+        key[1]: value
+        for key, value in fake.links.results.items()
+        if key[0] == "alarmcraft" and key[2] == "alarm_performance"
+    }
+    assert found, fake.links.results.keys()
+    performance = next(iter(found.values()))
+    day = performance["detail"]["periods"]["24h"]
+    assert day["total"] == 1 and day["eemua"]["level"] == "robust"
+    assert day["top"][0]["alarm_id"] == alarm_id
+    assert set(performance["detail"]["periods"]) == {"24h", "7d", "30d"}
+    assert {f["id"] for f in day["figures"]} >= {"per_hour", "flood", "fleeting", "busy"}
 
     # Acknowledged: still active; a second cycle raises nothing new.
     acked = client.post(f"/api/alarms/{alarm_id}/ack").json()

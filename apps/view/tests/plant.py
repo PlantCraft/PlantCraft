@@ -21,6 +21,8 @@ NOW = datetime(2026, 10, 1, 12, 0, tzinfo=timezone.utc)
 APP_KEY = "test-app-key"
 # Another app of the suite, publishing results DashCraft cards can show.
 LINK_KEY = "test-linkcraft-key"
+# Alarms, publishing each area's alarm performance for the reports.
+ALARM_KEY = "test-alarmcraft-key"
 
 USERS = {
     "admin": {"name": "Administrator", "level": "admin", "apps": {"dashcraft": "editor"}},
@@ -105,7 +107,7 @@ def make_fake(**options) -> FakePlantCraft:
     return FakePlantCraft(
         users=USERS,
         apps=APPS,
-        app_keys={"dashcraft": APP_KEY, "linkcraft": LINK_KEY},
+        app_keys={"dashcraft": APP_KEY, "linkcraft": LINK_KEY, "alarmcraft": ALARM_KEY},
         assets=DEFAULT_ASSETS + EXTRA_ASSETS,
         signals=DEFAULT_SIGNALS + EXTRA_SIGNALS + DERIVED_SIGNALS,
         now=NOW,

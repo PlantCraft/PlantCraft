@@ -40,6 +40,7 @@ from reportlab.platypus import (
 from dashcraft.dashboards.fields import FieldConfig, effective, finite_number
 from dashcraft.dashboards.model import Card
 from dashcraft.i18n import t
+from dashcraft.reports import alarm_performance
 from dashcraft.reports import groups as grouped
 from dashcraft.reports import markdown as md
 from dashcraft.reports.schedule import zone
@@ -1176,6 +1177,88 @@ def events_flowables(
     return out
 
 
+def _plain_table(table: dict[str, Any], width: float) -> Flowable:
+    """A table of ``alarm_performance.tables``: text cells, numbers to the right, and a mark
+    before each row in its state's colour (warning, alarm)."""
+
+    right = {index for index, side in enumerate(table["align"]) if side == "right"}
+    body: list[list[Any]] = [
+        [
+            Paragraph(_esc(name), STYLES["head_right" if index in right else "head"])
+            for index, name in enumerate(table["head"])
+        ]
+    ]
+    styles: list[tuple] = []
+    for number, (row, state) in enumerate(zip(table["rows"], table["states"], strict=True), 1):
+        body.append(
+            [
+                Paragraph(_esc(cell), STYLES["cell_right" if index in right else "cell"])
+                for index, cell in enumerate(row)
+            ]
+        )
+        if state:
+            styles.append(
+                ("LINEBEFORE", (0, number), (0, number), 2, STATE_COLORS.get(state, MUTED))
+            )
+    columns = len(table["head"])
+    narrow = [index for index in range(columns) if index in right]
+    wide = [index for index in range(columns) if index not in right]
+    each = min(64.0, width / (columns * 1.6))
+    rest = (width - each * len(narrow)) / max(1, len(wide))
+    widths = [each if index in right else rest for index in range(columns)]
+    out = Table(body, colWidths=widths, repeatRows=1, hAlign="LEFT")
+    out.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LINEBELOW", (0, 0), (-1, 0), 0.7, AXIS),
+                ("LINEBELOW", (0, 1), (-1, -1), 0.4, GRID),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                *styles,
+            ]
+        )
+    )
+    return out
+
+
+def alarms_flowables(
+    section: dict[str, Any],
+    data: dict[str, Any] | None,
+    error: str | None,
+    width: float,
+    clock: Clock,
+) -> list[Flowable]:
+    """Alarm performance (ISA-18.2): the EEMUA 191 line, the figures, then the floods, the most
+    frequent alarms, the time to acknowledge and the fleeting alarms (``alarm_performance``)."""
+
+    out: list[Flowable] = [
+        Paragraph(_esc(section.get("title") or t("Alarm performance (ISA-18.2)")), STYLES["h3"])
+    ]
+    data = data or {}
+    if not data.get("reading"):
+        out.append(_empty(width, error or t("This section could not be read.")))
+        return out
+    if error:
+        out.append(Paragraph(_esc(error), STYLES["problem"]))
+    out.append(Paragraph(_esc(alarm_performance.lead(data)), STYLES["note"]))
+    for index, table in enumerate(alarm_performance.tables(data, clock)):
+        block: list[Flowable] = [Spacer(1, 4)]
+        if index:
+            block.append(Paragraph(_esc(table["title"]), STYLES["h4"]))
+        if table["rows"]:
+            block.append(_plain_table(table, width))
+        else:
+            block.append(_empty(width, table["empty"]))
+        if table["note"]:
+            block.append(Paragraph(_esc(table["note"]), STYLES["note"]))
+        out.append(KeepTogether(block) if len(table["rows"]) <= 12 else block[0])
+        if len(table["rows"]) > 12:
+            out.extend(block[1:])
+    return out
+
+
 def _groups_table(data: dict[str, Any], width: float, clock: Clock) -> Flowable:
     """The ranked groups of an events section that counts its events."""
 
@@ -1233,6 +1316,8 @@ def _section_flowables(
         return [KeepTogether(body)] if keep else body
     if kind == "events":
         return events_flowables(section, item.get("data"), item.get("error"), width, clock)
+    if kind == "alarms":
+        return alarms_flowables(section, item.get("data"), item.get("error"), width, clock)
     return []
 
 
