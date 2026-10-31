@@ -40,7 +40,14 @@ def read_pdf(data: bytes, *, ocr: bool = True) -> list[Page]:
 
 
 def _vector(page: Page, source) -> None:
-    words = source.extract_words(x_tolerance=1.5, y_tolerance=2, keep_blank_chars=False)
+    # Turned text on drawings mostly reads bottom to top (a label along a vertical line).
+    words = source.extract_words(
+        x_tolerance=1.5,
+        y_tolerance=2,
+        keep_blank_chars=False,
+        char_dir_rotated="btt",
+        line_dir_rotated="ltr",
+    )
     for word in words:
         page.texts.append(Text(word["text"], (word["x0"], word["top"], word["x1"], word["bottom"])))
     for obj in source.lines:

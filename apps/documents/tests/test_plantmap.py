@@ -4,6 +4,7 @@ joined into one plant (``doccraft.plantmap``)."""
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -193,8 +194,6 @@ FOREIGN = {
 def test_a_drawing_in_another_style_is_read_too():
     """Drawn by hand, not by the demo's generator: flow top to bottom, a drum with arc heads,
     a vertical valve, open chevron arrows, tags on one line inside the bubbles."""
-    from pathlib import Path
-
     data = (Path(__file__).parent / "files" / "foreign-pid.svg").read_bytes()
     result = read_drawing(data, "foreign-pid.svg")[0]
     s = score(result, FOREIGN)
@@ -203,3 +202,42 @@ def test_a_drawing_in_another_style_is_read_too():
     assert s["relations"]["recall"] == 1.0 and s["relations"]["precision"] == 1.0
     # Its own number in the title block is not a connector to another sheet.
     assert not any(i.get("ref_sheet") == "PID-U-200-07" for i in result["items"])
+
+
+# The DEXPI example P&ID C01 (CC BY 4.0, see ATTRIBUTION.md), drawn by a commercial P&ID tool
+# in DIN/ISO 10628 style: tags without a dash (P4711), instrument numbers with a dot
+# (TICSA 4750.03) in rounded boxes, valve tags turned along their lines, a tank drawn as
+# separate strokes. Answer key from its DEXPI XML: 12 tags and 6 equipment-to-equipment feeds.
+DEXPI_TAGS = {
+    "H-1007",
+    "H-1008",
+    "HS-4750.01",
+    "HV-4750.01",
+    "P-4711",
+    "P-4712",
+    "PI-4712.01",
+    "PICSA-4712.02",
+    "PV-4712.02",
+    "T-4750",
+    "TICSA-4750.03",
+    "TV-4750.03",
+}
+DEXPI_FEEDS = {
+    ("H-1007", "T-4750"),
+    ("H-1008", "T-4750"),
+    ("P-4711", "H-1007"),
+    ("P-4711", "T-4750"),
+    ("P-4712", "H-1008"),
+    ("T-4750", "P-4711"),
+}
+
+
+def test_a_real_pid_from_another_tool_is_read():
+    data = (Path(__file__).parent / "files" / "dexpi-C01V01-HEX.EX02.pdf").read_bytes()
+    page = read_drawing(data, "C01V01-HEX.EX02.pdf")[0]
+    found = {i["tag"] for i in page["items"] if i.get("tag")}
+    assert DEXPI_TAGS <= found  # every tag, as of 2026-10-31
+    assert len(found - DEXPI_TAGS) <= 1  # SV-104.01, a safety valve the XML keeps as piping
+    feeds = {(r["from"], r["to"]) for r in page["relations"] if r["type"] == "feeds"}
+    assert len(feeds & DEXPI_FEEDS) >= 3 and len(feeds - DEXPI_FEEDS) <= 1
+    assert read_diagrams(data, "C01V01-HEX.EX02.pdf")  # kept as a diagram

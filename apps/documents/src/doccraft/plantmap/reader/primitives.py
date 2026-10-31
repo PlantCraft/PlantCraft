@@ -30,6 +30,10 @@ class Text:
     def height(self) -> float:
         return self.box[3] - self.box[1]
 
+    @property
+    def width(self) -> float:
+        return self.box[2] - self.box[0]
+
 
 @dataclass
 class Seg:

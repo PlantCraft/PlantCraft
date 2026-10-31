@@ -1,7 +1,8 @@
 """Which pages of a document are diagrams (P&IDs), what each one shows, and its text.
 
 A page is a diagram when the reader (``reader/``) finds tags on it joined by lines: at least
-three tagged items and one relation, or, on a scan (no lines traced yet), at least five tags.
+three tagged items and one relation; or at least five tags among many strokes (lines not
+traced); or, on a scan (no lines traced yet), at least five tags.
 Each diagram page is kept with what was read (items, relations, sheet number, unit) and gets
 a passage of its own, written in words ("P-1001 feeds E-1009"), so the search and the assistant
 find what the drawing shows, not only the words printed on it.
@@ -26,6 +27,10 @@ DRAWING_FORMATS = {
 }
 MIN_ITEMS = 3
 MIN_SCAN_TAGS = 5
+# A drawing whose lines were not traced is still a diagram when it holds enough tags among
+# enough strokes (a datasheet with tags has few strokes).
+MIN_TAGS_WITHOUT_LINES = 5
+MIN_STROKES = 150
 
 
 def read_diagrams(data: bytes, filename: str) -> list[dict[str, Any]]:
@@ -49,7 +54,12 @@ def read_diagrams(data: bytes, filename: str) -> list[dict[str, Any]]:
         if page["source"] == "raster":
             if len(tagged) < MIN_SCAN_TAGS:
                 continue
-        elif len(tagged) < MIN_ITEMS or not page["relations"]:
+        elif len(tagged) < MIN_ITEMS:
+            continue
+        elif not page["relations"] and (
+            len(tagged) < MIN_TAGS_WITHOUT_LINES
+            or page.get("stats", {}).get("strokes", 0) < MIN_STROKES
+        ):
             continue
         page["format"] = kind
         out.append(page)

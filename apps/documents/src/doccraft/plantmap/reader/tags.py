@@ -55,7 +55,6 @@ EQUIPMENT = {
     "K": "compressor",
     "B": "blower",
     "M": "mixer",
-    "X": "equipment",
     "S": "separator",
     "G": "generator",
 }
@@ -74,9 +73,10 @@ INSTRUMENT_CLASSES = (
     "instrument",
 )
 
-FULL = re.compile(r"^([A-Z]{1,5})[-_ ]?(\d{2,6})([A-Z]{0,2}(?:/[A-Z])?)$")
+# The number may carry a dotted sub-number (DIN/ISO 10628 style: TICSA 4750.03).
+FULL = re.compile(r"^([A-Z]{1,5})[-_ ]?(\d{2,6}(?:\.\d{1,3})?)([A-Z]{0,2}(?:/[A-Z])?)$")
 LETTERS = re.compile(r"^[A-Z]{1,5}$")
-NUMBER = re.compile(r"^\d{2,6}[A-Z]?$")
+NUMBER = re.compile(r"^\d{2,6}(?:\.\d{1,3})?[A-Z]?$")
 LINE_NUMBER = re.compile(r"^\d+(?:[.,/]\d+)?(?:\"|”|''|IN)?-[A-Z]{1,4}-\d{2,6}(?:-[A-Z0-9]+)*$")
 SHEET = re.compile(r"^(?:P&?ID|PFD|DWG|PID)[-_ ]?[A-Z0-9][A-Z0-9-]*$")
 
@@ -106,6 +106,8 @@ def parse(text: str, *, in_bubble: bool = False) -> Tag | None:
         return None  # a unit code (U-100), not a thing on the drawing
     if not in_bubble and letters in EQUIPMENT and (len(letters) == 1 or letters in EQUIPMENT_PAIRS):
         return Tag(tag, letters, number + suffix, "equipment", EQUIPMENT[letters])
+    if not in_bubble and len(letters) > 4:
+        return None  # a word such as DEXPI-2013; five-letter instrument codes sit in bubbles
     cls = instrument_class(letters)
     if cls is None:
         return None

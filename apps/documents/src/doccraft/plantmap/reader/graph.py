@@ -34,6 +34,7 @@ from typing import Any
 from doccraft.plantmap.reader import tags as isa
 from doccraft.plantmap.reader.primitives import (
     Box,
+    Circle,
     Page,
     Seg,
     Shape,
@@ -122,6 +123,7 @@ def recognise(page: Page) -> Result:
     used_text: set[int] = set()
     items: list[Item] = []
 
+    stacked_bubbles(page)
     bubbles = _bubbles(page, used_text, items)
     valves, valve_shapes = _valves(page)
     arrows, arrow_shapes = _arrows(page, valve_shapes)
@@ -150,6 +152,37 @@ def recognise(page: Page) -> Result:
 
 
 # ---------------------------------------------------------------- 1-2: tags and symbols
+
+
+def stacked_bubbles(page: Page) -> None:
+    """ISA letters over a number make an instrument bubble, whatever its outline (a circle, a
+    rounded box drawn as two arcs and two lines, or a ring the scan lost): one circle with both
+    words inside is added, unless a circle already holds them."""
+
+    letters = [
+        t
+        for t in page.texts
+        if isa.LETTERS.match(t.text) and 2 <= len(t.text) <= 5 and isa.instrument_class(t.text)
+    ]
+    numbers = [t for t in page.texts if isa.NUMBER.match(t.text)]
+    for top in letters:
+        best = None
+        for low in numbers:
+            dy = low.cy - top.cy
+            if 0.6 * top.height < dy < 2.6 * top.height and abs(low.cx - top.cx) < top.height:
+                if best is None or dy < best[0]:
+                    best = (dy, low)
+        if best is None:
+            continue
+        low = best[1]
+        if any(
+            math.hypot(t.cx - c.cx, t.cy - c.cy) < c.r for c in page.circles for t in (top, low)
+        ):
+            continue
+        cx = (top.cx + low.cx) / 2
+        cy = (top.cy + low.cy) / 2
+        r = max(top.box[2] - top.box[0], low.box[2] - low.box[0], low.cy - top.cy) * 0.75
+        page.circles.append(Circle(cx, cy, r))
 
 
 def _bubbles(page: Page, used: set[int], items: list[Item]) -> list[Item]:
@@ -409,6 +442,23 @@ def _words(page: Page, used: set[int]) -> list[tuple[Text, isa.Tag]]:
                 if tag:
                     box = (t.box[0], min(t.box[1], t2.box[1]), t2.box[2], max(t.box[3], t2.box[3]))
                     out.append((Text(f"{t.text} {t2.text}", box), tag))
+    # Turned labels along a vertical line read bottom to top: the letters below the number.
+    numbers = [
+        (k, t)
+        for k, t in free
+        if k not in taken and t.height > 1.5 * t.width and isa.NUMBER.match(t.text)
+    ]
+    for k, t in free:
+        if k in taken or not isa.LETTERS.match(t.text):
+            continue
+        for _, t2 in numbers:
+            gap = t.box[1] - t2.box[3]
+            if abs(t.cx - t2.cx) < 0.5 * t2.width and -0.5 < gap < 1.2 * t2.width:
+                tag = isa.parse(f"{t.text}-{t2.text}")
+                if tag:
+                    box = (min(t.box[0], t2.box[0]), t2.box[1], max(t.box[2], t2.box[2]), t.box[3])
+                    out.append((Text(f"{t.text} {t2.text}", box), tag))
+                break
     return out
 
 
@@ -509,6 +559,12 @@ def _equipment(page: Page, words, skip: set[int], connectors, bubbles, items) ->
         for t, tag in words
         if tag.family == "equipment" and not any(inside(t.cx, t.cy, r) for r in taken_regions)
     ]
+    # A tag written more than once (on the drawing and again in a data table under it): the
+    # drawing's label is the largest one.
+    largest: dict[str, float] = {}
+    for t, tag in tags:
+        largest[tag.tag] = max(largest.get(tag.tag, 0.0), min(t.height, t.width))
+    tags = [(t, tag) for t, tag in tags if min(t.height, t.width) >= 0.9 * largest[tag.tag]]
     pairs = sorted(
         (
             (box_distance(g[0], t.box), gi, ti)
@@ -540,6 +596,30 @@ def _equipment(page: Page, words, skip: set[int], connectors, bubbles, items) ->
             )
         )
         done_g.add(gi)
+        done_t.add(ti)
+    # A tag with no closed symbol near it: an outline drawn as separate strokes (a tank's two
+    # walls and two heads) around it, or beside it.
+    heights = sorted(t.height for t in page.texts) or [8.0]
+    text_h = heights[len(heights) // 2]
+    left = [(ti, t, tag) for ti, (t, tag) in enumerate(tags) if ti not in done_t]
+    found = {ti: _enclosure(page, t, text_h) for ti, t, _ in left}
+    for ti, t, tag in sorted(left, key=lambda x: found[x[0]] is None):
+        box = found[ti]
+        if box is None or any(i.tag == tag.tag for i in items):
+            continue
+        items.append(
+            Item(
+                id=tag.tag,
+                family="equipment",
+                cls=tag.cls,
+                box=box,
+                tag=tag.tag,
+                label=t.text,
+                confidence="medium",
+                why="equipment tag with an outline drawn around or beside it",
+                region=("box", *box),
+            )
+        )
         done_t.add(ti)
     for ti, (t, tag) in enumerate(tags):
         if ti not in done_t and not any(i.tag == tag.tag for i in items):
@@ -639,6 +719,56 @@ class Net:
     segs: list[Seg]
     touches: dict[str, list[tuple[float, float]]] = field(default_factory=dict)
     ends: list[tuple[float, float]] = field(default_factory=list)
+
+
+def _hits(page: Page, x: float, y: float, dx: int, dy: int, reach: float) -> list:
+    """The strokes a ray from (x, y) along an axis crosses, nearest first, with how far."""
+
+    out = []
+    for s in page.segs:
+        if dx:
+            lo, hi = sorted((s.y1, s.y2))
+            if not lo <= y <= hi or hi - lo < 1e-6:
+                continue
+            at = s.x1 + (s.x2 - s.x1) * (y - s.y1) / (s.y2 - s.y1)
+            d = (at - x) * dx
+        else:
+            lo, hi = sorted((s.x1, s.x2))
+            if not lo <= x <= hi or hi - lo < 1e-6:
+                continue
+            at = s.y1 + (s.y2 - s.y1) * (x - s.x1) / (s.x2 - s.x1)
+            d = (at - y) * dy
+        if 0 < d <= reach:
+            out.append((d, s))
+    out.sort(key=lambda h: h[0])
+    return out
+
+
+def _enclosure(page: Page, t: Text, text_h: float) -> Box | None:
+    """The outline around a tag, or around a point just beside it: rays left, right, up and
+    down all meet a stroke, and the box they make is a symbol's size (not a table cell, not the
+    sheet)."""
+
+    reach = 0.2 * max(page.width, page.height)
+    probes = [(0.0, 0.0)] + [
+        (fx * k * text_h, fy * k * text_h)
+        for k in (3, 5, 7)
+        for fx, fy in ((0, -1), (0, 1), (1, 0), (-1, 0))
+    ]
+    sides = ((-1, 0), (1, 0), (0, -1), (0, 1))
+    for ox, oy in probes:
+        x, y = t.cx + ox, t.cy + oy
+        hits = [_hits(page, x, y, dx, dy, reach) for dx, dy in sides]
+        if any(not h for h in hits):
+            continue
+        box = (x - hits[0][0][0], y - hits[2][0][0], x + hits[1][0][0], y + hits[3][0][0])
+        w, h = box[2] - box[0], box[3] - box[1]
+        if w < 2.5 * text_h or h < 2.5 * text_h or w > 0.3 * page.width or h > 0.4 * page.height:
+            continue
+        if box_distance(box, t.box) > 6 * text_h:
+            continue
+        return box
+    return None
 
 
 def _nets(page: Page, items: list[Item]) -> list[Net]:

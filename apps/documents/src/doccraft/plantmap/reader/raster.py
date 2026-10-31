@@ -12,11 +12,17 @@ import io
 import shutil
 import subprocess
 
-from doccraft.plantmap.reader import tags as isa
 from doccraft.plantmap.reader.primitives import Circle, Page, Text
 from doccraft.plantmap.reader.svg import DrawingError
 
 MAX_PIXELS = 60_000_000
+# A scan is read within a time and size budget: larger pages are scaled down first, and the
+# bubbles are read one by one only while time is left (real scans with hatching or dense text
+# once gave thousands of candidate circles and ran for minutes).
+WORK_PIXELS = 16_000_000
+MAX_BUBBLES = 250
+BUDGET_SECONDS = 90.0
+MAX_RADII = 24
 OCR_SECONDS = 120
 
 
@@ -38,9 +44,16 @@ def read_image(data: bytes) -> Page:
 def read_image_array(image, *, scale: float) -> Page:
     """``scale``: pixels per point, so the page keeps the drawing's size in points."""
 
+    import time
+
+    started = time.monotonic()
     gray = image.convert("L")
     width, height = gray.size
     page = Page(width=width / scale, height=height / scale, source="raster")
+    if width * height > WORK_PIXELS:
+        shrink = (WORK_PIXELS / (width * height)) ** 0.5
+        gray = gray.resize((max(1, int(width * shrink)), max(1, int(height * shrink))))
+        scale *= shrink
     words = ocr(gray)
     if words is None:
         page.notes.append("This drawing is a scan and OCR (Tesseract) is not installed here.")
@@ -48,7 +61,18 @@ def read_image_array(image, *, scale: float) -> Page:
     heights = sorted(b[3] - b[1] for _, b in words) or [12]
     text_px = heights[len(heights) // 2]
     taken = []
-    for cx, cy, r in find_circles(gray, int(1.6 * text_px), int(4.5 * text_px)):
+    circles = find_circles(gray, int(1.6 * text_px), int(4.5 * text_px))
+    if len(circles) > MAX_BUBBLES:
+        page.notes.append(
+            f"{len(circles)} round shapes found; only the {MAX_BUBBLES} clearest were read."
+        )
+        circles = circles[:MAX_BUBBLES]
+    for n, (cx, cy, r) in enumerate(circles):
+        if time.monotonic() - started > BUDGET_SECONDS:
+            page.notes.append(
+                f"Time budget reached: {len(circles) - n} round shapes were not read."
+            )
+            break
         inner = read_bubble(gray, cx, cy, r, 0.82) or read_bubble(gray, cx, cy, r, 0.93)
         if not inner:
             continue
@@ -63,7 +87,9 @@ def read_image_array(image, *, scale: float) -> Page:
         if any((mx - cx) ** 2 + (my - cy) ** 2 < r * r for cx, cy, r in taken):
             continue
         page.texts.append(Text(text, (x0 / scale, y0 / scale, x1 / scale, y1 / scale)))
-    _stacked_bubbles(page)
+    from doccraft.plantmap.reader.graph import stacked_bubbles
+
+    stacked_bubbles(page)
     page.notes.append("Scanned drawing: tags and their places are read; lines are not traced.")
     return page
 
@@ -84,7 +110,9 @@ def find_circles(gray, rmin: int, rmax: int) -> list[tuple[float, float, float]]
     h, w = dark.shape
     angles = np.linspace(0, 2 * np.pi, 40, endpoint=False)
     found: list[tuple[float, float, float, float]] = []
-    for r in range(max(rmin // step, 4), max(rmax // step, 5) + 1):
+    low, high = max(rmin // step, 4), max(rmax // step, 5)
+    stride = max(1, (high - low + 1) // MAX_RADII)
+    for r in range(low, high + 1, stride):
         acc = np.zeros(h * w, dtype=np.int32)
         for a in angles:
             cx = (xs - r * np.cos(a)).round().astype(np.int64)
@@ -92,11 +120,15 @@ def find_circles(gray, rmin: int, rmax: int) -> list[tuple[float, float, float]]
             ok = (cx >= 0) & (cx < w) & (cy >= 0) & (cy < h)
             acc += np.bincount(cy[ok] * w + cx[ok], minlength=h * w).astype(np.int32)
         best = np.nonzero(acc >= 0.8 * len(angles))[0]
+        if len(best) > 20_000:  # a filled or hatched area votes everywhere: keep the strongest
+            best = best[np.argsort(acc[best])[-20_000:]]
         for idx in best:
             found.append((float(acc[idx]), float(idx % w), float(idx // w), float(r)))
     found.sort(reverse=True)
     kept: list[tuple[float, float, float]] = []
-    for votes, x, y, r in found:
+    for votes, x, y, r in found[:200_000]:
+        if len(kept) >= 2 * MAX_BUBBLES:
+            break
         if all((x - kx) ** 2 + (y - ky) ** 2 > (max(r, kr)) ** 2 for kx, ky, kr in kept):
             kept.append((x, y, r))
     return [(x * step, y * step, r * step) for x, y, r in kept]
@@ -172,24 +204,3 @@ def _clean(word: str) -> str:
         number = number.replace("O", "0").replace("o", "0").replace("l", "1").replace("I", "1")
         word = f"{letters}-{number}"
     return word
-
-
-def _stacked_bubbles(page: Page) -> None:
-    """Letters over a number (an ISA bubble) become one circle with both words inside."""
-
-    letters = [t for t in page.texts if isa.LETTERS.match(t.text) and 2 <= len(t.text) <= 5]
-    numbers = [t for t in page.texts if isa.NUMBER.match(t.text)]
-    for top in letters:
-        best = None
-        for low in numbers:
-            dy = low.cy - top.cy
-            if 0.6 * top.height < dy < 2.6 * top.height and abs(low.cx - top.cx) < top.height:
-                if best is None or dy < best[0]:
-                    best = (dy, low)
-        if best is None:
-            continue
-        low = best[1]
-        cx = (top.cx + low.cx) / 2
-        cy = (top.cy + low.cy) / 2
-        r = max(top.box[2] - top.box[0], low.box[2] - low.box[0], low.cy - top.cy) * 0.9
-        page.circles.append(Circle(cx, cy, r))
