@@ -1,0 +1,58 @@
+# PlantCraft installation file (draft, docs/installation-file.md).
+#
+# What is decided BEFORE the suite runs, by whoever installs the server, and that no account
+# inside PlantCraft can change: which apps exist, how big the machine is, the network, and the
+# security ceilings. Copy it to /etc/plantcraft/installation.conf (owned by root, mode 644):
+#
+#   sudo install -o root -g root -m 644 installation.conf.example /etc/plantcraft/installation.conf
+#
+# install.sh reads it on every run (install, update, "apply settings") and its values win over
+# the command line and over .env. PlantCraft only reads what install.sh derives from it: the
+# file is never mounted in a container, so a compromised or careless administrator account
+# cannot widen it. Settings › Installation shows each of these as "Set by the installation".
+# To change one: edit this file as root, then run `sudo /opt/plantcraft/install.sh`.
+#
+# Lines are KEY=value; # starts a comment. An empty value keeps install.sh's default.
+
+# --- What is installed ------------------------------------------------------------------------
+# Apps of the suite, comma separated (analytics, historian, view, alarms, models, documents),
+# or "all". Apps left out are not installed and cannot be turned on from the interface.
+APPS=analytics,historian,view,alarms
+# Can an administrator add, upgrade or remove apps from Settings › Apps? off: only this file
+# and `install.sh --add` can.
+WEB_APP_INSTALL=off
+# off | on | public (a demo open to visitors).
+DEMO=off
+
+# --- Machine size (shared with install.sh --machine, docs/machine-profile.md) ------------------
+# auto | small | medium | large | xlarge | off. auto reads the CPUs and memory Docker sees.
+# A size fills every CPU, memory, worker and slot setting; a value set by hand in .env is kept.
+MACHINE=auto
+# Most CPUs and memory the whole suite may take on this server (empty: all of it). Leaves room
+# for other programs on a shared server; the machine size is computed inside this ceiling.
+MAX_CPUS=
+MAX_MEMORY=
+
+# --- Load ceilings (an administrator may set lower values inside PlantCraft, never higher) ----
+# Signals the Historian may record, analysis runs at once, people signed in at once.
+MAX_SIGNALS=
+MAX_PARALLEL_RUNS=
+MAX_SESSIONS=
+
+# --- Network ------------------------------------------------------------------------------------
+# Names and addresses people type in the browser (space separated); empty: this server's.
+HOSTNAME=
+HTTPS_PORT=443
+BIND_ADDRESS=0.0.0.0
+# First three numbers of the seven internal /24 networks (172.30 gives 172.30.10.0/24 to
+# 172.30.16.0/24). Change only if they clash with a plant or office network.
+NETWORK_BASE=172.30
+
+# --- Security ceilings -------------------------------------------------------------------------
+# Language models: off (never, in the whole installation) | on (an administrator may add them;
+# they stay off until one does).
+LLM=off
+# The plant's time zone (IANA name, e.g. America/Sao_Paulo); empty: the server's. With
+# LOCK_TIMEZONE=yes, Settings › Installation shows it but cannot change it.
+TIMEZONE=
+LOCK_TIMEZONE=no

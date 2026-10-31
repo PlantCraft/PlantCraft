@@ -10,6 +10,7 @@
 #   ./install.sh --restore NAME  return to a backup; the current state is set aside, not deleted
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
+#   ./install.sh --check         check this server's requirements (preflight.sh) and change nothing
 #   ./install.sh --uninstall     stop and remove the containers; data and backups are kept
 #   ./install.sh --uninstall --purge   also delete data, backups and the suite's images
 #   ./install.sh --add FILE.pcapp       install or upgrade an app from a signed package
@@ -20,6 +21,9 @@
 #                                worker; --ca: PlantCraft's local-ca-root.crt; docs/compute.md)
 #
 # Options: --prefix DIR (install folder, default /opt/plantcraft or $PLANTCRAFT_HOME),
+#          --config FILE (the installation file, default /etc/plantcraft/installation.conf when
+#          it exists: apps, machine size, network and security ceilings decided outside the
+#          platform; its values win over these options; docs/installation-file.md),
 #          --with-linkcraft, --with-dashcraft, --with-histcraft,
 #          --with-alarmcraft, --with-modelcraft, --with-doccraft (turn that app on; LinkCraft is on by default when the bundle
 #          has it), --all-apps (every app the bundle has),
@@ -92,6 +96,11 @@ BACKUP_NAME=""
 ALLOW_UNSIGNED=0
 ALLOW_EMULATION=0
 PUBLISHER_KEY=""
+# The installation file (docs/installation-file.md): read once, after the options.
+INSTALLATION_CONF="${PLANTCRAFT_INSTALLATION_CONF:-}"
+CONF_ENV=()      # KEY=VALUE pairs it sets in .env, applied last by write_env
+CONF_APPS=""     # " <id> <id> " when it names the apps: the others are switched off
+CONF_LOCKED=""   # the .env keys it decided, for Settings › Installation ("Set by the installation")
 # An update in progress (do_install): the version it started from, its backup, and whether the
 # suite is being changed (a failure then returns to UPDATE_FROM by itself, on_exit).
 UPDATE_FROM=""
@@ -119,6 +128,9 @@ while [ $# -gt 0 ]; do
         --list-backups) ACTION="list-backups" ;;
         --drill) ACTION="drill" ;;
         --diagnostics) ACTION="diagnostics" ;;
+        --check) ACTION="check" ;;
+        --config) [ $# -ge 2 ] || die "--config needs a file"; INSTALLATION_CONF="$2"; shift ;;
+        --config=*) INSTALLATION_CONF="${1#*=}" ;;
         --restore) [ $# -ge 2 ] || die "--restore needs a backup name (see --list-backups)"; ACTION="restore"; BACKUP_NAME="$2"; shift ;;
         --add) [ $# -ge 2 ] || die "--add needs a package file"; ACTION="add"; APP_PACKAGE="$2"; shift ;;
         --remove) [ $# -ge 2 ] || die "--remove needs an app id"; ACTION="remove"; APP_ID="$2"; shift ;;
@@ -161,6 +173,98 @@ if [ "$ACTION" = "worker" ] && [ -z "${PLANTCRAFT_HOME:-}" ] && [ "$PREFIX" = "$
     fi
 fi
 [ "$PURGE" = 0 ] || [ "$ACTION" = "uninstall" ] || die "--purge only goes with --uninstall"
+
+# The installation file ----------------------------------------------------------------------
+# Decided outside the platform by whoever installs the server: it must be owned by root and
+# writable by nobody else (like sshd's StrictModes), or it is refused. Never mounted in a
+# container: PlantCraft sees only what is derived from it in .env.
+conf_value() { sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$INSTALLATION_CONF" | sed 's/[[:space:]]*#.*$//; s/^"//; s/"$//' | tail -n 1; }
+conf_set() { CONF_ENV+=("$1=$2"); CONF_LOCKED="${CONF_LOCKED:+$CONF_LOCKED,}$1"; }
+conf_app_id() {
+    case "$1" in
+        analytics | link | linkcraft) echo linkcraft ;; historian | hist | histcraft) echo histcraft ;;
+        view | dash | dashcraft) echo dashcraft ;; alarms | alarm | alarmcraft) echo alarmcraft ;;
+        models | model | modelcraft) echo modelcraft ;; documents | doc | doccraft) echo doccraft ;;
+        *) return 1 ;;
+    esac
+}
+load_installation_conf() {
+    if [ -z "$INSTALLATION_CONF" ]; then
+        [ -f /etc/plantcraft/installation.conf ] || return 0
+        INSTALLATION_CONF=/etc/plantcraft/installation.conf
+    fi
+    [ -f "$INSTALLATION_CONF" ] || die "--config: $INSTALLATION_CONF is not a file"
+    local owner mode value app id
+    owner="$(stat -c %u "$INSTALLATION_CONF")"
+    mode="$(stat -c %a "$INSTALLATION_CONF")"
+    if [ "$DEV" = 0 ] && { [ "$owner" != 0 ] || [ $((8#$mode & 8#022)) -ne 0 ]; }; then
+        die "$INSTALLATION_CONF must be owned by root and writable by root only (it is owner $owner, mode $mode): sudo chown root:root $INSTALLATION_CONF && sudo chmod 644 $INSTALLATION_CONF"
+    fi
+    log "Installation file: $INSTALLATION_CONF"
+    value="$(conf_value APPS)"
+    if [ -n "$value" ]; then
+        if [ "$value" = all ]; then
+            ALL_APPS=1
+        else
+            CONF_APPS=" "
+            for app in $(printf '%s' "$value" | tr ',' ' '); do
+                id="$(conf_app_id "$app")" || die "$INSTALLATION_CONF: APPS has an unknown app '$app'"
+                CONF_APPS="$CONF_APPS$id "
+            done
+            WITH_APPS="$CONF_APPS"
+        fi
+        CONF_LOCKED="${CONF_LOCKED:+$CONF_LOCKED,}COMPOSE_PROFILES"
+    fi
+    value="$(conf_value WEB_APP_INSTALL)"
+    case "$value" in "") ;; on | off) conf_set PLANTCRAFT_APP_INSTALL "$value" ;; *) die "$INSTALLATION_CONF: WEB_APP_INSTALL is on or off" ;; esac
+    value="$(conf_value DEMO)"
+    case "$value" in "" | off) ;; on) WITH_DEMO=1 ;; public) WITH_DEMO=1; PUBLIC_DEMO=1 ;; *) die "$INSTALLATION_CONF: DEMO is off, on or public" ;; esac
+    value="$(conf_value LLM)"
+    case "$value" in "") ;; off | on) conf_set PLANTCRAFT_LLM "$([ "$value" = off ] && echo off || echo '')" ;; *) die "$INSTALLATION_CONF: LLM is off or on" ;; esac
+    value="$(conf_value MACHINE)"
+    # The machine profile (install.sh --machine, thread "CPU and processes") reads PLANTCRAFT_MACHINE.
+    # With PR #20 its MACHINE variable is set here too, so the file wins over --machine.
+    if [ -n "$value" ]; then MACHINE="$value"; conf_set PLANTCRAFT_MACHINE "$value"; fi
+    value="$(conf_value MAX_CPUS)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_MAX_CPUS "$value"; fi
+    value="$(conf_value MAX_MEMORY)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_MAX_MEMORY "$value"; fi
+    value="$(conf_value HOSTNAME)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_HOSTNAME "$value"; fi
+    value="$(conf_value HTTPS_PORT)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_HTTPS_PORT "$value"; fi
+    value="$(conf_value BIND_ADDRESS)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_BIND_ADDRESS "$value"; fi
+    value="$(conf_value NETWORK_BASE)"
+    if [ -n "$value" ]; then
+        [[ "$value" =~ ^[0-9]{1,3}\.[0-9]{1,3}$ ]] || die "$INSTALLATION_CONF: NETWORK_BASE is like 172.30"
+        local net n=10
+        for net in PLANT APPS EDGE DEMO HISTDB LLM EGRESS; do
+            conf_set "PLANTCRAFT_${net}_SUBNET" "$value.$n.0/24"
+            n=$((n + 1))
+        done
+        conf_set PLANTCRAFT_PROXY_ADDRESS "$value.11.250"
+    fi
+    value="$(conf_value TIMEZONE)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_TIMEZONE "$value"; fi
+    value="$(conf_value LOCK_TIMEZONE)"; if [ "$value" = yes ]; then conf_set PLANTCRAFT_TIMEZONE_LOCKED true; fi
+    for value in MAX_SIGNALS MAX_PARALLEL_RUNS MAX_SESSIONS; do
+        app="$(conf_value "$value")"
+        if [ -n "$app" ]; then conf_set "PLANTCRAFT_$value" "$app"; fi
+    done
+}
+apply_installation_conf() { # apply_installation_conf ENV_FILE: last step of write_env
+    [ -n "$INSTALLATION_CONF" ] || return 0
+    local pair profiles app
+    for pair in "${CONF_ENV[@]}"; do env_set "${pair%%=*}" "${pair#*=}" "$1"; done
+    if [ -n "$CONF_APPS" ]; then
+        profiles="$(env_get COMPOSE_PROFILES "$1")"
+        for app in $(app_ids); do
+            if [[ ",$profiles," == *",$app,"* ]] && [[ "$CONF_APPS" != *" $app "* ]]; then
+                warn "$app is not in APPS of $INSTALLATION_CONF: switched off"
+                profiles="$(printf '%s' ",$profiles," | sed "s/,$app,/,/; s/^,//; s/,\$//")"
+            fi
+        done
+        env_set COMPOSE_PROFILES "$profiles" "$1"
+        env_set PLANTCRAFT_APPS "$(suite_apps_setting "$profiles" "$(env_get PLANTCRAFT_APPS "$1")" "$1")" "$1"
+    fi
+    env_set PLANTCRAFT_INSTALLATION_LOCKED "$CONF_LOCKED" "$1"
+    env_set PLANTCRAFT_INSTALLATION_CONF_SHA256 "$(sha256sum "$INSTALLATION_CONF" | cut -c 1-64)" "$1"
+}
 
 confirm() {
     [ "$ASSUME_YES" = 1 ] && return 0
@@ -551,6 +655,7 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
     # the Docker socket.
     env_set PLANTCRAFT_INSTALL_DIR "$PREFIX" "$env"
     env_set PLANTCRAFT_DOCKER_GID "$(docker_gid)" "$env"
+    apply_installation_conf "$env"
     fit_cpu_limits "$env"
 }
 
@@ -1350,8 +1455,21 @@ do_worker() {
     log "The compute worker is running. Pause or revoke it in PlantCraft › Settings › Compute."
 }
 
+do_check() {
+    [ -x "$BUNDLE_DIR/preflight.sh" ] || die "preflight.sh is missing next to install.sh"
+    PLANTCRAFT_INSTALLATION_CONF="${INSTALLATION_CONF:-/etc/plantcraft/installation.conf}" \
+        "$BUNDLE_DIR/preflight.sh" --prefix "$PREFIX"
+}
+
+case "$ACTION" in install | check) load_installation_conf ;; esac
 case "$ACTION" in
-    install) do_install ;;
+    check) do_check ;;
+    install)
+        # A server that fails the requirements stops here, before anything is changed.
+        if [ -x "$BUNDLE_DIR/preflight.sh" ] && [ "$DEV" = 0 ] && [ "${PLANTCRAFT_SKIP_CHECK:-0}" != 1 ]; then
+            do_check || die "the requirements check failed (above); nothing was changed. PLANTCRAFT_SKIP_CHECK=1 skips it."
+        fi
+        do_install ;;
     worker) do_worker ;;
     add) do_add ;;
     remove) do_remove ;;
