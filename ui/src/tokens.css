@@ -129,6 +129,7 @@
   --pc-app-histcraft: #755625;
   --pc-app-modelcraft: #8a4a2b;
   --pc-app-doccraft: #415a6f;
+  --pc-app-operations: #4a4f57;
 
   /* Elevation */
   --pc-shadow-color: #000000;
@@ -211,6 +212,7 @@
     --pc-app-modelcraft: #b15f37;
   --pc-app-doccraft: #577894;
     --pc-app-doccraft: #577894;
+    --pc-app-operations: #6b727c;
     --pc-shadow-color: #000000;
     --pc-scrim: #000000;
   }

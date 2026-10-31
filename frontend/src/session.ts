@@ -12,6 +12,16 @@ export function useIsAdmin() {
   return useContext(SessionContext).isAdmin;
 }
 
+/** The built-in Operations app's id in a person's app roles (plantcraft.auth.access.OPERATIONS_APP). */
+export const OPERATIONS_APP = "operations";
+
+/** Opens Operations (status, load, logs): an administrator, the Operations role, or a public
+ * demo's visitor (read-only). */
+export function useCanOperate() {
+  const { access, isAdmin } = useContext(SessionContext);
+  return isAdmin || Boolean(access?.can_operate) || Boolean(access?.admin_view);
+}
+
 /** Reads the administration pages: an administrator, or a public demo's visitor (read-only). */
 export function useAdminView() {
   const { access, isAdmin } = useContext(SessionContext);

@@ -324,6 +324,25 @@ def administration_reader(username: CurrentUser, rt: Runtime) -> str:
 AdminView = Annotated[str, Depends(administration_reader)]
 
 
+def operations_reader(request: Request, username: CurrentUser, rt: Runtime) -> str:
+    """Who may open Operations (status, load, logs): an administrator, a person with the
+    Operations role (``Access.can_operate``), or the public demo's visitor (read-only)."""
+
+    demo = public_demo()
+    if demo is not None and username == demo.username:
+        return username
+    _username, access = request_access(request, rt)
+    if access is None or not access.can_operate:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=t("Only admins and people with the Operations role can open this."),
+        )
+    return username
+
+
+OperationsView = Annotated[str, Depends(operations_reader)]
+
+
 def current_scope(request: Request, rt: Runtime) -> AssetScope:
     """The assets the signed-in person sees (docs/asset-scope.md), computed once per request."""
 

@@ -41,7 +41,8 @@ from plantcraft.platform import Platform, Workspace
 from plantcraft.platform.asset_scope import EVERYTHING, AssetScope, build_scope, scope_roots
 from plantcraft.specialists import KeyFile, SpecialistChat, SpecialistStore
 from plantcraft.watch import SuiteWatch
-from plantcraft.watch.recorder import HealthRecorder, ServerMetrics
+from plantcraft.watch.logs import SuiteLogs
+from plantcraft.watch.recorder import HealthRecorder, ServerMetrics, server_urls
 
 LOGGER = logging.getLogger(__name__)
 
@@ -211,6 +212,8 @@ class ApiRuntime:
             certificates=lambda: [suite_https(), *self.datalayer.certificates()],
             # Tasks that wait with no compute worker able to run them (Settings › Compute).
             compute=self.compute.waiting_without_worker,
+            # The errors each server logged a minute (the load alerts, plantcraft.watch.load).
+            error_rates=lambda: self.health_signals.error_rates,
         )
         # The suite's health as signals of the Historian's source "System", every minute.
         self.health_signals = HealthRecorder(
@@ -222,6 +225,8 @@ class ApiRuntime:
                 self.workspace.db, self.workspace.events, self.contributions
             ).apply,
         )
+        # Operations › Logs: every server's own log, read back with filters.
+        self.suite_logs = SuiteLogs(self.tokens, server_urls(), running=self._running_services)
         # Notifications the apps send (docs/notifications.md); the SMTP password beside the database.
         secret = os.environ.get("PLANTCRAFT_MAIL_SECRET_FILE", "").strip() or Path(
             scenario.storage.sqlite_path

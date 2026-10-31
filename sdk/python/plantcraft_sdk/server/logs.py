@@ -185,6 +185,13 @@ def configure_logging(
     return path
 
 
+def current_file() -> Path | None:
+    """The file ``configure_logging`` writes to in this process (None without one)."""
+
+    found = _configured.get("file")
+    return found if isinstance(found, Path) else None
+
+
 __all__ = [
     "BACKUPS",
     "JsonFormatter",
@@ -192,6 +199,7 @@ __all__ = [
     "REQUEST_ID",
     "configure_logging",
     "counts",
+    "current_file",
     "log_file",
     "redact",
 ]

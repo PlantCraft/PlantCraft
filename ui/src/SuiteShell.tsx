@@ -198,7 +198,7 @@ export const ADMIN_PATH = "admin";
  * the Historian that collects, the apps that analyse, model and run, View where results are
  * seen, and PlantCraft last (configuration, seldom opened).
  */
-export const SUITE_ORDER = ["desk", "histcraft", "linkcraft", "modelcraft", "alarmcraft", "doccraft", "simcraft", "dashcraft", "processcraft"];
+export const SUITE_ORDER = ["desk", "histcraft", "linkcraft", "modelcraft", "alarmcraft", "doccraft", "simcraft", "dashcraft", "operations", "processcraft"];
 
 function suiteRank(entry: SuiteApp): number {
   const at = SUITE_ORDER.indexOf(appIdFor(entry.id) ?? "");

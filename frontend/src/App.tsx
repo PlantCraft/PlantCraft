@@ -1,7 +1,7 @@
 /** The platform's front end: sign-in, then two apps in one page: Desk, each
  * person's day, at "/", and PlantCraft, the suite's setup and administration, at "/admin". */
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { Activity, AlertTriangle, ArrowRight, Building2, CalendarDays, ChevronDown, ClipboardCheck, CloudDownload, DatabaseBackup, Languages, LayoutDashboard, LoaderCircle, LockKeyhole, Network, Package, ListTodo, Settings2, StickyNote, ShieldCheck, SlidersHorizontal, Sun, UserRound, Users, XCircle } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, Building2, CalendarDays, ChevronDown, ClipboardCheck, CloudDownload, DatabaseBackup, Gauge, Languages, LayoutDashboard, LoaderCircle, LockKeyhole, Network, Package, ListTodo, ScrollText, Settings2, StickyNote, ShieldCheck, SlidersHorizontal, Sun, UserRound, Users, XCircle } from "lucide-react";
 import { announceMessagesChanged, AppFrames, appPrefix, claimPanel, isFramed, otherPanelOpen, PythonMark, sanitizeIcon, SuiteShell, toApp, toFrame, FRAME_ATTR, FRAME_OFF, type FrameState, type ShellNavItem, type SuiteApp } from "@plantcraft/ui";
 import { api, requestJson, UNAUTHORIZED_EVENT } from "./api";
 import { BrandMark } from "./Brand";
@@ -22,7 +22,7 @@ import { SetupPage } from "./SetupPage";
 import { platformTour } from "./PlatformTour";
 import SuiteHealthBanner from "./SuiteHealthBanner";
 import { LANGUAGES, language, setLanguage, t, type Language } from "./i18n";
-import { SessionContext, canSee, safeNext, useAccess } from "./session";
+import { SessionContext, canSee, safeNext, useAccess, useCanOperate } from "./session";
 import { suiteApi, TOKEN_RENEW_MS } from "./suiteApi";
 import { syncPreferences } from "./preferencesApi";
 import type { AccessInfo, HomeData, Installation, SessionInfo } from "./types";
@@ -34,6 +34,8 @@ const PersonPage = lazy(() => import("./People"));
 const HealthPage = lazy(() => import("./OperationsPage").then((module) => ({ default: module.HealthPage })));
 const BackupsPage = lazy(() => import("./OperationsPage").then((module) => ({ default: module.BackupsPage })));
 const UpdatesPage = lazy(() => import("./OperationsPage").then((module) => ({ default: module.UpdatesPage })));
+const LogsPage = lazy(() => import("./OperationsLogs").then((module) => ({ default: module.LogsPage })));
+const LoadAlertsPage = lazy(() => import("./OperationsLimits").then((module) => ({ default: module.LoadAlertsPage })));
 const LanguageModelPage = lazy(() => import("./LanguageModel"));
 const AssistantAccessPage = lazy(() => import("./AssistantAccess"));
 const ExecutionsPage = lazy(() => import("./Executions"));
@@ -141,7 +143,7 @@ function LanguageSelect() {
 
 // Old addresses that moved (2026-10-20): Settings left, Users and App keys split.
 const MOVED: Record<string, string> = { "/settings": "/admin", "/settings/users": "/users", "/app-keys": "/apps/keys", "/data/import": "/asset-import", "/operations": "/health", "/setup/backups": "/backups", "/inbox": "/messages/notifications", "/routines": "/todo" };
-const EXACT_PATHS = ["/", "/widgets", "/admin", "/attention", "/calendar", "/todo", "/notes", "/team", "/assets", "/data", "/asset-import", "/asset-import/review", "/executions", "/users", "/users/groups", "/users/specialists", "/apps/keys", "/apps", "/setup", "/setup/language-model", "/setup/assistant-access", "/setup/email", "/setup/calendars", "/setup/corporate-login", "/health", "/backups", "/updates", "/help", "/messages", "/actions", "/setup/audit", "/setup/notebooks", "/setup/compute", "/setup/installation", "/setup/apps", "/preferences", "/notebooks", "/assistant", "/assistant/new"];
+const EXACT_PATHS = ["/", "/widgets", "/admin", "/attention", "/calendar", "/todo", "/notes", "/team", "/assets", "/data", "/asset-import", "/asset-import/review", "/executions", "/users", "/users/groups", "/users/specialists", "/apps/keys", "/apps", "/setup", "/setup/language-model", "/setup/assistant-access", "/setup/email", "/setup/calendars", "/setup/corporate-login", "/health", "/ops/logs", "/ops/alerts", "/backups", "/updates", "/help", "/messages", "/actions", "/setup/audit", "/setup/notebooks", "/setup/compute", "/setup/installation", "/setup/apps", "/preferences", "/notebooks", "/assistant", "/assistant/new"];
 /** The id after a prefix ("/messages/12" -> "12"), or null. */
 function idAfter(path: string, prefix: string) {
   return path.startsWith(prefix) && path.length > prefix.length ? decodeURIComponent(path.slice(prefix.length)) : null;
@@ -149,6 +151,12 @@ function idAfter(path: string, prefix: string) {
 /** The pages that are Desk's, the person's own work; the rest are PlantCraft's. */
 export function isDeskPath(path: string) {
   return ["/", "/widgets", "/calendar", "/notebooks", "/todo", "/notes", "/team", "/attention", "/messages", "/actions", "/assistant"].includes(path) || ["/messages/", "/actions/", "/people/", "/groups/", "/assistant/"].some((prefix) => path.startsWith(prefix));
+}
+/** Operations, built in like Desk: the suite's status, load and logs, its backups and updates
+ * (docs/operations.md, section 4). Its pages keep the addresses they had in PlantCraft. */
+export const OPERATIONS_PATHS = ["/health", "/ops/logs", "/ops/alerts", "/backups", "/updates"];
+export function isOperationsPath(path: string) {
+  return OPERATIONS_PATHS.includes(path);
 }
 function isKnownPath(path: string) {
   return EXACT_PATHS.includes(path) || (path.startsWith("/assets/") && path.length > 8) || path === "/asset-types" || path.startsWith("/asset-types/") || idAfter(path, "/people/") !== null || idAfter(path, "/groups/") !== null || idAfter(path, "/messages/") !== null || idAfter(path, "/actions/") !== null || /^\/assistant\/\d+$/.test(path);
@@ -168,6 +176,7 @@ function useHome() {
 
 function Page({ path, data, username, onInboxChange }: { path: string; data: HomeData; username: string; onInboxChange: () => void }) {
   const access = useAccess();
+  const operate = useCanOperate();
   if (path === "/") return <DeskToday data={data} me={data.users.find((item) => item.username === username) ?? null} />;
   if (path === "/widgets") return <WidgetGalleryPage data={data} me={data.users.find((item) => item.username === username) ?? null} />;
   if (path === "/calendar") return <Suspense fallback={PAGE_LOADING}><CalendarPage /></Suspense>;
@@ -205,6 +214,8 @@ function Page({ path, data, username, onInboxChange }: { path: string; data: Hom
   if (path === "/apps/keys") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><AppKeysPage /></Suspense> : <NoAccess />;
   if (path === "/apps") return canSee(access, "administration") ? <Suspense fallback={PAGE_LOADING}><AppsPage /></Suspense> : <NoAccess />;
   if (path === "/health") return <Suspense fallback={PAGE_LOADING}><HealthPage /></Suspense>;
+  if (path === "/ops/logs") return operate ? <Suspense fallback={PAGE_LOADING}><LogsPage /></Suspense> : <NoAccess />;
+  if (path === "/ops/alerts") return operate ? <Suspense fallback={PAGE_LOADING}><LoadAlertsPage /></Suspense> : <NoAccess />;
   if (path === "/backups") return canSee(access, "administration") ? <Suspense fallback={PAGE_LOADING}><BackupsPage /></Suspense> : <NoAccess />;
   if (path === "/updates") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><UpdatesPage /></Suspense> : <NoAccess />;
   if (path === "/help") return <HelpPage apps={data.apps} />;
@@ -262,6 +273,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const [lastApp, setLastApp] = useState<{ prefix: string; url: string } | null>(null);
   const offFrame = window.location.search.includes(FRAME_OFF);
   const access = useAccess();
+  const operate = useCanOperate();
   // Bumped after a conversation was read so the messages button's badge updates at once.
   const [inboxRefresh, setInboxRefresh] = useState(0);
   const bumpInbox = useCallback(() => setInboxRefresh((value) => value + 1), []);
@@ -288,6 +300,9 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const me = data.users.find((item) => item.username === username) ?? null;
   if (EMBEDDED) return <EmbeddedMessages path={path} data={data} username={username} onRead={bumpInbox} />;
   const desk = isDeskPath(path);
+  // Operations is an app of its own for the people who may open it; for everyone else /health
+  // stays PlantCraft's read-only "System health".
+  const operating = operate && isOperationsPath(path);
   // Desk: the person's day. PlantCraft: the plant's assets for everyone; the rest is administration.
   // Messages and the Assistant are not Desk pages any more: their buttons above the
   // person's name open them over any screen; /messages and /assistant stay as their full pages.
@@ -305,19 +320,25 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
     // Notebooks last, the most complex; the Python logo says what they are.
     ...(admin || notebooksOn ? [{ to: "/notebooks", label: t("Notebooks"), icon: <PythonMark /> }] : []),
   ];
-  const nav: ShellNavItem[] = desk ? deskNav : [
+  const opsNav: ShellNavItem[] = [
+    { to: "/health", label: t("Status"), icon: <Activity /> },
+    { to: "/ops/logs", label: t("Logs"), icon: <ScrollText /> },
+    { to: "/ops/alerts", label: t("Load alerts"), icon: <Gauge /> },
+    ...(adminView ? [{ to: "/backups", label: t("Backups"), icon: <DatabaseBackup />, section: administration }] : []),
+    ...(admin ? [{ to: "/updates", label: t("Updates"), icon: <CloudDownload />, section: administration }] : []),
+  ];
+  const nav: ShellNavItem[] = desk ? deskNav : operating ? opsNav : [
     { to: "/admin", label: t("Overview"), icon: <LayoutDashboard /> },
     { to: "/assets", label: t("Assets"), icon: <Network />, match: (current) => current === "/assets" || current.startsWith("/assets/") || current.startsWith("/asset-import") || current.startsWith("/asset-types") },
-    { to: "/health", label: t("System health"), icon: <Activity /> },
+    // Who opens Operations finds the suite's status there; everyone else reads it here.
+    ...(operate ? [] : [{ to: "/health", label: t("System health"), icon: <Activity /> }]),
     { to: "/preferences", label: t("Preferences"), icon: <SlidersHorizontal /> },
     // A public demo's visitor reads People, Apps and Backups too.
     ...(adminView ? [
       { to: "/users", label: t("People"), icon: <Users />, section: administration },
       { to: "/apps", label: t("Apps"), icon: <Package />, section: administration },
-      { to: "/backups", label: t("Backups"), icon: <DatabaseBackup />, section: administration },
     ] : []),
     ...(admin ? [
-      { to: "/updates", label: t("Updates"), icon: <CloudDownload />, section: administration },
       { to: "/setup", label: t("Settings"), icon: <Settings2 />, section: administration, match: (current: string) => current.startsWith("/setup") },
     ] : []),
   ];
@@ -325,6 +346,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const apps: SuiteApp[] = [
     { id: "desk", name: "Desk", url: "/" },
     { id: "processcraft", name: "PlantCraft", url: "/" },
+    ...(operate ? [{ id: "operations", name: "Operations", url: "/health" }] : []),
     ...data.apps.filter((app) => app.access).map((app) => ({ id: app.id, name: app.name, url: app.url, version: app.version })),
   ];
   const prefix = offFrame ? null : appPrefix(path, apps.map((app) => app.url));
@@ -346,14 +368,14 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   // the frames keep their place among its children so the apps stay loaded.
   return (
     <SuiteShell
-      app={framed ? shown?.app ?? entry!.id : desk ? "desk" : "processcraft"}
+      app={framed ? shown?.app ?? entry!.id : desk ? "desk" : operating ? "operations" : "processcraft"}
       appName={framed ? shown?.appName ?? entry!.name : undefined}
-      home={framed ? shown?.home ?? "/" : desk ? "/" : "/admin"}
-      localApps={["desk", "processcraft"]}
+      home={framed ? shown?.home ?? "/" : desk ? "/" : operating ? "/health" : "/admin"}
+      localApps={["desk", "processcraft", "operations"]}
       assistant={framed ? shown?.assistant ?? false : path !== "/assistant" && !path.startsWith("/assistant/")}
       assistantControl={framed ? assistantControl : undefined}
       tourId={framed ? undefined : "processcraft"}
-      subtitle={framed ? shown?.subtitle : desk ? t("Your day") : t("Platform")}
+      subtitle={framed ? shown?.subtitle : desk ? t("Your day") : operating ? t("Status and logs") : t("Platform")}
       nav={framed ? frameNav : nav}
       path={framed ? shown?.path ?? "/" : path}
       href={framed ? (to) => `${frameBase}${to.replace(/^\//, "")}` : (to) => to}

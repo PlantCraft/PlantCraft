@@ -10,18 +10,20 @@ Every request is in the audit log.
 from __future__ import annotations
 
 import hmac
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from plantcraft.api.deps import AdminUser, AdminView, CurrentUser, Runtime
+from plantcraft.api.deps import AdminUser, AdminView, CurrentUser, OperationsView, Runtime
 from plantcraft.api.identity import issue_user_token
 from plantcraft.apps.manager import AppError
 from plantcraft.i18n import t
 from plantcraft.platform.datalayer import DataLayerError
+from plantcraft_sdk.server import logread
+from plantcraft_sdk.utc import parse_instant
 
 router = APIRouter(prefix="/api/operations")
 
@@ -71,10 +73,106 @@ def overview(_admin: AdminView, rt: Runtime) -> dict[str, Any]:
 
 
 @router.get("/health")
-def health(_admin: AdminView, rt: Runtime) -> dict[str, Any]:
-    """The suite watch: what it looked at last, open and recent incidents, Docker's view."""
+def health(_reader: OperationsView, rt: Runtime) -> dict[str, Any]:
+    """The suite watch: what it looked at last, open and recent incidents, Docker's view, the
+    machine's load and the load limits (administrators and the Operations role)."""
 
-    return rt.watch.overview()
+    return {**rt.watch.overview(), "limits": rt.watch.limits().as_dict()}
+
+
+class Limits(BaseModel):
+    enabled: bool | None = None
+    cpu_warning: float | None = None
+    cpu_critical: float | None = None
+    memory_warning: float | None = None
+    memory_critical: float | None = None
+    errors_warning: float | None = None
+    errors_critical: float | None = None
+    minutes: int | None = None
+
+
+@router.get("/limits")
+def limits(_reader: OperationsView, rt: Runtime) -> dict[str, Any]:
+    """The load alerts' levels (plantcraft.watch.load)."""
+
+    return rt.watch.limits().as_dict()
+
+
+@router.put("/limits")
+def set_limits(payload: Limits, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    """Change the load alerts' levels; the next tick of the watch uses them."""
+
+    before = rt.watch.limits().as_dict()
+    try:
+        value = rt.watch.set_limits(payload.model_dump(exclude_none=True)).as_dict()
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    _audit(rt, admin, "operations.limits", {"before": before, "after": value})
+    return value
+
+
+# A read of Operations › Logs looks back this far when it names no start.
+LOGS_DEFAULT_HOURS = 6
+LOGS_MAX_DAYS = 31
+
+
+@router.get("/logs")
+def logs(
+    reader: OperationsView,
+    rt: Runtime,
+    services: str | None = Query(default=None, max_length=500),
+    hours: float | None = Query(default=None, gt=0, le=LOGS_MAX_DAYS * 24),
+    since: str | None = Query(default=None, max_length=40),
+    until: str | None = Query(default=None, max_length=40),
+    level: str | None = Query(default=None, max_length=10),
+    text: str | None = Query(default=None, max_length=200),
+    request_id: str | None = Query(default=None, max_length=64),
+    logger: str | None = Query(default=None, max_length=200),
+    limit: int = Query(default=logread.DEFAULT_LIMIT, ge=1, le=logread.MAX_LIMIT),
+) -> dict[str, Any]:
+    """The logs of every server of the suite (or ``services``, comma-separated), newest first,
+    with the messages that come back most often. Each read is in the audit log: logs name
+    people and what they did."""
+
+    bounds: dict[str, datetime | None] = {}
+    for name, value in (("since", since), ("until", until)):
+        moment = parse_instant(value) if value else None
+        if value and moment is None:
+            raise HTTPException(422, t("Use an ISO 8601 time."))
+        bounds[name] = moment
+    if bounds["since"] is None:
+        back = timedelta(hours=hours if hours is not None else LOGS_DEFAULT_HOURS)
+        bounds["since"] = (bounds["until"] or datetime.now(timezone.utc)) - back
+    if level and level.upper() not in logread.LEVELS:
+        raise HTTPException(422, t("Unknown log level."))
+    wanted = [item.strip() for item in (services or "").split(",") if item.strip()] or None
+    found = rt.suite_logs.read(
+        services=wanted,
+        level=level.upper() if level else None,
+        text=text,
+        request_id=request_id,
+        logger=logger,
+        limit=limit,
+        **bounds,
+    )
+    _audit(
+        rt,
+        reader,
+        "operations.logs.read",
+        {
+            key: value
+            for key, value in {
+                "services": wanted,
+                "level": level,
+                "text": text,
+                "request_id": request_id,
+                "logger": logger,
+                "since": bounds["since"].isoformat(),
+            }.items()
+            if value
+        },  # fmt: skip
+    )
+    return found
 
 
 # What everyone may see of Health: whether each part of the suite runs. The

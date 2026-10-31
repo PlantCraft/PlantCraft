@@ -24,7 +24,7 @@ from plantcraft.api.deps import (
     open_to,
     user_access,
 )
-from plantcraft.auth.access import LEVEL_LABELS, level_label
+from plantcraft.auth.access import LEVEL_LABELS, OPERATIONS_APP, level_label
 from plantcraft.auth.suite import FORMER_IDS, app_access
 from plantcraft.i18n import t
 from plantcraft.platform.asset_scope import MAX_SCOPE_ROOTS, scope_roots
@@ -144,7 +144,8 @@ def _applications(rt: Any, applications: list[str] | None) -> list[str] | None:
 
 
 def _app_roles(rt: Any, roles: dict[str, str]) -> dict[str, str]:
-    _applications(rt, list(roles))
+    # Operations is built in (plantcraft.auth.access.OPERATIONS_APP), not a suite app.
+    _applications(rt, [app_id for app_id in roles if app_id != OPERATIONS_APP])
     return dict(roles)
 
 

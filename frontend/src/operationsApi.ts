@@ -24,7 +24,26 @@ export interface OperationsOverview {
   schedule: Schedule & { state: { last_daily?: string; last_drill?: string } };
   installer: { online: boolean; last_seen: string | null };
 }
-export interface ServiceMetrics { service: string; name?: string; state: string; health: string; exit_code?: number | null; status?: string; restarts?: number | null; started_at?: string | null; cpu_pct?: number | null; mem_bytes?: number | null; mem_limit_bytes?: number | null; mem_pct?: number | null }
+/** One container as the installer sees it. `cpu_pct` is Docker's own number (% of one core: 400 % is
+ * 4 cores busy); `cpu_load_pct` is the share of the CPUs it may use (`cpus`, else the machine's), 0-100. */
+export interface ServiceMetrics { service: string; name?: string; state: string; health: string; exit_code?: number | null; status?: string; restarts?: number | null; started_at?: string | null; cpu_pct?: number | null; cpus?: number | null; cpu_load_pct?: number | null; mem_bytes?: number | null; mem_limit_bytes?: number | null; mem_pct?: number | null }
+/** The machine the suite runs on (on Docker Desktop, the Linux machine Docker runs in). */
+export interface HostLoad { cpus?: number | null; cpu_pct?: number | null; mem_pct?: number | null; mem_total_bytes?: number | null; mem_used_bytes?: number | null; load_1m?: number | null }
+/** Load alerts (Operations › Load alerts): two levels, held `minutes` before the watch tells. */
+export interface LoadLimits { enabled: boolean; cpu_warning: number; cpu_critical: number; memory_warning: number; memory_critical: number; errors_warning: number; errors_critical: number; minutes: number }
+export const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] as const;
+export interface LogRecord { time: string; level: string; app?: string; service: string; logger?: string; message: string; request_id?: string; error?: string; version?: string; [key: string]: unknown }
+export interface LogsAnswer {
+  records: LogRecord[];
+  truncated: boolean;
+  /** Every server whose logs can be read (PlantCraft first). */
+  services: string[];
+  read: string[];
+  /** Servers that did not answer (down, or older than this page). */
+  missing: string[];
+  top: { service: string; level: string; message: string; count: number }[];
+}
+export interface LogsQuery { services?: string[]; hours?: number; level?: string; text?: string; request_id?: string; limit?: number }
 export interface Incident { incident_id: number; check_key: string; subject: string; detail: string; opened_at: string; closed_at: string | null; notified: number }
 export interface SuiteHealth {
   at: string | null;
@@ -33,7 +52,9 @@ export interface SuiteHealth {
   checks: { key: string; subject: string; bad: boolean; detail: string }[];
   open: Incident[];
   recent: Incident[];
-  metrics: { at: string; services: ServiceMetrics[]; disk: { total_bytes: number; free_bytes: number; free_pct: number | null } | null; error: string | null } | null;
+  metrics: { at: string; services: ServiceMetrics[]; host?: HostLoad | null; disk: { total_bytes: number; free_bytes: number; free_pct: number | null } | null; error: string | null } | null;
+  /** The load alerts' levels the watch uses now. */
+  limits?: LoadLimits;
   conversation_id: number | null;
   /** How fast the disk fills (a line through a week of hourly samples); null for the first day. */
   disk_forecast?: DiskForecast | null;
@@ -71,5 +92,17 @@ export const operationsApi = {
   diagnostics: () => requestJson<Queued>("/api/operations/diagnostics", post()),
   outcome: (requestId: string) => requestJson<{ request_id: string; state: string; message?: string; file?: string; size?: number }>(`/api/operations/requests/${encodeURIComponent(requestId)}`),
   diagnosticsUrl: (requestId: string) => `/api/operations/diagnostics/${encodeURIComponent(requestId)}`,
+  limits: () => requestJson<LoadLimits>("/api/operations/limits"),
+  setLimits: (value: Partial<LoadLimits>) => requestJson<LoadLimits>("/api/operations/limits", { method: "PUT", body: JSON.stringify(value) }),
+  logs: (query: LogsQuery) => {
+    const params = new URLSearchParams();
+    if (query.services?.length) params.set("services", query.services.join(","));
+    if (query.hours) params.set("hours", String(query.hours));
+    if (query.level) params.set("level", query.level);
+    if (query.text?.trim()) params.set("text", query.text.trim());
+    if (query.request_id?.trim()) params.set("request_id", query.request_id.trim());
+    if (query.limit) params.set("limit", String(query.limit));
+    return requestJson<LogsAnswer>(`/api/operations/logs?${params.toString()}`);
+  },
   schedule: (value: Partial<Schedule>) => requestJson<Schedule>("/api/operations/schedule", { method: "PUT", body: JSON.stringify(value) }),
 };
