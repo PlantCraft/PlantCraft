@@ -33,6 +33,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **The demo's lines in the install log carry the seconds since the seed started**
+  (`[demo +42s] ...`), and the Historian backfill says how long it took: the seed is half of an
+  install with `--demo` (69 of 124 s on a 4 CPU arm64 VM), and the log now shows which step.
 - **The Historian's database has its own CPU limit, `HISTCRAFT_DB_CPUS` (default 2).** It
   shared `HISTCRAFT_CPUS` with the Historian, so lowering the Historian's limit also slowed the
   database it reads from (0.6.0 load tests, 2026-10-31). An installation that set
