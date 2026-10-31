@@ -8,7 +8,7 @@
 import { AssetSearch, chosenFolder, confirmAction, DataTable, FolderColumn, FolderField, FolderPlaceLine, inFolder, LOCAL_ZONE, NO_FOLDER, putInFolder, recipientLabel, RecipientPicker, rememberFolder, timeZoneLabel, TimeZoneSelect, useAssistantPage, useFolders, type DataColumn, type GroupOption, type PersonOption } from "@plantcraft/ui";
 import { BellPlus, History, Pause, Play, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { ParameterField } from "@plantcraft/ui/blockEditor";
+import { ParameterField } from "@plantcraft/ui/blockParameter";
 import { blockCatalog } from "./AlgorithmEditor";
 import { api } from "./api";
 import { formatAgo, formatDate, formatDuration, formatNumber, t } from "./i18n";

@@ -22,6 +22,10 @@
       "types": "./dist/BlockEditor.d.ts",
       "default": "./dist/BlockEditor.js"
     },
+    "./blockParameter": {
+      "types": "./dist/blockParameter.d.ts",
+      "default": "./dist/blockParameter.js"
+    },
     "./codeEditor": {
       "types": "./dist/CodeEditor.d.ts",
       "default": "./dist/CodeEditor.js"

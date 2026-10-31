@@ -80,6 +80,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Schedules and the block pages open without the block editor (`@plantcraft/ui`).**
+  `ParameterField` and `typeLabel` have their own subpath, `@plantcraft/ui/blockParameter`
+  (still exported from `blockEditor`), so Analytics › Schedules and Models › Blocks no longer
+  load React Flow and the diagram editor (~205 KB) to show a block's parameters.
+
 - **Operations suggests the machine profile that fits.** When the machine, within the installation's
   `MAX_CPUS`/`MAX_MEMORY`, fits another profile than the one applied (more memory added, a
   profile pinned by hand), suite health names it and the command that applies it
