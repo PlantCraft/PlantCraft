@@ -1,7 +1,7 @@
 """The drawing reader: a P&ID file in, the plant it shows out (``graph.Result``).
 
 ``read_drawing(data, filename)`` picks the format from the file's first bytes (SVG, PDF, PNG,
-JPEG, TIFF), reads every page and recognises each; never raises on a bad drawing other than
+JPEG, TIFF, or DEXPI XML, read exactly by ``dexpi.read_dexpi``), reads every page and recognises each; never raises on a bad drawing other than
 ``DrawingError`` with a message a person can act on.
 """
 
@@ -27,16 +27,22 @@ def kind_of(data: bytes, filename: str = "") -> str:
         return "jpeg"
     if head[:4] in {b"II*\x00", b"MM\x00*"}:
         return "tiff"
+    if b"<PlantModel" in data[:4096]:
+        return "dexpi"
     text = data[:2048].lstrip().lower()
     if text.startswith(b"<?xml") or text.startswith(b"<svg") or b"<svg" in text:
         return "svg"
-    raise DrawingError("Send a P&ID as PDF, SVG, PNG, JPEG or TIFF.")
+    raise DrawingError("Send a P&ID as PDF, SVG, DEXPI (XML), PNG, JPEG or TIFF.")
 
 
 def read_drawing(data: bytes, filename: str = "") -> list[dict[str, Any]]:
     if len(data) > MAX_BYTES:
         raise DrawingError("The file is larger than 40 MB.")
     kind = kind_of(data, filename)
+    if kind == "dexpi":
+        from doccraft.plantmap.reader.dexpi import read_dexpi
+
+        return read_dexpi(data)
     if kind == "svg":
         from doccraft.plantmap.reader.svg import read_svg
 

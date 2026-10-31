@@ -28,7 +28,7 @@ export function DiagramsPage(_props: { me: Me }) {
   if (!rows) return <Loading />;
   return <>
     <Heading title={t("Diagrams")} />
-    <p className="muted">{t("The pages of the documents that are diagrams (P&IDs), read into equipment, instruments and the lines between them. Send P&IDs as PDF, SVG or images in Documents; they appear here once read.")}</p>
+    <p className="muted">{t("The pages of the documents that are diagrams (P&IDs), read into equipment, instruments and the lines between them. Send P&IDs as PDF, SVG, DEXPI (XML) or images in Documents; they appear here once read.")}</p>
     {rows.length === 0
       ? <div className="panel empty">{t("No diagram found in the documents yet.")} <Link to="/documents">{t("Send P&IDs in Documents")}</Link></div>
       : <DataTable rows={rows} rowKey={(row) => `${row.rev_id}:${row.page}`} label={t("Diagrams")}
@@ -43,7 +43,7 @@ export function DiagramsPage(_props: { me: Me }) {
           { key: "document", label: t("Document"), phone: "hide", sort: (row) => row.doc_number, render: (row) => <Link to={`/documents/${row.doc_id}`}>{row.doc_number || row.doc_title}</Link> },
           { key: "items", label: t("Items"), className: "num", sort: (row) => row.items, render: (row) => row.items },
           { key: "relations", label: t("Lines"), className: "num", phone: "hide", sort: (row) => row.relations, render: (row) => row.relations },
-          { key: "source", label: t("Read from"), phone: "hide", sort: (row) => row.source, render: (row) => row.source === "raster" ? t("Scan (OCR)") : t("Drawing") },
+          { key: "source", label: t("Read from"), phone: "hide", sort: (row) => row.source, render: (row) => row.source === "raster" ? t("Scan (OCR)") : row.source === "dexpi" ? t("DEXPI file") : t("Drawing") },
         ]} />}
   </>;
 }
