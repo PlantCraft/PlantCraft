@@ -131,6 +131,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   is new since their last read (`LINKCRAFT_READ_CACHE`, 15 min overlap, whole read every 6 h).
   The Historian's CPU per round: 0.85 to 0.07 s on the demo's 200 signals, 59 to 0.8 s on
   2,000 dense signals (`ci/bench/reads`).
+  The cache keeps samples compact when that is exact (int32 milliseconds and float32, 8 bytes a
+  sample instead of 16: 453 to 226 MB on 2,000 dense signals x 24 h) and holds at most
+  `LINKCRAFT_READ_CACHE_MB` (512 MB by default), dropping the signals used least recently.
+  Scheduled methods read their step means through it too, only the steps new since their last
+  run; Run now still reads the whole window.
 - **Signal quality sees the source's quality (2026-10-31).** API v1 gave a bad sample as a null
   value and an uncertain or substituted one as good, so the `sq_*` checks never saw them.
   `POST /api/v1/series` takes `"quality": true` and then lists, per series, where the source's
