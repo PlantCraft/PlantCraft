@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from linkcraft.blocks import CATALOG, compile_algorithm
 from linkcraft.blocks.run import block_verdicts, recorded_ports, samples, trace, wires
+from linkcraft.data.cache import RawCache, read_means_incremental
 from linkcraft.i18n import t
 
 INPUT_BLOCKS = ("input.signal", "input.state")
@@ -141,9 +142,11 @@ def read_inputs(
     start: pd.Timestamp,
     end: pd.Timestamp,
     step: float,
+    cache: RawCache | None = None,
 ) -> tuple[dict[str, Any], dict[str, str]]:
     """What each signal block of ``plan`` reads, by node id (a series, or why there is none),
-    and the signal id each one resolved to."""
+    and the signal id each one resolved to. ``cache``: a scheduled run reads through the
+    loops' read cache (only what is new since its last run); a person's run reads whole."""
 
     named: dict[str, Any] = {}
     wanted: dict[str, str] = {}
@@ -156,9 +159,22 @@ def read_inputs(
             named[node_id] = NoData(str(exc), node_id)
     if wanted:
         try:
-            columns, errors = reader.client.series_many_pandas(
-                sorted(set(wanted.values())), start.to_pydatetime(), end.to_pydatetime(), step
-            )
+            names = sorted(set(wanted.values()))
+            if cache is None:
+                columns, errors = reader.client.series_many_pandas(
+                    names, start.to_pydatetime(), end.to_pydatetime(), step
+                )
+            else:
+                columns, errors = read_means_incremental(
+                    cache,
+                    names,
+                    start,
+                    end,
+                    step,
+                    lambda group, begin, finish, seconds: reader.client.series_many_pandas(
+                        group, begin.to_pydatetime(), finish.to_pydatetime(), seconds
+                    ),
+                )
             failed = {item["signal"]: str(item.get("detail") or "") for item in errors}
         except PlantCraftError as exc:
             columns, failed = {}, {signal: str(exc.detail or exc) for signal in wanted.values()}
@@ -223,8 +239,10 @@ def run_on_asset(
     algorithm_id: str | None = None,
     with_trace: bool = False,
     keep: list[tuple[str, str]] | None = None,
+    cache: RawCache | None = None,
 ) -> dict[str, Any]:
-    """Run ``diagram`` on asset ``asset_id`` over ``start``-``end``.
+    """Run ``diagram`` on asset ``asset_id`` over ``start``-``end`` (``cache``: see
+    ``read_inputs``).
 
     Returns the summary (outputs, each block's verdict, recorded ports with their points, the
     run's verdict), the blocks' memory after the run (``states``), for a test the trace, and the
@@ -235,7 +253,7 @@ def run_on_asset(
     plan = _plan(diagram)
     reader = AssetReader(client)
     subject = reader.asset(asset_id)
-    named, signals = read_inputs(plan, reader, subject, start, end, step)
+    named, signals = read_inputs(plan, reader, subject, start, end, step, cache)
     return _run_plan(
         plan,
         asset_id,
