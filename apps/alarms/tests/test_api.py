@@ -187,6 +187,12 @@ def test_shelve_and_out_of_service(runtime, fake, client):
     alarm_id = make_rule(client, high())["rule_id"]
     bad = client.post(f"/api/alarms/{alarm_id}/shelve", json={"minutes": 30, "reason": ""})
     assert bad.status_code == 422
+    # Shelving is time-limited by priority (the philosophy: 1 h critical ... 24 h low).
+    priority = client.get(f"/api/alarms/{alarm_id}").json()["priority"]
+    longest = {"critical": 60, "high": 240, "medium": 720, "low": 1440}[priority]
+    too_long = {"minutes": longest + 1, "reason": "Instrument under repair"}
+    refused = client.post(f"/api/alarms/{alarm_id}/shelve", json=too_long)
+    assert refused.status_code == 422 and "at most" in refused.text
     shelved = client.post(
         f"/api/alarms/{alarm_id}/shelve", json={"minutes": 30, "reason": "Instrument under repair"}
     ).json()

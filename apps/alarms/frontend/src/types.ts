@@ -181,6 +181,7 @@ export interface Philosophy {
   immediate: Priority[]; digest: Priority[]; digest_times: string[]; timezone: string;
   chatter_minute: number; chatter_hour: number; stale_hours: number;
   target_high: number; target_medium: number; target_low: number;
+  shelve_hours_critical: number; shelve_hours_high: number; shelve_hours_medium: number; shelve_hours_low: number;
 }
 export interface PhilosophyRecord extends Philosophy { defaults: Philosophy; updated_at: string | null; updated_by: string | null; next_summary: string }
 export interface IncomingCount { app: string; kind: string; count: number; last: string; counted: number }
