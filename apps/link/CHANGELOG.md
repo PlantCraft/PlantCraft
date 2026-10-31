@@ -13,7 +13,6 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   forecast is shown only when the line fits (R² of at least 0.5) and the limit is less than a year
   away. `GET /api/loop-days-to-limit` lists the soonest first, and so does the widget "Analytics:
   closest to the limit" (`engine/days_to_limit.py`).
-
 - **Two signal checks, rate of change (`sq_rate`) and transmitter fault levels (`sq_ne43`).**
   Rate of change counts the changes, measured over at least a minute, that are faster than the
   process can move: an absolute limit per minute, or half of the range per minute by default. NE 43
