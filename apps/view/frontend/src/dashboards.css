@@ -435,3 +435,4 @@ body.tc-screen .pcs-content, body.tc-screen .content { max-width: none; padding:
 .tc-report-versions { margin: 0; padding-left: 18px; font-size: var(--pc-fs-xs); display: grid; gap: 6px; }
 .tc-report-versions blockquote { margin: 2px 0; padding-left: 8px; border-left: 2px solid var(--pc-border-subtle); }
 .tc-report-asset-list { max-height: 220px; overflow: auto; display: grid; gap: 2px; padding: 4px 0; }
+.tc-report-feedback-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }

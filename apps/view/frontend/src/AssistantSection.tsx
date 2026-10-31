@@ -53,7 +53,7 @@ export function AssistantView({ section, read, tick, reportId, canEdit, editing 
         <small className="muted">{t("Written {when} with requirements v{n}. The PDF keeps what was sent.", { when: formatDate(written.written_at, { dateStyle: "medium", timeStyle: "short" }), n: written.version })}</small></>
       : <p className="muted">{t("Not written yet: the model writes it when the report is made (Download PDF, Send now or the schedule).")}</p>)}
     {canEdit && !editing && written && <div className="tc-report-feedback">
-      <label><MessageSquareText size={14} aria-hidden /> {t("Feedback for the next edition")}
+      <label><span className="tc-report-feedback-title"><MessageSquareText size={14} aria-hidden /> {t("Feedback for the next edition")}</span>
         <textarea rows={2} maxLength={4000} value={feedback} placeholder={t("Too long; start with the loops that got worse; add the valve findings…")} onChange={(event) => setFeedback(event.target.value)} />
       </label>
       <div className="tc-report-feedback-row">
