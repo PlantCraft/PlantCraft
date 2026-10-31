@@ -1244,7 +1244,7 @@ def _assemble(
     """One point's decoded chunks, then its recent values, as times and values in
     ``[start, end]`` with a neighbour on each side."""
 
-    parts = [codec.decode(chunks[t0]) for t0 in sorted(chunks)]
+    parts = [codec.decoded_chunks.decode(chunks[t0]) for t0 in sorted(chunks)]
     parts += [(times, values) for _, times, values in recent]
     if not parts:
         return np.empty(0, dtype=np.int64), np.empty(0)

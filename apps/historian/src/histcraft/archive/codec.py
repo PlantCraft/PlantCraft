@@ -26,9 +26,11 @@ the collector writes every few seconds (``ArchiveStore.hold``).
 from __future__ import annotations
 
 import json
+import os
 import struct
 import threading
 import zlib
+from collections import OrderedDict
 from collections.abc import Sequence
 from typing import Any
 
@@ -175,6 +177,67 @@ def decode(blob: bytes) -> tuple[np.ndarray, np.ndarray | list[str | None]]:
     if len(labels) != count:
         raise CodecError("damaged chunk: label count")
     return times, labels
+
+
+class DecodedChunks:
+    """The last chunks reads decoded, up to ``budget`` bytes of decoded values.
+
+    A chunk's bytes are its key, so a chunk rewritten (compaction, a late value) is a new key
+    and an answer is never stale. Reads of the same hours (an Analytics round, its checks and a
+    method, each over the last day) then decode each chunk once instead of once per read: in
+    the 0.6.0 load test, decoding was a quarter of the Historian's CPU. Arrays come back
+    read-only; text labels as the same list, which callers copy before changing.
+    """
+
+    def __init__(self, budget: int):
+        self.budget = max(0, int(budget))
+        self.size = 0
+        self.hits = 0
+        self.misses = 0
+        self._items: OrderedDict[bytes, tuple[np.ndarray, Any, int]] = OrderedDict()
+        self._lock = threading.Lock()
+
+    def decode(self, blob: bytes) -> tuple[np.ndarray, np.ndarray | list[str | None]]:
+        if not self.budget:
+            return decode(blob)
+        with self._lock:
+            found = self._items.get(blob)
+            if found is not None:
+                self._items.move_to_end(blob)
+                self.hits += 1
+                return found[0], found[1]
+        times, values = decode(blob)
+        times.flags.writeable = False
+        if isinstance(values, np.ndarray):
+            values.flags.writeable = False
+            cost = times.nbytes + values.nbytes + len(blob)
+        else:
+            cost = times.nbytes + 64 * len(values) + len(blob)
+        with self._lock:
+            self.misses += 1
+            if blob not in self._items and cost <= self.budget:
+                self._items[blob] = (times, values, cost)
+                self.size += cost
+                while self.size > self.budget:
+                    _, (_, _, freed) = self._items.popitem(last=False)
+                    self.size -= freed
+        return times, values
+
+    def clear(self) -> None:
+        with self._lock:
+            self._items.clear()
+            self.size = 0
+
+
+def _cache_budget() -> int:
+    try:
+        return int(float(os.environ.get("HISTCRAFT_CHUNK_CACHE_MB", "32")) * 1024 * 1024)
+    except ValueError:
+        return 32 * 1024 * 1024
+
+
+# Each process of the Historian keeps its own (HISTCRAFT_CHUNK_CACHE_MB, 0 turns it off).
+decoded_chunks = DecodedChunks(_cache_budget())
 
 
 def encode(times_ms: np.ndarray, values: np.ndarray | Sequence[str | None], kind: str) -> bytes:
