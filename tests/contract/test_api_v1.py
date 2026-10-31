@@ -604,6 +604,22 @@ def test_value_aggregates_over_a_window(central, agg):
     assert body["at"] == "2026-01-01T12:59:50+00:00"
 
 
+def test_value_over_a_window_that_closed_earlier(central):
+    """``end`` reads a closed window (a report of last week); never past the newest data."""
+
+    headers = _as(central, "op")
+    url = f"/api/v1/signals/{LOOP_SIGNAL}/value"
+    closed = {"agg": "mean", "window": "1h", "end": "2026-01-01T12:00:00Z"}
+    body = central.get(url, params=closed, headers=headers).json()
+    assert body["at"] == "2026-01-01T12:00:00+00:00" and isinstance(body["value"], float)
+    now = central.get(url, params={"agg": "mean", "window": "1h"}, headers=headers).json()
+    assert body["value"] != now["value"]
+    later = central.get(url, params={**closed, "end": "2999-01-01T00:00:00Z"}, headers=headers)
+    assert later.json()["at"] == "2026-01-01T12:59:50+00:00"
+    wrong = central.get(url, params={**closed, "end": "last monday"}, headers=headers)
+    assert wrong.status_code == 422
+
+
 def test_the_value_of_a_text_signal_is_its_last_label(central):
     headers = _as(central, "op")
     body = central.get("/api/v1/signals/scenario:mode/value", headers=headers).json()

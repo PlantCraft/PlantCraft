@@ -108,6 +108,14 @@ def test_data_signals_in_v1_signal_shape(pc, loaded):
     # a bare tag finds the one signal that has it
     assert pc.get(f"{DATA}/signals/TI-100.PV").json()["id"] == "plant:TI-100.PV"
     assert pc.get(f"{DATA}/signals/TI-100.PV/value").json()["signal"] == "TI-100.PV"
+    # A window that closed earlier (a report of last week): ``end`` says when; never past now.
+    closed = {"agg": "mean", "window": "1h", "end": "2026-10-26T00:00:00Z"}
+    answer = pc.get(f"{DATA}/signals/TI-100.PV/value", params=closed).json()
+    assert answer["at"] == "2026-10-26T00:00:00+00:00"
+    later = pc.get(f"{DATA}/signals/TI-100.PV/value", params={**closed, "end": "2999-01-01"})
+    assert later.json()["at"] < "2999"
+    wrong = pc.get(f"{DATA}/signals/TI-100.PV/value", params={**closed, "end": "last monday"})
+    assert wrong.status_code == 422
     assert [s["id"] for s in pc.get(f"{DATA}/signals", params={"q": "mode"}).json()] == [
         "plant:FIC-101.MODE"
     ]

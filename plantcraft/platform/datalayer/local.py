@@ -20,6 +20,7 @@ from plantcraft_sdk.contract import (
     ContractError,
     aggregate,
     iso,
+    parse_time,
     parse_window,
     series_range,
     shape_values,
@@ -258,7 +259,9 @@ class LocalDataLayer(DataLayer):
             batch.add(signal_id, kind, stamps, numbers)
         return batch.payload()
 
-    def value(self, signal_id: str, agg: str, window: str) -> dict[str, Any]:
+    def value(
+        self, signal_id: str, agg: str, window: str, end: str | None = None
+    ) -> dict[str, Any]:
         catalog = self._catalog()
         found = self._known(signal_id, catalog)
         kind = catalog.signals[found]["kind"]
@@ -274,6 +277,7 @@ class LocalDataLayer(DataLayer):
                 raise ContractError(t("A text signal has only agg=last."))
             if kind in TYPED_KINDS and agg != "last":
                 raise ContractError(t("A {kind} point has only agg=last.", kind=kind))
+            until = parse_time(end, "end")
         except ContractError as exc:
             raise DataLayerError(422, str(exc)) from exc
         end_at = self.data_end()
@@ -282,6 +286,9 @@ class LocalDataLayer(DataLayer):
             last = self.platform.derived.last_time(found)
             if last is not None and last > end_at:
                 end_at = min(last, pd.Timestamp.now(tz="UTC"))
+        if until is not None:
+            # A window that closed earlier (a report of last week), never past the data.
+            end_at = min(end_at, pd.Timestamp(until))
         if kind in TYPED_KINDS:
             stamps, typed = self.platform.derived.read_typed(found, kind, end_at - span, end_at)
             return {

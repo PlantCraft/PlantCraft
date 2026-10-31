@@ -272,8 +272,10 @@ class HistCraftDataLayer(DataLayer):
         body = {"signals": signals, "start": start, "end": end, "step": step}
         return self.call("POST", "/series", json=body, raw=True)
 
-    def value(self, signal_id: str, agg: str, window: str) -> dict[str, Any]:
-        params = {"agg": agg, "window": window}
+    def value(
+        self, signal_id: str, agg: str, window: str, end: str | None = None
+    ) -> dict[str, Any]:
+        params = {"agg": agg, "window": window, **({"end": end} if end else {})}
         return self.call("GET", f"/signals/{_quoted(signal_id)}/value", params=params)
 
     # Derived series --------------------------------------------------------------

@@ -788,11 +788,21 @@ class PlantCraftClient:
             return pd.DataFrame(index=pd.DatetimeIndex([], tz="UTC"))
         return pd.concat(columns, axis=1).sort_index()
 
-    def value(self, signal_id: str, agg: str = "last", window: str = "1h") -> Value:
+    def value(
+        self,
+        signal_id: str,
+        agg: str = "last",
+        window: str = "1h",
+        end: str | datetime | None = None,
+    ) -> Value:
+        """One aggregate over ``window`` ending now, or at ``end`` (a window that closed
+        earlier, like last week; never later than now)."""
+
+        params = {"agg": agg, "window": window}
+        if end is not None:
+            params["end"] = _time(end)
         return self._read(
-            "GET",
-            f"/api/v1/signals/{quote(signal_id, safe='')}/value",
-            params={"agg": agg, "window": window},
+            "GET", f"/api/v1/signals/{quote(signal_id, safe='')}/value", params=params
         )
 
     # Derived series -----------------------------------------------------------

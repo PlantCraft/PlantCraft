@@ -23,6 +23,7 @@ from plantcraft_sdk.auth import User
 from plantcraft_sdk.contract import (
     MAX_BATCH_SIGNALS,
     ContractError,
+    parse_time,
     series_range,
     unique_signals,
 )
@@ -482,10 +483,18 @@ def value(
     _caller: PlantCraft,
     agg: str = "last",
     window: str = "1h",
+    end: str | None = None,
 ) -> dict[str, Any]:
+    """One aggregate over the ``window`` that ends at ``end`` (ISO 8601; now when left out, and
+    never later than now): a report of last week reads the week that closed on Monday."""
+
     point = _point(runtime, signal_id)
     try:
-        answer = runtime.reader.value(point_ref(point), agg, window)
+        now = datetime.now(timezone.utc)
+        until = parse_time(end, "end")
+        answer = runtime.reader.value(
+            point_ref(point), agg, window, min(until, now) if until else None
+        )
     except ContractError as exc:
         raise HTTPException(422, str(exc)) from exc
     except SourceUnavailable as exc:
