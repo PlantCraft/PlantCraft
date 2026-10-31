@@ -6,13 +6,14 @@ container and the free disk; the backups and the last drill) and what each serve
 reserved source ``system`` ("System"), so the trends, the dashboards and the alarms of the
 suite read the suite's own health like any plant signal:
 
-- ``system:<service>.up`` (1 running and healthy, 0 otherwise), ``.cpu_pct``, ``.mem_mb``,
+- ``system:<service>.up`` (1 running and healthy, 0 otherwise), ``.cpu_pct`` (its CPU as a
+  share of the CPUs it may use, 0-100, since 0.6.0; Docker's % of one core before), ``.mem_mb``,
   ``.mem_pct``, ``.restarts`` for every container;
 - ``system:<service>.latency_ms`` (p95 of the last requests), ``.errors`` and ``.warnings``
   (logged per minute) for every server that answers its metrics;
 - ``system:<service>.queue_items`` and ``.queue_wait_min`` (how long the oldest item has waited)
   for every server that reports a work queue (Link's executions, Models' simulations);
-- ``system:host.disk_free_gb``, ``.disk_free_pct``;
+- ``system:host.cpu_pct``, ``.mem_pct`` (the machine's own), ``.disk_free_gb``, ``.disk_free_pct``;
 - ``system:backup.age_h`` (the newest good backup), ``.ok`` (the newest backup is good),
   ``.drill_ok`` (the last restore drill passed).
 
@@ -49,7 +50,7 @@ _TAG = re.compile(r"[^A-Za-z0-9_.-]+")
 # signal suffix -> (name, unit, low, high)
 SERVICE_SIGNALS: dict[str, tuple[str, str, float | None, float | None]] = {
     "up": ("{service} up", "", 0.0, 1.0),
-    "cpu_pct": ("{service} CPU", "%", 0.0, 100.0),
+    "cpu_pct": ("{service} CPU of its limit", "%", 0.0, 100.0),
     "mem_mb": ("{service} memory", "MB", 0.0, None),
     "mem_pct": ("{service} memory of its limit", "%", 0.0, 100.0),
     "restarts": ("{service} restarts", "", 0.0, None),
@@ -60,6 +61,8 @@ SERVICE_SIGNALS: dict[str, tuple[str, str, float | None, float | None]] = {
     "queue_wait_min": ("{service} wait of the oldest queued item", "min", 0.0, None),
 }
 OTHER_SIGNALS: dict[str, tuple[str, str, float | None, float | None]] = {
+    "host.cpu_pct": ("Machine CPU", "%", 0.0, 100.0),
+    "host.mem_pct": ("Machine memory in use", "%", 0.0, 100.0),
     "host.disk_free_gb": ("Free disk", "GB", 0.0, None),
     "host.disk_free_pct": ("Free disk", "%", 0.0, 100.0),
     "backup.age_h": ("Age of the last good backup", "h", 0.0, None),
@@ -129,6 +132,8 @@ class HealthRecorder:
         self._counters: dict[str, tuple[datetime, int, int]] = {}
         # service -> the queue its metrics carried last minute (the watch reads it)
         self.queues: dict[str, dict[str, Any]] = {}
+        # service -> errors it logged a minute, last measured (the watch's load checks read it)
+        self.error_rates: dict[str, float] = {}
         self._lock = threading.Lock()
         self.last: dict[str, Any] = {"at": None, "written": 0, "error": None, "waiting": 0}
 
@@ -150,17 +155,26 @@ class HealthRecorder:
                 running = item.get("state") == "running"
                 healthy = str(item.get("health") or "") in ("", "healthy")
                 values[f"{name}.up"] = 1.0 if running and healthy else 0.0
-                values[f"{name}.cpu_pct"] = _number(item.get("cpu_pct"))
+                # The share of the CPUs it may use (0-100); an older installer wrote only
+                # Docker's % of one core, which is kept as it is.
+                load = item.get("cpu_load_pct")
+                values[f"{name}.cpu_pct"] = _number(
+                    load if load is not None else item.get("cpu_pct")
+                )
                 memory = _number(item.get("mem_bytes"))
                 values[f"{name}.mem_mb"] = round(memory / 2**20, 1) if memory is not None else None
                 values[f"{name}.mem_pct"] = _number(item.get("mem_pct"))
                 values[f"{name}.restarts"] = _number(item.get("restarts"))
+            host = metrics.get("host") or {}
+            values["host.cpu_pct"] = _number(host.get("cpu_pct"))
+            values["host.mem_pct"] = _number(host.get("mem_pct"))
             disk = metrics.get("disk") or {}
             free = _number(disk.get("free_bytes"))
             if free is not None:
                 values["host.disk_free_gb"] = round(free / 2**30, 2)
             values["host.disk_free_pct"] = _number(disk.get("free_pct"))
         queues: dict[str, dict[str, Any]] = {}
+        rates: dict[str, float] = {}
         reported: dict[str, dict[str, Any]] = {}
         for service, answer in self._servers().items():
             name = service_tag(service)
@@ -183,9 +197,10 @@ class HealthRecorder:
                 # A restarted server counts from zero again: its new count is the rate's base.
                 new_errors = errors - before[1] if errors >= before[1] else errors
                 new_warnings = warnings - before[2] if warnings >= before[2] else warnings
-                values[f"{name}.errors"] = round(new_errors / minutes, 2)
+                values[f"{name}.errors"] = rates[service] = round(new_errors / minutes, 2)
                 values[f"{name}.warnings"] = round(new_warnings / minutes, 2)
         self.queues = queues
+        self.error_rates = rates
         self.reported = reported
         values.update(self._backups(now))
         return {key: value for key, value in values.items() if key}

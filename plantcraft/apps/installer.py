@@ -47,6 +47,7 @@ from pathlib import Path
 from typing import Any
 
 from plantcraft.apps import package as pkg
+from plantcraft.apps import host_usage
 
 REQUEST_LIMIT = 64 * 1024
 ACTIONS = {"install", "uninstall", "rollback", "set_key"}
@@ -219,6 +220,8 @@ class Installer:
         self.project = project or os.environ.get("COMPOSE_PROJECT_NAME") or "processcraft"
         self.max_image_bytes = max_image_bytes
         self.wait_seconds = wait_seconds
+        # The machine's CPU is a difference between two reads: one sampler for the process.
+        self.host = host_usage.HostSampler()
         for folder in ("status/requests", "apps", "routes", "secrets", "work"):
             (self.state / folder).mkdir(parents=True, exist_ok=True)
         for folder in ("secrets", "work"):
@@ -277,10 +280,12 @@ class Installer:
 
     def metrics(self) -> dict[str, Any]:
         """Every container of the suite as Docker sees it (state, health, restarts, CPU,
-        memory) and the free disk of the install folder. Docker runs each service's health
+        memory, its CPU limit and its CPU as a share of that limit), the machine's own CPU and
+        memory (``host``, plantcraft.apps.host_usage) and the free disk of the install folder. Docker runs each service's health
         check (``/healthz``), so ``health`` is the suite's own answer, seen from outside it."""
 
         value: dict[str, Any] = {"at": now(), "services": [], "error": None}
+        host = value["host"] = self.host.sample()
         try:
             disk = shutil.disk_usage(self.install_dir)
             value["disk"] = {
@@ -328,7 +333,9 @@ class Installer:
             used = usage.get(str(container.get("Name"))) or {}
             memory = str(used.get("MemUsage") or "").split("/")
             restarts = extra[0] if extra else ""
+            cpu_pct = percent(used["CPUPerc"]) if used.get("CPUPerc") else None
             nanos = extra[3] if extra and len(extra) > 3 else ""
+            cpus = host_usage.nano_cpus(nanos) if nanos else None
             value["services"].append(
                 {
                     "service": container.get("Service"),
@@ -341,9 +348,13 @@ class Installer:
                     "restarts": int(restarts) if restarts.isdigit() else None,
                     "started_at": extra[1] if extra else None,
                     "oom_killed": (extra[2] == "true") if extra else None,
-                    # Its CPU limit (compose's cpus:); None without one.
+                    # Docker's own number: % of one core (400 % is 4 cores busy).
+                    "cpu_pct": cpu_pct,
+                    "cpus": cpus,
+                    # Its CPU limit (compose's cpus:); None without one (same as ``cpus``).
                     "cpu_limit": int(nanos) / 1e9 if nanos.isdigit() and int(nanos) else None,
-                    "cpu_pct": percent(used["CPUPerc"]) if used.get("CPUPerc") else None,
+                    # The share of the CPUs it may use, 0 to 100 (host_usage.load_pct).
+                    "cpu_load_pct": host_usage.load_pct(cpu_pct, cpus, host.get("cpus")),
                     "mem_bytes": size_bytes(memory[0]) if used else None,
                     "mem_limit_bytes": size_bytes(memory[1]) if len(memory) == 2 else None,
                     "mem_pct": percent(used["MemPerc"]) if used.get("MemPerc") else None,

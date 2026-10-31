@@ -252,7 +252,7 @@ def test_the_suite_frame_and_a_frameless_full_screen(signed_in, app_url, screens
     # One Help for the suite (ui 0.32.0): in the person's menu, at PlantCraft's Help on this app.
     expect(sidebar.get_by_role("link", name="Help")).to_have_count(0)
     sidebar.locator(".pcs-profile").click()
-    expect(page.get_by_role("menuitem", name="Help")).to_have_attribute(
+    expect(page.get_by_role("menuitem", name="Help", exact=True)).to_have_attribute(
         "href", re.compile(r"help\?app=dashcraft$")
     )
     sidebar.locator(".pcs-profile").click()

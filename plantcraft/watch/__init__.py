@@ -31,6 +31,8 @@ from plantcraft.config import plant_clock
 from plantcraft.db import Database, Store, utc_text
 from plantcraft.events.catalog import PLATFORM_APP, SYSTEM, WATCH_EVENTS
 from plantcraft.i18n import t
+from plantcraft.watch.load import PREFIXES as LOAD_PREFIXES
+from plantcraft.watch.load import LoadLimits, load_checks
 from plantcraft_sdk.utc import parse_instant
 
 LOGGER = logging.getLogger(__name__)
@@ -61,8 +63,10 @@ GRACE_STARTING = 10
 QUEUE_WAIT_MINUTES = 30
 GRACE_QUEUE = 2
 _SEVERITY = {item["name"]: item["severity"] for item in SYSTEM}
-# Checks of things that come and go with the apps installed (a certificate with its source).
-APP_CHECKS = ("service:", "queue:", "cert:")
+# Checks of things that come and go with the apps installed (a certificate with its source),
+# and the load checks (plantcraft.watch.load), which also hold still during a backup.
+APP_CHECKS = ("service:", "queue:", "cert:", *LOAD_PREFIXES)
+LIMITS_STATE = "load_limits"
 # Certificates are read once an hour (the Historian's over HTTP); told 30 days before, reminded 7.
 CERT_SECONDS = 3600
 CERT_SOON_DAYS = 7
@@ -112,6 +116,8 @@ class Check:
     bad: bool
     detail: str = ""
     grace: int = GRACE_DOWN
+    # "warning" posts 🟠, "critical" 🔴 (the load checks have both levels).
+    level: str = "critical"
 
 
 class WatchStore(Store):
@@ -203,6 +209,7 @@ class SuiteWatch:
         events: Any = None,
         certificates: Callable[[], list[dict[str, Any]]] | None = None,
         compute: Callable[[], list[dict[str, Any]]] | None = None,
+        error_rates: Callable[[], dict[str, float]] | None = None,
         clock: Callable[[], datetime] = utcnow,
     ):
         """``desk`` reads the installer's status (``OperationsDesk``); ``admins`` names the
@@ -211,7 +218,8 @@ class SuiteWatch:
         ``events`` (``EventStore``) records each incident as an event;
         ``certificates`` the suite's certificates (``plantcraft.certificates``);
         ``compute`` the apps whose tasks wait with no compute worker able to run them
-        (``ComputeStore.waiting_without_worker``)."""
+        (``ComputeStore.waiting_without_worker``); ``error_rates`` the errors each server
+        logged a minute, last measured (``HealthRecorder.error_rates``)."""
 
         self.store = WatchStore(db)
         self.users = users
@@ -222,6 +230,7 @@ class SuiteWatch:
         self.events = events
         self.certificates = certificates
         self.compute = compute
+        self.error_rates = error_rates
         self._certs: tuple[datetime, list[dict[str, Any]]] | None = None
         self._cert_soon: dict[str, str] = {}
         self.clock = clock
@@ -260,6 +269,7 @@ class SuiteWatch:
                 Check("docker", t("Docker"), False),
             ]
             found += self._services(metrics.get("services") or [])
+            found += self._load(metrics.get("services") or [], metrics.get("host"))
             found += self._disk(metrics.get("disk"))
             found += self._disk_trend(metrics.get("disk"), now)
         found += self._queues()
@@ -315,6 +325,36 @@ class SuiteWatch:
             else:
                 found.append(Check(f"service:{name}", subject, False))
         return found
+
+    def limits(self) -> LoadLimits:
+        """The load limits an administrator set (Operations › Load alerts), else the defaults."""
+
+        return LoadLimits.from_dict(self.store.get(LIMITS_STATE))
+
+    def set_limits(self, changes: dict[str, Any]) -> LoadLimits:
+        """Changes some limits; ``ValueError`` when they make no sense together."""
+
+        limits = LoadLimits.from_dict({**self.limits().as_dict(), **changes}).validated()
+        self.store.set(LIMITS_STATE, limits.as_dict())
+        return limits
+
+    def _load(self, services: list[dict[str, Any]], host: Any) -> list[Check]:
+        rates: dict[str, float] = {}
+        if self.error_rates is not None:
+            try:
+                rates = dict(self.error_rates() or {})
+            except Exception:  # the other checks go on
+                LOGGER.exception("watch: reading the error rates failed")
+        opened = {key for key in self.store.open_incidents() if key.startswith(LOAD_PREFIXES)}
+        return load_checks(
+            services,
+            host if isinstance(host, dict) else None,
+            rates,
+            self.limits(),
+            opened,
+            tick_seconds=TICK_SECONDS,
+            check=Check,
+        )
 
     def _queues(self) -> list[Check]:
         if self.queues is None:
@@ -555,7 +595,7 @@ class SuiteWatch:
         quiet = self.store.get(f"posted:{check.key}")
         last = parse_instant(quiet) if quiet else None
         loud = last is None or (now - last).total_seconds() >= QUIET_SECONDS
-        text = "🔴 " + t(
+        text = ("🟠 " if check.level == "warning" else "🔴 ") + t(
             "{subject}: {detail} (since {time}).",
             subject=check.subject,
             detail=check.detail,

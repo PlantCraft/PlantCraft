@@ -9,6 +9,41 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
+  app switcher, for administrators and for a new **Operations** role (Users: IT, or an
+  integrator's team, without making them administrators). **Status** shows every app's CPU and
+  memory against its own limit (Docker's "344 %" is now "86 %, 3.4 of 4 CPUs"), the machine's
+  CPU, memory and load, the free disk and the incidents. **Logs** reads every server's log in one
+  list, with period, level, text, request and app filters, the most frequent warnings and errors,
+  the whole record, "Same request in every app" and CSV export. **Load alerts** tells the
+  administrators (Suite health, and an event for Alarms) when an app or the machine stays above a
+  level: CPU or memory 80 % (warning) and 95 % (critical), or errors logged a minute, held 5
+  minutes; levels changed on the page (`docs/operations.md`, section 4).
+- **Requests: anyone asks IT or an integrator for help, from any app.** "Ask for help" in the
+  person's menu of every app opens a short form (what, which kind of problem, who should answer)
+  with the app and page filled in; a log record and an open incident have "Open a request".
+  A request is an action of kind `request` with a category, a queue (told at once in Messages,
+  and by email to those who want it) and its first answer timed;
+  Operations › Requests lists them (waiting for a first answer in amber), and the Operations role
+  answers them whatever its access level. Time is logged on any request or action (hours on a
+  day, note, billable or not).
+- **Partners: the companies working at the plant.** A group of the new kind **Company** has its
+  coordinator on its side, its teams under it, a sponsor at the plant and a last day of access:
+  from the next day nobody in it signs in (the sign-in says why) and their sessions end.
+  Operations › Partners shows each company's people, teams, access, open requests and the month's
+  hours, and exports the month's time report as CSV.
+- **Request targets.** A first answer and a resolution target per priority (an administrator
+  changes them); the resolution clock stops while a request is Blocked. Requests shows the time
+  left or how late, and counts the late ones.
+- **The month's hours approved.** After a month ends, an administrator or the company's sponsor
+  approves its hours on Partners; that month's entries are then closed until an administrator
+  reopens it.
+- **Temporary support access.** An administrator gives a person Operations for up to 72 hours,
+  for a reason and often a request; it ends by itself or with "End now", the person is told, and
+  both are in the audit log.
+- The public demo's visitors no longer see the server logs.
+- SDK: `GET /api/ops/logs` on every server (`plantcraft_sdk.server.logread`), read with the `ops`
+  scope.
 - **Images in an app's language model calls** (SDK 0.86.0). `POST /api/v1/llm/{use}` takes
   images in a user's turn (PNG, JPEG, WebP or GIF, at most 4 a call, 5 MB each), and
   `client.llm(use, question, images=[png])` sends them. They reach Anthropic as image blocks and

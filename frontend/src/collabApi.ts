@@ -44,8 +44,16 @@ export type PersonMark = "star" | "unread";
 export interface NoticeFeed { items: Notice[]; counts: Record<NoticeState, number> }
 
 export type ActionStatus = "open" | "in_progress" | "blocked" | "done" | "cancelled";
-export interface ActionDraft { title: string; description: string; priority: string; owner: string | null; group_id?: string | null; due_at: string | null; refs: string[] }
-export interface ActionHistory { kind: "created" | "changed" | "status" | "comment" | "checklist"; text: string; actor: string; actor_name: string; created_at: string }
+export interface ActionDraft { title: string; description: string; priority: string; owner: string | null; group_id?: string | null; due_at: string | null; refs: string[]; kind?: ActionKind; category?: string | null }
+/** An action, or a request someone asked of IT or an integrator (Operations › Requests). */
+export type ActionKind = "action" | "request";
+export interface RequestDraft { title: string; description: string; category: string; priority?: string; group_id: string | null; refs: string[] }
+/** Time logged on an action, in hours on a day. */
+export interface TimeEntry { entry_id: number; username: string; display_name: string; day: string; hours: number; note: string; billable: boolean; created_at: string; /** Its month's hours are approved: closed to changes. */ locked?: boolean }
+/** Where a request stands against one target (plantcraft/actions/sla.py). */
+export interface SlaClock { target_minutes: number; used_minutes: number; state: "running" | "at_risk" | "met" | "breached"; due_at: string | null; paused_minutes?: number; paused?: boolean }
+export interface RequestSla { response: SlaClock; resolution: SlaClock }
+export interface ActionHistory { kind: "created" | "changed" | "status" | "comment" | "checklist" | "hours"; text: string; actor: string; actor_name: string; created_at: string }
 /** One line of an action's checklist: what, who and by when, ticked when done. */
 export interface ActionItem { item_id: number; text: string; done: boolean; owner: string | null; owner_name: string | null; due_at: string | null; overdue: boolean; done_by: string | null; done_by_name: string | null; done_at: string | null }
 export interface ItemChange { text?: string; owner?: string | null; due_at?: string | null; done?: boolean }
@@ -57,6 +65,13 @@ export interface Action {
   created_by: string; created_by_name: string; created_at: string; updated_at: string; completed_at: string | null; history?: ActionHistory[];
   /** When it took its current status (its last status change, else its creation). */
   status_since?: string;
+  kind?: ActionKind; kind_label?: string;
+  /** A request's category, and when someone other than who asked first answered. */
+  category?: string | null; category_label?: string | null; first_response_at?: string | null;
+  /** The hours logged on it in all, and (on its own page) each entry. */
+  hours_logged?: number; hours?: TimeEntry[];
+  /** A request's first answer and resolution against its targets (none when archived). */
+  sla?: RequestSla | null;
   /** Items ticked and in all (the board's cards). */
   checklist?: { done: number; total: number };
   /** On the action's own page: the checklist, and the #references written in the text and comments. */
@@ -73,8 +88,9 @@ export interface ActionList {
   views?: Array<{ id: ActionView; label: string }>;
   /** An administrator: sees every action. */
   everything?: boolean;
+  kinds?: Choice[]; categories?: Choice[];
 }
-export interface ActionQuery { status?: string[]; owner?: string; ref?: string; q?: string; mine?: boolean; view?: ActionView }
+export interface ActionQuery { status?: string[]; owner?: string; ref?: string; q?: string; mine?: boolean; view?: ActionView; kind?: ActionKind }
 
 /** installation: the default set up in Setup; provider: a saved provider and one of its models;
  * own: the fields of the profile (older profiles); off: scripted answers. */
@@ -118,6 +134,7 @@ export function actionQuery(query: ActionQuery): string {
   if (query.q?.trim()) params.set("q", query.q.trim());
   if (query.mine) params.set("mine", "true");
   if (query.view && query.view !== "visible") params.set("view", query.view);
+  if (query.kind) params.set("kind", query.kind);
   const text = params.toString();
   return text ? `?${text}` : "";
 }
@@ -145,6 +162,9 @@ export const collabApi = {
   addItem: (id: Id, item: { text: string; owner: string | null; due_at: string | null }) => requestJson<Action>(`/api/actions/${seg(id)}/items`, json("POST", item)),
   changeItem: (id: Id, itemId: number, change: ItemChange) => requestJson<Action>(`/api/actions/${seg(id)}/items/${itemId}`, json("PATCH", change)),
   deleteItem: (id: Id, itemId: number) => requestJson<Action>(`/api/actions/${seg(id)}/items/${itemId}`, json("DELETE")),
+  ask: (draft: RequestDraft) => requestJson<Action>("/api/requests", json("POST", draft)),
+  logHours: (id: Id, entry: { hours: number; day: string | null; note: string; billable: boolean }) => requestJson<Action>(`/api/actions/${seg(id)}/hours`, json("POST", entry)),
+  deleteHours: (id: Id, entryId: number) => requestJson<Action>(`/api/actions/${seg(id)}/hours/${entryId}`, json("DELETE")),
 
   specialists: () => requestJson<SpecialistList>("/api/specialists"),
   createSpecialist: (draft: SpecialistDraft & { username: string }) => requestJson<Specialist>("/api/specialists", json("POST", draft)),

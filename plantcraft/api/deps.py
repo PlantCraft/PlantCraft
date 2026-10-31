@@ -6,13 +6,14 @@ import hashlib
 import re
 import time
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Annotated, Any, TypeVar
 
 from fastapi import Depends, HTTPException, Request, status
 
 from plantcraft.actions import Visibility
 from plantcraft.api.runtime import ApiRuntime
-from plantcraft.auth.access import Access
+from plantcraft.auth.access import OPERATIONS_APP, Access
 from plantcraft.auth.public_demo import public_demo
 from plantcraft.desk import VISIT_OWNER
 from plantcraft.i18n import t
@@ -62,6 +63,9 @@ def session_user(request: Request, rt: ApiRuntime) -> str | None:
         return None
     if username == rt.auth.username:
         return str(username)
+    if rt.workspace.groups.access_ended(str(username)):
+        # Their company's access ended (plantcraft.groups, ``access_until``).
+        return None
     source, _external_id = rt.workspace.users.identity(str(username))
     if source == "local":
         if not rt.directory.settings().local_passwords:
@@ -139,6 +143,13 @@ def user_access(rt: ApiRuntime, username: str | None) -> Access | None:
     if access is None and not rt.auth.enabled:
         # Sign-in off with no people at all: the local operator.
         return Access("admin")
+    if (
+        access is not None
+        and not access.can_operate
+        and rt.workspace.support_access.active(username)
+    ):
+        # Temporary support access (plantcraft.auth.support_access): Operations while it lasts.
+        access = replace(access, app_roles=(*access.app_roles, (OPERATIONS_APP, "viewer")))
     return access
 
 
@@ -157,6 +168,7 @@ def action_visibility(rt: ApiRuntime, username: str) -> Visibility:
         everything=bool(access and access.is_admin) or bool(demo and demo.username == username),
         people=frozenset(scope["people"]),
         groups=frozenset(scope["groups"]),
+        requests=bool(access and access.can_operate),
         # Actions only about assets out of their asset scope (docs/asset-scope.md).
         out_of_scope=frozenset()
         if assets.everything
@@ -326,6 +338,25 @@ def administration_reader(username: CurrentUser, rt: Runtime) -> str:
 
 
 AdminView = Annotated[str, Depends(administration_reader)]
+
+
+def operations_reader(request: Request, username: CurrentUser, rt: Runtime) -> str:
+    """Who may open Operations (status, load, logs): an administrator, a person with the
+    Operations role (``Access.can_operate``), or the public demo's visitor (read-only)."""
+
+    demo = public_demo()
+    if demo is not None and username == demo.username:
+        return username
+    _username, access = request_access(request, rt)
+    if access is None or not access.can_operate:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=t("Only admins and people with the Operations role can open this."),
+        )
+    return username
+
+
+OperationsView = Annotated[str, Depends(operations_reader)]
 
 
 def current_scope(request: Request, rt: Runtime) -> AssetScope:

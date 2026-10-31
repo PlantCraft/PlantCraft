@@ -19,6 +19,7 @@ export const APP_IDS = [
   "histcraft",
   "modelcraft",
   "doccraft",
+  "operations",
 ] as const;
 
 export type AppId = (typeof APP_IDS)[number];
@@ -59,6 +60,8 @@ export const APP_NAMES: Record<AppId, string> = {
   histcraft: "Historian",
   modelcraft: "Models",
   doccraft: "Documents",
+  // The suite's own status, load and logs, for the plant's IT and integrators: served by the platform.
+  operations: "Operations",
 };
 
 /** "PlantCraft Analytics"; the platform is just "PlantCraft". */
@@ -122,6 +125,7 @@ export const APP_COLORS: Record<AppId, { name: string; light: string; dark: stri
   histcraft: { name: "Archive Bronze", light: "#755625", dark: "#946d2f" },
   modelcraft: { name: "Copper", light: "#8a4a2b", dark: "#b15f37" },
   doccraft: { name: "Manual Slate", light: "#415a6f", dark: "#577894" },
+  operations: { name: "Panel Graphite", light: "#4a4f57", dark: "#6b727c" },
 };
 
 type Attrs = Record<string, string | number>;
@@ -187,6 +191,13 @@ export const APP_GLYPHS: Record<AppId, GlyphPart[]> = {
     s("M9 4.5h9.5l5 5v18H9z", 2.2, R),
     s("M18.5 4.5v5h5", 2.2, R),
     s("M12.5 14h7M12.5 18h7M12.5 22h4.5", 1.6, R),
+  ],
+  // A panel gauge: the load of the suite, its needle short of the red end.
+  operations: [
+    s("M5.5 22a10.5 10.5 0 0 1 21 0", 2.2, R),
+    s("M16 22l5.5-6.5", 2.4, R),
+    s("M16 8.5v2.5M9.2 11.3l1.6 1.7M22.8 11.3l-1.6 1.7M6.7 17.5h2.3M23 17.5h2.3", 1.6, R),
+    s("M9 26.5h14", 2.2, R),
   ],
 };
 

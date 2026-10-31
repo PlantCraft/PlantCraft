@@ -5,6 +5,25 @@ know that the code and `CHANGELOG.md` do not say. One short entry per change wor
 
 ## Unreleased
 
+- Operations (built-in, like Desk): Docker's CPU is a percentage of one core, so an "80 %" alert
+  on it meant nothing for an app limited to 4 CPUs; the installer now gives each service its limit
+  and the share of it, and samples the machine from `/proc`. Logs live in each app's own volume,
+  which PlantCraft does not mount, so each server reads its own (`GET /api/ops/logs`) and PlantCraft
+  fans out with an `ops` token instead of a log shipper: no new container, nothing leaves the
+  machine. The load checks stay in the core watch, not in Alarms, so they still speak when Alarms
+  is down. Requests are actions of kind `request`, not a ticket system of their own: comments,
+  checklist, history, notifications and Desk come with them. A company is a kind of group, so its
+  teams, coordinator, asset scope and notifications are the groups' own; its last day of access is
+  checked on every request (one indexed query; the tree only once a company has ended). Hours
+  count for the company of who logged them, not of the queue: what an integrator bills is their
+  people's time.
+- Request targets are computed when read, from the status history, not stored: a target changed
+  applies at once, and nothing has to tick. The clock is the calendar's (plants run day and
+  night); Blocked, an existing status, is the pause, so the API v1 status list stays as it was.
+  Temporary support access adds the Operations role in `user_access` while a grant lasts (one
+  indexed query per request), so every check that reads `can_operate` follows it and it ends
+  without a job. Operations is not a framed app: it is left out of the frame prefixes, or `/health`
+  would load the platform again inside a frame.
 - Backup of the suite at one instant (2026-10-31): `plantcraft.ops.snapshot` opens a read snapshot of every SQLite file first, then copies each in one step. Before, the copy in steps of 4,096 pages restarted at every commit of another process: with 7 databases (1.5 GB) and apps committing 20 times a second it had not finished after 16 minutes; now 28 s, the same as idle, and every database holds the same instant (0.0 s apart, against minutes).
 - Storage test (2026-10-31): JSON kept in each app's SQLite beats loose files (3-4x faster writes, indexable, 0/100 broken after kill -9 against 71/100 for an in-place `write_text`); one shared SQLite halves throughput and makes one app's batch stall the others' writes (p99 4 -> 54 ms, 130 ms with a heavy writer); PostgreSQL with a schema per app costs ~60 us a query against ~4 us. Kept one SQLite per app; Models writes its JSON files atomically. Benchmarks in `ci/bench/storage/`.
 
