@@ -6,6 +6,13 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Added
+
+- **Laboratory results in Trends.** A `laboratory:<analysis>` signal is drawn as markers at its
+  sampling times, never averaged over the interval, whenever the result arrived. The tooltip
+  gives its status (approved, not yet approved, rejected) and when it was received and approved.
+  An approved result is a filled circle, one not yet approved an open circle, a rejected one an x.
+
 ### Fixed
 
 - **A process display opens in under a second.** The demo's Riverbend plant has 289 bindings,

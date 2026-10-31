@@ -9,6 +9,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- `plantcraft-sdk`: `PlantCraftClient.lab_samples(signal, start, end)` reads a laboratory
+  signal's samples from the Historian, each with its status and its received and approved times
+  (an empty list without a Historian). View's trends use it.
 - **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
   app switcher, for administrators and for a new **Operations** role (Users: IT, or an
   integrator's team, without making them administrators). **Status** shows every app's CPU and
