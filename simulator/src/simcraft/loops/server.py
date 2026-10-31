@@ -3,6 +3,12 @@
 Tags are `CPM.Loops.<LOOP_ID>.<SIGNAL>` string NodeIds in the PlantCraft Simulator namespace
 (`simcraft.contracts.NAMESPACE_URI`). Values are historized (OPC UA Historical Access) and the
 dynamic state is kept in a second SQLite file, so a restart continues where it stopped.
+
+For training, the server also applies a fault schedule (``--faults``, ``loops.faults``) and
+reads the instructor's controls from the state file every step (``simcraft loops freeze``,
+``speed``, ``snapshot restore``): frozen, the model holds and nothing is published; at speed N,
+the model runs N seconds for each second of the clock (timestamps stay the real time); a
+restored snapshot puts every loop back in the state it was saved in.
 """
 
 from __future__ import annotations
@@ -26,6 +32,7 @@ from .dynamics import (
     initial_state,
     simulate_step,
 )
+from .faults import Fault, active_faults, load_schedule
 from .storage import HISTORY_RETENTION, LoopHistorySQLite, SimulatorStateStore
 
 logger = logging.getLogger(__name__)
@@ -35,14 +42,15 @@ APPLICATION_URI = "urn:processcraft:plantcraft:loops"
 HISTORY_BACKFILL_BATCH_POINTS = 240
 
 
-def _data_value(value: float | str, timestamp: datetime) -> ua.DataValue:
+def _data_value(value: float | str, timestamp: datetime, bad: bool = False) -> ua.DataValue:
     # Asyncua's SQLite historian uses Python's built-in TIMESTAMP converter,
     # which expects naive UTC values. OPC UA transports these timestamps as UTC.
     history_timestamp = timestamp.astimezone(UTC).replace(tzinfo=None)
     variant_type = ua.VariantType.String if isinstance(value, str) else ua.VariantType.Double
+    status = ua.StatusCodes.BadSensorFailure if bad else ua.StatusCodes.Good
     return ua.DataValue(
         ua.Variant(value, variant_type),
-        StatusCode_=ua.StatusCode(ua.StatusCodes.Good),
+        StatusCode_=ua.StatusCode(status),
         SourceTimestamp=history_timestamp,
         ServerTimestamp=history_timestamp,
     )
@@ -63,6 +71,7 @@ class LoopPortfolioServer:
         historian_seconds: float = 5.0,
         reset: bool = False,
         namespace_uri: str = NAMESPACE_URI,
+        faults: list[Fault] | None = None,
     ):
         self.endpoint = endpoint
         self.namespace_uri = namespace_uri
@@ -73,6 +82,9 @@ class LoopPortfolioServer:
         self.realtime_seconds = max(float(realtime_seconds), 0.2)
         self.historian_seconds = max(float(historian_seconds), 0.2)
         self.reset = reset
+        self.faults = list(faults or [])
+        self.offset_seconds = 0.0
+        self._fired: set[str] = set()
 
         self.server: Server | None = None
         self.history: LoopHistorySQLite | None = None
@@ -214,6 +226,7 @@ class LoopPortfolioServer:
 
         state_store = SimulatorStateStore(self.state_db)
         self.state_store = state_store
+        self.offset_seconds = state_store.controls()["offset_seconds"]
         stored_at, stored_states = state_store.load()
         counts = [await self.history.count_node_values(node.nodeid) for node in self.nodes.values()]
         complete_state = set(stored_states) == {
@@ -228,6 +241,8 @@ class LoopPortfolioServer:
             for node in self.nodes.values():
                 await self.history.clear_node_values(node.nodeid)
             state_store.clear()
+            state_store.set_controls(offset_seconds=0.0)
+            self.offset_seconds = 0.0
             self.states = {
                 definition.loop_id: initial_state(definition) for definition in LOOP_DEFINITIONS
             }
@@ -238,6 +253,7 @@ class LoopPortfolioServer:
             previous = stored_at
             start = stored_at + timedelta(seconds=self.history_sample_seconds)
 
+        self._fired = set(state_store.fired())
         history_values: dict[str, list[ua.DataValue]] = defaultdict(list)
         timestamp = start
         buffered_points = 0
@@ -290,18 +306,29 @@ class LoopPortfolioServer:
         step_seconds: float,
         history_values: dict[str, list[ua.DataValue]] | None = None,
     ) -> None:
+        """One step of every loop. Faults follow the clock (``timestamp``); the model runs on
+        its own clock, ahead by ``offset_seconds`` after a speed-up, behind after a freeze."""
+
+        model_time = timestamp + timedelta(seconds=self.offset_seconds)
         for definition in LOOP_DEFINITIONS:
-            values = simulate_step(
-                definition,
-                self.states[definition.loop_id],
-                timestamp,
-                step_seconds,
-            )
+            state = self.states[definition.loop_id]
+            faults = active_faults(self.faults, definition.loop_id, timestamp)
+            values = simulate_step(definition, state, model_time, step_seconds, faults)
             self.latest_values[definition.loop_id] = values
+            for fault in faults:
+                if fault.fault_id not in self._fired:
+                    self._fired.add(fault.fault_id)
+                    if self.state_store is not None:
+                        seen = {"pv": values["PV"], "op": values["OP"], "sp": values["SP"],
+                                "mode": values["MODE"]}  # fmt: skip
+                        self.state_store.record_fault(
+                            fault.fault_id, definition.loop_id, timestamp, seen
+                        )
             if history_values is not None:
+                bad = state.pv_status == "Bad"
                 for signal_name, value in values.items():
                     history_values[definition.tag(signal_name)].append(
-                        _data_value(value, timestamp)
+                        _data_value(value, timestamp, bad and signal_name == "PV")
                     )
 
     async def _write_latest_values(
@@ -313,6 +340,7 @@ class LoopPortfolioServer:
         for definition in LOOP_DEFINITIONS:
             values = self.latest_values[definition.loop_id]
             prior = (previous_values or {}).get(definition.loop_id, {})
+            bad = self.states[definition.loop_id].pv_status == "Bad"
             for signal_name, value in values.items():
                 # SP is written continuously so online trends always have a
                 # current endpoint. MODE remains event-driven because it is a
@@ -320,8 +348,34 @@ class LoopPortfolioServer:
                 if signal_name == "MODE" and prior.get(signal_name) == value:
                     continue
                 await self.nodes[definition.tag(signal_name)].write_value(
-                    _data_value(value, timestamp)
+                    _data_value(value, timestamp, bad and signal_name == "PV")
                 )
+
+    def _apply_controls(self, elapsed: float) -> tuple[bool, float]:
+        """The instructor's controls for this step: (frozen, model seconds to run). A snapshot
+        asked to restore is put in place first."""
+
+        assert self.state_store is not None
+        restore = self.state_store.take_restore()
+        if restore:
+            try:
+                restored = self.state_store.snapshot(restore)
+            except LookupError:
+                logger.warning("snapshot %r is gone; nothing restored", restore)
+            else:
+                for loop_id, state in restored.items():
+                    if loop_id in self.states:
+                        self.states[loop_id] = state
+                logger.info("snapshot %r restored", restore)
+        controls = self.state_store.controls()
+        if controls["frozen"]:
+            # The model's clock stops with it: back from a freeze, it goes on where it was.
+            self.offset_seconds -= elapsed
+        else:
+            self.offset_seconds += (controls["speed"] - 1.0) * elapsed
+        if abs(self.offset_seconds - controls["offset_seconds"]) > 1e-6:
+            self.state_store.set_controls(offset_seconds=self.offset_seconds)
+        return controls["frozen"], elapsed * (1.0 if controls["frozen"] else controls["speed"])
 
     async def _realtime_loop(self) -> None:
         assert self.state_store is not None
@@ -329,13 +383,16 @@ class LoopPortfolioServer:
             started = asyncio.get_running_loop().time()
             timestamp = datetime.now(UTC)
             previous_time = self.simulated_at or timestamp
+            elapsed = max((timestamp - previous_time).total_seconds(), 0.05)
+            frozen, model_seconds = self._apply_controls(elapsed)
+            if frozen:
+                self.simulated_at = timestamp
+                await asyncio.sleep(self.realtime_seconds)
+                continue
             previous_values = {
                 loop_id: dict(values) for loop_id, values in self.latest_values.items()
             }
-            self._simulate_all(
-                timestamp,
-                max((timestamp - previous_time).total_seconds(), 0.05),
-            )
+            self._simulate_all(timestamp, model_seconds)
             await self._write_latest_values(
                 timestamp,
                 previous_values=previous_values,
@@ -395,6 +452,11 @@ def build_parser(prog: str | None = None) -> argparse.ArgumentParser:
         type=float,
         default=float(env("SIMCRAFT_HISTORIAN_SECONDS", "5")),
     )
+    parser.add_argument(
+        "--faults",
+        default=env("SIMCRAFT_FAULTS", ""),
+        help="a fault schedule (JSON) to apply, for training; see `simcraft loops faults`",
+    )
     parser.add_argument("--reset", action="store_true")
     parser.add_argument(
         "--log-level",
@@ -404,6 +466,11 @@ def build_parser(prog: str | None = None) -> argparse.ArgumentParser:
 
 
 async def _run(args: argparse.Namespace) -> None:
+    loops = {definition.loop_id for definition in LOOP_DEFINITIONS}
+    faults = load_schedule(args.faults, loops) if args.faults else []
+    if faults:
+        logger.info("fault schedule: %s faults (the answer key stays with the instructor)",
+                    len(faults))  # fmt: skip
     simulator = LoopPortfolioServer(
         endpoint=args.endpoint,
         history_db=args.history_db,
@@ -414,6 +481,7 @@ async def _run(args: argparse.Namespace) -> None:
         historian_seconds=args.historian_seconds,
         reset=args.reset,
         namespace_uri=args.namespace_uri,
+        faults=faults,
     )
     stop_event = asyncio.Event()
     loop = asyncio.get_running_loop()

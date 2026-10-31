@@ -1,4 +1,15 @@
-"""Persistence of the loop portfolio: its OPC UA historian and the dynamic state of each loop."""
+"""Persistence of the loop portfolio: its OPC UA historian and the dynamic state of each loop.
+
+The state file also keeps the instructor's side of a training session, which no OPC UA client
+sees:
+
+| Table | Holds |
+|---|---|
+| ``simulator_state`` | each loop's dynamic state, saved every step |
+| ``fault_log`` | when each scheduled fault began and what it held (the answer key's evidence) |
+| ``snapshots`` | named copies of every loop's state, to restore a starting point |
+| ``controls`` | one row: frozen, speed, the model clock's offset, a snapshot asked to restore |
+"""
 
 from __future__ import annotations
 
@@ -145,6 +156,28 @@ class SimulatorStateStore:
                     state_json TEXT NOT NULL,
                     schema_version INTEGER NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS fault_log (
+                    fault_id TEXT PRIMARY KEY,
+                    loop_id TEXT NOT NULL,
+                    fired_at TEXT NOT NULL,
+                    seen_json TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS snapshots (
+                    name TEXT PRIMARY KEY,
+                    created_at TEXT NOT NULL,
+                    simulated_at TEXT NOT NULL,
+                    states_json TEXT NOT NULL,
+                    note TEXT NOT NULL DEFAULT ''
+                );
+                CREATE TABLE IF NOT EXISTS controls (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    frozen INTEGER NOT NULL DEFAULT 0,
+                    speed REAL NOT NULL DEFAULT 1,
+                    offset_seconds REAL NOT NULL DEFAULT 0,
+                    restore TEXT,
+                    changed_at TEXT NOT NULL DEFAULT ''
+                );
+                INSERT OR IGNORE INTO controls (id) VALUES (1);
                 """
             )
 
@@ -195,6 +228,125 @@ class SimulatorStateStore:
     def clear(self) -> None:
         with self._connect() as connection:
             connection.execute("DELETE FROM simulator_state")
+            connection.execute("DELETE FROM fault_log")
+
+    # Faults: when each began (the answer key's "fired").
+
+    def record_fault(self, fault_id: str, loop_id: str, at: datetime, seen: dict) -> None:
+        with self._connect() as connection:
+            connection.execute(
+                "INSERT OR IGNORE INTO fault_log (fault_id, loop_id, fired_at, seen_json)"
+                " VALUES (?, ?, ?, ?)",
+                (fault_id, loop_id, _stamp(at), json.dumps(seen, separators=(",", ":"))),
+            )
+
+    def fired(self) -> dict[str, dict]:
+        with self._connect() as connection:
+            rows = connection.execute("SELECT * FROM fault_log").fetchall()
+        return {
+            row["fault_id"]: {"at": row["fired_at"], **json.loads(row["seen_json"])} for row in rows
+        }
+
+    # Snapshots: a named copy of every loop's state.
+
+    def save_snapshot(self, name: str, note: str = "") -> dict:
+        name = snapshot_name(name)
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT loop_id, simulated_at, state_json FROM simulator_state"
+                " WHERE schema_version = ?",
+                (self.SCHEMA_VERSION,),
+            ).fetchall()
+            if not rows:
+                raise LookupError("no state to keep yet: start the simulator first")
+            states = {row["loop_id"]: json.loads(row["state_json"]) for row in rows}
+            at = min(row["simulated_at"] for row in rows)
+            connection.execute(
+                "INSERT INTO snapshots (name, created_at, simulated_at, states_json, note)"
+                " VALUES (?, ?, ?, ?, ?) ON CONFLICT(name) DO UPDATE SET"
+                " created_at = excluded.created_at, simulated_at = excluded.simulated_at,"
+                " states_json = excluded.states_json, note = excluded.note",
+                (name, _stamp(datetime.now(UTC)), at, json.dumps(states), note[:300]),
+            )
+        return {"name": name, "simulated_at": at, "loops": len(states)}
+
+    def snapshots(self) -> list[dict]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT name, created_at, simulated_at, note FROM snapshots ORDER BY name"
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def snapshot(self, name: str) -> dict[str, LoopState]:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT states_json FROM snapshots WHERE name = ?", (name,)
+            ).fetchone()
+        if row is None:
+            raise LookupError(f"no snapshot {name!r}")
+        return {
+            loop_id: LoopState.from_dict(state)
+            for loop_id, state in json.loads(row["states_json"]).items()
+        }
+
+    def delete_snapshot(self, name: str) -> bool:
+        with self._connect() as connection:
+            return connection.execute("DELETE FROM snapshots WHERE name = ?", (name,)).rowcount > 0
+
+    # Controls: freeze, speed, a restore asked for; the server reads them every step.
+
+    def controls(self) -> dict:
+        with self._connect() as connection:
+            row = connection.execute("SELECT * FROM controls WHERE id = 1").fetchone()
+        return {
+            "frozen": bool(row["frozen"]),
+            "speed": float(row["speed"]),
+            "offset_seconds": float(row["offset_seconds"]),
+            "restore": row["restore"],
+            "changed_at": row["changed_at"],
+        }
+
+    def set_controls(self, **values) -> dict:
+        allowed = {"frozen", "speed", "offset_seconds", "restore"}
+        if set(values) - allowed:
+            raise ValueError(f"unknown control(s) {sorted(set(values) - allowed)}")
+        if "speed" in values and not MIN_SPEED <= float(values["speed"]) <= MAX_SPEED:
+            raise ValueError(f"speed from {MIN_SPEED:g} to {MAX_SPEED:g}")
+        if values.get("restore") is not None:
+            self.snapshot(values["restore"])  # refuses an unknown name now, not at the server
+        sets = ", ".join(f"{key} = ?" for key in values)
+        with self._connect() as connection:
+            connection.execute(
+                f"UPDATE controls SET {sets}, changed_at = ? WHERE id = 1",  # noqa: S608
+                (*[int(v) if isinstance(v, bool) else v for v in values.values()],
+                 _stamp(datetime.now(UTC))),
+            )  # fmt: skip
+        return self.controls()
+
+    def take_restore(self) -> str | None:
+        """The snapshot asked to restore, once (the request is cleared)."""
+
+        with self._connect() as connection:
+            row = connection.execute("SELECT restore FROM controls WHERE id = 1").fetchone()
+            if row is None or not row["restore"]:
+                return None
+            connection.execute("UPDATE controls SET restore = NULL WHERE id = 1")
+        return str(row["restore"])
+
+
+MIN_SPEED = 1.0
+MAX_SPEED = 20.0
+
+
+def snapshot_name(name: str) -> str:
+    name = (name or "").strip()
+    if not name or len(name) > 60 or not all(ch.isalnum() or ch in "-_. " for ch in name):
+        raise ValueError("a snapshot name is up to 60 letters, digits, spaces, - _ or .")
+    return name
+
+
+def _stamp(moment: datetime) -> str:
+    return moment.astimezone(UTC).isoformat()
 
 
 HISTORY_RETENTION = timedelta(days=2)
