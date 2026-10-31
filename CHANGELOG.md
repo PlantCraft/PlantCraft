@@ -195,6 +195,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **`install.sh --uninstall --purge` no longer deletes another installation's images.** With
+  two installations on one Docker (test and production), purging one removed the image tags the
+  other's containers were created from, and the other could not start again. Purge now keeps
+  every image a container of another Compose project uses and says which.
+  `install.sh --show-config` exits 1 when `.env` differs from the installation file or the file
+  was not applied, and 0 when they match (docs/installation-file.md).
 - **Release bundles build again.** The installer image copies single files, and since
   `write_atomic` moved to the SDK (#54) its backup and update code imported `plantcraft.files`,
   which it did not hold: `make bundle` stopped at the installer image. It now carries that file

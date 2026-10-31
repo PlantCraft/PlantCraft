@@ -300,3 +300,61 @@ def test_check_json_reports_the_apps_this_run_would_install(tmp_path):
         check=False,
     )
     assert json.loads(done.stdout)["apps"].split() == ["linkcraft", "alarmcraft"]
+
+
+def test_purge_keeps_the_images_another_installation_uses(tmp_path):
+    """Two installations on one Docker (a test and a production one): purging one leaves the
+    images the other's containers were created from (F2, 2026-10-31)."""
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    removed = tmp_path / "removed"
+    fake = bin_dir / "docker"
+    fake.write_text(
+        "#!/bin/sh\n"
+        'if [ "$1" = ps ]; then\n'
+        "  printf 'test|processcraft:0.5.1\\ntest|histcraft:0.5.1\\nprod|processcraft:0.5.1\\n"
+        "prod|postgres:17.11-trixie\\n|simcraft:0.5.1\\n'\n"
+        f'elif [ "$1" = image ]; then echo "$3" >> {removed}; fi\n'
+    )
+    fake.chmod(0o755)
+    script = "\n".join([_function("purge_images"), 'purge_images "$1"'])
+    done = subprocess.run(
+        ["bash", "-c", script, "-", "test"],
+        input="histcraft:0.5.1\npostgres:17.11-trixie\nprocesscraft:0.5.1\nsimcraft:0.5.1\n",
+        capture_output=True,
+        text=True,
+        check=True,
+        env={**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}"},
+    )
+    # prod's containers use processcraft and postgres; a lone container (no project) uses simcraft.
+    assert done.stdout.split() == ["postgres:17.11-trixie", "processcraft:0.5.1", "simcraft:0.5.1"]
+    assert removed.read_text().split() == ["histcraft:0.5.1"]
+
+
+def test_show_config_exits_1_when_env_differs_from_the_file(tmp_path):
+    import hashlib
+
+    conf = tmp_path / "installation.conf"
+    conf.write_text("LLM=off\n")
+    digest = hashlib.sha256(conf.read_bytes()).hexdigest()
+    script = "\n".join(
+        [
+            'log() { :; }; warn() { :; }; die() { echo "$*" >&2; exit 9; }',
+            _function("env_get"),
+            _function("do_show_config"),
+            'INSTALLATION_CONF="$1"; PREFIX="$2"; CONF_ENV=("PLANTCRAFT_LLM=off"); CONF_APPS=""',
+            "do_show_config",
+        ]
+    )
+
+    def run(env: str) -> int:
+        (tmp_path / ".env").write_text(env)
+        return subprocess.run(
+            ["bash", "-c", script, "-", str(conf), str(tmp_path)], capture_output=True, check=False
+        ).returncode
+
+    applied = f"PLANTCRAFT_INSTALLATION_CONF_SHA256={digest}\n"
+    assert run(applied + "PLANTCRAFT_LLM=off\n") == 0
+    assert run(applied + "PLANTCRAFT_LLM=\n") == 1  # edited by hand
+    assert run("PLANTCRAFT_LLM=off\n") == 1  # never applied
