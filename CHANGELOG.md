@@ -42,6 +42,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   processes its peak under the 0.6.0 load test C2 reached 780 to 910 MiB, above the 768m `small`
   gave it (plan B, 2026-10-31). The Historian also keeps the archive chunks it decoded, so reads
   of the same day decode them once (`HISTCRAFT_CHUNK_CACHE_MB`).
+- **The demo's lines in the install log carry the seconds since the seed started**
+  (`[demo +42s] ...`), and the Historian backfill says how long it took: the seed is half of an
+  install with `--demo` (69 of 124 s on a 4 CPU arm64 VM), and the log now shows which step.
+- **The Historian's means on a grid take one pass (2026-10-31).** A grid read built each
+  signal's segments four times to get its covered time and area; now once, with the same
+  arithmetic and the same values to the bit. 200 dense signals x 24 h at 60 s: the Historian's
+  CPU 0.89 to 0.67 s per read (`ci/bench/reads`).
 - **Notebooks read raw series 7 to 9 times faster (2026-10-31).** `plantcraft-notebook` 0.3.0
   on a computer asks `POST /api/v1/series` for the binary answer, and PlantCraft passes the
   Historian's binary answer on as it came, without parsing it (`Accept:
