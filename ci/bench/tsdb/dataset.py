@@ -141,7 +141,8 @@ class Templates:
 
 def day(tpl: Templates, d: int, points: int = POINTS, first_point: int = 1):
     """(point int32, t int64 ms, v float64) of day ``d`` for ids first_point.., sorted by (point, t)."""
-    k_all, lev_all = kinds(POINTS), levels(POINTS)
+    n = max(POINTS, first_point + points - 1)
+    k_all, lev_all = kinds(n), levels(n)
     t0 = day_start(d)
     ps, ts, vs = [], [], []
     for pid in range(first_point, first_point + points):

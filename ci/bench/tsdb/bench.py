@@ -88,11 +88,11 @@ def to_pandas(got: dict) -> dict:
     }
 
 
-def round_ids(n=200, seed=5):
+def round_ids(n=200, seed=5, total=dataset.POINTS):
     return sorted(
         int(x)
         for x in np.random.default_rng(seed).choice(
-            np.arange(1, dataset.POINTS + 1), n, replace=False
+            np.arange(1, total + 1), min(n, total), replace=False
         )
     )
 
@@ -165,9 +165,10 @@ def queries(key: str, repeat: int = 7):
     t1 = s["t1"]
     t0 = s["t0"]
     rng = np.random.default_rng(11)
-    ids = round_ids()
-    all_ids = list(range(1, dataset.POINTS + 1))
-    pv = [i for i in all_ids if dataset.kinds()[i - 1] == 0]
+    npts = s.get("points", dataset.POINTS)
+    ids = round_ids(total=min(npts, dataset.POINTS))
+    all_ids = list(range(1, npts + 1))
+    pv = [i for i in all_ids if dataset.kinds(npts)[i - 1] == 0]
     qs = {
         "Q1 tendência 1 ponto 24 h bruto": lambda: eng.raw_many(
             [int(rng.choice(pv))], t1 - DAY, t1
@@ -177,11 +178,11 @@ def queries(key: str, repeat: int = 7):
             0: (np.zeros(int(eng.scan(ids, t1 - DAY, t1))),)
         },
         "Q2p rodada 200 pontos 24 h + pandas": lambda: to_pandas(eng.raw_many(ids, t1 - DAY, t1)),
-        "Q3 frota 2000 pontos 24 h bruto": lambda: eng.raw_many(all_ids, t1 - DAY, t1),
+        f"Q3 frota {npts} pontos 24 h bruto": lambda: eng.raw_many(all_ids, t1 - DAY, t1),
         "Q4 grade 200 pontos 24 h 60 s": lambda: eng.grid(ids, t1 - DAY, t1, 60_000),
         "Q5 tendência longa 1 ponto 1 h": lambda: eng.grid([int(rng.choice(pv))], t0, t1, HOUR),
         "Q6 incremental 200 pontos 15 min": lambda: eng.raw_many(ids, t1 - 15 * 60_000, t1),
-        "Q7 último valor 2000 pontos": lambda: eng.last(all_ids),
+        f"Q7 último valor {npts} pontos": lambda: eng.last(all_ids),
     }
     out = {}
     for name, fn in qs.items():
@@ -243,7 +244,18 @@ def conc(key: str, levels=(1, 2, 4, 10, 16), rounds: int = 3):
         # each client reads its own 200 signals (different loops), as parallel Analytics rounds do
         mgr = mp.Manager()
         barrier = mgr.Barrier(n)
-        args = [(key, t1, round_ids(200, seed=100 + i), rounds, barrier) for i in range(n)]
+        args = [
+            (
+                key,
+                t1,
+                round_ids(
+                    200, seed=100 + i, total=min(s.get("points", dataset.POINTS), dataset.POINTS)
+                ),
+                rounds,
+                barrier,
+            )
+            for i in range(n)
+        ]
         w = time.perf_counter()
         with mp.get_context("spawn").Pool(n) as pool:
             res = pool.map(_worker, args)
@@ -275,7 +287,7 @@ def check(key: str):
     s = state()[key]
     d = s["first"] + s["days"] - 1
     p, t, v = dataset.read(DATA, d, s["points"])
-    ids = round_ids(20)
+    ids = round_ids(20, total=min(s["points"], dataset.POINTS))
     t0, t1 = dataset.day_start(d), dataset.day_start(d + 1)
     got = eng.raw_many(ids, t0, t1)
     bad = []
@@ -307,10 +319,11 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["load", "query", "conc", "check", "stop", "all"])
     ap.add_argument("--engine", required=True)
     ap.add_argument("--days", type=int, default=7)
+    ap.add_argument("--points", type=int, default=dataset.POINTS)
     ap.add_argument("--repeat", type=int, default=7)
     a = ap.parse_args()
     if a.cmd in ("load", "all"):
-        load(a.engine, a.days)
+        load(a.engine, a.days, a.points)
     if a.cmd in ("check", "all"):
         check(a.engine)
     if a.cmd in ("query", "all"):
