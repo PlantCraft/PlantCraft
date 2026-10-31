@@ -21,7 +21,16 @@ FLOORS = tomllib.loads((ROOT / "tests" / "floors.toml").read_text(encoding="utf-
 # | 1 | suite (what the app sends to PlantCraft; nothing yet) |
 # | 2 | library (the app's own object: reading, passages, search, its store and its service) |
 # | 3 | api, cli |
-LAYERS = {"i18n": -1, "config": 0, "meta": 0, "suite": 1, "library": 2, "api": 3, "cli": 3}
+LAYERS = {
+    "i18n": -1,
+    "config": 0,
+    "meta": 0,
+    "suite": 1,
+    "plantmap": 1,
+    "library": 2,
+    "api": 3,
+    "cli": 3,
+}
 
 
 def test_offline_by_default():

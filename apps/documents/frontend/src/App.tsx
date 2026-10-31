@@ -1,9 +1,11 @@
 import { SuiteShell, signOut, useSuiteSession } from "@plantcraft/ui";
 import { useEffect, useMemo, useState } from "react";
 import { api, UNAUTHORIZED_EVENT } from "./api";
+import { DiagramView, DiagramsPage } from "./DiagramsPage";
 import { DocumentPage, DocumentView } from "./DocumentPage";
 import { LibraryPage } from "./LibraryPage";
 import { OverviewPage } from "./OverviewPage";
+import { PlantMapPage } from "./PlantMapPage";
 import { SearchPage } from "./SearchPage";
 import { HelpView } from "./SuitePages";
 import { t } from "./i18n";
@@ -19,6 +21,9 @@ function Route({ path, me }: { path: string; me: Me }) {
   if (section === "folders" && id) return <LibraryPage key={`f-${id}`} folderId={id} me={me} />;
   if (section === "assets" && id) return <LibraryPage key={`a-${id}`} assetId={id} me={me} />;
   if (section === "search") return <SearchPage me={me} />;
+  if (section === "diagrams" && id && part) return <DiagramView key={`${id}-${part}`} revId={id} page={Number(part) || 1} />;
+  if (section === "diagrams") return <DiagramsPage me={me} />;
+  if (section === "plant-map") return <PlantMapPage me={me} />;
   // The reading queue moved to the suite's Queue (side bar); an old link opens the library.
   if (section === "queue") return <LibraryPage me={me} />;
   if (section === "help") return <HelpView pageId={id || undefined} />;

@@ -26,6 +26,7 @@ from typing import Any
 from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import ValidationError
 
 from plantcraft_sdk.auth import AuthError, User, wants_html
 from plantcraft_sdk.client import PlantCraftError
@@ -37,9 +38,15 @@ from plantcraft_sdk.server.files import AppFiles
 from plantcraft_sdk.server.logs import current_file
 from plantcraft_sdk.server.memory import Releaser
 from plantcraft_sdk.server.ops import RequestLog, can_read_metrics, metrics
+from plantcraft_sdk.server.origin import SameSiteWrites
 from plantcraft_sdk.server.queue import FORMAT as QUEUE_FORMAT
 from plantcraft_sdk.server.search import search_answer
 from plantcraft_sdk.utc import parse_instant
+
+
+def _openapi() -> bool:
+    return os.environ.get("PLANTCRAFT_OPENAPI", "").strip().lower() in {"1", "true", "yes", "on"}
+
 
 LOGGER = logging.getLogger(__name__)
 # A public page: never cached by a shared proxy, never sends its token on as a referrer.
@@ -78,8 +85,9 @@ def suite_api(
     api = FastAPI(
         title=title,
         version=version,
-        docs_url="/api/docs",
-        openapi_url="/api/openapi.json",
+        # The route list only when asked (PLANTCRAFT_OPENAPI=true, for development).
+        docs_url="/api/docs" if _openapi() else None,
+        openapi_url="/api/openapi.json" if _openapi() else None,
         redoc_url=None,
     )
     api.state.runtime = runtime
@@ -87,8 +95,21 @@ def suite_api(
 
     @api.exception_handler(PlantCraftError)
     async def processcraft_failed(_request: Request, exc: PlantCraftError) -> JSONResponse:
-        status = exc.status_code if exc.status_code in (401, 403, 404) else 502
+        # PlantCraft refused the request (a 4xx) or failed (502: this app's upstream).
+        status = exc.status_code if 400 <= int(exc.status_code or 0) < 500 else 502
         return JSONResponse({"detail": str(exc.detail)}, status_code=status)
+
+    @api.exception_handler(ValidationError)
+    async def invalid_value(_request: Request, exc: ValidationError) -> JSONResponse:
+        # A value the route built from the request failed its model's checks (a folder id with
+        # other characters): the request was wrong, not the server (API fuzzing, 2026-10-31).
+        errors = exc.errors()
+        message = str(errors[0].get("msg", "")) if errors else ""
+        return JSONResponse({"detail": message or t("Invalid value.")}, status_code=422)
+
+    @api.exception_handler(UnicodeError)
+    async def broken_text(_request: Request, _exc: UnicodeError) -> JSONResponse:
+        return JSONResponse({"detail": t("The text has characters that are not valid.")}, 422)
 
     @api.exception_handler(Exception)
     async def unexpected(_request: Request, exc: Exception) -> JSONResponse:
@@ -293,5 +314,7 @@ def mount(
         app.mount("/", api)
     # A public demo visit's requests, a few at once (plantcraft_sdk.server.demo).
     app.add_middleware(DemoVisitLimit)
+    # A write with the cookie from another site of the domain is refused (server.origin).
+    app.add_middleware(SameSiteWrites)
     app.add_middleware(RequestLog)
     return app

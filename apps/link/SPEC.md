@@ -90,7 +90,7 @@ is incomplete, and CPM settings never leak into the central app.
 | Diagnosis | Valve stiction screening (`stiction_screening`) | stick-slip model: Choudhury, Thornhill and Shah 2005; saturation ruled out first: Jelali and Huang 2010 | done (screening of the OP pattern; no PV-OP shape test, G28) | same, `tests/test_rounds.py` (FIC-105) |
 | Diagnosis | Valve stiction quantification | Choudhury 2006, Jelali and Huang 2010 | partial: screening only, no Horch cross-correlation, ellipse or bicoherence test (G28); ISDB oracle not pinned (G3) | `tests/oracles` |
 | Diagnosis | Loop interaction (`interaction_cross_correlation`) | survey | done | same |
-| Diagnosis | Minimum-variance benchmark (Harris index) | Harris 1989, Horch and Isaksson 1999 | missing (G19) | |
+| Diagnosis | Minimum-variance benchmark (Harris index, `harris_index`) | Harris 1989, Horch and Isaksson 1999 | done | `tests/test_harris.py` |
 | Algorithms | Configurable assessment as diagrams of typed blocks, checked before they run; outputs on the asset, as events and in the historian | survey | done (44 blocks, 5 shipped algorithms, 0.2 protocols converted; `docs/blocks-and-algorithms.md`) | `tests/test_algorithms.py` |
 | Engine | Scheduled assessment of the whole plant | survey | done (round, interval/hourly/daily/weekly/once schedules) | `tests/test_schedules.py`, `tests/test_engine_reliability.py` |
 | Engine | Thousands of loops per round | survey | done: 2000 loops in ~2.5 min (bench, 4 processes) | `python -m linkcraft.bench` |

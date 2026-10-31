@@ -11,8 +11,8 @@ license = {text = "Apache-2.0"}
 requires-python = ">=3.11"
 dependencies = [
     # Not on any index: install it from vendor/ first
-    # (pip install --no-index --find-links vendor plantcraft-sdk==0.81.0).
-    "plantcraft-sdk==0.81.0",
+    # (pip install --no-index --find-links vendor plantcraft-sdk==0.82.0).
+    "plantcraft-sdk==0.82.0",
     "fastapi>=0.116,<1",
     "httpx>=0.27,<1",
     "pydantic>=2.7,<3",
@@ -26,11 +26,18 @@ dependencies = [
     "numpy>=2,<3",
     "onnxruntime>=1.20,<2",
     "tokenizers>=0.20,<1",
+    # The plant map: drawings read into tags and lines (pdfplumber and pdfminer.six: MIT;
+    # pypdfium2: Apache-2.0/BSD, draws a page for the review; Pillow: HPND). OCR of scans uses
+    # the tesseract program when the image has it.
+    "pdfplumber>=0.11,<0.12",
+    "pypdfium2>=4.30,<6",
+    "pillow>=10,<14",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8",
+    "reportlab>=4,<6",  # tools/evaluate.py and the tests draw the demo's P&IDs as PDF
     "ruff==0.17.1",
 ]
 # Browser journeys (tests/e2e, `make e2e`); test-only, never in the image.

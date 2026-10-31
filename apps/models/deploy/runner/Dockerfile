@@ -42,6 +42,9 @@ RUN --mount=type=secret,id=build_ca,required=false,mode=0444 \
     if [ -s /run/secrets/build_ca ]; then CA="-o Acquire::https::CAInfo=/run/secrets/build_ca"; \
         sed -i 's#http://#https://#g' /etc/apt/sources.list; else CA=""; fi; \
     apt-get $CA update; \
+    # The base image's system packages, up to date (trivy, 2026-10-31: 27 critical and 459 high
+    # findings with a fix in the base image's packages).
+    DEBIAN_FRONTEND=noninteractive apt-get $CA upgrade -y --no-install-recommends; \
     apt-get $CA install -y --no-install-recommends python3 git ca-certificates; \
     if [ -s /run/secrets/build_ca ]; then export GIT_SSL_CAINFO=/run/secrets/build_ca; fi; \
     git init -q /tmp/msl; \

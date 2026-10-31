@@ -137,7 +137,7 @@ done
 log "Writing $OUT (linux/$ARCH)"
 rm -rf "$OUT" "$DIST/$NAME.tar.gz" "$DIST/$NAME.tar.gz.sha256" "$DIST/$NAME.tar.gz.sha256.sig"
 mkdir -p "$OUT/certs" "$OUT/docs" "$OUT/sbom" "$OUT/trusted-publishers"
-cp "$ROOT/deploy/compose.yaml" "$ROOT/deploy/compose-worker.yaml" "$ROOT/deploy/install.sh" "$ROOT/deploy/firewall.sh" "$OUT/"
+cp "$ROOT/deploy/compose.yaml" "$ROOT/deploy/compose-worker.yaml" "$ROOT/deploy/install.sh" "$ROOT/deploy/firewall.sh" "$ROOT/deploy/security-check.sh" "$OUT/"
 cp "$ROOT/deploy/certs/README.md" "$OUT/certs/"
 cp "$ROOT/LICENSE" "$ROOT/NOTICE" "$OUT/"
 cp "$ROOT/docs/install-offline.md" "$ROOT/docs/security-guide.md" "$ROOT/docs/app-package.md" "$OUT/docs/"
@@ -171,7 +171,7 @@ sed -e "s/^PLANTCRAFT_VERSION=.*/PLANTCRAFT_VERSION=$VERSION/" \
         echo "# $image $(docker image inspect --format '{{.Id}}' "$image")"
     done
 } >"$OUT/bundle.env"
-chmod 0755 "$OUT/install.sh" "$OUT/firewall.sh"
+chmod 0755 "$OUT/install.sh" "$OUT/firewall.sh" "$OUT/security-check.sh"
 if [ -n "$bundle_plant" ]; then
     # The demo's plant map: the Simulator source, its 50 loops and their loop types.
     mkdir -p "$OUT/demo"

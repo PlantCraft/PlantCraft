@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hmac
 import logging
+import math
 import time
 from typing import Any
 
@@ -21,6 +22,8 @@ from plantcraft.api.identity import clear_token_cookie, refresh_browser_token
 from plantcraft.api.routers.home import _version
 from plantcraft.api.schemas import LoginPayload, SwitchUserPayload
 from plantcraft.auth.public_demo import public_demo
+from plantcraft.auth.sessions import new_session_id
+from plantcraft.auth.throttle import address_key, pair_key
 from plantcraft.directory import DirectoryRefused, DirectoryUnavailable, WrongCredentials
 from plantcraft.i18n import t
 
@@ -80,20 +83,21 @@ def login(
             status_code=403, detail=t("Use Enter the demo to visit the public demo.")
         )
     if rt.auth.enabled:
-        # Failed sign-ins per username and per address; a burst blocks for a while.
-        keys = [
-            f"user:{username.lower()[:200]}",
-            f"addr:{request.client.host if request.client else '-'}",
-        ]
+        # Failed sign-ins per name and address, and per address (plantcraft.auth.throttle):
+        # the wait grows for one name typed wrong from one place, so nobody locks someone
+        # else out from another address.
+        address = request.client.host if request.client else "-"
+        keys = [pair_key(username, address), address_key(address)]
         throttle = rt.workspace.login_throttle
-        if throttle.blocked(keys):
+        if (wait := throttle.wait(keys)) > 0:
             audit_sign_in(rt, request, username, "session.sign_in_blocked")
             raise HTTPException(
                 status_code=429,
                 detail=t("Too many attempts. Wait a few minutes and try again."),
+                headers={"Retry-After": str(max(1, math.ceil(wait)))},
             )
-        admin = hmac.compare_digest(username, rt.auth.username) and hmac.compare_digest(
-            payload.password, rt.auth.password
+        admin = hmac.compare_digest(_raw(username), _raw(rt.auth.username)) and hmac.compare_digest(
+            _raw(payload.password), _raw(rt.auth.password)
         )
         local = (
             not admin
@@ -132,6 +136,12 @@ def login(
     return _session_payload(username, rt, request)
 
 
+def _raw(text: str) -> bytes:
+    """Bytes to compare in constant time (``compare_digest`` refuses non-ASCII text)."""
+
+    return text.encode("utf-8", "surrogatepass")
+
+
 def audit_sign_in(rt: Any, request: Request, username: str, action: str, **detail: Any) -> None:
     """One ``session.*`` row of the audit log: who, from which address, and how or why not."""
 
@@ -148,6 +158,8 @@ def open_session(request: Request, rt: Any, username: str) -> None:
     request.session.clear()
     request.session["cpm_username"] = username
     if rt.auth.enabled:
+        # Its id goes on the list of ended sessions at sign-out (plantcraft.auth.sessions).
+        request.session["cpm_sid"] = new_session_id()
         request.session["cpm_fp"] = password_fingerprint(rt, username)
         request.session["cpm_auth_at"] = int(time.time())
 
@@ -203,6 +215,9 @@ def logout(request: Request, response: Response, rt: Runtime) -> dict[str, bool]
     username = request.session.get("cpm_username")
     if rt.auth.enabled and isinstance(username, str) and username:
         audit_sign_in(rt, request, username, "session.sign_out")
+    if isinstance(sid := request.session.get("cpm_sid"), str) and sid:
+        # A copy of this cookie stops working now, not when it would have expired.
+        rt.workspace.ended_sessions.end(sid, 60 * 60 * 24 * rt.auth.session_days)
     if visit := request.session.get("demo_visit"):
         # A visitor who leaves gives their place to the next one.
         rt.workspace.demo_visits.leave(str(visit))

@@ -97,7 +97,7 @@ function AnswerBody({ message, onRetry }: { message: ChatMessage; onRetry?: () =
     {failed
       ? <div className="asst-failed"><AlertTriangle size={15} /> <span>{message.text || t("The answer was interrupted. Ask again.")}</span>
         {onRetry && <button type="button" className="button button-secondary asst-retry" onClick={onRetry}><RotateCcw size={14} />{t("Try again")}</button>}</div>
-      : message.text && <div className={`asst-markdown${working ? " pc-answer-writing" : ""}`}>{renderMarkdown(message.text)}</div>}
+      : message.text && <div className={`asst-markdown${working ? " pc-answer-writing" : ""}`}>{renderMarkdown(message.text, { plainExternalLinks: true })}</div>}
     <AnswerProgress message={message} />
     {message.charts.map((chart, index) => <AssistantChart key={index} chart={chart} />)}
     {message.state === "done" && (message.meta?.proposals ?? []).map((proposal, index) => <ProposalCard key={index} chatId={message.chat_id} messageId={message.message_id} index={index} proposal={proposal} />)}
