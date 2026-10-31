@@ -6,7 +6,7 @@ export { HelpBrowser, helpTree, type HelpBrowserProps, type HelpDoc } from "./He
 export { configureUi, t as uiText } from "./i18n.js";
 export { fetchInbox, inboxBadge, INBOX_POLL_MS, messagesUrl, platformUrl, unreadCount, urgentFrom, useInbox, type InboxCounts, type InboxState } from "./Inbox.js";
 export { markUrgentSeen, runNoticeAction, urgentDue, UrgentToast, type NoticeAction, type UrgentNotice } from "./UrgentNotice.js";
-export { renderMarkdown } from "./Markdown.js";
+export { renderMarkdown, type MarkdownOptions } from "./Markdown.js";
 export { SuiteShell, startTour, appsWithPlatform, SUITE_ORDER, initials, PLATFORM_APP, useSuiteApps, type ShellNavChild, type ShellNavItem, type ShellUser, type SuiteApp, type SuiteShellProps } from "./SuiteShell.js";
 export { THEME_KEY, applyTheme, initTheme, setTheme, themeChoice, type ThemeChoice } from "./theme.js";
 export { PageTabs, type PageTab } from "./PageTabs.js";
