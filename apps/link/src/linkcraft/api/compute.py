@@ -25,6 +25,8 @@ from concurrent.futures import TimeoutError as FutureTimeout
 from pathlib import Path
 from typing import Any
 
+from plantcraft_sdk.files import write_atomic, write_json
+
 from linkcraft.blocks import sandbox, site
 from linkcraft.engine.suite_compute import ANSWERS, CALLS, ComputeTaskError, SuitePool
 from linkcraft.engine.wire import decode, encode
@@ -118,9 +120,7 @@ def _keep_blocks(blocks: dict[str, str]) -> None:
         if path is None or path.is_file():
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
-        scratch = path.with_suffix(".tmp")
-        scratch.write_text(str(text), encoding="utf-8")
-        scratch.replace(path)
+        write_atomic(path, str(text))
 
 
 def answer(job_dir: Path) -> None:
@@ -144,7 +144,7 @@ def answer(job_dir: Path) -> None:
             answers.append({"ok": False, "error": error[:4000]})
     out = job_dir / "out"
     out.mkdir(exist_ok=True)
-    (out / ANSWERS).write_text(json.dumps(answers, separators=(",", ":")), encoding="utf-8")
+    write_json(out / ANSWERS, answers, separators=(",", ":"))
 
 
 __all__ = ["ANSWERS", "RemoteCodePool", "answer", "run_block_code", "site_blocks"]

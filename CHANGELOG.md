@@ -38,6 +38,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **State files are written whole or not at all, everywhere (storage tests, 2026-10-31).**
+  `plantcraft-sdk` 0.88.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
+  unique temporary file created with its final mode, `fsync`, then a rename, so a process killed
+  mid-write leaves the old file, never half a JSON (71 of 100 kills broke a `write_text` file).
+  The platform's `plantcraft.files` and Models' `modelcraft.atomic` now use it, and so do the
+  state files that still wrote in place or through a shared temporary name: the operations
+  journal and status, the Operations desk requests, installed app files, the egress allowlist,
+  the industrial data key (now private from the first byte), the Historian's CSV sources and
+  import files, Analytics' block files and compute answers, Models' jobs, results, runner state
+  and library cache, and the SDK compute folder's files.
 - **The Historian's means on a grid take one pass (2026-10-31).** A grid read built each
   signal's segments four times to get its covered time and area; now once, with the same
   arithmetic and the same values to the bit. 200 dense signals x 24 h at 60 s: the Historian's

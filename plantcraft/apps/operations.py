@@ -50,6 +50,7 @@ from typing import Any
 from plantcraft.apps import historian_backup
 from plantcraft.apps.historian_backup import HistorianBackup, HistorianBackupError
 from plantcraft.apps.installer import Docker, InstallError, json_lines
+from plantcraft.files import write_atomic
 from plantcraft.ops import snapshot
 
 DRIVER = "processcraft-ops"
@@ -313,11 +314,8 @@ class Driver:
     def _write_json(self, path: Path, value: Any) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         self._hand_over(path.parent)
-        partial = path.with_name(f".{path.name}.{uuid.uuid4().hex[:8]}")
-        partial.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        partial.chmod(0o644)
-        self._hand_over(partial)
-        partial.replace(path)
+        write_atomic(path, json.dumps(value, indent=2, sort_keys=True) + "\n", mode=0o644)
+        self._hand_over(path)
 
     def log(self, message: str) -> None:
         print(f"[{self.clock().strftime('%H:%M:%S')}] {message}", flush=True)
@@ -329,10 +327,7 @@ class Driver:
     def _journal_write(self, value: dict[str, Any]) -> None:
         folder = self.journal.parent
         folder.mkdir(mode=0o700, exist_ok=True)
-        partial = folder / f".current.{uuid.uuid4().hex[:8]}"
-        partial.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        partial.chmod(0o600)
-        partial.replace(self.journal)
+        write_atomic(self.journal, json.dumps(value, indent=2, sort_keys=True) + "\n")
 
     def phase(self, phase: str, **fields: Any) -> None:
         """Write the journal before each step: a driver that stops is finished or undone."""
@@ -530,8 +525,7 @@ class Driver:
             current = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             current = {}
-        path.write_text(json.dumps({**current, **fields}, indent=2, sort_keys=True) + "\n")
-        path.chmod(0o600)
+        write_atomic(path, json.dumps({**current, **fields}, indent=2, sort_keys=True) + "\n")
 
     # Backup --------------------------------------------------------------------------------
 

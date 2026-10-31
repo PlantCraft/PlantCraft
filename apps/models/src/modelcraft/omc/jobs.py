@@ -23,6 +23,7 @@ from typing import Any, Protocol
 
 from plantcraft_sdk.client import PlantCraftClient
 from plantcraft_sdk.compute.client import ComputeClient
+from plantcraft_sdk.files import write_json
 
 from modelcraft.omc import runner
 from modelcraft.omc.messages import parse, simulation_log
@@ -136,7 +137,7 @@ def _write_job(
         target.write_text(text, encoding="utf-8")
     for name, content in extra.items():
         (folder / name).write_bytes(content)
-    (folder / "job.json").write_text(json.dumps(job), encoding="utf-8")
+    write_json(folder / "job.json", job)
 
 
 def _answer(folder: Path) -> JobAnswer:
@@ -401,7 +402,7 @@ class SuiteExecutor:
         collected = self.jobs_dir / "collected" / job_id
         shutil.rmtree(collected, ignore_errors=True)
         (collected / "out").mkdir(parents=True)
-        (collected / "result.json").write_text(json.dumps(answer.result), encoding="utf-8")
+        write_json(collected / "result.json", answer.result)
         for name, content in answer.files.items():
             target = (collected / "out" / name).resolve()
             if collected / "out" in target.parents:

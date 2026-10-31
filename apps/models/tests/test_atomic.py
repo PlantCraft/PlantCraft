@@ -10,7 +10,6 @@ import json
 
 import pytest
 
-from modelcraft import atomic
 from modelcraft.atomic import write_atomic, write_json
 
 
@@ -22,7 +21,9 @@ def test_a_write_that_fails_half_way_keeps_the_old_file(tmp_path, monkeypatch):
     target = tmp_path / "files.json"
     write_json(target, {"a.mo": "model A end A;"})
 
-    real_open = open
+    import os
+
+    real_fdopen = os.fdopen
 
     class HalfFile:
         def __init__(self, handle):
@@ -45,7 +46,7 @@ def test_a_write_that_fails_half_way_keeps_the_old_file(tmp_path, monkeypatch):
         def fileno(self):
             return self.handle.fileno()
 
-    monkeypatch.setattr(atomic, "open", lambda *a, **k: HalfFile(real_open(*a, **k)), raising=False)
+    monkeypatch.setattr(os, "fdopen", lambda *a, **k: HalfFile(real_fdopen(*a, **k)))
     with pytest.raises(Boom):
         write_json(target, {"a.mo": "model A Real x; end A;" * 100})
 

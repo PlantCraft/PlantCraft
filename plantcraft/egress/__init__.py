@@ -30,6 +30,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
+from plantcraft.files import write_atomic
+
 LOGGER = logging.getLogger("plantcraft.egress")
 
 PORT = 3128
@@ -101,10 +103,7 @@ def write_allowlist(hosts: list[str], path: Path | None = None) -> bool:
         return False
     clean = sorted({host.lower() for host in hosts if is_public_host(host)})
     target.parent.mkdir(parents=True, exist_ok=True)
-    scratch = target.with_suffix(".tmp")
-    scratch.write_text(json.dumps({"hosts": clean, "at": int(time.time())}), encoding="utf-8")
-    os.chmod(scratch, 0o644)
-    os.replace(scratch, target)
+    write_atomic(target, json.dumps({"hosts": clean, "at": int(time.time())}), mode=0o644)
     return True
 
 
