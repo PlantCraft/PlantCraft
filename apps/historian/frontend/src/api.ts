@@ -85,7 +85,7 @@ export const api = {
   answer: <T,>(requestId: number) => request<RequestAnswer<T>>(`/api/requests/${requestId}`),
   points: (q = "", source = "") => request<Point[]>(`/api/points?${new URLSearchParams({ q, ...(source ? { source } : {}) })}`),
   addPoints: (points: NewPoint[]) => request<{ added: string[]; skipped: { signal: string; tag: string; reason: string }[] }>("/api/points", body("POST", { points })),
-  updatePoint: (signal: string, patch: Partial<Omit<Point, "mode" | "own_mode" | "scan_seconds" | "deviation" | "max_seconds" | "retention_days" | "exception">> & { mode?: Point["own_mode"]; scan_seconds?: number | null; deviation?: number | null; exception?: number | null; max_seconds?: number | null; retention_days?: number | null }) => request<Point>(`/api/points/${id(signal)}`, body("PATCH", patch)),
+  updatePoint: (signal: string, patch: Partial<Omit<Point, "mode" | "own_mode" | "scan_seconds" | "deviation" | "max_seconds" | "retention_days" | "exception">> & { mode?: Point["own_mode"]; scan_seconds?: number | null; deviation?: number | null; exception?: number | null; min_seconds?: number | null; max_seconds?: number | null; retention_days?: number | null }) => request<Point>(`/api/points/${id(signal)}`, body("PATCH", patch)),
   deletePoints: (signals: string[]) => request<{ removed: number; retired: number; days: number }>("/api/points/delete", body("POST", { signals })),
   retiredPoints: () => request<{ points: RetiredPoint[]; days: number }>("/api/points/retired"),
   restorePoints: (ids: number[]) => request<{ restored: string[]; refused: { id: number; signal?: string; reason: string }[] }>("/api/points/restore", body("POST", { ids })),

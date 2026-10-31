@@ -44,7 +44,7 @@ export function PointPage({ signal, me }: { signal: string; me: Me }) {
     const own = (key: PointSetting) => (found.own[key] === null ? "" : String(found.own[key]));
     setDraft((now) => Object.keys(now).length ? now : {
       name: found.name, description: found.description, unit: found.unit, scan_seconds: own("scan_seconds"), deviation: own("deviation"),
-      exception: own("exception"), profile: profileOf(found),
+      exception: own("exception"), profile: profileOf(found), min_seconds: found.min_seconds ? String(found.min_seconds) : "",
       low: found.low === null ? "" : String(found.low), high: found.high === null ? "" : String(found.high),
       max_seconds: own("max_seconds"), retention_days: own("retention_days"), step: found.step, enabled: found.enabled, mode: found.own_mode, address: found.address,
     });
@@ -65,6 +65,8 @@ export function PointPage({ signal, me }: { signal: string; me: Me }) {
       const updated = await api.updatePoint(signal, {
         name: String(draft.name ?? ""), description: String(draft.description ?? ""), unit: String(draft.unit ?? ""),
         scan_seconds: number("scan_seconds"), max_seconds: number("max_seconds"), retention_days: number("retention_days"),
+        // Lines only (PI's CompMin): empty or 0 archives as often as the compression asks.
+        ...(point!.kind === "number" && !draft.step ? { min_seconds: number("min_seconds") } : {}),
         // A profile clears the point's own deviation and exception; "custom" keeps them.
         ...(point!.kind === "number" ? (draft.profile === "custom"
           ? { profile: "", deviation: number("deviation"), exception: number("exception") }
@@ -168,6 +170,7 @@ export function PointPage({ signal, me }: { signal: string; me: Me }) {
           </select><small>{t("Now: {compression}.", { compression: compression(point) })}</small></label>}
         {point.kind === "number" && draft.profile === "custom" && setting("exception", "Exception", point.unit, "In engineering units; empty takes the general share of the span")}
         {point.kind === "number" && draft.profile === "custom" && setting("deviation", "Deviation", point.unit, point.deviation_percent ? t("No range known: {share}. In engineering units", { share: compression(point) }) : "In engineering units")}
+        {point.kind === "number" && !draft.step && field("min_seconds", "Shortest interval between archived values (s)", "Empty: none. A faster change is held until then", "number")}
         {setting("max_seconds", "Longest interval between archived values (s)", "s")}
         {setting("retention_days", "Retention (days)", "days")}
         <p className="form-note">{t("Empty fields take the source's value, else the general settings; the most specific wins.")}</p>
