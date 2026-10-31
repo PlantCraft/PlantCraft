@@ -210,3 +210,15 @@ def test_import_the_dcs_alarm_list_review_and_apply(signed_in, app_url, screensh
     page.goto(f"{app_url}/alarm/rules")
     expect(page.get_by_role("link", name="Feed flow very high (DCS)")).to_be_visible()
     expect(page.get_by_role("link", name="Feed flow low (DCS)")).to_have_count(0)
+
+
+def test_a_rule_only_while_its_permissive_holds(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/alarm/rules/new")
+    page.get_by_role("button", name="Only while…").click()
+    expect(page.get_by_role("group", name="Only while")).to_be_visible()
+    page.get_by_label("Permissive limit").fill("1")
+    page.get_by_label("Enabled after (s)").fill("30")
+    _shot(page, screenshots, "9-only-while")
+    page.get_by_role("button", name="Remove the permissive").click()
+    expect(page.get_by_role("button", name="Only while…")).to_be_visible()

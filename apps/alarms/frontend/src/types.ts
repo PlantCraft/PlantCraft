@@ -24,6 +24,8 @@ export interface AlarmDraft {
 }
 
 export interface Alarm extends AlarmDraft {
+  /** Suppressed by design: the rule's permissive does not hold (state-based alarming). */
+  suppressed?: boolean;
   alarm_id: string; status: Status; condition: string; priority_label: string;
   active: boolean; acked: boolean; acked_at: string | null; acked_by: string | null;
   value: number | null; value_at: string | null; raised_at: string | null; signal: string | null;
@@ -124,7 +126,13 @@ export interface SimpleCondition {
   event: SimpleEvent | null; test: "open" | "count"; count: number; window_minutes: number; for_seconds: number; for_points: number;
 }
 /** The Simple form: one to three conditions joined by and (or by or). */
-export interface SimpleLogic { conditions: SimpleCondition[]; combine: "and" | "or"; clear_after_seconds: number }
+export interface SimpleLogic {
+  conditions: SimpleCondition[]; combine: "and" | "or"; clear_after_seconds: number;
+  /** State-based alarming: judged only while this value condition (a permissive) holds. */
+  enable_when?: SimpleCondition | null;
+  /** Seconds the permissive must hold before the alarm is judged (the flow settles after a start). */
+  enable_delay_seconds?: number;
+}
 
 export type Per = "asset" | "execution" | "rule";
 /** Where a rule applies: assets, every asset under branches or of types, the assets of

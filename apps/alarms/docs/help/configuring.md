@@ -34,6 +34,16 @@ Values and events are picked in the **Explorer**: the plant map with each asset'
 series the apps computed about it and the events that named it. A value picked for **each
 asset** is read on every asset of the rule.
 
+### Only while: alarms that depend on the plant's state
+
+**Only while…** in the Simple form adds a permissive: a value condition that must hold for the
+alarm to be judged at all (state-based alarming, ISA-18.2 designed suppression). A low flow alarm
+**only while P-101 running ≥ 1**, with **Enabled after** 30 s so the flow can settle after a
+start. While the permissive does not hold, the alarm is suppressed by design: it is not raised,
+it clears if it was raised, and its page says so. A permissive that cannot be judged (no data)
+leaves the alarm enabled, so a bad signal never hides an alarm. In Blocks it is the **Enabled
+when** input of Raise an alarm.
+
 ## What it makes
 
 - **An alarm**: needs an acknowledgement, shows in Alarms and counts in Performance (ISA-18.2).
