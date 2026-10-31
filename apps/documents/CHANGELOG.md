@@ -27,6 +27,12 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   two pieces of equipment with a nozzle at each end, and each instrument loop with its valves
   and the equipment it measures. No graphics; what was marked Wrong is left out. The help page
   now explains Diagrams and the plant map.
+- **A scan read again by the language model.** On a scanned diagram an editor may ask
+  **Read again with the language model**: the page's image and what the drawing reader found go
+  to the model an administrator gives the new use `diagram-read` (Setup › Language models; off
+  until then, and the app now asks for `write.llm`). The tags and lines it adds are kept with
+  medium certainty and "read by the language model; check it", to be checked on the map. On the
+  demo scans gpt-5-mini read the lines with precision 0.93 and recall 0.97, where OCR reads none.
 - **From the map to the plant.** An item PlantCraft already has opens its asset, its signals
   (the Historian's) and what the suite's apps say about it, from the item's card on the map.
 - `tools/llm_vision_eval.py --dexpi DIR --xml DIR` scores a vision model on public P&IDs against

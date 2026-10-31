@@ -50,9 +50,17 @@ export function DiagramsPage(_props: { me: Me }) {
 
 /** One diagram: the page drawn by the server with a box on each thing the reader found, and the
  * list of what it found, the doubtful first. */
-export function DiagramView({ revId, page }: { revId: string; page: number }) {
+export function DiagramView({ revId, page, me }: { revId: string; page: number; me?: Me }) {
   const [diagram, setDiagram] = useState<Diagram | null>(null);
   const [error, setError] = useState("");
+  const [reading, setReading] = useState(false);
+  const [readError, setReadError] = useState("");
+  /** A scan read again by the language model an administrator gave "diagram-read". */
+  const readWithModel = () => {
+    setReading(true);
+    setReadError("");
+    api.readWithModel(revId, page).then(setDiagram).catch((err) => setReadError(message(err))).finally(() => setReading(false));
+  };
   const [picked, setPicked] = useState<string | null>(null);
   useEffect(() => { api.diagram(revId, page).then(setDiagram).catch((err) => setError(message(err))); }, [revId, page]);
   const items = useMemo(() => {
@@ -78,6 +86,11 @@ export function DiagramView({ revId, page }: { revId: string; page: number }) {
       <Link to={`/documents/${diagram.doc_id}`}>{t("Open the document")}</Link>
       {result.notes.map((note) => <span key={note}> · {note}</span>)}
     </p>
+    {me?.can_edit && result.source === "raster" && <p className="muted">
+      {t("A scan's lines are hard to read without a model.")}{" "}
+      <button type="button" className="link-button" disabled={reading} onClick={readWithModel}>{reading ? t("Reading…") : t("Read again with the language model")}</button>
+    </p>}
+    {readError && <ErrorBox text={readError} />}
     <div className="diagram-columns">
       <div className="panel diagram-canvas">
         <div className="diagram-frame" style={{ aspectRatio: `${result.width} / ${result.height}` }}>

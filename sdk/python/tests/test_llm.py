@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import pytest
 
 from plantcraft_sdk.client import BadRequest, Forbidden, NotFound
-from plantcraft_sdk.llm import messages_body, split_use
+from plantcraft_sdk.llm import MAX_IMAGE_BYTES, image, messages_body, split_use
 from plantcraft_sdk.testing import FakePlantCraft
 
 USES = [
@@ -64,3 +64,33 @@ def test_an_app_writes_with_the_uses_it_declared(fake):
     assert refused.value.status_code == 409
     fake.links.llm_answer = lambda call: call["messages"][-1]["content"].upper()
     assert client.llm("algorithm-draft", "ok")["text"] == "OK"
+
+
+PNG = b"\x89PNG\r\n\x1a\n" + b"\0" * 32
+
+
+def test_a_user_turn_carries_images_for_a_model_that_reads_them():
+    body = messages_body("What is drawn?", images=[PNG])
+    turn = body["messages"][-1]
+    assert turn["content"] == "What is drawn?" and len(turn["images"]) == 1
+    assert turn["images"][0] == image(PNG)
+    jpeg = image(b"\xff\xd8\xff" + b"\0" * 8, "image/jpeg")
+    chat = [{"role": "user", "content": "Read this", "images": [jpeg]}]
+    assert messages_body(chat)["messages"][0]["images"] == [jpeg]
+    with pytest.raises(ValueError, match="one of"):
+        messages_body("x", images=[{"media_type": "application/pdf", "data": "AAAA"}])
+    with pytest.raises(ValueError, match="base64"):
+        messages_body("x", images=[{"media_type": "image/png", "data": "not base64!"}])
+    with pytest.raises(ValueError, match="at most 4"):
+        messages_body("x", images=[PNG] * 5)
+    with pytest.raises(ValueError, match="MB"):
+        messages_body("x", images=[b"\0" * (MAX_IMAGE_BYTES + 1)])
+    with pytest.raises(ValueError, match="user's turn"):
+        messages_body([{"role": "assistant", "content": "y", "images": [PNG]}, {"content": "z"}])
+
+
+def test_the_fake_receives_the_images(fake):
+    client = _service(fake)
+    client.put_contributions({"contributes": {"llm": USES}})
+    fake.links.llm_answer = lambda call: f"{len(call['messages'][-1].get('images', []))} image"
+    assert client.llm("algorithm-draft", "What is drawn?", images=[PNG])["text"] == "1 image"

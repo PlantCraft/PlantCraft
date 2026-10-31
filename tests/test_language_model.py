@@ -480,3 +480,35 @@ def test_the_answer_is_streamed_as_it_is_written_in_each_format(monkeypatch):
     model = ChatModel("", provider="openai", model="qwen3", endpoint=LOCAL["endpoint"])
     model.on_text = lambda _text: None
     assert model.answer("Be brief.", [{"role": "user", "content": "hi"}]) == "whole"
+
+
+def test_an_image_reaches_openai_in_both_of_its_formats():
+    """An app's image (POST /api/v1/llm with images) is an Anthropic image block in the
+    conversation; chat completions and the Responses API each get it as a data URL."""
+
+    turn = {
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "source": {"type": "base64", "media_type": "image/png", "data": "iVBO"},
+            },
+            {"type": "text", "text": "What is drawn?"},
+        ],
+    }
+    chat = model_module._to_openai("m", "Be short.", [turn], None)["messages"][-1]
+    assert chat == {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "What is drawn?"},
+            {"type": "image_url", "image_url": {"url": "data:image/png;base64,iVBO"}},
+        ],
+    }
+    responses = model_module._to_responses("m", "Be short.", [turn], None)["input"][-1]
+    assert responses == {
+        "role": "user",
+        "content": [
+            {"type": "input_text", "text": "What is drawn?"},
+            {"type": "input_image", "image_url": "data:image/png;base64,iVBO"},
+        ],
+    }
