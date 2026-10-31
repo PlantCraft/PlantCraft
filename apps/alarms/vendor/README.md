@@ -5,11 +5,11 @@ only from this folder, so the image builds offline and checks each file's hash. 
 here: a change is made in `sdk/python` or `ui/` at the repository's root, released as a new
 version, and `dev/revendor` puts the new file here with its hash.
 
-## plantcraft-sdk 0.84.0
+## plantcraft-sdk 0.85.0
 
-`pip install --no-index --find-links vendor plantcraft-sdk==0.84.0` (Makefile, CI and the
+`pip install --no-index --find-links vendor plantcraft-sdk==0.85.0` (Makefile, CI and the
 Dockerfile). The wheel is PlantCraft's reproducible build (`make sdk-wheel`, PlantCraft
-ed6f906): every app on SDK 0.84.0 vendors these same bytes.
+6be9b6a): every app on SDK 0.85.0 vendors these same bytes.
 
 ## @plantcraft/ui 0.90.0
 
@@ -23,6 +23,6 @@ PlantCraft's `make ui-package` (every app on ui 0.90.0 vendors the same bytes).
 The same in `sha256sum -c` format (the Docker build and `plantcraft-app check` check both):
 
 ```text
-7dad1c4978c376d3b662f6f5e0a37285a71db4ba4c3f17b4f726c0360041ca62  plantcraft_sdk-0.84.0-py3-none-any.whl
+8f447b3afaeaeba02df29e335a78efc57be41b6242e0edd9dc5c0e1249119d29  plantcraft_sdk-0.85.0-py3-none-any.whl
 66fed2821b0b258c0d5efa991a389b0fcea06c4b139ad5a2260fd3e594bfa929  plantcraft-ui-0.90.0.tgz
 ```
