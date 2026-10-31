@@ -8,7 +8,7 @@ function only needs the file's bytes, the plant's known tags and the embedder.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -17,6 +17,7 @@ from doccraft.library.embed import Embedder
 from doccraft.library.passages import Passage, cut
 from doccraft.library.store import DocumentStore
 from doccraft.library.tags import known
+from doccraft.plantmap.diagrams import describe, read_diagrams
 
 log = logging.getLogger(__name__)
 
@@ -29,17 +30,28 @@ class Indexed:
     passages: list[Passage]
     assets: list[list[str]]
     vectors: np.ndarray
+    diagrams: list[dict] = field(default_factory=list)
 
 
 def index_file(
     data: bytes, filename: str, tag_ids: dict[str, str], embedder: Embedder, title: str = ""
 ) -> Indexed:
     extracted = reader.extract_isolated(data, filename)
+    kind = reader.format_of(filename)
+    diagrams = read_diagrams(data, filename) if kind in {"pdf", *reader.DRAWING_ONLY} else []
+    # Each diagram page gets a passage saying what it shows, in words.
+    for page in diagrams:
+        heading = ["Diagram", " ".join(x for x in (page.get("sheet"), page.get("title")) if x)]
+        extracted.sections.append(
+            reader.Section(describe(page), page=page.get("page"), heading=[h for h in heading if h])
+        )
     passages = cut(extracted.sections)
     if not passages:
         raise reader.Unreadable(
             "No text was found in the file. A scanned document needs text recognition (OCR), "
             "which is not switched on."
+            if kind not in reader.DRAWING_ONLY
+            else "No diagram was recognised in this drawing (no tags joined by lines)."
         )
     heading = title or extracted.title
     # Each passage is embedded with its document's title and headings, so "the manual of U-200,
@@ -47,7 +59,9 @@ def index_file(
     texts = [" > ".join([heading, *p.heading]) + "\n" + p.text for p in passages]
     vectors = embedder.passages(texts)
     assets = [known(" ".join(p.heading) + " " + p.text, tag_ids) for p in passages]
-    return Indexed(extracted.format, extracted.pages, extracted.title, passages, assets, vectors)
+    return Indexed(
+        extracted.format, extracted.pages, extracted.title, passages, assets, vectors, diagrams
+    )
 
 
 def index_revision(
@@ -77,4 +91,5 @@ def index_revision(
         pages=done.pages,
         embedder=embedder.name,
     )
+    store.store_diagrams(rev_id, done.diagrams)
     return True

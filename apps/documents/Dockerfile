@@ -96,6 +96,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DOCCRAFT_PORT=8150 \
     FORWARDED_ALLOW_IPS=127.0.0.1
 
+# OCR for scanned drawings (the plant map reads tags on scans with it): tesseract with its
+# English data, from Debian, nothing else. Without it scans are skipped, never an error.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=frontend /build/frontend/dist /app/ui
 COPY LICENSE ATTRIBUTION.md CHANGELOG.md app.toml /app/

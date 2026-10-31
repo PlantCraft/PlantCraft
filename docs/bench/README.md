@@ -202,3 +202,34 @@ First runs, 4 CPUs (reports in `docs/bench/results/*-platform-*`):
 What remains is one Python process doing 50 batches of 500 signals over a recorded file at
 once: light calls (results, audit) then wait behind them. With the Historian (`HISTCRAFT_URL`)
 the batches are read there, and `PLANTCRAFT_WORKERS` spreads the rest over processes.
+
+## CPU, processes and the machine profile (`ci/bench/cpu_sweep.sh`)
+
+The same extreme load (C2: nine methods besides the rounds, 167 signals x 24 h raw) while one
+setting changes (plan B, 2026-10-31; cloud, 4 vCPU, 0.5.1 images). Each step recreates what
+changed, waits for every container to be healthy and runs `extreme.py` with a label.
+
+```bash
+ci/bench/cpu_sweep.sh --prefix P --plan per-app    # each app's CPU limit at 1, 2, 4
+ci/bench/cpu_sweep.sh --prefix P --plan executor   # Analytics' compute slots 1, 2, 4, 8
+ci/bench/cpu_sweep.sh --prefix P --plan machine    # the whole suite on 1, 2, 4 cores (cpuset),
+                                                   # the Historian in 1 and 2 processes
+ci/bench/cpu_sweep.sh --prefix P --plan shares     # 2 cores, cpu_shares for people's containers
+```
+
+| Step | round s | 9 methods s | person trend p95 s |
+|---|---:|---:|---:|
+| today's defaults (limits 30 CPUs / 34 GB on 4 cores) | 30.5 | 15.6 | 5.5 |
+| one app's CPU limit 1, 2 or 4 (PlantCraft, Analytics, its executor, Historian, View) | 20 to 30 | 15 to 20 | 1.2 to 5.3 |
+| Analytics' compute slots 1 / 2 / 4 / 8 | 32.6 / 30.7 / 27.5 / 27.0 | 20 / 21 / 20 / 17.5 | 4.7 / 5.4 / 3.4 / 2.9 |
+| whole suite on 1 core, Historian 1 / 2 processes | 96.8 / 85.3 | 32 / 37 | 1.5 / 0.3 |
+| whole suite on 2 cores, Historian 1 / 2 processes | 35.1 / 23.9 | 18.3 / 12.4 | 4.7 / 3.6 |
+| whole suite on 4 cores, Historian 1 / 2 processes | 30.5 / 22.6 | 24.1 / 18.0 | 3.1 / 1.9 |
+| 2 cores, no priority / cpu_shares 4096 people, 256 background | 33.5 / 38.6 | 21.0 / 19.8 | 4.7 / 3.5 |
+
+What it says: one container's CPU limit changes little (single runs vary by about 3 s); the
+Historian, one Python process at a full core, sets the pace, and a second process is the largest
+gain at 2 and 4 cores. Going from 2 to 4 cores without it gains almost nothing. Peak memory of
+every container over all runs adds up to 4.5 GB (Historian 723 MiB with 2 processes, Analytics
+692, PlantCraft 623, its executor 615 with 8 slots), which is what the `small` profile's limits
+and its swap warning are built on.

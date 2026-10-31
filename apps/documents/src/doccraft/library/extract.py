@@ -33,7 +33,15 @@ FORMATS = {
     ".csv": "csv",
     ".html": "html",
     ".htm": "html",
+    # Drawings: no text layer to speak of; the plant map's reader says what they show.
+    ".svg": "svg",
+    ".png": "image",
+    ".jpg": "image",
+    ".jpeg": "image",
+    ".tif": "image",
+    ".tiff": "image",
 }
+DRAWING_ONLY = {"svg", "image"}
 
 
 @dataclass
@@ -321,7 +329,14 @@ def _html(data: bytes) -> Extracted:
     return extracted
 
 
+def _drawing(data: bytes) -> Extracted:
+    """A drawing file: its passages come from what the plant map's reader finds on it."""
+    return Extracted(format="drawing", sections=[], pages=1)
+
+
 READERS = {
+    "svg": _drawing,
+    "image": _drawing,
     "pdf": _pdf,
     "docx": _docx,
     "xlsx": _xlsx,

@@ -4,8 +4,10 @@ import { splitName } from "./send";
 
 describe("the frame's pages", () => {
   it("Overview comes first; the library holds each document, each folder and the asset deep link", () => {
-    const [overview, documents, search] = NAV;
-    expect(NAV.map((item) => item.to)).toEqual(["/", "/documents", "/search"]);
+    const [overview, documents, diagrams, map, search] = NAV;
+    expect(NAV.map((item) => item.to)).toEqual(["/", "/documents", "/diagrams", "/plant-map", "/search"]);
+    expect(diagrams.match?.("/diagrams/abc/2")).toBe(true);
+    expect(map.match?.("/plant-map")).toBe(true);
     expect(overview.match?.("/")).toBe(true);
     expect(overview.match?.("/documents")).toBe(false);
     for (const path of ["/documents", "/documents/abc", "/assets/FIC-1001", "/folders/x"]) expect(documents.match?.(path)).toBe(true);
