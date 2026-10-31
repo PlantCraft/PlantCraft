@@ -40,6 +40,11 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ### Security
 
+- **A document that looks confidential is kept from the assistant** (security test D11). When
+  its first revision is read, a document that says it is not for the assistant, is marked
+  confidential, or holds what looks like a password, PIN or key has its assistant switch turned
+  off. A line inside the text was only text before, and answers quoted the secret it held. The
+  editor turns the switch back on in the document's settings when that was wrong.
 - Drawings are read in the same worker process as the text of the file, with the same limits:
   120 s, a memory budget, no network and no file writes.
 
