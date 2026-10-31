@@ -1,7 +1,7 @@
 """Which pages of a document are diagrams (P&IDs), what each one shows, and its text.
 
 A page is a diagram when the reader (``reader/``) finds tags on it joined by lines: at least
-three tagged items and one relation; or at least five tags among many strokes (lines not
+three tagged items and one relation; a DEXPI file with one tagged item (it says what it is); or at least five tags among many strokes (lines not
 traced); or, on a scan (no lines traced yet), at least five tags.
 Each diagram page is kept with what was read (items, relations, sheet number, unit) and gets
 a passage of its own, written in words ("P-1001 feeds E-1009"), so the search and the assistant
@@ -19,6 +19,7 @@ from doccraft.plantmap.reader import DrawingError, kind_of, read_drawing
 LOG = logging.getLogger(__name__)
 DRAWING_FORMATS = {
     ".svg": "svg",
+    ".xml": "dexpi",
     ".png": "image",
     ".jpg": "image",
     ".jpeg": "image",
@@ -51,7 +52,10 @@ def read_diagrams(data: bytes, filename: str) -> list[dict[str, Any]]:
     out = []
     for page in pages:
         tagged = [i for i in page["items"] if i.get("tag")]
-        if page["source"] == "raster":
+        if page["source"] == "dexpi":
+            if not tagged:
+                continue
+        elif page["source"] == "raster":
             if len(tagged) < MIN_SCAN_TAGS:
                 continue
         elif len(tagged) < MIN_ITEMS:

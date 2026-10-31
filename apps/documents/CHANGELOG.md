@@ -6,6 +6,14 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ### Added
 
+- **P&IDs saved as DEXPI (XML) go straight into the plant map.** Send the `.xml` a P&ID tool
+  (AVEVA, Hexagon Smart P&ID, Siemens COMOS...) exports as DEXPI (Proteus XML) and Documents reads
+  it with its own reader (pyDEXPI is AGPL and is not used): equipment, instruments and their
+  valves, and what feeds, measures, controls or sits on what, all certain since the tool says
+  so. The page is drawn from the file's data for the review page, and it is a diagram like any
+  other: in Diagrams, on the map, in search. On the 79 public DEXPI test files it reads 65 of 67
+  equipment-to-equipment feeds, none wrong; the example C01 gives all 12 tags and 6 feeds. A file
+  with a DOCTYPE or entities is refused.
 - **Diagrams and the plant map, read from the P&IDs in the library.** P&IDs sent as PDF, SVG or
   an image (PNG, JPEG, TIFF) are read offline, with no language model: ISA-5.1 tags, symbols,
   lines, flow arrows and off-page connectors, each finding with how sure it is and why. Every

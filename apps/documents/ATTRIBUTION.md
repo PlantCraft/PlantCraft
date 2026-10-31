@@ -53,7 +53,8 @@ PlantCraft authors (Apache-2.0).
 One third-party drawing is committed, for the plant-map reader's tests:
 `tests/files/dexpi-C01V01-HEX.EX02.pdf`, the example P&ID "C01V01-HEX.EX02" of the DEXPI
 Training Test Cases (DEXPI initiative, https://gitlab.com/dexpi/TrainingTestCases), licensed
-CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); unchanged. No other third-party dataset
+CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); unchanged. Its DEXPI XML is committed too,
+gzipped and otherwise unchanged, as `tests/files/dexpi-C01V01-HEX.EX02.xml.gz`. No other third-party dataset
 is committed. `tests/files/incident.pdf` is one of the suite's invented
 demo documents (PlantCraft `deploy/demo/documents/`). The test plant (`plantcraft_sdk.testplant`, a port of
 The Simulator's loop equations) is synthetic.
