@@ -113,6 +113,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Customizing an overview shows that it is on.** A tinted bar that stays in view says
+  "Customizing this page", explains the moves and keeps **Done** at hand; each widget gets a
+  stronger outline (ui 0.95.0, interface pass of 2026-10-31).
 - **Schedules and the block pages open without the block editor (`@plantcraft/ui`).**
   `ParameterField` and `typeLabel` have their own subpath, `@plantcraft/ui/blockParameter`
   (still exported from `blockEditor`), so Analytics › Schedules and Models › Blocks no longer
