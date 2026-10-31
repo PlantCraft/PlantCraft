@@ -287,7 +287,7 @@ def test_the_signal_quality_algorithm_and_its_runs(signed_in, app_url):
     expect(page.locator(".alg-diagram .react-flow__node").first).to_be_visible()
     page.get_by_role("navigation", name="Algorithm").get_by_role("link", name="Settings").click()
     expect(page).to_have_url(re.compile(r"/link/algorithms/signal_quality/settings$"))
-    expect(page.locator(".toggles li")).to_have_count(9)  # sq_source_quality (A14, #79)
+    expect(page.locator(".toggles li")).to_have_count(11)  # with #79 and #85
     expect(page.get_by_role("heading", name="Where it is used")).to_be_visible()
     # 0.2 addresses still open it.
     page.goto(f"{app_url}/link/protocols/signal-quality")

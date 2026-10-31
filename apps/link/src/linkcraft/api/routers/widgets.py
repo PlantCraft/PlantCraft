@@ -18,7 +18,7 @@ from plantcraft_sdk import widgets as w
 from linkcraft.api.deps import CurrentUser, RuntimeDep
 from linkcraft.api.plant_widgets import STATUS_WORDS, alarm_history, health_map
 from linkcraft.api.routers.groups import _algorithms, _group, _outputs, _rows
-from linkcraft.api.routers.losses import loop_effective_control, loop_losses
+from linkcraft.api.routers.losses import loop_days_to_limit, loop_effective_control, loop_losses
 from linkcraft.api.routers.results import BUILDERS, KIND_LABELS, KINDS, _key, scoped_rows
 from linkcraft.api.routers.runs import run_rows
 from linkcraft.api.scope import Scope
@@ -222,6 +222,27 @@ def widget(
             ],
             href=f"{root}/results?kind=loop",
             empty=t("No loop measured yet."),
+        )
+    if widget_id == "closest-to-limit":
+        rows = loop_days_to_limit(scope, rt, until=None)[:8]
+        return w.items(
+            [
+                w.item(
+                    row["name"],
+                    detail=t(
+                        "Health {now}, {slope} a day (fit {r2})",
+                        now=f"{row['now']:.0f}",
+                        slope=f"{row['slope_per_day']:+.1f}",
+                        r2=f"{row['r2']:.2f}",
+                    ),
+                    value=t("now") if row["days"] <= 0 else f"{row['days']:.0f} d",
+                    state="alarm" if row["days"] <= 7 else "warning",
+                    href=f"{root}/loops/{quote(row['loop_id'], safe='')}",
+                )
+                for row in rows
+            ],
+            href=f"{root}/results?kind=loop",
+            empty=t("No loop's health is falling toward its limit."),
         )
     if widget_id == "runs":
         return w.items(

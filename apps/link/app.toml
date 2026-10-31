@@ -649,6 +649,14 @@ kind = "list"
 sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
 
 [[contributes.widgets]]
+id = "closest-to-limit"
+title = "Analytics: closest to the limit"
+description = "The loops whose health is falling toward the alarm limit, with the days left by the trend of the last 14 days, soonest first."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
 id = "last-run"
 title = "Analytics: last run"
 description = "The newest run of any algorithm."
