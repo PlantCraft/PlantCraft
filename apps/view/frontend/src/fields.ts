@@ -9,7 +9,7 @@ export const DEFAULT_OPTIONS: CardOptions = {
   bar_style: "bars", value_labels: "auto", sort: "none",
   legend: "list", legend_place: "bottom", legend_values: [], tooltip: "all", stack: "none", connect_gaps: false,
   y_scale: "linear", y_label: "", soft_min: null, soft_max: null,
-  threshold_markers: true, threshold_labels: false,
+  gauge_style: "dial", threshold_markers: true, threshold_labels: false,
   columns: ["last", "mean", "min", "max"], cell: "color_text", row_color: false,
   point_size: 5,
 };

@@ -82,6 +82,15 @@ phase = "interval"
 payload = { days_to_full = "Days until the disk is full", free_bytes = "Free bytes on the disk", bytes_per_day = "Bytes the archive grows a day" }
 rule = { when = "open", minutes = 60, priority = "high", notify = "admins", enabled = true }
 
+[[publishes.events]]
+name = "annotation.added"
+title = "Note on a signal"
+description = "A person wrote a note on a signal, at an instant or over an interval (Historian, the signal's page, or POST /api/v1/annotations). Posted by the page in the person's name."
+severity = "info"
+category = "user"
+phase = "instant"
+payload = { annotation = "Note id in the Historian", signal = "Signal id", at = "Instant, or start of the interval (ISO 8601)", end = "End of the interval (ISO 8601), or null", text = "The note" }
+
 # The assistant's works on the Historian's pages (PlantCraft docs/assistant.md, "What each page
 # offers"): each page names itself in useAssistantPage({page: "histcraft:<id>"}).
 [[contributes.assistant.works]]

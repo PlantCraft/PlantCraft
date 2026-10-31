@@ -81,6 +81,10 @@ Editors draw diagrams: **New diagram**, or **Edit** on a diagram.
 3. **Bind it**: click a symbol and pick the **asset it draws** (P-101, TK-1). Its colour, level
    and running are bound at once from the asset's signal roles; change any of them in the panel.
    **Value** adds a number beside the selected symbol (its PV first), with its own limits.
+   Tick **Analog indicator (ISA-101)** to draw a grey bar under it: the normal range as a darker
+   band (the low to high warning when not set), the limits as LL, L, H and HH ticks, the setpoint
+   (its asset's SP first) as a hollow mark and the value as a pointer. Only the pointer takes a
+   colour, and only out of normal.
 4. **Save**. Nothing is saved before; Cancel leaves the diagram as it was.
 
 Or start from a draft: **From assets** lays out a unit from its equipment, loops and relations

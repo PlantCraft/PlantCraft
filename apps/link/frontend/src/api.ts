@@ -1,7 +1,7 @@
 import { configureFolders, createApiClient, jsonBody, withImageHrefs, type PromptText } from "@plantcraft/ui";
 import type { Diagram, DiagramCheck } from "@plantcraft/ui/blockEditor";
 import { href } from "./nav";
-import type { Algorithm, AlgorithmDocs, AlgorithmVersion, AlgorithmTest, AlgorithmUsage, AssetChoice, AssetLink, AssetRun, AssetTiming, BlockCheck, BlockCode, BlockDetail, BlockFileDoc, Blocks, BlockSaved, BlockTestAnswer, CalibrationAnswer, CheckSpec, ComputeOffer, DefaultsVersion, ComputePlacement, Execution, ExecutionGroup, ExecutionList, GroupSubject, OwnSeries, SubjectHistory, HelpDocEntry, HistoryPoint, Job, LoopConfig, LoopDetail, LoopRow, Me, MethodGroup, MethodSpec, ModelExample, ModelExampleCreated, ModelRow, ModelStarter, Overview, QualityRun, RepeatedAlgorithm, ResultList, ResultQuery, RunRow, Schedule, SchedulePreview, SignalAlgorithm, SignalData, SignalDetail, SignalOption, SignalRow, Status_, SyncResult, UserGroup, Verdict } from "./types";
+import type { Algorithm, AlgorithmDocs, AlgorithmVersion, AlgorithmTest, AlgorithmUsage, AssetChoice, AssetLink, AssetRun, AssetTiming, BlockCheck, BlockCode, BlockDetail, BlockFileDoc, Blocks, BlockSaved, BlockTestAnswer, CalibrationAnswer, CheckSpec, ComputeOffer, DefaultsVersion, ComputePlacement, Execution, ExecutionGroup, ExecutionList, GroupSubject, OwnSeries, SubjectHistory, HelpDocEntry, HistoryPoint, Job, LoopConfig, LoopDetail, LoopReference, LoopRow, Me, MethodGroup, MethodSpec, ModelExample, ModelExampleCreated, ModelRow, ModelStarter, Overview, QualityRun, RepeatedAlgorithm, ResultList, ResultQuery, RunRow, Schedule, SchedulePreview, SignalAlgorithm, SignalData, SignalDetail, SignalOption, SignalRow, Status_, SyncResult, UserGroup, Verdict } from "./types";
 import { RESULT_FILTERS } from "./types";
 
 const client = createApiClient({ app: "linkcraft", href });
@@ -38,6 +38,8 @@ export const api = {
   createLoop: (payload: Record<string, unknown>) => request<{ loop: LoopConfig }>("/api/loops", body("POST", payload)),
   updateLoop: (loopId: string, payload: Record<string, unknown>) => request<{ loop: LoopConfig }>(`/api/loops/${id(loopId)}`, body("PATCH", payload)),
   deleteLoop: (loopId: string) => request<void>(`/api/loops/${id(loopId)}`, { method: "DELETE" }),
+  recordReference: (loopId: string) => request<LoopReference>(`/api/loops/${id(loopId)}/reference`, { method: "POST" }),
+  deleteReference: (loopId: string) => request<void>(`/api/loops/${id(loopId)}/reference`, { method: "DELETE" }),
   signalSearch: (q: string) => request<SignalOption[]>(`/api/signal-search?${new URLSearchParams({ q, limit: "20" })}`),
   loopReportUrl: (loopId: string) => href(`/api/loops/${id(loopId)}/report.pdf`),
   jobs: (loopId?: string) => request<Job[]>(`/api/jobs${loopId ? `?${new URLSearchParams({ loop_id: loopId })}` : ""}`),

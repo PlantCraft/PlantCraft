@@ -6,6 +6,16 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Added
+
+- **An example optimization comes ready: tune a PI for the least IAE.** Next to the example
+  study, Models queues "Example: tune the PI for the least IAE" once. It is an optimization on
+  `FirstOrderDeadTimeLoop` that changes the controller's gain and integral time, from a sluggish
+  start (k 0.4, Ti 60 s), to bring the loop to its new setpoint with the least integral of
+  absolute error, overshooting by 10% at most (COBYLA). On that process it ends near k 1.2 and
+  Ti 21 s in about 35 simulations, close to the SIMC rule's k 1.0 and Ti 20 s.
+  `MODELCRAFT_EXAMPLE_STUDY=false` leaves it out too.
+
 ### Fixed
 
 - A study's ranking table scrolls inside its panel on a phone instead of pushing the page sideways.

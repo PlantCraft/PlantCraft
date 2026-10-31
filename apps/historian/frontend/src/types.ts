@@ -98,6 +98,8 @@ export type Point = {
   exception_percent: number | null;
   profile: Profile;
   max_seconds: number;
+  // Lines only: the least time between archived values (null or 0: none).
+  min_seconds?: number | null;
   retention_days: number;
   // The point's own values (null where it inherits) and where each value in effect comes from.
   own: Record<PointSetting, number | null>;

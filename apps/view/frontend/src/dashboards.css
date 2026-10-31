@@ -438,3 +438,26 @@ body.tc-screen .pcs-content, body.tc-screen .content { max-width: none; padding:
 .tc-report-versions blockquote { margin: 2px 0; padding-left: 8px; border-left: 2px solid var(--pc-border-subtle); }
 .tc-report-asset-list { max-height: 220px; overflow: auto; display: grid; gap: 2px; padding: 4px 0; }
 .tc-report-feedback-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+
+/* ISA-101 analog indicator (analog.tsx): grey while normal; only the pointer takes a colour. */
+.isa-analog-track { fill: var(--pc-surface-2); stroke: var(--pc-border); stroke-width: .6; }
+.isa-analog-normal { fill: var(--pc-text-3); opacity: .35; }
+.isa-analog-limit line { stroke: var(--pc-text-2); stroke-width: 1.2; }
+.isa-analog-limit text { font: 600 7px/1 var(--pc-font-mono); fill: var(--pc-text-3); }
+.isa-analog-sp { fill: none; stroke: var(--pc-text); stroke-width: 1.2; }
+.isa-analog-pointer { fill: var(--pc-text); stroke: var(--pc-surface); stroke-width: .6; }
+.isa-analog[data-state="warning"] .isa-analog-pointer { fill: var(--pc-attention-fill); }
+.isa-analog[data-state="alarm"] .isa-analog-pointer { fill: var(--pc-problem-fill); }
+.isa-analog[data-state="unknown"] .isa-analog-pointer { fill: var(--pc-text-3); }
+.tc-analogs { flex: 1; min-height: 0; display: grid; gap: 8px; align-content: start; overflow: auto; }
+.tc-analogs.tc-stats-row { grid-template-columns: repeat(var(--tc-stat-count, 1), minmax(0, 1fr)); }
+.tc-analog { min-width: 0; display: grid; gap: 2px; }
+.tc-analog svg { width: 100%; height: auto; max-height: 64px; overflow: visible; }
+.tc-analog-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.tc-analog-name { flex: 1; min-width: 0; color: var(--pc-text-3); font-size: var(--pc-fs-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-analog-head b { font: 700 18px/1 var(--pc-font-display); }
+.tc-analog[data-state="warning"] .tc-analog-head b { color: var(--pc-attention-text); }
+.tc-analog[data-state="alarm"] .tc-analog-head b { color: var(--pc-problem-text); }
+.tc-analog-unit, .tc-analog-sp { color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
+.tc-analog-ends { display: flex; justify-content: space-between; color: var(--pc-text-3); font: 10px/1 var(--pc-font-mono); }
+.tc-spark-normal { fill: var(--pc-text-3); opacity: .16; }
