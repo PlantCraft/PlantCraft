@@ -139,7 +139,7 @@ def service_token(payload: ServiceTokenRequest, rt: Runtime) -> dict[str, str]:
     record = rt.workspace.app_keys.verify(app_id, payload.key)
     if record is None:
         raise HTTPException(status_code=401, detail=t("Unknown app or key."))
-    return issue_service_token(rt, app_id, record["key_id"])
+    return issue_service_token(rt, app_id, record["key_id"], record.get("scopes"))
 
 
 @router.get("/me")
