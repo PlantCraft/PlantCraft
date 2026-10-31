@@ -170,7 +170,7 @@ These complete the table above; `tests/contract/test_api_v1.py` checks them.
   last hour (`key_id`, `revoked_at`), whose service tokens are refused. Entries stay only as long
   as a token from before them could still be alive (15 minutes for people, an hour for keys).
   A token issued after the change (signing in again) gets `iat` at least `not_before`.
-  Signing out ends that browser session's tokens the same way (since SDK 0.83.0): the browser's
+  Signing out ends that browser session's tokens the same way (since SDK 0.84.0): the browser's
   token carries the SHA-256 of its session id (`sid` claim), and the list gives the sessions signed
   out in the last 15 minutes (`sid_sha256`, `ended_at`). The person's other sessions keep working.
   `plantcraft_sdk.auth.TokenVerifier` reads the list at most every 10 seconds; when it cannot

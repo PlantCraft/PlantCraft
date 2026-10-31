@@ -112,7 +112,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/alarms/frontend/package-lock.json
-      - run: python -m pip install -q --force-reinstall --no-index --find-links vendor --no-deps "plantcraft-sdk==0.83.0"
+      - run: python -m pip install -q --force-reinstall --no-index --find-links vendor --no-deps "plantcraft-sdk==0.84.0"
       - run: python -m pip install -q --find-links vendor -e ".[dev,e2e]"
       # Chromium is downloaded in CI only; the product never fetches anything at runtime.
       - run: python -m playwright install --with-deps chromium
