@@ -215,6 +215,7 @@ class LocalDataLayer(DataLayer):
         step: float | None,
         *,
         quality: bool = False,
+        extremes: bool = False,
     ) -> dict[str, Any]:
         start_at, end_at, step_s = self._range(start, end, step)
         catalog = self._catalog()

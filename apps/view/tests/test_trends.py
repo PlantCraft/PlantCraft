@@ -181,3 +181,33 @@ def test_each_line_reads_at_its_own_interval(client):
     assert pv["style"]["color"] == "#1F5FD6" and sp["style"]["dash"] == "dash"
     bad = {**view, "plots": [{"lines": [{"signal_id": "fake:FIC-101.PV", "step_seconds": -1}]}]}
     assert client.post("/dash/api/trends/data", json=bad).status_code == 422
+
+
+def test_min_and_max_lines_come_from_the_historians_extremes_not_raw_samples(client, monkeypatch):
+    from plantcraft_sdk.client import PlantCraftClient
+
+    asked: list[tuple[float | None, bool]] = []
+    original = PlantCraftClient.series_many
+
+    def counted(self, signal_ids, start=None, end=None, step=None, **options):
+        asked.append((step, bool(options.get("extremes"))))
+        return original(self, signal_ids, start, end, step, **options)
+
+    monkeypatch.setattr(PlantCraftClient, "series_many", counted)
+    lines = [
+        {"signal_id": "fake:FIC-101.PV"},
+        {"signal_id": "fake:FIC-101.PV", "agg": "max"},
+        {"signal_id": "fake:FIC-101.PV", "agg": "min"},
+    ]
+    view = {"plots": [{"lines": lines}], "period": {"mode": "relative", "window": "2h"}}
+    mean, high, low = client.post(
+        "/dash/api/trends/data", json={**view, "step_seconds": 600}
+    ).json()["plots"][0]["lines"]
+    assert asked == [(600, True)]  # one grid read, no raw samples
+    assert all(lo <= m <= hi for lo, m, hi in zip(low["v"], mean["v"], high["v"], strict=True))
+    assert any(hi > lo for lo, hi in zip(low["v"], high["v"], strict=True))
+    # A first or last line still summarises the raw samples here.
+    asked.clear()
+    last = {**view, "plots": [{"lines": [{"signal_id": "fake:FIC-101.PV", "agg": "last"}]}]}
+    client.post("/dash/api/trends/data", json={**last, "step_seconds": 600})
+    assert asked == [(600, False), (None, False)]

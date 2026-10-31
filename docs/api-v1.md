@@ -93,7 +93,7 @@ input. Times are ISO 8601 with offset; series timestamps are UTC.
 | `GET /api/v1/signals` | `[{"id", "name", "source", "unit", "description", "low", "high", "kind", "source_kind"}]`; `source_kind` is the source's type (`opcua`, `pi_web_api`, `csv`, `derived`; `null` when unknown): a `csv` signal is sampled (laboratory analyses) and judged by its own rules; filter `q`; derived signals add `app`, `subject`, `result` and filter by them |
 | `GET /api/v1/signals/{id}` | One signal, same shape |
 | `GET /api/v1/signals/{id}/series?start&end&step` | `{"signal", "kind", "t": [iso...], "v": [number \| string \| null...]}` (typed by the point's kind); `step` in seconds (optional: recorded values); at most 200,000 points. A runs point answers `{"signal", "kind": "runs", "runs": [{"run_at", "t", "v"}]}` (`run`, `runs`) |
-| `POST /api/v1/series` | Body `{"signals": [id...], "start", "end", "step", "quality"}` (1 to 500 ids; `quality` optional): `{"series": [{"signal", "kind", "t", "v"}...], "errors": [{"signal", "status", "detail"}...]}` |
+| `POST /api/v1/series` | Body `{"signals": [id...], "start", "end", "step", "quality", "extremes"}` (1 to 500 ids; `quality` and `extremes` optional): `{"series": [{"signal", "kind", "t", "v"}...], "errors": [{"signal", "status", "detail"}...]}` |
 | `GET /api/v1/signals/{id}/value?agg&window` | `{"signal", "agg", "window", "value", "at"}`; `agg` one of `last, mean, min, max, std`; `window` like `1h`, `24h`, `7d` |
 | `PUT /api/v1/series` | Derived series, an app's service token only. Body: up to 500 items `[{"signal": "app-<app id>:<name>", "t": [iso...], "v": [...], "name", "unit", "kind", "subject", "result"}]`: `{"written", "errors"}` |
 | `PUT /api/v1/series/runs` | Runs points, an app's service token only. Body: up to 500 runs `[{"signal": "app-<app id>:<name>", "run_at", "t": [iso...], "v": [number...], "keep_runs", "keep_days", ...}]`: `{"written", "errors"}` (see "Value kinds, retention and runs") |
@@ -286,6 +286,9 @@ Additive to v1; `plantcraft-sdk` 0.3.0 (`plantcraft_sdk.assets`, `client.asset_t
   state at `start`, then its `t` is at or before `start`; an empty list: good all along). A bad
   sample is still a null value, and an uncertain or substituted one keeps its value, so this is
   the only place they show. A source that keeps no quality leaves the list out.
+  With `step`, `"extremes": true` adds each cell's lowest and highest recorded value to a
+  number series (`"low"`, `"high"`, beside the means in `v`; `null` where a cell had none). A
+  source read live, or a span past what the Historian keeps extremes for, leaves them out.
   A client may also ask for the binary answer (`Accept: application/x-plantcraft-series`, when
   `GET /api/v1/reads` lists `pcs1` in `formats`; `plantcraft_sdk.wire`): the same series, with
   times and values as arrays.
