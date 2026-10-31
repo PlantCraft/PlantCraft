@@ -8,6 +8,7 @@ function only needs the file's bytes, the plant's known tags and the embedder.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -20,6 +21,23 @@ from doccraft.library.tags import known
 from doccraft.plantmap.diagrams import describe
 
 log = logging.getLogger(__name__)
+
+# A document that marks itself as not for the assistant, or holds what looks like a secret, has
+# the assistant switched off when its first revision is read (security test D11, 2026-10-31: a
+# "not for the assistant" line inside the text is only text, and the answer quoted its PIN). The
+# editor switches it back on in the document's settings when that was wrong.
+CONFIDENTIAL = re.compile(
+    r"\b(?:not\s+for\s+(?:the\s+)?(?:assistant|ai|llm)|confidential|strictly\s+private"
+    r"|do\s+not\s+(?:share|distribute|disclose)|n[ãa]o\s+(?:compartilhar|divulgar)"
+    r"|confidencial|uso\s+restrito)\b"
+    r"|\b(?:password|passwd|passphrase|senha|pin|api[\s_-]?key|secret[\s_-]?key|token)"
+    r"(?:\s*[:=]\s*\S{4,}|\s+(?:is|é)\s+[\"'`]?\S*\d\S*)",
+    re.IGNORECASE,
+)
+
+
+def looks_confidential(texts: list[str]) -> bool:
+    return any(CONFIDENTIAL.search(text) for text in texts)
 
 
 @dataclass
@@ -92,4 +110,10 @@ def index_revision(
         embedder=embedder.name,
     )
     store.store_diagrams(rev_id, done.diagrams)
+    first = len(doc.get("revisions") or []) <= 1
+    if first and doc.get("assistant") and looks_confidential([p.text for p in done.passages]):
+        store.update(rev["doc_id"], {"assistant": False})
+        log.warning(
+            "document %s looks confidential: the assistant no longer reads it", rev["doc_id"]
+        )
     return True
