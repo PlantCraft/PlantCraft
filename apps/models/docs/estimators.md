@@ -1,7 +1,10 @@
 # Estimators in Models: virtual sensors and Kalman filters (design, prototype)
 
-Status: prototype of 2026-10-31 (item E3.2 of the Saturday test plan). The math is in
-`src/modelcraft/estimators/` with tests; nothing here is wired to pages or the queue yet.
+Status: prototype of 2026-10-31 (item E3.2 of the Saturday test plan). The math is in the SDK,
+`plantcraft_sdk.estimators` (NumPy only, tests in `sdk/python/tests/test_estimators.py`), so
+Models and Analytics share one copy. Analytics runs it as blocks (library "Estimators":
+`estimator.kalman`, `estimator.drift`, `estimator.lab_fusion`); the Models object below
+(estimator, fit as a study) is the next step.
 
 ## What a person gets
 

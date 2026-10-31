@@ -8,7 +8,7 @@ import math
 import numpy as np
 import pytest
 
-from modelcraft.estimators import (
+from plantcraft_sdk.estimators import (
     fit_fopdt,
     fit_soft_sensor,
     fopdt_model,
@@ -16,7 +16,7 @@ from modelcraft.estimators import (
     local_level,
     tune,
 )
-from modelcraft.estimators.kalman import noise_variance
+from plantcraft_sdk.estimators.kalman import noise_variance
 
 DT = 5.0
 

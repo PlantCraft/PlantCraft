@@ -20,9 +20,8 @@ import math
 from dataclasses import dataclass, field
 
 import numpy as np
-from scipy.optimize import minimize_scalar
 
-from modelcraft.estimators.identify import Fopdt
+from plantcraft_sdk.estimators.identify import Fopdt
 
 
 @dataclass
@@ -47,8 +46,8 @@ class StateSpace:
 
 @dataclass
 class Filtered:
-    states: np.ndarray  # (n, k)
-    variances: np.ndarray  # (n, k): the diagonal of P
+    states: np.ndarray  # (states, steps): one row per state
+    variances: np.ndarray  # (states, steps): the diagonal of P
     estimate: np.ndarray  # C x: the filtered measurement
     innovations: np.ndarray  # y - C x_prior (NaN where y was missing)
     loglik: float
@@ -75,6 +74,8 @@ def kalman_filter(model: StateSpace, y: np.ndarray, u: np.ndarray | None = None)
     loglik = 0.0
     if u is not None:
         u = np.asarray(u, dtype=float) - model.u_offset
+    if n == 1:
+        return _scalar(model, y, u, float(x[0]), float(P[0, 0]))
     for k in range(steps):
         if k:
             x = model.A @ x
@@ -95,6 +96,46 @@ def kalman_filter(model: StateSpace, y: np.ndarray, u: np.ndarray | None = None)
         states[:, k] = x
         variances[:, k] = np.diag(P)
     return Filtered(states, variances, (C @ states).ravel() + model.y_offset, innovations, loglik)
+
+
+def _scalar(model: StateSpace, y: np.ndarray, u: np.ndarray | None, x: float, p: float) -> Filtered:
+    """The one-state filter on plain floats: the same steps, about ten times faster than the
+    matrix loop, which matters when ``tune`` runs it a few dozen times."""
+
+    a, q, r, c = float(model.A[0, 0]), float(model.Q[0, 0]), float(model.R), float(model.C[0])
+    b = float(model.B[0]) if model.B is not None and u is not None else 0.0
+    ys = y.tolist()
+    us = u.tolist() if u is not None else []
+    states, variances, innovations = [0.0] * len(ys), [0.0] * len(ys), [math.nan] * len(ys)
+    loglik = 0.0
+    log2pi = math.log(2 * math.pi)
+    for k, value in enumerate(ys):
+        if k:
+            x = a * x
+            if b:
+                j = k - 1 - model.delay
+                drive = us[j] if j >= 0 else us[0]
+                if drive == drive:  # not NaN
+                    x += b * drive
+            p = a * a * p + q
+        if value == value and value not in (math.inf, -math.inf):
+            e = value - c * x
+            s = c * c * p + r
+            gain = p * c / s
+            x += gain * e
+            p -= gain * c * p
+            innovations[k] = e
+            loglik -= 0.5 * (log2pi + math.log(s) + e * e / s)
+        states[k] = x
+        variances[k] = p
+    row = np.array([states])
+    return Filtered(
+        row,
+        np.array([variances]),
+        c * row[0] + model.y_offset,
+        np.array(innovations),
+        loglik,
+    )
 
 
 def noise_variance(y: np.ndarray) -> float:
@@ -148,6 +189,26 @@ def fopdt_model(
     )
 
 
+def _golden(cost, low: float, high: float, tolerance: float) -> float:
+    """The minimum of a one-humped ``cost`` on ``[low, high]`` by golden-section search (numpy
+    only, so the SDK needs no SciPy)."""
+
+    ratio = (math.sqrt(5) - 1) / 2
+    a, b = low, high
+    c, d = b - ratio * (b - a), a + ratio * (b - a)
+    fc, fd = cost(c), cost(d)
+    while b - a > tolerance:
+        if fc < fd:
+            b, d, fd = d, c, fc
+            c = b - ratio * (b - a)
+            fc = cost(c)
+        else:
+            a, c, fc = c, d, fd
+            d = a + ratio * (b - a)
+            fd = cost(d)
+    return (a + b) / 2
+
+
 def tune(
     build, y: np.ndarray, u: np.ndarray | None = None, low: float = 1e-10, high: float = 1e-1
 ) -> tuple[float, Filtered]:
@@ -157,8 +218,5 @@ def tune(
     def cost(log_q: float) -> float:
         return -kalman_filter(build(10.0**log_q), y, u).loglik
 
-    found = minimize_scalar(
-        cost, bounds=(math.log10(low), math.log10(high)), method="bounded", options={"xatol": 0.05}
-    )
-    q = 10.0 ** float(found.x)
+    q = 10.0 ** _golden(cost, math.log10(low), math.log10(high), 0.05)
     return q, kalman_filter(build(q), y, u)
