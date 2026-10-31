@@ -226,6 +226,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **An app the installation left out no longer reads as broken.** Its address said "This
+  application is not running" and pointed visitors at `docker compose ps`; it now says the app is
+  not installed on this server or not running, and that the launcher lists the installed apps.
 - **`APPS=all` in the installation file, and `--all-apps`, installed Analytics alone.** A second
   `check_apps` function in `install.sh` (the requirements check's) replaced the one that turns on
   every app of the bundle and checks each `--with-<app>` image. It is now `requirement_apps`, and a

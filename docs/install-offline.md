@@ -370,8 +370,10 @@ any new outbound connection from the proxy. They do not survive a reboot: save t
 | Uninstall, keep data | `./install.sh --uninstall` |
 | Uninstall and delete data, backups and images | `./install.sh --uninstall --purge` |
 
-A page saying "This application is not running" under `/link/`, `/dash/` or
-`/hist/` means that app's container is not up: check `COMPOSE_PROFILES` and `docker compose ps`.
+A page saying "This application is not installed on this server, or it is not running" under an
+app's address (`/link/`, `/dash/`, `/hist/`, ...) means that app's container is not up: either the
+app is not installed (check `COMPOSE_PROFILES`, or `APPS` in the installation file) or it stopped
+(`docker compose ps`).
 
 ## 10. Install folder
 
