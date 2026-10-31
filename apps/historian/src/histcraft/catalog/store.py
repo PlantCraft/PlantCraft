@@ -40,6 +40,7 @@ every few seconds (``version`` changes on every write) and never writes them.
 from __future__ import annotations
 
 import json
+import os
 import time
 from collections.abc import Iterable
 from typing import Any
@@ -493,6 +494,15 @@ class CatalogStore(Store):
             raise CatalogError(t("Signal {id} not found.", id=signal_id), 404)
         return found
 
+    @staticmethod
+    def signal_limit() -> int | None:
+        """The most points the installation lets the Historian record (``MAX_SIGNALS`` of the
+        installation file, ``PLANTCRAFT_MAX_SIGNALS``); None: no limit. Points the apps write
+        (results) do not count."""
+
+        raw = (os.environ.get("PLANTCRAFT_MAX_SIGNALS") or "").strip()
+        return int(raw) if raw.isdigit() and int(raw) > 0 else None
+
     def add_points(self, items: list[PointIn], *, range_origin: str = "source") -> dict[str, Any]:
         """Add points; a tag or address its source already has is skipped and reported.
 
@@ -517,6 +527,15 @@ class CatalogStore(Store):
                 " default_deviation_percent, default_max_seconds FROM sources"
             ).fetchall()
             kinds = {row["id"]: row["kind"] for row in rows}
+            limit = self.signal_limit()
+            room = None
+            if limit is not None:
+                written = [row["id"] for row in rows if row["kind"] in WRITTEN_KINDS] or [""]
+                marks = ",".join("?" for _ in written)
+                found = connection.execute(
+                    f"SELECT COUNT(*) AS n FROM points WHERE source_id NOT IN ({marks})", written
+                ).fetchone()
+                room = max(0, limit - int(found["n"]))
             # The defaults of each source's new points: its overrides, else the general ones.
             defaults = {row["id"]: _source_defaults(row, general) for row in rows}
             for item in items:
@@ -540,6 +559,18 @@ class CatalogStore(Store):
                     continue
                 if signal in refused:
                     skipped.append({"signal": signal, "tag": item.tag, "reason": refused[signal]})
+                    continue
+                if room is not None and room <= 0:
+                    skipped.append(
+                        {
+                            "signal": signal,
+                            "tag": item.tag,
+                            "reason": t(
+                                "the installation's limit of {count} signals",
+                                count=limit,
+                            ),
+                        }
+                    )
                     continue
                 values = _with_defaults(item, defaults[item.source_id])
                 inherits = ",".join(key for key in INHERITABLE if getattr(item, key) is None)
@@ -581,6 +612,8 @@ class CatalogStore(Store):
                 )
                 if inserted.rowcount:
                     added.append(signal)
+                    if room is not None:
+                        room -= 1
                 else:
                     skipped.append(
                         {
