@@ -27,8 +27,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   installs the Docker Engine 29.9.2 and Compose 5.6.1 the bundle carries (`docker-engine/`, pinned
   hashes), offline, with its systemd units. `docs/install.md` adds Windows without Docker Desktop.
 - **Setup wizard** (`deploy/wizard/`, first version): the installer's screens in a browser on the
-  server (127.0.0.1, one-time key): requirements, apps, machine and load, network and security,
-  review of the file, install log.
+  server (127.0.0.1, a random key per start): apps, requirements for those apps, machine and
+  load, network and security, review of the file, install log. Tried on Windows 11 (WSL): it
+  checks first that it runs from a complete release bundle, and a failed install can go back.
 
 ### Changed
 

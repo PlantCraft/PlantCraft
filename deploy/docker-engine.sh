@@ -11,7 +11,8 @@
 # Docker Engine (moby) and Compose are Apache 2.0 and may be shipped with the suite; Docker
 # Desktop is not used (it needs a paid subscription in companies of 250+ people or US$10M+
 # revenue). The static binaries are Docker's own (docs.docker.com/engine/install/binaries); the
-# server still needs iptables and a kernel with overlayfs and cgroups, as for any Docker.
+# server still needs iptables and a kernel with overlayfs and cgroups, as for any Docker. It runs
+# the suite's images and builds none (no buildx): release bundles are built by CI.
 set -Eeuo pipefail
 
 DOCKER_VERSION=29.9.2
@@ -121,6 +122,11 @@ install_engine() { # install DIR
     tar -xzf "$dir/docker-$arch.tgz" -C /usr/local/bin --strip-components=1
     install -D -m 0755 "$dir/docker-compose-$arch" /usr/local/lib/docker/cli-plugins/docker-compose
     getent group docker >/dev/null || groupadd --system docker
+    # The person who ran sudo may use docker without sudo after signing in again.
+    if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ] && id "$SUDO_USER" >/dev/null 2>&1; then
+        usermod -aG docker "$SUDO_USER"
+        log "$SUDO_USER is in the docker group: sign out and in again to use docker without sudo."
+    fi
     if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
         units
         systemctl daemon-reload
