@@ -35,7 +35,7 @@ SCADA and IIoT platforms. Sources are public only (clean room, see AGENTS.md).
 | Collection | Secure OPC UA (Sign, SignAndEncrypt, certificates) | Part 4 | done (client certificate made once; server trusted by SHA-256) | `tests/test_secure_opcua.py` |
 | Compression | Swinging-door compression with a deviation per point | Bristol 1990 | done | `tests/test_compression.py` |
 | Compression | Maximum time between archived values | | done | `tests/test_compression.py` |
-| Compression | Exception deviation before compression (two-stage filter) | | missing (one stage) | |
+| Compression | Exception deviation before compression (two-stage filter) | | done (exception 0.1 % and compression 0.2 % of the span by default, like PI; named profiles `fine` and `none`) | `tests/test_compression.py` |
 | Compression | Step points and text (digital states) archived on change | | done | `tests/test_compression.py` |
 | Archive | Compressed storage, merged over time | | done | `tests/test_archive.py`, bench |
 | Archive | Retention per point | | done (whole chunks; PostgreSQL drops whole past months) | `tests/test_archive.py`, `tests/test_partitions.py` |

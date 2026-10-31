@@ -7,6 +7,19 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Changed
+
+- **The Historian answers from several processes (0.6.0 load tests, 2026-10-31).** Heavy reads
+  ran in one Python process on one core. `histcraft serve` now starts as many processes as the
+  CPUs its container may use (`HISTCRAFT_WORKERS`, `auto` by default: the container's CPU limit,
+  up to 4; one where SQLite cannot use WAL, as on a Docker Desktop bind mount, or with the
+  collector inside). Each process holds its part of `HISTCRAFT_READ_VALUES`, and only one samples
+  the work queue. With ten methods at once (`ci/bench/extreme.py`, C2, 2 CPUs) Analytics' round
+  went from 16 to 12 s. `plantcraft-sdk` 0.80.0 gains `plantcraft_sdk.server.workers` (the
+  start lock, the leader and `worker_count`), which PlantCraft now uses too.
+- **`install.sh` fits every CPU limit to small hosts**, also the ones left at their default in
+  `compose.yaml` (a 2-CPU machine stopped on `LINKCRAFT_EXECUTOR_CPUS`, default 4).
+
 ### Fixed
 
 - **Trends keep their spikes.** When a trend had more points than a chart takes (1,500 by

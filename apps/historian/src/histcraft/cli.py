@@ -51,11 +51,25 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "serve":
         import uvicorn
+        from plantcraft_sdk.server.workers import worker_count
 
-        from histcraft.api.app import create_app
-
+        settings = Settings.from_environment()
+        settings.data_dir.mkdir(parents=True, exist_ok=True)
+        # Heavy reads run in Python: one process answers them on one core (0.6.0 load tests).
+        # A collector inside the server keeps it to one process.
+        workers = (
+            1
+            if settings.collector == "embedded"
+            else worker_count("HISTCRAFT_WORKERS", folder=settings.data_dir)
+        )
+        if workers > 1:
+            # Each process builds its app from the environment and holds its part of the read
+            # budget (``Settings.read_values``).
+            os.environ["HISTCRAFT_SERVER_PROCESSES"] = str(workers)
         uvicorn.run(
-            create_app(),
+            "histcraft.cli:app_factory" if workers > 1 else _app(),
+            factory=workers > 1,
+            workers=workers,
             host=args.host,
             port=args.port,
             proxy_headers=True,
@@ -121,3 +135,25 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def _app():
+    from histcraft.api.app import create_app
+
+    return create_app()
+
+
+def app_factory():
+    """One server process's app when there are several (``uvicorn --factory``): its own JSON
+    logs, as ``main`` sets them for one."""
+
+    from plantcraft_sdk.server.logs import configure_logging
+
+    from histcraft import __version__
+    from histcraft.config import Settings
+
+    configure_logging(
+        "histcraft", version=__version__, data_dir=Settings.from_environment().data_dir
+    )
+    logging.getLogger("asyncua").setLevel(logging.WARNING)
+    return _app()
