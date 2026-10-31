@@ -38,6 +38,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **The machine profile gives the Historian 1 GB on `small` and 1.5 GB on `medium`.** With 2
+  processes its peak under the 0.6.0 load test C2 reached 780 to 910 MiB, above the 768m `small`
+  gave it (plan B, 2026-10-31). The Historian also keeps the archive chunks it decoded, so reads
+  of the same day decode them once (`HISTCRAFT_CHUNK_CACHE_MB`).
 - **The demo's lines in the install log carry the seconds since the seed started**
   (`[demo +42s] ...`), and the Historian backfill says how long it took: the seed is half of an
   install with `--demo` (69 of 124 s on a 4 CPU arm64 VM), and the log now shows which step.

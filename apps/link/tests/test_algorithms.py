@@ -92,7 +92,7 @@ def test_every_shipped_algorithm_is_valid_and_documented(item):
     plan = compile_algorithm(item["diagram"])
     assert plan.errors == [], plan.errors
     assert check_algorithm(item["name"], item["docs"]) == []
-    assert len(SYSTEM) == 6 and BY_ID[item["algorithm_id"]] is item
+    assert len(SYSTEM) == 7 and BY_ID[item["algorithm_id"]] is item
 
 
 def test_a_protocol_of_0_2_becomes_a_diagram_with_its_gate_drawn():

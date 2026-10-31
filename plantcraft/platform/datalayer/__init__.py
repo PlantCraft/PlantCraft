@@ -94,7 +94,12 @@ class DataLayer:
     ) -> dict[str, Any]:
         raise NotImplementedError
 
-    def value(self, signal_id: str, agg: str, window: str) -> dict[str, Any]:
+    def value(
+        self, signal_id: str, agg: str, window: str, end: str | None = None
+    ) -> dict[str, Any]:
+        """One aggregate over ``window`` ending at ``end`` (ISO 8601; the newest data when
+        None, and never later)."""
+
         raise NotImplementedError
 
     # Derived series --------------------------------------------------------------

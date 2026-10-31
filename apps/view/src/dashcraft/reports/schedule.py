@@ -92,6 +92,37 @@ def runs_between(
     return found
 
 
+def closed_period(
+    schedule: Schedule, now: datetime, zone_name: str | None
+) -> tuple[datetime, datetime] | None:
+    """The last whole calendar period of the cadence before ``now`` (UTC), on the plant's wall
+    clock: yesterday, last Monday to Sunday, the two weeks before this Monday, last month or last
+    quarter. None when the report reads its own period (``closed`` off, or not scheduled)."""
+
+    if not schedule.closed or not schedule.on:
+        return None
+    where = zone(zone_name)
+    today = now.astimezone(where).date()
+    if schedule.every == "day":
+        end = today
+        start = end - timedelta(days=1)
+    elif schedule.every in ("week", "fortnight"):
+        end = today - timedelta(days=today.weekday())
+        start = end - timedelta(days=7 if schedule.every == "week" else 14)
+    elif schedule.every == "month":
+        end = today.replace(day=1)
+        start = (end - timedelta(days=1)).replace(day=1)
+    else:  # quarter
+        end = date(today.year, (today.month - 1) // 3 * 3 + 1, 1)
+        before = end - timedelta(days=1)
+        start = date(before.year, (before.month - 1) // 3 * 3 + 1, 1)
+
+    def instant(day: date) -> datetime:
+        return datetime.combine(day, time(0), tzinfo=where).astimezone(UTC)
+
+    return instant(start), instant(end)
+
+
 def cadence(schedule: Schedule) -> str:
     """In people's words: "Every day at 06:00", "Every Monday at 07:00", "Off"."""
 

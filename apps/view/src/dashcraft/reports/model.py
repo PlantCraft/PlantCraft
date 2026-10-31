@@ -54,13 +54,17 @@ class Schedule(BaseModel):
     """When the report is made and sent, in the installation's time zone (``PLANTCRAFT_TIMEZONE``):
     every day at ``at``, every week (or every other week) on ``weekday`` at ``at``, every month (or
     every quarter: January, April, July, October) on ``day`` at ``at``. The period the report
-    covers is the report's own (``Report.period``): any window up to a year, whatever the cadence."""
+    covers is the report's own (``Report.period``): any window up to a year, whatever the cadence;
+    or, with ``closed``, the last whole day, week, two weeks, month or quarter."""
 
     every: Literal["off", "day", "week", "fortnight", "month", "quarter"] = "off"
     at: str = "06:00"
     weekday: Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"] = "mon"
     # Up to the 28th, so every month has the day.
     day: int = Field(default=1, ge=1, le=28)
+    # Cover the last whole calendar period of the cadence (yesterday, last Monday to Sunday,
+    # last month, last quarter) instead of the report's period ending when it is made.
+    closed: bool = False
 
     @field_validator("at")
     @classmethod

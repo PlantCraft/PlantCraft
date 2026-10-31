@@ -29,7 +29,7 @@ image = "dashcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.87.0"
+sdk = "0.88.0"
 asset_types = ["unit", "equipment", "loop"]   # asset pages link here (subtypes included)
 roles = {}
 

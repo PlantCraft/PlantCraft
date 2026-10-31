@@ -456,3 +456,31 @@ def test_a_monitor_sets_its_own_parameter_values_on_top_of_the_algorithm(tmp_pat
         )
     finally:
         runtime.shutdown()
+
+
+def test_the_shipped_virtual_sensor_records_the_filter_and_finds_a_drift(tmp_path):
+    from linkcraft.blocks.algorithms import BY_ID
+
+    diagram = BY_ID["virtual_sensor"]["diagram"]
+    found = {}
+    for bias in (0.0, 4.0):
+        fake = unit_fake(bias=bias, minutes=60)
+        runtime = unit_runtime(tmp_path / str(bias), fake)
+        try:
+            end = pd.Timestamp(NOW)
+            found[bias] = run_on_asset(
+                diagram,
+                "tic-1",
+                client=runtime.service_client,
+                start=end - pd.Timedelta(hours=2),
+                end=end,
+                step=STEP,
+                models=runtime.model_runtime(),
+            )["summary"]
+        finally:
+            runtime.shutdown()
+    clean, drifted = found[0.0], found[4.0]
+    recorded = {entry["port"] for entry in clean["recorded"]}
+    assert {"value", "uncertainty", "bias", "corrected"} <= recorded
+    assert clean["verdict"]["status"] == "ok", clean["verdict"]
+    assert drifted["verdict"]["status"] in ("warning", "alarm", "bad"), drifted["verdict"]

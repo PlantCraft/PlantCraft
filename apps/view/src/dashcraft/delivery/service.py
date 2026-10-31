@@ -31,7 +31,7 @@ from dashcraft.query.cards import Reader
 from dashcraft.reports import assistant as helper
 from dashcraft.reports import document, docx, html, pdf, text
 from dashcraft.reports.model import ReportPayload, Schedule
-from dashcraft.reports.schedule import cadence, next_run, runs_between
+from dashcraft.reports.schedule import cadence, closed_period, next_run, runs_between
 from dashcraft.reports.store import ReportStore
 from dashcraft.suite import Suite
 from dashcraft.suite.reports import unread
@@ -76,6 +76,24 @@ class ReportService:
     def next_run(self, payload: dict[str, Any]) -> datetime | None:
         schedule = Schedule.model_validate(payload.get("schedule") or {})
         return next_run(schedule, self.clock(), self.zone())
+
+    def span(
+        self, report: dict[str, Any], reader: Reader
+    ) -> tuple[Reader, str, datetime, datetime]:
+        """What a report made now reads: the reader, the period as a window, its start and end.
+        The report's period ending now; or, when the schedule asks for whole calendar periods,
+        the last one (last week, last month) with every read pinned to its end."""
+
+        now = reader.clock()
+        closed = closed_period(
+            Schedule.model_validate(report.get("schedule") or {}), now, self.zone()
+        )
+        if closed is None:
+            period = report.get("period") or "24h"
+            return reader, period, now - timedelta(seconds=window_seconds(period)), now
+        start, end = closed
+        hours = round((end - start).total_seconds() / 3600)
+        return reader.until(end), f"{hours}h", start, end
 
     def cadence(self, report: dict[str, Any]) -> str:
         return cadence(Schedule.model_validate(report.get("schedule") or {}))
@@ -130,14 +148,14 @@ class ReportService:
         """Read every section over the report's period, ending now, and keep the PDF. A failure
         is kept as a failed run with its reason, never raised (but a refused token, 401)."""
 
-        end = reader.clock()
-        start = end - timedelta(seconds=window_seconds(report.get("period") or "24h"))
+        made_at = reader.clock()
+        reader, period, start, end = self.span(report, reader)
         run = self.store.start_run(
             report, trigger=trigger, by=by, period_start=start, period_end=end
         )
         try:
             items, problems = read_sections(
-                reader, report.get("sections") or [], report["period"], self.writer(report)
+                reader, report.get("sections") or [], period, self.writer(report)
             )
             document = pdf.render(
                 report,
@@ -145,7 +163,7 @@ class ReportService:
                 {
                     "start": start,
                     "end": end,
-                    "made_at": end,
+                    "made_at": made_at,
                     "zone": self.zone(),
                     "cadence": self.cadence(report),
                     "problems": problems,
@@ -296,15 +314,15 @@ class ReportService:
     def read_now(self, report: dict[str, Any], reader: Reader) -> tuple[document.Document, list]:
         """The report read now over its period, as the document every format writes."""
 
-        end = reader.clock()
-        start = end - timedelta(seconds=window_seconds(report.get("period") or "24h"))
+        made_at = reader.clock()
+        reader, period, start, end = self.span(report, reader)
         items, problems = read_sections(
-            reader, report.get("sections") or [], report["period"], self.last_written(report)
+            reader, report.get("sections") or [], period, self.last_written(report)
         )
         info = {
             "start": start,
             "end": end,
-            "made_at": end,
+            "made_at": made_at,
             "zone": self.zone(),
             "cadence": self.cadence(report),
             "problems": problems,

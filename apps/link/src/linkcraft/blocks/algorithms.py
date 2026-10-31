@@ -1,9 +1,10 @@
 """The algorithms PlantCraft Analytics ships (read-only; people save copies and change those).
 
-Six examples, each clear about what it is for and tagged (owner, Link round 6): Signal quality
+Seven examples, each clear about what it is for and tagged (owner, Link round 6): Signal quality
 ("data quality", on every signal); Flow loop, Level loop, Surge level and Temperature or pressure
 loop ("control loop", each the start of the loops of its type, ``catalog.loop_types``); Unit twin
-("digital twin", a process model beside the plant, on assets). The demo plant adds its own
+("digital twin", a process model beside the plant, on assets); Virtual sensor ("virtual sensor",
+a Kalman filter and the sensor's drift on a PV and its valve). The demo plant adds its own
 calibrated twins (``models.examples``). Loop health, Control valve and Oscillation and noise of
 0.3 live on inside Flow loop; a loop that named one runs Flow loop. What depends on the kind of
 loop (a flow is faster than a temperature) stays in the loop types' parameters, under each
@@ -31,6 +32,7 @@ SIGNAL_QUALITY = "signal_quality"
 LEGACY: dict[str, str] = ALGORITHM_OF_PROTOCOL
 # The tags of the shipped algorithms (translated where they are shown).
 CONTROL_LOOP, DATA_QUALITY, DIGITAL_TWIN = "control loop", "data quality", "digital twin"
+VIRTUAL_SENSOR = "virtual sensor"
 
 COLUMNS = {"input": 40, "gate": 330, "method": 640, "logic": 960, "output": 1260}
 ROW = 130
@@ -269,6 +271,41 @@ def _unit_twin() -> dict[str, Any]:
     return d.done()
 
 
+VIRTUAL_SENSOR_ID = "virtual_sensor"
+
+
+def _virtual_sensor() -> dict[str, Any]:
+    d = _Diagram()
+    d.node("op", "input.signal", "input", parameters={"role": "op"}, label="Valve (OP)")
+    d.node("pv", "input.signal", "input", parameters={"role": "pv"}, label="Measured (PV)")
+    d.node("kalman", "estimator.kalman", "gate", record=["value", "uncertainty"])
+    d.node("drift", "estimator.drift", "gate", record=["bias", "corrected"])
+    d.node("size", "transform.expression", "method", parameters={"expression": "abs(a)"})
+    d.node("mean", "stats.mean", "method")
+    d.node(
+        "limits",
+        "logic.limits",
+        "logic",
+        parameters={
+            "better": "lower",
+            "warning": 1.0,
+            "bad": 3.0,
+            "sentence": "The sensor reads {value} away from what its valve explains, on average",
+        },
+    )
+    d.node("result", "output.result", "output", parameters={"name": "Sensor drift"})
+    d.node("message", "output.message", "output")
+    for block in ("kalman", "drift"):
+        d.wire("op", "value", block, "u")
+        d.wire("pv", "value", block, "x")
+    d.wire("drift", "bias", "size", "a")
+    d.wire("size", "value", "mean", "x")
+    d.wire("mean", "value", "limits", "x")
+    d.wire("limits", "result", "result", "in")
+    d.wire("limits", "result", "message", "in")
+    return d.done()
+
+
 def _signal_quality() -> dict[str, Any]:
     d = _Diagram()
     d.node("signal", "input.signal", "input", parameters={"role": "signal"})
@@ -416,6 +453,33 @@ SYSTEM: tuple[dict[str, Any], ...] = (
             "deviation on one output points at its sensor or at that part of the process; "
             "on all outputs, at the operation or the model. Never call a model wrong or a "
             "sensor failed from this alone: say what to check.",
+        ),
+    },
+    {
+        "algorithm_id": VIRTUAL_SENSOR_ID,
+        "name": "Virtual sensor",
+        "tags": [VIRTUAL_SENSOR],
+        "description": "A cleaner PV from its valve (Kalman filter) and the sensor's drift, "
+        "each written to the historian; the drift is judged against limits in the PV's unit.",
+        "subject_kind": "asset",
+        "diagram": _virtual_sensor(),
+        "docs": AlgorithmDocs(
+            purpose="What is the value behind a noisy or drifting transmitter, and is it drifting?",
+            assets="Loops or equipment with a measured value (PV role) and the valve or "
+            "output that moves it (OP role).",
+            when="On analyzers and transmitters that are noisy, drift or are checked against "
+            "lab samples. The limits of the Limit check are in the PV's unit: set them for "
+            "the signal (1 and 3 suit a temperature in °C). For a lab value between samples, "
+            "use the Soft sensor block of Estimators in a copy.",
+            reading="The Kalman block records the filtered PV and its uncertainty; the Drift "
+            "block records the bias (the drift) and the PV without it, each a series in the "
+            "historian beside the PV. The verdict is the mean size of the bias over the "
+            "window. The model is fitted on the window it reads, so it needs no setup; a "
+            "drift older than the window is part of the model and reads as none.",
+            assistant="Report the drift with its sign and unit and how fast it grew. A drift "
+            "means the transmitter needs a check or a calibration, not that the process "
+            "moved: say what to check. A change in the process the valve does not explain "
+            "also reads as drift, so mention it when the unit changed operation.",
         ),
     },
     {
