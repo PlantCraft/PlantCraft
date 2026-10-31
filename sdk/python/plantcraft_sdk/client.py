@@ -1175,9 +1175,10 @@ class PlantCraftClient:
     def llm(
         self,
         use: str,
-        messages: list[Mapping[str, str]] | str,
+        messages: list[Mapping[str, Any]] | str,
         *,
         system: str = "",
+        images: Iterable[Any] = (),
         timeout: float = LLM_TIMEOUT,
     ) -> dict[str, Any]:
         """``POST /api/v1/llm/{use}``: one answer from the model PlantCraft gives one of the
@@ -1185,12 +1186,15 @@ class PlantCraftClient:
 
         ``messages`` is a question, or the turns of a chat (``role`` user or assistant). A use
         with no model now (off, or nothing set up) raises ``BadRequest`` with status 409: say
-        so, and that an administrator chooses one in Setup › Language models."""
+        so, and that an administrator chooses one in Setup › Language models.
+
+        ``images`` (PNG bytes, or ``plantcraft_sdk.llm.image(data, media_type)``) go with the
+        last user turn, for a model that reads images: at most 4, 5 MB each."""
 
         return self._send(
             "POST",
             f"/api/v1/llm/{quote(use, safe=':')}",
-            json=messages_body(messages, system=system),
+            json=messages_body(messages, system=system, images=images),
             idempotent=False,
             timeout=timeout,
         )

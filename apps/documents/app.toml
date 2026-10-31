@@ -30,13 +30,13 @@ image = "doccraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.85.0"
+sdk = "0.86.0"
 asset_types = []        # any asset can have documents
 roles = {}
 
 [permissions]
 read = ["assets", "people"]
-write = ["audit"]
+write = ["audit", "llm"]
 plant_write = false
 outbound = []
 
@@ -183,3 +183,10 @@ description = "Documents no one has linked to the plant's assets yet, with the t
 size = "m"
 kind = "list"
 sizes = [{ w = 4, h = 3 }, { w = 6, h = 3 }, { w = 12, h = 3 }]
+
+[[contributes.llm]]                  # Setup > Language models: plantmap/llm.py
+id = "diagram-read"
+title = "Read a scanned diagram again"
+description = "Reads a scanned P&ID page again when an editor asks, adding the tags and lines the drawing reader missed; people check what it adds on the plant map."
+reads = "The page's image and the tags and lines the drawing reader found on it; nothing from the plant's signals."
+default = "off"
