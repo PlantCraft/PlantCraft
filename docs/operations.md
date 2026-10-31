@@ -399,6 +399,17 @@ What the processes share, and how (`plantcraft.ops.workers`):
 A new background duty that must run once per installation goes in `ApiRuntime._lead`; state that
 must be the same in every process goes in the database, never in a module variable.
 
+**The Historian in several processes** (0.6.0 load tests, 2026-10-31). Analytics' rounds and
+methods read hours of raw values at once, and turning them into answers is Python work: in one
+process the Historian answered them on one core while the others waited (50 s stalls on the
+public demo). `histcraft serve` starts `HISTCRAFT_WORKERS` processes; `auto`, the default, is the
+CPUs its container may use (the cgroup limit `HISTCRAFT_CPUS`, at most 4). Always 1 where SQLite
+cannot use WAL in its data folder (as for PlantCraft) and when the collector runs inside the
+server (`HISTCRAFT_COLLECTOR=embedded`, a one-laptop install). The archive is PostgreSQL; each
+process holds `HISTCRAFT_READ_VALUES` divided by the processes, so the memory bound stays the
+same; `startup.lock` and `leader.lock` (`plantcraft_sdk.server.workers`, the same locks as
+PlantCraft's) keep the first start and the work queue's sampler to one process.
+
 **Historian's collector on its own.** `histcraft-collector` (`histcraft collect`, the Historian
 image, no port, healthy while its heartbeat is fresh) collects and archives; `histcraft` serves
 the pages and the API with `HISTCRAFT_COLLECTOR=off`. Restarting or updating the server, or a

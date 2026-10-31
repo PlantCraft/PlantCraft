@@ -569,18 +569,24 @@ suite_apps_setting() { # suite_apps_setting PROFILES CURRENT ENV_FILE
 }
 
 # Docker refuses to start a container whose CPU limit exceeds the host's CPU count ("range of
-# CPUs is from 0.01 to N"), so the limits in .env never ask for more than the host has.
+# CPUs is from 0.01 to N"), so the limits never ask for more than the host has: every
+# ${KEY:-default} CPU limit of compose.yaml, set in .env or left at its default (a 2-CPU
+# machine stopped on LINKCRAFT_EXECUTOR_CPUS's default 4, 0.6.0 load tests).
 fit_cpu_limits() {
-    local env="$1" cpus key value
+    local env="$1" cpus key default value file
     cpus="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
-    for key in PLANTCRAFT_CPUS LINKCRAFT_CPUS DASHCRAFT_CPUS HISTCRAFT_CPUS TWINCRAFT_CPUS ALARMCRAFT_CPUS MODELCRAFT_CPUS MODELCRAFT_EXECUTOR_CPUS LINKCRAFT_EXECUTOR_CPUS; do
+    for file in "$PREFIX/compose.yaml" "$BUNDLE_DIR/compose.yaml"; do
+        [ -f "$file" ] && break
+    done
+    [ -f "$file" ] || return 0
+    while IFS=' ' read -r key default; do
         value="$(env_get "$key" "$env")"
-        [ -n "$value" ] || continue
+        value="${value:-$default}"
         if awk -v a="$value" -v b="$cpus" 'BEGIN { exit !(a + 0 > b + 0) }'; then
             warn "$key=$value is more than the $cpus CPUs of this host: using $cpus"
             env_set "$key" "$cpus" "$env"
         fi
-    done
+    done < <(sed -n 's/^ *cpus: "${\([A-Z_]*_CPUS\):-\([0-9.]*\)}".*/\1 \2/p' "$file" | sort -u)
 }
 
 simcraft_image() { docker image inspect "simcraft:$1" >/dev/null 2>&1; }

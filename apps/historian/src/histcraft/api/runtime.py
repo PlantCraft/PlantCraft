@@ -19,6 +19,7 @@ from plantcraft_sdk.server import ops
 from plantcraft_sdk.server.platform import PlatformRuntime
 from plantcraft_sdk.server.queue import QueueMetrics, QueueNow, QueueSampler
 from plantcraft_sdk.server.store import Database as QueueDatabase
+from plantcraft_sdk.server.workers import Leader
 
 from histcraft import APP_ID
 from histcraft.api import queue
@@ -87,6 +88,9 @@ class Runtime(PlatformRuntime):
         # queue's history).
         self.queue_metrics = QueueMetrics(QueueDatabase(settings.data_dir / "queue.sqlite3"))
         self.queue_sampler = QueueSampler(self.queue_metrics, self.queue_now)
+        # With several server processes (``HISTCRAFT_WORKERS``) the sampler runs in one only.
+        self._leader = Leader(settings.data_dir)
+        self._stopping = threading.Event()
 
     def queue_now(self, since: datetime | None = None) -> QueueNow:
         return queue.queue_now(self.catalog, self.archive, self.settings.data_dir, since)
@@ -163,14 +167,25 @@ class Runtime(PlatformRuntime):
     def start(self) -> None:
         # What is open now (a stalled collector, a source down), for PlantCraft's monitor.
         ops.report_conditions(lambda: open_conditions(self.catalog, self.archive))
-        self.queue_sampler.start()
+        self._stopping.clear()
+        if self._leader.acquire():
+            self.queue_sampler.start()
+        else:
+            # Another process samples; this one takes over when that one ends.
+            threading.Thread(target=self._lead, name="histcraft-leader", daemon=True).start()
         if self.collector is not None and self._thread is None:
             self._thread = CollectorThread(self.collector)
             self._thread.start()
 
+    def _lead(self) -> None:
+        if self._leader.wait(self._stopping):
+            self.queue_sampler.start()
+
     def shutdown(self) -> None:
         ops.report_conditions(None)
+        self._stopping.set()
         self.queue_sampler.stop()
+        self._leader.release()
         if self._thread is not None:
             self._thread.stop()
             self._thread = None
