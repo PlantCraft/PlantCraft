@@ -2,8 +2,8 @@
 
 Data: ``python tests/oracles/fetch_sacac.py`` (pinned, never committed: the repository declares
 no licence). Labels: the repository's own categories (Bauer et al., 2016), never our methods:
-a loop under Stiction is "stiction", one under Tuning is "no_stiction". Loops are scored in groups
-of one sampling time, each through a monitoring round on ``FakePlantCraft`` (the production path,
+a loop under Stiction is "stiction", one under Tuning is "no_stiction". Each loop is scored
+alone, through a monitoring round on ``FakePlantCraft`` (the production path,
 as the ISDB oracle). The number of loops whose verdict matches never drops below
 ``[oracles] sacac_loops``.
 """
@@ -31,12 +31,11 @@ def test_stiction_screening_matches_the_sacac_categories(tmp_path):
             "reachable (docs/gaps.md G3)"
         )
     rows = json.loads((DATA / "loops.json").read_text(encoding="utf-8"))
-    groups: dict[float, dict[str, str]] = defaultdict(dict)
-    for row in rows:
-        groups[float(row["sample_seconds"])][row["loop"]] = row["category"]
+    # One round per loop, so each one's window is its own record (cases run from 20 minutes to
+    # two days).
     matched, wrong = 0, []
-    for index, (_step, labels) in enumerate(sorted(groups.items())):
-        found, missed = score(DATA, labels, tmp_path / f"group-{index}")
+    for index, row in enumerate(rows):
+        found, missed = score(DATA, {row["loop"]: row["category"]}, tmp_path / f"loop-{index}")
         matched += found
         wrong += missed
     by_label = defaultdict(lambda: [0, 0])
@@ -90,3 +89,21 @@ def test_the_fetcher_reads_the_repository_layout(tmp_path):
     assert sample_seconds("Sampling rate: non-constant (mean value: 12 seconds)") == 12.0
     labels = {row["loop"]: row["category"] for row in rows}
     assert score(tmp_path / "sacac", labels, tmp_path / "rt") == (2, [])
+
+
+def test_the_shape_index_tells_a_triangle_from_a_sine_and_a_wander():
+    """He et al. (2007) on clean shapes: a triangle wave near 1, a sine near 0; a random walk
+    (no regular cycle) is not judged."""
+
+    import numpy as np
+
+    from linkcraft.methods.cpm.stiction import shape_index
+
+    rng = np.random.default_rng(0)
+    steps = np.arange(4000)
+    period = 100
+    sine = np.sin(2 * np.pi * steps / period) + rng.normal(0, 0.05, steps.size)
+    triangle = 2 * np.abs(2 * ((steps / period) % 1) - 1) - 1 + rng.normal(0, 0.05, steps.size)
+    assert shape_index(sine, period) < 0.2
+    assert shape_index(triangle, period) > 0.8
+    assert shape_index(np.cumsum(rng.normal(0, 1, steps.size)), period) is None

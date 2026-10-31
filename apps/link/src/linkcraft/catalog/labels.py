@@ -177,6 +177,14 @@ PARAMETER_LABELS = {
         "Minimum OP jump",
         "Sudden OP change that marks a slip after the valve sticks.",
     ),
+    "shape_index_high": (
+        "Triangular shape index",
+        "Curve-fitting index at which a cycle counts as fully triangular, the shape of stiction.",
+    ),
+    "min_half_cycles": (
+        "Minimum half cycles",
+        "Regular half cycles of the oscillation needed before its shape is judged.",
+    ),
     "jump_fraction_reference": (
         "Reference jump fraction",
         "Share of stick-then-slip moves at which the slip part of the stiction score is full.",

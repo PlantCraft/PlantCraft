@@ -17,9 +17,17 @@ is flat because the controller is saturated, not because it sticks, and stiction
 there. Jelali and Huang (2010) list saturation among the conditions to rule out before a stiction
 test. When the whole window is saturated the screen returns ``not_applicable`` and says why.
 
-This is a screening of the OP pattern only. The published shape tests (Horch's PV-OP cross-
-correlation, the PV-OP ellipse or the bicoherence test of Choudhury et al. 2006) are not
-implemented; see ``docs/gaps.md`` (G28).
+A sticky valve behind a smooth controller output shows no stuck moves, so the screen also reads
+the *shape* of the oscillation, as the curve-fitting test of He et al. (2007): each half cycle of
+the OP and of the PV is fitted with a sine and with a triangle. Stiction makes the controller
+output of a self-regulating loop (and the PV of an integrating one) triangular, while aggressive
+tuning or an outside disturbance keeps both sinusoidal. The shape index is the sine error over the
+sum of both errors (above ``shape_index_high`` reads as stiction, 0.5 is undecided); the higher of
+the OP and PV indices counts. The score is the larger of the stick-slip and the shape evidence.
+
+An OP that is not on the 0-100 scale of ``lower_limit``/``upper_limit`` (a normalised record) is
+not checked for saturation. Horch's cross-correlation and the bicoherence test of Choudhury et al.
+(2006) are not implemented; see ``docs/gaps.md`` (G28).
 """
 
 from __future__ import annotations
@@ -49,6 +57,7 @@ from pydantic import BaseModel, Field
 from linkcraft.methods.references import (
     CHOUDHURY_2006_STICTION,
     CHOUDHURY_THORNHILL_SHAH_2005_STICTION_MODEL,
+    HE_2007_CURVE_FITTING_STICTION,
     JELALI_HUANG_2010_STICTION_BOOK,
     THORNHILL_HAGGLUND_1997_OSCILLATION,
 )
@@ -67,6 +76,9 @@ class StictionParameters(BaseModel):
     lower_limit: float = 0.0
     upper_limit: float = 100.0
     margin: float = Field(default=1.0, ge=0.0)
+    # Curve-fitting shape test (He et al. 2007): index where a half cycle reads fully triangular.
+    shape_index_high: float = Field(default=0.65, gt=0.5, le=1.0)
+    min_half_cycles: int = Field(default=4, ge=2)
 
 
 METHOD_METADATA = MethodMetadata(
@@ -76,6 +88,7 @@ METHOD_METADATA = MethodMetadata(
     maturity=MethodMaturity.ENGINEERING_HEURISTIC,
     references=[
         CHOUDHURY_THORNHILL_SHAH_2005_STICTION_MODEL,
+        HE_2007_CURVE_FITTING_STICTION,
         CHOUDHURY_2006_STICTION,
         JELALI_HUANG_2010_STICTION_BOOK,
         THORNHILL_HAGGLUND_1997_OSCILLATION,
@@ -85,14 +98,16 @@ METHOD_METADATA = MethodMetadata(
         "Leave out OP moves touching a saturated sample (op<=lower+margin or op>=upper-margin); "
         "flat = share of |dOP|<=movement_epsilon; slip = share of |dOP|>=jump_threshold right "
         "after a flat move; score = 100*min(1, pv_peak/min_autocorrelation)"
-        "*(0.5*flat + 0.5*min(1, slip/jump_fraction_reference))."
+        "*max(0.5*flat + 0.5*min(1, slip/jump_fraction_reference), shape), where shape = "
+        "clip((index-0.5)/(shape_index_high-0.5), 0, 1) and index = max over OP and PV of "
+        "sine SSE / (sine SSE + triangle SSE) fitted per half cycle (He et al. 2007)."
     ),
     assumptions=["The OP represents the valve command and routine data are representative."],
     limitations=[
         "This is a simplified screening, not a full reproduction of the "
         "bicoherence or ellipse methods of Choudhury et al.",
-        "It reads the stick-slip in the OP signal, so it suits an OP that shows the valve's "
-        "movement; a smooth controller output of a sticky valve is not recognised.",
+        "The stick-slip part needs an OP that shows the valve's movement; the shape part needs "
+        "a sustained oscillation of at least a few cycles in the window.",
         "Valve position feedback improves the diagnosis but is not "
         "required by this screening block.",
     ],
@@ -154,8 +169,16 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
 
     pv = frame["pv"].to_numpy(dtype=float)
     op = frame["op"].to_numpy(dtype=float)
-    saturated = (op <= parameters.lower_limit + parameters.margin) | (
-        op >= parameters.upper_limit - parameters.margin
+    on_scale = (
+        float(np.nanmin(op)) >= parameters.lower_limit - parameters.margin
+        and float(np.nanmax(op)) <= parameters.upper_limit + parameters.margin
+    )
+    # A normalised OP (negative values, or above the top of the scale) has no known limits.
+    saturated = (
+        (op <= parameters.lower_limit + parameters.margin)
+        | (op >= parameters.upper_limit - parameters.margin)
+        if on_scale
+        else np.zeros(op.shape, dtype=bool)
     )
     # A move is screened only when both of its samples are off the limits.
     usable = ~(saturated[1:] | saturated[:-1])
@@ -185,9 +208,21 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
     )
     slip_factor = min(1.0, slip_fraction / parameters.jump_fraction_reference)
     op_pattern_factor = 0.50 * flat_fraction + 0.50 * slip_factor
+    # The shape of a cycle means something only when the PV clearly cycles.
+    cycling = bool(lag) and peak >= parameters.min_autocorrelation
+    op_shape = shape_index(op, lag, parameters.min_half_cycles) if cycling else None
+    pv_shape = shape_index(pv, lag, parameters.min_half_cycles) if cycling else None
+    shapes = [value for value in (op_shape, pv_shape) if value is not None]
+    index = max(shapes) if shapes else None
+    shape_factor = (
+        min(1.0, max(0.0, (index - 0.5) / (parameters.shape_index_high - 0.5)))
+        if index is not None
+        else 0.0
+    )
     # Too few moves off the limits to read a pattern: stiction cannot be judged here.
     screenable = screened >= 3
-    score = 100.0 * oscillation_factor * op_pattern_factor if screenable else 0.0
+    evidence = max(op_pattern_factor, shape_factor)
+    score = 100.0 * oscillation_factor * evidence if screenable else 0.0
     status = status_from_score(score) if screenable else MethodStatus.NOT_APPLICABLE
 
     return result(
@@ -209,6 +244,9 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
             "pv_autocorrelation_peak": peak,
             "pv_lag_samples": lag,
             "op_pattern_factor": op_pattern_factor,
+            "op_shape_index": op_shape,
+            "pv_shape_index": pv_shape,
+            "shape_factor": shape_factor,
             "stiction_screening_score": float(score),
             "valid_samples": int(len(frame)),
         },
@@ -219,6 +257,75 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
             )
         ],
     )
+
+
+def _half_cycle_errors(segment: np.ndarray) -> tuple[float, float]:
+    """Sum of squared errors of the best sine half wave and the best triangle (peak anywhere)
+    through the zero crossings at both ends of ``segment``."""
+
+    if segment.size > 64:  # the shape, not the samples: 64 points are plenty
+        segment = np.interp(np.linspace(0, segment.size - 1, 64), np.arange(segment.size), segment)
+    n = segment.size
+    k = np.arange(n, dtype=float)
+    span = float(n - 1)
+    sine = np.sin(np.pi * k / span)
+    amplitude = float(sine @ segment) / float(sine @ sine)
+    sine_error = float(np.sum((segment - amplitude * sine) ** 2))
+    best = np.inf
+    for peak in range(1, n - 1):
+        tri = np.where(k <= peak, k / peak, (span - k) / (span - peak))
+        height = float(tri @ segment) / float(tri @ tri)
+        best = min(best, float(np.sum((segment - height * tri) ** 2)))
+    return sine_error, best
+
+
+def shape_index(
+    values: np.ndarray, period: int, min_half_cycles: int = 4, max_spread: float = 0.35
+) -> float | None:
+    """He et al. (2007): sine error / (sine + triangle error) summed over the half cycles of
+    ``values`` (a signal oscillating with ``period`` samples). Near 1 triangular (stiction), near 0
+    sinusoidal, 0.5 undecided; None with too few half cycles, or half cycles whose lengths spread
+    more than ``max_spread`` of their mean (no regular oscillation)."""
+
+    if period < 8:
+        return None
+    x = np.asarray(values, dtype=float)
+    x = x[np.isfinite(x)]
+    if x.size < 2 * period:
+        return None
+    # Smooth over a tenth of the period so noise makes no extra zero crossings, then centre on a
+    # running mean over one period (a slow drift would shift the crossings).
+    width = max(1, period // 10)
+    smooth = np.convolve(x, np.ones(width) / width, mode="same")
+    level = np.convolve(x, np.ones(period) / period, mode="same")
+    centred = smooth - level
+    edge = period // 2
+    centred = centred[edge : centred.size - edge]
+    signs = np.sign(centred)
+    crossings = np.flatnonzero(signs[1:] * signs[:-1] < 0) + 1
+    lengths = np.diff(crossings)
+    # A limit cycle repeats: half cycles of about one length. A wandering signal (a healthy
+    # loop riding disturbances) crosses at random, and its half cycles look triangular too.
+    if lengths.size < min_half_cycles or float(np.std(lengths)) > max_spread * float(
+        np.mean(lengths)
+    ):
+        return None
+    sine_total = tri_total = 0.0
+    halves = 0
+    for start, end in zip(crossings[:-1], crossings[1:], strict=False):
+        length = end - start + 1
+        # A half cycle near half the period: shorter ones are noise, longer ones a pause.
+        if not 0.25 * period <= length <= 1.0 * period:
+            continue
+        segment = centred[start : end + 1]
+        segment = segment - np.linspace(segment[0], segment[-1], length)
+        sine_error, tri_error = _half_cycle_errors(np.abs(segment))
+        sine_total += sine_error
+        tri_total += tri_error
+        halves += 1
+    if halves < min_half_cycles or sine_total + tri_total <= 0:
+        return None
+    return sine_total / (sine_total + tri_total)
 
 
 def describe(metrics: dict) -> str:
@@ -240,6 +347,18 @@ def describe(metrics: dict) -> str:
             "{facts}; {saturated} of the window at an output limit left out",
             facts=facts,
             saturated=_pct(saturated),
+        )
+    shapes = [
+        v for v in (metrics.get("op_shape_index"), metrics.get("pv_shape_index")) if v is not None
+    ]
+    if shapes and float(metrics.get("shape_factor") or 0) > float(
+        metrics.get("op_pattern_factor") or 0
+    ):
+        facts = t(
+            "{facts}; the oscillation cycles in triangles (shape index {index}, 1 is a triangle, "
+            "0 a sine)",
+            facts=facts,
+            index=f"{max(shapes):.2f}",
         )
     if float(metrics.get("stiction_screening_score") or 0) < 25:
         return t("No clear valve stiction signature ({facts}).", facts=facts)
