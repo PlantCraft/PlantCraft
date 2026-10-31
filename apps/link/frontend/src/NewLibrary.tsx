@@ -7,7 +7,7 @@ import { Dialog } from "@plantcraft/ui";
 import { FolderPlus } from "lucide-react";
 import { useState } from "react";
 import { api } from "./api";
-import { forgetBlockCatalog } from "./AlgorithmEditor";
+import { forgetBlockCatalog } from "./blockCatalog";
 import { t } from "./i18n";
 
 export function NewLibraryDialog({ onClose, onMade }: { onClose: () => void; onMade: (library: { library: string; name: string }) => void }) {

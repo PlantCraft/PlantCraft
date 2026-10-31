@@ -16,7 +16,7 @@ import { ChevronRight, Copy, Download, Lock, PenLine, Plus, Search, SlidersHoriz
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import { linkRef } from "./Assistant";
-import { blockCatalog, forgetBlockCatalog } from "./AlgorithmEditor";
+import { blockCatalog, forgetBlockCatalog } from "./blockCatalog";
 import { openEditor } from "./algorithms";
 import { canWriteBlocks, EditBlockPage } from "./BlockEdit";
 import { ComparePicker } from "./Compare";

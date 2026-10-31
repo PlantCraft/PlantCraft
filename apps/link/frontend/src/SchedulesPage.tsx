@@ -9,7 +9,7 @@ import { AssetSearch, chosenFolder, confirmAction, DataTable, FolderColumn, Fold
 import { BellPlus, History, Pause, Play, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { ParameterField } from "@plantcraft/ui/blockParameter";
-import { blockCatalog } from "./AlgorithmEditor";
+import { blockCatalog } from "./blockCatalog";
 import { api } from "./api";
 import { formatAgo, formatDate, formatDuration, formatNumber, t } from "./i18n";
 import { navigate } from "./nav";

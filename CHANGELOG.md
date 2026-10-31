@@ -95,7 +95,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **Schedules and the block pages open without the block editor (`@plantcraft/ui`).**
   `ParameterField` and `typeLabel` have their own subpath, `@plantcraft/ui/blockParameter`
   (still exported from `blockEditor`), so Analytics › Schedules and Models › Blocks no longer
-  load React Flow and the diagram editor (~205 KB) to show a block's parameters.
+  load React Flow and the diagram editor to show a block's parameters. Analytics' block palette
+  (`blockCatalog.ts`) and Models' version helpers (`versionParts.tsx`) left the editor modules
+  for the same reason. Script on open: Analytics › Schedules 708 to 487 KB, Analytics › Blocks
+  1,155 to 941 KB, Models › Blocks 720 to 461 KB.
 - **The platform's pages load a quarter less script.** The Desk's widget grid
   (react-grid-layout) and the asset pages were in the script every page of the platform loads.
   They now load with their own page: 758 KB to 509 KB for the sign-in and for every page but the

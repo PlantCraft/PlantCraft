@@ -16,7 +16,7 @@ import { api } from "./api";
 import { t } from "./i18n";
 import { href, navigate } from "./nav";
 import { blockPath, codePath, modelPath, type BlockTab } from "./paths";
-import { modelVersions, VersionDialog } from "./ModelPage";
+import { modelVersions, VersionDialog } from "./versionParts";
 import { BlockCompare } from "./Versions";
 import type { BlockLibrary, BlockUse, CatalogBlock, Me, Revision } from "./types";
 import { Dialog, ErrorBox, Heading, Link, Loading, message } from "./ui";

@@ -19,18 +19,9 @@ import { sketchDiagram } from "./algorithmSketch";
 import { CalibrateTool, DEVIATION_BLOCK } from "./Calibrate";
 import { DEFAULT_TIMING, EMPTY_DOCS, type Algorithm, type AlgorithmDocs, type AlgorithmTest, type AssetChoice, type AssetTiming, type BlockResult, type Blocks, type ComputePlacement, type Me, type SubjectKind } from "./types";
 import { ErrorBox, Loading, Pill } from "./ui";
+import { blockCatalog } from "./blockCatalog";
 
-let blocksCache: Promise<Blocks> | null = null;
-/** The palette, read once per page load (again after a block is saved). */
-export function blockCatalog(): Promise<Blocks> {
-  if (!blocksCache) blocksCache = api.blocks().catch((error: unknown) => { blocksCache = null; throw error; });
-  return blocksCache;
-}
-
-/** Read the palette again on next use: a block was saved, copied or deleted. */
-export function forgetBlockCatalog(): void {
-  blocksCache = null;
-}
+export { blockCatalog, forgetBlockCatalog } from "./blockCatalog";
 
 const blockHref = (blockId: string) => href(`/blocks/${encodeURIComponent(blockId)}`);
 
