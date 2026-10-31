@@ -17,6 +17,13 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   words, so search and the assistant find what it shows ("P-1001 feeds E-1009"). Scans are read
   with Tesseract OCR (now in the image), within a time budget. New dependencies: pdfplumber,
   pypdfium2, pillow. A DEXPI example P&ID (CC BY 4.0) is a test file.
+- **Real P&IDs from CAD tools read better.** An equipment tag written beside its outline finds
+  that outline (not the gap between the pipes around it); valves drawn as four loose strokes
+  are valves; arrows drawn along a line, away from any symbol, give the line's direction; a
+  pump drawn small to scale is still a pump. On the DEXPI example the reader finds 4 of its 6
+  equipment feeds with none wrong (3, one of them reversed, before).
+- `tools/llm_vision_eval.py --dexpi DIR --xml DIR` scores a vision model on public P&IDs against
+  their DEXPI XML (`tools/dexpi_truth.py`), next to the classical reader on the same files.
 
 ## [0.5.1] - 2026-10-30
 

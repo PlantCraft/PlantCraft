@@ -239,5 +239,9 @@ def test_a_real_pid_from_another_tool_is_read():
     assert DEXPI_TAGS <= found  # every tag, as of 2026-10-31
     assert len(found - DEXPI_TAGS) <= 1  # SV-104.01, a safety valve the XML keeps as piping
     feeds = {(r["from"], r["to"]) for r in page["relations"] if r["type"] == "feeds"}
-    assert len(feeds & DEXPI_FEEDS) >= 3 and len(feeds - DEXPI_FEEDS) <= 1
+    # 4 of 6, none wrong: the exchanger's tag sits beside its outline, the tank's return line
+    # carries its direction in an arrow along the line, and the valves are four loose strokes.
+    assert len(feeds & DEXPI_FEEDS) >= 4 and not feeds - DEXPI_FEEDS
+    valves = {i["tag"] for i in page["items"] if i["why"] == "valve symbol with its tag beside it"}
+    assert {"HV-4750.01", "PV-4712.02", "TV-4750.03"} <= valves
     assert read_diagrams(data, "C01V01-HEX.EX02.pdf")  # kept as a diagram
