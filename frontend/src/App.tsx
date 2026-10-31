@@ -158,6 +158,8 @@ export function isDeskPath(path: string) {
 /** Operations, built in like Desk: the suite's status, load and logs, its backups and updates
  * (docs/operations.md, section 4). Its pages keep the addresses they had in PlantCraft. */
 export const OPERATIONS_PATHS = ["/health", "/ops/logs", "/ops/requests", "/ops/partners", "/ops/support", "/ops/alerts", "/backups", "/updates"];
+/** What a sponsor at the plant opens in Operations without its role. */
+const SPONSOR_PATHS = ["/ops/requests", "/ops/partners"];
 export function isOperationsPath(path: string) {
   return OPERATIONS_PATHS.includes(path);
 }
@@ -222,7 +224,7 @@ function Page({ path, data, username, onInboxChange }: { path: string; data: Hom
   if (path === "/ops/logs") return operate && !demoVisitor ? <Suspense fallback={PAGE_LOADING}><LogsPage /></Suspense> : <NoAccess />;
   // Everyone asks for help and follows their own requests; Operations sees them all.
   if (path === "/ops/requests") return <Suspense fallback={PAGE_LOADING}><RequestsPage /></Suspense>;
-  if (path === "/ops/partners") return operate ? <Suspense fallback={PAGE_LOADING}><PartnersPage /></Suspense> : <NoAccess />;
+  if (path === "/ops/partners") return operate || (access.sponsor_of ?? []).length > 0 ? <Suspense fallback={PAGE_LOADING}><PartnersPage /></Suspense> : <NoAccess />;
   if (path === "/ops/support") return operate ? <Suspense fallback={PAGE_LOADING}><SupportPage people={data.users.filter((item) => item.username !== username)} /></Suspense> : <NoAccess />;
   if (path === "/ops/alerts") return operate ? <Suspense fallback={PAGE_LOADING}><LoadAlertsPage /></Suspense> : <NoAccess />;
   if (path === "/backups") return canSee(access, "administration") ? <Suspense fallback={PAGE_LOADING}><BackupsPage /></Suspense> : <NoAccess />;
@@ -312,7 +314,9 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const desk = isDeskPath(path);
   // Operations is an app of its own for the people who may open it; for everyone else /health
   // stays PlantCraft's read-only "System health".
-  const operating = operate && isOperationsPath(path);
+  // A sponsor at the plant who is not in Operations opens its Requests and Partners only.
+  const sponsorOnly = !operate && (access.sponsor_of ?? []).length > 0;
+  const operating = operate ? isOperationsPath(path) : sponsorOnly && SPONSOR_PATHS.includes(path);
   // Desk: the person's day. PlantCraft: the plant's assets for everyone; the rest is administration.
   // Messages and the Assistant are not Desk pages any more: their buttons above the
   // person's name open them over any screen; /messages and /assistant stay as their full pages.
@@ -330,7 +334,10 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
     // Notebooks last, the most complex; the Python logo says what they are.
     ...(admin || notebooksOn ? [{ to: "/notebooks", label: t("Notebooks"), icon: <PythonMark /> }] : []),
   ];
-  const opsNav: ShellNavItem[] = [
+  const opsNav: ShellNavItem[] = sponsorOnly ? [
+    { to: "/ops/requests", label: t("Requests"), icon: <LifeBuoy /> },
+    { to: "/ops/partners", label: t("Partners"), icon: <Building2 /> },
+  ] : [
     { to: "/health", label: t("Status"), icon: <Activity /> },
     ...(demoVisitor ? [] : [{ to: "/ops/logs", label: t("Logs"), icon: <ScrollText /> }]),
     { to: "/ops/requests", label: t("Requests"), icon: <LifeBuoy /> },
@@ -359,7 +366,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const apps: SuiteApp[] = [
     { id: "desk", name: "Desk", url: "/" },
     { id: "processcraft", name: "PlantCraft", url: "/" },
-    ...(operate ? [{ id: "operations", name: "Operations", url: "/health" }] : []),
+    ...(operate || sponsorOnly ? [{ id: "operations", name: "Operations", url: sponsorOnly ? "/ops/partners" : "/health" }] : []),
     ...data.apps.filter((app) => app.access).map((app) => ({ id: app.id, name: app.name, url: app.url, version: app.version })),
   ];
   // Only the apps in frames have an address prefix: Desk, PlantCraft and Operations are pages of
@@ -387,7 +394,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
     <SuiteShell
       app={framed ? shown?.app ?? entry!.id : desk ? "desk" : operating ? "operations" : "processcraft"}
       appName={framed ? shown?.appName ?? entry!.name : undefined}
-      home={framed ? shown?.home ?? "/" : desk ? "/" : operating ? "/health" : "/admin"}
+      home={framed ? shown?.home ?? "/" : desk ? "/" : operating ? (sponsorOnly ? "/ops/partners" : "/health") : "/admin"}
       localApps={LOCAL}
       assistant={framed ? shown?.assistant ?? false : path !== "/assistant" && !path.startsWith("/assistant/")}
       assistantControl={framed ? assistantControl : undefined}

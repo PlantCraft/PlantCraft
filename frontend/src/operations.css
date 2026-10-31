@@ -133,3 +133,12 @@
 .ops-window-ended { opacity: 0.7; }
 .ops-window-apps { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .ops-window-apps legend { font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: 4px; }
+/* Queues' working hours (Requests › Targets) */
+.ops-service-hours { margin-top: 16px; border-top: 1px solid var(--pc-border); padding-top: 12px; }
+.ops-service-hours h3 { font-size: 0.95rem; margin: 0 0 6px; display: flex; gap: 8px; align-items: baseline; }
+.ops-service-hours ul { margin: 0 0 10px; padding-left: 18px; }
+.ops-service-hours-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; align-items: end; }
+.ops-service-hours-form label > span { display: block; font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: 4px; }
+.ops-service-hours-form fieldset { grid-column: 1 / -1; border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.ops-service-hours-form legend { font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: 4px; }
+.ops-service-hours-actions { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }

@@ -67,6 +67,7 @@ class FakeHistCraft:
         self.requests: list[dict] = []
         self.fail: int | None = None
         self.timeout = False
+        self.extremes = False  # answer a grid read with each cell's low and high
         self.sources = {
             "plc": {
                 "id": "plc",
@@ -144,6 +145,8 @@ class FakeHistCraft:
             return httpx.Response(200, json={"ok": True, "detail": {"server": body["endpoint"]}})
         if method == "POST" and path == "/series":
             series = [{**SERIES, "signal": s} for s in body["signals"] if s.endswith("FIC-101.PV")]
+            if self.extremes and body.get("extremes") and body.get("step"):
+                series = [{**item, "low": [0.5], "high": [9.5]} for item in series]
             errors = [
                 {"signal": s, "status": 404, "detail": "Signal not found."}
                 for s in body["signals"]
@@ -626,6 +629,9 @@ def test_the_interface_charts_read_through_histcraft(hist):
     assert history.json()["series"]["plc:FIC-101.PV"][0][1] == 1.5
     series = hist.get("/api/signals/plc:FIC-101.PV/series", params={"window": "1h"})
     assert series.status_code == 200 and series.json()["series"][0][1] == 1.5
+    # Without extremes from the Historian (text, past its extremes), the raw samples are read.
+    reads = [c["body"] for c in hist.fake.calls("POST") if c["path"] == "/series"]
+    assert reads[0]["extremes"] is True and reads[0]["step"] and reads[1]["step"] is None
     value = hist.get("/api/signals/plc:FIC-101.PV/value", params={"window": "1h"}).json()
     assert value["value"] == 1.5
     hist.fake.timeout = True
@@ -755,3 +761,16 @@ def test_a_map_may_name_a_source_kept_in_histcraft(hist):
     plant["signals"][0]["source_id"] = "nowhere"
     wrong = hist.post("/api/map/preview?filename=plant.json", content=json.dumps(plant).encode())
     assert any("nowhere" in i["message"] for i in wrong.json()["issues"])
+
+
+def test_a_long_trend_takes_each_cells_low_and_high_from_the_historian(hist):
+    _admin(hist)
+    hist.fake.extremes = True
+    before = len(hist.fake.requests)
+    history = hist.get("/api/data/history", params={"tag": "plc:FIC-101.PV", "hours": 24})
+    assert history.status_code == 200, history.text
+    assert [v for _, v in history.json()["series"]["plc:FIC-101.PV"]] == [0.5, 9.5]
+    reads = [c for c in hist.fake.requests[before:] if c["path"] == "/series"]
+    # One read: a grid of about 750 cells over the day, not the day's raw samples.
+    assert len(reads) == 1 and reads[0]["body"]["extremes"] is True
+    assert 100 <= reads[0]["body"]["step"] <= 130

@@ -44,6 +44,16 @@ def _session_payload(username: str | None, rt: Any, request: Request) -> dict[st
         # Temporary support access: when it ends (the shell says so).
         grant = rt.workspace.support_access.active(username) if username else None
         shown["support_until"] = grant["ends_at"] if grant else None
+        # The companies this person sponsors at the plant: Operations › Partners opens for them.
+        shown["sponsor_of"] = (
+            [
+                item["group_id"]
+                for item in rt.workspace.groups.list()
+                if item["kind"] == "company" and item.get("sponsor") == username
+            ]
+            if username
+            else []
+        )
     return {
         "authenticated": bool(username),
         "username": username,

@@ -121,6 +121,7 @@ export const operationsApi = {
   planMaintenance: (draft: { reason: string; hours: number; services: string[] | null; starts_at: string | null }) => requestJson<MaintenanceWindow>("/api/operations/maintenance/windows", post(draft)),
   endMaintenance: (windowId: number) => requestJson<MaintenanceWindow>(`/api/operations/maintenance/windows/${windowId}`, { method: "DELETE" }),
   targets: () => requestJson<TargetsAnswer>("/api/operations/targets"),
+  setServiceHours: (queue: string | null, hours: WorkingHours | null) => requestJson<TargetsAnswer>("/api/operations/service-hours", { method: "PUT", body: JSON.stringify({ queue, hours }) }),
   setTargets: (targets: TargetsAnswer["targets"]) => requestJson<TargetsAnswer>("/api/operations/targets", { method: "PUT", body: JSON.stringify({ targets }) }),
   supportAccess: () => requestJson<{ grants: SupportGrant[]; max_hours: number }>("/api/operations/support-access"),
   grantSupport: (draft: { username: string; hours: number; reason: string; action_id?: number | null }) => requestJson<SupportGrant>("/api/operations/support-access/grants", post(draft)),
@@ -130,7 +131,11 @@ export const operationsApi = {
 /** A month's hours approved for a company (null company: the plant's own people). */
 export interface HoursApproval { month: string; company: string | null; hours: number; approved_by: string; approved_by_name: string; approved_at: string }
 export type Priority = "critical" | "high" | "medium" | "low";
-export interface TargetsAnswer { targets: Record<Priority, { response_hours: number; resolution_hours: number }>; defaults: TargetsAnswer["targets"] }
+export interface TargetsAnswer { targets: Record<Priority, { response_hours: number; resolution_hours: number }>; defaults: TargetsAnswer["targets"]; service_hours?: QueueHours[]; timezone?: string }
+export type DayName = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+/** When a queue works (null queue: the default); its requests' clocks run only then. */
+export interface WorkingHours { days: DayName[]; start: string; end: string }
+export interface QueueHours extends WorkingHours { queue: string | null; queue_name: string | null }
 /** Temporary support access: Operations for a person until `ends_at`. */
 export interface SupportGrant { grant_id: number; username: string; display_name: string; reason: string; action_id: number | null; granted_by: string; granted_by_name: string; starts_at: string; ends_at: string; ended_by: string | null; ended_at: string | null; active: boolean }
 
