@@ -50,5 +50,5 @@ moves to setpoint activity rather than poor tuning.
   temperatures in °C), too tight for one held near zero (a gauge pressure, a differential).
   Give such loops their `pv_span` or an absolute `error_tolerance`. PlantCraft does not keep
   signal ranges yet; when it does, the span can come from there (gap G36).
-- No minimum-variance (Harris) benchmark yet: the error is not compared with what the best
-  possible controller would achieve (gap G19).
+- The error is not compared here with what the best possible controller would achieve: that is
+  the minimum-variance (Harris) index, `harris_index`.

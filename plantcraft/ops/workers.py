@@ -20,22 +20,20 @@ from __future__ import annotations
 
 import logging
 import os
-import threading
-from collections.abc import Iterator
-from contextlib import contextmanager
 from pathlib import Path
 
 from plantcraft_sdk.server.store import journal_mode
 
-LOGGER = logging.getLogger(__name__)
-MAX_WORKERS = 8
-# A process waiting to lead asks again this often.
-LEADER_RETRY_SECONDS = 5.0
+# The locks between processes are the SDK's (every app that runs several processes shares them).
+from plantcraft_sdk.server.workers import (  # noqa: F401
+    LEADER_RETRY_SECONDS,
+    MAX_WORKERS,
+    Leader,
+    first_only,
+    startup,
+)
 
-try:
-    import fcntl
-except ImportError:  # pragma: no cover - Windows
-    fcntl = None  # type: ignore[assignment]
+LOGGER = logging.getLogger(__name__)
 
 
 def worker_count(
@@ -67,95 +65,3 @@ def worker_count(
     if not (environ.get("HISTCRAFT_URL") or "").strip():
         return 1
     return max(2, min(4, cpus if cpus is not None else os.cpu_count() or 1))
-
-
-@contextmanager
-def startup(folder: str | Path) -> Iterator[None]:
-    """Hold the installation's start lock: one process at a time builds its runtime."""
-
-    if fcntl is None:
-        yield
-        return
-    path = Path(folder) / "startup.lock"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
-        yield
-    finally:
-        os.close(fd)  # closing releases the lock
-
-
-@contextmanager
-def first_only(path: str | Path) -> Iterator[bool]:
-    """True for the one process that holds ``path`` now, False for the others (never blocks):
-    for work two processes must not do at once and the next round redoes anyway."""
-
-    if fcntl is None:
-        yield True
-        return
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError:
-            yield False
-            return
-        yield True
-    finally:
-        os.close(fd)
-
-
-class Leader:
-    """The process that runs the installation's once-only duties (``acquire`` never blocks)."""
-
-    def __init__(self, folder: str | Path):
-        self.path = Path(folder) / "leader.lock"
-        self._fd: int | None = None
-        self._lock = threading.Lock()
-
-    @property
-    def held(self) -> bool:
-        return self._fd is not None
-
-    def acquire(self) -> bool:
-        with self._lock:
-            if self._fd is not None:
-                return True
-            if fcntl is None:
-                self._fd = -1
-                return True
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            fd = os.open(self.path, os.O_RDWR | os.O_CREAT, 0o600)
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except OSError:
-                os.close(fd)
-                return False
-            os.ftruncate(fd, 0)
-            os.write(fd, f"{os.getpid()}\n".encode())
-            self._fd = fd
-            return True
-
-    def release(self) -> None:
-        with self._lock:
-            fd, self._fd = self._fd, None
-        if fd is not None and fd >= 0:
-            os.close(fd)
-
-    def wait(self, stop: threading.Event) -> bool:
-        """Block until this process leads (True) or ``stop`` is set (False)."""
-
-        announced = False
-        while not stop.is_set():
-            if self.acquire():
-                if announced:
-                    LOGGER.info("This process now runs the installation's background duties")
-                return True
-            if not announced:
-                LOGGER.info("Another process runs the background duties; this one stands by")
-                announced = True
-            stop.wait(LEADER_RETRY_SECONDS)
-        return False
