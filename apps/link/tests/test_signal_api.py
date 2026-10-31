@@ -218,7 +218,7 @@ def _check(protocol: dict, check_id: str) -> dict:
 def test_checks_catalog_and_admin_defaults(sq_runtime, sq_fake):
     with client_for(sq_runtime, sq_fake, "admin") as sq_client:
         protocol = sq_client.get("/link/api/signal-quality").json()
-        assert len(protocol["checks"]) == 8 and protocol["system"] is True
+        assert len(protocol["checks"]) == 11 and protocol["system"] is True
         frozen = _check(protocol, "sq_frozen")
         assert frozen["parameters"][0]["name"] == "min_minutes"
         assert frozen["action"]

@@ -52,6 +52,18 @@ class PhilosophyDraft(BaseModel):
     target_high: float = Field(default=5.0, ge=0, le=100)
     target_medium: float = Field(default=15.0, ge=0, le=100)
     target_low: float = Field(default=80.0, ge=0, le=100)
+    # The longest an alarm may be shelved, by priority, in hours (ISA-18.2: shelving is
+    # time-limited, and the more urgent the alarm the shorter).
+    shelve_hours_critical: int = Field(default=1, ge=1, le=168)
+    shelve_hours_high: int = Field(default=4, ge=1, le=168)
+    shelve_hours_medium: int = Field(default=12, ge=1, le=168)
+    shelve_hours_low: int = Field(default=24, ge=1, le=168)
+
+    def shelve_minutes(self, priority: str | None) -> int:
+        """The longest shelving allowed for an alarm of ``priority``, in minutes."""
+
+        hours = getattr(self, f"shelve_hours_{priority or 'medium'}", self.shelve_hours_medium)
+        return int(hours) * 60
 
     @field_validator("digest_times")
     @classmethod

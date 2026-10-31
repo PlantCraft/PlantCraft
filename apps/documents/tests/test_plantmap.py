@@ -3,6 +3,7 @@ joined into one plant (``doccraft.plantmap``)."""
 
 from __future__ import annotations
 
+import gzip
 import json
 import sys
 from pathlib import Path
@@ -271,6 +272,52 @@ def test_a_real_pid_from_another_tool_is_read():
     valves = {i["tag"] for i in page["items"] if i["why"] == "valve symbol with its tag beside it"}
     assert {"HV-4750.01", "PV-4712.02", "TV-4750.03"} <= valves
     assert read_diagrams(data, "C01V01-HEX.EX02.pdf")  # kept as a diagram
+
+
+def test_a_dexpi_file_is_read_exactly_into_the_map(client, runtime, tmp_path):
+    # The same C01 saved as DEXPI (Proteus XML) by the P&ID tool: every tag and feed, all sure.
+    data = gzip.decompress(
+        (Path(__file__).parent / "files" / "dexpi-C01V01-HEX.EX02.xml.gz").read_bytes()
+    )
+    page = read_drawing(data, "C01V01-HEX.EX02.xml")[0]
+    assert page["source"] == "dexpi"
+    assert {i["tag"] for i in page["items"]} == DEXPI_TAGS
+    assert {(r["from"], r["to"]) for r in page["relations"] if r["type"] == "feeds"} == DEXPI_FEEDS
+    assert {r["confidence"] for r in page["relations"]} == {"high"}
+    kinds = {(r["from"], r["type"], r["to"]) for r in page["relations"]}
+    assert ("PICSA-4712.02", "controls", "PV-4712.02") in kinds
+    assert ("PV-4712.02", "on", "H-1007") in kinds
+    assert ("TICSA-4750.03", "measures", "T-4750") in kinds
+    w, h = page["width"], page["height"]
+    assert all(
+        0 <= i["box"][0] <= i["box"][2] <= w and 0 <= i["box"][1] <= i["box"][3] <= h
+        for i in page["items"]
+    )
+
+    # Sent to the library like any file: a diagram, its picture drawn here, and on the map.
+    doc = send(client, "C01V01-HEX.EX02.xml", data, number="C01-DEXPI", kind="P&ID")
+    index(runtime)
+    one = next(d for d in client.get("/api/diagrams").json() if d["doc_id"] == doc["doc_id"])
+    assert one["source"] == "dexpi"
+    image = client.get(f"/api/diagrams/{one['rev_id']}/1/image")
+    assert image.status_code == 200 and image.headers["content-type"].startswith("image/svg+xml")
+    assert image.content.startswith(b"<svg") and b"<script" not in image.content
+    plant = client.get("/api/plant-map").json()
+    assert DEXPI_FEEDS <= {(r["from"], r["to"]) for r in plant["relations"] if r["type"] == "feeds"}
+
+    # Our own DEXPI export reads back the same equipment and feeds.
+    back = read_drawing(client.get("/api/plant-map/dexpi.xml").content, "plant.xml")[0]
+    assert DEXPI_FEEDS <= {(r["from"], r["to"]) for r in back["relations"] if r["type"] == "feeds"}
+
+
+def test_a_dexpi_file_with_entities_is_refused():
+    bomb = b'<?xml version="1.0"?><!DOCTYPE a [<!ENTITY x "xx">]><PlantModel>&x;</PlantModel>'
+    with pytest.raises(DrawingError):
+        read_drawing(bomb, "bomb.xml")
+    assert read_diagrams(bomb, "bomb.xml") == []
+    assert (
+        read_diagrams(b"<?xml version='1.0'?><PlantModel><Equipment/></PlantModel>", "x.xml") == []
+    )
 
 
 def test_an_editor_has_a_page_read_again_by_the_language_model(

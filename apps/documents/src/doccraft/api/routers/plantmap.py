@@ -26,6 +26,7 @@ from doccraft.library.service import Refused
 from doccraft.plantmap import llm as diagram_llm
 from doccraft.plantmap.build import LIST_COLUMNS, asset_file, build_map, lists
 from doccraft.plantmap.dexpi import dexpi_xml
+from doccraft.plantmap.reader.dexpi import draw_svg, is_dexpi
 from doccraft.plantmap.summary_doc import NUMBER, summary_markdown
 
 router = APIRouter(prefix="/api", tags=["plant map"])
@@ -92,6 +93,9 @@ def diagram_image(
         "Content-Security-Policy": "default-src 'none'; sandbox",
     }
     try:
+        if is_dexpi(data):
+            # Drawn here from the file's data: the XML itself never reaches the browser.
+            return Response(draw_svg(data), media_type="image/svg+xml", headers=headers)
         png = _render(data, found["format"], page)
     except Exception as error:  # noqa: BLE001 - an unreadable page shows no picture
         raise HTTPException(status_code=422, detail=t("This page cannot be drawn.")) from error

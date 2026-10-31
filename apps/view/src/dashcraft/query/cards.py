@@ -575,7 +575,21 @@ def read_result(
         "state": status if status in ("ok", "warning", "alarm") else "unknown",
         "summary": str(found.get("summary") or ""),
         "stale": bool(found.get("stale")),
+        "priority": None if found.get("stale") else _worst_priority(found.get("detail")),
     }
+
+
+PRIORITY_ORDER = ("critical", "high", "medium", "low")
+
+
+def _worst_priority(detail: Any) -> str | None:
+    """The most urgent priority among a result's active alarms (``detail.active[].priority``,
+    as Alarms publishes ``alarm_state``), so a diagram can draw its alarm mark by priority."""
+
+    if not isinstance(detail, dict) or not isinstance(detail.get("active"), list):
+        return None
+    found = {item.get("priority") for item in detail["active"] if isinstance(item, dict)}
+    return next((p for p in PRIORITY_ORDER if p in found), None)
 
 
 def _value(reader: Reader, resolved: Resolved, agg: str, window: str) -> dict[str, Any]:

@@ -6,6 +6,34 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+### Added
+
+- **Two signal checks, rate of change (`sq_rate`) and transmitter fault levels (`sq_ne43`).**
+  Rate of change counts the changes, measured over at least a minute, that are faster than the
+  process can move: an absolute limit per minute, or half of the range per minute by default. NE 43
+  reads a 4-20 mA signal on its range as NAMUR NE 43 does. 3.8 to 20.5 mA is measurement, and
+  3.6 mA or less, 21 mA or more, is the transmitter reporting its own fault: any fault level is a
+  warning, over 1% of the values is bad, and saturation beyond the measuring range is a warning.
+  Both need the signal's limits (or, for the rate, a limit of its own), and otherwise do not apply.
+- **Loop-hours lost by cause.** Every monitoring round adds the part of its window no earlier
+  round on the loop covered, split by cause: out of normal mode, output at a limit, oscillating
+  and bad signal (missing or frozen PV). `GET /api/loop-losses?days=&until=&group_by=area|loop`
+  sums them by area or loop over any period up to 400 days; the widget "Analytics: loop-hours
+  lost, 7 days" shows them by area on the Overview and on Desk.
+- **Effective control**, a composite score per loop: the share of the time in normal mode x
+  inside its operating band x with the output off its limits, from the loop's own methods (a part
+  it does not measure counts as 1). `GET /api/loop-effective-control` and the widget "Analytics:
+  effective control" list the lowest first.
+- **Source quality, a signal check (`sq_source_quality`).** It shows how much of the window the
+  source itself marked bad, substituted or uncertain, per signal, from the per-sample quality
+  PlantCraft returns (OPC UA, PI and Canary keep one with every value). Bad or substituted time
+  over 1% of the window is a warning and over 5% makes the data unusable. Uncertain time is a
+  warning at most. On a source without quality the check does not apply. Signal quality runs it
+  on number and text signals.
+- **The loop page shows where the controller output spent the window**, as the share of the
+  window in each 5% band. A loop that lives near 0 or 100% is saturated, and one squeezed into a
+  few percent has little room left.
+
 ### Changed
 
 - A round hands each loop only its own signals' samples. It read 50 loops at once into one

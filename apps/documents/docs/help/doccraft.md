@@ -48,7 +48,9 @@ suite, finds documents by number or title and the best passages.
 ## Diagrams and the plant map (beta)
 
 P&IDs sent to the library are also read as drawings, offline and with no language model. This
-works for PDF from a CAD tool, SVG, and scans or images (PNG, JPEG, TIFF). Every page that is a
+works for PDF from a CAD tool, SVG, and scans or images (PNG, JPEG, TIFF). A P&ID tool's
+DEXPI export (XML) is read exactly: the tool already says what each item is and what joins
+what, so nothing there is a guess. Every page that is a
 diagram is listed in **Diagrams**. Each page opens with boxes over what was found and a list
 of what to check first. Each finding says how sure the reader is and why.
 Pick a box: if PlantCraft has that tag, the asset, its signals and what the apps say about it

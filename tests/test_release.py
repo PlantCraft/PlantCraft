@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -101,6 +102,18 @@ def test_install_sh_orders_versions_as_the_release_check_does(a, b):
     assert _install_sh_version_ge(a, a)
     if a in ("0.5.1", "0.6.0-rc1", "0.10.0"):  # the suite's own versions
         assert release.version_key(a) > release.version_key(b)
+
+
+@pytest.mark.parametrize("name", ["install.sh", "preflight.sh", "security-check.sh", "bundle.sh"])
+def test_a_deploy_script_defines_each_function_once(name):
+    """bash keeps the last definition: a second ``check_apps`` once made ``APPS=all`` and
+    ``--all-apps`` install Analytics alone."""
+
+    script = Path(__file__).resolve().parents[1] / "deploy" / name
+    names = re.findall(
+        r"^([A-Za-z_][A-Za-z0-9_]*)\(\) \{", script.read_text(encoding="utf-8"), re.M
+    )
+    assert sorted({n for n in names if names.count(n) > 1}) == []
 
 
 def test_the_changelog_entry_of_a_version():
