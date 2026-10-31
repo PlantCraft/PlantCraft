@@ -88,7 +88,8 @@ def _role(header: str) -> str | None:
 def read_case(raw: bytes) -> tuple[dict[str, list[float]], list[str]]:
     """The PV, OP and SP columns of a case's CSV, and its header as found."""
 
-    text = raw.decode("utf-8-sig", errors="replace")
+    # The repository's files end their lines with a bare CR (classic Mac), which csv refuses.
+    text = raw.decode("utf-8-sig", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
     sample = text[:4096]
     try:
         dialect = csv.Sniffer().sniff(sample, delimiters=",;\t ")

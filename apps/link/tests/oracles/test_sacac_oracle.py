@@ -70,7 +70,7 @@ def test_the_fetcher_reads_the_repository_layout(tmp_path):
     with zipfile.ZipFile(archive, "w") as bundle:
         bundle.writestr(
             "Stiction/stiction-F-x/stiction-F-x.csv",
-            "PV,OP\n" + "\n".join(f"{a},{b}" for a, b in sticky),
+            "PV,OP\r" + "\r".join(f"{a},{b}" for a, b in sticky),  # bare CR, as SACAC's
         )
         bundle.writestr("Stiction/stiction-F-x/stiction-F-x.txt", "Sampling rate: 10 seconds\n")
         bundle.writestr(
