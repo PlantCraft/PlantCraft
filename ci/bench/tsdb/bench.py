@@ -183,6 +183,7 @@ def queries(key: str, repeat: int = 7):
         "Q5 tendência longa 1 ponto 1 h": lambda: eng.grid([int(rng.choice(pv))], t0, t1, HOUR),
         "Q6 incremental 200 pontos 15 min": lambda: eng.raw_many(ids, t1 - 15 * 60_000, t1),
         f"Q7 último valor {npts} pontos": lambda: eng.last(all_ids),
+        "Q8 1 ponto período todo bruto": lambda: eng.raw_many([int(rng.choice(pv))], t0, t1),
     }
     out = {}
     for name, fn in qs.items():
