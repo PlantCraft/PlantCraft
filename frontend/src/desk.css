@@ -52,10 +52,10 @@ a.dk-inbox-link:hover b { color: var(--pc-primary-text); }
 .dk-calendar .fc .fc-pickDate-button:hover { background: var(--pc-surface-2); border-color: transparent; }
 .dk-cal-picker { position: absolute; z-index: 20; top: 56px; left: 50%; transform: translateX(-50%); width: 280px; padding: 12px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg, 12px); background: var(--pc-surface); box-shadow: 0 12px 32px rgba(0,0,0,.16); }
 .dk-cal-picker-year { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.dk-cal-picker-yearname { border: 0; background: transparent; color: var(--pc-text); font: 700 var(--pc-fs-lg, 1.1rem) var(--pc-font-body, inherit); padding: 4px 12px; border-radius: var(--pc-radius-md); cursor: pointer; }
+.dk-cal-picker-yearname { border: 0; background: transparent; color: var(--pc-text); font: 700 var(--pc-fs-lg, 1.1rem) var(--pc-font-sans); padding: 4px 12px; border-radius: var(--pc-radius-md); cursor: pointer; }
 .dk-cal-picker-yearname:hover { background: var(--pc-surface-2); }
 .dk-cal-picker-months { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.dk-cal-picker-months button { padding: 9px 4px; border: 1px solid transparent; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-2); font: 600 var(--pc-fs-sm) var(--pc-font-body, inherit); text-transform: capitalize; cursor: pointer; }
+.dk-cal-picker-months button { padding: 9px 4px; border: 1px solid transparent; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-2); font: 600 var(--pc-fs-sm) var(--pc-font-sans); text-transform: capitalize; cursor: pointer; }
 .dk-cal-picker-months button:hover { background: var(--pc-surface-2); }
 .dk-cal-picker-months button.today { color: var(--pc-app-desk); border-color: var(--pc-border); }
 .dk-cal-picker-months button.on { background: var(--pc-app-desk); color: var(--pc-on-accent); }
@@ -307,10 +307,10 @@ a.dk-agenda-event:hover b { color: var(--pc-primary-text); }
 .dk-team-column h3 small { color: var(--pc-text-3); font-variant-numeric: tabular-nums; }
 .dk-team-card { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--pc-border-subtle); border-left: 3px solid var(--pc-border); border-radius: var(--pc-radius-sm, 6px); background: var(--pc-surface); font-size: var(--pc-fs-sm); }
 .dk-team-card[draggable="true"] { cursor: grab; }
-.dk-team-card.late { border-left-color: var(--pc-status-alarm, #c62828); }
+.dk-team-card.late { border-left-color: var(--pc-problem-text); }
 
 /* Team › All groups (round 8): a card per group with its people. */
 .dk-team-glance { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; align-items: start; }
 .dk-team-glance-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.dk-team-glance-name { padding: 0; border: 0; background: transparent; color: var(--pc-text); font: 700 var(--pc-fs-md) var(--pc-font-body, inherit); text-align: left; cursor: pointer; }
+.dk-team-glance-name { padding: 0; border: 0; background: transparent; color: var(--pc-text); font: 700 var(--pc-fs-md) var(--pc-font-sans); text-align: left; cursor: pointer; }
 .dk-team-glance-name:hover { color: var(--pc-primary-text); text-decoration: underline; }

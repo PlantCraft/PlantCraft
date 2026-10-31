@@ -11,7 +11,7 @@ import { Plot } from "@plantcraft/ui/plot";
 import { opBins } from "./chart";
 import { resultLabel, statusLabel, suiteLabel } from "./status";
 import type { Algorithm, LoopDetail, Me, MethodResult, SettingSource } from "./types";
-import { AlgorithmDiagram } from "./AlgorithmEditor";
+import { AlgorithmDiagram } from "./AlgorithmDiagramLazy";
 import { algorithmOf } from "./algorithms";
 import { ErrorBox, Health, Heading, Link, Loading, Pill, ResultHeadline } from "./ui";
 import { resultsPath } from "./ResultsPage";

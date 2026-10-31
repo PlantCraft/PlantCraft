@@ -4,7 +4,7 @@
  * coordinator, who changes its members. Groups form a tree, and a coordinator
  * leads their group and sees the work of every group below it. */
 import { AlertTriangle, LoaderCircle, MessagesSquare, Pencil, Plus, ShieldCheck, Trash2, UserRound, Users } from "lucide-react";
-import { DataTable } from "@plantcraft/ui";
+import { DataTable, confirmAction, Heading } from "@plantcraft/ui";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { api } from "./api";
 import { collabApi } from "./collabApi";
@@ -46,15 +46,12 @@ export function GroupsPage() {
   if (!isAdmin) return <div className="module-state module-error"><AlertTriangle /><span>{t("Only admins manage groups.")}</span></div>;
 
   async function remove(group: Group) {
-    if (!window.confirm(t("Delete the group {name}? Its people stay, the groups under it move up a level, and apps that notify it will no longer reach them.", { name: group.name }))) return;
+    if (!(await confirmAction(t("Delete the group {name}? Its people stay, the groups under it move up a level, and apps that notify it will no longer reach them.", { name: group.name }), { confirm: t("Delete"), danger: true }))) return;
     try { await groupsApi.remove(group.group_id); setNotice(t("{name} was deleted.", { name: group.name })); await load(); } catch (err) { setError(message(err)); }
   }
 
   return <>
-    <div className="page-heading">
-      <div><span className="eyebrow"><Users size={14} /> {t("Administration")}</span><h1>{t("People")}</h1><p>{t("Groups gather people by department, area, discipline or team, in a tree: each group may sit under another, and its coordinator sees the work of the groups below. Every app can notify a group or make it the owner of something.")}</p></div>
-      <div className="heading-actions"><button className="button button-primary" onClick={() => setEditing("new")} disabled={!data}><Plus size={16} /> {t("New group")}</button></div>
-    </div>
+    <Heading title={t("People")} actions={<><button className="button button-primary" onClick={() => setEditing("new")} disabled={!data}><Plus size={16} /> {t("New group")}</button></>} />
     <UserTabs current="groups" />
     {error && <div className="form-error"><AlertTriangle size={15} /> {error}</div>}
     {notice && <div className="ac-notice"><ShieldCheck size={15} /> {notice}</div>}

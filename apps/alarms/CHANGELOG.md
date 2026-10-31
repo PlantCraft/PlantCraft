@@ -22,6 +22,12 @@ joins it into the bundle's release notes.
   no secret, no app data), reached through a Unix socket, and can no longer leave the sandbox
   through a `match` class pattern or pandas' helpers (security test D8).
 
+### Fixed
+
+- Colours and shadows named after tokens that do not exist use the suite's tokens, so they follow
+  the dark theme.
+
+
 ## [0.5.1] - 2026-10-30
 
 - Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).

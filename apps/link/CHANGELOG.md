@@ -46,6 +46,8 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Changed
 
+- **A loop's page opens lighter**: its algorithm diagram (React Flow and the editor) comes
+  once it is drawn, not with the page: 781 → 552 KiB of script to open a loop.
 - A round hands each loop only its own signals' samples. It read 50 loops at once into one
   frame of all their times and gave every loop its columns of it, so on a raw day each loop's task
   carried every other loop's times as empty rows (99.5% of a 50-loop, 200-signal batch). Building

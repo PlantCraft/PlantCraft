@@ -8,6 +8,8 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- Colours and shadows named after tokens that do not exist use the suite's tokens, so they follow
+  the dark theme.
 - A run's `files.json` and `compare.json`, a result's `names.json` and `variables.json` and the cached reading of a library model are written whole or not at all (temporary file, fsync, rename): a process killed while writing one no longer leaves broken JSON behind.
 
 ### Security

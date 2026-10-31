@@ -44,7 +44,7 @@
 }
 .al-scope { margin: 4px 0 12px; }
 .al-routed { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.button-link { background: none; border: 0; padding: 0; color: var(--pc-link, var(--pc-primary)); cursor: pointer; font: inherit; text-decoration: underline; }
+.button-link { background: none; border: 0; padding: 0; color: var(--pc-primary-text); cursor: pointer; font: inherit; text-decoration: underline; }
 .al-windows { display: grid; gap: 8px; }
 .al-window, .al-step { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; padding: 10px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); }
 .al-days { display: flex; flex-wrap: wrap; gap: 4px; }

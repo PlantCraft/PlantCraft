@@ -10,7 +10,7 @@ import { ALL_LEVELS, openToLevel, saveTreeLevel, savedTreeLevel, TREE_LEVELS } f
 import { locale, t } from "./i18n";
 import { assetPath } from "./assetLinks";
 import { navigate } from "./nav";
-import { AssistantTitleButton, DataTable, FollowUp, PageTabs, type DataColumn, useAssistantPage } from "@plantcraft/ui";
+import { AssistantTitleButton, DataTable, FollowUp, PageTabs, type DataColumn, useAssistantPage, Heading } from "@plantcraft/ui";
 import { ADMIN_ONLY, useCanEdit, useIsAdmin } from "./session";
 import type { SuiteAppCard } from "./types";
 import "./assets.css";
@@ -215,8 +215,7 @@ export function AssetsPage() {
     window.history.replaceState({}, "", next ? `/assets?type=${encodeURIComponent(next)}` : "/assets");
   };
   return <>
-    <div className="page-heading"><div><span className="eyebrow">{t("Plant")}</span><div className="page-heading-title"><h1>{t("Assets")}</h1><AssistantTitleButton /></div><p>{t("The plant organized in folders: units, areas and equipment, each with its record and signals. The apps read this tree.")}</p></div>
-      <div className="heading-actions"><button type="button" className="button button-secondary" disabled={!isAdmin} title={isAdmin ? undefined : ADMIN_ONLY} onClick={() => navigate("/asset-import")}><Upload size={16} /> {t("Import")}</button><button type="button" className="button button-secondary" onClick={() => setExporting(true)}><Download size={16} /> {t("Export")}</button><button type="button" className="button button-primary" disabled={!isAdmin} title={isAdmin ? undefined : ADMIN_ONLY} onClick={() => setCreating(true)}><Plus size={16} /> {t("New asset")}</button></div></div>
+    <Heading title={t("Assets")} actions={<><button type="button" className="button button-secondary" disabled={!isAdmin} title={isAdmin ? undefined : ADMIN_ONLY} onClick={() => navigate("/asset-import")}><Upload size={16} /> {t("Import")}</button><button type="button" className="button button-secondary" onClick={() => setExporting(true)}><Download size={16} /> {t("Export")}</button><button type="button" className="button button-primary" disabled={!isAdmin} title={isAdmin ? undefined : ADMIN_ONLY} onClick={() => setCreating(true)}><Plus size={16} /> {t("New asset")}</button></>} />
     <AssetTabs current="assets" />
     <article className="panel as-tree-panel" data-tour="asset-tree">
       <div className="as-toolbar">

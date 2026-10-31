@@ -1,7 +1,7 @@
 /** Specialists: the robot users people message (docs/collaboration.md). Admins only; a tab of Users. */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { AlertTriangle, Bot, FlaskConical, LoaderCircle, MessagesSquare, Pencil, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
-import { DataTable, PageTabs } from "@plantcraft/ui";
+import { AlertTriangle, Bot, FlaskConical, LoaderCircle, MessagesSquare, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { DataTable, PageTabs, confirmAction, Heading } from "@plantcraft/ui";
 import { Avatar, errorText } from "./collab";
 import { collabApi, type Choice, type Specialist, type SpecialistDraft, type SpecialistList, type SpecialistTest } from "./collabApi";
 import { t } from "./i18n";
@@ -56,15 +56,12 @@ export function SpecialistsPage() {
   const appName = (id: string) => data?.apps.find((app) => app.application_id === id)?.name ?? id;
 
   async function remove(item: Specialist) {
-    if (!window.confirm(t("Delete the specialist {name}? Its account is deactivated; the answers it gave stay in the conversations.", { name: item.display_name }))) return;
+    if (!(await confirmAction(t("Delete the specialist {name}? Its account is deactivated; the answers it gave stay in the conversations.", { name: item.display_name }), { confirm: t("Delete"), danger: true }))) return;
     try { await collabApi.deleteSpecialist(item.username); setNotice(t("{name} was deleted.", { name: item.display_name })); setEditing(null); await load(); } catch (err) { setError(errorText(err)); }
   }
 
   return <>
-    <div className="page-heading">
-      <div><span className="eyebrow"><Users size={14} /> {t("Administration")}</span><h1>{t("People")}</h1><p>{t("Specialists answer people in Messages from what the apps published. They only read; they never change anything.")}</p></div>
-      <div className="heading-actions"><button className="button button-primary" onClick={() => setEditing("new")} disabled={!data}><Plus size={16} /> {t("New specialist")}</button></div>
-    </div>
+    <Heading title={t("People")} actions={<><button className="button button-primary" onClick={() => setEditing("new")} disabled={!data}><Plus size={16} /> {t("New specialist")}</button></>} />
     <UserTabs current="specialists" />
     {error && <div className="form-error"><AlertTriangle size={15} /> {error}</div>}
     {notice && <div className="ac-notice"><ShieldCheck size={15} /> {notice}</div>}

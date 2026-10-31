@@ -106,7 +106,7 @@
 .dg-asset-panel footer { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px; }
 .dg-zoomed { cursor: grab; }
 .dg-zoomed:active { cursor: grabbing; }
-.dg-zoom { position: absolute; right: 8px; bottom: 8px; z-index: 1; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md, 8px); box-shadow: var(--pc-shadow-sm, none); }
+.dg-zoom { position: absolute; right: 8px; bottom: 8px; z-index: 1; display: flex; align-items: center; gap: 2px; padding: 2px; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md, 8px); box-shadow: var(--pc-shadow-1); }
 .dg-zoom-level { min-width: 46px; text-align: center; font-size: var(--pc-fs-xs); color: var(--pc-text-2); font-variant-numeric: tabular-nums; }
 .dg-timebar { display: flex; flex-direction: column; gap: var(--pc-space-2); padding: var(--pc-space-2) 0; }
 .dg-timebar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pc-space-2); }

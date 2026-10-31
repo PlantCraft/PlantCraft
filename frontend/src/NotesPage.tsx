@@ -13,7 +13,7 @@ import StarterKit from "@tiptap/starter-kit";
 import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion";
 import { ArrowRightCircle, Bold, CalendarDays, Code, Heading2, Italic, List, ListChecks, ListOrdered, ListTodo, Lock, Pin, PinOff, Plus, Quote, Search, Share2, StickyNote, Trash2, Users, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useAssistantPage } from "@plantcraft/ui";
+import { useAssistantPage, confirmAction } from "@plantcraft/ui";
 import { errorText, isLocalHref, shortWhen } from "./collab";
 import { collabApi, type Contacts, type RefOption } from "./collabApi";
 import { PageHeading } from "./DeskPages";
@@ -185,7 +185,7 @@ function NoteEditor({ note, contacts, onSaved, onGone }: { note: Note; contacts:
     try { const saved = await deskApi.changeNote(note.note_id, change); setCurrent(saved); onSaved(saved); setError(""); } catch (err) { setError(errorText(err)); }
   }
   async function remove() {
-    if (!window.confirm(t("Delete the note {title}?", { title: title || t("Untitled") }))) return;
+    if (!(await confirmAction(t("Delete the note {title}?", { title: title || t("Untitled") }), { confirm: t("Delete"), danger: true }))) return;
     pending.current = {};
     try { await deskApi.deleteNote(note.note_id); onGone(); } catch (err) { setError(errorText(err)); }
   }

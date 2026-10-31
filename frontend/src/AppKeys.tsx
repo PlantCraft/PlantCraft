@@ -1,6 +1,6 @@
 /** App keys: what an app of the suite uses to ask PlantCraft for a service token (admins only). */
 import { AlertTriangle, Ban, Copy, KeyRound, LoaderCircle, Plus } from "lucide-react";
-import { DataTable } from "@plantcraft/ui";
+import { DataTable, confirmAction, Heading } from "@plantcraft/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { AppTabs } from "./AppTabs";
 import { appLabel } from "./appMarks";
@@ -41,7 +41,7 @@ export function AppKeysSection() {
     setBusy(false);
   }
   async function revoke(keyId: string, app: string) {
-    if (!window.confirm(t("Revoke this key of {app}? The app stops reaching PlantCraft until it gets a new key.", { app }))) return;
+    if (!(await confirmAction(t("Revoke this key of {app}? The app stops reaching PlantCraft until it gets a new key.", { app }), { confirm: t("Revoke"), danger: true }))) return;
     try {
       await suiteApi.revokeAppKey(keyId);
       if (created?.key_id === keyId) setCreated(null);
@@ -87,7 +87,7 @@ export function AppKeysSection() {
 /** The App keys page (admins). */
 export default function AppKeysPage() {
   return <>
-    <div className="page-heading"><div><span className="eyebrow">{t("Administration")}</span><h1>{t("Apps")}</h1><p>{t("The keys the apps of the suite use to reach the platform on their own.")}</p></div></div>
+    <Heading title={t("Apps")} />
     <AppTabs current="keys" />
     <AppKeysSection />
   </>;

@@ -245,6 +245,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Interface pass.** Asking before a delete, a revoke or an uninstall is the suite's dialog everywhere
+  (16 places still used the browser's `window.confirm`); 13 page titles of the platform drawn by
+  hand use `@plantcraft/ui`'s `Heading`, so they get the assistant button like every other
+  page; colours, shadows and fonts named after tokens that do not exist (`--pc-status-alarm`,
+  `--pc-danger`, `--pc-shadow-sm`, `--pc-text-1`, …) use the real ones and follow the dark theme.
+  `tests/test_visual_rules.py` checks both.
 - **An app the installation left out no longer reads as broken.** Its address said "This
   application is not running" and pointed visitors at `docker compose ps`; it now says the app is
   not installed on this server or not running, and that the launcher lists the installed apps.

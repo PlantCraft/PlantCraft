@@ -1,6 +1,6 @@
 /** Administration of people: access level, applications, password and whether they are active. */
-import { AlertTriangle, KeyRound, LoaderCircle, Pencil, Plus, Power, ShieldCheck, UserRound, Users } from "lucide-react";
-import { DataTable } from "@plantcraft/ui";
+import { AlertTriangle, KeyRound, LoaderCircle, Pencil, Plus, Power, ShieldCheck, UserRound } from "lucide-react";
+import { DataTable, confirmAction, Heading } from "@plantcraft/ui";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { accessApi, EMPTY_PROFILE, type UserDraft } from "./accessApi";
 import { AssetScopeField } from "./AssetScopeField";
@@ -56,7 +56,7 @@ export function UsersPage() {
 
   async function toggle(user: UserAccount) {
     const off = user.active;
-    if (off && !window.confirm(t("Deactivate {name}? They will no longer be able to sign in; their history is kept.", { name: user.display_name }))) return;
+    if (off && !(await confirmAction(t("Deactivate {name}? They will no longer be able to sign in; their history is kept.", { name: user.display_name }), { confirm: t("Deactivate"), danger: true }))) return;
     try {
       await accessApi.updateUser(user.username, { display_name: user.display_name, role: user.role, access_level: user.access_level, applications: user.applications, active: !off });
       setNotice(off ? t("{name} was deactivated.", { name: user.display_name }) : t("{name} was reactivated.", { name: user.display_name }));
@@ -65,10 +65,7 @@ export function UsersPage() {
   }
 
   return <>
-    <div className="page-heading">
-      <div><span className="eyebrow"><Users size={14} /> {t("Administration")}</span><h1>{t("People")}</h1><p>{t("Who signs in to the suite, what they can do and which apps they can open.")}</p></div>
-      <div className="heading-actions"><button className="button button-primary" onClick={() => setEditing("new")}><Plus size={16} /> {t("New user")}</button></div>
-    </div>
+    <Heading title={t("People")} actions={<><button className="button button-primary" onClick={() => setEditing("new")}><Plus size={16} /> {t("New user")}</button></>} />
     <UserTabs current="people" />
     {error && <div className="form-error"><AlertTriangle size={15} /> {error}</div>}
     {notice && <div className="ac-notice"><ShieldCheck size={15} /> {notice}</div>}

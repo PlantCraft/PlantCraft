@@ -117,8 +117,8 @@ a.asst-ref:hover { border-color: var(--pc-primary-border); color: var(--pc-prima
 .asst-eval-summary strong { font-size: var(--pc-fs-lg, 18px); }
 .asst-eval-cases { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
 .asst-eval-case { width: 100%; border: 1px solid var(--pc-border-subtle); background: var(--pc-surface); border-radius: var(--pc-radius-md); padding: 8px 10px; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 10px; align-items: center; text-align: left; color: inherit; cursor: pointer; }
-.asst-eval-cases li.ok .asst-eval-case > svg:first-child { color: var(--pc-success, #1a7f4b); }
-.asst-eval-cases li.bad .asst-eval-case > svg:first-child { color: var(--pc-danger, #c0362c); }
+.asst-eval-cases li.ok .asst-eval-case > svg:first-child { color: var(--pc-good-text); }
+.asst-eval-cases li.bad .asst-eval-case > svg:first-child { color: var(--pc-problem-text); }
 .asst-eval-case small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .asst-eval-detail { margin: 4px 0 8px; padding: 10px 12px; border-radius: var(--pc-radius-md); background: var(--pc-surface-2); display: grid; gap: 8px; font-size: var(--pc-fs-sm); }
 .asst-eval-detail dt { color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 700; }
@@ -146,7 +146,7 @@ a.asst-ref:hover { border-color: var(--pc-primary-border); color: var(--pc-prima
 .asst-list .asst-menu-list li:hover { background: transparent; }
 .asst-menu-list button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 9px; border: 0; border-radius: var(--pc-radius-sm); background: transparent; color: var(--pc-text); font-size: var(--pc-fs-sm); text-align: left; cursor: pointer; }
 .asst-menu-list button:hover, .asst-menu-list button:focus-visible { background: var(--pc-surface-2); }
-.asst-menu-list .asst-menu-danger { color: var(--pc-danger); }
+.asst-menu-list .asst-menu-danger { color: var(--pc-problem-text); }
 .asst-menu-note { position: absolute; top: 100%; right: 0; z-index: 30; margin-top: 4px; padding: 4px 8px; border-radius: var(--pc-radius-sm); background: var(--pc-text); color: var(--pc-surface); font-size: var(--pc-fs-xs); white-space: nowrap; }
 .asst-share-row { display: flex; align-items: center; gap: 8px; padding: 6px 4px; font-size: var(--pc-fs-sm); cursor: pointer; }
 .asst-share-filter { width: 100%; margin: 6px 0; }

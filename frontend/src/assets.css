@@ -202,8 +202,8 @@ a.ty-row:hover { background: var(--pc-surface-2); }
 .as-sig-table tr:last-child td { border-bottom: 0; }
 .as-sig-table .as-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .as-sig-table .as-signal-tag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--pc-font-mono); font-size: var(--pc-fs-sm); }
-.as-sig-missing td:first-child { box-shadow: inset 3px 0 0 var(--pc-status-alarm, #c0392b); }
-.as-sig-required { color: var(--pc-status-alarm, #c0392b); font-style: normal; margin-left: 2px; }
+.as-sig-missing td:first-child { box-shadow: inset 3px 0 0 var(--pc-problem-text); }
+.as-sig-required { color: var(--pc-problem-text); font-style: normal; margin-left: 2px; }
 .as-sig-edit { white-space: nowrap; text-align: right; }
 .as-sig-edit .as-link-button { margin-right: 4px; }
 .as-signals { display: grid; gap: 8px; }
@@ -342,4 +342,4 @@ a.ty-row:hover { background: var(--pc-surface-2); }
 .start-step label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .start-step .src-hint { margin: 2px 0 0 24px; }
 .start-state { display: flex; align-items: center; gap: 6px; margin: 4px 0 0 24px; }
-.start-failed { color: var(--pc-danger, #b42318); }
+.start-failed { color: var(--pc-problem-text); }

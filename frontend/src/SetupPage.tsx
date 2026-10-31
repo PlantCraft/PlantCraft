@@ -1,7 +1,7 @@
 /** Setup (administrators): the settings done once, or seldom, that have no page of their own in
  * the menu. Health, Backups and Updates have their own pages.
  * Only the tiles: the step-by-step path and the intro text are gone. */
-import { NextSteps, type JourneyStep } from "@plantcraft/ui";
+import { NextSteps, type JourneyStep, Heading } from "@plantcraft/ui";
 import { t } from "./i18n";
 import { navigate } from "./nav";
 
@@ -35,7 +35,7 @@ export function setupGroups(): { title: string; items: JourneyStep[] }[] {
 
 export function SetupPage() {
   return <>
-    <div className="page-heading"><div><span className="eyebrow">{t("Administration")}</span><h1>{t("Settings")}</h1></div></div>
+    <Heading title={t("Settings")} />
     {setupGroups().map((group) => <NextSteps key={group.title} title={group.title} navigate={navigate} limit={group.items.length} items={group.items} />)}
   </>;
 }
