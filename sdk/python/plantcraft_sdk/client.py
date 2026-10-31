@@ -55,12 +55,14 @@ from datetime import datetime, timezone
 from typing import Any, cast
 from urllib.parse import quote
 
+import numpy as np
 import pandas as pd
 
 try:
     import httpx
 except ImportError:  # An app's notebook runtime (server/objects.py) reads only the errors here.
     httpx = None  # type: ignore[assignment]
+from plantcraft_sdk import wire
 from plantcraft_sdk.assets import MAX_RESULT_ASSETS
 from plantcraft_sdk.contract import (
     BATCH_FULL_STATUS,
@@ -123,6 +125,7 @@ ETAG_ENTRIES = 32
 ETAG_MAX_BYTES = 64 * 2**20
 # Where signal and series reads go when they skip PlantCraft (the Historian's root URL).
 HISTORIAN_URL_ENV = "PLANTCRAFT_HISTORIAN_URL"
+BINARY_READS_ENV = "PLANTCRAFT_BINARY_READS"
 # The Historian's reads API this client speaks (``GET /api/v1/reads`` answers ``{"api": 1}``).
 HISTORIAN_READS_API = 1
 # After the Historian could not answer (or does not serve reads), PlantCraft serves the reads
@@ -221,6 +224,8 @@ class _Historian:
     def __init__(self, url: str):
         self.url = url.rstrip("/")
         self.state: bool | None = None  # None: not asked yet
+        # The answers it writes besides JSON (``GET /api/v1/reads`` ``formats``).
+        self.formats: frozenset[str] = frozenset()
         self.until = 0.0
         self.lock = threading.Lock()
 
@@ -273,6 +278,9 @@ class PlantCraftClient:
             historian_url = os.environ.get(HISTORIAN_URL_ENV, "")
         historian_url = historian_url.strip()
         self._historian = _Historian(historian_url) if historian_url else None
+        # Series read as pandas come in the binary answer when the Historian writes it
+        # (``plantcraft_sdk.wire``); PLANTCRAFT_BINARY_READS=0 keeps JSON (comparisons).
+        self.binary_reads = os.environ.get(BINARY_READS_ENV, "1").strip() != "0"
 
     # Lifecycle --------------------------------------------------------------
 
@@ -299,6 +307,7 @@ class PlantCraftClient:
         )
         client._batch = self._batch
         client._historian = self._historian
+        client.binary_reads = self.binary_reads
         return client
 
     # Transport --------------------------------------------------------------
@@ -317,10 +326,11 @@ class PlantCraftClient:
         idempotent: bool = True,
         base: str | None = None,
         timeout: float | None = None,
+        accept: str = "application/json",
     ) -> Any:
         return self._exchange(
             method, path, params=params, json=json, auth=auth, idempotent=idempotent,
-            base=base, timeout=timeout,
+            base=base, timeout=timeout, accept=accept,
         )[0]  # fmt: skip
 
     def _exchange(
@@ -334,6 +344,7 @@ class PlantCraftClient:
         idempotent: bool = True,
         base: str | None = None,
         timeout: float | None = None,
+        accept: str = "application/json",
     ) -> tuple[Any, httpx.Headers]:
         """The answer and its headers. A GET sends the ETag of the answer kept for it, and a
         304 gives that answer back."""
@@ -344,7 +355,7 @@ class PlantCraftClient:
         renewed = False
         attempt = 0
         while True:
-            headers = {"Accept": "application/json"}
+            headers = {"Accept": accept}
             if auth:
                 headers["Authorization"] = f"Bearer {self.token()}"
             if kept is not None:
@@ -381,6 +392,12 @@ class PlantCraftClient:
                 return json_module.loads(kept[1]), response.headers
             if response.is_error:
                 raise _error(response)
+            if response.headers.get("content-type", "").startswith(wire.MEDIA_TYPE):
+                try:
+                    series, errors = wire.read_binary(response.content)
+                except wire.WireError as exc:
+                    raise Unavailable(f"PlantCraft answered with broken series: {exc}") from exc
+                return {"series": series, "errors": errors}, response.headers
             try:
                 answer = response.json()
             except ValueError as exc:
@@ -469,6 +486,8 @@ class PlantCraftClient:
         try:
             answer = self._send("GET", "/api/v1/reads", base=historian.url)
             serves = isinstance(answer, dict) and answer.get("api") == HISTORIAN_READS_API
+            if serves:
+                historian.formats = frozenset(str(item) for item in answer.get("formats") or [])
         except PlantCraftError:
             # An older Historian (404), one that cannot be reached, or a token it refuses.
             serves = False
@@ -676,8 +695,14 @@ class PlantCraftClient:
         start: str | datetime | None = None,
         end: str | datetime | None = None,
         step: float | None = None,
+        *,
+        binary: bool = False,
     ) -> SeriesBatch:
         """Many signals' series: ``{"series": [...], "errors": [{signal, status, detail}]}``.
+
+        ``binary``: a Historian that writes the binary answer (``plantcraft_sdk.wire``) sends
+        it, and its series hold numpy arrays (``t`` int64 ms, ``v`` floats) instead of lists;
+        ``series_many_pandas`` uses it.
 
         One ``POST /api/v1/series`` per 500 signals; signals a request had no
         room for (413) are asked for again in the next one, so ``errors`` holds
@@ -691,7 +716,7 @@ class PlantCraftClient:
         errors: dict[str, SeriesError] = {}
         while pending:
             chunk, pending = pending[:MAX_BATCH_SIGNALS], pending[MAX_BATCH_SIGNALS:]
-            answer = self._series_batch(chunk, start, end, step)
+            answer = self._series_batch(chunk, start, end, step, binary=binary)
             for item in answer.get("series") or []:
                 item.setdefault("kind", "number")
                 found[item["signal"]] = item
@@ -723,13 +748,25 @@ class PlantCraftClient:
         start: str | datetime | None,
         end: str | datetime | None,
         step: float | None,
+        *,
+        binary: bool = False,
     ) -> dict[str, Any]:
         body = {"signals": signal_ids, "start": _time(start), "end": _time(end), "step": step}
         historian = self._historian
         if historian is not None and self._historian_serves(historian):
+            accept = (
+                f"{wire.MEDIA_TYPE}, application/json;q=0.5"
+                if binary and wire.FORMAT in historian.formats
+                else "application/json"
+            )
             try:
                 return self._send(
-                    "POST", "/api/v1/series", json=body, base=historian.url, timeout=SERIES_TIMEOUT
+                    "POST",
+                    "/api/v1/series",
+                    json=body,
+                    base=historian.url,
+                    timeout=SERIES_TIMEOUT,
+                    accept=accept,
                 )
             except Unavailable as exc:
                 if exc.status_code is not None:
@@ -764,8 +801,15 @@ class PlantCraftClient:
     ) -> tuple[dict[str, pd.Series], list[SeriesError]]:
         """``series_many`` as ``({signal id: pandas.Series}, errors)``; text signals hold labels."""
 
-        batch = self.series_many(signal_ids, start, end, step)
-        columns = {item["signal"]: series_to_pandas(item) for item in batch["series"]}
+        batch = self.series_many(signal_ids, start, end, step, binary=self.binary_reads)
+        columns = {
+            item["signal"]: (
+                wire.binary_to_pandas(item)
+                if isinstance(item.get("t"), np.ndarray)
+                else series_to_pandas(item)
+            )
+            for item in batch["series"]
+        }
         return columns, batch["errors"]
 
     def series_frame(

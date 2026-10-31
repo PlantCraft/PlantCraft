@@ -21,9 +21,12 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
+import numpy as np
+import pandas as pd
 from fastapi import HTTPException
 from fastapi.responses import Response
 from plantcraft_sdk.contract import BatchBuilder
+from plantcraft_sdk.wire import MEDIA_TYPE, BinaryWriter, read_binary
 
 from histcraft.i18n import t
 
@@ -96,6 +99,8 @@ class Ticket:
 class EncodedBatch(BatchBuilder):
     """``BatchBuilder`` whose series are JSON as soon as they are added (``response``)."""
 
+    binary = False
+
     def __init__(self) -> None:
         super().__init__()
         self.encoded: list[bytes] = []
@@ -127,3 +132,51 @@ class EncodedBatch(BatchBuilder):
         body = b"".join([b'{"series":[', b",".join(self.encoded), b'],"errors":', errors, b"}"])
         self.encoded = []
         return Response(body, media_type="application/json")
+
+
+class BinaryBatch(BatchBuilder):
+    """``BatchBuilder`` whose answer is the binary format (``plantcraft_sdk.wire``): each
+    series' arrays as they were read, no ISO text and no JSON per value."""
+
+    binary = True
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.writer = BinaryWriter()
+
+    def _room(self, signal: str, count: int) -> bool:
+        if self.full or (self.writer.items and self.points + count > self.budget):
+            self.full = True
+            self.postpone(signal)
+            return False
+        self.points += count
+        return True
+
+    def add(
+        self,
+        signal: str,
+        kind: str,
+        stamps: Any,
+        values: Any,
+        extra: dict[str, Any] | None = None,
+    ) -> None:
+        if not self._room(signal, len(stamps)):
+            return
+        if len(stamps) and isinstance(stamps[0], str):  # a run's times, as stored
+            parsed = pd.to_datetime(list(stamps), utc=True, format="ISO8601")
+            times = parsed.as_unit("ms").asi8
+        else:
+            times = np.asarray(stamps, dtype=np.int64)
+        if kind == "number" and isinstance(values, np.ndarray):
+            self.writer.numbers(signal, kind, times, values, extra)
+        else:
+            self.writer.labels(signal, kind, times, list(values), extra)
+
+    def payload(self) -> dict[str, Any]:
+        series, errors = read_binary(self.writer.body(self.errors))
+        return {"series": series, "errors": errors}
+
+    def response(self, more_errors: list[dict[str, Any]] | None = None) -> Response:
+        body = self.writer.body(self.errors + (more_errors or []))
+        self.writer = BinaryWriter()
+        return Response(body, media_type=MEDIA_TYPE)

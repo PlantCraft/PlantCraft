@@ -22,6 +22,8 @@ import pandas as pd
 from plantcraft_sdk.client import PlantCraftClient, PlantCraftError, error_for
 from plantcraft_sdk.derived import split_derived
 
+from linkcraft.data.cache import RawCache, enabled_by_default, read_incremental
+
 LOGGER = logging.getLogger(__name__)
 TOO_MANY_POINTS = 422
 # Signals per batch request (the contract allows 500; smaller batches stream better).
@@ -77,8 +79,12 @@ class Samples:
 class SignalReader:
     """Reads signals through one ``PlantCraftClient`` (the app's, or a person's)."""
 
-    def __init__(self, client: PlantCraftClient):
+    def __init__(self, client: PlantCraftClient, *, cache: RawCache | None | bool = False):
         self.client = client
+        # The rounds' raw reads ask only for what is new since the last one (``data.cache``).
+        if cache is True:
+            cache = RawCache() if enabled_by_default() else None
+        self.cache: RawCache | None = cache or None
 
     def signals(self) -> list[dict[str, Any]]:
         """The plant's measured signals: derived ones (series apps computed, such as LinkCraft's
@@ -112,19 +118,33 @@ class SignalReader:
         found = Samples()
         start_at = naive_utc(start).tz_localize("UTC").to_pydatetime()
         end_at = naive_utc(end).tz_localize("UTC").to_pydatetime()
-        for offset in range(0, len(names), BATCH):
-            chunk = names[offset : offset + BATCH]
-            columns, errors = self.client.series_many_pandas(chunk, start_at, end_at, step=step)
-            if step:
-                found.resampled.update(columns)
+
+        def fetch(group: list[str], begin: Any, finish: Any):
+            begin_at = naive_utc(begin).tz_localize("UTC").to_pydatetime()
+            finish_at = naive_utc(finish).tz_localize("UTC").to_pydatetime()
+            columns, errors = self.client.series_many_pandas(group, begin_at, finish_at, step=step)
             crowded = [item["signal"] for item in errors if item["status"] == TOO_MANY_POINTS]
             if crowded:
                 means, again = self.client.series_many_pandas(
-                    crowded, start_at, end_at, step=fallback_step
+                    crowded, begin_at, finish_at, step=fallback_step
                 )
+                for values in means.values():
+                    values.attrs["means"] = True
                 columns.update(means)
-                found.resampled.update(means)
                 errors = [item for item in errors if item["status"] != TOO_MANY_POINTS] + again
+            return columns, errors
+
+        for offset in range(0, len(names), BATCH):
+            chunk = names[offset : offset + BATCH]
+            if self.cache is not None and not step:
+                columns, errors = read_incremental(
+                    self.cache, chunk, naive_utc(start_at), naive_utc(end_at), fetch
+                )
+            else:
+                columns, errors = fetch(chunk, start_at, end_at)
+            if step:
+                found.resampled.update(columns)
+            found.resampled.update(k for k, v in columns.items() if v.attrs.get("means"))
             down = [item for item in errors if int(item["status"]) >= 500]
             if down and len(down) == len(chunk):
                 raise error_for(int(down[0]["status"]), down[0].get("detail"))

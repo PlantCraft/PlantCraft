@@ -17,7 +17,7 @@ from functools import partial
 from typing import Annotated, Any
 
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from plantcraft_sdk.auth import User
 from plantcraft_sdk.contract import (
@@ -26,10 +26,11 @@ from plantcraft_sdk.contract import (
     series_range,
     unique_signals,
 )
+from plantcraft_sdk.wire import MEDIA_TYPE as WIRE_MEDIA_TYPE
 from pydantic import BaseModel, Field, ValidationError
 
 from histcraft.api.deps import RuntimeDep, current_user, time_limited
-from histcraft.api.read_budget import EncodedBatch, Ticket, json_bytes
+from histcraft.api.read_budget import BinaryBatch, EncodedBatch, Ticket, json_bytes
 from histcraft.api.runtime import Runtime, point_ref
 from histcraft.archive.query import Reader, SourceUnavailable, to_ms
 from histcraft.catalog.models import (
@@ -530,14 +531,25 @@ class BatchIn(BaseModel):
 
 @router.post("/series")
 @time_limited
-def series_batch(body: BatchIn, runtime: RuntimeDep, _caller: PlantCraft) -> Response:
+def series_batch(
+    body: BatchIn, runtime: RuntimeDep, _caller: PlantCraft, request: Request
+) -> Response:
     with runtime.read_budget.hold() as ticket:
-        return read_batch(body, runtime, ticket).response()
+        return read_batch(body, runtime, ticket, binary=wants_binary(request)).response()
 
 
-def read_batch(body: BatchIn, runtime: Runtime, ticket: Ticket) -> EncodedBatch:
-    """The series of a batch, each JSON as soon as it is read, within the read budget: the
-    caller answers ``.response()`` before ``ticket`` is given back."""
+def wants_binary(request: Request) -> bool:
+    """The caller asked for the binary answer (``plantcraft_sdk.wire``) in ``Accept``."""
+
+    return WIRE_MEDIA_TYPE in request.headers.get("accept", "")
+
+
+def read_batch(
+    body: BatchIn, runtime: Runtime, ticket: Ticket, *, binary: bool = False
+) -> EncodedBatch | BinaryBatch:
+    """The series of a batch, each JSON as soon as it is read (or kept as arrays for the
+    binary answer), within the read budget: the caller answers ``.response()`` before
+    ``ticket`` is given back."""
 
     if not 1 <= len(body.signals) <= MAX_BATCH_SIGNALS:
         raise HTTPException(
@@ -586,7 +598,8 @@ def read_batch(body: BatchIn, runtime: Runtime, ticket: Ticket) -> EncodedBatch:
         )
         + (len(refs) - len(stored)) * _values_of(None, begin, finish, step)
     )
-    builder = EncodedBatch()
+    builder: EncodedBatch | BinaryBatch = BinaryBatch() if binary else EncodedBatch()
+    read = runtime.reader.series_arrays if binary else runtime.reader.series
     for signal_id in wanted:
         point = points[signal_id]
         if point is None:
@@ -618,7 +631,7 @@ def read_batch(body: BatchIn, runtime: Runtime, ticket: Ticket) -> EncodedBatch:
                 # A source that cannot answer leaves the archive alone, as for one signal.
                 if found is not None and not isinstance(found, str):
                     samples = Reader.with_older(ref, samples, runtime.reader.normalize(ref, *found))
-            stamps, values = runtime.reader.series(ref, begin, finish, step, samples)
+            stamps, values = read(ref, begin, finish, step, samples)
         except ContractError as exc:
             builder.fail(signal_id, 422, str(exc))
             continue
