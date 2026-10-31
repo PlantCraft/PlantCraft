@@ -675,16 +675,27 @@ def series_to_pandas(series: Series | dict[str, Any]) -> pd.Series:
     """A v1 series payload as a ``pandas.Series`` with a UTC DatetimeIndex.
 
     Numbers give a float series (None as NaN); a ``"kind": "text"`` series gives
-    an object series of labels (None where a step had none).
+    an object series of labels (None where a step had none). A series read with its
+    quality keeps the changes in ``attrs["quality"]``.
     """
 
     index = parse_times(list(series.get("t") or []))
     raw = list(series.get("v") or [])
     if series.get("kind") == "text":
-        return pd.Series(raw, index=index, name=series.get("signal"), dtype=object)
-    # None becomes NaN in a float array.
-    values = np.array(raw, dtype=float) if raw else np.array([], dtype=float)
-    return pd.Series(values, index=index, name=series.get("signal"), dtype=float)
+        column = pd.Series(raw, index=index, name=series.get("signal"), dtype=object)
+    else:
+        # None becomes NaN in a float array.
+        values = np.array(raw, dtype=float) if raw else np.array([], dtype=float)
+        column = pd.Series(values, index=index, name=series.get("signal"), dtype=float)
+    return with_quality(column, series)
+
+
+def with_quality(column: pd.Series, series: Series | dict[str, Any]) -> pd.Series:
+    """``column`` with the series' quality changes in ``attrs["quality"]``, when it has any."""
+
+    if "quality" in series:
+        column.attrs["quality"] = list(series.get("quality") or [])
+    return column
 
 
 def subject_digest(subject: str) -> str:
@@ -737,6 +748,7 @@ __all__ = [
     "shape_text_series",
     "shape_values",
     "subject_digest",
+    "with_quality",
     "text_label",
     "unique_signals",
 ]

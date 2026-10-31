@@ -96,3 +96,31 @@ def test_a_batch_of_many_points_round_trips():
 def test_damaged_batches_raise_codec_error(blob):
     with pytest.raises(codec.CodecError):
         codec.decode_batch(blob)
+
+
+def test_decoded_chunks_decode_once_and_follow_a_rewritten_chunk():
+    cache = codec.DecodedChunks(budget=1 << 20)
+    times = np.array([1000, 2000, 3000], dtype=np.int64)
+    blob = codec.encode_numbers(times, np.array([1.0, 2.0, 3.0]))
+    first = cache.decode(blob)
+    again = cache.decode(bytes(blob))
+    assert cache.misses == 1 and cache.hits == 1
+    assert again[0] is first[0]
+    assert not again[0].flags.writeable and not again[1].flags.writeable
+    rewritten = codec.encode_numbers(times, np.array([1.0, 2.0, 4.0]))
+    assert cache.decode(rewritten)[1].tolist() == [1.0, 2.0, 4.0]
+
+
+def test_decoded_chunks_stay_within_their_budget():
+    blobs = [
+        codec.encode_numbers(np.arange(100, dtype=np.int64) * 1000, np.full(100, float(i)))
+        for i in range(20)
+    ]
+    cache = codec.DecodedChunks(budget=5_000)
+    for blob in blobs:
+        cache.decode(blob)
+    assert 0 < cache.size <= 5_000
+    assert cache.decode(blobs[0])[1][0] == 0.0  # evicted, decoded again
+    off = codec.DecodedChunks(budget=0)
+    off.decode(blobs[0])
+    assert off.size == 0 and not off._items

@@ -195,8 +195,27 @@ class Reader:
         (``_hold_on_change``). A point that is not a number gives the value in effect at the
         end of each cell, typed by its kind (``kinds.outward``)."""
 
-        stamps, values = self._series(point, start, end, step, samples, now)
-        return stamps, outward(point.kind, values)
+        times, values = self._series(point, start, end, step, samples, now)
+        if isinstance(values, np.ndarray):
+            values = _json_numbers(values)
+        return iso_ms(times), outward(point.kind, values)
+
+    def series_arrays(
+        self,
+        point: PointRef,
+        start: datetime,
+        end: datetime,
+        step: float | None,
+        samples: tuple[np.ndarray, Any] | None = None,
+        now: datetime | None = None,
+    ) -> tuple[np.ndarray, Any]:
+        """``series`` before it becomes text: millisecond times and, for a number, floats
+        (NaN where ``series`` writes null); the binary answers write these as they are."""
+
+        times, values = self._series(point, start, end, step, samples, now)
+        if isinstance(values, np.ndarray):
+            return times, values
+        return times, outward(point.kind, values)
 
     def _series(
         self,
@@ -206,7 +225,7 @@ class Reader:
         step: float | None,
         samples: tuple[np.ndarray, Any] | None,
         now: datetime | None,
-    ) -> tuple[list[str], list[Any]]:
+    ) -> tuple[np.ndarray, Any]:
         start_ms, end_ms = to_ms(start), to_ms(end)
         if samples is None and step is not None:
             rolled = self._rolled_series(point, start_ms, end_ms, step * 1000.0, now)
@@ -229,14 +248,16 @@ class Reader:
                 )
             )
         edges = start_ms + np.arange(count + 1, dtype=float) * step_ms
-        grid = iso_ms(edges[:-1].astype(np.int64))
+        grid = edges[:-1].astype(np.int64)
         if labelled(point.kind):
             return grid, _labels_at(times, values, edges[1:], edges[:-1])
         if point.kind != "number":
             held = _labels_at(times, values, edges[1:], edges[:-1])
-            return grid, [None if v is None or not math.isfinite(v) else float(v) for v in held]
-        means = _averages(times, values, point.step or on_change, edges)
-        return grid, _json_numbers(means)
+            return grid, np.array(
+                [np.nan if v is None or not math.isfinite(v) else float(v) for v in held],
+                dtype=float,
+            )
+        return grid, _averages(times, values, point.step or on_change, edges)
 
     def extremes(
         self, point: PointRef, start: datetime, end: datetime, step: float
@@ -293,7 +314,7 @@ class Reader:
 
     def _rolled_series(
         self, point: PointRef, start_ms: int, end_ms: int, step_ms: float, now: datetime | None
-    ) -> tuple[list[str], list[Any]] | None:
+    ) -> tuple[np.ndarray, np.ndarray] | None:
         """A grid of whole hours from the hourly rollups, the cells they do not cover (the
         newest hours, an hour changed since) from the samples; None when no rollup helps."""
 
@@ -321,7 +342,7 @@ class Reader:
                 until = min(end_ms, to_ms(now or datetime.now(timezone.utc)))
                 times, values = _hold_on_change(times, values, point.kind, until)
             means[first:last] = _averages(times, values, held, edges[first : last + 1])
-        return iso_ms(edges[:-1].astype(np.int64)), _json_numbers(means)
+        return edges[:-1].astype(np.int64), means
 
     # Runs (H2) -------------------------------------------------------------------
 
@@ -496,7 +517,7 @@ def _with_snapshot(
 
 def _recorded(
     times: np.ndarray, values: Any, kind: str, start_ms: int, end_ms: int
-) -> tuple[list[str], list[Any]]:
+) -> tuple[np.ndarray, Any]:
     inside = (times >= start_ms) & (times <= end_ms)
     if labelled(kind):
         keep = [i for i in np.flatnonzero(inside) if values[i] is not None]
@@ -504,7 +525,7 @@ def _recorded(
         stamps = times[keep] if keep else np.empty(0, dtype=np.int64)
     else:
         keep_mask = inside & np.isfinite(values)
-        picked = values[keep_mask].tolist()
+        picked = np.asarray(values[keep_mask], dtype=float)
         stamps = times[keep_mask]
     if len(picked) > MAX_POINTS:
         raise ContractError(
@@ -513,7 +534,7 @@ def _recorded(
                 count=MAX_POINTS,
             )
         )
-    return iso_ms(stamps), picked
+    return np.asarray(stamps, dtype=np.int64), picked
 
 
 _ISO_MEMO: dict[bytes, list[str]] = {}
@@ -618,13 +639,32 @@ def _integral_at(times, values, step, power, knots, x):
 
 
 def _averages(times: np.ndarray, values: np.ndarray, step: bool, edges: np.ndarray) -> np.ndarray:
-    """Time-weighted average of the rebuilt signal over each ``[edges[i], edges[i+1])``."""
+    """Time-weighted average of the rebuilt signal over each ``[edges[i], edges[i+1])``.
+
+    The covered time and the area of ``_integral_at`` (powers 0 and 1), from one pass over the
+    segments: the same arithmetic, without building the segments four times.
+    """
 
     if len(times) < 2:
         return np.full(len(edges) - 1, np.nan)
     times_f = times.astype(float)
-    cover = _integral_at(times_f, values, step, 0, _cumulative(times, values, step, 0), edges)
-    area = _integral_at(times_f, values, step, 1, _cumulative(times, values, step, 1), edges)
+    t0, t1, v0, v1, valid = _segments(times, values, step)
+    width = np.where(valid, t1 - t0, 0.0)
+    cover_knots = np.concatenate([[0.0], np.cumsum(width)])
+    area_knots = np.concatenate([[0.0], np.cumsum(width * (v0 + v1) / 2.0)])
+    index = np.clip(np.searchsorted(times_f, edges, side="right") - 1, 0, len(times) - 2)
+    before = edges <= times_f[0]
+    after = edges >= times_f[-1]
+    dx = np.clip(edges - t0[index], 0.0, None)
+    span = t1[index] - t0[index]
+    fraction = np.divide(dx, span, out=np.zeros_like(dx), where=span > 0)
+    a = v0[index]
+    b = a + (v1[index] - a) * fraction  # value at the edge
+    known = valid[index]
+    cover = cover_knots[index] + np.where(known, dx, 0.0)
+    area = area_knots[index] + np.where(known, dx * (a + b) / 2.0, 0.0)
+    cover = np.where(after, cover_knots[-1], np.where(before, 0.0, cover))
+    area = np.where(after, area_knots[-1], np.where(before, 0.0, area))
     covered = np.diff(cover)
     with np.errstate(invalid="ignore", divide="ignore"):
         return np.where(covered > 0, np.diff(area) / np.where(covered > 0, covered, 1.0), np.nan)

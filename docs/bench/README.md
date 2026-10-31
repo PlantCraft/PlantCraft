@@ -205,7 +205,14 @@ machine, another hour: the cloud's own noise shows in C2's spread). Median (low 
 
 No 503 in any run. C6's 502s (4 to 6 a run) are the 20 s the Historian was away. In C4 the 20
 people share one account, so PlantCraft's per-person API limit (120 a minute) answers some of
-their display reads with 429: they load PlantCraft, not the Historian.
+their display reads with 429: they load PlantCraft, not the Historian. `--own-accounts` gives
+each person a viewer account of their own (bench-person-NN, turned off after the run):
+
+| C4 with an account per person | round s | person trend p95 s | display p95 s | Analytics Overview p95 s | errors |
+|---|---|---|---|---|---|
+| 20 people, 3 runs | 13.9 (12.9-15.3) | 0.14-0.26 | 0.22-0.26 | 0.27-0.43 | none |
+| 50 people | 19.8 | 0.26 | 0.40 | 2.03 | none |
+| 50 people, the Overview kept 3 s | 15.7 | 0.42 | 0.60 | 0.15 | none |
 
 ## PlantCraft alone: 50,000 signals and 50 apps (`ci/bench/platform_scale.py`)
 
@@ -253,10 +260,30 @@ ci/bench/cpu_sweep.sh --prefix P --plan shares     # 2 cores, cpu_shares for peo
 | whole suite on 2 cores, Historian 1 / 2 processes | 35.1 / 23.9 | 18.3 / 12.4 | 4.7 / 3.6 |
 | whole suite on 4 cores, Historian 1 / 2 processes | 30.5 / 22.6 | 24.1 / 18.0 | 3.1 / 1.9 |
 | 2 cores, no priority / cpu_shares 4096 people, 256 background | 33.5 / 38.6 | 21.0 / 19.8 | 4.7 / 3.5 |
+| the same, three runs each (mean) | 42.5 / 56.4 | 28.7 / 30.1 | 3.1 / 4.3 |
 
 What it says: one container's CPU limit changes little (single runs vary by about 3 s); the
 Historian, one Python process at a full core, sets the pace, and a second process is the largest
-gain at 2 and 4 cores. Going from 2 to 4 cores without it gains almost nothing. Peak memory of
+gain at 2 and 4 cores. Going from 2 to 4 cores without it gains almost nothing. Priority by `cpu_shares` (people's containers 4096, the background 256) made rounds a third slower and did not make screens faster over three runs each, so the profile leaves it out. Peak memory of
 every container over all runs adds up to 4.5 GB (Historian 723 MiB with 2 processes, Analytics
 692, PlantCraft 623, its executor 615 with 8 slots), which is what the `small` profile's limits
-and its swap warning are built on.
+and its swap warning are built on. On a 2 CPU / 4 GB virtual machine with 2 GB of swap the
+`small` profile ran C2 four times without a container stopped (RAM peak 3.0 GB, swap 0.9 GB);
+with Analytics and its executor at 1 CPU and 1 slot its round was slower, so `small` gives
+them 2.
+
+The Historian's reads, profiled under C2 (main's image, 2 processes, `py-spy`): decoding archive
+chunks was about a quarter of its CPU, and the round, its checks and the methods read the same
+day again and again. Each process now keeps the chunks it decoded (`HISTCRAFT_CHUNK_CACHE_MB`,
+32 by default; a chunk's bytes are its key, so a rewritten chunk is never served stale). Results,
+4 vCPU, three runs each way, alternated:
+
+| C2, mean of 3 | Round (s) | Checks (s) | 9 methods (s) | Method reads p50 (s) | Historian at a full core (s) | Historian memory peak (MiB) |
+|---|---:|---:|---:|---:|---:|---:|
+| cache off | 30.5 | 30.5 | 30.6 | 21.6 | 24.7 | 780 |
+| cache on | 23.0 | 20.6 | 21.9 | 15.6 | 16.0 | 861 |
+
+One read of 167 signals over 24 h (750,000 values) in the container: 1.0 s without the cache,
+0.45 s once it holds them (2.2 times faster), 18 MB of cache. The Historian's peak with 2 processes
+(780 to 910 MiB) is above the `small` profile's 768m, so `small` gives it 1 GB and `medium`
+1.5 GB.

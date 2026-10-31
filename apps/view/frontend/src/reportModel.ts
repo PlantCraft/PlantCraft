@@ -34,6 +34,16 @@ export function cadenceLabel(schedule: Schedule): string {
   return t("Not scheduled");
 }
 
+/** The whole calendar period a closed schedule covers, in people's words. */
+export const CLOSED_LABELS: Record<Schedule["every"], string> = {
+  off: "",
+  day: "Yesterday, midnight to midnight",
+  week: "Last week, Monday to Sunday",
+  fortnight: "The two weeks before Monday",
+  month: "Last month, first day to last",
+  quarter: "Last quarter",
+};
+
 /** "The last 24 hours", "The last 7 days". */
 export function periodLabel(period: string): string {
   return t("The last {window}", { window: windowLabel(period) });

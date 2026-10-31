@@ -27,6 +27,7 @@ SOURCE_KINDS = (
     "system",
     "calc",
     "import",
+    "lab",
 )
 # Sources read by the gateway (Telegraf, ``collector.gateway``): it pushes their values to the
 # collector, which archives them like any read value. They have no history to read back.
@@ -38,7 +39,10 @@ PLANT_KINDS = ("pi_web_api", "opcua", "csv")
 IMPORT_KIND = "import"
 IMPORT_PREFIX = "import-"
 # Kinds written through the API (an app's series, the suite's health), never read from a plant.
-WRITTEN_KINDS = ("derived", "system")
+WRITTEN_KINDS = ("derived", "system", "lab")
+# Laboratory results (``laboratory:<analysis>``): one source, created with the first result
+# written (``POST /api/v1/lab``). A value is stored at its sampling time, whenever it arrives.
+LAB_SOURCE = "laboratory"
 # The suite's own health: one source, written by PlantCraft only, kept 90 days.
 SYSTEM_SOURCE = "system"
 SYSTEM_RETENTION_DAYS = 90
@@ -62,6 +66,7 @@ DEFAULT_MODES = {
     "derived": "archive",
     "system": "archive",
     "calc": "archive",
+    "lab": "archive",
     "mqtt": "archive",
     "modbus": "archive",
     "sql": "archive",
@@ -183,6 +188,7 @@ SOURCE_OPTIONS: dict[str, dict[str, Any]] = {
     "derived": {},
     "system": {},
     "calc": {},
+    "lab": {},
     **GATEWAY_OPTIONS,
 }
 

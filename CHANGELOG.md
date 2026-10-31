@@ -9,6 +9,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Images in an app's language model calls** (SDK 0.86.0). `POST /api/v1/llm/{use}` takes
+  images in a user's turn (PNG, JPEG, WebP or GIF, at most 4 a call, 5 MB each), and
+  `client.llm(use, question, images=[png])` sends them. They reach Anthropic as image blocks and
+  OpenAI (chat completions or the Responses API) as data URLs. The audit log counts the images
+  sent. It is for a model that reads drawings: a scanned P&ID, a photo of a gauge, a chart.
 - **Configuration decided before installing, outside the platform** (`docs/installation-file.md`).
   `/etc/plantcraft/installation.conf`, owned by root and never mounted in a container, holds
   which apps exist, whether apps may be installed from Settings › Apps, the demo, the machine
@@ -39,6 +44,63 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   0.015 ms in PlantCraft. Revocation, the expiry and the signing key are still checked every time.
 - **`./install.sh --security-check` runs in 1.5 s instead of 3.9 s:** one `docker inspect` for all
   containers and networks, and the backup's listing read while the other checks run.
+- **The machine profile gives the Historian 1 GB on `small` and 1.5 GB on `medium`.** With 2
+  processes its peak under the 0.6.0 load test C2 reached 780 to 910 MiB, above the 768m `small`
+  gave it (plan B, 2026-10-31). The Historian also keeps the archive chunks it decoded, so reads
+  of the same day decode them once (`HISTCRAFT_CHUNK_CACHE_MB`).
+- **The demo's lines in the install log carry the seconds since the seed started**
+  (`[demo +42s] ...`), and the Historian backfill says how long it took: the seed is half of an
+  install with `--demo` (69 of 124 s on a 4 CPU arm64 VM), and the log now shows which step.
+- **The Historian's means on a grid take one pass (2026-10-31).** A grid read built each
+  signal's segments four times to get its covered time and area; now once, with the same
+  arithmetic and the same values to the bit. 200 dense signals x 24 h at 60 s: the Historian's
+  CPU 0.89 to 0.67 s per read (`ci/bench/reads`).
+- **Notebooks read raw series 7 to 9 times faster (2026-10-31).** `plantcraft-notebook` 0.3.0
+  on a computer asks `POST /api/v1/series` for the binary answer, and PlantCraft passes the
+  Historian's binary answer on as it came, without parsing it (`Accept:
+  application/x-plantcraft-series`; other callers and a local data layer still get JSON). 10
+  dense signals x 24 h raw: 1.46 to 0.17 s; 50: 5.1 to 0.7 s; the same frames. In the browser
+  (JupyterLite) the package keeps JSON; `PLANTCRAFT_BINARY_READS=0` keeps it on a computer too.
+- **Min and max trend lines come from the Historian, 10× faster (2026-10-31).** A View trend's
+  min or max line read every raw sample of its period and summarised them in Python (50 dense
+  signals x 24 h: 1.8 million values, 7.5 s). `POST /api/v1/series` with a `step` now takes
+  `"extremes": true` and gives each cell's lowest and highest value beside the means (`low`,
+  `high`; from the hourly rollups where whole hours allow); `plantcraft-sdk` 0.87.0
+  `series_many(..., extremes=True)`, also in `FakePlantCraft`. The View asks for it for min and
+  max lines: one grid read, 7.5 to 0.7 s and the Historian's CPU 3.2 to 0.6 s, the same values
+  (`ci/bench/reads/trendbench.py`). First and last lines still summarise the samples.
+- **Pages open without Plotly until they draw a chart (`@plantcraft/ui`).** `Plot` fetched
+  Plotly (1.4 MB) with any page that could show a chart, even when the chart sat behind a tab or
+  a click. It now arrives the first time a chart is drawn, with an empty box of the chart's size
+  in the meantime. In Analytics, opening Blocks loads 1.15 MB of script instead of 2.5 MB and
+  Algorithms 0.7 MB instead of 2.1 MB; a page whose chart shows at once (Signal, Loop) is drawn
+  first and gets Plotly right after.
+
+- **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
+  went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
+  the chunks 0.6 s). `plantcraft-sdk` 0.85.0 adds `plantcraft_sdk.wire`, a binary answer for
+  `POST /api/v1/series` (int64 ms times and float64 values, asked with `Accept:
+  application/x-plantcraft-series` when the Historian lists `pcs1` in `GET /api/v1/reads`;
+  JSON stays the default, `PLANTCRAFT_BINARY_READS=0` keeps it). Analytics builds its raw frame
+  as one block instead of `pd.concat`, and its loop rounds and Signal quality ask only for what
+  is new since their last read (`LINKCRAFT_READ_CACHE`, 15 min overlap, whole read every 6 h).
+  The Historian's CPU per round: 0.85 to 0.07 s on the demo's 200 signals, 59 to 0.8 s on
+  2,000 dense signals (`ci/bench/reads`).
+- **Signal quality sees the source's quality (2026-10-31).** API v1 gave a bad sample as a null
+  value and an uncertain or substituted one as good, so the `sq_*` checks never saw them.
+  `POST /api/v1/series` takes `"quality": true` and then lists, per series, where the source's
+  quality was not good (`"quality": [{t, quality}]`, each change holding until the next; the
+  Historian reads it for all signals in one query). `plantcraft-sdk` 0.85.0:
+  `series_many(..., quality=True)`, and `series_many_pandas` keeps the list in
+  `attrs["quality"]`. Analytics asks for it in Signal quality (the incremental read joins it
+  across rounds), and `sq_availability` 1.1.0 counts substituted time as missing, warns on
+  uncertain time above `1 - warn_coverage` and reports `quality_bad`, `quality_uncertain` and
+  `quality_substituted`. Without the field nothing changes.
+- **Operations shows the machine and its profile.** Suite health names the machine as Docker
+  sees it (CPUs, memory), the machine profile that sized the suite (`install.sh --machine`) and
+  its ceilings, and each service's CPU limit beside its use. The `small` profile gives Analytics
+  and its executor 2 CPUs and 2 slots and Documents 1 GB, after a 2 CPU / 4 GB machine ran its
+  round slower with 1 and Documents reached 540 MB idle (plan B, 2026-10-31).
 - **The Historian's database has its own CPU limit, `HISTCRAFT_DB_CPUS` (default 2).** It
   shared `HISTCRAFT_CPUS` with the Historian, so lowering the Historian's limit also slowed the
   database it reads from (0.6.0 load tests, 2026-10-31). An installation that set
@@ -101,6 +163,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   and highest value, in time order, so every spike, trip and step is drawn at its full height
   with the same number of points (`plantcraft/industrial_data/thinning.py`; Historian and direct
   sources alike). Values that are not numbers (states) still keep every n-th point.
+
+- **Long tables sort by a text column in a fraction of a second (`@plantcraft/ui`).** The
+  suite's table compared texts with `localeCompare` and its options, which builds a collator
+  for every comparison: 100,000 rows sorted by tag took 13.4 s in the browser. One collator for all
+  comparisons gives the same order (numbers in names in order, case and accents aside) in 0.4 s.
 
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the

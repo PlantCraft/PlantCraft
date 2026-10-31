@@ -440,6 +440,13 @@ def _reach_problem(url: str, reason: object, proxied: bool) -> str:
     return t("The model service could not be reached: {reason}", reason=text)
 
 
+def _data_url(block: dict[str, Any]) -> str:
+    """An Anthropic image block as the data URL OpenAI reads."""
+
+    source = block.get("source") or {}
+    return f"data:{source.get('media_type', 'image/png')};base64,{source.get('data', '')}"
+
+
 def _to_openai(
     model: str, system: str, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None
 ) -> dict[str, Any]:
@@ -469,6 +476,16 @@ def _to_openai(
             if calls:
                 entry["tool_calls"] = calls
             out.append(entry)
+            continue
+        pictures = [_data_url(block) for block in blocks if block.get("type") == "image"]
+        if pictures:
+            parts: list[dict[str, Any]] = [
+                {"type": "text", "text": block.get("text", "")}
+                for block in blocks
+                if block.get("type") == "text"
+            ]
+            parts += [{"type": "image_url", "image_url": {"url": url}} for url in pictures]
+            out.append({"role": "user", "content": parts})
             continue
         for block in blocks:
             if block.get("type") == "tool_result":
@@ -512,6 +529,16 @@ def _to_responses(
         content = message.get("content")
         if isinstance(content, str):
             items.append({"role": message["role"], "content": content})
+            continue
+        pictures = [_data_url(b) for b in content or [] if b.get("type") == "image"]
+        if pictures:
+            parts: list[dict[str, Any]] = [
+                {"type": "input_text", "text": b.get("text", "")}
+                for b in content or []
+                if b.get("type") == "text"
+            ]
+            parts += [{"type": "input_image", "image_url": url} for url in pictures]
+            items.append({"role": message["role"], "content": parts})
             continue
         for block in content or []:
             kind = block.get("type")

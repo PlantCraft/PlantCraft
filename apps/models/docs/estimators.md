@@ -3,8 +3,10 @@
 Status: prototype of 2026-10-31 (item E3.2 of the Saturday test plan). The math is in the SDK,
 `plantcraft_sdk.estimators` (NumPy only, tests in `sdk/python/tests/test_estimators.py`), so
 Models and Analytics share one copy. Analytics runs it as blocks (library "Estimators":
-`estimator.kalman`, `estimator.drift`, `estimator.lab_fusion`); the Models object below
-(estimator, fit as a study) is the next step.
+`estimator.kalman`, `estimator.drift`, `estimator.soft_sensor`) and ships them wired as the
+"Virtual sensor" algorithm (a loop's valve and measurement: filtered value, uncertainty, sensor
+bias, graded by the mean bias). The Models object below (estimator, fit as a study) is the next
+step.
 
 ## What a person gets
 
@@ -46,13 +48,27 @@ regression and Kalman add-ons); the vendor survey is item E3.1 of the plan.
 
 ## Measured on the Simulator's hidden truth (24 h, 5 s steps; fit on the first half)
 
+The FOPDT fit is a one-step least squares refined on the simulated response (output error):
+on smooth data the one-step fit alone calls the process an integrator.
+
 | Case | Raw sensor RMSE | Best classic | Kalman | Gain |
 |---|---|---|---|---|
-| AIC-307 noisy analyzer | 0.0294 | 5 min moving average 0.0038, 135 s late | model-based 0.0027, no lag | 11x |
-| AIC-504 noisy analyzer | 0.0289 | 5 min moving average 0.0033, 220 s late | model-based 0.0016, no lag | 18x |
+| AIC-307 noisy analyzer | 0.0294 | 5 min moving average 0.0038, 135 s late | model-based 0.0008, no lag | 39x |
+| AIC-504 noisy analyzer | 0.0289 | 5 min moving average 0.0033, 220 s late | model-based 0.0007, 75 s | 41x |
+| Second order process fitted as FOPDT | 0.0289 | 5 min moving average 0.0033, 190 s late | model-based 0.0007, 35 s | 41x |
 | TIC-203 drifting sensor | 0.0560 | (none sees a drift) | bias state, corrected 0.0057; bias tracked to 0.0056 | 10x |
 | AIC-307 with a lab every 30 min | held lab value 0.0253 | soft sensor 0.0045 | model + lab 0.0030 | 8x |
 
-Caveat: the Simulator's loops are FOPDT, the very structure the filter assumes, so these are an
-upper bound. The next check is on recorded plant data (the demo's Historian) and with a
-mismatched model (wrong dead time, a second order process).
+### With the model wrong on purpose
+
+| Error in the model | Effect on the Kalman error |
+|---|---|
+| Dead time ×0, ×0.5 or ×2 | none to +15% |
+| A second order process fitted as a first order | none (the row above) |
+| Time constant ×0.5 | up to +70% |
+| Time constant ×2 | 2x to 3.5x, and 375 to 475 s late |
+| Gain ×0.7 or ×1.3 | 3x to 7x; retuning the noise recovers about half |
+
+So the gain is what to refit from time to time (a fit is cheap: tuning and filtering 17,280
+samples takes 0.19 s). The Simulator's loops are FOPDT, the very structure the filter assumes,
+so the right-model rows are an upper bound; the next check is on recorded plant data.

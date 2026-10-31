@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import math
+from datetime import datetime, timezone
 
 from histcraft.archive.compression import Compressor
+from histcraft.archive.query import to_ms
 from histcraft.collector.reading import Reading
 from histcraft.collector.service import PointState
+from tests.test_api import loaded  # noqa: F401 - fixture
 from tests.test_archive import make
 
 POINT = {"id": 1, "kind": "number", "deviation": 1.0, "max_seconds": 3600, "step": False}
@@ -82,3 +85,30 @@ def test_opc_ua_status_classes_become_qualities():
     assert (good.good, good.quality) == (True, "good")
     assert (uncertain.good, uncertain.quality, uncertain.value) == (True, "uncertain", 5.0)
     assert (bad.good, bad.quality, bad.value) == (False, "bad", None)
+
+
+def test_many_points_qualities_in_one_go_match_one_by_one(tmp_path):
+    archive = make(tmp_path)
+    archive.put_qualities(
+        [(1, 1000, "uncertain"), (1, 5000, "good"), (2, 500, "good"), (2, 3000, "substituted")]
+    )
+    found = archive.qualities_many([1, 2, 3], 2000, 10_000)
+    assert found == {point: archive.qualities(point, 2000, 10_000) for point in (1, 2, 3)}
+    assert found[1] == [(1000, "uncertain"), (5000, "good")] and found[3] == []
+
+
+def test_a_batch_read_says_where_the_quality_was_not_good(client, loaded):  # noqa: F811
+    from tests.test_reads import V1
+
+    point = loaded.catalog.point("plant:TI-100.PV")
+    at = to_ms(datetime(2026, 10, 19, 0, 10, tzinfo=timezone.utc))
+    loaded.archive.put_qualities([(int(point["id"]), at, "uncertain")])
+    window = {"start": "2026-10-19T00:00:00Z", "end": "2026-10-19T01:00:00Z"}
+    body = {"signals": ["plant:TI-100.PV"], **window}
+    plain = client.post(f"{V1}/series", json=body).json()
+    assert "quality" not in plain["series"][0]
+    marked = client.post(f"{V1}/series", json={**body, "quality": True}).json()
+    assert marked["series"][0]["quality"] == [
+        {"t": "2026-10-19T00:10:00+00:00", "quality": "uncertain"}
+    ]
+    assert marked["series"][0]["t"] == plain["series"][0]["t"]

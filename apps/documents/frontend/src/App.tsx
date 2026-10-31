@@ -21,7 +21,7 @@ function Route({ path, me }: { path: string; me: Me }) {
   if (section === "folders" && id) return <LibraryPage key={`f-${id}`} folderId={id} me={me} />;
   if (section === "assets" && id) return <LibraryPage key={`a-${id}`} assetId={id} me={me} />;
   if (section === "search") return <SearchPage me={me} />;
-  if (section === "diagrams" && id && part) return <DiagramView key={`${id}-${part}`} revId={id} page={Number(part) || 1} />;
+  if (section === "diagrams" && id && part) return <DiagramView key={`${id}-${part}`} revId={id} page={Number(part) || 1} me={me} />;
   if (section === "diagrams") return <DiagramsPage me={me} />;
   if (section === "plant-map") return <PlantMapPage me={me} />;
   // The reading queue moved to the suite's Queue (side bar); an old link opens the library.

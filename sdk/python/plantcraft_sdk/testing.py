@@ -87,6 +87,7 @@ from plantcraft_sdk.contract import (
     iso,
     iso_many,
     kind_of,
+    parse_time,
     parse_times,
     parse_window,
     series_range,
@@ -1733,7 +1734,34 @@ class FakePlantCraft(_LinksRoutes):
                 batch.fail(signal_id, abort.status, str(abort.detail))
                 continue
             batch.add(signal_id, self.kind(found), stamps, values)
+            if payload.get("extremes") is True and step and self.kind(found) == "number":
+                band = self._extremes(found, start_at, end_at, step, len(stamps))
+                if band is not None and batch.series and batch.series[-1]["signal"] == signal_id:
+                    batch.series[-1]["low"], batch.series[-1]["high"] = band
         return batch.payload()
+
+    def _extremes(
+        self, signal_id: str, start: datetime, end: datetime, step: float, cells: int
+    ) -> tuple[list[Any], list[Any]] | None:
+        """Each ``step`` cell's lowest and highest recorded value, as the Historian's
+        ``extremes`` (None when the raw values do not fit one read)."""
+
+        try:
+            stamps, values = self._values(signal_id, start, end, None)
+        except (ContractError, _Abort):
+            return None
+        numbers = pd.to_numeric(pd.Series(values, dtype=object), errors="coerce").to_numpy(float)
+        at = pd.DatetimeIndex(pd.to_datetime(list(stamps), utc=True)).as_unit("ns").asi8 / 1e9
+        index = np.floor((at - start.timestamp()) / step).astype(np.int64)
+        keep = (index >= 0) & (index < cells) & ~np.isnan(numbers)
+        low, high = np.full(cells, np.nan), np.full(cells, np.nan)
+        np.fmin.at(low, index[keep], numbers[keep])
+        np.fmax.at(high, index[keep], numbers[keep])
+
+        def listed(found: np.ndarray) -> list[Any]:
+            return [None if np.isnan(value) else float(value) for value in found]
+
+        return listed(low), listed(high)
 
     def _route_put_series(self, request: "_Request") -> dict[str, Any]:
         claims = self._caller(request)
@@ -1927,18 +1955,19 @@ class FakePlantCraft(_LinksRoutes):
             raise ContractError("A runs point has no value: read its runs.")
         if kind == "text" and agg != "last":
             raise ContractError("A text signal has only agg=last.")
+        until = parse_time(request.query.get("end"), "end")
+        end_at = min(self.data_end, until) if until else self.data_end
         if kind in _TYPED_KINDS:
             if agg != "last":
                 raise ContractError(f"A {kind} point has only agg=last.")
-            stamps, typed = self._values(found, self.data_end - span, self.data_end, None)
+            stamps, typed = self._values(found, end_at - span, end_at, None)
             return {
                 "signal": id,
                 "agg": agg,
                 "window": window,
                 "value": typed[-1] if typed else None,
-                "at": stamps[-1] if stamps else iso(self.data_end),
+                "at": stamps[-1] if stamps else iso(end_at),
             }
-        end_at = self.data_end
         # Long windows are summarized on a coarser grid, as a historian would.
         seconds = span.total_seconds()
         step = None if seconds / self.sample_seconds <= MAX_POINTS else seconds / 10_000

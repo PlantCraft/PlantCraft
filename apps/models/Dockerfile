@@ -50,9 +50,9 @@ COPY src ./src
 # PlantCraft Models wheel (--no-deps: the index only provides its build backend, setuptools).
 RUN --mount=type=secret,id=build_ca,required=false \
     if [ -s /run/secrets/build_ca ]; then export PIP_CERT=/run/secrets/build_ca; fi; \
-    grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.85.0-py3-none-any.whl' vendor/README.md \
+    grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.88.0-py3-none-any.whl' vendor/README.md \
         | (cd vendor && sha256sum -c -) \
-    && cp vendor/plantcraft_sdk-0.85.0-py3-none-any.whl /wheelhouse/ \
+    && cp vendor/plantcraft_sdk-0.88.0-py3-none-any.whl /wheelhouse/ \
     && pip wheel --no-cache-dir --no-deps --wheel-dir /wheelhouse . \
     && rm -rf build
 
@@ -99,7 +99,7 @@ RUN --mount=type=bind,from=wheels,source=/wheelhouse,target=/wheelhouse \
     python -m pip install --no-cache-dir --root-user-action=ignore --no-index --find-links /wheelhouse \
         --require-hashes --no-deps -r /tmp/requirements.lock \
     && python -m pip install --no-cache-dir --root-user-action=ignore --no-index --no-deps \
-        /wheelhouse/plantcraft_sdk-0.85.0-py3-none-any.whl /wheelhouse/modelcraft-*.whl \
+        /wheelhouse/plantcraft_sdk-0.88.0-py3-none-any.whl /wheelhouse/modelcraft-*.whl \
     && python -m pip check \
     && python -m compileall -q "$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/modelcraft" \
     && python -m pip uninstall -y --root-user-action=ignore pip \

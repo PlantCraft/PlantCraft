@@ -17,21 +17,23 @@ from functools import partial
 from typing import Annotated, Any
 
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from plantcraft_sdk.auth import User
 from plantcraft_sdk.contract import (
     MAX_BATCH_SIGNALS,
     ContractError,
+    parse_time,
     series_range,
     unique_signals,
 )
+from plantcraft_sdk.wire import MEDIA_TYPE as WIRE_MEDIA_TYPE
 from pydantic import BaseModel, Field, ValidationError
 
 from histcraft.api.deps import RuntimeDep, current_user, time_limited
-from histcraft.api.read_budget import EncodedBatch, Ticket, json_bytes
+from histcraft.api.read_budget import BinaryBatch, EncodedBatch, Ticket, json_bytes
 from histcraft.api.runtime import Runtime, point_ref
-from histcraft.archive.query import Reader, SourceUnavailable, to_ms
+from histcraft.archive.query import Reader, SourceUnavailable, iso_ms, to_ms
 from histcraft.catalog.models import (
     PLANT_KINDS,
     SOURCE_SETTINGS,
@@ -482,10 +484,18 @@ def value(
     _caller: PlantCraft,
     agg: str = "last",
     window: str = "1h",
+    end: str | None = None,
 ) -> dict[str, Any]:
+    """One aggregate over the ``window`` that ends at ``end`` (ISO 8601; now when left out, and
+    never later than now): a report of last week reads the week that closed on Monday."""
+
     point = _point(runtime, signal_id)
     try:
-        answer = runtime.reader.value(point_ref(point), agg, window)
+        now = datetime.now(timezone.utc)
+        until = parse_time(end, "end")
+        answer = runtime.reader.value(
+            point_ref(point), agg, window, min(until, now) if until else None
+        )
     except ContractError as exc:
         raise HTTPException(422, str(exc)) from exc
     except SourceUnavailable as exc:
@@ -526,18 +536,35 @@ class BatchIn(BaseModel):
     start: str | None = None
     end: str | None = None
     step: float | None = None
+    # Each series also says where its quality was not good: ``quality: [{t, quality}]`` (the
+    # quality from ``t`` to the next change: uncertain, substituted, bad, or good again).
+    quality: bool = False
+    # With ``step``: each number series also holds every cell's lowest and highest value
+    # (``low``, ``high``, beside the means), from the hourly rollups where whole hours allow.
+    extremes: bool = False
 
 
 @router.post("/series")
 @time_limited
-def series_batch(body: BatchIn, runtime: RuntimeDep, _caller: PlantCraft) -> Response:
+def series_batch(
+    body: BatchIn, runtime: RuntimeDep, _caller: PlantCraft, request: Request
+) -> Response:
     with runtime.read_budget.hold() as ticket:
-        return read_batch(body, runtime, ticket).response()
+        return read_batch(body, runtime, ticket, binary=wants_binary(request)).response()
 
 
-def read_batch(body: BatchIn, runtime: Runtime, ticket: Ticket) -> EncodedBatch:
-    """The series of a batch, each JSON as soon as it is read, within the read budget: the
-    caller answers ``.response()`` before ``ticket`` is given back."""
+def wants_binary(request: Request) -> bool:
+    """The caller asked for the binary answer (``plantcraft_sdk.wire``) in ``Accept``."""
+
+    return WIRE_MEDIA_TYPE in request.headers.get("accept", "")
+
+
+def read_batch(
+    body: BatchIn, runtime: Runtime, ticket: Ticket, *, binary: bool = False
+) -> EncodedBatch | BinaryBatch:
+    """The series of a batch, each JSON as soon as it is read (or kept as arrays for the
+    binary answer), within the read budget: the caller answers ``.response()`` before
+    ``ticket`` is given back."""
 
     if not 1 <= len(body.signals) <= MAX_BATCH_SIGNALS:
         raise HTTPException(
@@ -586,7 +613,15 @@ def read_batch(body: BatchIn, runtime: Runtime, ticket: Ticket) -> EncodedBatch:
         )
         + (len(refs) - len(stored)) * _values_of(None, begin, finish, step)
     )
-    builder = EncodedBatch()
+    quality: dict[int, list[tuple[int, str]]] = {}
+    if body.quality:
+        quality = runtime.archive.qualities_many(
+            [int(p["id"]) for p in points.values() if p is not None and p["mode"] != "source"],
+            begin_ms,
+            finish_ms,
+        )
+    builder: EncodedBatch | BinaryBatch = BinaryBatch() if binary else EncodedBatch()
+    read = runtime.reader.series_arrays if binary else runtime.reader.series
     for signal_id in wanted:
         point = points[signal_id]
         if point is None:
@@ -618,14 +653,28 @@ def read_batch(body: BatchIn, runtime: Runtime, ticket: Ticket) -> EncodedBatch:
                 # A source that cannot answer leaves the archive alone, as for one signal.
                 if found is not None and not isinstance(found, str):
                     samples = Reader.with_older(ref, samples, runtime.reader.normalize(ref, *found))
-            stamps, values = runtime.reader.series(ref, begin, finish, step, samples)
+            stamps, values = read(ref, begin, finish, step, samples)
         except ContractError as exc:
             builder.fail(signal_id, 422, str(exc))
             continue
         except SourceUnavailable as exc:
             builder.fail(signal_id, 502, str(exc))
             continue
-        builder.add(signal_id, point["kind"], stamps, values)
+        extra = None
+        if body.quality:
+            changes = quality.get(int(point["id"]), [])
+            stamps_q = iso_ms(np.asarray([at for at, _ in changes], dtype=np.int64))
+            extra = {
+                "quality": [
+                    {"t": at, "quality": code}
+                    for at, (_, code) in zip(stamps_q, changes, strict=True)
+                ]
+            }
+        if body.extremes and step:
+            bounds = runtime.reader.extremes(ref, begin, finish, step)
+            if bounds is not None and len(bounds[0]) == len(stamps):
+                extra = {**(extra or {}), "low": bounds[0], "high": bounds[1]}
+        builder.add(signal_id, point["kind"], stamps, values, extra)
     return builder
 
 

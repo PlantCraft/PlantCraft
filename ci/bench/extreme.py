@@ -24,6 +24,8 @@ What one run does, against the installation in ``--prefix`` (as ``suite_bench.py
    collector wrote it, then deletes the import;
 5. with ``--restart-after S``, restarts the Historian S seconds into the work and measures how
    long it stayed away;
+   with ``--own-accounts``, each person signs in with a viewer account of their own (created as
+   bench-person-NN and turned off after the run), as PlantCraft counts API use per person;
 6. samples CPU and memory of every container every 2 s.
 
 The report says, per caller, how long the reads took and how many failed (503: the Historian's
@@ -42,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import secrets
 import subprocess
 import sys
 import threading
@@ -383,6 +386,35 @@ def restart(suite: Suite, after: float) -> dict:
     return {"after_s": after, "away_s": round(time.perf_counter() - began, 1)}
 
 
+def accounts(suite: Suite, count: int) -> list[tuple[str, str]]:
+    """``count`` viewer accounts bench-person-NN with a password of this run (each person has
+    their own: PlantCraft's per-person API limit counts one account's requests together)."""
+
+    password = secrets.token_urlsafe(18)
+    made = []
+    for number in range(count):
+        name = f"bench-person-{number + 1:02d}"
+        person = {"display_name": f"Bench person {number + 1}", "access_level": "viewer"}
+        try:
+            suite.call("POST", "/api/users", {"username": name, "password": password, **person})
+        except RuntimeError as exc:
+            if ": 409 " not in str(exc):
+                raise
+            suite.call("PUT", f"/api/users/{name}", {**person, "active": True})
+            suite.call("POST", f"/api/users/{name}/password", {"password": password})
+        made.append((name, password))
+    return made
+
+
+def close_accounts(suite: Suite, made: list[tuple[str, str]]) -> None:
+    for name, _ in made:
+        body = {"display_name": name, "access_level": "viewer", "active": False}
+        try:
+            suite.call("PUT", f"/api/users/{name}", body)
+        except (RuntimeError, OSError) as exc:
+            log(f"could not turn {name} off: {exc}")
+
+
 def run(args: argparse.Namespace) -> dict:
     preset = SCENARIOS.get(args.scenario, {})
     methods = preset.get("methods", 0) if args.methods is None else args.methods
@@ -409,9 +441,14 @@ def run(args: argparse.Namespace) -> dict:
     time.sleep(args.settle)
     began = time.time()
     crowd = []
+    made = accounts(suite, people) if args.own_accounts else []
     for number in range(people):
         own = Suite(prefix, args.url)
-        own.login()
+        if made:
+            name, password = made[number]
+            own.call("POST", "/api/login", {"username": name, "password": password})
+        else:
+            own.login()
         thread = threading.Thread(
             target=person, args=(own, rec, signals, stop, args.pause), daemon=True
         )
@@ -439,6 +476,7 @@ def run(args: argparse.Namespace) -> dict:
     for thread in crowd:
         thread.join(timeout=200)
     sampler.stop()
+    close_accounts(suite, made)
     ended = time.time()
     callers = {}
     for caller, calls in sorted(rec.calls.items()):
@@ -458,6 +496,7 @@ def run(args: argparse.Namespace) -> dict:
             "step": args.step,
             "methods": methods,
             "people": people,
+            "own_accounts": bool(made),
             "rounds": with_rounds,
             "limits": {k: v for k, v in suite.env.items() if k.endswith(("_CPUS", "_MEMORY"))},
         },
@@ -560,6 +599,9 @@ def main() -> int:
     parser.add_argument("--backfill", type=int, help="values to import meanwhile (C5)")
     parser.add_argument("--restart-after", type=float, help="restart the Historian S s in (C6)")
     parser.add_argument("--step", type=float, default=None, help="means of STEP s (default raw)")
+    parser.add_argument(
+        "--own-accounts", action="store_true", help="each person signs in as a viewer of their own"
+    )
     parser.add_argument("--no-rounds", action="store_true", help="leave Analytics' rounds out")
     parser.add_argument("--pause", type=float, default=5, help="seconds between a person's screens")
     parser.add_argument("--settle", type=float, default=10, help="quiet seconds measured first")

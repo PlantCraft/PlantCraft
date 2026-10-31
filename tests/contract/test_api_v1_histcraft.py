@@ -284,6 +284,9 @@ def test_v1_reads_are_forwarded_with_processcraft_own_token(hist):
         "agg": "last",
         "window": "2h",
     }
+    closed = {"agg": "mean", "window": "7d", "end": "2026-10-26T00:00:00Z"}
+    hist.get("/api/v1/signals/plc:FIC-101.PV/value", params=closed, headers=reader)
+    assert fake.calls("GET", "/signals/plc:FIC-101.PV/value")[1]["query"] == closed
     assert fake.calls("POST", "/series")[0]["body"] == {
         "signals": ["plc:FIC-101.PV", "nope"],
         "start": None,
@@ -316,6 +319,36 @@ def test_long_series_pass_through_as_histcraft_wrote_them(hist):
     assert series.headers["content-type"] == "application/json"
     answer = hist.post("/api/v1/series", json={"signals": ["plc:FIC-101.PV"]}, headers=reader)
     assert answer.status_code == 200 and answer.content == batch
+
+
+def test_a_binary_batch_passes_through_when_the_caller_accepts_it(hist):
+    """A caller that accepts the binary answer gets the Historian's bytes as they came; one
+    that does not, or a Historian that answers JSON anyway, gets JSON."""
+
+    from plantcraft_sdk import wire
+
+    writer = wire.BinaryWriter()
+    writer.numbers("plc:FIC-101.PV", "number", [1_760_000_000_000], [1.5])
+    binary = writer.body([])
+    asked: list[str] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        asked.append(request.headers["accept"])
+        if wire.MEDIA_TYPE in request.headers["accept"]:
+            return httpx.Response(200, content=binary, headers={"content-type": wire.MEDIA_TYPE})
+        return httpx.Response(200, content=b'{"series": [], "errors": []}')
+
+    _rt(hist).datalayer.http = httpx.Client(transport=httpx.MockTransport(handle))
+    reader = _as(hist, "op")
+    body = {"signals": ["plc:FIC-101.PV"]}
+    accept = {**reader, "Accept": f"{wire.MEDIA_TYPE}, application/json;q=0.5"}
+    answer = hist.post("/api/v1/series", json=body, headers=accept)
+    assert answer.content == binary
+    assert answer.headers["content-type"].startswith(wire.MEDIA_TYPE)
+    assert wire.read_binary(answer.content)[0][0]["v"].tolist() == [1.5]
+    plain = hist.post("/api/v1/series", json=body, headers=reader)
+    assert plain.headers["content-type"] == "application/json"
+    assert wire.MEDIA_TYPE in asked[0] and wire.MEDIA_TYPE not in asked[1]
 
 
 def test_callers_are_checked_before_anything_is_forwarded(hist):

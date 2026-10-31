@@ -93,8 +93,8 @@ input. Times are ISO 8601 with offset; series timestamps are UTC.
 | `GET /api/v1/signals` | `[{"id", "name", "source", "unit", "description", "low", "high", "kind", "source_kind"}]`; `source_kind` is the source's type (`opcua`, `pi_web_api`, `csv`, `derived`; `null` when unknown): a `csv` signal is sampled (laboratory analyses) and judged by its own rules; filter `q`; derived signals add `app`, `subject`, `result` and filter by them |
 | `GET /api/v1/signals/{id}` | One signal, same shape |
 | `GET /api/v1/signals/{id}/series?start&end&step` | `{"signal", "kind", "t": [iso...], "v": [number \| string \| null...]}` (typed by the point's kind); `step` in seconds (optional: recorded values); at most 200,000 points. A runs point answers `{"signal", "kind": "runs", "runs": [{"run_at", "t", "v"}]}` (`run`, `runs`) |
-| `POST /api/v1/series` | Body `{"signals": [id...], "start", "end", "step"}` (1 to 500 ids): `{"series": [{"signal", "kind", "t", "v"}...], "errors": [{"signal", "status", "detail"}...]}` |
-| `GET /api/v1/signals/{id}/value?agg&window` | `{"signal", "agg", "window", "value", "at"}`; `agg` one of `last, mean, min, max, std`; `window` like `1h`, `24h`, `7d` |
+| `POST /api/v1/series` | Body `{"signals": [id...], "start", "end", "step", "quality", "extremes"}` (1 to 500 ids; `quality` and `extremes` optional): `{"series": [{"signal", "kind", "t", "v"}...], "errors": [{"signal", "status", "detail"}...]}` |
+| `GET /api/v1/signals/{id}/value?agg&window&end` | `{"signal", "agg", "window", "value", "at"}`; `agg` one of `last, mean, min, max, std`; `window` like `1h`, `24h`, `7d`; optional `end` (ISO 8601, never later than now) reads a window that closed earlier, like last week |
 | `PUT /api/v1/series` | Derived series, an app's service token only. Body: up to 500 items `[{"signal": "app-<app id>:<name>", "t": [iso...], "v": [...], "name", "unit", "kind", "subject", "result"}]`: `{"written", "errors"}` |
 | `PUT /api/v1/series/runs` | Runs points, an app's service token only. Body: up to 500 runs `[{"signal": "app-<app id>:<name>", "run_at", "t": [iso...], "v": [number...], "keep_runs", "keep_days", ...}]`: `{"written", "errors"}` (see "Value kinds, retention and runs") |
 | `GET /api/v1/signals/{id}/runs?limit` | A runs point's executions, newest first: `{"signal", "runs": [{"run_at", "start", "end", "n"}]}` |
@@ -280,6 +280,18 @@ Additive to v1; `plantcraft-sdk` 0.3.0 (`plantcraft_sdk.assets`, `client.asset_t
   fits; that signal and every one after it are postponed: ask for them again in another
   request). The SDK's `series_many` does that on its own. It is a POST because the id list can
   be long; it reads only, like every other v1 data route.
+  With `"quality": true` (since 2026-10-31, SDK 0.85.0) each series also lists where the
+  source's quality was not good: `"quality": [{"t": iso, "quality": "uncertain" | "substituted" |
+  "bad" | "good"}]`, oldest first, each change holding until the next one (the first may be the
+  state at `start`, then its `t` is at or before `start`; an empty list: good all along). A bad
+  sample is still a null value, and an uncertain or substituted one keeps its value, so this is
+  the only place they show. A source that keeps no quality leaves the list out.
+  With `step`, `"extremes": true` adds each cell's lowest and highest recorded value to a
+  number series (`"low"`, `"high"`, beside the means in `v`; `null` where a cell had none). A
+  source read live, or a span past what the Historian keeps extremes for, leaves them out.
+  A client may also ask for the binary answer (`Accept: application/x-plantcraft-series`, when
+  `GET /api/v1/reads` lists `pcs1` in `formats`; `plantcraft_sdk.wire`): the same series, with
+  times and values as arrays.
 - **Value.** Defaults `agg=last`, `window=1h`; `window` is a number and one of `s, m, h, d`, at most
   366 days, ending now (or at a recorded file's last sample). `value` is `null` without data;
   `std` is the sample standard deviation (0 for one sample). `at` is the time of the last sample
@@ -585,10 +597,11 @@ starts off whatever it declares, until an administrator gives it a model.
 
 | Endpoint | Shape |
 |---|---|
-| `POST /api/v1/llm/{use}` | An app's service token only, with `write.llm` (403 otherwise); `use` is `<id>` or `<app id>:<id>` of one of its own uses. Body `{"system"?: text, "messages": [{"role": "user" \| "assistant", "content"}]}`, the last message the user's, at most 200,000 characters in all: `{"use": "<app>:<id>", "model", "text"}`. 404 for a use the app did not declare, 409 when the use has no model now (off, nothing set up, or models forbidden in the installation), 429 past `PLANTCRAFT_LLM_APP_DAILY` calls of the app per plant day (500), 502 when the model's server did not answer. Each call is audited (`language_model.used`: provider, model, characters sent and received). Added 2026-10-25, SDK 0.32.0 |
+| `POST /api/v1/llm/{use}` | An app's service token only, with `write.llm` (403 otherwise); `use` is `<id>` or `<app id>:<id>` of one of its own uses. Body `{"system"?: text, "messages": [{"role": "user" \| "assistant", "content", "images"?}]}`, the last message the user's, at most 200,000 characters in all; a user's turn may carry `images` (`[{"media_type": "image/png" \| "image/jpeg" \| "image/webp" \| "image/gif", "data": base64}]`, at most 4 a call, 5 MB each, for a model that reads images; added 2026-10-31): `{"use": "<app>:<id>", "model", "text"}`. 404 for a use the app did not declare, 409 when the use has no model now (off, nothing set up, or models forbidden in the installation), 429 past `PLANTCRAFT_LLM_APP_DAILY` calls of the app per plant day (500), 502 when the model's server did not answer. Each call is audited (`language_model.used`: provider, model, characters sent, images sent and characters received). Added 2026-10-25, SDK 0.32.0 |
 
-`client.llm(use, messages, system=...)` sends it (a question or the turns of a chat; 120 s
-timeout). `FakePlantCraft` answers it for the uses the app sent in its contributions, keeps
+`client.llm(use, messages, system=..., images=[png_bytes])` sends it (a question or the turns
+of a chat, images with the last user turn; `plantcraft_sdk.llm.image(data, media_type)` for a
+JPEG; 120 s timeout). `FakePlantCraft` answers it for the uses the app sent in its contributions, keeps
 `fake.links.llm_calls` and answers `fake.links.llm_answer` (a text, a function of the call, or
 None for 409). The model only reads what the app sends: it never acts on the plant or the suite.
 
@@ -768,7 +781,7 @@ checks the forwarding against a stub.
 | `GET /api/v1/signals/{id}` (also result and event subjects) | `GET .../api/v1/data/signals/{id}` |
 | `GET /api/v1/signals/{id}/series?start&end&step` (also the asset page and history charts) | `GET .../api/v1/data/signals/{id}/series` |
 | `POST /api/v1/series` | `POST .../api/v1/data/series` (same body) |
-| `GET /api/v1/signals/{id}/value?agg&window` | `GET .../api/v1/data/signals/{id}/value` |
+| `GET /api/v1/signals/{id}/value?agg&window&end` | `GET .../api/v1/data/signals/{id}/value` |
 | `PUT /api/v1/series` (derived) | `POST .../api/v1/data/derived` with `{"app", "series": [item + "app"]}`, answering `{"written", "errors": [{"signal", "status", "detail"}]}` (PlantCraft adds each error's `index`) |
 | `PUT /api/v1/series/runs` | `POST .../api/v1/data/derived/runs` with `{"app", "series": [run...]}`, answering as `/derived` |
 | `GET /api/v1/signals/{id}/series?run&runs`, `GET /api/v1/signals/{id}/runs?limit` | `GET .../api/v1/data/signals/{id}/series` and `.../runs` (same query) |
@@ -831,7 +844,7 @@ derived writes and everything else):
 | `GET {HISTCRAFT_URL}/api/v1/reads` | `{"api": 1}`: this Historian serves the reads below |
 | `GET {HISTCRAFT_URL}/api/v1/signals?q&app&subject&result`, `.../signals/{id}` | as API v1 |
 | `GET {HISTCRAFT_URL}/api/v1/signals/{id}/series?start&end&step`, `POST .../series` | as API v1 |
-| `GET {HISTCRAFT_URL}/api/v1/signals/{id}/value?agg&window` | as API v1 |
+| `GET {HISTCRAFT_URL}/api/v1/signals/{id}/value?agg&window&end` | as API v1 |
 
 - **Who reads.** The rule of API v1's reads: a token PlantCraft signed (a person's, or an
   app's service token), checked against `/api/v1/auth/keys` and the tokens ended early

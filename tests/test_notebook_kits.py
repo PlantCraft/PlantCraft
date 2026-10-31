@@ -196,7 +196,7 @@ def test_the_kit_copies_the_notebooks_and_keeps_what_the_person_edited(
         if os.name == "posix":
             assert (home / kit.TOKEN_FILE).stat().st_mode & 0o077 == 0
         assert kit.stored_token("http://testserver") == token
-        monkeypatch.setattr(pc.Client, "_computer", _routed(TestClient(app)))
+        monkeypatch.setattr(pc.Client, "_fetch", _routed(TestClient(app)))
         work = tmp_path / "work"
         done = kit.sync(work)
         assert done["examples"] >= 4 and done["added"] == 1
