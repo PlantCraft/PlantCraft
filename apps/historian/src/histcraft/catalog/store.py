@@ -56,6 +56,7 @@ from histcraft.catalog.models import (
     DEFAULT_SETTINGS,
     DROPPED_APPS,
     INHERITABLE,
+    LAB_SOURCE,
     LIVE_KINDS,
     MANAGED,
     NOT_COLLECTED,
@@ -898,6 +899,11 @@ class CatalogStore(Store):
         """
 
         return self._written(derived_source(app), "derived", app, series)
+
+    def lab(self, series: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        """The points of laboratory analyses (``laboratory:<analysis>``), as :meth:`derived`."""
+
+        return self._written(LAB_SOURCE, "lab", "Laboratory", series)
 
     def system(self, series: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         """The points of the suite's health signals (``system:<name>``), as :meth:`derived`.

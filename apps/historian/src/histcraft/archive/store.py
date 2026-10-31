@@ -189,6 +189,21 @@ class ArchiveStore(Store):
         value TEXT NOT NULL
     );
 
+    -- A laboratory point's samples (lab:<analysis>): the value lives in chunks at the sampling
+    -- time ``t``; here when it reached the laboratory and was approved, its status, when it was
+    -- written here and by whom, and how many times it was written (a retest writes again).
+    CREATE TABLE IF NOT EXISTS lab_samples (
+        point INTEGER NOT NULL,
+        t INTEGER NOT NULL,
+        received INTEGER,
+        approved INTEGER,
+        status TEXT NOT NULL,
+        written INTEGER NOT NULL,
+        author TEXT NOT NULL DEFAULT '',
+        writes INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY(point, t)
+    );
+
     CREATE TABLE IF NOT EXISTS request_results (
         id INTEGER PRIMARY KEY,
         status TEXT NOT NULL,
@@ -539,6 +554,29 @@ class ArchiveStore(Store):
                 " SET quality = excluded.quality",
                 list(changes),
             )
+
+    def put_lab_samples(self, rows: Iterable[tuple[Any, ...]]) -> None:
+        """Store ``(point, t, received, approved, status, written, author)`` of laboratory
+        samples; a sample written again keeps the newest and counts the writes."""
+
+        with self._lock, self._connect() as connection:
+            connection.executemany(
+                "INSERT INTO lab_samples (point, t, received, approved, status, written, author)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(point, t) DO UPDATE SET"
+                " received = excluded.received, approved = excluded.approved,"
+                " status = excluded.status, written = excluded.written,"
+                " author = excluded.author, writes = lab_samples.writes + 1",
+                list(rows),
+            )
+
+    def lab_samples(self, point: int, start_ms: int, end_ms: int) -> list[dict[str, Any]]:
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT t, received, approved, status, written, author, writes FROM lab_samples"
+                " WHERE point = ? AND t >= ? AND t <= ? ORDER BY t",
+                (point, start_ms, end_ms),
+            ).fetchall()
+        return [dict(row) for row in rows]
 
     def put_snapshots(self, rows: Iterable[dict[str, Any]]) -> None:
         stamp = now_ms()
@@ -964,6 +1002,34 @@ class ArchiveStore(Store):
             out.insert(0, (int(before["t"]), str(before["quality"])))
         return out
 
+    def qualities_many(
+        self, points: Iterable[int], start_ms: int, end_ms: int
+    ) -> dict[int, list[tuple[int, str]]]:
+        """``qualities`` of many points: one round trip on PostgreSQL (one query per point on
+        SQLite); a point whose quality stayed good has an empty list."""
+
+        ids = sorted({int(point) for point in points})
+        if not ids:
+            return {}
+        if not self.db.postgres:
+            return {point: self.qualities(point, start_ms, end_ms) for point in ids}
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT point, t, quality FROM qualities WHERE point = ANY(?) AND t > ? AND t <= ?"
+                " UNION ALL SELECT q.point, q.t, q.quality FROM unnest(?::bigint[]) AS p(point)"
+                " CROSS JOIN LATERAL (SELECT point, t, quality FROM qualities WHERE point = p.point"
+                " AND t <= ? ORDER BY t DESC LIMIT 1) q ORDER BY 1, 2",
+                (ids, start_ms, end_ms, ids, start_ms),
+            ).fetchall()
+        found: dict[int, list[tuple[int, str]]] = {point: [] for point in ids}
+        for row in rows:
+            point, at, code = int(row["point"]), int(row["t"]), str(row["quality"])
+            changes = found[point]
+            if at <= start_ms and code == "good":
+                continue  # good at the start: nothing to say
+            changes.append((at, code))
+        return found
+
     def point_ids(self) -> set[int]:
         with self._connect() as connection:
             rows = connection.execute(
@@ -1211,6 +1277,7 @@ _POINT_TABLES = (
     "qualities",
     "point_totals",
     "run_series",
+    "lab_samples",
 )
 DELETE_BATCH = 500
 DELETE_TRIES = 5

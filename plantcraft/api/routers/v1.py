@@ -45,6 +45,8 @@ from plantcraft_sdk.contract import (
 from plantcraft_sdk.contributes import FEATURES
 from plantcraft_sdk.derived import DerivedError, check_owner, parse_derived, parse_runs
 from plantcraft_sdk.server.paging import MAX_PAGE, list_response
+from plantcraft_sdk.wire import MAGIC as WIRE_MAGIC
+from plantcraft_sdk.wire import MEDIA_TYPE as WIRE_MEDIA_TYPE
 
 router = APIRouter(prefix="/api/v1")
 JSON = "application/json"
@@ -71,6 +73,11 @@ class SeriesBatchRequest(BaseModel):
     start: str | None = Field(default=None, max_length=64)
     end: str | None = Field(default=None, max_length=64)
     step: float | None = None
+    # Each series also lists where its samples were not good (``quality``: [{t, quality}]),
+    # so a check can tell bad, uncertain and substituted values from good ones.
+    quality: bool = False
+    # With ``step``: each number series also holds every cell's lowest and highest value.
+    extremes: bool = False
 
 
 def _unprocessable(error: ContractError) -> HTTPException:
@@ -505,11 +512,21 @@ def run_list(
 
 @router.post("/series")
 def series_batch(
-    payload: SeriesBatchRequest, _caller: V1Reader, rt: Runtime, scope: V1Scope
+    payload: SeriesBatchRequest,
+    _caller: V1Reader,
+    rt: Runtime,
+    scope: V1Scope,
+    request: Request,
 ) -> Any:
     """Many signals' series in one request and one source read; each failure is listed
-    in ``errors`` (404, 422, 502, or 413 when the request ran out of points)."""
+    in ``errors`` (404, 422, 502, or 413 when the request ran out of points). A caller that
+    accepts ``application/x-plantcraft-series`` gets the Historian's binary answer, passed on
+    as it came (``plantcraft_sdk.wire``), when the Historian is the data layer."""
 
+    # Only a source that keeps quality is asked for it (a local source has none).
+    quality: dict[str, bool] = {"quality": True} if payload.quality else {}
+    if payload.extremes:
+        quality["extremes"] = True
     hidden = [item for item in payload.signals if not scope.signal(item)]
     if hidden:
         # Signals out of the caller's asset scope answer 404, as unknown ones do.
@@ -517,7 +534,12 @@ def series_batch(
         answer: dict[str, Any] = {"series": [], "errors": []}
         if allowed:
             answer = _answer(
-                rt.datalayer.series_batch, allowed, payload.start, payload.end, payload.step
+                rt.datalayer.series_batch,
+                allowed,
+                payload.start,
+                payload.end,
+                payload.step,
+                **quality,
             )
         missing = [
             {"signal": item, "status": 404, "detail": t("Signal not found.")}
@@ -527,8 +549,12 @@ def series_batch(
     args = (payload.signals, payload.start, payload.end, payload.step)
     raw = getattr(rt.datalayer, "series_batch_raw", None)
     if raw is not None:
-        return Response(_answer(raw, *args), media_type=JSON)
-    return JSONResponse(_answer(rt.datalayer.series_batch, *args))
+        if WIRE_MEDIA_TYPE in request.headers.get("accept", ""):
+            body = _answer(raw, *args, **quality, binary=True)
+            binary = body[: len(WIRE_MAGIC)] == WIRE_MAGIC
+            return Response(body, media_type=WIRE_MEDIA_TYPE if binary else JSON)
+        return Response(_answer(raw, *args, **quality), media_type=JSON)
+    return JSONResponse(_answer(rt.datalayer.series_batch, *args, **quality))
 
 
 @router.put("/series")

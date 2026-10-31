@@ -16,6 +16,13 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Laboratory results as signals (`laboratory:<analysis>`).** `POST /api/v1/lab` (editors, or a
+  bridge from the LIMS with a person's key) stores each result at its sampling time, however late
+  it arrives, with the times it reached the laboratory and was approved; it reads as `uncertain`
+  until approved and `bad` when rejected, and writing the same sample again (a retest) replaces
+  its value and counts the write. `GET /api/v1/lab/{signal}` lists a window's samples with their
+  times and how late each was written. Trends, Analytics and the estimators read the analysis as
+  any signal, at the time the sample was taken (industry reference library, LIMS and MES).
 - **A limit on the points it records**, from `MAX_SIGNALS` of PlantCraft's installation file
   (`PLANTCRAFT_MAX_SIGNALS`): points past it are skipped with the reason; the series apps write
   do not count.

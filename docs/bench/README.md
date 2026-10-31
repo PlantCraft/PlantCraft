@@ -205,7 +205,14 @@ machine, another hour: the cloud's own noise shows in C2's spread). Median (low 
 
 No 503 in any run. C6's 502s (4 to 6 a run) are the 20 s the Historian was away. In C4 the 20
 people share one account, so PlantCraft's per-person API limit (120 a minute) answers some of
-their display reads with 429: they load PlantCraft, not the Historian.
+their display reads with 429: they load PlantCraft, not the Historian. `--own-accounts` gives
+each person a viewer account of their own (bench-person-NN, turned off after the run):
+
+| C4 with an account per person | round s | person trend p95 s | display p95 s | Analytics Overview p95 s | errors |
+|---|---|---|---|---|---|
+| 20 people, 3 runs | 13.9 (12.9-15.3) | 0.14-0.26 | 0.22-0.26 | 0.27-0.43 | none |
+| 50 people | 19.8 | 0.26 | 0.40 | 2.03 | none |
+| 50 people, the Overview kept 3 s | 15.7 | 0.42 | 0.60 | 0.15 | none |
 
 ## PlantCraft alone: 50,000 signals and 50 apps (`ci/bench/platform_scale.py`)
 

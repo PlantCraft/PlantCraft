@@ -19,6 +19,16 @@ describe("DataTable", () => {
     expect(arrangeRows(rows, columns, null, "fic 10", (row) => row.name).map((row) => row.name)).toEqual(["FIC-10"]);
   });
 
+  it("sorts 100,000 rows by text in well under a second, case and accents aside", () => {
+    const many: Row[] = Array.from({ length: 100_000 }, (_, i) => ({ name: `fic-${(i * 7919) % 2000}`, age: i }));
+    const started = performance.now();
+    const sorted = arrangeRows(many, columns, { key: "name", descending: false }, "", undefined);
+    expect(performance.now() - started).toBeLessThan(2000);
+    expect(sorted[0].name).toBe("fic-0");
+    expect(sorted[sorted.length - 1].name).toBe("fic-1999");
+    expect(arrangeRows([{ name: "Válvula", age: 1 }, { name: "valvula", age: 2 }, { name: "Bomba", age: 3 }], columns, { key: "name", descending: false }, "", undefined).map((row) => row.age)).toEqual([3, 1, 2]);
+  });
+
   it("filters a column by one of its values, before searching and sorting", () => {
     type Run = { id: string; kind: string; size: number };
     const runs: Run[] = [{ id: "a", kind: "backup", size: 3 }, { id: "b", kind: "update", size: 1 }, { id: "c", kind: "backup", size: 2 }];

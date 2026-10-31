@@ -24,9 +24,12 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from plantcraft_sdk.client import PlantCraftClient, PlantCraftError, error_for
 from plantcraft_sdk.contract import SeriesError
+
+from linkcraft.data.cache import RawCache, enabled_by_default, read_incremental
 
 LOGGER = logging.getLogger(__name__)
 # Batch requests in flight at once for one batch of loops, and the fewest signals one carries.
@@ -73,15 +76,49 @@ def _reason(error: SeriesError) -> str:
     return str(error_for(int(error["status"]), error.get("detail")))
 
 
+def wide_frame(columns: dict[str, pd.Series]) -> pd.DataFrame:
+    """``pd.concat(columns, axis=1).sort_index()`` of series on naive, unique, sorted times,
+    built as one block: about 10x faster on 200 signals of a raw day, which have almost no
+    time in common (the frame is mostly NaN, and concat aligns them pair by pair)."""
+
+    stamps = np.unique(np.concatenate([values.index.asi8 for values in columns.values()]))
+    index = pd.DatetimeIndex(stamps.view("datetime64[ns]"))
+    numbers = [key for key, values in columns.items() if values.dtype != object]
+    block = np.full((len(stamps), len(numbers)), np.nan, order="F")
+    for position, key in enumerate(numbers):
+        values = columns[key]
+        block[np.searchsorted(stamps, values.index.asi8), position] = values.to_numpy(dtype=float)
+    frame = pd.DataFrame(block, index=index, columns=numbers, copy=False)
+    if len(numbers) == len(columns):
+        return frame
+    for key, values in columns.items():
+        if values.dtype == object:
+            labels = np.full(len(stamps), np.nan, dtype=object)
+            labels[np.searchsorted(stamps, values.index.asi8)] = values.to_numpy()
+            frame[key] = labels
+    return frame[list(columns)]
+
+
 class PlantData:
     """Reads loops' signals through one ``PlantCraftClient`` (thread-safe)."""
 
-    def __init__(self, client: PlantCraftClient, *, threads: int = READ_THREADS):
+    def __init__(
+        self,
+        client: PlantCraftClient,
+        *,
+        threads: int = READ_THREADS,
+        cache: RawCache | None | bool = True,
+    ):
         self.client = client
         self.threads = max(1, threads)
+        # The rounds' reads ask only for what is new since the last one (``data.cache``).
+        if cache is True:
+            cache = RawCache() if enabled_by_default() else None
+        self.cache: RawCache | None = cache or None
 
     def with_client(self, client: PlantCraftClient) -> PlantData:
-        return PlantData(client, threads=self.threads)
+        # A person's reads (a run, a chart) are their own: never served from the rounds' cache.
+        return PlantData(client, threads=self.threads, cache=False)
 
     def _chunks(self, names: list[str]) -> list[list[str]]:
         """The signals split over at most ``threads`` requests of at least 40 signals each."""
@@ -93,6 +130,23 @@ class PlantData:
     def _read(
         self, names: list[str], start: pd.Timestamp, end: pd.Timestamp, step: float
     ) -> tuple[dict[str, pd.Series], list[SeriesError]]:
+        if self.cache is None:
+            return self._read_whole(names, start, end, step)
+        return read_incremental(
+            self.cache,
+            names,
+            start,
+            end,
+            lambda group, begin, finish: self._read_whole(group, begin, finish, step),
+        )
+
+    def _read_whole(
+        self,
+        names: list[str],
+        start: pd.Timestamp,
+        end: pd.Timestamp,
+        step: float,
+    ) -> tuple[dict[str, pd.Series], list[SeriesError]]:
         start_at = start.tz_localize("UTC").to_pydatetime()
         end_at = end.tz_localize("UTC").to_pydatetime()
         columns, errors = self.client.series_many_pandas(names, start_at, end_at)
@@ -100,6 +154,8 @@ class PlantData:
         if crowded:
             # Too many recorded values in the window: one mean per step instead.
             means, again = self.client.series_many_pandas(crowded, start_at, end_at, step=step)
+            for values in means.values():
+                values.attrs["means"] = True
             columns.update(means)
             errors = [item for item in errors if item["status"] != TOO_MANY_POINTS] + again
         return columns, errors
@@ -160,8 +216,7 @@ class PlantData:
                 values = mode_text(values)
             shaped[signal_id] = values
         if shaped:
-            frame = pd.concat(shaped, axis=1).sort_index()
-            frame.index.name = None
+            frame = wide_frame(shaped)
         else:
             frame = pd.DataFrame(index=pd.DatetimeIndex([]))
         frame.attrs["failed_tags"] = failed
