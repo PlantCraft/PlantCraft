@@ -111,7 +111,7 @@ function CompanyCard({ company, approval }: { company: Company; approval: ReactN
       <div><dt>{t("Sponsor at the plant")}</dt><dd>{company.sponsor ? <PersonLink username={company.sponsor} name={company.sponsor_name} /> : <span className="muted">{t("None")}</span>}</dd></div>
       <div><dt>{t("People")}</dt><dd>{company.people.length}{company.teams.length > 0 && <small className="muted"> · {t("{count} teams", { count: company.teams.length })}</small>}</dd></div>
       <div><dt>{t("Open requests")}</dt><dd>{company.open_requests}</dd></div>
-      <div><dt>{t("Time this month")}</dt><dd>{hoursText(company.hours)}{company.hours > 0 && <small className="muted"> · {t("{hours} billable", { hours: hoursText(company.billable_hours) })}</small>}</dd></div>
+      <div><dt>{t("Time in the month")}</dt><dd>{hoursText(company.hours)}{company.hours > 0 && <small className="muted"> · {t("{hours} billable", { hours: hoursText(company.billable_hours) })}</small>}</dd></div>
     </dl>
     <div className="ops-company-approval">{approval}</div>
     {company.people.length > 0 && <ul className="ops-company-people">{company.people.map((person) => <li key={person.username}>
