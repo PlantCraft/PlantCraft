@@ -244,9 +244,17 @@ class HistCraftDataLayer(DataLayer):
         return self.call("GET", f"/signals/{_quoted(signal_id)}/runs", params=params)
 
     def series_batch(
-        self, signals: list[str], start: str | None, end: str | None, step: float | None
+        self,
+        signals: list[str],
+        start: str | None,
+        end: str | None,
+        step: float | None,
+        *,
+        quality: bool = False,
     ) -> dict[str, Any]:
         body = {"signals": signals, "start": start, "end": end, "step": step}
+        if quality:
+            body["quality"] = True
         return self.call("POST", "/series", json=body)
 
     # The same reads as JSON bytes: API v1 passes HistCraft's answer on without parsing it and
@@ -266,9 +274,17 @@ class HistCraftDataLayer(DataLayer):
         return self.call("GET", f"/signals/{_quoted(signal_id)}/series", params=params, raw=True)
 
     def series_batch_raw(
-        self, signals: list[str], start: str | None, end: str | None, step: float | None
+        self,
+        signals: list[str],
+        start: str | None,
+        end: str | None,
+        step: float | None,
+        *,
+        quality: bool = False,
     ) -> bytes:
         body = {"signals": signals, "start": start, "end": end, "step": step}
+        if quality:
+            body["quality"] = True
         return self.call("POST", "/series", json=body, raw=True)
 
     def value(self, signal_id: str, agg: str, window: str) -> dict[str, Any]:

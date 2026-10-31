@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field, ValidationError
 from histcraft.api.deps import RuntimeDep, current_user, time_limited
 from histcraft.api.read_budget import BinaryBatch, EncodedBatch, Ticket, json_bytes
 from histcraft.api.runtime import Runtime, point_ref
-from histcraft.archive.query import Reader, SourceUnavailable, to_ms
+from histcraft.archive.query import Reader, SourceUnavailable, iso_ms, to_ms
 from histcraft.catalog.models import (
     PLANT_KINDS,
     SOURCE_SETTINGS,
@@ -527,6 +527,9 @@ class BatchIn(BaseModel):
     start: str | None = None
     end: str | None = None
     step: float | None = None
+    # Each series also says where its quality was not good: ``quality: [{t, quality}]`` (the
+    # quality from ``t`` to the next change: uncertain, substituted, bad, or good again).
+    quality: bool = False
 
 
 @router.post("/series")
@@ -598,6 +601,13 @@ def read_batch(
         )
         + (len(refs) - len(stored)) * _values_of(None, begin, finish, step)
     )
+    quality: dict[int, list[tuple[int, str]]] = {}
+    if body.quality:
+        quality = runtime.archive.qualities_many(
+            [int(p["id"]) for p in points.values() if p is not None and p["mode"] != "source"],
+            begin_ms,
+            finish_ms,
+        )
     builder: EncodedBatch | BinaryBatch = BinaryBatch() if binary else EncodedBatch()
     read = runtime.reader.series_arrays if binary else runtime.reader.series
     for signal_id in wanted:
@@ -638,7 +648,17 @@ def read_batch(
         except SourceUnavailable as exc:
             builder.fail(signal_id, 502, str(exc))
             continue
-        builder.add(signal_id, point["kind"], stamps, values)
+        extra = None
+        if body.quality:
+            changes = quality.get(int(point["id"]), [])
+            stamps_q = iso_ms(np.asarray([at for at, _ in changes], dtype=np.int64))
+            extra = {
+                "quality": [
+                    {"t": at, "quality": code}
+                    for at, (_, code) in zip(stamps_q, changes, strict=True)
+                ]
+            }
+        builder.add(signal_id, point["kind"], stamps, values, extra)
     return builder
 
 

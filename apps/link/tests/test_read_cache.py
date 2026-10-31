@@ -78,3 +78,41 @@ def test_means_and_failures_are_never_kept():
 
     read_incremental(cache, ["a", "b"], *window(end), read)
     assert cache.values() == 0
+
+
+def test_quality_changes_are_joined_across_incremental_reads():
+    marks = {
+        "a": [
+            (STAMPS[0], "uncertain"),
+            (STAMPS[27 * 60], "good"),
+            (STAMPS[30 * 60 + 5], "bad"),
+        ]
+    }
+
+    def source(names, begin, end):
+        lo, hi = begin.tz_localize("UTC"), end.tz_localize("UTC")
+        columns = {}
+        for name in names:
+            column = ALL[name][(ALL[name].index >= lo) & (ALL[name].index <= hi)].copy()
+            changes = [(at, code) for at, code in marks.get(name, []) if at <= hi]
+            before = [item for item in changes if item[0] <= lo]
+            inside = [item for item in changes if item[0] > lo]
+            state = before[-1:] if before and before[-1][1] != "good" else []
+            column.attrs["quality"] = [
+                {"t": at.isoformat(), "quality": code} for at, code in state + inside
+            ]
+            columns[name] = column
+        return columns, []
+
+    cache = RawCache(overlap_seconds=900)
+    end = START + pd.Timedelta(hours=30)
+    for step in range(3):
+        start, finish = window(end + pd.Timedelta(minutes=10 * step))
+        columns, _ = read_incremental(cache, ["a"], start, finish, source)
+        whole, _ = source(["a"], start, finish)
+        assert columns["a"].attrs["quality"] == whole["a"].attrs["quality"], step
+    assert [item["quality"] for item in columns["a"].attrs["quality"]] == [
+        "uncertain",
+        "good",
+        "bad",
+    ]

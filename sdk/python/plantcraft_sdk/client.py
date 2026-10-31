@@ -697,12 +697,19 @@ class PlantCraftClient:
         step: float | None = None,
         *,
         binary: bool = False,
+        quality: bool = False,
     ) -> SeriesBatch:
         """Many signals' series: ``{"series": [...], "errors": [{signal, status, detail}]}``.
 
         ``binary``: a Historian that writes the binary answer (``plantcraft_sdk.wire``) sends
         it, and its series hold numpy arrays (``t`` int64 ms, ``v`` floats) instead of lists;
         ``series_many_pandas`` uses it.
+
+        ``quality``: each series also lists where its samples were not good,
+        ``"quality": [{"t", "quality"}]`` (the quality from ``t`` to the next change:
+        ``uncertain``, ``substituted``, ``bad``, or ``good`` again). Without it a bad sample is
+        just a null value and an uncertain one looks good. A server that keeps no quality
+        leaves the list out.
 
         One ``POST /api/v1/series`` per 500 signals; signals a request had no
         room for (413) are asked for again in the next one, so ``errors`` holds
@@ -716,7 +723,7 @@ class PlantCraftClient:
         errors: dict[str, SeriesError] = {}
         while pending:
             chunk, pending = pending[:MAX_BATCH_SIGNALS], pending[MAX_BATCH_SIGNALS:]
-            answer = self._series_batch(chunk, start, end, step, binary=binary)
+            answer = self._series_batch(chunk, start, end, step, binary=binary, quality=quality)
             for item in answer.get("series") or []:
                 item.setdefault("kind", "number")
                 found[item["signal"]] = item
@@ -750,8 +757,16 @@ class PlantCraftClient:
         step: float | None,
         *,
         binary: bool = False,
+        quality: bool = False,
     ) -> dict[str, Any]:
-        body = {"signals": signal_ids, "start": _time(start), "end": _time(end), "step": step}
+        body: dict[str, Any] = {
+            "signals": signal_ids,
+            "start": _time(start),
+            "end": _time(end),
+            "step": step,
+        }
+        if quality:
+            body["quality"] = True
         historian = self._historian
         if historian is not None and self._historian_serves(historian):
             accept = (
@@ -798,10 +813,18 @@ class PlantCraftClient:
         start: str | datetime | None = None,
         end: str | datetime | None = None,
         step: float | None = None,
+        *,
+        quality: bool = False,
     ) -> tuple[dict[str, pd.Series], list[SeriesError]]:
-        """``series_many`` as ``({signal id: pandas.Series}, errors)``; text signals hold labels."""
+        """``series_many`` as ``({signal id: pandas.Series}, errors)``; text signals hold labels.
 
-        batch = self.series_many(signal_ids, start, end, step, binary=self.binary_reads)
+        ``quality``: each series' ``attrs["quality"]`` holds its quality changes, as
+        ``series_many`` gives them.
+        """
+
+        batch = self.series_many(
+            signal_ids, start, end, step, binary=self.binary_reads, quality=quality
+        )
         columns = {
             item["signal"]: (
                 wire.binary_to_pandas(item)

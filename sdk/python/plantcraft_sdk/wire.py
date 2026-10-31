@@ -30,6 +30,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from plantcraft_sdk.contract import with_quality
+
 MEDIA_TYPE = "application/x-plantcraft-series"
 MAGIC = b"PCS1"
 FORMAT = "pcs1"
@@ -129,12 +131,15 @@ def binary_to_pandas(item: dict[str, Any]) -> pd.Series:
         .as_unit("ns")
     )
     values = item.get("v")
+    name = item.get("signal")
     if item.get("kind") == "text":
-        return pd.Series(list(values or []), index=index, name=item.get("signal"), dtype=object)
-    if isinstance(values, np.ndarray):
-        return pd.Series(values, index=index, name=item.get("signal"), dtype=float, copy=False)
-    numbers = np.array([np.nan if v is None else v for v in values or []], dtype=float)
-    return pd.Series(numbers, index=index, name=item.get("signal"), dtype=float)
+        column = pd.Series(list(values or []), index=index, name=name, dtype=object)
+    elif isinstance(values, np.ndarray):
+        column = pd.Series(values, index=index, name=name, dtype=float, copy=False)
+    else:
+        numbers = np.array([np.nan if v is None else v for v in values or []], dtype=float)
+        column = pd.Series(numbers, index=index, name=name, dtype=float)
+    return with_quality(column, item)
 
 
 __all__ = ["FORMAT", "MEDIA_TYPE", "BinaryWriter", "WireError", "binary_to_pandas", "read_binary"]

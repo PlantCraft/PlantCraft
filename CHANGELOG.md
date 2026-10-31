@@ -19,6 +19,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   is new since their last read (`LINKCRAFT_READ_CACHE`, 15 min overlap, whole read every 6 h).
   The Historian's CPU per round: 0.85 to 0.07 s on the demo's 200 signals, 59 to 0.8 s on
   2,000 dense signals (`ci/bench/reads`).
+- **Signal quality sees the source's quality (2026-10-31).** API v1 gave a bad sample as a null
+  value and an uncertain or substituted one as good, so the `sq_*` checks never saw them.
+  `POST /api/v1/series` takes `"quality": true` and then lists, per series, where the source's
+  quality was not good (`"quality": [{t, quality}]`, each change holding until the next; the
+  Historian reads it for all signals in one query). `plantcraft-sdk` 0.81.0:
+  `series_many(..., quality=True)`, and `series_many_pandas` keeps the list in
+  `attrs["quality"]`. Analytics asks for it in Signal quality (the incremental read joins it
+  across rounds), and `sq_availability` 1.1.0 counts substituted time as missing, warns on
+  uncertain time above `1 - warn_coverage` and reports `quality_bad`, `quality_uncertain` and
+  `quality_substituted`. Without the field nothing changes.
 - **The Historian answers from several processes (0.6.0 load tests, 2026-10-31).** Heavy reads
   ran in one Python process on one core. `histcraft serve` now starts as many processes as the
   CPUs its container may use (`HISTCRAFT_WORKERS`, `auto` by default: the container's CPU limit,

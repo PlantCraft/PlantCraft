@@ -34,6 +34,22 @@ class _Kept:
     start: pd.Timestamp  # the window it holds: [start, until]
     until: pd.Timestamp
     read_at: float  # monotonic time of the last whole read
+    quality: list | None = None  # the quality changes read with them, when asked for
+
+
+def _at(change: dict) -> pd.Timestamp:
+    stamp = pd.Timestamp(change["t"])
+    return stamp.tz_localize("UTC") if stamp.tzinfo is None else stamp.tz_convert("UTC")
+
+
+def joined_quality(old: list | None, new: list, since: pd.Timestamp) -> list:
+    """The quality changes kept before ``since`` and the ones read from it (each change holds
+    until the next one; the new read's first may restate the state at ``since``)."""
+
+    keep = [item for item in old or [] if _at(item) < since]
+    if not keep:
+        return list(new)
+    return keep + [item for item in new if _at(item) >= since]
 
 
 class RawCache:
@@ -76,6 +92,7 @@ class RawCache:
         end]``; kept for the next read."""
 
         now = self.clock()
+        quality = values.attrs.get("quality")
         with self._lock:
             kept = self._kept.get(signal)
             if since is None or kept is None:
@@ -85,7 +102,11 @@ class RawCache:
                 old = old[(old.index >= start) & (old.index < since)]
                 whole = pd.concat([old, values]) if len(old) else values
                 read_at = kept.read_at
-            self._kept[signal] = _Kept(whole, start, end, read_at)
+                if quality is not None:
+                    quality = joined_quality(kept.quality, quality, since)
+            if quality is not None:
+                whole.attrs["quality"] = quality
+            self._kept[signal] = _Kept(whole, start, end, read_at, quality)
         return whole
 
     def drop(self, signal: str) -> None:

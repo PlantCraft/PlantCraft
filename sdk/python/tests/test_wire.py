@@ -88,3 +88,31 @@ def test_the_client_asks_for_it_only_when_the_historian_writes_it():
     client.binary_reads = False
     client.series_many_pandas(["plant:A"])
     assert [wire.MEDIA_TYPE in item for item in seen] == [True, False, False]
+
+
+def test_quality_is_asked_for_only_when_wanted_and_kept_on_the_pandas_series():
+    bodies: list[bytes] = []
+    changes = [{"t": "2025-10-09T08:53:20.250000+00:00", "quality": "uncertain"}]
+
+    def historian(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/reads"):
+            return httpx.Response(200, json={"api": 1, "formats": ["pcs1"]})
+        bodies.append(request.content)
+        writer = wire.BinaryWriter()
+        extra = {"quality": changes} if b'"quality"' in request.content else None
+        writer.numbers("plant:A", "number", TIMES, np.array([1.5, np.nan, -2.0]), extra)
+        return httpx.Response(
+            200, content=writer.body([]), headers={"content-type": wire.MEDIA_TYPE}
+        )
+
+    http = httpx.Client(transport=httpx.MockTransport(historian))
+    client = PlantCraftClient(
+        "http://pc.test", "token", http_client=http, historian_url="http://h.test/hist"
+    )
+    plain, _ = client.series_many_pandas(["plant:A"])
+    checked, _ = client.series_many_pandas(["plant:A"], quality=True)
+    assert b"quality" not in bodies[0] and b'"quality":true' in bodies[1].replace(b" ", b"")
+    assert "quality" not in plain["plant:A"].attrs
+    assert checked["plant:A"].attrs["quality"] == changes
+    as_json = {"signal": "plant:A", "t": [], "v": [], "quality": changes}
+    assert series_to_pandas(as_json).attrs["quality"] == changes
