@@ -40,7 +40,11 @@
 #          sign-in page, no LLM for visitors, rate limits), --yes,
 #          --install-docker (no Docker on this Linux server: install the Docker Engine and Compose
 #          the bundle carries in docker-engine/, offline, as root),
-#          --dev (run from a source checkout: no bundle checks, images built locally).
+#          --dev (run from a source checkout: no bundle checks, images built locally),
+#          --machine small|medium|large|xlarge|auto|off (the machine profile: every container's
+#          CPU and memory limit, processes and pools from one choice; auto, the default, picks
+#          by the CPUs and memory Docker sees; a value changed by hand in .env is kept;
+#          MACHINE in the installation file wins over it).
 #
 # Needs Docker Engine and the Compose plugin, run as root or as a member of the `docker` group.
 # It never downloads anything: images come from images.tar in this bundle.
@@ -92,6 +96,7 @@ ASSUME_YES=0
 DEV=0
 WITH_APPS=" "    # " <id> <id> ": apps turned on by --with-<id>
 ALL_APPS=0
+MACHINE=""
 WITH_DEMO=0
 PUBLIC_DEMO=0
 APP_PACKAGE=""
@@ -122,7 +127,7 @@ die() {
     exit 1
 }
 
-usage() { sed -n '2,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,43p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -152,6 +157,8 @@ while [ $# -gt 0 ]; do
         --public-demo) WITH_DEMO=1; PUBLIC_DEMO=1 ;;
         --dev) DEV=1 ;;
         --install-docker) INSTALL_DOCKER=1 ;;
+        --machine) [ $# -ge 2 ] || die "--machine needs small, medium, large, xlarge, auto or off"; MACHINE="$2"; shift ;;
+        --machine=*) MACHINE="${1#*=}" ;;
         --allow-unsigned) ALLOW_UNSIGNED=1 ;;
         --allow-emulation) ALLOW_EMULATION=1 ;;
         --publisher-key) [ $# -ge 2 ] || die "--publisher-key needs a public key file"; PUBLISHER_KEY="$2"; shift ;;
@@ -237,7 +244,7 @@ load_installation_conf() {
     case "$value" in "") ;; on | off) conf_set PLANTCRAFT_NOTEBOOKS "$([ "$value" = on ] && echo true || echo false)" ;; *) die "$INSTALLATION_CONF: NOTEBOOKS is on or off" ;; esac
     value="$(conf_value MACHINE)"
     # The machine profile (install.sh --machine, thread "CPU and processes") reads PLANTCRAFT_MACHINE.
-    # With PR #20 its MACHINE variable is set here too, so the file wins over --machine.
+    # MACHINE of the file wins over --machine.
     if [ -n "$value" ]; then MACHINE="$value"; conf_set PLANTCRAFT_MACHINE "$value"; fi
     value="$(conf_value MAX_CPUS)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_MAX_CPUS "$value"; fi
     value="$(conf_value MAX_MEMORY)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_MAX_MEMORY "$value"; fi
@@ -673,7 +680,9 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
     # the Docker socket.
     env_set PLANTCRAFT_INSTALL_DIR "$PREFIX" "$env"
     env_set PLANTCRAFT_DOCKER_GID "$(docker_gid)" "$env"
+    # The installation file first: its MACHINE and MAX_CPUS/MAX_MEMORY feed the machine profile.
     apply_installation_conf "$env"
+    apply_machine_profile "$env"
     fit_cpu_limits "$env"
     cap_parallel_runs "$env"
 }
@@ -708,6 +717,134 @@ suite_apps_setting() { # suite_apps_setting PROFILES CURRENT ENV_FILE
         entries="${entries:+$entries,}$app=$(app_field "$app" 3)${version:+@$version}"
     done
     printf '%s' "$entries${others:+${entries:+,}$others}"
+}
+
+# Machine profile (plan B3, 2026-10-31): one choice fills every CPU, memory, process and pool
+# value of the suite. Memory limits add up to what the machine has less about 1 GB for the system
+# and Docker. A value the profile wrote is the profile's until someone changes it in .env: the
+# values written last are kept in data/machine-profile.env, and a key whose value differs from
+# them is the person's and is left alone. Values: docs/bench (plan B, 2026-10-31).
+machine_size() { # machine_size CPUS MEMORY_MB -> small | medium | large | xlarge
+    if [ "$1" -le 2 ] || [ "$2" -lt 6000 ]; then echo small
+    elif [ "$1" -le 4 ] || [ "$2" -lt 14000 ]; then echo medium
+    elif [ "$1" -le 8 ] || [ "$2" -lt 48000 ]; then echo large
+    else echo xlarge
+    fi
+}
+
+# One line per key: KEY small medium large xlarge. "cpus" is the machine's CPUs, "half" half of
+# them, "rest" all but two.
+MACHINE_TABLE='
+PLANTCRAFT_WORKERS 2 3 4 8
+PLANTCRAFT_CPUS 2 cpus cpus 8
+PLANTCRAFT_MEMORY 768m 1536m 4g 8g
+LINKCRAFT_CPUS 1 2 4 4
+LINKCRAFT_MEMORY 896m 1g 4g 8g
+LINKCRAFT_WORKERS 2 3 6 rest
+LINKCRAFT_COMPUTE_SLOTS 1 3 6 rest
+LINKCRAFT_EXECUTOR_CPUS 1 3 6 rest
+LINKCRAFT_EXECUTOR_SLOTS 1 3 6 rest
+LINKCRAFT_EXECUTOR_MEMORY 1g 2g 8g 16g
+LINKCRAFT_TASK_MEMORY_MB 768 1024 2048 4096
+DASHCRAFT_CPUS 1 2 2 4
+DASHCRAFT_MEMORY 384m 512m 2g 2g
+ALARMCRAFT_CPUS 0.5 1 1 2
+ALARMCRAFT_MEMORY 384m 384m 1g 1g
+MODELCRAFT_CPUS 0.5 1 1 2
+MODELCRAFT_MEMORY 384m 512m 1g 2g
+MODELCRAFT_RUN_WORKERS 1 2 2 4
+MODELCRAFT_EXECUTOR_CPUS 1 2 4 half
+MODELCRAFT_EXECUTOR_SLOTS 1 2 3 half
+MODELCRAFT_EXECUTOR_MEMORY 1g 2g 4g 16g
+DOCCRAFT_CPUS 1 1 2 4
+DOCCRAFT_MEMORY 768m 1g 1536m 4g
+HISTCRAFT_CPUS 2 2 4 8
+HISTCRAFT_WORKERS 2 2 3 4
+HISTCRAFT_MEMORY 768m 1g 2g 4g
+HISTCRAFT_READ_VALUES 1500000 3000000 4000000 8000000
+HISTCRAFT_COLLECTOR_CPUS 1 1 2 2
+HISTCRAFT_COLLECTOR_MEMORY 384m 512m 1g 2g
+HISTCRAFT_DB_MEMORY 768m 1536m 8g 16g
+HISTCRAFT_DB_SHARED_BUFFERS 192MB 384MB 2GB 4GB
+HISTCRAFT_DB_CACHE_SIZE 512MB 1GB 6GB 12GB
+'
+
+machine_values() { # machine_values SIZE CPUS -> KEY=VALUE lines
+    local column
+    case "$1" in small) column=2 ;; medium) column=3 ;; large) column=4 ;; *) column=5 ;; esac
+    printf '%s\n' "$MACHINE_TABLE" | awk -v c="$column" -v n="$2" 'NF == 5 {
+        v = $c
+        if (v == "cpus") v = n
+        else if (v == "half") v = (n >= 4 ? int(n / 2) : 1)
+        else if (v == "rest") v = (n > 3 ? n - 2 : 1)
+        print $1 "=" v
+    }'
+}
+
+docker_machine() { # "CPUS MEMORY_MB" as Docker sees them (Docker Desktop: its VM, not the Mac)
+    local cpus mem
+    cpus="$(docker info --format '{{.NCPU}}' 2>/dev/null || true)"
+    mem="$(docker info --format '{{.MemTotal}}' 2>/dev/null || true)"
+    [ -n "$cpus" ] || cpus="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
+    if [ -n "$mem" ]; then
+        mem=$((mem / 1048576))
+    else
+        mem="$(awk '/^MemTotal:/ { print int($2 / 1024) }' /proc/meminfo 2>/dev/null || echo 4096)"
+    fi
+    printf '%s %s' "$cpus" "$mem"
+}
+
+apply_machine_profile() { # apply_machine_profile ENV_FILE
+    local env="$1" choice size cpus mem record line key value current previous kept=""
+    choice="${MACHINE:-$(env_get PLANTCRAFT_MACHINE "$env")}"
+    choice="${choice:-auto}"
+    read -r cpus mem <<<"$(docker_machine)"
+    # Ceilings for a shared server (installation.conf, plan H): the profile sizes for at most
+    # PLANTCRAFT_MAX_CPUS and PLANTCRAFT_MAX_MEMORY (6, 12g, 12288m), leaving the rest to others.
+    local max
+    max="$(env_get PLANTCRAFT_MAX_CPUS "$env")"
+    if [[ "$max" =~ ^[0-9]+$ ]] && [ "$max" -gt 0 ] && [ "$max" -lt "$cpus" ]; then cpus="$max"; fi
+    max="$(env_get PLANTCRAFT_MAX_MEMORY "$env")"
+    case "$max" in
+        *[gG]) max="${max%?}"; [[ "$max" =~ ^[0-9]+$ ]] && max=$((max * 1024)) || max="" ;;
+        *[mM]) max="${max%?}"; [[ "$max" =~ ^[0-9]+$ ]] || max="" ;;
+        *) max="" ;;
+    esac
+    if [ -n "$max" ] && [ "$max" -gt 0 ] && [ "$max" -lt "$mem" ]; then mem="$max"; fi
+    case "$choice" in
+        off) return 0 ;;
+        auto) size="$(machine_size "$cpus" "$mem")" ;;
+        small | medium | large | xlarge) size="$choice" ;;
+        *) die "--machine: $choice is not small, medium, large, xlarge, auto or off" ;;
+    esac
+    record="$PREFIX/data/machine-profile.env"
+    mkdir -p "$PREFIX/data"
+    touch "$record"
+    while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        key="${line%%=*}"
+        value="${line#*=}"
+        current="$(env_get "$key" "$env")"
+        previous="$(env_get "$key" "$record")"
+        # Before the first profile, the shipped default (.env.example) is nobody's choice either.
+        [ -n "$previous" ] || previous="$(env_get "$key" "$PREFIX/.env.example")"
+        if [ -z "$current" ] || [ "$current" = "$previous" ]; then
+            env_set "$key" "$value" "$env"
+        elif [ "$current" != "$value" ]; then
+            kept="${kept:+$kept, }$key=$current"
+        fi
+    done <<<"$(machine_values "$size" "$cpus")"
+    machine_values "$size" "$cpus" >"$record"
+    env_set PLANTCRAFT_MACHINE "$choice" "$env"
+    env_set PLANTCRAFT_MACHINE_SIZE "$size" "$env"
+    log "Machine profile: $size ($cpus CPUs, $((mem / 1024)) GB: what Docker sees, within PLANTCRAFT_MAX_*; chosen: $choice)"
+    if [ -n "$kept" ]; then log "Kept as set by hand in .env: $kept"; fi
+    # Every app on, the demo plant and a round at its peak use about 4.5 GB (plan B5): a small
+    # machine needs swap, or fewer apps (docs/requirements.md).
+    if [ "$size" = small ] && [ -r /proc/meminfo ] &&
+        [ "$(awk '/^SwapTotal:/ { print int($2 / 1024) }' /proc/meminfo)" -lt 1024 ]; then
+        warn "a small machine ($((mem / 1024)) GB) without swap: give it 2 GB of swap, or turn off apps it does not need (Documents, Models), or a busy moment stops a container"
+    fi
 }
 
 # Docker refuses to start a container whose CPU limit exceeds the host's CPU count ("range of
