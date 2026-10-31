@@ -31,7 +31,7 @@ dependencies = [
     # the tesseract program when the image has it.
     "pdfplumber>=0.11,<0.12",
     "pypdfium2>=4.30,<6",
-    "pillow>=10,<13",
+    "pillow>=10,<14",
 ]
 
 [project.optional-dependencies]
