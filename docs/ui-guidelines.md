@@ -34,7 +34,8 @@ checks the rules marked *(checked)*.
    explanation left, fields right); fields in `form-grid` (two columns, `field-span` for full
    width, `check` for a checkbox line); Save in a `FormFooter`.
 9. Dialogs are the ui's `Dialog`, with `form-grid` and its footer. Asking before an action is
-   `confirmAction`, never `window.confirm`; a message after an action (what went wrong, or that
+   `confirmAction`, never `window.confirm`; asking for one short text (a name, a number of hours)
+   is `askText`, never `window.prompt`; a message after an action (what went wrong, or that
    it worked) is `showToast(text, { tone })`, never `window.alert`.
 10. An app never sets its own button heights, gaps or form columns: it asks for a change in `ui/`.
 

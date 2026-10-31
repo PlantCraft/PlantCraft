@@ -9,7 +9,7 @@
  */
 import { AppWindow, ArrowRightCircle, CalendarDays, Check, CheckCircle2, Circle, GripVertical, Inbox, ListPlus, Plus, Repeat, Sun, Trash2, Users, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type DragEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
-import { displayTimeZone, useAssistantPage, confirmAction } from "@plantcraft/ui";
+import { displayTimeZone, useAssistantPage, askText, confirmAction } from "@plantcraft/ui";
 import { errorText, isLocalHref } from "./collab";
 import { PageHeading } from "./DeskPages";
 import { addDays, deskApi, isoDay, type AppTodo, type Todo, type TodoList, type TodoRepeat, type TodoStep, type TodoView, type TodoViewName } from "./deskApi";
@@ -201,7 +201,7 @@ function NewList({ groups, onDone }: { groups: TodoView["groups"]; onDone: (list
 function ListTools({ list, onChange, onGone }: { list: TodoList; onChange: () => void; onGone: () => void }) {
   if (!list.editable) return list.group_name ? <small className="muted">{t("Shared with {name}", { name: list.group_name })}</small> : null;
   async function rename() {
-    const name = window.prompt(t("List name"), list.name);
+    const name = await askText(t("List name"), { title: t("Rename the list"), value: list.name, confirm: t("Rename") });
     if (name && name.trim() && name.trim() !== list.name) { await deskApi.changeList(list.list_id, { name: name.trim() }).catch(() => undefined); onChange(); }
   }
   async function remove() {
