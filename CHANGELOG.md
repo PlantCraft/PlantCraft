@@ -35,6 +35,19 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Accessibility: no WCAG AA finding left in the suite's frame.** An axe-core sweep of 35 pages
+  (desktop and phone, every app, 2026-10-31) found no critical issue and five small ones, all in
+  shared parts: the count badges on the sidebar had white on red or light blue (3.5:1 and 2.5:1;
+  now 5.4:1 and 6.7:1, `--pc-chrome-problem`), the tour card's head counted as a second page
+  banner, the frame's `main` around an app had no name of its own, To-do, Notes and Messages
+  jumped from `h1` to `h3`, a table column with only buttons had an empty header (now "Actions"
+  for screen readers, in `DataTable` and Historian's sources), and the block editor's status
+  lights had a label but no role (`role="img"`).
+- **The demo journeys (`tests/e2e_suite`) follow the current sign-in page and tour.** They still
+  looked for "Public demo" / "A visit lasts" (the visit clock went away on 2026-10-28), for the
+  older "read-only" refusal and for the tour's last step "Your apps"; 13 of 15 failed on a VM
+  after the update from 0.5.1, all from the first. 15 of 15 pass on main.
+
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the
   update from a release candidate to its release was refused as going back; versions now order
