@@ -134,6 +134,7 @@ def recognise(page: Page) -> Result:
     _equipment(page, words, valve_shapes | arrow_shapes, connectors, bubbles, items)
     _sheet_info(page, result)
 
+    items += _ball_valves(page, items)
     nets = _nets(page, items)
     # An actuator's open arrowhead is part of its valve, not a flow arrow.
     arrows += [
@@ -897,6 +898,56 @@ def _enclosure(page: Page, t: Text, text_h: float) -> Box | None:
     return None
 
 
+def _ball_valves(page: Page, items: list[Item]) -> list[Item]:
+    """Hand and ball valves drawn without a tag, as DIN/ISO 10628 tools draw them: a small
+    circle in a gap of the line, between the ends of the two pieces (with bars or a bow tie
+    around it). The line runs through: each piece meets the valve, so the flow is followed
+    across it."""
+
+    out: list[Item] = []
+    solid = [s for s in page.segs if not s.dashed and s.length > 2 * TOL]
+    for c in page.circles:
+        if c.filled or not 1.5 <= c.r <= 6.0:
+            continue
+        if any(i.region and i.touches(c.cx, c.cy, 0.0) for i in items + out):
+            continue
+        for horizontal in (True, False):
+            sides: dict[int, float] = {}
+            for s in solid:
+                along = (s.x2 - s.x1) if horizontal else (s.y2 - s.y1)
+                across = (s.y2 - s.y1) if horizontal else (s.x2 - s.x1)
+                if abs(across) > 0.5 or abs(along) < 2 * c.r:
+                    continue
+                for (x, y), (fx, fy) in (
+                    ((s.x1, s.y1), (s.x2, s.y2)),
+                    ((s.x2, s.y2), (s.x1, s.y1)),
+                ):
+                    a, b = (x - c.cx, y - c.cy) if horizontal else (y - c.cy, x - c.cx)
+                    far = (fx - c.cx) if horizontal else (fy - c.cy)
+                    if abs(b) <= 1.0 and c.r < abs(a) <= c.r + 10.0 and abs(far) > abs(a):
+                        side = 1 if a > 0 else -1
+                        sides[side] = min(sides.get(side, math.inf), abs(a))
+            if len(sides) == 2:
+                lo, hi = -sides[-1], sides[1]
+                if horizontal:
+                    box = (c.cx + lo, c.cy - c.r - 1, c.cx + hi, c.cy + c.r + 1)
+                else:
+                    box = (c.cx - c.r - 1, c.cy + lo, c.cx + c.r + 1, c.cy + hi)
+                out.append(
+                    Item(
+                        id=f"valve@{c.cx:.0f},{c.cy:.0f}",
+                        family="instrument",
+                        cls="valve",
+                        box=box,
+                        confidence="medium",
+                        why="hand valve on the line (a small circle in a gap of the line)",
+                        region=("box", *box),
+                    )
+                )
+                break
+    return out
+
+
 def _nets(page: Page, items: list[Item]) -> list[Net]:
     strokes = [
         s for s in page.segs if s.length > 0.5 and not any(i.holds(s) for i in items if i.region)
@@ -1026,6 +1077,35 @@ def _split_at(net: Net, arrow: Arrow, flow: list[Item]) -> tuple[set[str], set[s
     return behind - both, ahead - both
 
 
+def _pieces(net: Net, arrows: list[Arrow]) -> dict[str, set[int]]:
+    """The pieces of a line between its arrows (the strokes an arrow sits on taken out), and
+    which pieces each member touches."""
+
+    rest = [s for s in net.segs if not any(_point_on(s, *a.tip, TOL) for a in arrows)]
+    parent = list(range(len(rest)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i, a in enumerate(rest):
+        for j in range(i + 1, len(rest)):
+            b = rest[j]
+            if any(_point_on(b, x, y, TOL) for x, y in ((a.x1, a.y1), (a.x2, a.y2))) or any(
+                _point_on(a, x, y, TOL) for x, y in ((b.x1, b.y1), (b.x2, b.y2))
+            ):
+                parent[find(i)] = find(j)
+    out: dict[str, set[int]] = defaultdict(set)
+    for member, points in net.touches.items():
+        for x, y in points:
+            for i, s in enumerate(rest):
+                if _point_on(s, x, y, TOL):
+                    out[member].add(find(i))
+    return out
+
+
 def _relations(items: list[Item], nets: list[Net], arrows: list[Arrow], result: Result) -> None:
     by_id = {i.id: i for i in items}
     process = {"equipment", "connector", "terminal"}
@@ -1044,6 +1124,10 @@ def _relations(items: list[Item], nets: list[Net], arrows: list[Arrow], result: 
         rels[key] = {"from": frm, "type": kind, "to": to, "confidence": confidence, "why": why}
 
     unsure: list[tuple[Net, list[Item]]] = []
+    arrowed: list[tuple[Net, list[Item], set[tuple[str, str]]]] = []
+    origin: dict[tuple[str, str], set[int]] = defaultdict(
+        set
+    )  # high edges: the nets they came from
     for net in nets:
         members = [by_id[k] for k in net.touches]
         if net.dashed:
@@ -1083,6 +1167,7 @@ def _relations(items: list[Item], nets: list[Net], arrows: list[Arrow], result: 
                 for b in flow:
                     if a.id not in downstream and b.id in downstream:
                         edges.append((a.id, b.id, "high"))
+                        origin[(a.id, b.id)].add(id(net))
             continue
         # Arrows drawn along the line, away from any symbol: what lies ahead of them is
         # downstream.
@@ -1093,8 +1178,47 @@ def _relations(items: list[Item], nets: list[Net], arrows: list[Arrow], result: 
         pairs = {(a, b) for a, b in pairs if (b, a) not in pairs}
         if pairs:
             edges += [(a, b, "high") for a, b in sorted(pairs)]
+            for pair in pairs:
+                origin[pair].add(id(net))
+            arrowed.append((net, flow, pairs))
         else:
             unsure.append((net, flow))
+
+    # A valve on two lines with arrows: on the line where it sits alone in its piece (between
+    # arrows) its direction is sure. On the other line, where it shares its piece with
+    # equipment, it is where that piece's flow goes: into the valve, not out of it.
+    pieces = {id(net): _pieces(net, arrows) for net, _, _ in arrowed}
+
+    def sources(net: Net, flow: list[Item], pairs, v: Item) -> list[Item]:
+        mine = pieces[id(net)].get(v.id, set())
+        out = []
+        for m in flow:
+            shared = pieces[id(net)].get(m.id, set()) & mine
+            if m.id == v.id or not shared:
+                continue
+            if any(b == m.id and pieces[id(net)].get(a, set()) & shared for a, b in pairs):
+                continue  # downstream of an arrow on this piece
+            out.append(m)
+        return out
+
+    sure_out = {
+        (v.id, id(net))
+        for net, flow, pairs in arrowed
+        for v in flow
+        if v.cls == "valve"
+        and any(a == v.id for a, _ in pairs)
+        and not any(m.cls != "valve" for m in sources(net, flow, pairs, v))
+    }
+    for net, flow, pairs in arrowed:
+        me = id(net)
+        for v in (m for m in flow if m.cls == "valve"):
+            if not any(k == v.id and n != me for k, n in sure_out) or (v.id, me) in sure_out:
+                continue
+            feeding = sources(net, flow, pairs, v)
+            if not any(m.cls != "valve" for m in feeding):
+                continue
+            edges[:] = [e for e in edges if not (e[0] == v.id and origin[(e[0], e[1])] == {me})]
+            edges += [(m.id, v.id, "high") for m in feeding]
 
     # A line with no arrow that runs through a valve flows the way the valve's other line does.
     for _ in range(3):
@@ -1153,7 +1277,8 @@ def _relations(items: list[Item], nets: list[Net], arrows: list[Arrow], result: 
 
     def upstream_end(start: str, seen=None):
         seen = seen or set()
-        for a, conf in pred.get(start, []):
+        # Equipment right upstream first, then through valves.
+        for a, conf in sorted(pred.get(start, []), key=lambda p: node_name(by_id[p[0]]) is None):
             if a in seen:
                 continue
             seen.add(a)
