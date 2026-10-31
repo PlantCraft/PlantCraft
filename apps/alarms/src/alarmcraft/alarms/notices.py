@@ -262,6 +262,8 @@ class NoticeStore(Store):
     );
     CREATE INDEX IF NOT EXISTS outbox_status ON outbox (status, at);
     CREATE INDEX IF NOT EXISTS outbox_alarm ON outbox (alarm_id, policy_id, at);
+    -- The flood count reads the last minutes only (raised_for, storage test 2026-10-31).
+    CREATE INDEX IF NOT EXISTS outbox_at ON outbox (at);
     CREATE TABLE IF NOT EXISTS sends (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         at TEXT NOT NULL,
@@ -383,7 +385,10 @@ class NoticeStore(Store):
 
         with self._connect() as connection:
             row = connection.execute(
-                "SELECT COUNT(DISTINCT alarm_id) AS n FROM outbox, json_each(outbox.recipients_json)"
+                # ``+alarm_id`` keeps SQLite from walking outbox_alarm (every row of 30 days, for the
+                # DISTINCT) instead of outbox_at (the window): 15 ms -> 0.09 ms a person with
+                # 300,000 rows (storage test 2026-10-31).
+                "SELECT COUNT(DISTINCT +alarm_id) AS n FROM outbox, json_each(outbox.recipients_json)"
                 " WHERE json_each.value = ? AND at >= ? AND event = 'raised'"
                 " AND status NOT IN ('digest', 'chatter', 'dropped')",
                 (recipient, since),
