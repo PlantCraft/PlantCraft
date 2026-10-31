@@ -15,11 +15,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from histcraft.api.deps import EditorUser, RuntimeDep, Scope, in_scope
-from histcraft.api.routers.lab import DAY_MS, _ms
 from histcraft.archive.query import iso_ms
 from histcraft.catalog.models import CatalogError
 from histcraft.clock import now_ms
 from histcraft.i18n import t
+from histcraft.lab import DAY_MS
+from histcraft.lab import stamp_ms as _ms
 
 router = APIRouter(prefix="/api/v1/annotations", tags=["annotations"])
 MAX_NOTES = 1000
