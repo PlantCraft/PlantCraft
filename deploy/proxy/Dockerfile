@@ -7,11 +7,13 @@
 # port 443; a process with no capabilities and no-new-privileges cannot even start it. The
 # copy below drops that attribute: the proxy listens on 8443 and needs no capability at all.
 
-ARG CADDY_IMAGE=caddy:2.11.2-alpine@sha256:834468128c7696cec0ceea6172f7d692daf645ae51983ca76e39da54a97c570d
+ARG CADDY_IMAGE=caddy:2.11.6-alpine@sha256:d44355d3c2149dc580ce2cac735955d1c08d3d00882c30489c241aa51a5c10d9
 
 FROM ${CADDY_IMAGE}
 
-RUN cp /usr/bin/caddy /tmp/caddy \
+# apk upgrade: the base image's Alpine packages (curl, brotli) get their fixes at build (trivy, D13).
+RUN apk upgrade --no-cache \
+    && cp /usr/bin/caddy /tmp/caddy \
     && mv /tmp/caddy /usr/bin/caddy \
     && chmod 0755 /usr/bin/caddy \
     && addgroup -S -g 10003 proxy \

@@ -21,6 +21,7 @@ from doccraft.api.deps import CurrentUser, EditorUser, RuntimeDep
 from doccraft.api.runtime import Runtime
 from doccraft.i18n import t
 from doccraft.plantmap.build import LIST_COLUMNS, asset_file, build_map, lists
+from doccraft.plantmap.dexpi import dexpi_xml
 
 router = APIRouter(prefix="/api", tags=["plant map"])
 IMAGE_DPI = 110
@@ -129,6 +130,23 @@ def plant_map_asset_file(rt: RuntimeDep, user: CurrentUser) -> Response:
         json.dumps(document, indent=1, ensure_ascii=False),
         media_type="application/json",
         headers={"Content-Disposition": 'attachment; filename="plant-map-assets.json"'},
+    )
+
+
+@router.get("/plant-map/dexpi.xml")
+def plant_map_dexpi(rt: RuntimeDep, user: CurrentUser) -> Response:
+    """The map in DEXPI (Proteus XML) for a P&ID tool: equipment, lines and instrument loops."""
+
+    diagrams = rt.store.diagrams(_visible(rt, user), full=True)
+    document = dexpi_xml(build_map(diagrams, None, rt.store.map_reviews()))
+    rt.audit(user, "plantmap.export", "plant-map", {"format": "dexpi", "bytes": len(document)})
+    return Response(
+        document,
+        media_type="application/xml",
+        headers={
+            "Content-Disposition": 'attachment; filename="plant-map-dexpi.xml"',
+            "X-Content-Type-Options": "nosniff",
+        },
     )
 
 

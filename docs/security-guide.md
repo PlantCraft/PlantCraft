@@ -193,7 +193,7 @@ list the operating-system packages of the images or the Caddy binary (G13).
 | CR 1.1 Human user identification and authentication | Met: local accounts, Active Directory or LDAP, OpenID Connect single sign-on |
 | CR 1.2 Software process identification | Met: app keys and signed service tokens (API v1) |
 | CR 1.5 / 1.7 Authenticator management, password strength | Met: hashed passwords, at least 8 characters, generated admin password |
-| CR 1.11 Unsuccessful login attempts | Met: 10 failures block 5 minutes |
+| CR 1.11 Unsuccessful login attempts | Met: per name and address, 5 free tries then a doubling wait from 15 s to 15 min, at most 100 tries per address in 15 min |
 | CR 2.1 Authorization enforcement | Met in the API, with a permission test of every route |
 | CR 2.8 Auditable events | Yes: central audit log of the changes in PlantCraft and the apps, of AI assistant tool calls and of every sign-in and sign-out, read on Settings › Audit log |
 | CR 3.1 / 4.1 Communication integrity and confidentiality | Met on C1 (TLS); C2 depends on the PI and OPC UA servers' TLS settings |
@@ -202,7 +202,28 @@ list the operating-system packages of the images or the Caddy binary (G13).
 | CR 7.1 Denial of service protection | Partial: resource limits, sign-in throttling |
 | CR 7.3 / 7.4 Backup and recovery | Met: scheduled online backups (the Historian's database full and incremental), a restore drill, backup before upgrade, rollback |
 | CR 7.7 Least functionality | Met: non-root, read-only, no capabilities, no admin API, no build tools (SL2) |
+| CR 7.6 RE1 Machine-readable reporting of security settings | Met: `./install.sh --security-check` (below) |
 | Depends on the client | Host hardening, patching, physical security, disk encryption, central logging |
+
+### Security check
+
+`./install.sh --security-check` (or `./security-check.sh` in the install folder) checks the running
+suite against this guide and changes nothing. It reads `docker inspect`, the folder's files and the
+proxy's HTTPS answer; nothing leaves the server. Each of its 36 checks has a stable id
+(`PC-<area>-NN`: `INT` integrity, `CTR` containers, `NET` network, `TLS`, `SEC` secrets, `ACC`
+accounts, `AUD` records, `REC` recovery, `MIN` least functionality, `HOST`), a severity, a result
+(pass, warn, fail, info, na), the evidence it saw, how to fix it and its references (IEC 62443-4-2
+CR, NIST SP 800-53). The score is 0-100, weighted by severity, with a warning counting half.
+
+- `--format json` gives one document for the plant's own tools, `--format junit` a test report
+  (a failure is a failed test case) and `--format sarif` a code-scanning report.
+- `--skip PC-HOST-03,...` leaves checks out. Write down why in the plant's change record.
+- `--url https://name` checks the HTTPS answer at another address.
+- Exit code 0: no failure; 1: a failure; 2: the check could not run.
+
+The host itself (operating system, SSH, AppArmor or SELinux) is the plant's. Run a host benchmark
+such as Lynis or OpenSCAP for it; the check only reports whether the host firewall and disk
+encryption are on.
 
 ## 9. Contact
 

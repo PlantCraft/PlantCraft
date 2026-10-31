@@ -11,10 +11,12 @@
 #   ./install.sh --export-backup NAME --passphrase-file FILE [--out FILE]
 #                                an encrypted copy of a backup to take off the server
 #                                (AES-256, key from the passphrase; backups hold every key)
+#   ./install.sh --security-check [--format json|junit|sarif]
+#                                the installed suite against its security promises (security-check.sh)
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
 #   ./install.sh --check         check this server's requirements (preflight.sh) and change nothing;
-#                                --ignore ID[,ID] lets those checks fail (ids in the report)
+#                                --ignore ID[,ID] lets those checks fail (ids in the report); --json for tools
 #   ./install.sh --show-config   the installation file, each value it sets and what .env holds now
 #   ./install.sh --uninstall     stop and remove the containers; data and backups are kept
 #   ./install.sh --uninstall --purge   also delete data, backups and the suite's images
@@ -98,6 +100,7 @@ PURGE=0
 ASSUME_YES=0
 DEV=0
 WITH_APPS=" "    # " <id> <id> ": apps turned on by --with-<id>
+CHECK_JSON=0     # --check --json: the requirements report as JSON (preflight.sh --json)
 ALL_APPS=0
 MACHINE=""
 WITH_DEMO=0
@@ -106,6 +109,7 @@ APP_PACKAGE=""
 APP_ID=""
 BACKUP_NAME=""
 PASSPHRASE_FILE=""
+CHECK_ARGS=()
 EXPORT_OUT=""
 ALLOW_UNSIGNED=0
 ALLOW_EMULATION=0
@@ -132,7 +136,7 @@ die() {
     exit 1
 }
 
-usage() { sed -n '2,43p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,55p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -143,7 +147,10 @@ while [ $# -gt 0 ]; do
         --list-backups) ACTION="list-backups" ;;
         --drill) ACTION="drill" ;;
         --diagnostics) ACTION="diagnostics" ;;
+        --security-check) ACTION="security-check" ;;
+        --format | --url | --skip) [ $# -ge 2 ] || die "$1 needs a value"; CHECK_ARGS+=("$1" "$2"); shift ;;
         --check) ACTION="check" ;;
+        --json) CHECK_JSON=1 ;;
         --show-config) ACTION="show-config" ;;
         --ignore) [ $# -ge 2 ] || die "--ignore needs check ids (see --check)"; export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}$2"; shift ;;
         --ignore=*) export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}${1#*=}" ;;
@@ -821,6 +828,7 @@ HISTCRAFT_MEMORY 768m 1g 2g 4g
 HISTCRAFT_READ_VALUES 1500000 3000000 4000000 8000000
 HISTCRAFT_COLLECTOR_CPUS 1 1 2 2
 HISTCRAFT_COLLECTOR_MEMORY 384m 512m 1g 2g
+HISTCRAFT_DB_CPUS 2 2 4 8
 HISTCRAFT_DB_MEMORY 768m 1536m 8g 16g
 HISTCRAFT_DB_SHARED_BUFFERS 192MB 384MB 2GB 4GB
 HISTCRAFT_DB_CACHE_SIZE 512MB 1GB 6GB 12GB
@@ -1722,10 +1730,22 @@ do_worker() {
     log "The compute worker is running. Pause or revoke it in PlantCraft › Settings › Compute."
 }
 
+# The apps this run would install, for the requirements check: the installation file's, or
+# --all-apps, or Analytics (on by default) and the --with-<app> ones.
+check_apps() {
+    local apps
+    if [ "$ALL_APPS" = 1 ]; then echo all; return; fi
+    apps="$(printf '%s' "$WITH_APPS" | xargs)"
+    if [ -z "$CONF_APPS" ] && [[ " $apps " != *" linkcraft "* ]]; then apps="linkcraft $apps"; fi
+    printf '%s' "$apps" | xargs | tr ' ' ','
+}
+
 do_check() {
     [ -x "$BUNDLE_DIR/preflight.sh" ] || die "preflight.sh is missing next to install.sh"
+    local args=(--prefix "$PREFIX" --apps "$(check_apps)")
+    [ "$CHECK_JSON" = 1 ] && args+=(--json)
     PLANTCRAFT_INSTALLATION_CONF="${INSTALLATION_CONF:-/etc/plantcraft/installation.conf}" \
-        "$BUNDLE_DIR/preflight.sh" --prefix "$PREFIX"
+        "$BUNDLE_DIR/preflight.sh" "${args[@]}"
 }
 
 # What the installation file sets against what .env holds: "differs" means .env was edited by
@@ -1761,6 +1781,8 @@ do_show_config() {
     fi
 }
 
+# With --check --json only the report goes to stdout, so tools can read it.
+if [ "$ACTION" = check ] && [ "$CHECK_JSON" = 1 ]; then log() { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" >&2; }; fi
 case "$ACTION" in install | check | show-config) load_installation_conf ;; esac
 case "$ACTION" in
     check) do_check ;;
@@ -1783,5 +1805,9 @@ case "$ACTION" in
     diagnostics) do_diagnostics ;;
     restore) do_restore ;;
     export-backup) do_export_backup ;;
+    security-check)
+        [ -x "$PREFIX/security-check.sh" ] || die "no security-check.sh in $PREFIX: install this bundle first"
+        exec "$PREFIX/security-check.sh" "${CHECK_ARGS[@]}"
+        ;;
     uninstall) do_uninstall ;;
 esac

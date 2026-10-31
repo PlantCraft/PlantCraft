@@ -33,7 +33,7 @@ deploy/         requirements.in/.lock (+ overrides.txt): hashed dependencies of 
 | Layer | Packages (`src/modelcraft/`) | Role |
 |---|---|---|
 | -1 | `i18n` | `t()`; anything may use it |
-| 0 | `config`, `meta` | settings from the environment, `app.toml` and help pages (the store is `plantcraft_sdk.server.store`) |
+| 0 | `config`, `meta`, `atomic` | settings from the environment, `app.toml` and help pages, files written whole or not at all (the store is `plantcraft_sdk.server.store`) |
 | 0 | `examples` | the example projects (Modelica files, package data) |
 | 1 | `projects`, `modelica` | the project store (files, versions); Modelica text: tokens, outline, policy, diagram edits |
 | 2 | `omc` | the runner (stdlib only, also the runner image's program), jobs, messages, results, library index, diagram reduction |

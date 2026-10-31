@@ -17,6 +17,8 @@ from typing import Any
 
 import numpy as np
 
+from modelcraft.atomic import write_json
+
 MAX_VARIABLES = 20_000
 MAX_ROWS = 400_000
 VALUES = "values.npy"
@@ -100,7 +102,7 @@ def store(csv_path: Path, init_path: Path | None, folder: Path) -> dict[str, Any
     for index, row in enumerate(rows):
         matrix[index, : len(row)] = row
     np.save(folder / VALUES, matrix, allow_pickle=False)
-    (folder / NAMES).write_text(json.dumps(header), encoding="utf-8")
+    write_json(folder / NAMES, header)
     declared = {item["name"]: item for item in variables_from_init(init_path)}
     variables = []
     for column, name in enumerate(header):
@@ -121,7 +123,7 @@ def store(csv_path: Path, init_path: Path | None, folder: Path) -> dict[str, Any
     for name, item in declared.items():
         if item["kind"] == "parameter" and name not in header:
             variables.append({**item, "column": None, "final": None, "constant": True})
-    (folder / VARIABLES).write_text(json.dumps(variables), encoding="utf-8")
+    write_json(folder / VARIABLES, variables)
     times = matrix[:, 0] if width and len(rows) else np.array([])
     return {
         "variables": len(variables),
