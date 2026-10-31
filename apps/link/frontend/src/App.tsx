@@ -43,6 +43,8 @@ const LegacyResultsPage = lazy(() => import("./ResultsPage").then((m) => ({
     return <m.ResultsPage key={target} me={me} />;
   },
 })));
+const ApcListPage = lazy(() => import("./ApcPage").then((m) => ({ default: m.ApcListPage })));
+const ApcPage = lazy(() => import("./ApcPage").then((m) => ({ default: m.ApcPage })));
 const SignalPage = lazy(() => import("./SignalPage").then((m) => ({ default: m.SignalPage })));
 const SignalQualityPage = lazy(() => import("./SignalQualityPage").then((m) => ({ default: m.SignalQualityPage })));
 const SignalRunPage = lazy(() => import("./SignalQualityPage").then((m) => ({ default: m.SignalRunPage })));
@@ -52,6 +54,8 @@ function Route({ path, me }: { path: string; me: Me }) {
   const id = rest.length ? rest.map(decodeURIComponent).join("/") : "";
   if (section === "assets" && id) return <AssetLinkPage assetId={id} me={me} />;
   if (section === "help") return <HelpPage path={path} />;
+  if (section === "apc" && id) return <ApcPage key={id} controllerId={id} />;
+  if (section === "apc") return <ApcListPage />;
   if (section === "signals" && id) return <SignalPage signalId={id} me={me} />;
   if ((section === "signals" || section === "loops") && !id) return <LegacyResultsPage kind={section === "signals" ? "signal" : "loop"} me={me} />;
   if (section === "results" && id === "runs") return <RunHistoryPage me={me} />;

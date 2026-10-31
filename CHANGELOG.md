@@ -17,6 +17,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   from 0 to 100 against the lab. Analytics runs it as the block `estimator.lab_fusion` (library
   Estimators, group Soft sensors).
 
+- `plantcraft-sdk`: starter asset types for a third-party multivariable controller:
+  *Multivariable controller* (`apc`, role `on`, attributes `vendor` and `cost_unit`) and inside it
+  *Manipulated variable* (`apc_mv`) and *Controlled variable* (`apc_cv`), both from *Controller
+  variable* (`apc_variable`: roles `value`, `lo`, `hi`, `target`, `status`, `shadow_price`,
+  attribute `limit_band`). An existing installation gets them at its next start. Analytics' APC
+  health and View's MV/CV widget read them.
 - The Historian's gateway writes its buffer to `data/histcraft/gateway-buffer` (made by
   `install.sh`; mounted read-write in `histcraft-gateway`, its only writable folder), so values
   read while the collector is away survive a gateway restart.
