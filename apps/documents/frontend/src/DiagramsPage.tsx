@@ -72,10 +72,7 @@ export function DiagramView({ revId, page }: { revId: string; page: number }) {
     return item?.label || id;
   };
   return <>
-    <Heading title={`${diagram.sheet || t("Page {n}", { n: diagram.page })}${diagram.title ? ` · ${diagram.title}` : ""}`} actions={<>
-      <Link className="button" to="/diagrams">{t("All diagrams")}</Link>
-      <Link className="button" to="/plant-map">{t("Plant map")}</Link>
-    </>} />
+    <Heading title={`${diagram.sheet || t("Page {n}", { n: diagram.page })}${diagram.title ? ` · ${diagram.title}` : ""}`} />
     <p className="muted">
       {t("From {doc}, page {page}.", { doc: diagram.doc_number || diagram.doc_title, page: diagram.page })}{" "}
       <Link to={`/documents/${diagram.doc_id}`}>{t("Open the document")}</Link>
