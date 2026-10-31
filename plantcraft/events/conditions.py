@@ -8,6 +8,11 @@ here: the relay keeps the app's catalog, compares the conditions with the ones t
 before and writes, in the app's name, a ``start`` for each new one and an ``end`` for each one
 gone. Alarms then judges them like any other event.
 
+A condition whose payload names ``owners`` (``user:``/``group:`` references: the owners of a
+Historian source, H13) is also told to them as a notification of the app, with an email, under
+the key ``condition:<key>``; when it ends, that notification is settled ("Back to normal at
+…"). The owners of a failing integration hear of it without anyone writing an alarm rule.
+
 An app that did not answer this minute keeps its conditions open: not knowing is not good news,
 and the suite watch already says the app is down. Open conditions are stored, so a restart
 neither repeats a start nor forgets an end. A condition whose name the app does not declare as
@@ -17,11 +22,15 @@ an ``interval`` event is left out and logged once.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
+from datetime import datetime, timezone
 from typing import Any
 
 from pydantic import ValidationError
 
-from plantcraft.db import Store
+from plantcraft.config import plant_clock
+from plantcraft.db import Migration, Store, add_columns
+from plantcraft.i18n import t
 from plantcraft.refs import parse_ref
 from plantcraft_sdk.contributes import ContributionsIn
 from plantcraft_sdk.events import CatalogIn
@@ -29,6 +38,11 @@ from plantcraft_sdk.events import CatalogIn
 LOGGER = logging.getLogger(__name__)
 
 ACTOR = "system"
+MAX_OWNERS = 20
+# Where a condition about a source opens, by app.
+APP_PAGES = {"histcraft": "/hist/sources/{source}"}
+# The notification's priority for the event's severity.
+PRIORITIES = {"critical": "critical", "error": "high", "warning": "medium", "info": "low"}
 
 
 class ConditionRelay(Store):
@@ -43,10 +57,29 @@ class ConditionRelay(Store):
         PRIMARY KEY (app, condition_key)
     );
     """
+    # Who was told when the condition opened (a JSON list), to settle it when it ends (H13).
+    MIGRATIONS = (
+        Migration(
+            "owners", add_columns("relayed_conditions", {"owners": "TEXT NOT NULL DEFAULT '[]'"})
+        ),
+    )
 
-    def __init__(self, db: Any, events: Any, contributions: Any = None):
+    def __init__(
+        self,
+        db: Any,
+        events: Any,
+        contributions: Any = None,
+        *,
+        notifications: Callable[[], Any] | None = None,
+        app_names: Callable[[], dict[str, str]] | None = None,
+    ):
+        """``notifications`` answers the suite's ``NotificationCenter`` (it is built after the
+        relay); ``app_names`` the apps' display names."""
+
         super().__init__(db)
         self.events = events
+        self.notifications = notifications
+        self.app_names = app_names
         # The registry of what apps add (plantcraft.apps.contributions), fed the same way.
         self.contributions = contributions
         self._catalogs: dict[str, str] = {}
@@ -147,27 +180,30 @@ class ConditionRelay(Store):
         kind = f"{app}.{item['name']}"
         subject = self._subject(app, item.get("subject"))
         summary = str(item.get("summary") or spec.get("title") or kind)[:500]
+        payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
+        severity = str(item.get("severity") or spec.get("severity") or "warning")
         self.events.publish(
             kind,
             subject,
             source=app,
             actor=ACTOR,
             summary=summary,
-            payload=item.get("payload") if isinstance(item.get("payload"), dict) else {},
+            payload=payload,
             refs=[str(ref) for ref in item.get("refs") or []],
-            severity=str(item.get("severity") or spec.get("severity") or "warning"),
+            severity=severity,
             key=key,
             phase="start",
             category=str(spec.get("category") or ""),
         )
+        owners = self._tell(app, key, subject, summary, payload, severity, spec)
         with self._lock, self._write() as connection:
             connection.execute(
                 """
                 INSERT OR REPLACE INTO relayed_conditions
-                    (app, condition_key, kind, subject, summary, opened_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                    (app, condition_key, kind, subject, summary, opened_at, owners)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (app, key, kind, subject, summary, self._now()),
+                (app, key, kind, subject, summary, self._now(), self._json(owners)),
             )
 
     def _end(self, app: str, key: str, row: dict[str, Any]) -> None:
@@ -187,10 +223,63 @@ class ConditionRelay(Store):
             phase="end",
             category=str(spec.get("category") or ""),
         )
+        if self._loads(row.get("owners"), []) and self.notifications is not None:
+            try:
+                self.notifications().resolve(
+                    app,
+                    f"condition:{key}",
+                    t("Back to normal at {moment}", moment=plant_clock(datetime.now(timezone.utc))),
+                )
+            except Exception:  # noqa: BLE001 - the event is written all the same
+                LOGGER.exception("notification of %s/%s not settled", app, key)
         with self._lock, self._write() as connection:
             connection.execute(
                 "DELETE FROM relayed_conditions WHERE app = ? AND condition_key = ?", (app, key)
             )
+
+    def _tell(
+        self,
+        app: str,
+        key: str,
+        subject: str,
+        summary: str,
+        payload: dict[str, Any],
+        severity: str,
+        spec: dict[str, Any],
+    ) -> list[str]:
+        """Notify the condition's ``owners`` (with an email); answers who was told."""
+
+        owners = [
+            str(ref).strip().lower()
+            for ref in payload.get("owners") or []
+            if str(ref).strip().lower().startswith(("user:", "group:"))
+        ][:MAX_OWNERS]
+        if not owners or self.notifications is None:
+            return []
+        lines = [str(spec.get("description") or "")]
+        contact = " ".join(str(payload.get("contact") or "").split())[:300]
+        if contact:
+            lines.append(t("Contact: {contact}", contact=contact))
+        name = (self.app_names() if self.app_names else {}).get(app, app)
+        source = str(payload.get("source") or "")
+        try:
+            self.notifications().notify(
+                app,
+                name,
+                recipients=owners,
+                title=summary,
+                text="\n\n".join(line for line in lines if line),
+                priority=PRIORITIES.get(severity, "medium"),
+                url=APP_PAGES[app].format(source=source) if source and app in APP_PAGES else None,
+                email=True,
+                refs=[subject],
+                key=f"condition:{key}",
+                category=str(spec.get("category") or "") or None,
+            )
+        except Exception:  # noqa: BLE001 - the event is written all the same
+            LOGGER.exception("owners of %s/%s not told", app, key)
+            return []
+        return owners
 
     @staticmethod
     def _subject(app: str, subject: Any) -> str:
