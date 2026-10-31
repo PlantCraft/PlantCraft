@@ -35,7 +35,8 @@ LIBRARIES: dict[str, dict[str, str]] = {
     "estimator": {
         "name": "Estimators",
         "description": "Virtual sensors: a better value of a noisy or drifting signal (Kalman "
-        "filters) and a sampled value at every step (soft sensors).",
+        "filters), a sampled value at every step (soft sensors), and flows that close their "
+        "balances, with the meter that is wrong (reconciliation).",
     },
     "stats": {
         "name": "Statistics",
