@@ -403,6 +403,36 @@ def ungrounded(text: str, facts: dict[str, Any]) -> list[str]:
     return sorted(set(TAG.findall(text)) - given)
 
 
+DAY = re.compile(r"(?<!\d)20\d\d-\d\d-\d\d(?!\d)")
+
+
+def misdated(text: str, facts: dict[str, Any]) -> list[str]:
+    """``TAG day`` pairs where the text dates an asset on a day none of its facts carry (a model
+    shifting a finding by a day, as gpt-5-mini did twice in 3 editions on 2026-10-31). Read per
+    line: a line naming one tag, or a line under a heading naming one tag."""
+
+    days: dict[str, set[str]] = {}
+    for item in [*(facts.get("events") or []), *(facts.get("results") or [])]:
+        dumped = json.dumps(item, ensure_ascii=False, default=str)
+        for tag in set(TAG.findall(dumped)):
+            days.setdefault(tag, set()).update(DAY.findall(dumped))
+    period = set(DAY.findall(json.dumps(facts.get("period") or {}, default=str)))
+    found: set[str] = set()
+    current = ""
+    for line in text.splitlines():
+        tags = set(TAG.findall(line))
+        if line.lstrip().startswith("#"):
+            current = next(iter(tags)) if len(tags) == 1 else ""
+            continue
+        tag = next(iter(tags)) if len(tags) == 1 else (current if not tags else "")
+        if not tag or tag not in days:
+            continue
+        for day in DAY.findall(line):
+            if day not in days[tag] and day not in period:
+                found.add(f"{tag} {day}")
+    return sorted(found)
+
+
 def requirement_problems(requirements: str) -> list[str]:
     """What a proposal of requirements says about this period's data instead of how to write:
     the tags it names (a small model copied facts into the prompt, 2026-10-31)."""
@@ -424,15 +454,23 @@ def section_text(title: str, body: str, facts: dict[str, Any], model: str = "") 
 
     heading = f"# {title.strip()}\n\n" if title.strip() else ""
     invented = ungrounded(body, facts)
-    warning = (
-        "\n\n> "
-        + t(
-            "Check: the text names {tags}, which the facts it was given do not.",
-            tags=", ".join(invented[:10]),
+    dated = misdated(body, facts)
+    checks = []
+    if invented:
+        checks.append(
+            t(
+                "Check: the text names {tags}, which the facts it was given do not.",
+                tags=", ".join(invented[:10]),
+            )
         )
-        if invented
-        else ""
-    )
+    if dated:
+        checks.append(
+            t(
+                "Check: the text gives dates its facts do not have for {pairs}.",
+                pairs=", ".join(dated[:10]),
+            )
+        )
+    warning = "".join(f"\n\n> {check}" for check in checks)
     counted = t(
         "Written by a language model{model} from {results} results and {events} events of "
         "{assets} assets. Check before acting.",

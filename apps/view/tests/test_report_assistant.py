@@ -232,3 +232,32 @@ def test_a_tag_the_facts_never_name_is_flagged():
     text = helper.section_text("Week", "PIC-999 oscillates.", facts)
     assert "PIC-999, which the facts it was given do not" in text
     assert "Check:" not in helper.section_text("Week", "FIC-101 is fine.", facts)
+
+
+def test_misdated_flags_a_finding_shifted_by_a_day():
+    facts = {
+        "period": {"start": "2026-10-26T10:00:00+00:00", "end": "2026-11-02T10:00:00+00:00"},
+        "events": [
+            {
+                "at": "2026-11-01T00:00:00+00:00",
+                "kind": "linkcraft.finding.opened",
+                "asset": "FIC-1003",
+            },
+            {
+                "at": "2026-10-29T23:00:00+00:00",
+                "kind": "linkcraft.finding.opened",
+                "asset": "FIC-1206",
+            },
+        ],
+        "results": [],
+    }
+    text = (
+        "## FIC-1003\nStiction (finding opened 2026-10-30T00:00:00).\n\n"
+        "- FIC-1206: stiction, opened 2026-10-29T23:00:00.\n"
+        "- FIC-1003 — inspect the valve (finding opened 2026-10-31).\n"
+        "- FIC-1003 and FIC-1206: opened 2026-10-28 and 2026-10-29.\n"
+        "Period 2026-10-26 to 2026-11-02 for FIC-1003."
+    )
+    assert helper.misdated(text, facts) == ["FIC-1003 2026-10-30", "FIC-1003 2026-10-31"]
+    cell = helper.section_text("U-200", text, facts)
+    assert "dates its facts do not have for FIC-1003 2026-10-30, FIC-1003 2026-10-31" in cell
