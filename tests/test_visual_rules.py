@@ -100,6 +100,19 @@ def test_asking_before_an_action_is_the_suites_dialog():
     assert not offenders, "window.confirm in place of confirmAction: " + ", ".join(offenders)
 
 
+def test_a_message_after_an_action_is_the_suites_toast():
+    """Rule 9: ``showToast`` from ``@plantcraft/ui``, never the browser's ``window.alert``, which
+    blocks the page and looks like the browser's (2026-10-31)."""
+
+    offenders = [
+        f"{path.relative_to(ROOT)}:{number}"
+        for path in _sources()
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if "window.alert(" in line
+    ]
+    assert not offenders, "window.alert in place of showToast: " + ", ".join(offenders)
+
+
 def _styles(*roots: str) -> list[Path]:
     found: list[Path] = []
     for root in roots:

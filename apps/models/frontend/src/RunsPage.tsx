@@ -5,7 +5,7 @@
  * and with the plant signals it was asked to match.
  */
 import type * as Plotly from "plotly.js";
-import { DataTable, confirmAction, currentTheme, plotTheme, seriesVar, type DataColumn, type FilterState } from "@plantcraft/ui";
+import { DataTable, confirmAction, showToast, currentTheme, plotTheme, seriesVar, type DataColumn, type FilterState } from "@plantcraft/ui";
 import { Plot } from "@plantcraft/ui/plot";
 import { Download, Package, Play, Square, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -30,10 +30,10 @@ export function runDownload(run: Run): { url: string; label: string } | null {
 export function RunsTable({ runs, me, onChanged, initialFilters, label = t("Simulations") }: { runs: Run[]; me: Me; onChanged: () => void; initialFilters?: FilterState; label?: string }) {
   const remove = async (run: Run) => {
     if (!(await confirmAction(t("Delete this simulation and its results?"), { confirm: t("Delete"), danger: true }))) return;
-    try { await api.deleteRun(run.id); onChanged(); } catch (err) { window.alert(message(err)); }
+    try { await api.deleteRun(run.id); onChanged(); } catch (err) { showToast(message(err), { tone: "error" }); }
   };
   const cancel = async (run: Run) => {
-    try { await api.cancelRun(run.id); onChanged(); } catch (err) { window.alert(message(err)); }
+    try { await api.cancelRun(run.id); onChanged(); } catch (err) { showToast(message(err), { tone: "error" }); }
   };
   const kinds = new Set(runs.map((run) => run.kind));
   const columns: DataColumn<Run>[] = [
@@ -61,7 +61,7 @@ export function RunsTable({ runs, me, onChanged, initialFilters, label = t("Simu
 
 /** What runs now, how far each is, and what waits, in the order it will run. */
 export function QueueLists({ queue, me, onChanged }: { queue: QueueState; me: Me; onChanged: () => void }) {
-  const cancel = async (run: Run) => { try { await api.cancelRun(run.id); onChanged(); } catch (err) { window.alert(message(err)); } };
+  const cancel = async (run: Run) => { try { await api.cancelRun(run.id); onChanged(); } catch (err) { showToast(message(err), { tone: "error" }); } };
   const row = (run: Run) => <li key={run.id} className="mc-queue-row">
     <Link to={runPath(run)} className="mc-queue-name"><strong>{run.label || run.model.split(".").pop()}</strong><small className="muted">{run.study ? run.study.name : run.project_name} · {run.created_by}</small></Link>
     {run.status === "running" ? <Progress value={run.progress ?? 0} text={typeof run.progress === "number" ? `${Math.round(run.progress * 100)} %` : t("Starting")} /> : <RunPill run={run} />}
