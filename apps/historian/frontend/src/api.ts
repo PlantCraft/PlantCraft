@@ -55,7 +55,12 @@ export interface Note { id: number; signal: string; at: string; end: string | nu
 /** The PlantCraft event a new note answers, for the page to post (``POST /api/v1/events``). */
 export interface NoteEvent { app: string; kind: string; subject: string; summary: string; payload: Record<string, unknown> }
 
+/** A person's edit of an archived value (``/api/v1/edits``), with the value it replaced. */
+export interface ValueEdit { t: string; action: "inserted" | "edited" | "deleted"; old: number | string | null; new: number | string | null; by: string; at: string; reason: string }
+
 export const api = {
+  valueEdits: (signal: string, start: string, end: string) => request<{ signal: string; edits: ValueEdit[] }>(`/api/v1/edits/${id(signal)}?${new URLSearchParams({ start, end }).toString()}`),
+  editValues: (edit: { signal: string; reason: string; changes: { t: string; value?: number | string; delete?: boolean }[] }) => request<{ changes: { t: string; action: string; old: unknown; new: unknown }[] }>("/api/v1/edits", body("POST", edit)),
   notes: (signal: string, start: string, end: string) => request<{ notes: Note[]; truncated: boolean }>(`/api/v1/annotations?${new URLSearchParams({ signal, start, end }).toString()}`),
   addNote: (note: { signal: string; at: string; end: string | null; text: string }) => request<Note & { event: NoteEvent }>("/api/v1/annotations", body("POST", note)),
   removeNote: (noteId: number) => request<void>(`/api/v1/annotations/${noteId}`, { method: "DELETE" }),

@@ -8,6 +8,12 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Audited edits of archived values.** An editor inserts, changes or deletes values of a signal
+  with a reason (the signal's page, *Edited values*, or `POST /api/v1/edits`; all or nothing).
+  Reads with `quality` give each edited time's mark in `edits` (`inserted`, `edited`,
+  `deleted`); the value replaced is kept with who, when and why (`GET /api/v1/edits/{signal}`),
+  and each edit is in PlantCraft's audit log (`histcraft.values.edit`). Signals an app writes are
+  changed in that app.
 - **The OPC UA status code is kept with each change of quality**: a read with `quality` gives,
   beside `uncertain`, `bad` or `good`, the sub-code (`status`, like `UncertainLastUsableValue` or
   `BadSensorFailure`) and the LimitBits (`limit`: `low`, `high` or `constant`, a value pinned at
