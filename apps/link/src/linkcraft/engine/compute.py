@@ -30,6 +30,8 @@ from concurrent.futures import (
 from concurrent.futures.process import BrokenProcessPool
 from typing import Any
 
+from plantcraft_sdk.server.workers import available_cpus
+
 from linkcraft.i18n import t
 
 LOGGER = logging.getLogger(__name__)
@@ -39,7 +41,7 @@ def default_processes() -> int:
     configured = os.environ.get("LINKCRAFT_PROCESSES", "").strip()
     if configured.isdigit():
         return int(configured)
-    cores = os.cpu_count() or 1
+    cores = available_cpus()  # the container's limit, not the host's cores
     # Leave one core for the web server and the reading threads.
     return 0 if cores <= 2 else min(cores - 1, 16)
 

@@ -8,6 +8,9 @@
 #   ./install.sh --backup        back up now, while the suite runs (verified; docs/operations.md)
 #   ./install.sh --list-backups  the backups and their state
 #   ./install.sh --restore NAME  return to a backup; the current state is set aside, not deleted
+#   ./install.sh --export-backup NAME --passphrase-file FILE [--out FILE]
+#                                an encrypted copy of a backup to take off the server
+#                                (AES-256, key from the passphrase; backups hold every key)
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
 #   ./install.sh --uninstall     stop and remove the containers; data and backups are kept
@@ -32,7 +35,10 @@
 #          loops, algorithms, model examples, dashboards, messages; `processcraft demo seed`),
 #          --public-demo (--demo left open to visitors: a read-only account `demo` shown on the
 #          sign-in page, no LLM for visitors, rate limits), --yes,
-#          --dev (run from a source checkout: no bundle checks, images built locally).
+#          --dev (run from a source checkout: no bundle checks, images built locally),
+#          --machine small|medium|large|xlarge|auto|off (the machine profile: every container's
+#          CPU and memory limit, processes and pools from one choice; auto, the default, picks
+#          by the CPUs and memory Docker sees; a value changed by hand in .env is kept).
 #
 # Needs Docker Engine and the Compose plugin, run as root or as a member of the `docker` group.
 # It never downloads anything: images come from images.tar in this bundle.
@@ -84,11 +90,14 @@ ASSUME_YES=0
 DEV=0
 WITH_APPS=" "    # " <id> <id> ": apps turned on by --with-<id>
 ALL_APPS=0
+MACHINE=""
 WITH_DEMO=0
 PUBLIC_DEMO=0
 APP_PACKAGE=""
 APP_ID=""
 BACKUP_NAME=""
+PASSPHRASE_FILE=""
+EXPORT_OUT=""
 ALLOW_UNSIGNED=0
 ALLOW_EMULATION=0
 PUBLISHER_KEY=""
@@ -108,7 +117,7 @@ die() {
     exit 1
 }
 
-usage() { sed -n '2,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,43p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -120,6 +129,9 @@ while [ $# -gt 0 ]; do
         --drill) ACTION="drill" ;;
         --diagnostics) ACTION="diagnostics" ;;
         --restore) [ $# -ge 2 ] || die "--restore needs a backup name (see --list-backups)"; ACTION="restore"; BACKUP_NAME="$2"; shift ;;
+        --export-backup) [ $# -ge 2 ] || die "--export-backup needs a backup name (see --list-backups)"; ACTION="export-backup"; BACKUP_NAME="$2"; shift ;;
+        --passphrase-file) [ $# -ge 2 ] || die "--passphrase-file needs a file"; PASSPHRASE_FILE="$2"; shift ;;
+        --out) [ $# -ge 2 ] || die "--out needs a file name"; EXPORT_OUT="$2"; shift ;;
         --add) [ $# -ge 2 ] || die "--add needs a package file"; ACTION="add"; APP_PACKAGE="$2"; shift ;;
         --remove) [ $# -ge 2 ] || die "--remove needs an app id"; ACTION="remove"; APP_ID="$2"; shift ;;
         --uninstall) ACTION="uninstall" ;;
@@ -131,6 +143,8 @@ while [ $# -gt 0 ]; do
         --demo) WITH_DEMO=1 ;;
         --public-demo) WITH_DEMO=1; PUBLIC_DEMO=1 ;;
         --dev) DEV=1 ;;
+        --machine) [ $# -ge 2 ] || die "--machine needs small, medium, large, xlarge, auto or off"; MACHINE="$2"; shift ;;
+        --machine=*) MACHINE="${1#*=}" ;;
         --allow-unsigned) ALLOW_UNSIGNED=1 ;;
         --allow-emulation) ALLOW_EMULATION=1 ;;
         --publisher-key) [ $# -ge 2 ] || die "--publisher-key needs a public key file"; PUBLISHER_KEY="$2"; shift ;;
@@ -358,6 +372,54 @@ check_signature() { # check_signature VERSION
     fi
 }
 
+# Before any image is loaded: the signature over SHA256SUMS checked with this server's own
+# OpenSSL (Ed25519, 1.1.1 or later), not with a program that came in the bundle being checked.
+# SHA256SUMS was already checked against every file (verify_bundle), so a good signature covers
+# images.tar too. Without a usable openssl the check runs, as before, in the installer image
+# after the load (check_signature), and a warning says so.
+host_signature() {
+    local sig="$BUNDLE_DIR/SHA256SUMS.sig" publisher raw key tmp
+    INSTALLED_TRUST=0
+    if has_installed_trust; then INSTALLED_TRUST=1; fi
+    set_trust_dir
+    if [ ! -f "$sig" ]; then
+        if compgen -G "$TRUST_DIR/*.pub" >/dev/null 2>&1 && [ "$ALLOW_UNSIGNED" != 1 ]; then
+            die "the bundle is not signed (SHA256SUMS.sig is missing) and this server trusts publisher keys: get the signed bundle, or pass --allow-unsigned for a development bundle. Nothing was loaded."
+        fi
+        host_signature_done
+        return 0
+    fi
+    if ! command -v openssl >/dev/null 2>&1 ||
+        ! openssl pkeyutl -help 2>&1 | grep -q -- '-rawin'; then
+        warn "openssl 1.1.1 or later is not on this server: the signature is checked after the images are loaded, by the bundle's installer."
+        host_signature_done
+        return 0
+    fi
+    publisher="$(sed -n 's/^ *"publisher": *"\([a-z0-9-]*\)".*/\1/p' "$sig" | head -n 1)"
+    raw="$(sed -n 's/^ *"signature": *"\([A-Za-z0-9+\/=]*\)".*/\1/p' "$sig" | head -n 1)"
+    [ -n "$publisher" ] && [ -n "$raw" ] || die "SHA256SUMS.sig cannot be read. Nothing was loaded."
+    key="$TRUST_DIR/$publisher.pub"
+    if [ ! -f "$key" ]; then
+        if [ "$FIRST_TRUST" = 0 ]; then
+            die "the bundle is signed by '$publisher', which this server does not trust (trusted-publishers/). Nothing was loaded."
+        fi
+        die "the bundle is signed by '$publisher' but carries no key for it. Nothing was loaded."
+    fi
+    tmp="$(mktemp)"
+    printf '%s' "$raw" | base64 -d >"$tmp" 2>/dev/null || { rm -f "$tmp"; die "SHA256SUMS.sig cannot be read. Nothing was loaded."; }
+    log "Checking the bundle's signature with this server's OpenSSL (before loading anything)"
+    if ! openssl pkeyutl -verify -pubin -inkey "$key" -rawin -in "$BUNDLE_DIR/SHA256SUMS" -sigfile "$tmp" >/dev/null 2>&1; then
+        rm -f "$tmp"
+        die "the signature does not match SHA256SUMS: the bundle was modified. Nothing was loaded."
+    fi
+    rm -f "$tmp"
+    echo "    signature checked: publisher $publisher"
+    host_signature_done
+}
+host_signature_done() {
+    if [ -n "$TRUST_TMP" ]; then rm -rf "$TRUST_TMP"; TRUST_TMP=""; fi
+}
+
 load_images() {
     log "Loading images from images.tar (no download)"
     docker load -i "$BUNDLE_DIR/images.tar" | sed 's/^/    /'
@@ -418,6 +480,7 @@ copy_files() {
     if [ "$PREFIX" = "$BUNDLE_DIR" ]; then return 0; fi
     log "Copying the suite files to $PREFIX"
     cp "$BUNDLE_DIR/compose.yaml" "$BUNDLE_DIR/.env.example" "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/firewall.sh" "$PREFIX/"
+    if [ -f "$BUNDLE_DIR/security-check.sh" ]; then cp "$BUNDLE_DIR/security-check.sh" "$PREFIX/"; chmod 0755 "$PREFIX/security-check.sh"; fi
     local file
     for file in bundle.env release.json RELEASE-NOTES.md; do
         if [ -f "$BUNDLE_DIR/$file" ]; then cp "$BUNDLE_DIR/$file" "$PREFIX/"; fi
@@ -551,6 +614,7 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
     # the Docker socket.
     env_set PLANTCRAFT_INSTALL_DIR "$PREFIX" "$env"
     env_set PLANTCRAFT_DOCKER_GID "$(docker_gid)" "$env"
+    apply_machine_profile "$env"
     fit_cpu_limits "$env"
 }
 
@@ -566,6 +630,134 @@ suite_apps_setting() { # suite_apps_setting PROFILES CURRENT ENV_FILE
         entries="${entries:+$entries,}$app=$(app_field "$app" 3)${version:+@$version}"
     done
     printf '%s' "$entries${others:+${entries:+,}$others}"
+}
+
+# Machine profile (plan B3, 2026-10-31): one choice fills every CPU, memory, process and pool
+# value of the suite. Memory limits add up to what the machine has less about 1 GB for the system
+# and Docker. A value the profile wrote is the profile's until someone changes it in .env: the
+# values written last are kept in data/machine-profile.env, and a key whose value differs from
+# them is the person's and is left alone. Values: docs/bench (plan B, 2026-10-31).
+machine_size() { # machine_size CPUS MEMORY_MB -> small | medium | large | xlarge
+    if [ "$1" -le 2 ] || [ "$2" -lt 6000 ]; then echo small
+    elif [ "$1" -le 4 ] || [ "$2" -lt 14000 ]; then echo medium
+    elif [ "$1" -le 8 ] || [ "$2" -lt 48000 ]; then echo large
+    else echo xlarge
+    fi
+}
+
+# One line per key: KEY small medium large xlarge. "cpus" is the machine's CPUs, "half" half of
+# them, "rest" all but two.
+MACHINE_TABLE='
+PLANTCRAFT_WORKERS 2 3 4 8
+PLANTCRAFT_CPUS 2 cpus cpus 8
+PLANTCRAFT_MEMORY 768m 1536m 4g 8g
+LINKCRAFT_CPUS 1 2 4 4
+LINKCRAFT_MEMORY 896m 1g 4g 8g
+LINKCRAFT_WORKERS 2 3 6 rest
+LINKCRAFT_COMPUTE_SLOTS 1 3 6 rest
+LINKCRAFT_EXECUTOR_CPUS 1 3 6 rest
+LINKCRAFT_EXECUTOR_SLOTS 1 3 6 rest
+LINKCRAFT_EXECUTOR_MEMORY 1g 2g 8g 16g
+LINKCRAFT_TASK_MEMORY_MB 768 1024 2048 4096
+DASHCRAFT_CPUS 1 2 2 4
+DASHCRAFT_MEMORY 384m 512m 2g 2g
+ALARMCRAFT_CPUS 0.5 1 1 2
+ALARMCRAFT_MEMORY 384m 384m 1g 1g
+MODELCRAFT_CPUS 0.5 1 1 2
+MODELCRAFT_MEMORY 384m 512m 1g 2g
+MODELCRAFT_RUN_WORKERS 1 2 2 4
+MODELCRAFT_EXECUTOR_CPUS 1 2 4 half
+MODELCRAFT_EXECUTOR_SLOTS 1 2 3 half
+MODELCRAFT_EXECUTOR_MEMORY 1g 2g 4g 16g
+DOCCRAFT_CPUS 1 1 2 4
+DOCCRAFT_MEMORY 768m 1g 1536m 4g
+HISTCRAFT_CPUS 2 2 4 8
+HISTCRAFT_WORKERS 2 2 3 4
+HISTCRAFT_MEMORY 768m 1g 2g 4g
+HISTCRAFT_READ_VALUES 1500000 3000000 4000000 8000000
+HISTCRAFT_COLLECTOR_CPUS 1 1 2 2
+HISTCRAFT_COLLECTOR_MEMORY 384m 512m 1g 2g
+HISTCRAFT_DB_MEMORY 768m 1536m 8g 16g
+HISTCRAFT_DB_SHARED_BUFFERS 192MB 384MB 2GB 4GB
+HISTCRAFT_DB_CACHE_SIZE 512MB 1GB 6GB 12GB
+'
+
+machine_values() { # machine_values SIZE CPUS -> KEY=VALUE lines
+    local column
+    case "$1" in small) column=2 ;; medium) column=3 ;; large) column=4 ;; *) column=5 ;; esac
+    printf '%s\n' "$MACHINE_TABLE" | awk -v c="$column" -v n="$2" 'NF == 5 {
+        v = $c
+        if (v == "cpus") v = n
+        else if (v == "half") v = (n >= 4 ? int(n / 2) : 1)
+        else if (v == "rest") v = (n > 3 ? n - 2 : 1)
+        print $1 "=" v
+    }'
+}
+
+docker_machine() { # "CPUS MEMORY_MB" as Docker sees them (Docker Desktop: its VM, not the Mac)
+    local cpus mem
+    cpus="$(docker info --format '{{.NCPU}}' 2>/dev/null || true)"
+    mem="$(docker info --format '{{.MemTotal}}' 2>/dev/null || true)"
+    [ -n "$cpus" ] || cpus="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
+    if [ -n "$mem" ]; then
+        mem=$((mem / 1048576))
+    else
+        mem="$(awk '/^MemTotal:/ { print int($2 / 1024) }' /proc/meminfo 2>/dev/null || echo 4096)"
+    fi
+    printf '%s %s' "$cpus" "$mem"
+}
+
+apply_machine_profile() { # apply_machine_profile ENV_FILE
+    local env="$1" choice size cpus mem record line key value current previous kept=""
+    choice="${MACHINE:-$(env_get PLANTCRAFT_MACHINE "$env")}"
+    choice="${choice:-auto}"
+    read -r cpus mem <<<"$(docker_machine)"
+    # Ceilings for a shared server (installation.conf, plan H): the profile sizes for at most
+    # PLANTCRAFT_MAX_CPUS and PLANTCRAFT_MAX_MEMORY (6, 12g, 12288m), leaving the rest to others.
+    local max
+    max="$(env_get PLANTCRAFT_MAX_CPUS "$env")"
+    if [[ "$max" =~ ^[0-9]+$ ]] && [ "$max" -gt 0 ] && [ "$max" -lt "$cpus" ]; then cpus="$max"; fi
+    max="$(env_get PLANTCRAFT_MAX_MEMORY "$env")"
+    case "$max" in
+        *[gG]) max="${max%?}"; [[ "$max" =~ ^[0-9]+$ ]] && max=$((max * 1024)) || max="" ;;
+        *[mM]) max="${max%?}"; [[ "$max" =~ ^[0-9]+$ ]] || max="" ;;
+        *) max="" ;;
+    esac
+    if [ -n "$max" ] && [ "$max" -gt 0 ] && [ "$max" -lt "$mem" ]; then mem="$max"; fi
+    case "$choice" in
+        off) return 0 ;;
+        auto) size="$(machine_size "$cpus" "$mem")" ;;
+        small | medium | large | xlarge) size="$choice" ;;
+        *) die "--machine: $choice is not small, medium, large, xlarge, auto or off" ;;
+    esac
+    record="$PREFIX/data/machine-profile.env"
+    mkdir -p "$PREFIX/data"
+    touch "$record"
+    while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        key="${line%%=*}"
+        value="${line#*=}"
+        current="$(env_get "$key" "$env")"
+        previous="$(env_get "$key" "$record")"
+        # Before the first profile, the shipped default (.env.example) is nobody's choice either.
+        [ -n "$previous" ] || previous="$(env_get "$key" "$PREFIX/.env.example")"
+        if [ -z "$current" ] || [ "$current" = "$previous" ]; then
+            env_set "$key" "$value" "$env"
+        elif [ "$current" != "$value" ]; then
+            kept="${kept:+$kept, }$key=$current"
+        fi
+    done <<<"$(machine_values "$size" "$cpus")"
+    machine_values "$size" "$cpus" >"$record"
+    env_set PLANTCRAFT_MACHINE "$choice" "$env"
+    env_set PLANTCRAFT_MACHINE_SIZE "$size" "$env"
+    log "Machine profile: $size ($cpus CPUs, $((mem / 1024)) GB: what Docker sees, within PLANTCRAFT_MAX_*; chosen: $choice)"
+    if [ -n "$kept" ]; then log "Kept as set by hand in .env: $kept"; fi
+    # Every app on, the demo plant and a round at its peak use about 4.5 GB (plan B5): a small
+    # machine needs swap, or fewer apps (docs/requirements.md).
+    if [ "$size" = small ] && [ -r /proc/meminfo ] &&
+        [ "$(awk '/^SwapTotal:/ { print int($2 / 1024) }' /proc/meminfo)" -lt 1024 ]; then
+        warn "a small machine ($((mem / 1024)) GB) without swap: give it 2 GB of swap, or turn off apps it does not need (Documents, Models), or a busy moment stops a container"
+    fi
 }
 
 # Docker refuses to start a container whose CPU limit exceeds the host's CPU count ("range of
@@ -719,6 +911,10 @@ prepare_data() {
         # second install.sh run as a member of the docker group cannot reach inside it.
         mkdir -p data/compute-jobs/linkcraft data/compute-jobs/modelcraft
         chown -R $COMPUTE_UID:$COMPUTE_UID data/compute-jobs
+        # Alarms and its sandbox container share only this folder (its socket).
+        mkdir -p data/alarmcraft-sandbox
+        chown 10009:10009 data/alarmcraft-sandbox
+        chmod 0700 data/alarmcraft-sandbox
         chown $COMPUTE_UID:$PLANTCRAFT_UID data/compute-local-key
         chmod 0640 data/compute-local-key
         $owners
@@ -901,6 +1097,7 @@ do_install() {
         log "Version $version is already installed: applying settings and certificates again"
     fi
     if [ "$DEV" = 0 ] && [ -f "$BUNDLE_DIR/images.tar" ]; then
+        host_signature
         load_images
         # An update was checked above by the installed version, before anything changed.
         if [ "$UPDATE_APPLYING" = 0 ]; then check_signature "$version"; fi
@@ -1219,6 +1416,30 @@ do_restore() {
     print_access
 }
 
+# A backup holds .env, every app key, the admin and database passwords and the certificate
+# authority's key in clear (mode 0600, root): fine on the server, not on a disk that leaves it.
+# The copy is AES-256 (OpenSSL, key from the passphrase with PBKDF2, 600,000 rounds); the backup's
+# manifest checks every file again when it is restored.
+#   openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass file:PASS -in X.tar.enc | tar -x
+do_export_backup() {
+    check_docker
+    installed_prefix
+    [[ "$BACKUP_NAME" =~ ^[0-9]{8}-[0-9]{6}-[a-z][a-z0-9-]{1,30}$ ]] || die "invalid backup name: $BACKUP_NAME (see --list-backups)"
+    [ -n "$PASSPHRASE_FILE" ] && [ -r "$PASSPHRASE_FILE" ] || die "--passphrase-file FILE is needed: the passphrase, one line, at least 16 characters"
+    [ "$(head -n 1 "$PASSPHRASE_FILE" | tr -d '\n' | wc -c)" -ge 16 ] || die "the passphrase must have at least 16 characters"
+    command -v openssl >/dev/null 2>&1 || die "openssl is not on this server"
+    local out="${EXPORT_OUT:-$PWD/plantcraft-backup-$BACKUP_NAME.tar.enc}" image
+    image="$(helper_image)"
+    [ ! -e "$out" ] || die "$out exists: choose another --out"
+    log "Encrypting backups/$BACKUP_NAME to $out"
+    (umask 077 && as_root "$image" "cd /install/backups && test -d '$BACKUP_NAME' && tar --numeric-owner -cf - '$BACKUP_NAME'" |
+        openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass "file:$PASSPHRASE_FILE" -out "$out") ||
+        { rm -f "$out"; die "the backup could not be exported (is the name right? see --list-backups)."; }
+    [ -s "$out" ] || { rm -f "$out"; die "the export wrote nothing."; }
+    chmod 0600 "$out"
+    log "Written: $out ($(du -h "$out" | cut -f1)). Keep the passphrase apart from the file."
+}
+
 do_diagnostics() {
     check_docker
     installed_prefix
@@ -1287,6 +1508,7 @@ do_worker() {
     fi
     if [ "$PREFIX" != "$BUNDLE_DIR" ]; then
         if [ -f "$BUNDLE_DIR/images.tar" ]; then
+            host_signature
             load_images
             check_signature "$version"
         fi
@@ -1367,5 +1589,6 @@ case "$ACTION" in
     drill) do_drill ;;
     diagnostics) do_diagnostics ;;
     restore) do_restore ;;
+    export-backup) do_export_backup ;;
     uninstall) do_uninstall ;;
 esac

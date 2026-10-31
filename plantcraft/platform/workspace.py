@@ -15,6 +15,7 @@ from plantcraft.assistant_access import AssistantAccessStore
 from plantcraft.audit import AuditStore
 from plantcraft.auth.app_keys import AppKeyStore
 from plantcraft.auth.demo_visits import DemoVisits
+from plantcraft.auth.sessions import EndedSessions
 from plantcraft.auth.throttle import LoginThrottle
 from plantcraft.auth.usage import UsageStore
 from plantcraft.auth.users import UserStore
@@ -53,6 +54,7 @@ class Workspace(Store):
         self.app_keys = AppKeyStore(db)
         self.assistant_access = AssistantAccessStore(db)
         self.login_throttle = LoginThrottle(db)
+        self.ended_sessions = EndedSessions(db)
         self.usage = UsageStore(db)
         self.demo_visits = DemoVisits(db)
         self.results = ResultStore(db)

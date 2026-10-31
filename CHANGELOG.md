@@ -37,10 +37,30 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   the work queue. With ten methods at once (`ci/bench/extreme.py`, C2, 2 CPUs) Analytics' round
   went from 16 to 12 s. `plantcraft-sdk` 0.80.0 gains `plantcraft_sdk.server.workers` (the
   start lock, the leader and `worker_count`), which PlantCraft now uses too.
+- **One machine profile sizes the whole suite (plan B, 2026-10-31).** `install.sh --machine
+  small|medium|large|xlarge|auto|off` (default `auto`, from the CPUs and memory Docker sees,
+  within `PLANTCRAFT_MAX_CPUS`/`PLANTCRAFT_MAX_MEMORY`) fills about 30 settings from one table:
+  every container's limits, the processes of PlantCraft and the Historian, Analytics' executions
+  and compute slots, Models' runs, the Historian's read budget and database memory. Before, the
+  defaults added up to 30 CPUs and 34 GB on any machine. A value changed by hand is kept.
+  `compose.yaml` now passes `LINKCRAFT_WORKERS`, `LINKCRAFT_COMPUTE_SLOTS`,
+  `HISTCRAFT_READ_VALUES` and `HISTCRAFT_WORKERS`, which `.env` could not change before.
+- **Pools are sized by the container's CPUs, not the host's.** Inside a container
+  `os.cpu_count()` counts every core of the machine: Analytics ran 8 executions at once with a
+  4-CPU limit on a 12-core Mac mini. PlantCraft's processes, Analytics' executions and processes,
+  and a compute worker's slots now use `plantcraft_sdk.server.workers.available_cpus` (the cgroup
+  limit).
 - **`install.sh` fits every CPU limit to small hosts**, also the ones left at their default in
   `compose.yaml` (a 2-CPU machine stopped on `LINKCRAFT_EXECUTOR_CPUS`, default 4).
 
 ### Fixed
+
+- **Trends keep their spikes.** When a trend had more points than a chart takes (1,500 by
+  default), PlantCraft kept every n-th point, so any event shorter than the gap vanished: a day at
+  1 s with twenty 5 s spikes showed none of them. Each stretch of the series now keeps its lowest
+  and highest value, in time order, so every spike, trip and step is drawn at its full height
+  with the same number of points (`plantcraft/industrial_data/thinning.py`; Historian and direct
+  sources alike). Values that are not numbers (states) still keep every n-th point.
 
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the

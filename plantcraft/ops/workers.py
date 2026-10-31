@@ -29,6 +29,7 @@ from plantcraft_sdk.server.workers import (  # noqa: F401
     LEADER_RETRY_SECONDS,
     MAX_WORKERS,
     Leader,
+    available_cpus,
     first_only,
     startup,
 )
@@ -44,8 +45,8 @@ def worker_count(
     """How many server processes to start.
 
     ``PLANTCRAFT_WORKERS`` is a number (1 to 8) or ``auto`` (the default): 1 while PlantCraft
-    reads plant sources itself (its history cache lives in the process), else the CPUs up to 4,
-    at least 2.
+    reads plant sources itself (its history cache lives in the process), else the container's
+    CPUs (its cgroup quota, not the host's cores: ``available_cpus``) up to 4, at least 2.
 
     Always 1 when the database's ``folder`` is where SQLite cannot use WAL (a Docker Desktop
     bind mount, a share, FUSE: ``plantcraft_sdk.server.store.journal_mode``): file locks there do
@@ -64,4 +65,4 @@ def worker_count(
             LOGGER.warning("PLANTCRAFT_WORKERS=%r is not a number: using auto", value)
     if not (environ.get("HISTCRAFT_URL") or "").strip():
         return 1
-    return max(2, min(4, cpus if cpus is not None else os.cpu_count() or 1))
+    return max(2, min(4, cpus if cpus is not None else available_cpus()))

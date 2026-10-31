@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A small P&ID drawn by hand in another style than the demo's generator: flow from top to
+     bottom, ellipse-ended vessel drawn with arcs, vertical valves, open chevron arrows, tags
+     written in one line inside the bubbles, an indicator with no controller, a hand valve. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <g stroke="#000" fill="none" stroke-width="1" font-family="Arial">
+    <!-- V-201 knock-out drum: vertical, heads drawn as arcs -->
+    <path d="M 100 80 A 40 18 0 0 1 180 80 L 180 200 A 40 18 0 0 1 100 200 Z"/>
+    <text x="190" y="140" font-size="9" stroke="none" fill="#000">V-201</text>
+    <!-- inlet from the top: off-page connector -->
+    <polygon points="110,10 170,10 170,30 140,40 110,30"/>
+    <text x="140" y="22" font-size="6" text-anchor="middle" stroke="none" fill="#000">PFD-U-200-01</text>
+    <text x="140" y="30" font-size="6" text-anchor="middle" stroke="none" fill="#000">R-205</text>
+    <line x1="140" y1="40" x2="140" y2="62"/>
+    <polyline points="136,56 140,62 144,56"/>
+    <!-- liquid outlet down to pump P-202 -->
+    <line x1="140" y1="218" x2="140" y2="300"/>
+    <circle cx="140" cy="320" r="20"/>
+    <line x1="140" y1="300" x2="160" y2="300"/>
+    <text x="110" y="355" font-size="9" stroke="none" fill="#000">P-202</text>
+    <!-- pump discharge to the right, then down through LV-201 (vertical valve) to E-203 -->
+    <line x1="160" y1="320" x2="400" y2="320"/>
+    <line x1="400" y1="320" x2="400" y2="390"/>
+    <polygon points="393,390 407,390 400,400"/>
+    <polygon points="393,410 407,410 400,400"/>
+    <line x1="400" y1="400" x2="388" y2="400"/>
+    <path d="M 388 393 A 7 7 0 0 0 388 407 Z"/>
+    <text x="412" y="404" font-size="6" stroke="none" fill="#000">LV-201</text>
+    <line x1="400" y1="410" x2="400" y2="480"/>
+    <polyline points="396,474 400,480 404,474"/>
+    <!-- E-203 cooler -->
+    <circle cx="400" cy="505" r="25"/>
+    <polyline points="380,515 390,495 400,515 410,495 420,515"/>
+    <text x="432" y="508" font-size="9" stroke="none" fill="#000">E-203</text>
+    <!-- LT-201 on the drum, LIC-201 beside it, signal to LV-201 -->
+    <circle cx="60" cy="140" r="15"/>
+    <text x="60" y="142" font-size="6" text-anchor="middle" stroke="none" fill="#000">LT 201</text>
+    <line x1="75" y1="140" x2="100" y2="140"/>
+    <circle cx="60" cy="250" r="15"/>
+    <text x="60" y="252" font-size="6" text-anchor="middle" stroke="none" fill="#000">LIC 201</text>
+    <line x1="60" y1="155" x2="60" y2="235" stroke-dasharray="4 2"/>
+    <polyline points="60,265 60,420 370,420 370,400 388,400" stroke-dasharray="4 2"/>
+    <!-- PI-202 on the pump discharge, no controller -->
+    <circle cx="250" cy="270" r="15"/>
+    <text x="250" y="272" font-size="6" text-anchor="middle" stroke="none" fill="#000">PI 202</text>
+    <line x1="250" y1="285" x2="250" y2="320"/>
+    <!-- title block -->
+    <rect x="560" y="520" width="220" height="60"/>
+    <text x="570" y="540" font-size="8" stroke="none" fill="#000">UNIT U-200 HYDROTREATING</text>
+    <text x="570" y="555" font-size="8" stroke="none" fill="#000">DIAGRAM: KNOCK-OUT DRUM</text>
+    <text x="570" y="570" font-size="10" stroke="none" fill="#000">PID-U-200-07</text>
+  </g>
+</svg>

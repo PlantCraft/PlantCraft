@@ -91,7 +91,9 @@ EXECUTOR_IMAGES = {MODELCRAFT_RUNNER: f"{MODELCRAFT_RUNNER_IMAGE}:${{MODELCRAFT_
 # The app's setting that sends its work to the compute workers (default `suite`).
 COMPUTE_SETTINGS = {"linkcraft": "LINKCRAFT_COMPUTE", "modelcraft": "MODELCRAFT_RUNNER"}
 # Services with no network at all.
-NO_NETWORK = {"installer", *EXECUTORS}
+# Code sandboxes an app reaches only through a socket in a shared folder (sandbox_remote).
+CODE_SANDBOXES = {"alarmcraft-sandbox": "alarmcraft"}
+NO_NETWORK = {"installer", *EXECUTORS, *CODE_SANDBOXES}
 HISTCRAFT_DB = "histcraft-db"
 HISTCRAFT_GATEWAY = "histcraft-gateway"
 # Apps that need no app key (HistCraft reads its own sources).
@@ -1166,3 +1168,19 @@ def test_live_llm_egress_refuses_hosts_no_provider_names(stack: Stack) -> None:
         check=False,
     )  # fmt: skip
     assert asked.returncode == 0 and " 403 " in asked.stdout, asked.stdout + asked.stderr
+
+
+def test_the_code_sandboxes_have_no_network_no_secret_and_no_app_data() -> None:
+    """Alarms' rules run their Python in alarmcraft-sandbox (security test 2026-10-31, D8): the
+    app's image, no network, no secret, and only the socket folder shared with the app."""
+
+    services = _compose()["services"]
+    for name, app in CODE_SANDBOXES.items():
+        sandbox, owner = services[name], services[app]
+        assert sandbox["profiles"] == [app]
+        assert sandbox["image"] == owner["image"]
+        assert sandbox["network_mode"] == "none" and "networks" not in sandbox
+        assert "secrets" not in sandbox
+        assert sandbox["volumes"] == [f"./data/{app}-sandbox:/sandbox"]
+        assert f"./data/{app}-sandbox:/sandbox" in owner["volumes"]
+        assert owner["environment"]["ALARMCRAFT_CODE_SOCKET"] == "/sandbox/code.sock"

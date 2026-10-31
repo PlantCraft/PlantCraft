@@ -45,6 +45,10 @@ def session_user(request: Request, rt: ApiRuntime) -> str | None:
         return rt.default_user()
     if not username:
         return None
+    sid = request.session.get("cpm_sid")
+    if not isinstance(sid, str) or not sid or rt.workspace.ended_sessions.ended(sid):
+        # Signed out (plantcraft.auth.sessions), or a cookie from before session ids.
+        return None
     demo = public_demo()
     if demo is not None and username == demo.username:
         # A visit of the public demo lasts while its place does (plantcraft.auth.demo_visits);

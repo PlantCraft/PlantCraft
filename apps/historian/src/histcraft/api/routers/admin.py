@@ -378,7 +378,9 @@ def export_points(runtime: RuntimeDep, scope: Scope, source_id: str | None = Non
 
     found = runtime.catalog.points(source_id=source_id)
     text = points_csv.to_csv([item for item in found if scope.signal(item["signal"])])
-    name = f"historian-points-{source_id or 'all'}.csv"
+    # Only safe characters in the file name: it goes into a header (latin-1, no quotes).
+    label = "".join(c for c in (source_id or "all") if c.isascii() and (c.isalnum() or c in "-_."))
+    name = f"historian-points-{label or 'source'}.csv"
     return Response(
         text,
         media_type="text/csv; charset=utf-8",

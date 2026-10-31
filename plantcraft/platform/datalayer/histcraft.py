@@ -49,6 +49,7 @@ import httpx
 import pandas as pd
 
 from plantcraft.i18n import t
+from plantcraft.industrial_data.thinning import thin_extremes
 from plantcraft.platform.datalayer import DataLayer, DataLayerError
 
 DATA = "/api/v1/data"
@@ -399,11 +400,7 @@ class HistCraftDataLayer(DataLayer):
                 for stamp, value in zip(item.get("t") or [], item.get("v") or [], strict=False)
                 if value is not None
             ]
-            if len(pairs) > max_points:
-                thinned = pairs[:: len(pairs) // max_points + 1]
-                if thinned[-1] is not pairs[-1]:
-                    thinned.append(pairs[-1])
-                pairs = thinned
+            pairs = thin_extremes(pairs, max_points)
             series[tag] = [[_local_text(stamp, self.timezone), value] for stamp, value in pairs]
         failed = {error.get("signal") for error in answer.get("errors") or []}
         return {
