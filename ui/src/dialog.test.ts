@@ -2,7 +2,7 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
-import { confirmAction, Dialog } from "./Dialog";
+import { askText, confirmAction, Dialog } from "./Dialog";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const flush = () => act(async () => { await Promise.resolve(); });
@@ -80,6 +80,46 @@ describe("dialog", () => {
     await flush();
     act(() => { key(document.querySelector('[role="alertdialog"]')!, "Escape"); });
     expect(await escape).toBe(false);
+    await flush();
+    expect(document.querySelector(".pc-confirm-host")).toBeNull();
+  });
+
+  it("askText answers the trimmed text, null on Cancel or Escape, and stays off while the field is empty", async () => {
+    const setValue = (input: HTMLInputElement, value: string) => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      setter.call(input, value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    const named = askText("Name of the copy", { value: "Plant (copy)", confirm: "Copy" });
+    await flush();
+    const field = document.querySelector<HTMLInputElement>(".pc-ask-field")!;
+    expect(document.activeElement).toBe(field);
+    expect(field.value).toBe("Plant (copy)");
+    expect(document.querySelector('[role="dialog"] h2')!.textContent).toBe("Name of the copy");
+    const go = document.querySelector<HTMLButtonElement>(".pc-ask-yes")!;
+    act(() => setValue(field, "   "));
+    expect(go.disabled).toBe(true);
+    act(() => setValue(field, "  Plant B  "));
+    expect(go.disabled).toBe(false);
+    act(() => go.click());
+    expect(await named).toBe("Plant B");
+    await flush();
+    expect(document.querySelector(".pc-confirm-host")).toBeNull();
+
+    const hours = askText("How many hours back?", { title: "Backfill", value: "48", type: "number" });
+    await flush();
+    const box = document.querySelector('[role="dialog"]')!;
+    expect(box.querySelector("h2")!.textContent).toBe("Backfill");
+    expect(box.textContent).toContain("How many hours back?");
+    act(() => setValue(document.querySelector<HTMLInputElement>(".pc-ask-field")!, "-2"));
+    expect(document.querySelector<HTMLButtonElement>(".pc-ask-yes")!.disabled).toBe(true);
+    act(() => [...document.querySelectorAll<HTMLButtonElement>(".pc-confirm-host button")].find((item) => item.textContent === "Cancel")!.click());
+    expect(await hours).toBeNull();
+
+    const escape = askText("Name of the trend");
+    await flush();
+    act(() => { key(document.querySelector('[role="dialog"]')!, "Escape"); });
+    expect(await escape).toBeNull();
     await flush();
     expect(document.querySelector(".pc-confirm-host")).toBeNull();
   });

@@ -1,11 +1,11 @@
 /**
  * The suite's dialogs (scale review A1): one Dialog every app opens its windows in, and
- * confirmAction() in place of the browser's window.confirm, so asking before a delete looks and
+ * confirmAction() and askText() in place of the browser's window.confirm and window.prompt, so asking before a delete looks and
  * reads the same in every app, follows the theme and works inside the platform's frame. The
  * styles are in base.css ("Forms and dialogs").
  */
 import { X } from "lucide-react";
-import { createElement, useEffect, useId, useRef, type FormEvent, type ReactNode, type RefObject } from "react";
+import { createElement, useEffect, useId, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
 import { createRoot } from "react-dom/client";
 import { t } from "./i18n.js";
 
@@ -130,5 +130,71 @@ export function confirmAction(message: string, options: ConfirmOptions = {}): Pr
       queueMicrotask(() => { root.unmount(); host.remove(); });
     };
     root.render(createElement(ConfirmDialog, { message, options, answer }));
+  });
+}
+
+export type AskTextOptions = {
+  /** The dialog's title; the question itself when left out. */
+  title?: string;
+  /** What the field starts with. */
+  value?: string;
+  /** The words of the button that goes ahead ("Copy", "Save"); "OK" when left out. */
+  confirm?: string;
+  /** The words of the button that stays; "Cancel" when left out. */
+  cancel?: string;
+  /** "number" for a count or a duration: the answer must then be a number above zero. */
+  type?: "text" | "number";
+};
+
+/** The question askText() draws. Exported for its tests and for a page that wants it inline. */
+export function AskTextDialog({ message, options, answer }: { message: string; options: AskTextOptions; answer: (value: string | null) => void }) {
+  const [value, setValue] = useState(options.value ?? "");
+  const fieldId = useId();
+  const number = options.type === "number";
+  const trimmed = value.trim();
+  const valid = number ? Number.isFinite(Number(trimmed)) && Number(trimmed) > 0 : trimmed.length > 0;
+  return (
+    <Dialog
+      title={options.title ?? message}
+      onClose={() => answer(null)}
+      initialFocus=".pc-ask-field"
+      onSubmit={() => { if (valid) answer(trimmed); }}
+      footer={<>
+        <button type="button" className="button button-secondary" onClick={() => answer(null)}>{options.cancel ?? t("Cancel")}</button>
+        <button type="submit" className="button button-primary pc-ask-yes" disabled={!valid}>{options.confirm ?? t("OK")}</button>
+      </>}
+    >
+      <div className="form-grid">
+        <label className="field-span" htmlFor={fieldId}>
+          {options.title !== undefined && <span>{message}</span>}
+          <input id={fieldId} className="pc-ask-field" type={number ? "number" : "text"} min={number ? "0" : undefined} step={number ? "any" : undefined}
+            value={value} aria-label={options.title === undefined ? message : undefined} onChange={(event) => setValue(event.target.value)}
+            onFocus={(event) => event.currentTarget.select()} />
+        </label>
+      </div>
+    </Dialog>
+  );
+}
+
+/**
+ * Ask the person for one short text in the suite's dialog: resolves the trimmed text when they go
+ * ahead, null when they cancel, press Escape or click outside. `await askText(...)` takes the place
+ * of `window.prompt(...)`; the button that goes ahead stays off while the field is empty (or, with
+ * `type: "number"`, is not a number above zero).
+ */
+export function askText(message: string, options: AskTextOptions = {}): Promise<string | null> {
+  return new Promise((resolve) => {
+    const host = document.createElement("div");
+    host.className = "pc-confirm-host";
+    document.body.append(host);
+    const root = createRoot(host);
+    let done = false;
+    const answer = (value: string | null) => {
+      if (done) return;
+      done = true;
+      resolve(value);
+      queueMicrotask(() => { root.unmount(); host.remove(); });
+    };
+    root.render(createElement(AskTextDialog, { message, options, answer }));
   });
 }
