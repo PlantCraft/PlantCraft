@@ -345,6 +345,7 @@ def test_the_editor_gets_the_palette(api):
         "input",
         "dq",
         "transform",
+        "estimator",
         "stats",
         "cpm",
         "equipment",
