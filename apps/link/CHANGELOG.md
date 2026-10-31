@@ -8,6 +8,18 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **Mass balance reconciliation and redundant pair drift** (gaps M5, A23), two blocks in the
+  Estimators library. *Mass balance reconciliation* takes up to eight flows (ports s1 to s8) and
+  their balances as text (`s1 + s2 = s3; s3 = s4 + 0.5*s5`), with each meter's uncertainty in % of
+  its reading (2% by default). At each step it gives the reconciled flows, which close every
+  balance (weighted least squares), and the raw imbalance. On the window's mean it judges whether
+  the balances close within the uncertainty (global χ² test). When they do not, it names the meter
+  with the gross error and its bias, using the measurement test and serial elimination. Meters
+  that sit in exactly the same balances are named together. *Redundant pair drift* filters the
+  difference between two meters of the same quantity with a local level Kalman filter. It gives
+  the drift and its uncertainty, and it judges the drift bad when it exceeds both a tolerance and
+  a number of standard deviations. NumPy only (`linkcraft/methods/reconciliation.py`).
+
 - **Lab fusion block** (`estimator.lab_fusion`, Estimators, group Soft sensors). It corrects an
   analyzer or a soft sensor with the lab results. Each result counts at its sampling time, from
   the approval delay you give. The block outputs the corrected value, the bias and the
