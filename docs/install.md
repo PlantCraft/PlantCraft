@@ -280,3 +280,7 @@ starts from the [app template](../templates/app).
 ./install.sh --uninstall           # stops and removes the containers; data and backups stay
 ./install.sh --uninstall --purge   # also deletes the data, the backups and the images
 ```
+
+`--purge` keeps an image that a container of another installation on the same Docker was
+created from (a test and a production installation side by side) and says which. An
+installation whose containers were already removed cannot be seen: its images go.
