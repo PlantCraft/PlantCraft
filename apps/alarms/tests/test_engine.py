@@ -300,6 +300,62 @@ def test_performance_figures():
     assert result["mean_ack_seconds"] == 60.0
 
 
+def test_eemua_level_floods_with_hysteresis_and_what_the_journal_tells():
+    # A flood: 12, then 7 (still on: not below 5), then 2 (over) in 10-minute periods.
+    found = [occurrence(f"f{i % 6}", 0.5 * i) for i in range(12)]
+    found += [occurrence(f"g{i}", 10 + i) for i in range(7)]
+    found += [occurrence("h", 21), occurrence("h", 22)]
+    # Fleeting: back to normal in 3 s, nobody acted; one acknowledged is not fleeting.
+    quick = (T0 + timedelta(minutes=200, seconds=3)).isoformat()
+    found += [occurrence("q", 200, ended_at=quick), occurrence("q", 200, ended_at=quick)]
+    found += [
+        occurrence(
+            "k",
+            300,
+            "high",
+            ended_at=quick,
+            acked_at=(T0 + timedelta(minutes=300, seconds=s)).isoformat(),
+        )
+        for s in (30, 60, 600)
+    ]
+    result = performance(found, T0, T0 + timedelta(hours=8))
+    figures = {item["id"]: item for item in result["figures"]}
+    assert result["floods"] == [
+        {
+            "start": T0.isoformat(),
+            "end": (T0 + timedelta(minutes=20)).isoformat(),
+            "minutes": 20,
+            "alarms": 19,
+            "peak": 12,
+        }
+    ]
+    assert result["flood_minutes"] == 20  # the 7 kept it on; the 2 ended it
+    assert result["eemua"]["level"] == "stable"  # average under 1, peak above 10
+    assert [b["level"] for b in result["eemua"]["bands"]] == [
+        "robust",
+        "stable",
+        "reactive",
+        "overloaded",
+    ]
+    assert figures["fleeting"]["value"] == 2 and result["fleeting"][0] == {
+        "alarm_id": "q",
+        "name": "q",
+        "count": 2,
+    }
+    assert result["acknowledge"] == [
+        {"priority": "high", "count": 3, "median_seconds": 60.0, "p90_seconds": 600.0}
+    ]
+    assert figures["busy"]["value"] == 0.0
+    many = [occurrence(f"a{i}", i * 0.5) for i in range(40)] + [
+        occurrence(f"b{i}", 70) for i in range(25)
+    ]
+    loud = performance(many, T0, T0 + timedelta(hours=2))
+    assert {i["id"]: i for i in loud["figures"]}["busy"]["value"] == 50.0
+    assert (
+        len(loud["top"]) == 20 and loud["eemua"]["level"] == "reactive"
+    )  # 5.4 per 10 minutes on average
+
+
 def test_performance_of_a_quiet_period():
     result = performance([], T0, T0 + timedelta(hours=1))
     assert result["total"] == 0 and all(item["status"] == "ok" for item in result["figures"])

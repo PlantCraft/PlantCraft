@@ -1,7 +1,7 @@
 import { DataTable, useAssistantPage, BRAND_COLORS, currentTheme, plotTheme, statusVar } from "@plantcraft/ui";
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { formatDuration, t } from "./i18n";
+import { formatDate, formatDuration, t } from "./i18n";
 import { Plot } from "@plantcraft/ui/plot";
 import { useDirectory, whoLabel } from "./people";
 import type { Performance } from "./types";
@@ -55,8 +55,24 @@ export function PerformancePage() {
         />
       </section>
       <section className="pc-grid pc-grid-2">
+        <EemuaChart data={data} />
+        <div className="panel">
+          <div className="panel-header"><div><h2>{t("Floods")}</h2><p>{t("A flood starts above {limit} alarms in 10 minutes and ends below half of it, so a short lull does not split it.", { limit: 10 })}</p></div></div>
+          {data.floods.length ? <ul>{data.floods.map((flood) => <li key={flood.start}>
+            {formatDate(flood.start)}: <b>{t("{minutes} min", { minutes: flood.minutes })}</b>, {t("{alarms} alarms, peak {peak} in 10 minutes", { alarms: flood.alarms, peak: flood.peak })}
+          </li>)}</ul> : <p className="muted">{t("No flood in this period.")}</p>}
+          <h3>{t("Time to acknowledge")}</h3>
+          {data.acknowledge.length ? <ul>{data.acknowledge.map((row) => <li key={row.priority}>
+            {t(PRIORITY_WORDS[row.priority] ?? row.priority)}: {t("half within {median}, 9 in 10 within {p90}", { median: formatDuration(row.median_seconds ?? 0), p90: formatDuration(row.p90_seconds ?? 0) })} <span className="muted">({row.count})</span>
+          </li>)}</ul> : <p className="muted">{t("No acknowledgement yet")}</p>}
+          <h3>{t("Fleeting alarms")}</h3>
+          {data.fleeting.length ? <p>{data.fleeting.map((item, index) => <span key={item.alarm_id}>{index ? ", " : ""}<Link to={`/alarms/${item.alarm_id}`}>{item.name}</Link> ({item.count})</span>)}</p>
+            : <p className="muted">{t("None: every alarm stayed long enough to be read.")}</p>}
+        </div>
+      </section>
+      <section className="pc-grid pc-grid-2">
         <div className="panel table-panel">
-          <div className="panel-header al-pad"><div><h2>{t("Most frequent alarms")}</h2><p>{t("{share}% of the load comes from these ten.", { share: data.top.reduce((sum, item) => sum + item.share, 0).toFixed(0) })}</p></div></div>
+          <div className="panel-header al-pad"><div><h2>{t("Most frequent alarms")}</h2><p>{t("The 20 raised most often; {share}% of the load comes from the first ten.", { share: data.top.slice(0, 10).reduce((sum, item) => sum + item.share, 0).toFixed(0) })}</p></div></div>
           {data.top.length ? <DataTable rows={data.top} rowKey={(item) => item.alarm_id} label={t("Most frequent alarms")} initialSort={{ key: "count", descending: true }} columns={[
             { key: "name", label: t("Alarm"), sort: (item) => item.name, render: (item) => <><Link to={`/alarms/${item.alarm_id}`}>{item.name}</Link>{item.chattering && <> <Pill status="alarm" label={t("Chattering")} /></>}</> },
             { key: "owner", label: t("Owner"), className: "small", sort: (item) => whoLabel(item.owner, directory), render: (item) => whoLabel(item.owner, directory) },
@@ -77,4 +93,33 @@ export function PerformancePage() {
       </section>
     </>}
   </>;
+}
+
+const EEMUA_WORDS: Record<string, string> = { robust: "Robust", stable: "Stable", reactive: "Reactive", overloaded: "Overloaded" };
+const EEMUA_STATUS: Record<string, string> = { robust: "ok", stable: "ok", reactive: "warning", overloaded: "alarm" };
+
+/** The EEMUA 191 chart: the period as one point, average against peak alarms per 10 minutes,
+ * over the four bands (robust, stable, reactive, overloaded). */
+function EemuaChart({ data }: { data: Performance }) {
+  const mode = currentTheme();
+  const layout = plotTheme(mode);
+  const colors = BRAND_COLORS[mode];
+  const { level, average_per_10min: average, peak_per_10min: peak } = data.eemua;
+  const x = Math.max(average, 0.01);
+  const y = Math.max(peak, 1);
+  const band = (x0: number, x1: number, y0: number, y1: number, color: string) => ({ type: "rect", xref: "x", yref: "y", x0, x1, y0, y1, fillcolor: color, opacity: 0.12, line: { width: 0 }, layer: "below" });
+  return <div className="panel">
+    <div className="panel-header"><div><h2>{t("EEMUA 191 level")}</h2><p>{t("Average against peak alarms per 10 minutes.")}</p></div>
+      <Pill status={EEMUA_STATUS[level] ?? "unknown"} label={t(EEMUA_WORDS[level] ?? level)} /></div>
+    <Plot
+      data={[{ type: "scatter", mode: "markers+text", x: [x], y: [y], text: [t("This period")], textposition: "top center", marker: { size: 12, color: colors.primary } }]}
+      layout={{ ...layout, height: 260, margin: { l: 50, r: 10, t: 10, b: 40 }, showlegend: false,
+        xaxis: { ...layout.xaxis, type: "log", range: [-2, 3], title: { text: t("Average per 10 minutes") } },
+        yaxis: { ...layout.yaxis, type: "log", range: [0, 4], title: { text: t("Peak per 10 minutes") } },
+        shapes: [band(0.01, 1, 1, 10, colors.good), band(0.01, 1, 10, 100, colors.primary), band(0.01, 1, 100, 10000, colors.attention), band(1, 10, 1, 10000, colors.attention), band(10, 1000, 1, 10000, colors.problem)] }}
+      config={{ displaylogo: false, responsive: true }}
+      style={{ width: "100%" }}
+      useResizeHandler
+    />
+  </div>;
 }
