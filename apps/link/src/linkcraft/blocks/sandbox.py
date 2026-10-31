@@ -76,6 +76,10 @@ DENIED_MODULES = frozenset(
         "numpy.testing",
         "pandas.io",
         "pandas.testing",
+        # pickle_compat.loads unpickles, and unpickling calls any function (os.system)
+        "pandas.compat",
+        # Expr("x.__class__") reads any attribute by name (pandas.eval's own machinery)
+        "pandas.core.computation",
     }
 )
 DENIED_NAMES = frozenset(
@@ -156,6 +160,15 @@ DENIED_ATTRIBUTES = frozenset(
         "extbuild",
         "tempdir",
         "temppath",
+        # unpickling calls any function
+        "Unpickler",
+        "pickle",
+        "pickle_compat",
+        "computation",
+        "Expr",
+        "Scope",
+        # imports any module by name and hands it back unguarded
+        "import_optional_dependency",
         # the system
         "system",
         "popen",
@@ -347,6 +360,10 @@ def check_code(code: str) -> list[str]:
                 )
             elif _attribute_denied(node.attr):
                 problem(node, t("{name} is not allowed in a block.", name=node.attr))
+        elif isinstance(node, ast.MatchClass):
+            # A class pattern reads attributes by name, like getattr: ``case object(__class__=c)``,
+            # or ``case K(c)`` with a ``__match_args__`` the code set through type().
+            problem(node, t("class patterns in match are not allowed in a block."))
         elif isinstance(node, ast.Name):
             if node.id.startswith("__"):
                 problem(node, t("names that start with __ are not allowed ({name}).", name=node.id))
