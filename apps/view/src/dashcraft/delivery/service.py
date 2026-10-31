@@ -31,7 +31,14 @@ from dashcraft.query.cards import Reader
 from dashcraft.reports import assistant as helper
 from dashcraft.reports import document, docx, html, pdf, text
 from dashcraft.reports.model import ReportPayload, Schedule
-from dashcraft.reports.schedule import cadence, closed_period, next_run, runs_between
+from dashcraft.reports.schedule import (
+    MAX_EVENT_RUNS,
+    cadence,
+    closed_period,
+    event_periods,
+    next_run,
+    runs_between,
+)
 from dashcraft.reports.store import ReportStore
 from dashcraft.suite import Suite
 from dashcraft.suite.reports import unread
@@ -78,12 +85,20 @@ class ReportService:
         return next_run(schedule, self.clock(), self.zone())
 
     def span(
-        self, report: dict[str, Any], reader: Reader
+        self,
+        report: dict[str, Any],
+        reader: Reader,
+        period: tuple[datetime, datetime] | None = None,
     ) -> tuple[Reader, str, datetime, datetime]:
         """What a report made now reads: the reader, the period as a window, its start and end.
         The report's period ending now; or, when the schedule asks for whole calendar periods,
-        the last one (last week, last month) with every read pinned to its end."""
+        the last one (last week, last month) with every read pinned to its end; or ``period``
+        (the batch an event closed), with every read pinned to its end."""
 
+        if period is not None:
+            start, end = period
+            hours = max(1, round((end - start).total_seconds() / 3600))
+            return reader.until(end), f"{hours}h", start, end
         now = reader.clock()
         closed = closed_period(
             Schedule.model_validate(report.get("schedule") or {}), now, self.zone()
@@ -143,19 +158,25 @@ class ReportService:
         )
 
     def make(
-        self, report: dict[str, Any], reader: Reader, *, trigger: str, by: str | None
+        self,
+        report: dict[str, Any],
+        reader: Reader,
+        *,
+        trigger: str,
+        by: str | None,
+        period: tuple[datetime, datetime] | None = None,
     ) -> dict[str, Any]:
         """Read every section over the report's period, ending now, and keep the PDF. A failure
         is kept as a failed run with its reason, never raised (but a refused token, 401)."""
 
         made_at = reader.clock()
-        reader, period, start, end = self.span(report, reader)
+        reader, window, start, end = self.span(report, reader, period)
         run = self.store.start_run(
             report, trigger=trigger, by=by, period_start=start, period_end=end
         )
         try:
             items, problems = read_sections(
-                reader, report.get("sections") or [], period, self.writer(report)
+                reader, report.get("sections") or [], window, self.writer(report)
             )
             document = pdf.render(
                 report,
@@ -359,12 +380,18 @@ class ReportService:
         return f"{self.root}/api/reports/{run['report_id']}/runs/{run['run_id']}/pdf"
 
     def send(
-        self, report: dict[str, Any], reader: Reader, *, trigger: str, by: str | None
+        self,
+        report: dict[str, Any],
+        reader: Reader,
+        *,
+        trigger: str,
+        by: str | None,
+        period: tuple[datetime, datetime] | None = None,
     ) -> dict[str, Any]:
         """Make the report and send it to its recipients; the run says how many it reached."""
 
         with self._lock:
-            run = self.make(report, reader, trigger=trigger, by=by)
+            run = self.make(report, reader, trigger=trigger, by=by, period=period)
         page = f"{self.root}/reports/{report['report_id']}?run={run['run_id']}"
         if run["status"] != "done":
             self.suite.failed(report, run, page)
@@ -407,6 +434,54 @@ class ReportService:
         if due:
             self.sync()
         return sent
+
+    def due_events(self, reader: Callable[[], Reader | None]) -> list[dict[str, Any]]:
+        """Send a report for each batch or start-up an event closed since the last one (V5):
+        the reports whose schedule has ``on_event``, over the period each new end event closes
+        (``schedule.event_periods``). The newest event run's end is where the next look starts;
+        before the first, the report's last save (old events never flood a new trigger)."""
+
+        watched = []
+        for report in self.store.list():
+            schedule = Schedule.model_validate(report.get("schedule") or {})
+            if schedule.on_event is not None:
+                watched.append((report, schedule.on_event))
+        if not watched:
+            return []
+        found = reader()
+        if found is None:
+            return []
+        sent = []
+        for report, trigger in watched:
+            try:
+                ends = found.events(trigger.end_kind, 200)
+                starts = found.events(trigger.start_kind, 200) if trigger.start_kind else []
+            except Unauthorized:
+                raise
+            except Exception:  # noqa: BLE001 - an app not installed publishes nothing
+                continue
+            since = self._event_mark(report)
+            fallback = window_seconds(report.get("period") or "24h")
+            for start, end, _event in event_periods(
+                trigger, ends, starts, since, fallback, limit=MAX_EVENT_RUNS
+            ):
+                try:
+                    sent.append(
+                        self.send(report, found, trigger="event", by=None, period=(start, end))
+                    )
+                except Unauthorized:
+                    LOGGER.warning(
+                        "Report %s not sent: PlantCraft refused View's token", report["report_id"]
+                    )
+                    break
+        return sent
+
+    def _event_mark(self, report: dict[str, Any]) -> datetime:
+        for run in self.store.runs(report["report_id"], limit=200):
+            if run.get("trigger") == "event" and run.get("period_end"):
+                return _instant(run["period_end"])
+        saved = report.get("updated_at") or report.get("created_at")
+        return _instant(saved) if saved else self.clock()
 
     def sync(self) -> None:
         """PlantCraft's list of View's schedules, and the coming sends on Desk's calendar."""
@@ -488,7 +563,8 @@ class ReportScheduler:
         if not self._resumed:
             self._resumed = True
             self.service.resume()
-        return self.service.due(self.reader)
+        sent = self.service.due(self.reader)
+        return sent + self.service.due_events(self.reader)
 
     def _loop(self) -> None:
         while not self._stop.is_set():
@@ -503,3 +579,13 @@ class ReportScheduler:
         if self._thread is not None:
             self._thread.join(timeout=5)
         self.lease.release()
+
+
+def _instant(value: Any) -> datetime:
+    """A stored stamp as an aware UTC instant (the epoch when it cannot be read)."""
+
+    try:
+        at = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return datetime(1970, 1, 1, tzinfo=UTC)
+    return at if at.tzinfo else at.replace(tzinfo=UTC)

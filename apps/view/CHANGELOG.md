@@ -8,6 +8,11 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **A report made when a batch or a start-up ends (V5, first part).** Settings › **Also when an
+  event ends a batch or a start-up**: each new event of the chosen kind (about one asset, or
+  any) makes and sends the report over the batch it closes, from the matching start event (or
+  the start the event carries, or the report's period), at most 31 days. Each batch once; the
+  runs show as triggered by an event. `schedule.on_event` in `/api/reports`.
 - **A multivariable controller panel (V10).** A dashboard panel of kind **Multivariable
   controller** shows a third-party APC read only: whether it is on and its mode, then each MV and
   CV with its value, limits, steady-state target, status and shadow price, a bar of its range,
