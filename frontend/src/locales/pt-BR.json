@@ -1487,5 +1487,7 @@
   "HTTPS port": "Porta HTTPS",
   "Listen on": "Escutar em",
   "Internal networks": "Redes internas",
-  "Time zone locked": "Fuso horário travado"
+  "Time zone locked": "Fuso horário travado",
+  "Assistant read limit reached (possible extraction)": "Limite de leitura do assistente atingido (possível extração)",
+  "Assistant read many signals at once (possible extraction)": "Assistente leu muitos sinais de uma vez (possível extração)"
 }

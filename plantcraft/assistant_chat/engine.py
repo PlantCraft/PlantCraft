@@ -506,6 +506,85 @@ def history_for_model(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return turns
 
 
+def reads_of(name: str, arguments: dict[str, Any]) -> int:
+    """What one tool call reads, counted for the daily limit: a signal each, at least one."""
+
+    if name == HELP:
+        return 0
+    ids = arguments.get("signal_ids")
+    if isinstance(ids, list):
+        return max(1, len(ids))
+    return 1
+
+
+class ReadBudget:
+    """How much the assistant read for each person today (security backlog B13, 2026-10-31).
+
+    Each tool call counts the signals it reads (``reads_of``). Past ``daily`` the assistant
+    reads nothing more for that person until the plant's next day, and the audit log gets one
+    ``assistant.read_limit`` that day. The count starts from today's ``assistant.tool`` records
+    of the audit log, so a restart does not reset it; each server process keeps its own."""
+
+    def __init__(self, audit: Any, daily: int):
+        self.audit = audit
+        self.daily = daily
+        self._used: dict[tuple[str, str], int] = {}
+        self._warned: set[tuple[str, str]] = set()
+        self._lock = threading.Lock()
+
+    @staticmethod
+    def _today() -> datetime:
+        return datetime.now(plant_timezone()).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    def _seed(self, username: str, since: datetime) -> int:
+        try:
+            rows = self.audit.list(
+                username=username, action="assistant.tool", since=utc_text(since), limit=5_000
+            )
+        except Exception:  # an audit log that cannot be read starts the day at zero
+            return 0
+        used = 0
+        for row in rows:
+            detail = row.get("detail") if isinstance(row, dict) else None
+            arguments = detail.get("arguments") if isinstance(detail, dict) else None
+            name = str(row.get("subject") or "").removeprefix("tool:")
+            used += reads_of(name, arguments if isinstance(arguments, dict) else {})
+        return used
+
+    def spend(self, username: str, amount: int) -> bool:
+        """Counts ``amount`` reads for ``username``; False (nothing counted) past the limit."""
+
+        if amount <= 0:
+            return True
+        since = self._today()
+        key = (username, since.date().isoformat())
+        with self._lock:
+            if key not in self._used:
+                self._used = {k: v for k, v in self._used.items() if k[1] == key[1]}
+                self._used[key] = self._seed(username, since)
+            if self._used[key] + amount > self.daily:
+                first = key not in self._warned
+                self._warned.add(key)
+                used = self._used[key]
+            else:
+                self._used[key] += amount
+                return True
+        if first:
+            self.audit.record(
+                username,
+                "assistant.read_limit",
+                f"user:{username}",
+                {"read_today": used, "asked": amount, "daily_limit": self.daily},
+                app_id="processcraft",
+            )
+        return False
+
+    def used(self, username: str) -> int:
+        key = (username, self._today().date().isoformat())
+        with self._lock:
+            return self._used.get(key, 0)
+
+
 class ChatEngine:
     def __init__(
         self,
@@ -526,6 +605,12 @@ class ChatEngine:
         self.users = users
         self.workers = _env_int("PLANTCRAFT_ASSISTANT_WORKERS", 4, 1, 32)
         self.daily = _env_int("PLANTCRAFT_ASSISTANT_DAILY", 300, 1, 100_000)
+        # What the assistant reads for one person: signals a day, and signals in one answer
+        # past which the audit log flags a possible extraction (B13, 2026-10-31).
+        self.reads = ReadBudget(
+            audit, _env_int("PLANTCRAFT_ASSISTANT_DAILY_READS", 2_000, 1, 10_000_000)
+        )
+        self.bulk_signals = _env_int("PLANTCRAFT_ASSISTANT_BULK_SIGNALS", 60, 1, 100_000)
         self.executor = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="assistant")
         self._futures: set[Future] = set()
         self._lock = threading.Lock()
@@ -1020,12 +1105,36 @@ class ChatEngine:
                 raise ValueError(f"Unknown tool: {name}")
             checked = mcp.check_arguments(found, arguments)
         step["summary"] = summary(checked)
+        if not self.reads.spend(username, reads_of(name, checked)):
+            raise RuntimeError(
+                t(
+                    "Today's limit of {count} signal reads by the assistant for this person is "
+                    "reached. Answer from what was already read and say so; it starts again "
+                    "tomorrow.",
+                    count=self.reads.daily,
+                )
+            )
 
         # Only what was read: an id the model guessed and that answered 404 is no source.
         def keep(found: list[str]) -> None:
+            before = sum(ref.startswith("signal:") for ref in refs)
             for ref in found:
                 if ref not in refs:
                     refs.append(ref)
+            after = sum(ref.startswith("signal:") for ref in refs)
+            if before < self.bulk_signals <= after:
+                # One answer read many signals at once: flagged once, the answer goes on.
+                self.audit.record(
+                    username,
+                    "assistant.bulk_read",
+                    f"user:{username}",
+                    {
+                        "chat_id": chat.get("chat_id"),
+                        "signals": after,
+                        "flag_at": self.bulk_signals,
+                    },
+                    app_id="processcraft",
+                )
 
         self.audit.record(
             username,

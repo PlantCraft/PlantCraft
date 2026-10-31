@@ -184,6 +184,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **A daily limit on what the assistant reads for each person, and extraction flags in the audit
+  log** (backlog B13). Each tool call counts the signals it reads. Past
+  `PLANTCRAFT_ASSISTANT_DAILY_READS` (2000 a day) the assistant reads nothing more for that person
+  until the next day, and the audit log records `assistant.read_limit`. One answer that reads
+  more than `PLANTCRAFT_ASSISTANT_BULK_SIGNALS` (60) signals is recorded as
+  `assistant.bulk_read`. Both show with a warning mark in Settings › Audit. The count starts from
+  the day's audit records, so a restart does not reset it.
 - **The assistant no longer says it created what it only prepared** (security test D11). After
   it proposes an action, an event or another object, "I created" in its answer becomes "I
   prepared": only the card's button creates it. The tool's answer and the instructions say so too.
