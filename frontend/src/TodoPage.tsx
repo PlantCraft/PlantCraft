@@ -9,7 +9,7 @@
  */
 import { AppWindow, ArrowRightCircle, CalendarDays, Check, CheckCircle2, Circle, GripVertical, Inbox, ListPlus, Plus, Repeat, Sun, Trash2, Users, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type DragEvent, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
-import { displayTimeZone, useAssistantPage } from "@plantcraft/ui";
+import { displayTimeZone, useAssistantPage, confirmAction } from "@plantcraft/ui";
 import { errorText, isLocalHref } from "./collab";
 import { PageHeading } from "./DeskPages";
 import { addDays, deskApi, isoDay, type AppTodo, type Todo, type TodoList, type TodoRepeat, type TodoStep, type TodoView, type TodoViewName } from "./deskApi";
@@ -116,7 +116,7 @@ function Detail({ todo, data, labels, onChange, onClose }: { todo: Todo; data: T
     } catch (err) { setError(errorText(err)); }
   }
   async function remove() {
-    if (!window.confirm(t("Delete the to-do {title}?", { title: todo.title }))) return;
+    if (!(await confirmAction(t("Delete the to-do {title}?", { title: todo.title }), { confirm: t("Delete"), danger: true }))) return;
     try { await deskApi.deleteTodo(todo.todo_id); onClose(); onChange(); } catch (err) { setError(errorText(err)); }
   }
   const myDay = todo.my_day === data.day;
@@ -205,7 +205,7 @@ function ListTools({ list, onChange, onGone }: { list: TodoList; onChange: () =>
     if (name && name.trim() && name.trim() !== list.name) { await deskApi.changeList(list.list_id, { name: name.trim() }).catch(() => undefined); onChange(); }
   }
   async function remove() {
-    if (!window.confirm(t("Delete the list {name} and its to-dos?", { name: list.name }))) return;
+    if (!(await confirmAction(t("Delete the list {name} and its to-dos?", { name: list.name }), { confirm: t("Delete"), danger: true }))) return;
     await deskApi.deleteList(list.list_id).catch(() => undefined);
     onGone();
   }

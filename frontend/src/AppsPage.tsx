@@ -1,7 +1,7 @@
 /** Apps page (administrators): install from a signed file, the online catalog, or register an external app. */
 import { AlertTriangle, Ban, CheckCircle2, CloudDownload, FileUp, KeyRound, Link2, LoaderCircle, Package, RefreshCw, RotateCcw, ShieldAlert, ShieldCheck, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { DataTable, SUITE_ORDER, type DataColumn } from "@plantcraft/ui";
+import { DataTable, SUITE_ORDER, type DataColumn, confirmAction, Heading } from "@plantcraft/ui";
 import { AppTabs } from "./AppTabs";
 import { appFullName, appIdFor } from "./appMarks";
 import { appsApi, type Adds, type AppsOverview, type Catalog, type InstalledApp, type PackagePreview } from "./appsApi";
@@ -98,10 +98,7 @@ export default function AppsPage() {
   }
 
   return <div className="apps-page">
-    <div className="page-heading">
-      <div><span className="eyebrow"><Package size={14} /> {t("Administration")}</span><h1>{t("Apps")}</h1><p>{t("Install the apps of the suite from signed packages, update them, roll them back or remove them. Every package is checked against the trusted publishers before anything runs.")}</p></div>
-      <div className="heading-actions"><button type="button" className="button button-secondary button-icon" title={t("Refresh")} aria-label={t("Refresh")} onClick={() => void load()}><RefreshCw /></button></div>
-    </div>
+    <Heading title={t("Apps")} actions={<><button type="button" className="button button-secondary button-icon" title={t("Refresh")} aria-label={t("Refresh")} onClick={() => void load()}><RefreshCw /></button></>} />
     <AppTabs current="apps" />
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
     {notice && <div className="ac-notice"><ShieldCheck size={15} /> {notice}</div>}
@@ -276,9 +273,9 @@ function InstalledTable({ apps, busy, installEnabled, onAct }: { apps: Installed
       return <>
         {app.has_sbom && <a className="icon-button" href={appsApi.sbomUrl(app.id)} target="_blank" rel="noreferrer" title={t("SBOM")} aria-label={t("SBOM of {name}", { name: app.name })}><Package size={15} /></a>}
         {managed && app.needs_key && <button className="icon-button" disabled={pending || !installEnabled || !!busy} title={t("Give it an app key")} onClick={() => void onAct(`key-${app.id}`, () => appsApi.giveKey(app.id))}><KeyRound size={15} /></button>}
-        {managed && app.previous_version && <button className="icon-button" disabled={pending || !installEnabled || !!busy} title={t("Roll back to {version}", { version: app.previous_version })} aria-label={t("Roll back {name}", { name: app.name })} onClick={() => { if (window.confirm(t("Return {name} to version {version}?", { name: app.name, version: app.previous_version ?? "" }))) void onAct(`rollback-${app.id}`, () => appsApi.rollback(app.id)); }}><RotateCcw size={15} /></button>}
+        {managed && app.previous_version && <button className="icon-button" disabled={pending || !installEnabled || !!busy} title={t("Roll back to {version}", { version: app.previous_version })} aria-label={t("Roll back {name}", { name: app.name })} onClick={async () => { if ((await confirmAction(t("Return {name} to version {version}?", { name: app.name, version: app.previous_version ?? "" }), { confirm: t("Roll back"), danger: false }))) void onAct(`rollback-${app.id}`, () => appsApi.rollback(app.id)); }}><RotateCcw size={15} /></button>}
         {app.origin === "external" && <button className="icon-button" disabled={!!busy} title={t("Check its address")} onClick={() => void onAct(`check-${app.id}`, () => appsApi.check(app.id))}><RefreshCw size={15} /></button>}
-        {(managed || app.origin === "external") && <button className="icon-button" disabled={pending || (managed && !installEnabled) || !!busy} title={managed ? t("Uninstall") : t("Remove")} aria-label={t("Uninstall {name}", { name: app.name })} onClick={() => { if (window.confirm(managed ? t("Uninstall {name}? Its data on the server is kept.", { name: app.name }) : t("Remove {name} from the launcher?", { name: app.name }))) void onAct(`remove-${app.id}`, () => appsApi.uninstall(app.id)); }}>{managed ? <Trash2 size={15} /> : <Ban size={15} />}</button>}
+        {(managed || app.origin === "external") && <button className="icon-button" disabled={pending || (managed && !installEnabled) || !!busy} title={managed ? t("Uninstall") : t("Remove")} aria-label={t("Uninstall {name}", { name: app.name })} onClick={async () => { if ((await confirmAction(managed ? t("Uninstall {name}? Its data on the server is kept.", { name: app.name }) : t("Remove {name} from the launcher?", { name: app.name }), { confirm: managed ? t("Uninstall") : t("Remove"), danger: true }))) void onAct(`remove-${app.id}`, () => appsApi.uninstall(app.id)); }}>{managed ? <Trash2 size={15} /> : <Ban size={15} />}</button>}
       </>;
     } },
   ];

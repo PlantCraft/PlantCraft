@@ -114,7 +114,7 @@
 .cl-steps li svg { flex: none; margin-top: 2px; }
 .cl-steps li span { display: grid; gap: 2px; }
 .cl-steps small { color: var(--pc-text-2); overflow-wrap: anywhere; }
-.cl-access { margin: 6px 0 0; color: var(--pc-text-1, inherit); }
+.cl-access { margin: 6px 0 0; color: var(--pc-text); }
 .cl-access.bad { color: var(--pc-problem-text); }
 .cl-retype { display: flex; align-items: center; gap: 5px; margin-top: 4px; color: var(--pc-attention-text); font-size: var(--pc-fs-xs); font-weight: 600; }
 .pp-token-form { margin: 8px 0; display: flex; gap: 8px; }

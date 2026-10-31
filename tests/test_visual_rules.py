@@ -80,3 +80,56 @@ def test_no_top_button_repeats_the_menu():
                 for target in _goes_to(fragment, menu):
                     problems.append(f"{path.relative_to(ROOT)}: a top button goes to {target}")
     assert not problems, "\n".join(problems)
+
+
+def _sources() -> list[Path]:
+    found = list((ROOT / "frontend" / "src").rglob("*.tsx"))
+    found += list(ROOT.glob("apps/*/frontend/src/**/*.tsx"))
+    return sorted(path for path in found if ".test." not in path.name)
+
+
+def test_asking_before_an_action_is_the_suites_dialog():
+    """Rule 9: ``confirmAction`` from ``@plantcraft/ui``, never the browser's ``window.confirm``."""
+
+    offenders = [
+        f"{path.relative_to(ROOT)}:{number}"
+        for path in _sources()
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if "window.confirm(" in line
+    ]
+    assert not offenders, "window.confirm in place of confirmAction: " + ", ".join(offenders)
+
+
+def _styles(*roots: str) -> list[Path]:
+    found: list[Path] = []
+    for root in roots:
+        found += [
+            path
+            for path in ROOT.glob(f"{root}/**/*")
+            if path.suffix in {".css", ".ts", ".tsx"} and "node_modules" not in path.parts
+        ]
+    return sorted(found)
+
+
+def test_every_colour_and_size_token_a_screen_uses_exists():
+    """A ``var(--pc-…)`` names a token of ``@plantcraft/ui`` (or one the page sets itself).
+
+    A misspelt or retired token draws its fallback, a fixed colour that ignores the dark theme,
+    or nothing at all (a shadow, a text colour).
+    """
+
+    every = _styles("ui/src", "frontend/src", "apps/*/frontend/src")
+    defined: set[str] = set()
+    for path in every:
+        text = path.read_text(encoding="utf-8")
+        defined |= set(re.findall(r"(--pc-[a-z0-9-]+)\s*:", text))
+        defined |= set(re.findall(r"[\"'](--pc-[a-z0-9-]+)[\"']", text))
+    missing = [
+        f"{path.relative_to(ROOT)}:{number} {name}"
+        for path in _styles("frontend/src", "apps/*/frontend/src")
+        if ".test." not in path.name
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        for name in re.findall(r"var\((--pc-[a-z0-9-]+[a-z0-9])", line)
+        if name not in defined
+    ]
+    assert not missing, "tokens that do not exist: " + ", ".join(missing)

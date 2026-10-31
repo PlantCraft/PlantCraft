@@ -1,6 +1,6 @@
 /** AI assistant access: the read-only MCP server's switch (Setup, admins) and each person's access
  * tokens (their profile). A token is shown once, with how to connect an assistant to it. */
-import { DataTable, FormSection, Heading } from "@plantcraft/ui";
+import { DataTable, FormSection, Heading, confirmAction } from "@plantcraft/ui";
 import { AlertTriangle, Ban, Bot, Copy, KeyRound, LoaderCircle, Plus, Power } from "lucide-react";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { requestJson } from "./api";
@@ -67,7 +67,7 @@ export default function AssistantAccessPage() {
     setBusy(false);
   }
   async function revoke(token: AssistantToken) {
-    if (!window.confirm(t("Revoke the token {label} of {person}? Their assistant stops reading at once.", { label: token.label || token.token_id, person: token.username }))) return;
+    if (!(await confirmAction(t("Revoke the token {label} of {person}? Their assistant stops reading at once.", { label: token.label || token.token_id, person: token.username }), { confirm: t("Revoke"), danger: true }))) return;
     try { await assistantApi.revokeAny(token.token_id); await load(); } catch (err) { setError(message(err)); }
   }
 
@@ -121,7 +121,7 @@ export function MyAssistantTokens() {
     try { setCreated(await assistantApi.create(label.trim())); setLabel(""); await load(); } catch (err) { setError(message(err)); }
   }
   async function revoke(token: AssistantToken) {
-    if (!window.confirm(t("Revoke {label}? The assistant using it stops reading at once.", { label: token.label || token.token_id }))) return;
+    if (!(await confirmAction(t("Revoke {label}? The assistant using it stops reading at once.", { label: token.label || token.token_id }), { confirm: t("Revoke"), danger: true }))) return;
     try { await assistantApi.revoke(token.token_id); if (created?.token_id === token.token_id) setCreated(null); await load(); } catch (err) { setError(message(err)); }
   }
 

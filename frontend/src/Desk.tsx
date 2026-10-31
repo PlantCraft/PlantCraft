@@ -8,7 +8,7 @@
  * /widgets draws every widget at every size (the widget test page).
  */
 import { CheckCircle2, Clock, Plus, Repeat, X } from "lucide-react";
-import { AssistantTitleButton, bodyPixels, fetchSuiteWidgets, useAssistantPage, formatAgo, openMessages, statusVar, useOverviewLayout, WidgetBoard, WidgetGallery, type BoardItem, type WidgetConfig, type WidgetDef, displayTimeZone, wallClock } from "@plantcraft/ui";
+import { AssistantTitleButton, bodyPixels, fetchSuiteWidgets, useAssistantPage, formatAgo, openMessages, statusVar, useOverviewLayout, WidgetBoard, WidgetGallery, type BoardItem, type WidgetConfig, type WidgetDef, displayTimeZone, wallClock, Heading } from "@plantcraft/ui";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { AppLauncher } from "./AppLauncher";
 import { Go, errorText } from "./collab";
@@ -318,9 +318,7 @@ function useCatalog(data: HomeData, me: WorkspaceUser | null) {
 export function WidgetGalleryPage({ data, me }: { data: HomeData; me: WorkspaceUser | null }) {
   const { catalog, loading } = useCatalog(data, me);
   return <>
-    <div className="page-heading">
-      <div><span className="eyebrow">{t("Desk")}</span><h1>{t("Widgets")}</h1><p>{t("Every widget of Desk and of the installed apps, at each size it allows.")}</p></div>
-    </div>
+    <Heading title={t("Widgets")} />
     {loading ? <Waiting /> : <WidgetGallery catalog={catalog} apps={data.apps.map(({ id, name, url }) => ({ id, name, url }))} />}
   </>;
 }

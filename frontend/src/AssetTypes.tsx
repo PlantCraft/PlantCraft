@@ -1,7 +1,7 @@
 /** Assets › Types: the type catalog (everyone reads it, admins edit it). */
 import { AssetTabs } from "./AssetsPage";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { useAssistantPage } from "@plantcraft/ui";
+import { useAssistantPage, confirmAction, Heading } from "@plantcraft/ui";
 import { AlertTriangle, BookOpen, LoaderCircle, Plus, Save, Search, Trash2, X } from "lucide-react";
 import { DATA_TYPE_LABELS, ICON_GROUPS, modelApi, TYPE_ICONS, TypeIcon, typeIndex, type AssetType, type DataType, type TypeAttribute, type TypeCatalog, type TypeDefinition, type TypeRole } from "./assetModel";
 import { t } from "./i18n";
@@ -69,8 +69,7 @@ export function AssetTypesPage({ selected }: { selected: string | null }) {
   const { byId } = typeIndex(catalog.types);
   const current = selected && selected !== "new" ? byId.get(selected) ?? null : null;
   return <>
-    <div className="page-heading"><div><span className="eyebrow">{t("Plant")}</span><h1>{t("Assets")}</h1><p>{t("What each type of asset records: its attributes, the signals it takes by role and what may sit inside it. A type inherits everything from its parent.")}</p></div>
-      <div className="heading-actions"><button type="button" className="button button-primary" disabled={!isAdmin} title={isAdmin ? undefined : ADMIN_ONLY} onClick={() => navigate("/asset-types/new")}><Plus size={16} /> {t("New type")}</button></div></div>
+    <Heading title={t("Assets")} actions={<><button type="button" className="button button-primary" disabled={!isAdmin} title={isAdmin ? undefined : ADMIN_ONLY} onClick={() => navigate("/asset-types/new")}><Plus size={16} /> {t("New type")}</button></>} />
     <AssetTabs current="types" />
     <div className="ty-layout">
       <article className="panel ty-list" aria-label={t("Asset types")}>
@@ -122,7 +121,7 @@ function TypeEditor({ type, isNew, catalog, canEdit, onSaved, onRemoved }: { typ
     }
   }
   async function remove() {
-    if (!type || !window.confirm(t("Remove the type {name}?", { name: type.name }))) return;
+    if (!type || !(await confirmAction(t("Remove the type {name}?", { name: type.name }), { confirm: t("Remove"), danger: true }))) return;
     try { await modelApi.deleteType(type.id); onRemoved(); } catch (err) { setError(err instanceof Error ? err.message : t("Could not remove the type.")); }
   }
   return <form className="panel ty-editor" onSubmit={save} aria-label={t("Type editor")}>

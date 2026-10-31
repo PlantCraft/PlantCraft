@@ -3,7 +3,7 @@
  * the model each use writes with: the default, and each part of the suite that uses a model,
  * the apps' own included. Choosing a default is what turns models on; the first model that
  * answers its test becomes the default. */
-import { FormSection, Heading } from "@plantcraft/ui";
+import { FormSection, Heading, confirmAction } from "@plantcraft/ui";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { AlertTriangle, Bot, CheckCircle2, FlaskConical, LoaderCircle, Pencil, Plus, Server, ShieldCheck, Trash2, X } from "lucide-react";
 import { AssistantEvaluation } from "./AssistantEval";
@@ -104,7 +104,7 @@ export function LanguageModelPage() {
   }
   async function remove(provider: LanguageProvider) {
     const who = provider.used_by.length ? ` ${t("Used by: {names}. They will answer from scripts until you choose another model for them.", { names: provider.used_by.join(", ") })}` : "";
-    if (!window.confirm(`${t("Remove the provider {name} and its key?", { name: provider.name })}${who}`)) return;
+    if (!(await confirmAction(`${t("Remove the provider {name} and its key?", { name: provider.name })}${who}`, { confirm: t("Remove"), danger: true }))) return;
     setError(""); setNotice("");
     try { take(await collabApi.removeProvider(provider.provider_id)); setNotice(t("{name} was removed.", { name: provider.name })); } catch (err) { setError(errorText(err)); }
   }

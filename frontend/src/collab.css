@@ -158,7 +158,7 @@
 .nt-markall { margin-left: auto; padding: 3px 6px; border: 0; background: none; display: inline-flex; align-items: center; gap: 4px; color: var(--pc-primary-text); font-size: var(--pc-fs-xs); font-weight: 600; cursor: pointer; }
 /* A row's own buttons (read, favorite, done): shown on hover or focus; a favorite's star stays. */
 .nt-row, .msg-row-item { position: relative; }
-.nt-row-tools { position: absolute; top: 6px; right: 6px; display: flex; gap: 2px; padding: 2px; border-radius: var(--pc-radius-md); background: var(--pc-surface); box-shadow: var(--pc-shadow-sm, 0 1px 3px rgb(0 0 0 / .12)); opacity: 0; pointer-events: none; z-index: 1; }
+.nt-row-tools { position: absolute; top: 6px; right: 6px; display: flex; gap: 2px; padding: 2px; border-radius: var(--pc-radius-md); background: var(--pc-surface); box-shadow: var(--pc-shadow-1); opacity: 0; pointer-events: none; z-index: 1; }
 .nt-row-tools .co-icon { width: 26px; height: 26px; }
 .nt-row:hover .nt-row-tools, .nt-row:focus-within .nt-row-tools, .msg-row-item:hover .nt-row-tools, .msg-row-item:focus-within .nt-row-tools { opacity: 1; pointer-events: auto; }
 /* Touch screens show the tools all the time: the row's text keeps clear of them. */
@@ -323,7 +323,7 @@
 .act-card-checklist { color: var(--pc-text-3); }
 .act-card-checklist-done { color: var(--pc-good-text); }
 .act-checklist-title { display: flex; align-items: baseline; gap: 10px; }
-.act-checklist-title small { color: var(--pc-text-4); font: 500 var(--pc-fs-sm) var(--pc-font-body, inherit); }
+.act-checklist-title small { color: var(--pc-text-4); font: 500 var(--pc-fs-sm) var(--pc-font-sans); }
 .act-progress { height: 5px; margin: -2px 0 10px; border-radius: var(--pc-radius-pill); background: var(--pc-surface-3); overflow: hidden; }
 .act-progress i { display: block; height: 100%; background: var(--pc-good-fill); transition: width .2s; }
 .act-checklist { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 2px; }
@@ -339,7 +339,7 @@
 .act-item-add input:first-child { flex: 1 1 240px; min-width: 0; }
 .act-item-add select, .act-item-add input { height: 36px; }
 /* An action's time (requests, Operations): who, which day, how long. */
-.act-time .section-title small { font: 500 var(--pc-fs-sm) var(--pc-font-body, inherit); margin-left: 6px; }
+.act-time .section-title small { font: 500 var(--pc-fs-sm) var(--pc-font-sans); margin-left: 6px; }
 .act-time-list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 2px; }
 .act-time-list li { display: grid; grid-template-columns: 4.5em 6.5em minmax(7em, auto) minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 36px; padding: 2px 6px; border-radius: var(--pc-radius-md); font-size: var(--pc-fs-sm); }
 .act-time-list li:hover { background: var(--pc-surface-2); }
@@ -407,6 +407,6 @@
 .pc-embedded-page .msg-list-head h1, .pc-embedded-page .msg-list-head .eyebrow { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 /* Messages and Notifications have a quick button each (round 8): the panel shows one section, no tabs. */
 .pc-embedded-page .msg-sections { display: none; }
-.nt-resolved { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--pc-success-text, var(--pc-text-2)); font-weight: 600; }
+.nt-resolved { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--pc-good-text); font-weight: 600; }
 .nt-resolved time { margin-left: auto; color: var(--pc-text-3); font-weight: 400; font-size: var(--pc-fs-sm); }
 .nt-outcome { margin: 0; color: var(--pc-text-2); }

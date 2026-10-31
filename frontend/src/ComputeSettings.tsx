@@ -2,7 +2,7 @@
  * the platform and with no network of their own, and the limits of each app's tasks
  * (docs/compute.md). A worker is added here; its machine enrolls with a one-time code. */
 import { AlertTriangle, Ban, Copy, Cpu, KeyRound, LoaderCircle, Pause, Play, Plus, Save, Trash2 } from "lucide-react";
-import { DataTable } from "@plantcraft/ui";
+import { DataTable, confirmAction, Heading } from "@plantcraft/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { appLabel } from "./appMarks";
 import { locale, t } from "./i18n";
@@ -110,19 +110,19 @@ export default function ComputeSettingsPage() {
     setBusy(false);
   }
   const appName = (id: string) => appLabel(id, data?.apps.find((app) => app.id === id)?.name ?? id);
-  const revoke = (worker: ComputeWorker) => {
-    if (!window.confirm(t("Revoke {name}? Its credential stops working at once and what it runs goes back to the queue.", { name: worker.name }))) return;
+  const revoke = async (worker: ComputeWorker) => {
+    if (!(await confirmAction(t("Revoke {name}? Its credential stops working at once and what it runs goes back to the queue.", { name: worker.name }), { confirm: t("Revoke"), danger: true }))) return;
     void act(() => computeApi.revoke(worker.id));
   };
-  const remove = (worker: ComputeWorker) => {
-    if (!window.confirm(t("Remove {name} from the list?", { name: worker.name }))) return;
+  const remove = async (worker: ComputeWorker) => {
+    if (!(await confirmAction(t("Remove {name} from the list?", { name: worker.name }), { confirm: t("Remove"), danger: true }))) return;
     void act(() => computeApi.remove(worker.id));
   };
   const saveLimits = (app: string, timeout: number | null, memory: number | null) => act(() => computeApi.setLimits(app, timeout, memory));
   const totals = (app: string) => (data?.queue ?? []).filter((row) => row.app === app).reduce((sum, row) => ({ queued: sum.queued + row.queued, running: sum.running + row.running, done: sum.done + row.done_24h, failed: sum.failed + row.failed_24h }), { queued: 0, running: 0, done: 0, failed: 0 });
 
   return <>
-    <div className="page-heading"><div><span className="eyebrow">{t("Administration")}</span><h1>{t("Compute")}</h1><p>{t("The workers that run the apps' calculations (Analytics blocks, Models studies) apart from the platform, in containers with no network and no secret. Add more workers, on this machine or others, to share the load.")}</p></div></div>
+    <Heading title={t("Compute")} />
     {error && <div className="form-error"><AlertTriangle size={15} /> {error}</div>}
     {data?.waiting_without_worker.map((item) => <div key={`${item.app}:${item.version}:${item.environment}:${item.size}`} className="ac-notice ac-notice-warn"><AlertTriangle size={15} /> {t("{count} tasks of {app} wait and no online worker runs them (version {version}, environment {environment}, size {size}).", { count: item.queued, app: appName(item.app), version: item.version ?? "—", environment: item.environment ?? "standard", size: sizeText(item.size) })}</div>)}
     <section className="panel ac-users ac-keys" aria-labelledby="compute-workers-title">

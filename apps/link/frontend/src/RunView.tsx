@@ -10,7 +10,7 @@ import type { DiagramTrace, TraceValue } from "@plantcraft/ui/blockEditor";
 import { DataTable, type DataColumn } from "@plantcraft/ui";
 import { FlaskConical } from "lucide-react";
 import { useEffect, useState } from "react";
-import { AlgorithmDiagram } from "./AlgorithmEditor";
+import { AlgorithmDiagram } from "./AlgorithmDiagramLazy";
 import { api } from "./api";
 import { formatDate, t } from "./i18n";
 import { resultLabel } from "./status";

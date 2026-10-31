@@ -88,7 +88,7 @@ button.chip { cursor: pointer; font: inherit; color: inherit; }
 .diagram-box { position: absolute; border: 1.5px solid; border-radius: 3px; background: transparent; padding: 0; cursor: pointer; }
 .diagram-box:hover, .diagram-box.picked { background: color-mix(in srgb, var(--pc-primary) 18%, transparent); }
 .diagram-box.low { border-style: dashed; border-color: var(--pc-problem-text) !important; }
-.diagram-box.linked { box-shadow: 0 0 0 2px var(--pc-attention, #e0a100); }
+.diagram-box.linked { box-shadow: 0 0 0 2px var(--pc-attention-fill); }
 .diagram-list { max-height: 80vh; overflow: auto; }
 .diagram-items { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .diagram-items li.picked { background: var(--pc-surface-2); border-radius: 6px; }
@@ -116,7 +116,7 @@ button.chip { cursor: pointer; font: inherit; color: inherit; }
 .map-equipment text { font-size: 12px; font-weight: 600; }
 .map-instrument circle { fill: var(--pc-primary); }
 .map-connector circle, .map-terminal circle { fill: var(--pc-text-3); }
-.map-picked rect, .map-picked circle { stroke: var(--pc-attention, #e0a100); stroke-width: 3; }
+.map-picked rect, .map-picked circle { stroke: var(--pc-attention-fill); stroke-width: 3; }
 .map-dim { opacity: .25; }
 .map-side { max-height: 72vh; overflow: auto; }
 .map-item h2 { margin: 0 0 4px; }
@@ -129,7 +129,7 @@ button.chip { cursor: pointer; font: inherit; color: inherit; }
 .map-pill rect { fill: var(--pc-primary-soft, #e6efff); stroke: var(--pc-primary); }
 .map-pill text { font-size: 10px; fill: var(--pc-primary-text, var(--pc-primary)); pointer-events: none; }
 .map-pill-open rect { stroke: var(--pc-problem-text); stroke-dasharray: 3 2; }
-.map-pill.map-picked rect { stroke: var(--pc-attention, #e0a100); stroke-width: 3; }
+.map-pill.map-picked rect { stroke: var(--pc-attention-fill); stroke-width: 3; }
 .map-loose-title { font-size: 11px; fill: var(--pc-text-3); }
 .map-lists { display: flex; flex-wrap: wrap; gap: 8px; }
 .map-review { font-size: 13px; white-space: nowrap; }

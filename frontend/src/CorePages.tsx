@@ -4,7 +4,7 @@ import { AlertTriangle, LoaderCircle } from "lucide-react";
 import { api } from "./api";
 import { HelpTip } from "./HelpTip";
 import { t } from "./i18n";
-import { AppMark, appLabel, HelpBrowser, useAssistantPage, type HelpDoc } from "@plantcraft/ui";
+import { AppMark, appLabel, HelpBrowser, useAssistantPage, type HelpDoc, Heading as SuiteHeading } from "@plantcraft/ui";
 import { navigate } from "./nav";
 import type { SuiteAppCard, WorkspaceUser } from "./types";
 import "./access.css";
@@ -73,7 +73,7 @@ export function HelpPage({ apps = [] }: { apps?: SuiteAppCard[] }) {
   function pick(next: string) { setApp(next); window.history.replaceState(window.history.state, "", where(next)); }
   const choices = [{ id: "processcraft", name: "PlantCraft" }, ...shown.map((item) => ({ id: item.id, name: appLabel(item.id, item.name) }))];
   return <>
-    <div className="page-heading"><div><h1>{t("Help")}</h1><p>{t("The guides of every app of the suite. The assistant reads them too: ask it from the button at the top of any page.")}</p></div></div>
+    <SuiteHeading title={t("Help")} />
     <div className="help-apps" role="tablist" aria-label={t("App")}>
       {choices.map((item) => <button key={item.id} type="button" role="tab" aria-selected={item.id === app} className={item.id === app ? "active" : undefined} onClick={() => pick(item.id)}>
         <AppMark app={item.id} name={item.name} size={18} />{item.name}

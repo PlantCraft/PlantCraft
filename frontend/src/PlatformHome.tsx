@@ -4,7 +4,7 @@
  * needs attention and the apps stay in the catalog; each person's day is Desk's first page
  * (Desk.tsx). What needs attention is listed on its own page (/attention). */
 import { ArrowRight, CheckCircle2, LoaderCircle, Settings2 } from "lucide-react";
-import { DataTable, useAssistantPage, fetchSuiteWidgets, formatAgo, MultiSelect, Pill, statusVar, useOverviewLayout, WidgetBoard, type BoardItem, type DataColumn, type WidgetDef } from "@plantcraft/ui";
+import { DataTable, useAssistantPage, fetchSuiteWidgets, formatAgo, MultiSelect, Pill, statusVar, useOverviewLayout, WidgetBoard, type BoardItem, type DataColumn, type WidgetDef, Heading } from "@plantcraft/ui";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { api } from "./api";
 import { AppLauncher } from "./AppLauncher";
@@ -155,9 +155,7 @@ export function PlatformHome({ data, admin }: { data: HomeData; admin: boolean }
   // Nothing is drawn until the person's board is read: a saved board never flashes the default.
   const shown = layout === undefined ? [] : layout ?? defaultBoard(admin);
   return <>
-    <div className="page-heading">
-      <div><span className="eyebrow">{data.scenario.display_name || data.scenario.name}</span><h1>{t("Overview")}</h1><p>{t("The suite at a glance: what answers, the data connections and what needs attention. Each person's day is in Desk.")}</p></div>
-    </div>
+    <Heading title={t("Overview")} />
     {!plantReady(data) && <div className="panel hm-setup" data-tour="setup-notice">
       <Settings2 size={20} aria-hidden="true" />
       <div><strong>{t("The plant is not set up yet")}</strong><p>{admin ? t("Connect the data, map the plant and install the apps in Settings, under Administration. It is done once.") : t("An administrator sets up the plant's data and assets. The apps fill this page once it is done.")}</p></div>
@@ -204,9 +202,7 @@ export function AttentionPage({ data }: { data: HomeData }) {
     { key: "open", label: "", render: (item) => item.url ? <a href={item.url} onClick={(event) => { if (event.metaKey || event.ctrlKey || event.button !== 0) return; event.preventDefault(); follow(item.url); }} aria-label={t("Open {name}", { name: item.name })}><ArrowRight size={15} /></a> : null },
   ], [data.apps]);
   return <>
-    <div className="page-heading">
-      <div><span className="eyebrow"><a href="/" onClick={go("/")}>{t("Desk")}</a></span><h1>{t("Needs attention")}</h1><p>{t("The results of every app that need someone, worst first. Each opens where it can be acted on.")}</p></div>
-    </div>
+    <Heading title={t("Needs attention")} />
     {error && <div className="form-error">{error}</div>}
     {!items && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
     {items && (items.length

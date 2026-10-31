@@ -72,6 +72,8 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ### Fixed
 
+- Colours and shadows named after tokens that do not exist use the suite's tokens, so they follow
+  the dark theme.
 - A diagram's page no longer shows the library's top buttons.
 
 ### Security

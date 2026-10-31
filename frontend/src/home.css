@@ -32,7 +32,7 @@
 /* Home (2026-10-21): two count buttons, the status of the apps and connections. */
 .hm-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--pc-space-4, 16px); margin-bottom: var(--pc-space-6); }
 .hm-kpi { position: relative; display: grid; gap: 4px; padding: 18px 20px; border-top: 4px solid var(--pc-border); color: inherit; text-decoration: none; transition: box-shadow .15s, transform .15s; }
-.hm-kpi:hover { box-shadow: var(--pc-shadow-md, 0 4px 14px rgba(0,0,0,.08)); transform: translateY(-1px); }
+.hm-kpi:hover { box-shadow: var(--pc-shadow-2); transform: translateY(-1px); }
 .hm-kpi b { font: 700 calc(var(--pc-fs-2xl) * 1.4)/1.05 var(--pc-font-display); }
 .hm-kpi small { color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
 .hm-kpi-icon { color: var(--pc-text-3); }

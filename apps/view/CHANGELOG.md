@@ -30,6 +30,8 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- Colours and shadows named after tokens that do not exist use the suite's tokens, so they follow
+  the dark theme.
 - **A process display opens in under a second.** The demo's Riverbend plant has 289 bindings,
   and View read each value and app result one at a time (about 250 requests, 2.8 to 4.9 s each
   time its short cache had expired). It now reads every signal's newest point in one batch of
