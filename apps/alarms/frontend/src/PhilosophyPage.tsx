@@ -83,6 +83,14 @@ export function PhilosophyPage({ me }: { me: Me }) {
           <Whole label={t("Stale after (hours active)")} value={draft.stale_hours} min={1} max={720} onChange={(value) => update({ stale_hours: value })} hint={t("No more reminders; the summary lists it for review.")} />
         </div>
       </FormSection>
+      <FormSection id="philosophy-shelve" title={t("Longest shelving")} detail={t("An alarm is shelved for this long at most, by priority: the more urgent, the shorter (ISA-18.2).")}>
+        <div className="form-grid">
+          <Whole label={t("Critical (hours)")} value={draft.shelve_hours_critical} min={1} max={168} onChange={(value) => update({ shelve_hours_critical: value })} />
+          <Whole label={t("High (hours)")} value={draft.shelve_hours_high} min={1} max={168} onChange={(value) => update({ shelve_hours_high: value })} />
+          <Whole label={t("Medium (hours)")} value={draft.shelve_hours_medium} min={1} max={168} onChange={(value) => update({ shelve_hours_medium: value })} />
+          <Whole label={t("Low (hours)")} value={draft.shelve_hours_low} min={1} max={168} onChange={(value) => update({ shelve_hours_low: value })} />
+        </div>
+      </FormSection>
       <FormSection id="philosophy-mix" title={t("Target share of priorities")} detail={t("Of the alarms raised; high counts critical too. Performance compares the real share.")}>
         <div className="form-grid">
           <Whole label={t("High and critical (%)")} value={draft.target_high} min={0} max={100} onChange={(value) => update({ target_high: value })} />

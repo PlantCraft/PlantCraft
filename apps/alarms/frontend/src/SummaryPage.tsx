@@ -23,6 +23,15 @@ export function ShelveDialog({ alarm, onClose, onDone }: { alarm: Alarm; onClose
   const [minutes, setMinutes] = useState(60);
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
+  // The philosophy's longest shelving for this alarm's priority; the server checks it too.
+  const [longest, setLongest] = useState<number | null>(null);
+  useEffect(() => {
+    api.philosophy().then((found) => {
+      const hours = found[`shelve_hours_${alarm.priority || "medium"}` as "shelve_hours_medium"];
+      if (hours) { setLongest(hours * 60); setMinutes((value) => Math.min(value, hours * 60)); }
+    }).catch(() => setLongest(null));
+  }, [alarm.priority]);
+  const choices = longest === null ? SHELVE_CHOICES : [...SHELVE_CHOICES.filter((value) => value < longest), longest];
   async function shelve() {
     try {
       await api.shelve(alarm.alarm_id, minutes, reason);
@@ -39,7 +48,7 @@ export function ShelveDialog({ alarm, onClose, onDone }: { alarm: Alarm; onClose
       <div className="form-grid">
         <label>{t("For")}
           <select value={minutes} onChange={(event) => setMinutes(Number(event.target.value))}>
-            {SHELVE_CHOICES.map((value) => <option key={value} value={value}>{shelveLabel(value)}</option>)}
+            {choices.map((value) => <option key={value} value={value}>{shelveLabel(value)}</option>)}
           </select>
         </label>
         <label className="field-span">{t("Why")}

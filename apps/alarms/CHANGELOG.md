@@ -8,6 +8,7 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Shelving has a time limit by priority.** The alarm philosophy sets the longest an alarm may be shelved: 1 hour for critical, 4 for high, 12 for medium and 24 for low by default (ISA-18.2). The shelve dialog offers only durations up to that limit, and the server refuses anything longer.
 - **Performance: the EEMUA 191 level, floods with hysteresis and what the journal tells.**
   - **EEMUA 191 level.** The period shows as one point, average against peak alarms per 10 minutes, on the four EEMUA 191 bands: robust, stable, reactive and overloaded.
   - **Floods.** A flood starts above the flood limit (10 in 10 minutes) and ends below half of it, so a short lull does not split it. Each flood is listed with its length, its alarms and its peak.
