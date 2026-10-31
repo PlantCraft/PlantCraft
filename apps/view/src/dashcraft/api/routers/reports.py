@@ -310,6 +310,9 @@ class FeedbackIn(BaseModel):
 
 class RequirementsIn(BaseModel):
     requirements: str = Field(min_length=1, max_length=helper.MAX_REQUIREMENTS)
+    # The feedback the requirements answer, when they come from a proposal.
+    feedback: str = Field(default="", max_length=4000)
+    run_id: str | None = Field(default=None, max_length=40)
 
 
 class ScopeIn(BaseModel):
@@ -391,7 +394,8 @@ def assistant_history(
 def assistant_feedback(
     report_id: str, section_id: str, body: FeedbackIn, rt: RuntimeDep, user: EditorUser
 ) -> dict[str, Any]:
-    """A comment on what the assistant wrote: the model turns it into the next requirements."""
+    """A comment on what the assistant wrote: the model proposes the next requirements (not
+    saved; the editor applies them with PUT .../requirements)."""
 
     report = _editable(rt, report_id, user)
     _assistant_section(report, section_id)
@@ -401,7 +405,6 @@ def assistant_feedback(
         ),
         helper.TUNE_USE,
     )
-    rt.audit(user, "report.assistant_tuned", report_id, {"version": out["version"]})
     return out
 
 
@@ -413,9 +416,16 @@ def assistant_requirements(
 
     report = _editable(rt, report_id, user)
     _assistant_section(report, section_id)
-    return rt.report_service.set_requirements(
-        report, section_id, body.requirements.strip(), user.username
+    out = rt.report_service.set_requirements(
+        report,
+        section_id,
+        body.requirements.strip(),
+        user.username,
+        feedback=body.feedback.strip(),
+        run_id=body.run_id,
     )
+    rt.audit(user, "report.assistant_tuned", report_id, {"version": out["version"]})
+    return out
 
 
 # Runs and PDFs ------------------------------------------------------------------------

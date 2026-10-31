@@ -121,7 +121,7 @@ def test_no_model_leaves_the_reason_in_the_section(client, fake):
     assert made["problems"] == 1
 
 
-def test_feedback_becomes_the_next_requirements(client, fake):
+def test_feedback_proposes_requirements_the_editor_applies(client, fake):
     publish_loop_health(fake)
     answers = iter(["Long text about every loop.", "- Only loops in warning.\n- Max 5 lines."])
     fake.links.llm_answer = lambda call: next(answers)
@@ -134,13 +134,21 @@ def test_feedback_becomes_the_next_requirements(client, fake):
     )
     assert tuned.status_code == 200, tuned.text
     body = tuned.json()
-    assert body["version"] == 2
     assert body["requirements"].startswith("- Only loops in warning.")
+    assert body["warnings"] == []
+    # Only a proposal: the report keeps version 1 until the editor applies it.
+    kept = client.get(f"/dash/api/reports/{report_id}").json()["sections"][0]["assistant"]
+    assert kept["version"] == 1
     call = fake.links.llm_calls[-1]
     assert call["use"] == "report-tune"
     assert "Long text about every loop." in call["messages"][-1]["content"]
     assert "Too long." in call["messages"][-1]["content"]
 
+    applied = client.put(
+        f"/dash/api/reports/{report_id}/assistant/ai/requirements",
+        json={"requirements": body["requirements"], "feedback": body["feedback"]},
+    )
+    assert applied.json()["version"] == 2
     saved = client.get(f"/dash/api/reports/{report_id}").json()
     assistant = saved["sections"][0]["assistant"]
     assert assistant["version"] == 2
@@ -189,6 +197,33 @@ def test_the_model_proposes_the_assets_from_a_description(client, fake):
 def test_the_analyses_list_for_the_checkboxes(client):
     found = client.get("/dash/api/report-analyses").json()
     assert [a["id"] for a in found] == ["loops", "signals", "alarms", "collection"]
+
+
+def test_a_proposal_that_copies_the_data_is_flagged():
+    assert helper.requirement_problems("- Start with the worst loops.") == []
+    [problem] = helper.requirement_problems("- Mechanical: FIC-1003, 0 alarms.")
+    assert "FIC-1003" in problem
+
+
+def test_facts_are_counted_and_ranked_per_asset():
+    facts = {
+        "results": [
+            {"asset": "A-1", "status": "warning", "score": 60, "summary": "noise"},
+            {"asset": "B-2", "status": "alarm", "score": 40, "summary": "oscillation"},
+            {"asset": "C-3", "status": "alarm", "score": 35, "summary": "saturated"},
+            {"asset": "D-4", "status": "ok", "score": 95},
+        ]
+    }
+    events = [
+        {"asset": "B-2", "kind": "alarmcraft.alarm.raised", "severity": "critical"},
+        {"asset": "B-2", "kind": "alarmcraft.alarm.raised", "severity": "warning"},
+        {"asset": "A-1", "kind": "linkcraft.finding.opened"},
+    ]
+    ranked = helper.by_asset(facts, events)
+    assert [r["asset"] for r in ranked] == ["C-3", "B-2", "A-1", "D-4"]
+    assert ranked[1]["alarms"] == 2 and ranked[1]["critical_alarms"] == 1
+    assert ranked[2]["findings_opened"] == 1
+    assert ranked[3]["problems"] == []
 
 
 def test_a_tag_the_facts_never_name_is_flagged():

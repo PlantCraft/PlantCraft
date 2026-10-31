@@ -15,6 +15,7 @@ export function AssistantView({ section, read, tick, reportId, canEdit, editing 
   const [feedback, setFeedback] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ version: number; requirements: string } | null>(null);
+  const [proposal, setProposal] = useState<{ requirements: string; previous: string; feedback: string; run_id: string | null; warnings: string[] } | null>(null);
   const [error, setError] = useState("");
   const [versions, setVersions] = useState<AssistantVersion[] | null>(null);
   useEffect(() => {
@@ -30,9 +31,18 @@ export function AssistantView({ section, read, tick, reportId, canEdit, editing 
   async function send() {
     setBusy(true); setError("");
     try {
-      const answer = await api.assistantFeedback(reportId, section.section_id, feedback.trim(), written?.run_id ?? null);
+      setDone(null);
+      setProposal(await api.assistantFeedback(reportId, section.section_id, feedback.trim(), written?.run_id ?? null));
+    } catch (err) { setError(message(err)); } finally { setBusy(false); }
+  }
+  async function apply() {
+    if (!proposal) return;
+    setBusy(true); setError("");
+    try {
+      const answer = await api.assistantRequirements(reportId, section.section_id, proposal.requirements, proposal.feedback, proposal.run_id);
       setDone({ version: answer.version, requirements: answer.requirements });
       setVersions(answer.versions);
+      setProposal(null);
       setFeedback("");
     } catch (err) { setError(message(err)); } finally { setBusy(false); }
   }
@@ -58,9 +68,19 @@ export function AssistantView({ section, read, tick, reportId, canEdit, editing 
       </label>
       <div className="tc-report-feedback-row">
         <button type="button" className="button button-secondary" onClick={() => void history()}><History size={14} /> {t("Versions")}</button>
-        <button type="button" className="button button-primary" disabled={busy || !feedback.trim()} onClick={() => void send()}>{busy ? t("Updating…") : t("Update the requirements")}</button>
+        <button type="button" className="button button-primary" disabled={busy || !feedback.trim()} onClick={() => void send()}>{busy ? t("Asking…") : t("Propose new requirements")}</button>
       </div>
       {error && <ErrorBox text={error} />}
+      {proposal && <div className="notice" role="status">
+        <b>{t("Proposed requirements: read them before applying")}</b>
+        {proposal.warnings.map((warning) => <div key={warning} className="tc-card-error"><AlertTriangle size={14} /> {warning}</div>)}
+        <textarea rows={8} maxLength={4000} aria-label={t("Proposed requirements")} value={proposal.requirements} onChange={(event) => setProposal({ ...proposal, requirements: event.target.value })} />
+        <details><summary>{t("Current requirements")}</summary><pre className="tc-report-requirements">{proposal.previous}</pre></details>
+        <div className="tc-report-feedback-row">
+          <button type="button" className="button button-secondary" onClick={() => setProposal(null)}>{t("Discard")}</button>
+          <button type="button" className="button button-primary" disabled={busy || !proposal.requirements.trim()} onClick={() => void apply()}>{t("Apply")}</button>
+        </div>
+      </div>}
       {done && <div className="notice notice-ok" role="status">{t("Requirements v{n} saved: the next edition follows them.", { n: done.version })}<pre className="tc-report-requirements">{done.requirements}</pre></div>}
       {versions && <ol className="tc-report-versions">{versions.map((item) => <li key={item.version}>
         <b>v{item.version}</b> {formatDate(item.created_at, { dateStyle: "short", timeStyle: "short" })}{item.created_by ? ` · ${item.created_by}` : ""}

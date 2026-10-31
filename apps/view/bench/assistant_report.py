@@ -300,8 +300,16 @@ def main(editions: int) -> None:
                 json={"feedback": feedback[edition - 1]},
             )
             assert tuned.status_code == 200, tuned.text
+            proposal = tuned.json()
             log[-1]["feedback"] = feedback[edition - 1]
-            log[-1]["next_requirements"] = tuned.json()["requirements"]
+            log[-1]["next_requirements"] = proposal["requirements"]
+            log[-1]["proposal_warnings"] = proposal["warnings"]
+            # The bench applies every proposal as given (a person would read it first).
+            applied = client.put(
+                f"/dash/api/reports/{rid}/assistant/ai/requirements",
+                json={"requirements": proposal["requirements"], "feedback": proposal["feedback"]},
+            )
+            assert applied.status_code == 200, applied.text
     history = client.get(f"/dash/api/reports/{rid}/assistant/ai").json()
     (OUT / "history.json").write_text(json.dumps(history, indent=1, ensure_ascii=False))
     (OUT / "log.json").write_text(json.dumps(log, indent=1, ensure_ascii=False))

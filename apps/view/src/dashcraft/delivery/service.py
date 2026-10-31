@@ -218,8 +218,9 @@ class ReportService:
         run_id: str | None = None,
     ) -> dict[str, Any]:
         """A person's feedback on what the assistant wrote, turned by the model of
-        ``report-tune`` into the section's next requirements; the report is saved with them and
-        the version kept (the old ones stay, to read or go back to)."""
+        ``report-tune`` into a proposal of the section's next requirements: nothing is saved
+        until the editor applies it (``set_requirements``), because a small model can read the
+        feedback wrong (2026-10-31: "worst" became "highest score")."""
 
         sections = list(report.get("sections") or [])
         index = next((i for i, s in enumerate(sections) if s.get("section_id") == section_id), None)
@@ -236,14 +237,14 @@ class ReportService:
         requirements = helper.clean_text(answer)[: helper.MAX_REQUIREMENTS].strip()
         if not requirements:
             raise ValueError(t("The model answered no requirements."))
-        return self.set_requirements(
-            report,
-            section_id,
-            requirements,
-            by,
-            feedback=feedback,
-            run_id=(draft or {}).get("run_id"),
-        )
+        # A proposal: the editor reads it (and what it names of this week's data) and applies it.
+        return {
+            "requirements": requirements,
+            "previous": spec.requirements,
+            "feedback": feedback,
+            "run_id": (draft or {}).get("run_id"),
+            "warnings": helper.requirement_problems(requirements),
+        }
 
     def set_requirements(
         self,

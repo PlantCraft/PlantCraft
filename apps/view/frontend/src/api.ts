@@ -80,8 +80,8 @@ export const api = {
   analyses: () => request<Analysis[]>("/api/report-analyses"),
   proposeScope: (description: string) => request<{ asset_ids: string[]; analyses: string[]; why: string; dropped: string[] }>("/api/report-assistant/scope", body("POST", { description })),
   assistantHistory: (reportId: string, sectionId: string) => request<{ assistant: AssistantSpec; drafts: AssistantWritten[]; versions: AssistantVersion[] }>(`/api/reports/${id(reportId)}/assistant/${id(sectionId)}`),
-  assistantFeedback: (reportId: string, sectionId: string, feedback: string, runId: string | null) => request<{ version: number; requirements: string; previous: string; versions: AssistantVersion[] }>(`/api/reports/${id(reportId)}/assistant/${id(sectionId)}/feedback`, body("POST", { feedback, run_id: runId })),
-  assistantRequirements: (reportId: string, sectionId: string, requirements: string) => request<{ version: number; requirements: string; versions: AssistantVersion[] }>(`/api/reports/${id(reportId)}/assistant/${id(sectionId)}/requirements`, body("PUT", { requirements })),
+  assistantFeedback: (reportId: string, sectionId: string, feedback: string, runId: string | null) => request<{ requirements: string; previous: string; feedback: string; run_id: string | null; warnings: string[] }>(`/api/reports/${id(reportId)}/assistant/${id(sectionId)}/feedback`, body("POST", { feedback, run_id: runId })),
+  assistantRequirements: (reportId: string, sectionId: string, requirements: string, feedback = "", runId: string | null = null) => request<{ version: number; requirements: string; versions: AssistantVersion[] }>(`/api/reports/${id(reportId)}/assistant/${id(sectionId)}/requirements`, body("PUT", { requirements, feedback, run_id: runId })),
   reportRuns: (reportId: string) => request<ReportRun[]>(`/api/reports/${id(reportId)}/runs`),
   /** A new report's start from a dashboard: its pages as headings, its cards as cells. */
   dashboardAsReport: (dashboardId: string) => request<Pick<ReportDraft, "name" | "description" | "folder_id" | "sections">>(`/api/dashboards/${id(dashboardId)}/as-report`),

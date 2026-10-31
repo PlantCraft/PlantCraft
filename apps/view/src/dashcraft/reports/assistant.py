@@ -219,11 +219,14 @@ def gather(reader: Any, spec: AssistantSpec, start: datetime, end: datetime) -> 
                     }
                 )
     facts["events"].sort(key=lambda e: str(e.get("at") or ""), reverse=True)
+    all_events = list(facts["events"])
     facts["events_total"] = len(facts["events"])
     facts["events"] = facts["events"][:EVENTS_SENT]
     # Worst first, so a cut keeps what matters.
     rank = {"alarm": 0, "critical": 0, "error": 0, "warning": 1, "ok": 3}
     facts["results"].sort(key=lambda r: (rank.get(str(r.get("status")), 2), r.get("asset", "")))
+    facts["by_asset"] = by_asset(facts, all_events)
+    facts["legend"] = LEGEND
     text = json.dumps(facts, ensure_ascii=False, default=str)
     while len(text) > MAX_FACT_CHARS and (facts["events"] or facts["results"]):
         if facts["events"]:
@@ -235,6 +238,70 @@ def gather(reader: Any, spec: AssistantSpec, start: datetime, end: datetime) -> 
     return facts
 
 
+LEGEND = (
+    "score: 0 to 100, LOWER IS WORSE. status: alarm is worse than warning, warning worse than ok. "
+    "by_asset is already counted and ranked: rank 1 is the worst asset; use its counts, do not "
+    "recount events."
+)
+
+
+def by_asset(facts: dict[str, Any], events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One row per asset with a result or an event, counted here so a small model needs neither
+    to count nor to sort: its worst status, lowest score, problems, and the period's alarms,
+    findings opened and other events. Ranked worst first (rank 1)."""
+
+    rows: dict[str, dict[str, Any]] = {}
+    severity = {"alarm": 0, "critical": 0, "error": 0, "warning": 1, "ok": 3}
+
+    def row(asset: str) -> dict[str, Any]:
+        return rows.setdefault(
+            asset,
+            {
+                "asset": asset,
+                "status": "",
+                "score": None,
+                "problems": [],
+                "alarms": 0,
+                "critical_alarms": 0,
+                "findings_opened": 0,
+                "other_events": 0,
+            },
+        )
+
+    for result in facts.get("results") or []:
+        item = row(str(result.get("asset")))
+        status = str(result.get("status") or "")
+        if not item["status"] or severity.get(status, 2) < severity.get(item["status"], 2):
+            item["status"] = status
+        score = result.get("score")
+        if isinstance(score, (int, float)) and (item["score"] is None or score < item["score"]):
+            item["score"] = score
+        if status not in ("ok", "") and result.get("summary"):
+            item["problems"].append(str(result["summary"]))
+    for event in events:
+        item = row(str(event.get("asset")))
+        kind = str(event.get("kind") or "")
+        if kind.endswith(".alarm.raised"):
+            item["alarms"] += 1
+            item["critical_alarms"] += event.get("severity") == "critical"
+        elif kind.endswith(".finding.opened"):
+            item["findings_opened"] += 1
+        else:
+            item["other_events"] += 1
+    ranked = sorted(
+        rows.values(),
+        key=lambda r: (
+            severity.get(r["status"], 2),
+            r["score"] if r["score"] is not None else 101,
+            -r["alarms"],
+            r["asset"],
+        ),
+    )
+    for index, item in enumerate(ranked, start=1):
+        item["rank"] = index
+    return ranked
+
+
 # Asking the model ---------------------------------------------------------------------------
 
 WRITE_SYSTEM = """\
@@ -242,15 +309,20 @@ You write one section of a plant report for process engineers. You get FACTS as 
 in scope, the latest results the plant's analysis apps keep about them, the period's events) and
 the REQUIREMENTS of the person who owns the report. Follow the requirements. Use only the facts:
 name assets as the facts name them, quote numbers as given, and never invent a value, an asset or
-an event. Answer with the section's text in Markdown (headings start at ##), nothing else."""
+an event. FACTS.legend says how to read scores; FACTS.by_asset is already counted and ranked
+(rank 1 is the worst): take counts and order from it. Say nothing about earlier periods unless
+the facts give them. Answer with the section's text in Markdown (headings start at ##), nothing
+else."""
 
 TUNE_SYSTEM = """\
 You keep the requirements of a report section the language model writes. You get the CURRENT
 REQUIREMENTS, the TEXT the model wrote with them, and a person's FEEDBACK on that text. Answer
 the new requirements: the current ones changed so the next text follows the feedback. Keep what
 the feedback does not touch, keep it a short list of rules, write it in the language of the
-current requirements, and never add a rule that asks the writer to invent facts. Answer with the
-requirements only, no preface."""
+current requirements, and never add a rule that asks the writer to invent facts. The requirements
+say how to write, never what the data is: no asset names or tags, no numbers or counts of this
+week, no statement about which data exists. Keep the words of the feedback ("worst" means the
+lowest score). Answer with the requirements only, no preface."""
 
 SCOPE_SYSTEM = """\
 You pick the assets a report should cover. You get ASSETS (id, name, kind, parent) as JSON and a
@@ -329,6 +401,21 @@ def ungrounded(text: str, facts: dict[str, Any]) -> list[str]:
 
     given = set(TAG.findall(json.dumps(facts, ensure_ascii=False, default=str)))
     return sorted(set(TAG.findall(text)) - given)
+
+
+def requirement_problems(requirements: str) -> list[str]:
+    """What a proposal of requirements says about this week's data instead of how to write:
+    the tags it names (a small model copied facts into the prompt, 2026-10-31)."""
+
+    tags = sorted(set(TAG.findall(requirements)))
+    if not tags:
+        return []
+    return [
+        t(
+            "The proposal names {tags}: requirements say how to write, not what the data is.",
+            tags=", ".join(tags[:8]),
+        )
+    ]
 
 
 def section_text(title: str, body: str, facts: dict[str, Any], model: str = "") -> str:
