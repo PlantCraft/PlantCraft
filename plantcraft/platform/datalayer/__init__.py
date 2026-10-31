@@ -102,6 +102,18 @@ class DataLayer:
 
         raise NotImplementedError
 
+    # Interpolated reads (``sampling``, ``max_gap`` on series) and ``summary`` (H5): a data
+    # layer that has them says so; API v1 answers 422 for the others.
+    interpolates = False
+
+    def summary(
+        self, signal_id: str, start: str | None, end: str | None, per: str | None = None
+    ) -> dict[str, Any]:
+        """``{signal, kind, unit, start, end, per, count, covered_pct, good_pct, total, mean,
+        min, max, std}`` of ``[start, end]``."""
+
+        raise NotImplementedError
+
     # Derived series --------------------------------------------------------------
 
     def put_derived(self, app: str, items: list[Any]) -> dict[str, Any]:

@@ -238,8 +238,11 @@ class HistCraftDataLayer(DataLayer):
         *,
         run: str | None = None,
         runs: int | None = None,
+        sampling: str | None = None,
+        max_gap: float | None = None,
     ) -> dict[str, Any]:
         params = {"start": start, "end": end, "step": step, "run": run, "runs": runs}
+        params.update(sampling=sampling, max_gap=max_gap)
         return self.call("GET", f"/signals/{_quoted(signal_id)}/series", params=params)
 
     def run_list(self, signal_id: str, limit: int = 50) -> dict[str, Any]:
@@ -255,12 +258,10 @@ class HistCraftDataLayer(DataLayer):
         *,
         quality: bool = False,
         extremes: bool = False,
+        sampling: str | None = None,
+        max_gap: float | None = None,
     ) -> dict[str, Any]:
-        body = {"signals": signals, "start": start, "end": end, "step": step}
-        if quality:
-            body["quality"] = True
-        if extremes:
-            body["extremes"] = True
+        body = _batch_body(signals, start, end, step, quality, extremes, sampling, max_gap)
         return self.call("POST", "/series", json=body)
 
     # The same reads as JSON bytes: API v1 passes HistCraft's answer on without parsing it and
@@ -275,8 +276,11 @@ class HistCraftDataLayer(DataLayer):
         *,
         run: str | None = None,
         runs: int | None = None,
+        sampling: str | None = None,
+        max_gap: float | None = None,
     ) -> bytes:
         params = {"start": start, "end": end, "step": step, "run": run, "runs": runs}
+        params.update(sampling=sampling, max_gap=max_gap)
         return self.call("GET", f"/signals/{_quoted(signal_id)}/series", params=params, raw=True)
 
     def series_batch_raw(
@@ -289,15 +293,13 @@ class HistCraftDataLayer(DataLayer):
         quality: bool = False,
         extremes: bool = False,
         binary: bool = False,
+        sampling: str | None = None,
+        max_gap: float | None = None,
     ) -> bytes:
         """The answer's bytes: JSON, or with ``binary`` the Historian's binary answer when it
         writes one (``plantcraft_sdk.wire``; it starts with ``wire.MAGIC``)."""
 
-        body = {"signals": signals, "start": start, "end": end, "step": step}
-        if quality:
-            body["quality"] = True
-        if extremes:
-            body["extremes"] = True
+        body = _batch_body(signals, start, end, step, quality, extremes, sampling, max_gap)
         accept = f"{WIRE_MEDIA_TYPE}, application/json;q=0.5" if binary else "application/json"
         return self.call("POST", "/series", json=body, raw=True, accept=accept)
 
@@ -306,6 +308,14 @@ class HistCraftDataLayer(DataLayer):
     ) -> dict[str, Any]:
         params = {"agg": agg, "window": window, **({"end": end} if end else {})}
         return self.call("GET", f"/signals/{_quoted(signal_id)}/value", params=params)
+
+    interpolates = True
+
+    def summary(
+        self, signal_id: str, start: str | None, end: str | None, per: str | None = None
+    ) -> dict[str, Any]:
+        params = {"start": start, "end": end, "per": per}
+        return self.call("GET", f"/signals/{_quoted(signal_id)}/summary", params=params)
 
     # Derived series --------------------------------------------------------------
 
@@ -709,6 +719,30 @@ def _test_message(answer: Any) -> str:
         )
         return t("Connection established.") + (f" {shown}" if shown else "")
     return str(detail or t("Connection established."))
+
+
+def _batch_body(
+    signals: list[str],
+    start: str | None,
+    end: str | None,
+    step: float | None,
+    quality: bool,
+    extremes: bool,
+    sampling: str | None,
+    max_gap: float | None,
+) -> dict[str, Any]:
+    """``POST /api/v1/data/series``'s body: the options only when they are asked for."""
+
+    body: dict[str, Any] = {"signals": signals, "start": start, "end": end, "step": step}
+    if quality:
+        body["quality"] = True
+    if extremes:
+        body["extremes"] = True
+    if sampling:
+        body["sampling"] = sampling
+    if max_gap is not None:
+        body["max_gap"] = max_gap
+    return body
 
 
 def _list(value: Any) -> list[Any]:

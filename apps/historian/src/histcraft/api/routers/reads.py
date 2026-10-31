@@ -9,9 +9,10 @@ reads. Same paths, shapes, limits and errors as PlantCraft's ``docs/api-v1.md``:
 | ``GET /api/v1/reads`` | ``{"api": 1}``: this Historian serves the reads below (the SDK asks once) |
 | ``GET /api/v1/signals?q&app&subject&result`` | the signals |
 | ``GET /api/v1/signals/{id}`` | one signal |
-| ``GET /api/v1/signals/{id}/series?start&end&step`` | its recorded values, or a grid |
-| ``POST /api/v1/series`` | many signals' series (``{signals, start, end, step}``) |
+| ``GET /api/v1/signals/{id}/series?start&end&step&sampling&max_gap`` | its recorded values, or a grid (averaged or interpolated) |
+| ``POST /api/v1/series`` | many signals' series (``{signals, start, end, step, sampling, max_gap}``) |
 | ``GET /api/v1/signals/{id}/value?agg&window`` | an aggregate |
+| ``GET /api/v1/signals/{id}/summary?start&end&per`` | count, time covered, % good, total, mean, min, max, std |
 
 Who may read is who may read PlantCraft's API v1: a token PlantCraft signed (a person's or
 an app's service token), not ended early (``/api/v1/auth/revoked``, read again every few
@@ -100,10 +101,34 @@ def series(
     start: str | None = Query(default=None, max_length=64),
     end: str | None = Query(default=None, max_length=64),
     step: float | None = None,
+    sampling: str | None = Query(default=None, max_length=20),
+    max_gap: float | None = None,
 ) -> Any:
     in_scope(scope, signal_id)
     # Written straight to JSON: long lists skip FastAPI's per-item encoder.
-    return data.series(signal_id, runtime, None, start=start, end=end, step=step)
+    return data.series(
+        signal_id,
+        runtime,
+        None,
+        start=start,
+        end=end,
+        step=step,
+        sampling=sampling,
+        max_gap=max_gap,
+    )
+
+
+@router.get("/signals/{signal_id:path}/summary")
+def summary(
+    signal_id: str,
+    runtime: RuntimeDep,
+    scope: ReaderScope,
+    start: str | None = Query(default=None, max_length=64),
+    end: str | None = Query(default=None, max_length=64),
+    per: str | None = Query(default=None, max_length=5),
+) -> Any:
+    in_scope(scope, signal_id)
+    return JSONResponse(data.summary(signal_id, runtime, None, start=start, end=end, per=per))
 
 
 @router.get("/signals/{signal_id:path}/value")

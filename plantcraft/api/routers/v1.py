@@ -40,6 +40,7 @@ from plantcraft_sdk.contract import (
     SERVICE_TOKEN_SECONDS,
     USER_TOKEN_SECONDS,
     ContractError,
+    sampling_options,
     subject_digest,
 )
 from plantcraft_sdk.contributes import FEATURES
@@ -78,6 +79,10 @@ class SeriesBatchRequest(BaseModel):
     quality: bool = False
     # With ``step``: each number series also holds every cell's lowest and highest value.
     extremes: bool = False
+    # With ``step``: ``interpolated`` reads each grid time's value, not each step's mean, and
+    # ``max_gap`` (seconds) is the longest span it interpolates across.
+    sampling: str | None = Field(default=None, max_length=20)
+    max_gap: float | None = None
 
 
 def _unprocessable(error: ContractError) -> HTTPException:
@@ -479,20 +484,66 @@ def series(
     step: float | None = Query(default=None),
     run: str | None = Query(default=None, max_length=64),
     runs: int | None = Query(default=None, ge=1, le=50),
+    sampling: str | None = Query(default=None, max_length=20),
+    max_gap: float | None = Query(default=None),
 ) -> Any:
     """Recorded values, or one mean (text: the last label) per ``step`` seconds; at most
     200,000 points. ``signal`` in the answer is the id as asked. A runs point answers
     ``{"signal", "kind": "runs", "runs": [{"run_at", "t", "v"}]}``, newest first: the run at
-    ``run`` (``latest`` by default, or its ISO time) or the ``runs`` newest."""
+    ``run`` (``latest`` by default, or its ISO time) or the ``runs`` newest.
+
+    ``sampling=interpolated`` (with ``step``, numbers only) gives the value at each grid time
+    from ``start`` to ``end``, on the straight line between the samples around it (steps for
+    a step signal); ``max_gap`` (seconds) is the longest span between two samples it
+    interpolates across, and past the last sample by more than it the value is null."""
 
     _require_signal(scope, signal_id)
-    options = {"run": run, "runs": runs}
+    options: dict[str, Any] = {"run": run, "runs": runs, **_sampling(rt, sampling, max_gap)}
     raw = getattr(rt.datalayer, "series_raw", None)
     if raw is not None:
         # The Historian's JSON as it came: never parsed and written again here.
         return Response(_answer(raw, signal_id, start, end, step, **options), media_type=JSON)
     # Written straight to JSON: long lists skip FastAPI's per-item encoder.
     return JSONResponse(_answer(rt.datalayer.series, signal_id, start, end, step, **options))
+
+
+@router.get("/signals/{signal_id:path}/summary")
+def summary(
+    signal_id: str,
+    _caller: V1Reader,
+    rt: Runtime,
+    scope: V1Scope,
+    start: str | None = Query(default=None, max_length=64),
+    end: str | None = Query(default=None, max_length=64),
+    per: str | None = Query(default=None, max_length=5),
+) -> dict[str, Any]:
+    """What ``[start, end]`` holds: ``count`` (values recorded in it), ``covered_pct`` (time
+    the signal has a value), ``good_pct`` (time its quality was good; null for a signal read
+    from its source), ``total`` (the time integral per ``per``: ``s``, ``min``, ``h`` or
+    ``d``, default ``h``, so a flow in t/h totals to tonnes) and the time-weighted ``mean``,
+    ``min``, ``max`` and ``std``. Needs the Historian (422 otherwise)."""
+
+    _require_signal(scope, signal_id)
+    if not getattr(rt.datalayer, "interpolates", False):
+        raise HTTPException(status_code=422, detail=t("Summaries need the Historian."))
+    return _answer(rt.datalayer.summary, signal_id, start, end, per)
+
+
+def _sampling(rt: Any, sampling: str | None, max_gap: float | None) -> dict[str, Any]:
+    """The series options for an interpolated read, checked here as the Historian checks
+    them; 422 when the data layer has no interpolated reads."""
+
+    if not sampling and max_gap is None:
+        return {}
+    try:
+        chosen, gap = sampling_options(sampling, 1.0, max_gap)
+    except ContractError as exc:
+        raise _unprocessable(exc) from exc
+    if chosen == "average":
+        return {}
+    if not getattr(rt.datalayer, "interpolates", False):
+        raise HTTPException(status_code=422, detail=t("Interpolated reads need the Historian."))
+    return {"sampling": chosen, "max_gap": gap}
 
 
 @router.get("/signals/{signal_id:path}/runs")
@@ -527,6 +578,7 @@ def series_batch(
     quality: dict[str, bool] = {"quality": True} if payload.quality else {}
     if payload.extremes:
         quality["extremes"] = True
+    quality.update(_sampling(rt, payload.sampling, payload.max_gap))
     hidden = [item for item in payload.signals if not scope.signal(item)]
     if hidden:
         # Signals out of the caller's asset scope answer 404, as unknown ones do.
