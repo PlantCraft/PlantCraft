@@ -159,7 +159,7 @@ export interface TrendData {
 
 /** A report (`/api/reports`): sections read over one period, made into a PDF on a schedule and
  * sent to people and groups in Messages. */
-export type SectionKind = "text" | "card" | "events" | "break" | "assistant";
+export type SectionKind = "text" | "card" | "events" | "break" | "assistant" | "alarms";
 /** ``group_by``: count the period's events by subject, kind, severity or ``payload.<field>``
  * and rank the groups (the most first) instead of listing the latest; "" lists them. */
 export interface EventsSpec { kinds: string[]; limit: number; group_by?: string }
@@ -169,10 +169,24 @@ export interface AssistantWritten { run_id: string; version: number; text: strin
 export interface AssistantData { kind: "assistant"; assets: number; results: number; events: number; event_counts: Record<string, number>; written: AssistantWritten | null }
 export interface AssistantVersion { version: number; requirements: string; feedback: string; run_id: string | null; created_by: string | null; created_at: string }
 export interface Analysis { id: string; title: string }
+/** An alarm performance section (ISA-18.2): the site or area whose performance Alarms publishes. */
+export interface AlarmsSpec { asset_id: string }
+export interface AlarmFigure { id: string; label: string; value: number | null; unit: string; target: string; status: string }
+export interface AlarmReading {
+  start: string; end: string; total: number; figures: AlarmFigure[];
+  eemua: { level: string; average_per_10min: number; peak_per_10min: number; [key: string]: unknown };
+  floods: Array<{ start: string; end: string; minutes: number; alarms: number; peak: number }>; flood_count: number; flood_minutes: number;
+  acknowledge: Array<{ priority: string; count: number; median_seconds: number | null; p90_seconds: number | null }>;
+  mean_ack_seconds: number | null; unacked: number;
+  top: Array<{ alarm_id: string; name: string; count: number; share: number; priority: string; chattering: boolean }>;
+  fleeting: Array<{ alarm_id: string; name: string; count: number }>; stale: number; chattering: number;
+}
+/** What Alarms published for the section's asset, the reading closest to the report's period. */
+export interface AlarmsData { kind: "alarms"; asset_id: string; asset_name: string; period: "24h" | "7d" | "30d"; exact: boolean; reading: AlarmReading | null; at: string | null; problem: string }
 export interface Section {
   section_id: string; kind: SectionKind;
   /** An events section's title (a card keeps its own; a text cell writes its headings in its Markdown). */
-  title: string; text: string; card: Card | null; events: EventsSpec | null; assistant?: AssistantSpec | null; width: "full" | "half";
+  title: string; text: string; card: Card | null; events: EventsSpec | null; assistant?: AssistantSpec | null; alarms?: AlarmsSpec | null; width: "full" | "half";
 }
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 export interface Schedule { every: "off" | "day" | "week" | "fortnight" | "month" | "quarter"; at: string; weekday: Weekday; day: number; /** Cover the last whole calendar period (last week, last month), not the period up to the send. */ closed?: boolean }
@@ -196,7 +210,7 @@ export interface Report extends ReportDraft {
 export type ShareTarget = "dashboard" | "report" | "diagram";
 export type ExportFormat = "docx" | "html" | "md";
 /** One section as read: its data (a card's, or the events'), or why it could not be read. */
-export interface SectionData { section: Section; data: (CardData | EventsData | AssistantData) | null; error: string | null }
+export interface SectionData { section: Section; data: (CardData | EventsData | AssistantData | AlarmsData) | null; error: string | null }
 export interface EventRow { at: string; kind: string; title: string; subject: string; subject_name: string; summary: string; severity: string }
 export interface EventsData {
   kind: "events"; counts: Array<{ kind: string; title: string; count: number; more: boolean }>;

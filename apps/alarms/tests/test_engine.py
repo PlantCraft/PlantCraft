@@ -372,3 +372,30 @@ def test_the_hourly_counts_fall_on_whole_hours():
     assert len(hours) == 25 and hours[0]["at"] == (T0 + timedelta(hours=10)).isoformat()
     assert hours[0]["counts"] == {"critical": 1} and hours[-1]["counts"] == {"low": 1}
     assert sum(sum(hour["counts"].values()) for hour in hours) == result["total"] == 2
+
+
+def test_the_performance_result_of_each_area_fits_platform_limits():
+    import json
+
+    from alarmcraft.monitor.performance_results import performance_results
+
+    class Tree:
+        def area_of(self, alarm):
+            area = {"id": alarm["area"]}
+            return ["site", alarm["area"]], area
+
+    alarms = [
+        {"alarm_id": f"a{i}", "name": "A very long alarm name " * 5 + str(i), "area": f"U-{i % 2}"}
+        for i in range(200)
+    ]
+    priorities = ["critical", "high", "medium", "low"]
+    found = [{**occurrence(f"a{n % 200}", 0.05 * n, priorities[n % 4])} for n in range(4000)]
+    now = T0 + timedelta(hours=6)
+    rows = performance_results(alarms, found, Tree(), now=now, url="/alarm/performance")
+    assert sorted(row["subject"] for row in rows) == ["asset:U-0", "asset:U-1", "asset:site"]
+    site = next(row for row in rows if row["subject"] == "asset:site")
+    assert site["detail"]["periods"]["24h"]["total"] == 4000
+    assert site["status"] == "alarm" and "EEMUA 191 overloaded" in site["summary"]
+    for row in rows:
+        assert len(json.dumps(row["detail"], separators=(",", ":"))) <= 16 * 1024
+        assert row["expires_at"] > row["at"]

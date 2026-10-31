@@ -20,6 +20,7 @@ from reportlab.lib import colors
 from dashcraft.dashboards.fields import effective, finite_number
 from dashcraft.dashboards.model import Card
 from dashcraft.i18n import t
+from dashcraft.reports import alarm_performance
 from dashcraft.reports import groups as grouped
 from dashcraft.reports import markdown as md
 from dashcraft.reports.pdf import (
@@ -393,6 +394,34 @@ def _events(section: dict[str, Any], item: dict[str, Any], clock: Clock) -> Part
     return part
 
 
+def _alarms(section: dict[str, Any], item: dict[str, Any], clock: Clock) -> list[Part]:
+    """An alarm performance section as parts every format draws like an events list: the
+    figures under the section's title and the EEMUA 191 line, then one table each."""
+
+    title = section.get("title") or t("Alarm performance (ISA-18.2)")
+    data, error = item.get("data") or {}, item.get("error")
+    if not data.get("reading"):
+        return [Part("events", title=title, error=error or t("This section could not be read."))]
+    found = alarm_performance.tables(data, clock)
+    parts = []
+    for index, table in enumerate(found):
+        part = Part(
+            "events",
+            title=title if index == 0 else table["title"],
+            counts=alarm_performance.lead(data) if index == 0 else "",
+            note=table["note"],
+            error=(error or "") if index == 0 else "",
+        )
+        if table["rows"]:
+            part.table = Table(
+                head=table["head"], rows=table["rows"], align=table["align"], states=table["states"]
+            )
+        else:
+            part.empty = table["empty"]
+        parts.append(part)
+    return parts
+
+
 def build(report: dict[str, Any], items: list[dict[str, Any]], info: dict[str, Any]) -> Document:
     """The document of ``report``: ``items`` as ``delivery.read_sections`` gives them, ``info``
     as ``pdf.render`` takes it."""
@@ -421,6 +450,8 @@ def build(report: dict[str, Any], items: list[dict[str, Any]], info: dict[str, A
             part = _events(section, item, clock)
             part.half = half
             parts.append(part)
+        elif kind == "alarms":
+            parts.extend(_alarms(section, item, clock))
         elif kind == "break":
             parts.append(Part("break"))
     period = t("{start} to {end}", start=clock.text(info["start"]), end=clock.text(info["end"]))

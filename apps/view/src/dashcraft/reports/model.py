@@ -44,7 +44,8 @@ PERIOD_FOR = {
     "month": "30d",
     "quarter": "90d",
 }
-SectionKind = Literal["text", "card", "events", "break", "assistant"]
+SectionKind = Literal["text", "card", "events", "break", "assistant", "alarms"]
+ASSET_ID = r"^[^\s$]{1,200}$"
 # What an events section may count its events by, instead of listing them: who they are about,
 # their kind, their severity, or one field of their payload (``payload.method_id``).
 GROUP_BY = re.compile(r"^(subject|kind|severity|payload\.[a-z][a-z0-9_]{0,40})$")
@@ -111,6 +112,13 @@ class EventsSpec(BaseModel):
         return cleaned
 
 
+class AlarmsSpec(BaseModel):
+    """An alarm performance section (ISA-18.2): the asset (the site or an area) whose alarms it
+    reads, from what Alarms publishes (``reports.alarm_performance``)."""
+
+    asset_id: str = Field(pattern=ASSET_ID)
+
+
 def text_with_heading(title: str, text: str) -> str:
     """A text section of before 2026-10-26 (a heading field above its Markdown) as one cell:
     the heading becomes the cell's first ``#`` line."""
@@ -132,6 +140,8 @@ class Section(BaseModel):
     events: EventsSpec | None = None
     # What an assistant section reads and how the model writes it (``reports.assistant``).
     assistant: AssistantSpec | None = None
+    # What an alarm performance section reads.
+    alarms: AlarmsSpec | None = None
     # Two half sections in a row sit side by side on the page.
     width: Literal["full", "half"] = "full"
 
@@ -175,7 +185,11 @@ class Section(BaseModel):
             raise ValueError(t("Pick the assets and analyses the assistant reads."))
         if self.kind != "assistant":
             self.assistant = None
-        if self.kind in ("text", "break", "assistant"):
+        if self.kind == "alarms" and self.alarms is None:
+            raise ValueError(t("Pick the site or the area whose alarms the section reads."))
+        if self.kind != "alarms":
+            self.alarms = None
+        if self.kind in ("text", "break", "assistant", "alarms"):
             self.width = "full"
         return self
 
@@ -254,6 +268,7 @@ __all__ = [
     "MAX_SECTIONS",
     "PERIOD_FOR",
     "WEEKDAYS",
+    "AlarmsSpec",
     "EventsSpec",
     "ReportPayload",
     "Schedule",

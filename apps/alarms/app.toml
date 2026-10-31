@@ -47,6 +47,8 @@ outbound = []
 results = [
     { kind = "alarm_state", subject = "asset" },
     { kind = "alarm_state", subject = "signal" },
+    # Each area's ISA-18.2 / EEMUA 191 alarm performance, once an hour (View's report section).
+    { kind = "alarm_performance", subject = "asset" },
 ]
 
 # What Alarms writes (PlantCraft docs/app-standard.md, section 6): each alarm's life, for the

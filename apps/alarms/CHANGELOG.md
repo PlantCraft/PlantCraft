@@ -8,6 +8,7 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Alarm performance published as a result.** Every hour, Alarms publishes the Performance page's reading over the last 24 hours, 7 days and 30 days as an `alarm_performance` result on the site and on each area. Other apps can read it without calling Alarms; View's reports print it. Each result expires after two hours.
 - **Shelving has a time limit by priority.** The alarm philosophy sets the longest an alarm may be shelved: 1 hour for critical, 4 for high, 12 for medium and 24 for low by default (ISA-18.2). The shelve dialog offers only durations up to that limit, and the server refuses anything longer.
 - **Performance: the EEMUA 191 level, floods with hysteresis and what the journal tells.**
   - **EEMUA 191 level.** The period shows as one point, average against peak alarms per 10 minutes, on the four EEMUA 191 bands: robust, stable, reactive and overloaded.

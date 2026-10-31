@@ -11,7 +11,7 @@ export const PERIODS = ["1h", "8h", "12h", "24h", "7d", "14d", "30d", "90d", "36
 export const PERIOD_FOR: Record<Schedule["every"], string> = { off: "24h", day: "24h", week: "7d", fortnight: "14d", month: "30d", quarter: "90d" };
 export const WEEKDAYS: Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 export const WEEKDAY_NAMES: Record<Weekday, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
-export const SECTION_LABELS: Record<SectionKind, string> = { text: "Text", card: "Panel", events: "Events", break: "Page break", assistant: "Assistant" };
+export const SECTION_LABELS: Record<SectionKind, string> = { text: "Text", card: "Panel", events: "Events", break: "Page break", assistant: "Assistant", alarms: "Alarm performance" };
 export const EXPORTS: Array<{ id: "pdf" | "docx" | "html" | "md"; label: string; hint: string }> = [
   { id: "pdf", label: "PDF", hint: "To print and to keep: the same file the schedule sends, kept in Sent." },
   { id: "docx", label: "Word (.docx)", hint: "To change and pass on: headings as Word's own, tables you can edit, charts as pictures." },
@@ -68,6 +68,7 @@ export function newSection(kind: SectionKind, sections: Section[]): Section {
   if (kind === "events") return { ...base, title: t("Events"), events: { kinds: [], limit: 20 } };
   if (kind === "text") return { ...base, text: "## " };
   if (kind === "assistant") return { ...base, title: t("By the assistant"), assistant: { asset_ids: [], children: true, analyses: ["loops"], requirements: "", version: 1 } };
+  if (kind === "alarms") return { ...base, title: t("Alarm performance (ISA-18.2)"), alarms: { asset_id: "" } };
   return base;
 }
 

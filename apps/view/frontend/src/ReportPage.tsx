@@ -1,9 +1,10 @@
 /** One report: the document as it reads now (its sections over its period), the PDFs it made
  * and sent, Download PDF and Send now, and the editor of its sections and settings. */
 import { Dialog, confirmAction, ApiError, MultiSelect, PageTabs, Pill, RecipientPicker, DataTable, errorMessage as message, renderMarkdown, useAssistantPage, type DataColumn, timeZoneLabel } from "@plantcraft/ui";
-import { AlertTriangle, ArrowDown, ArrowUp, CalendarClock, Check, Columns2, Download, FileText, Globe2, LayoutList, ListOrdered, ListTree, LoaderCircle, Pencil, Plus, RefreshCw, Rows3, Save, Send, Settings2, Sparkles, SquareSplitVertical, Trash2, Type, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, CalendarClock, Check, Columns2, Download, FileText, Globe2, LayoutList, ListOrdered, ListTree, LoaderCircle, Pencil, Plus, RefreshCw, Rows3, Save, Send, Settings2, Siren, Sparkles, SquareSplitVertical, Trash2, Type, X } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import { api, pdfUrl, type CardSource } from "./api";
+import { AlarmsDialog, AlarmsView } from "./AlarmsSection";
 import { AssistantDialog, AssistantView } from "./AssistantSection";
 import { CardEditor } from "./CardEditor";
 import { CardView } from "./CardView";
@@ -102,6 +103,7 @@ function SectionBody({ section, read, source, tick, editing, reportId = "", canE
   if (section.kind === "text") return <div className="tc-report-text"><div className="pc-markdown">{renderMarkdown(section.text)}</div></div>;
   if (section.kind === "break") return editing ? <div className="tc-report-break"><SquareSplitVertical size={14} aria-hidden /> {t("The PDF starts a new page here")}</div> : null;
   if (section.kind === "events") return <EventsView section={section} read={read} tick={tick} />;
+  if (section.kind === "alarms") return <AlarmsView section={section} read={read} tick={tick} />;
   if (section.kind === "assistant") return <AssistantView section={section} read={read} tick={tick} reportId={reportId} canEdit={canEdit} editing={editing} />;
   if (!section.card) return null;
   return <div className="tc-report-card" style={{ height: `${reportCardPixels(section.card)}px` } as CSSProperties}>
@@ -251,6 +253,7 @@ const ADD: Array<{ kind: SectionKind; icon: typeof Type; hint: string }> = [
   { kind: "text", icon: Type, hint: "Markdown: headings, notes, lists, tables" },
   { kind: "card", icon: LayoutList, hint: "A chart, KPIs or a table" },
   { kind: "events", icon: ListOrdered, hint: "Alarms, runs, other events" },
+  { kind: "alarms", icon: Siren, hint: "ISA-18.2 load, floods and response from Alarms" },
   { kind: "assistant", icon: Sparkles, hint: "Written by the assistant from the picked assets" },
   { kind: "break", icon: SquareSplitVertical, hint: "A new page in the PDF" },
 ];
@@ -500,6 +503,7 @@ export function ReportPage({ reportId, me }: { reportId: string; me: Me }) {
     {exporting && <ExportDialog reportId={reportId} busy={Boolean(busy)} onClose={() => setExporting(false)} onPdf={() => { setExporting(false); void makePdf(); }} />}
     {sharing && <ShareDialog target="report" dashboardId={reportId} name={saved.name} isAdmin={me.is_admin} onClose={() => setSharing(false)} />}
     {editing?.kind === "assistant" && <AssistantDialog section={editing} onClose={() => { setEditing(null); setInsertAt(null); }} onSave={applySection} />}
+    {editing?.kind === "alarms" && <AlarmsDialog section={editing} onClose={() => { setEditing(null); setInsertAt(null); }} onSave={applySection} />}
     {editing?.kind === "events" && <EventsDialog section={editing} onClose={() => { setEditing(null); setInsertAt(null); }} onSave={applySection} />}
     {editing?.kind === "card" && editing.card && draft && <CardEditor initial={editing.card} isNew={!draft.sections.some((item) => item.section_id === editing.section_id)} period={draft.period}
       onClose={() => { setEditing(null); setInsertAt(null); }} onSave={(card) => applySection({ ...editing, card })} />}

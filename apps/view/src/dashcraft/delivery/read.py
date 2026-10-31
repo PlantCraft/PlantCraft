@@ -17,6 +17,7 @@ from plantcraft_sdk.client import PlantCraftError, Unauthorized
 from dashcraft.dashboards.model import window_seconds
 from dashcraft.i18n import t
 from dashcraft.query.cards import Reader, read_card
+from dashcraft.reports import alarm_performance
 from dashcraft.reports import assistant as helper
 from dashcraft.reports.model import EventsSpec, Section
 
@@ -215,6 +216,9 @@ def read_section(reader: Reader, section: Section, period: str) -> dict[str, Any
             out["data"] = read_card(reader, section.card, None, period)
         elif section.kind == "events" and section.events is not None:
             out["data"] = read_events(reader, section.events, start, end)
+        elif section.kind == "alarms" and section.alarms is not None:
+            out["data"] = alarm_performance.read(reader, section.alarms.asset_id, period)
+            out["error"] = out["data"]["problem"] or None
         elif section.kind == "assistant" and section.assistant is not None:
             facts = helper.gather(reader, section.assistant, start, end)
             out["data"] = {
@@ -304,7 +308,9 @@ def read_sections(
             items.append(item)
             continue
         item = read_section(reader, section, period)
-        if section.kind in ("card", "events") and (item["error"] or section_problems(item["data"])):
+        if section.kind in ("card", "events", "alarms") and (
+            item["error"] or section_problems(item["data"])
+        ):
             problems += 1
         items.append(item)
     return items, problems

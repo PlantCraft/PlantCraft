@@ -107,6 +107,8 @@ class Runtime(PlatformRuntime):
             rules=self.rules,
             incoming=self.incoming,
             sync=self.sync,
+            tree=self.tree,
+            philosophy=self.philosophy,
         )
         self.replay = HistoryReplay(self.monitor)
         self._email: tuple[bool, Any] | None = None
