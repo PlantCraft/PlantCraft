@@ -569,12 +569,24 @@ suite_apps_setting() { # suite_apps_setting PROFILES CURRENT ENV_FILE
 }
 
 # Docker refuses to start a container whose CPU limit exceeds the host's CPU count ("range of
-# CPUs is from 0.01 to N"), so the limits in .env never ask for more than the host has.
+# CPUs is from 0.01 to N"), so the limits never ask for more than the host has. Every limit in
+# compose.yaml counts, also the ones .env leaves to the compose default (LINKCRAFT_EXECUTOR_CPUS
+# defaults to 4: a 2-CPU host failed there with nothing in .env); those are written to .env.
+compose_cpu_defaults() { # KEY=DEFAULT for every cpus: "${KEY:-DEFAULT}" of the compose file
+    local file
+    for file in "$BUNDLE_DIR/compose.yaml" "$PREFIX/compose.yaml"; do
+        [ -f "$file" ] || continue
+        sed -n 's/^ *cpus: *"\${\([A-Z0-9_]*\):-\([0-9.]*\)}".*/\1=\2/p' "$file" | sort -u
+        return 0
+    done
+}
 fit_cpu_limits() {
-    local env="$1" cpus key value
+    local env="$1" cpus key value defaults
     cpus="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
-    for key in PLANTCRAFT_CPUS LINKCRAFT_CPUS DASHCRAFT_CPUS HISTCRAFT_CPUS TWINCRAFT_CPUS ALARMCRAFT_CPUS MODELCRAFT_CPUS MODELCRAFT_EXECUTOR_CPUS LINKCRAFT_EXECUTOR_CPUS; do
+    defaults="$(compose_cpu_defaults)"
+    for key in $( { printf '%s\n' PLANTCRAFT_CPUS LINKCRAFT_CPUS DASHCRAFT_CPUS HISTCRAFT_CPUS TWINCRAFT_CPUS ALARMCRAFT_CPUS MODELCRAFT_CPUS MODELCRAFT_EXECUTOR_CPUS LINKCRAFT_EXECUTOR_CPUS; printf '%s\n' "$defaults" | sed -n 's/=.*//p'; } | sort -u); do
         value="$(env_get "$key" "$env")"
+        [ -n "$value" ] || value="$(printf '%s\n' "$defaults" | sed -n "s/^$key=//p" | head -n 1)"
         [ -n "$value" ] || continue
         if awk -v a="$value" -v b="$cpus" 'BEGIN { exit !(a + 0 > b + 0) }'; then
             warn "$key=$value is more than the $cpus CPUs of this host: using $cpus"

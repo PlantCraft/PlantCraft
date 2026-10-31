@@ -16,6 +16,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   repeated install, `install.sh` removes the ones already there (data, settings, images and
   backups stay), so a container left from an earlier run can no longer hold its name
   ("already in use") and need `docker compose down` by hand.
+- **A server with 2 processors installs.** `install.sh` capped only the CPU limits written in
+  `.env` to the host's processors; the ones left to `compose.yaml`'s defaults
+  (`LINKCRAFT_EXECUTOR_CPUS`, `PLANTCRAFT_CPUS`, `LINKCRAFT_CPUS`: 4) were not, so Docker refused
+  to start Analytics' executor ("range of CPUs is from 0.01 to 2.00"). Every `cpus:` limit of
+  `compose.yaml` is now checked, and the ones that do not fit are written to `.env` at the host's
+  count. Found by a clean install of 0.5.1 on a 2-CPU / 4 GB virtual machine.
 
 ## [0.5.1] - 2026-10-30
 

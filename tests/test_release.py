@@ -85,6 +85,41 @@ def _install_sh_version_ge(newer: str, older: str) -> bool:
     return done.returncode == 0
 
 
+def _install_sh_functions(*names: str) -> str:
+    text = (Path(__file__).resolve().parents[1] / "deploy" / "install.sh").read_text(
+        encoding="utf-8"
+    )
+    bodies = []
+    for name in names:
+        start = text.index(f"{name}() {{")
+        bodies.append(text[start : text.index("\n}\n", start) + 3])
+    return "\n".join(bodies)
+
+
+def test_install_sh_fits_compose_default_cpu_limits_to_a_small_host(tmp_path):
+    """A 2-CPU host: limits left to compose.yaml's defaults (4) are capped too, not only .env's."""
+
+    shutil.copy(Path(__file__).resolve().parents[1] / "deploy" / "compose.yaml", tmp_path)
+    env = tmp_path / ".env"
+    env.write_text("HISTCRAFT_CPUS=1\nMODELCRAFT_EXECUTOR_CPUS=8\n", encoding="utf-8")
+    body = _install_sh_functions("env_get", "env_set", "compose_cpu_defaults", "fit_cpu_limits")
+    script = f'warn() {{ :; }}\nnproc() {{ echo 2; }}\n{body}\nfit_cpu_limits "$1"'
+    subprocess.run(
+        ["bash", "-c", script, "-", str(env)],
+        check=True,
+        env={
+            "PATH": "/usr/bin:/bin",
+            "BUNDLE_DIR": str(tmp_path),
+            "PREFIX": str(tmp_path / "none"),
+        },
+    )
+    values = dict(line.split("=", 1) for line in env.read_text(encoding="utf-8").splitlines())
+    assert values["LINKCRAFT_EXECUTOR_CPUS"] == "2"  # compose default 4, absent from .env
+    assert values["MODELCRAFT_EXECUTOR_CPUS"] == "2"  # .env asked for 8
+    assert values["HISTCRAFT_CPUS"] == "1"  # already fits: untouched
+    assert "ALARMCRAFT_CPUS" not in values  # compose default 1 fits: .env stays as it was
+
+
 @pytest.mark.parametrize(
     "a,b",
     [
