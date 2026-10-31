@@ -223,6 +223,11 @@ class Engine:
         subjects = int(summary.get("subjects") or 0) if summary else 0
         self.jobs.set_progress(job["job_id"], subjects or done, subjects or total)
         clean = {key: value for key, value in (summary or {}).items() if key != "header"}
+        error = str((summary or {}).get("error") or "")
+        if status not in {"ok", "partial"} and unreachable(error):
+            # The plant's data did not answer (the Historian restarting, 0.6.0 load test C6):
+            # the queue tries the round again in 30 s, then 2 min, as for one loop's run.
+            raise RetryLater(error)
         if status in {"ok", "partial"}:
             self.jobs.finish(job["job_id"], "completed", summary=clean)
         else:

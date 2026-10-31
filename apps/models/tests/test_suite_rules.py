@@ -33,6 +33,7 @@ LAYERS = {
     "suite": 1,
     "projects": 1,
     "modelica": 1,
+    # Kalman filters, FOPDT fits and soft sensors over arrays (prototype, E3.2).
     "omc": 2,
     "runs": 3,
     "api": 4,
