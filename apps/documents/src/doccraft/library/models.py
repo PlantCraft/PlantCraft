@@ -114,3 +114,19 @@ class SearchRequest(BaseModel):
     kind: str | None = Field(default=None, max_length=40)
     folder: str | None = Field(default=None, max_length=12)
     limit: int = Field(default=8, ge=1, le=30)
+
+
+class LinkRef(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    doc_id: str = Field(min_length=1, max_length=40)
+    asset_id: str = Field(min_length=1, max_length=120)
+
+
+class LinkReview(BaseModel):
+    """Suggested document-asset links approved or rejected together."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    links: list[LinkRef] = Field(min_length=1, max_length=500)
+    verdict: str = Field(pattern="^(approved|rejected)$")

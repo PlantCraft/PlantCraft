@@ -22,6 +22,25 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   are valves; arrows drawn along a line, away from any symbol, give the line's direction; a
   pump drawn small to scale is still a pump. On the DEXPI example the reader finds 4 of its 6
   equipment feeds with none wrong (3, one of them reversed, before).
+- **Links to check: a queue for the assets found in documents.** The library's **Links to
+  check** lists the links between documents and the assets named in their text that wait for a
+  person, in the folders you change. Pick several and mark them **Correct**, which links them,
+  or **Wrong**. A link marked Wrong is not suggested again when the document is read again.
+  `DOCCRAFT_ASSET_AUTO_MENTIONS` sets a threshold: an asset named that many times in a document
+  is linked at once (source `auto`), and removing it on the document's page rejects it. The
+  default 0 sends every link to the queue, as before.
+- **Tags on a P&ID open the plant.** On a diagram's page, the box of a tag that PlantCraft
+  has opens the asset, its signals and what the apps say about it. A sheet linked from the
+  plant map opens with the item already picked.
+- **The plant map as a document the assistant cites.** **Write the plant summary** on the
+  plant map writes the map of a folder's P&IDs out as a document in that same folder:
+  - each unit, with its equipment in flow order and what feeds what;
+  - the control loops and the instruments;
+  - the sheets each item is drawn on.
+
+  It is indexed like any other document, so search and the assistant cite it. It is made with no
+  language model, and making it again adds a revision. Only that folder's drawings go into it,
+  so it has the same readers as they do.
 - **Hand valves drawn with no tag are followed.** A small circle in a gap of the line (a
   ball or hand valve as DIN/ISO 10628 tools draw it) is a valve the line runs through. A valve
   between two lines with arrows takes its direction from the line where it is alone. On the

@@ -233,9 +233,11 @@ fi
 # --- Accounts --------------------------------------------------------------------------------
 if [ -e "$HERE/data/initial-admin-password" ]; then
     age=$(((NOW - $(mtime_of "$HERE/data/initial-admin-password")) / 86400))
-    check PC-ACC-01 medium warn "The emergency administrator is kept for emergencies" \
-        "data/initial-admin-password exists ($age days old)" \
-        "Give people named administrator accounts, sign in as admin only in an emergency, and keep the file on encrypted storage." "CR 1.5 / IA-5"
+    # Its password is rotated at least every 90 days (./install.sh --rotate-admin-password).
+    if [ "$age" -gt 90 ]; then r=fail; else r=warn; fi
+    check PC-ACC-01 medium "$r" "The emergency administrator is kept for emergencies" \
+        "data/initial-admin-password exists, its password set $age days ago" \
+        "Give people named administrator accounts and sign in as admin only in an emergency; change its password at least every 90 days with ./install.sh --rotate-admin-password." "CR 1.5 / IA-5"
 else
     check PC-ACC-01 medium pass "The emergency administrator is kept for emergencies" "no password file in data/" "" "CR 1.5 / IA-5"
 fi

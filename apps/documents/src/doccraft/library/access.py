@@ -91,5 +91,5 @@ class Permissions:
 def about(scope: AssetScope, assets: Iterable[dict[str, Any]]) -> bool:
     if scope.everything:
         return True
-    confirmed = [item["asset_id"] for item in assets if item.get("source") != "suggested"]
+    confirmed = [item["asset_id"] for item in assets if item.get("source") in ("manual", "auto")]
     return not confirmed or any(scope.asset(asset) for asset in confirmed)
