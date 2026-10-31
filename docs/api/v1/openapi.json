@@ -360,6 +360,11 @@
       ],
       "title": "End"
      },
+     "quality": {
+      "default": false,
+      "title": "Quality",
+      "type": "boolean"
+     },
      "signals": {
       "items": {
        "maxLength": 300,

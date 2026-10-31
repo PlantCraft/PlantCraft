@@ -12,6 +12,11 @@ Modes (``--mode``):
 - ``hybrid``: the page image plus what the classical reader found; the model corrects it.
   This is the likely product path for scans.
 
+Real public P&IDs (``--dexpi DIR --xml DIR``): every PDF or PNG in the first folder whose
+DEXPI XML is in the second (same name, or the longest name the drawing starts with) is sent as
+an image and scored on tags and equipment-to-equipment feeds, next to the classical reader's
+score on the same file. ``--noise`` makes the demo scans dirty (speckle, skew).
+
 Each sheet is one call. Default is 3 sheets, which is a few cents on a cheap model. The
 script prints tokens per call, writes the answers and ``scores.json`` to ``--out``, and
 stops at ``--max-calls``. It uses only the standard library to call the API.
@@ -29,6 +34,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from doccraft.plantmap.reader import read_drawing  # noqa: E402
 from doccraft.plantmap.reader.score import KINDS, score, total  # noqa: E402
@@ -86,6 +92,105 @@ def as_result(answer: dict) -> dict:
     return {"sheet": answer.get("sheet"), "items": items, "relations": rels}
 
 
+def classical_found(page: dict) -> str:
+    found = {
+        "items": [{"tag": i["tag"], "cls": i["cls"]} for i in page["items"] if i.get("tag")],
+        "relations": [{k: r[k] for k in ("from", "type", "to")} for r in page["relations"]],
+    }
+    return (
+        "\nA classical reader found this; it may miss or misread tags and lines. "
+        "Correct and complete it:\n" + json.dumps(found)
+    )
+
+
+def _pr(found: set, true: set) -> dict:
+    hit = len(found & true)
+    return {
+        "precision": round(hit / len(found), 3) if found else 0.0,
+        "recall": round(hit / len(true), 3) if true else 0.0,
+        "found": len(found),
+        "true": len(true),
+    }
+
+
+def dexpi_score(page: dict, key: dict) -> dict:
+    tags = {i["tag"] for i in page["items"] if i.get("tag")}
+    feeds = {(r["from"], r["to"]) for r in page["relations"] if r["type"] == "feeds"}
+    return {
+        "tags": _pr(tags, set(key["tags"])),
+        "feeds": _pr(feeds, {tuple(f) for f in key["feeds"]}),
+    }
+
+
+def run_dexpi(args, key: str) -> None:
+    from dexpi_truth import norm, truth
+
+    xmls = {p.stem.upper(): p for p in Path(args.xml).iterdir() if p.suffix.lower() == ".xml"}
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    rows, calls, tokens = [], 0, 0
+    for drawing in sorted(Path(args.dexpi).iterdir()):
+        if drawing.suffix.lower() not in {".pdf", ".png"} or calls >= args.max_calls:
+            continue
+        stem = drawing.stem.upper()
+        match = max((s for s in xmls if stem.startswith(s)), key=len, default=None)
+        if match is None:
+            continue
+        answer_key = truth(xmls[match])
+        if not answer_key["feeds"]:
+            continue
+        data = drawing.read_bytes()
+        if drawing.suffix.lower() == ".pdf":
+            import pypdfium2
+
+            image = pypdfium2.PdfDocument(data)[0].render(scale=args.dpi / 72).to_pil()
+            png = out / f"{drawing.stem}.png"
+            image.save(png)
+            data_png = png.read_bytes()
+        else:
+            data_png = data
+        classical = read_drawing(data, drawing.name)
+        page = classical[0] if classical else {"items": [], "relations": []}
+        extra = classical_found(page) if args.mode == "hybrid" else ""
+        started = time.perf_counter()
+        answer, usage = ask(args.model, data_png, extra, key)
+        calls += 1
+        tokens += int(usage.get("total_tokens", 0))
+        llm = as_result(answer)
+        for item in llm["items"]:
+            item["tag"] = norm(str(item["tag"]).upper().replace(" ", ""))
+        for rel in llm["relations"]:
+            rel["from"] = norm(str(rel["from"]).upper().replace(" ", ""))
+            rel["to"] = norm(str(rel["to"]).upper().replace(" ", ""))
+        (out / f"{drawing.stem}.{args.mode}.json").write_text(json.dumps(answer, indent=1))
+        row = {
+            "file": drawing.name,
+            "classical": dexpi_score(page, answer_key),
+            "llm": dexpi_score(llm, answer_key),
+            "seconds": round(time.perf_counter() - started, 1),
+            "tokens": usage.get("total_tokens"),
+        }
+        rows.append(row)
+        print(
+            f"{drawing.name}: feeds classical {row['classical']['feeds']}  "
+            f"llm {row['llm']['feeds']}  {row['seconds']} s, {row['tokens']} tokens"
+        )
+    summary = {"model": args.model, "mode": args.mode, "calls": calls, "total_tokens": tokens}
+    for who in ("classical", "llm"):
+        for what in ("tags", "feeds"):
+            hit = sum(round(r[who][what]["recall"] * r[who][what]["true"]) for r in rows)
+            found = sum(r[who][what]["found"] for r in rows)
+            true = sum(r[who][what]["true"] for r in rows)
+            summary[f"{who}_{what}"] = {
+                "precision": round(hit / found, 3) if found else 0.0,
+                "recall": round(hit / true, 3) if true else 0.0,
+            }
+    (out / "dexpi-scores.json").write_text(
+        json.dumps({"summary": summary, "files": rows}, indent=1)
+    )
+    print(json.dumps(summary))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default="/tmp/llm-eval")
@@ -95,10 +200,15 @@ def main() -> None:
     parser.add_argument("--max-calls", type=int, default=6)
     parser.add_argument("--noise", type=float, default=0.0)
     parser.add_argument("--dpi", type=int, default=150)
+    parser.add_argument("--dexpi", help="folder of public P&IDs (PDF, PNG)")
+    parser.add_argument("--xml", help="folder of their DEXPI XML files")
     args = parser.parse_args()
     key = os.environ.get("OPENAI_API_KEY", "")
     if not key:
         sys.exit("OPENAI_API_KEY is not set: load ~/.config/plantcraft-tests/openai.env first.")
+    if args.dexpi:
+        run_dexpi(args, key)
+        return
     from doccraft.plantmap.sample.raster import scan
 
     out = Path(args.out)
@@ -112,19 +222,7 @@ def main() -> None:
         scan(pdf, png, dpi=args.dpi, noise=args.noise, seed=len(sheet))
         extra = ""
         if args.mode == "hybrid":
-            classical = read_drawing(png.read_bytes(), png.name)[0]
-            found = {
-                "items": [
-                    {"tag": i["tag"], "cls": i["cls"]} for i in classical["items"] if i.get("tag")
-                ],
-                "relations": [
-                    {k: r[k] for k in ("from", "type", "to")} for r in classical["relations"]
-                ],
-            }
-            extra = (
-                "\nA classical reader (OCR) found this; it may miss or misread tags "
-                "(PY for PV, 0 for O). Correct and complete it:\n" + json.dumps(found)
-            )
+            extra = classical_found(read_drawing(png.read_bytes(), png.name)[0])
         started = time.perf_counter()
         answer, usage = ask(args.model, png.read_bytes(), extra, key)
         calls += 1

@@ -194,3 +194,17 @@ def test_an_older_processcraft_without_the_list_still_lets_people_in():
         ),
     )
     assert verifier.user(fake.token("engineer")).username == "engineer"
+
+
+def test_a_signed_out_session_ends_its_token_in_every_app(fake):
+    verifier = fake.verifier("linkcraft")
+    token = fake.token("engineer", sid="a" * 64)
+    other = fake.token("engineer", sid="b" * 64)
+    assert verifier.user(token).username == "engineer"
+    fake.end_session("a" * 64)
+    verifier._revoked_at = -float("inf")
+    with pytest.raises(AuthError) as error:
+        verifier.user(token)
+    assert error.value.status_code == 401
+    # The same person's other session (another browser) keeps working.
+    assert verifier.user(other).username == "engineer"

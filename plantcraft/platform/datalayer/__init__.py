@@ -83,7 +83,13 @@ class DataLayer:
         raise NotImplementedError
 
     def series_batch(
-        self, signals: list[str], start: str | None, end: str | None, step: float | None
+        self,
+        signals: list[str],
+        start: str | None,
+        end: str | None,
+        step: float | None,
+        *,
+        quality: bool = False,
     ) -> dict[str, Any]:
         raise NotImplementedError
 

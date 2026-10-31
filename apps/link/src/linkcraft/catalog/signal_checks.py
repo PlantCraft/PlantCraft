@@ -205,7 +205,13 @@ def dataset_for(
     start: pd.Timestamp,
     end: pd.Timestamp,
     reference: pd.Series | None = None,
+    quality: list[dict[str, Any]] | None = None,
 ) -> LoopDataset:
+    """The dataset a signal check reads. ``quality``: the source's quality changes
+    (``[{t, quality}]``, else the ones read with ``values``), in ``metadata["quality"]``."""
+
+    if quality is None and values is not None:
+        quality = values.attrs.get("quality")
     columns = {"value": _naive_series(values)}
     if reference is not None and len(reference):
         columns["reference"] = _naive_series(reference)
@@ -228,5 +234,6 @@ def dataset_for(
             "unit": signal.get("unit") or "",
             "low": low,
             "high": high,
+            **({"quality": list(quality)} if quality is not None else {}),
         },
     )

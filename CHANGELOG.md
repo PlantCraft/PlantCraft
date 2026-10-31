@@ -39,6 +39,32 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   in the meantime. In Analytics, opening Blocks loads 1.15 MB of script instead of 2.5 MB and
   Algorithms 0.7 MB instead of 2.1 MB; a page whose chart shows at once (Signal, Loop) is drawn
   first and gets Plotly right after.
+
+- **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
+  went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
+  the chunks 0.6 s). `plantcraft-sdk` 0.85.0 adds `plantcraft_sdk.wire`, a binary answer for
+  `POST /api/v1/series` (int64 ms times and float64 values, asked with `Accept:
+  application/x-plantcraft-series` when the Historian lists `pcs1` in `GET /api/v1/reads`;
+  JSON stays the default, `PLANTCRAFT_BINARY_READS=0` keeps it). Analytics builds its raw frame
+  as one block instead of `pd.concat`, and its loop rounds and Signal quality ask only for what
+  is new since their last read (`LINKCRAFT_READ_CACHE`, 15 min overlap, whole read every 6 h).
+  The Historian's CPU per round: 0.85 to 0.07 s on the demo's 200 signals, 59 to 0.8 s on
+  2,000 dense signals (`ci/bench/reads`).
+- **Signal quality sees the source's quality (2026-10-31).** API v1 gave a bad sample as a null
+  value and an uncertain or substituted one as good, so the `sq_*` checks never saw them.
+  `POST /api/v1/series` takes `"quality": true` and then lists, per series, where the source's
+  quality was not good (`"quality": [{t, quality}]`, each change holding until the next; the
+  Historian reads it for all signals in one query). `plantcraft-sdk` 0.85.0:
+  `series_many(..., quality=True)`, and `series_many_pandas` keeps the list in
+  `attrs["quality"]`. Analytics asks for it in Signal quality (the incremental read joins it
+  across rounds), and `sq_availability` 1.1.0 counts substituted time as missing, warns on
+  uncertain time above `1 - warn_coverage` and reports `quality_bad`, `quality_uncertain` and
+  `quality_substituted`. Without the field nothing changes.
+- **Operations shows the machine and its profile.** Suite health names the machine as Docker
+  sees it (CPUs, memory), the machine profile that sized the suite (`install.sh --machine`) and
+  its ceilings, and each service's CPU limit beside its use. The `small` profile gives Analytics
+  and its executor 2 CPUs and 2 slots and Documents 1 GB, after a 2 CPU / 4 GB machine ran its
+  round slower with 1 and Documents reached 540 MB idle (plan B, 2026-10-31).
 - **The Historian's database has its own CPU limit, `HISTCRAFT_DB_CPUS` (default 2).** It
   shared `HISTCRAFT_CPUS` with the Historian, so lowering the Historian's limit also slowed the
   database it reads from (0.6.0 load tests, 2026-10-31). An installation that set
@@ -67,6 +93,21 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   limit).
 - **`install.sh` fits every CPU limit to small hosts**, also the ones left at their default in
   `compose.yaml` (a 2-CPU machine stopped on `LINKCRAFT_EXECUTOR_CPUS`, default 4).
+
+### Security
+
+- **Signing out ends the browser's token in every app too.** The 12-minute token carries the
+  SHA-256 of its session (`sid` claim). After sign-out PlantCraft refuses it at once, and
+  `GET /api/v1/auth/revoked` lists the session (`sessions`), so the apps refuse it within 10 s
+  (`plantcraft-sdk` 0.84.0). The person's other sessions keep working.
+- **`./install.sh --security-check`: 36 checks with stable ids, a score and machine-readable
+  output.** Each check (`PC-CTR-01` and so on) has a severity, the evidence it saw, how to fix it
+  and its IEC 62443-4-2 and NIST SP 800-53 references; `--format json|junit|sarif`, `--skip`, and
+  exit code 1 on a failure (docs/security-guide.md, "Security check").
+- **Fresher proxy and installer images.** The proxy moves to Caddy 2.11.6 and upgrades its Alpine
+  packages at build, and the installer's Docker CLI and Compose to 29.9.2. Trivy counted 3
+  critical and 84 high fixable findings in the proxy, and 3 and 87 in the installer, all in the old
+  Go binaries and curl.
 
 ### Fixed
 

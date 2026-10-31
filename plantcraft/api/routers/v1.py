@@ -71,6 +71,9 @@ class SeriesBatchRequest(BaseModel):
     start: str | None = Field(default=None, max_length=64)
     end: str | None = Field(default=None, max_length=64)
     step: float | None = None
+    # Each series also lists where its samples were not good (``quality``: [{t, quality}]),
+    # so a check can tell bad, uncertain and substituted values from good ones.
+    quality: bool = False
 
 
 def _unprocessable(error: ContractError) -> HTTPException:
@@ -102,6 +105,11 @@ def revoked(rt: Runtime) -> dict[str, Any]:
         "keys": [
             {"key_id": key_id, "revoked_at": stamp}
             for key_id, stamp in rt.workspace.app_keys.revoked_since(now - SERVICE_TOKEN_SECONDS)
+        ],
+        # Browser sessions signed out: their tokens carry the same digest (``sid`` claim).
+        "sessions": [
+            {"sid_sha256": digest, "ended_at": stamp}
+            for digest, stamp in rt.workspace.ended_sessions.ended_since(now - USER_TOKEN_SECONDS)
         ],
     }
 
@@ -505,6 +513,8 @@ def series_batch(
     """Many signals' series in one request and one source read; each failure is listed
     in ``errors`` (404, 422, 502, or 413 when the request ran out of points)."""
 
+    # Only a source that keeps quality is asked for it (a local source has none).
+    quality = {"quality": True} if payload.quality else {}
     hidden = [item for item in payload.signals if not scope.signal(item)]
     if hidden:
         # Signals out of the caller's asset scope answer 404, as unknown ones do.
@@ -512,7 +522,12 @@ def series_batch(
         answer: dict[str, Any] = {"series": [], "errors": []}
         if allowed:
             answer = _answer(
-                rt.datalayer.series_batch, allowed, payload.start, payload.end, payload.step
+                rt.datalayer.series_batch,
+                allowed,
+                payload.start,
+                payload.end,
+                payload.step,
+                **quality,
             )
         missing = [
             {"signal": item, "status": 404, "detail": t("Signal not found.")}
@@ -522,8 +537,8 @@ def series_batch(
     args = (payload.signals, payload.start, payload.end, payload.step)
     raw = getattr(rt.datalayer, "series_batch_raw", None)
     if raw is not None:
-        return Response(_answer(raw, *args), media_type=JSON)
-    return JSONResponse(_answer(rt.datalayer.series_batch, *args))
+        return Response(_answer(raw, *args, **quality), media_type=JSON)
+    return JSONResponse(_answer(rt.datalayer.series_batch, *args, **quality))
 
 
 @router.put("/series")

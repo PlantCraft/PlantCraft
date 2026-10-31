@@ -77,7 +77,7 @@ input. Times are ISO 8601 with offset; series timestamps are UTC.
 | Method and path | Purpose |
 |---|---|
 | `GET /api/v1/auth/keys` | `{"keys": [{"kid", "kty": "OKP", "crv": "Ed25519", "x"}]}` (JWK, public) |
-| `GET /api/v1/auth/revoked` | Tokens ended before they expire (public): `{"users": [{"sub_sha256", "not_before"}], "keys": [{"key_id", "revoked_at"}]}`; see "Ending tokens early" below |
+| `GET /api/v1/auth/revoked` | Tokens ended before they expire (public): `{"users": [{"sub_sha256", "not_before"}], "keys": [{"key_id", "revoked_at"}], "sessions": [{"sid_sha256", "ended_at"}]}`; see "Ending tokens early" below |
 | `POST /api/v1/auth/token` | Renew the browser token from the session cookie: `{"token", "expires_at"}` |
 | `POST /api/v1/auth/service-token` | Body `{"app", "key"}`: `{"token", "expires_at"}` |
 | `GET /api/v1/me` | `{"username", "name", "level", "apps": {...}, "notebooks_url"}` from the bearer token; `notebooks_url` is `/notebooks` when the person may open data in a notebook (Notebooks on, viewer and up; added 2026-10-23), else `null` |
@@ -93,7 +93,7 @@ input. Times are ISO 8601 with offset; series timestamps are UTC.
 | `GET /api/v1/signals` | `[{"id", "name", "source", "unit", "description", "low", "high", "kind", "source_kind"}]`; `source_kind` is the source's type (`opcua`, `pi_web_api`, `csv`, `derived`; `null` when unknown): a `csv` signal is sampled (laboratory analyses) and judged by its own rules; filter `q`; derived signals add `app`, `subject`, `result` and filter by them |
 | `GET /api/v1/signals/{id}` | One signal, same shape |
 | `GET /api/v1/signals/{id}/series?start&end&step` | `{"signal", "kind", "t": [iso...], "v": [number \| string \| null...]}` (typed by the point's kind); `step` in seconds (optional: recorded values); at most 200,000 points. A runs point answers `{"signal", "kind": "runs", "runs": [{"run_at", "t", "v"}]}` (`run`, `runs`) |
-| `POST /api/v1/series` | Body `{"signals": [id...], "start", "end", "step"}` (1 to 500 ids): `{"series": [{"signal", "kind", "t", "v"}...], "errors": [{"signal", "status", "detail"}...]}` |
+| `POST /api/v1/series` | Body `{"signals": [id...], "start", "end", "step", "quality"}` (1 to 500 ids; `quality` optional): `{"series": [{"signal", "kind", "t", "v"}...], "errors": [{"signal", "status", "detail"}...]}` |
 | `GET /api/v1/signals/{id}/value?agg&window` | `{"signal", "agg", "window", "value", "at"}`; `agg` one of `last, mean, min, max, std`; `window` like `1h`, `24h`, `7d` |
 | `PUT /api/v1/series` | Derived series, an app's service token only. Body: up to 500 items `[{"signal": "app-<app id>:<name>", "t": [iso...], "v": [...], "name", "unit", "kind", "subject", "result"}]`: `{"written", "errors"}` |
 | `PUT /api/v1/series/runs` | Runs points, an app's service token only. Body: up to 500 runs `[{"signal": "app-<app id>:<name>", "run_at", "t": [iso...], "v": [number...], "keep_runs", "keep_days", ...}]`: `{"written", "errors"}` (see "Value kinds, retention and runs") |
@@ -170,6 +170,9 @@ These complete the table above; `tests/contract/test_api_v1.py` checks them.
   last hour (`key_id`, `revoked_at`), whose service tokens are refused. Entries stay only as long
   as a token from before them could still be alive (15 minutes for people, an hour for keys).
   A token issued after the change (signing in again) gets `iat` at least `not_before`.
+  Signing out ends that browser session's tokens the same way (since SDK 0.84.0): the browser's
+  token carries the SHA-256 of its session id (`sid` claim), and the list gives the sessions signed
+  out in the last 15 minutes (`sid_sha256`, `ended_at`). The person's other sessions keep working.
   `plantcraft_sdk.auth.TokenVerifier` reads the list at most every 10 seconds; when it cannot
   (PlantCraft down, or older than this list), the last list read stays in force.
 - **`apps` claim.** Editors and admins get `editor`, viewers `viewer`, `dashboards` people no app.
@@ -277,6 +280,15 @@ Additive to v1; `plantcraft-sdk` 0.3.0 (`plantcraft_sdk.assets`, `client.asset_t
   fits; that signal and every one after it are postponed: ask for them again in another
   request). The SDK's `series_many` does that on its own. It is a POST because the id list can
   be long; it reads only, like every other v1 data route.
+  With `"quality": true` (since 2026-10-31, SDK 0.85.0) each series also lists where the
+  source's quality was not good: `"quality": [{"t": iso, "quality": "uncertain" | "substituted" |
+  "bad" | "good"}]`, oldest first, each change holding until the next one (the first may be the
+  state at `start`, then its `t` is at or before `start`; an empty list: good all along). A bad
+  sample is still a null value, and an uncertain or substituted one keeps its value, so this is
+  the only place they show. A source that keeps no quality leaves the list out.
+  A client may also ask for the binary answer (`Accept: application/x-plantcraft-series`, when
+  `GET /api/v1/reads` lists `pcs1` in `formats`; `plantcraft_sdk.wire`): the same series, with
+  times and values as arrays.
 - **Value.** Defaults `agg=last`, `window=1h`; `window` is a number and one of `s, m, h, d`, at most
   366 days, ending now (or at a recorded file's last sample). `value` is `null` without data;
   `std` is the sample standard deviation (0 for one sample). `at` is the time of the last sample

@@ -11,6 +11,8 @@
 #   ./install.sh --export-backup NAME --passphrase-file FILE [--out FILE]
 #                                an encrypted copy of a backup to take off the server
 #                                (AES-256, key from the passphrase; backups hold every key)
+#   ./install.sh --security-check [--format json|junit|sarif]
+#                                the installed suite against its security promises (security-check.sh)
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
 #   ./install.sh --check         check this server's requirements (preflight.sh) and change nothing;
@@ -107,6 +109,7 @@ APP_PACKAGE=""
 APP_ID=""
 BACKUP_NAME=""
 PASSPHRASE_FILE=""
+CHECK_ARGS=()
 EXPORT_OUT=""
 ALLOW_UNSIGNED=0
 ALLOW_EMULATION=0
@@ -133,7 +136,7 @@ die() {
     exit 1
 }
 
-usage() { sed -n '2,43p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,55p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -144,6 +147,8 @@ while [ $# -gt 0 ]; do
         --list-backups) ACTION="list-backups" ;;
         --drill) ACTION="drill" ;;
         --diagnostics) ACTION="diagnostics" ;;
+        --security-check) ACTION="security-check" ;;
+        --format | --url | --skip) [ $# -ge 2 ] || die "$1 needs a value"; CHECK_ARGS+=("$1" "$2"); shift ;;
         --check) ACTION="check" ;;
         --json) CHECK_JSON=1 ;;
         --show-config) ACTION="show-config" ;;
@@ -797,13 +802,13 @@ MACHINE_TABLE='
 PLANTCRAFT_WORKERS 2 3 4 8
 PLANTCRAFT_CPUS 2 cpus cpus 8
 PLANTCRAFT_MEMORY 768m 1536m 4g 8g
-LINKCRAFT_CPUS 1 2 4 4
+LINKCRAFT_CPUS 2 2 4 4
 LINKCRAFT_MEMORY 896m 1g 4g 8g
 LINKCRAFT_WORKERS 2 3 6 rest
-LINKCRAFT_COMPUTE_SLOTS 1 3 6 rest
-LINKCRAFT_EXECUTOR_CPUS 1 3 6 rest
-LINKCRAFT_EXECUTOR_SLOTS 1 3 6 rest
-LINKCRAFT_EXECUTOR_MEMORY 1g 2g 8g 16g
+LINKCRAFT_COMPUTE_SLOTS 2 3 6 rest
+LINKCRAFT_EXECUTOR_CPUS 2 3 6 rest
+LINKCRAFT_EXECUTOR_SLOTS 2 3 6 rest
+LINKCRAFT_EXECUTOR_MEMORY 1536m 2g 8g 16g
 LINKCRAFT_TASK_MEMORY_MB 768 1024 2048 4096
 DASHCRAFT_CPUS 1 2 2 4
 DASHCRAFT_MEMORY 384m 512m 2g 2g
@@ -816,7 +821,7 @@ MODELCRAFT_EXECUTOR_CPUS 1 2 4 half
 MODELCRAFT_EXECUTOR_SLOTS 1 2 3 half
 MODELCRAFT_EXECUTOR_MEMORY 1g 2g 4g 16g
 DOCCRAFT_CPUS 1 1 2 4
-DOCCRAFT_MEMORY 768m 1g 1536m 4g
+DOCCRAFT_MEMORY 1g 1g 1536m 4g
 HISTCRAFT_CPUS 2 2 4 8
 HISTCRAFT_WORKERS 2 2 3 4
 HISTCRAFT_MEMORY 768m 1g 2g 4g
@@ -1800,5 +1805,9 @@ case "$ACTION" in
     diagnostics) do_diagnostics ;;
     restore) do_restore ;;
     export-backup) do_export_backup ;;
+    security-check)
+        [ -x "$PREFIX/security-check.sh" ] || die "no security-check.sh in $PREFIX: install this bundle first"
+        exec "$PREFIX/security-check.sh" "${CHECK_ARGS[@]}"
+        ;;
     uninstall) do_uninstall ;;
 esac

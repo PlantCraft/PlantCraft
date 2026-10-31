@@ -117,7 +117,7 @@ class TokenVerifier:
         self._forced = -float("inf")
         self._lock = threading.Lock()
         self.revoked_ttl = REVOKED_TTL_SECONDS
-        self._revoked: tuple[dict[str, int], set[str]] = ({}, set())
+        self._revoked: tuple[dict[str, int], set[str], set[str]] = ({}, set(), set())
         self._revoked_at = -float("inf")
         self._revoked_lock = threading.Lock()
 
@@ -149,8 +149,9 @@ class TokenVerifier:
                 self._keys, self._fetched = payload, now
             return self._keys
 
-    def revoked(self) -> tuple[dict[str, int], set[str]]:
-        """``({sha256 of sub: not_before}, {revoked key ids})``, read again every few seconds.
+    def revoked(self) -> tuple[dict[str, int], set[str], set[str]]:
+        """``({sha256 of sub: not_before}, {revoked key ids}, {sha256 of signed-out sessions})``,
+        read again every few seconds.
 
         When PlantCraft cannot be reached (or is older and has no list), the last list read
         stays in force: tokens still expire on their own.
@@ -173,15 +174,17 @@ class TokenVerifier:
                     for item in payload.get("users") or []
                 }
                 keys = {str(item["key_id"]) for item in payload.get("keys") or []}
+                # Sessions signed out (PlantCraft 0.6): their tokens carry the digest as ``sid``.
+                sessions = {str(item["sid_sha256"]) for item in payload.get("sessions") or []}
             except (httpx.HTTPError, ValueError, KeyError, TypeError, AttributeError):
                 return self._revoked
-            self._revoked = (users, keys)
+            self._revoked = (users, keys, sessions)
             return self._revoked
 
     def check_revoked(self, claims: dict[str, Any]) -> None:
         """``AuthError(401)`` when PlantCraft ended this token before it expires."""
 
-        users, keys = self.revoked()
+        users, keys, sessions = self.revoked()
         subject = str(claims.get("sub") or "")
         if subject.startswith("app:"):
             if str(claims.get("key_id") or "") in keys:
@@ -190,6 +193,9 @@ class TokenVerifier:
         not_before = users.get(subject_digest(subject))
         if not_before is not None and int(claims.get("iat") or 0) < not_before:
             raise AuthError(401, "Your access changed. Sign in again.")
+        sid = claims.get("sid")
+        if isinstance(sid, str) and sid and sid in sessions:
+            raise AuthError(401, "You signed out. Sign in again.")
 
     # Verification -----------------------------------------------------------
 

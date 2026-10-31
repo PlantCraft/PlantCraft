@@ -59,6 +59,12 @@ def test_pids_become_diagrams_and_a_plant_map(signed_in, app_url, fake, tmp_path
     expect(page.get_by_text("Loops complete")).to_be_visible()
     page.locator(".map-node", has_text="E-1009").first.click()
     expect(page.locator(".map-item")).to_contain_text("P-1001")
+    # From the map to the plant: a loop PlantCraft has opens its asset, its signals in the
+    # Historian and what the apps say about it.
+    page.locator("tr", has_text="FIC-1001").first.click()
+    signals = page.locator(".map-item").get_by_role("link", name="its signals")
+    expect(signals).to_have_attribute("href", "/assets/FIC-1001?tab=signals")
+    page.locator(".map-node", has_text="E-1009").first.click()
     _shot(page, screenshots, "map-3-plant-map")
 
     # An editor checks the map: Correct makes an item sure, Wrong takes a line out, Undo

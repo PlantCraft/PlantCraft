@@ -475,3 +475,36 @@ def test_diagnostics_from_the_command_line(env, monkeypatch, capsysbinary):
     data = capsysbinary.readouterr().out
     with zipfile.ZipFile(io.BytesIO(data)) as bundle:
         assert "diagnostics/README.txt" in bundle.namelist()
+
+
+def test_machine_reads_docker_and_only_the_profile_settings(env):
+    class Answers(inst.Docker):
+        def run(self, *args, **kwargs):
+            out = "4|8273375232\n" if args[:1] == ("info",) else ""
+            return inst.subprocess.CompletedProcess(list(args), 0, out, "")
+
+    (env.install_dir / ".env").write_text(
+        "PLANTCRAFT_MACHINE=auto\nPLANTCRAFT_MACHINE_SIZE=medium\nPLANTCRAFT_MAX_CPUS=\n"
+        "PLANTCRAFT_ADMIN_PASSWORD=secret\n"
+    )
+    env.installer.docker = Answers()
+    machine = env.installer.machine()
+    assert machine == {
+        "cpus": 4,
+        "memory_bytes": 8273375232,
+        "profile": "auto",
+        "size": "medium",
+        "max_cpus": None,
+        "max_memory": None,
+    }
+    assert "secret" not in json.dumps(machine)
+
+
+def test_machine_without_docker_or_settings(env):
+    class Silent(inst.Docker):
+        def run(self, *args, **kwargs):
+            return inst.subprocess.CompletedProcess(list(args), 1, "", "no daemon")
+
+    env.installer.docker = Silent()
+    machine = env.installer.machine()
+    assert machine["cpus"] is None and machine["profile"] is None
