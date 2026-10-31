@@ -221,6 +221,11 @@ load_installation_conf() {
     case "$value" in "" | off) ;; on) WITH_DEMO=1 ;; public) WITH_DEMO=1; PUBLIC_DEMO=1 ;; *) die "$INSTALLATION_CONF: DEMO is off, on or public" ;; esac
     value="$(conf_value LLM)"
     case "$value" in "") ;; off | on) conf_set PLANTCRAFT_LLM "$([ "$value" = off ] && echo off || echo '')" ;; *) die "$INSTALLATION_CONF: LLM is off or on" ;; esac
+    # The other security switches: assistants from outside (MCP) and Notebooks.
+    value="$(conf_value ASSISTANT_ACCESS)"
+    case "$value" in "") ;; on | off) conf_set PLANTCRAFT_MCP "$([ "$value" = on ] && echo true || echo false)" ;; *) die "$INSTALLATION_CONF: ASSISTANT_ACCESS is on or off" ;; esac
+    value="$(conf_value NOTEBOOKS)"
+    case "$value" in "") ;; on | off) conf_set PLANTCRAFT_NOTEBOOKS "$([ "$value" = on ] && echo true || echo false)" ;; *) die "$INSTALLATION_CONF: NOTEBOOKS is on or off" ;; esac
     value="$(conf_value MACHINE)"
     # The machine profile (install.sh --machine, thread "CPU and processes") reads PLANTCRAFT_MACHINE.
     # With PR #20 its MACHINE variable is set here too, so the file wins over --machine.

@@ -46,6 +46,8 @@ KEYS = {
     "BIND_ADDRESS": r"^[0-9.:a-fA-F]+$",
     "NETWORK_BASE": r"^[0-9]{1,3}\.[0-9]{1,3}$",
     "LLM": r"^(on|off)$",
+    "ASSISTANT_ACCESS": r"^(on|off)?$",
+    "NOTEBOOKS": r"^(on|off)?$",
     "TIMEZONE": r"^[A-Za-z0-9/_+-]*$",
     "LOCK_TIMEZONE": r"^(yes|no)$",
 }

@@ -113,6 +113,10 @@ pre { background:var(--bg); border:1px solid var(--line); border-radius:6px; pad
       <div class="field"><label for="llm">Language models</label>
         <select id="llm"><option value="off">Never, in the whole installation</option><option value="on">Allowed: an administrator may add one (off until then)</option></select></div>
       <div class="row">
+        <div class="field"><label for="mcp">Assistants from outside (MCP)</label><select id="mcp"><option value="off">Never</option><option value="on">Allowed: an administrator may turn them on</option></select></div>
+        <div class="field"><label for="nb">Notebooks (people's own Python)</label><select id="nb"><option value="on">Allowed</option><option value="off">Never</option></select></div>
+      </div>
+      <div class="row">
         <div class="field"><label for="tz">Plant time zone</label><input type="text" id="tz" placeholder="the server's (e.g. America/Sao_Paulo)"></div>
         <div class="field"><label>&nbsp;</label><label><input type="checkbox" id="locktz"> Administrators cannot change it</label></div>
       </div>
@@ -157,7 +161,7 @@ function values() {
     DEMO: $("demo").value, MACHINE: document.querySelector("input[name=size]:checked").value, MAX_CPUS: $("maxcpus").value,
     MAX_MEMORY: $("maxmem").value, MAX_SIGNALS: $("maxsignals").value, MAX_PARALLEL_RUNS: $("maxruns").value,
     MAX_SESSIONS: $("maxsessions").value, HOSTNAME: $("hostname").value, HTTPS_PORT: $("port").value || "443",
-    BIND_ADDRESS: $("bind").value || "0.0.0.0", NETWORK_BASE: $("netbase").value || "172.30", LLM: $("llm").value,
+    BIND_ADDRESS: $("bind").value || "0.0.0.0", NETWORK_BASE: $("netbase").value || "172.30", LLM: $("llm").value, ASSISTANT_ACCESS: $("mcp").value, NOTEBOOKS: $("nb").value,
     TIMEZONE: $("tz").value, LOCK_TIMEZONE: $("locktz").checked ? "yes" : "no" };
 }
 async function runCheck() {

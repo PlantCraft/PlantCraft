@@ -68,7 +68,7 @@ def test_the_file_decides_apps_policies_and_network(tmp_path):
     done, env = _run(
         tmp_path,
         "APPS=analytics, historian  # two apps\nWEB_APP_INSTALL=off\nLLM=off\nMACHINE=medium\n"
-        "HTTPS_PORT=8443\nNETWORK_BASE=10.99\nTIMEZONE=America/Sao_Paulo\nLOCK_TIMEZONE=yes\n",
+        "ASSISTANT_ACCESS=off\nNOTEBOOKS=on\nHTTPS_PORT=8443\nNETWORK_BASE=10.99\nTIMEZONE=America/Sao_Paulo\nLOCK_TIMEZONE=yes\n",
         env="COMPOSE_PROFILES=linkcraft,histcraft,modelcraft\nLINKCRAFT_VERSION=0.5.1\n",
     )
     assert done.returncode == 0, done.stderr
@@ -80,6 +80,7 @@ def test_the_file_decides_apps_policies_and_network(tmp_path):
     assert env["PLANTCRAFT_APP_INSTALL"] == "off"
     assert env["PLANTCRAFT_LLM"] == "off"
     assert env["PLANTCRAFT_MACHINE"] == "medium"
+    assert env["PLANTCRAFT_MCP"] == "false" and env["PLANTCRAFT_NOTEBOOKS"] == "true"
     assert env["PLANTCRAFT_HTTPS_PORT"] == "8443"
     assert env["PLANTCRAFT_PLANT_SUBNET"] == "10.99.10.0/24"
     assert env["PLANTCRAFT_EGRESS_SUBNET"] == "10.99.16.0/24"

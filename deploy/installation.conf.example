@@ -52,6 +52,10 @@ NETWORK_BASE=172.30
 # Language models: off (never, in the whole installation) | on (an administrator may add them;
 # they stay off until one does).
 LLM=off
+# Assistants outside PlantCraft (Claude, ChatGPT... through MCP, Setup › Assistant access) and
+# Notebooks (Python people write and run): on | off. off removes them from the whole installation.
+ASSISTANT_ACCESS=off
+NOTEBOOKS=on
 # The plant's time zone (IANA name, e.g. America/Sao_Paulo); empty: the server's. With
 # LOCK_TIMEZONE=yes, Settings › Installation shows it but cannot change it.
 TIMEZONE=
