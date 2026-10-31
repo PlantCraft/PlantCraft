@@ -11,6 +11,7 @@ import pandas as pd
 from plantcraft.config import DataSourceConfig
 from plantcraft.i18n import t
 from plantcraft.industrial_data.sources import DataSource
+from plantcraft.industrial_data.thinning import thin_extremes
 
 SIGNALS_TTL_SECONDS = 300
 STATUS_TTL_SECONDS = 15
@@ -119,14 +120,11 @@ class IndustrialData:
             if column not in frame.columns:
                 continue
             values = frame[column].dropna()
-            if len(values) > max_points:
-                step = len(values) // max_points + 1
-                values = pd.concat([values.iloc[::step], values.iloc[-1:]])
-                values = values.loc[~values.index.duplicated(keep="last")]
             series[tag] = [
                 [stamp.isoformat(), value.item() if hasattr(value, "item") else value]
                 for stamp, value in values.items()
             ]
+            series[tag] = thin_extremes(series[tag], max_points)
         return {
             "start": start.isoformat(),
             "end": end.isoformat(),
