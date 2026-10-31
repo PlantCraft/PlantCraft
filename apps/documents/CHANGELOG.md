@@ -49,6 +49,11 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ### Changed
 
+- **Search is faster for people who see some folders and for the assistant.** The search no
+  longer reads the id of every passage the person may see. It checks only its best few hundred
+  passages by meaning. With 100,000 passages, a search with specific words takes 16 ms instead
+  of 191 ms, and a search with common words takes 190 ms instead of 360 ms. The results are
+  the same.
 - **Scans are read three times faster.** The search for instrument bubbles counts each ring of
   points as whole shifted copies of the page instead of letting every dark pixel vote: the same
   bubbles, found in 0.46 s instead of 5.2 s on a demo sheet. A scanned demo P&ID is now read in

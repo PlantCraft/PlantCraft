@@ -61,6 +61,19 @@ THORNHILL_HUANG_ZHANG_2003_REGULARITY = ScientificReference(
     "when r > 1.",
 )
 
+HE_2007_CURVE_FITTING_STICTION = ScientificReference(
+    title="A curve fitting method for detecting valve stiction in oscillating control loops",
+    authors=["Q. Peter He", "Jin Wang", "Martin Pottmann", "S. Joe Qin"],
+    year=2007,
+    venue="Industrial & Engineering Chemistry Research, 46(13), 4549-4560",
+    doi="10.1021/ie061219a",
+    url="https://doi.org/10.1021/ie061219a",
+    reference_type="article",
+    notes="Each half cycle of the oscillation is fitted with a sine and with a triangle; a "
+    "sticky valve makes the controller output (or an integrating PV) triangular, aggressive "
+    "tuning keeps it sinusoidal. Index = sine error / (sine + triangle error).",
+)
+
 CHOUDHURY_THORNHILL_SHAH_2005_STICTION_MODEL = ScientificReference(
     title="Modelling valve stiction",
     authors=["M.A.A. Shoukat Choudhury", "N.F. Thornhill", "S.L. Shah"],

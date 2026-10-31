@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from dashcraft.reports import pdf
 from dashcraft.reports.model import ReportPayload, Schedule, Section
-from dashcraft.reports.schedule import cadence, next_run, runs_between
+from dashcraft.reports.schedule import cadence, closed_period, next_run, runs_between
 from tests.conftest import client_for, make_runtime
 from tests.plant import NOW
 
@@ -145,6 +145,42 @@ def test_every_other_week_and_every_quarter():
         {"name": "Fortnight", "period": "14d", "schedule": fortnight.model_dump()}
     )
     assert report.period == "14d"
+
+
+def test_whole_calendar_periods_on_the_plant_clock():
+    """Yesterday, last Monday to Sunday, the two weeks before this Monday, last month, last
+    quarter: from local midnight to local midnight (São Paulo is UTC-3)."""
+
+    now = datetime(2026, 11, 4, 9, 0, tzinfo=UTC)  # a Wednesday, 06:00 in São Paulo
+    zone = "America/Sao_Paulo"
+
+    def span(every: str) -> tuple[str, str]:
+        found = closed_period(Schedule(every=every, closed=True), now, zone)
+        assert found is not None
+        return found[0].isoformat(), found[1].isoformat()
+
+    assert span("day") == ("2026-11-03T03:00:00+00:00", "2026-11-04T03:00:00+00:00")
+    assert span("week") == ("2026-10-26T03:00:00+00:00", "2026-11-02T03:00:00+00:00")
+    assert span("fortnight") == ("2026-10-19T03:00:00+00:00", "2026-11-02T03:00:00+00:00")
+    assert span("month") == ("2026-10-01T03:00:00+00:00", "2026-11-01T03:00:00+00:00")
+    assert span("quarter") == ("2026-07-01T03:00:00+00:00", "2026-10-01T03:00:00+00:00")
+    january = datetime(2027, 1, 15, tzinfo=UTC)
+    last_quarter = closed_period(Schedule(every="quarter", closed=True), january, "UTC")
+    assert last_quarter == (datetime(2026, 10, 1, tzinfo=UTC), datetime(2027, 1, 1, tzinfo=UTC))
+    # Off, or not scheduled: the report reads its own period, ending when it is made.
+    assert closed_period(Schedule(every="week"), now, zone) is None
+    assert closed_period(Schedule(every="off", closed=True), now, zone) is None
+
+
+def test_a_report_of_last_week_reads_the_week_that_closed(client, fake):
+    weekly = report(schedule={"every": "week", "weekday": "mon", "at": "06:00", "closed": True})
+    rid = client.post("/dash/api/reports", json=weekly).json()["report_id"]
+    run = client.post(f"/dash/api/reports/{rid}/send").json()
+    assert run["status"] == "done", run
+    start = datetime.fromisoformat(run["period_start"].replace("Z", "+00:00"))
+    end = datetime.fromisoformat(run["period_end"].replace("Z", "+00:00"))
+    assert end - start == timedelta(days=7) and end <= NOW
+    assert end.weekday() == 0 and (end.hour, end.minute) == (0, 0)  # the suite's zone is UTC
 
 
 def test_cadence_in_words():

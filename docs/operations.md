@@ -120,10 +120,13 @@ PlantCraft is down. A backup does not start with less free space than twice the 
 plus the Historian's part (its database size for a full copy, a twentieth of it for an
 incremental).
 
-**Off the server (planned).** A copy on the same disk does not survive the disk. Backups leave the server
-encrypted (AES-256-GCM, key from the admin's backup passphrase with scrypt; the passphrase is never
-stored): to `PLANTCRAFT_BACKUP_EXPORT_DIR` (a NAS or USB disk mounted on the host) and through
-the Download button. Local copies stay unencrypted, root only (`0700`).
+**Off the server.** A copy on the same disk does not survive the disk. `install.sh
+--export-backup <name> --passphrase-file FILE [--out PATH]` writes one backup encrypted (AES-256,
+key from the passphrase with PBKDF2, 600,000 rounds; the passphrase is never stored). Local copies
+stay unencrypted, root only (`0700`): they hold `.env`, the app keys, the initial admin password,
+the database password and the local certificate authority's private key, so a plain copy of
+`backups/` must not leave the server. Planned: export to `PLANTCRAFT_BACKUP_EXPORT_DIR` and through
+the Download button.
 
 **Restore.** On the Backups page (`/backups`; `/operations` and `/setup/backups` lead there since 2026-10-24) the admin picks a backup, confirms with their password
 and types its name. The driver checks it (the Historian's chain too) before anything stops, sets the current state aside (`before-restore`), stops the suite, restores images, settings and data,
@@ -131,6 +134,15 @@ rebuilds the Historian's database from its chain (`pg_combinebackup`, then `pg_v
 the result), starts it, and waits for every service to be healthy; if one is not, it returns to
 `before-restore` by itself and says why. Meanwhile the proxy shows a maintenance page with the
 progress. Command line: `install.sh --backup`, `--list-backups`, `--restore <name>`, `--drill`.
+
+**Restore on another server.** Copy the whole chain to the new server's `backups/` (an incremental
+needs every backup it names in `needed_by`; `--list-backups` shows them), install the same version
+there, then `--restore <name>`. CPU limits above the new host's CPU count are lowered to it before
+the suite starts (a 4-CPU server's backup restores on a 2-CPU one). The backup brings the old
+server's name (`PLANTCRAFT_HOSTNAME`), certificates and `installation_id`: set
+`PLANTCRAFT_HOSTNAME` in `.env` to the new server's names and run `install.sh` again (it applies
+the settings and issues the certificates), and retire the old server, which now shares the
+installation's identity.
 
 ## 3. Updates
 

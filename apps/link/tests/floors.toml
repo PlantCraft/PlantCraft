@@ -26,6 +26,11 @@ simulator_case_count = 10
 # International Stiction Database loops whose published label stiction_screening matches
 # (tests/oracles/test_isdb_oracle.py; 0 until the data is pinned and the labels transcribed).
 isdb_loops = 0
+# SACAC loops (Stiction and Tuning categories) whose category stiction_screening matches
+# (tests/oracles/test_sacac_oracle.py; data pinned 2026-10-31, fetched only where reachable).
+# 2026-10-31 on the Mac mini: 7 of 27 with the stick-slip pattern alone, 17 of 27 with the
+# curve-fitting shape test (stiction 8/13, tuning 9/14), docs/gaps.md G3.
+sacac_loops = 17
 # Synthetic signal oracle (tests/oracles/test_signal_synthetic_oracle.py): cases whose verdict
 # the signal checks get right, and the number of cases.
 signal_synthetic_cases = 90

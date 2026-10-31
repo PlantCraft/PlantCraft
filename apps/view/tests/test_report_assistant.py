@@ -258,9 +258,40 @@ def test_misdated_flags_a_finding_shifted_by_a_day():
         "- FIC-1003 and FIC-1206: opened 2026-10-28 and 2026-10-29.\n"
         "Period 2026-10-26 to 2026-11-02 for FIC-1003."
     )
-    assert helper.misdated(text, facts) == ["FIC-1003 2026-10-30", "FIC-1003 2026-10-31"]
+    assert helper.misdated(text, facts) == [
+        "FIC-1003 2026-10-30",
+        "FIC-1003 2026-10-31",
+        "FIC-1206 2026-10-28",  # several tags: the date goes to the nearest tag before it
+    ]
     cell = helper.section_text("U-200", text, facts)
     assert "dates its facts do not have for FIC-1003 2026-10-30, FIC-1003 2026-10-31" in cell
+
+
+def test_misdated_reads_a_line_naming_several_tags():
+    facts = {
+        "period": {"start": "2026-10-26T10:00:00+00:00", "end": "2026-11-02T10:00:00+00:00"},
+        "events": [
+            {
+                "at": "2026-11-01T00:00:00+00:00",
+                "kind": "linkcraft.finding.opened",
+                "asset": "FIC-1003",
+            },
+            {
+                "at": "2026-10-29T23:00:00+00:00",
+                "kind": "linkcraft.finding.opened",
+                "asset": "FIC-1206",
+            },
+        ],
+        "results": [],
+    }
+    # As gpt-5-mini wrote it in its third real edition: one line, two valves, one shifted date.
+    shifted = "- Mechanical: FIC-1206 (stiction, 2026-10-29) and FIC-1003 (stiction, 2026-10-31)."
+    assert helper.misdated(shifted, facts) == ["FIC-1003 2026-10-31"]
+    right = "- Mechanical: FIC-1206 (stiction, 2026-10-29) and FIC-1003 (stiction, 2026-11-01)."
+    assert helper.misdated(right, facts) == []
+    # A date before any tag, or one any tag on the line has, is never flagged.
+    assert helper.misdated("2026-10-31: FIC-1206 and FIC-1003 both stuck.", facts) == []
+    assert helper.misdated("FIC-1003 and FIC-1206 stuck since 2026-10-29.", facts) == []
 
 
 def test_by_asset_compares_with_the_previous_period():

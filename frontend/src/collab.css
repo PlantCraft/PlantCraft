@@ -24,7 +24,7 @@
 .co-ref-missing { color: var(--pc-attention-text); background: var(--pc-attention-soft); }
 .co-center { margin: auto; max-width: 460px; padding: 24px; display: grid; justify-items: center; gap: 8px; color: var(--pc-text-3); text-align: center; font-size: var(--pc-fs-md); line-height: 1.55; list-style: none; }
 .co-center > svg { width: 34px; height: 34px; color: var(--teal); }
-.co-center h3 { margin: 6px 0 0; color: var(--ink); font: 800 var(--pc-fs-xl) var(--pc-font-display); }
+.co-center h2, .co-center h3 { margin: 6px 0 0; color: var(--ink); font: 800 var(--pc-fs-xl) var(--pc-font-display); }
 .co-center p { margin: 0; }
 .co-center .button { margin-top: 8px; }
 .co-picker { z-index: 20; width: min(420px, 100%); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: 0 16px 40px color-mix(in srgb, var(--pc-shadow-color) 16%, transparent); overflow: hidden; }
@@ -101,7 +101,7 @@
 @media (prefers-reduced-motion: reduce) { .msg-dots i { animation: none; opacity: .7; } }
 .msg-empty-chat { margin: auto; max-width: 460px; padding: 24px; display: grid; justify-items: center; gap: 8px; color: var(--pc-text-3); text-align: center; font-size: var(--pc-fs-md); line-height: 1.55; }
 .msg-empty-chat > svg { width: 34px; height: 34px; color: var(--teal); }
-.msg-empty-chat h3 { margin: 6px 0 0; color: var(--ink); font: 800 var(--pc-fs-xl) var(--pc-font-display); }
+.msg-empty-chat h2, .msg-empty-chat h3 { margin: 6px 0 0; color: var(--ink); font: 800 var(--pc-fs-xl) var(--pc-font-display); }
 .msg-empty-chat p { margin: 0; }
 .msg-error { margin: 6px 18px; }
 

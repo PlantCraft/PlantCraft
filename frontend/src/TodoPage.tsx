@@ -322,10 +322,10 @@ export function TodoPage() {
         </button>)}
         <hr />
         {/* The views above are fixed (they gather to-dos from every list); the lists below are the person's own and their groups', the only ones renamed or deleted (round 8). */}
-        <h3 className="dk-todo-nav-label">{t("My lists")}</h3>
+        <h2 className="dk-todo-nav-label">{t("My lists")}</h2>
         {own.map(listButton)}
         {data && !own.length && <p className="dk-todo-nav-hint">{t("No lists yet.")}</p>}
-        {shared.length > 0 && <h3 className="dk-todo-nav-label">{t("Shared with my groups")}</h3>}
+        {shared.length > 0 && <h2 className="dk-todo-nav-label">{t("Shared with my groups")}</h2>}
         {shared.map(listButton)}
         {data && <NewList groups={data.groups} onDone={(made) => { go({ view: "list", list: made.list_id }); }} />}
       </nav>

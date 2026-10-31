@@ -76,7 +76,7 @@ never edited by hand. The rules, the shapes and examples are in `docs/api-v1.md`
 | GET | `/api/v1/signals/{signal_id}` | `read.signals` | `signal_id`* | Signal |
 | GET | `/api/v1/signals/{signal_id}/runs` | `read.series` | `signal_id`*, `limit` | Run List |
 | GET | `/api/v1/signals/{signal_id}/series` | `read.series` | `signal_id`*, `start`, `end`, `step`, `run`, `runs` | Series |
-| GET | `/api/v1/signals/{signal_id}/value` | `read.series` | `signal_id`*, `agg`, `window` | Value |
+| GET | `/api/v1/signals/{signal_id}/value` | `read.series` | `signal_id`*, `agg`, `window`, `end` | Value |
 | GET | `/api/v1/todos` | any app | `app`, `state` | App Todos |
 | POST | `/api/v1/todos` | any app | `app`, JSON body | Put Todo |
 | POST | `/api/v1/todos/close` | any app | `app`, JSON body | Close Todos |

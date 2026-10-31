@@ -284,6 +284,9 @@ def test_v1_reads_are_forwarded_with_processcraft_own_token(hist):
         "agg": "last",
         "window": "2h",
     }
+    closed = {"agg": "mean", "window": "7d", "end": "2026-10-26T00:00:00Z"}
+    hist.get("/api/v1/signals/plc:FIC-101.PV/value", params=closed, headers=reader)
+    assert fake.calls("GET", "/signals/plc:FIC-101.PV/value")[1]["query"] == closed
     assert fake.calls("POST", "/series")[0]["body"] == {
         "signals": ["plc:FIC-101.PV", "nope"],
         "start": None,
