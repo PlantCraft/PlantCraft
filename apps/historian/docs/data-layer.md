@@ -105,6 +105,16 @@ it holds: the min/max band of a trend on whole hours reads them past 7 days, and
 `mean`, `min` and `max` (`/value`) read the rollups of its whole hours and the samples of its
 ends only. Rows kept before 0.5 are built again by the next housekeepings.
 
+Daily and monthly rollups (H9, `rollups_coarse`, level 1 and 2) sum a closed UTC day's hours
+and a closed month's days, in order from the newest one kept; a write into the past drops them
+from there (with the hours it drops) and housekeeping sums them again. A grid of whole days and
+a long window's mean, min and max read the coarsest rows that fit and the hours only at the
+ends: a year as a daily trend 11 ms instead of 44, a 364-day mean 7.5 ms instead of 41
+(`ci/bench/storage/rollup_levels.md`). Raw values, hourly, daily and monthly rollups each have a
+retention (`retention_days`, `hourly_retention_days`, `daily_retention_days`,
+`monthly_retention_days`); a level is kept at least as long as the raw values and the finer
+levels (`forecast.level_days`), so the rollups outlive the values they were summed from.
+
 ## Calling PlantCraft Historian
 
 Base URL `http://histcraft:8100/hist` (in the suite; `HISTCRAFT_URL` in PlantCraft). Every

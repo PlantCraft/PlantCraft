@@ -1,7 +1,7 @@
 import { ApiError, createApiClient, type HelpEntry, type HelpPage, jsonBody, saveFile } from "@plantcraft/ui";
 import { t } from "./i18n";
 import { href } from "./nav";
-import type { AppMeta, ExportOptions, ExportPreview, ImportCheck, ImportItem, Me, ReadOptions, Overview, Point, RequestAnswer, RunInfo, RunsSeries, Series, Settings, Source, SourceEvent, SourceIntegration, SourceSettings, Variable } from "./types";
+import type { AppMeta, ExportOptions, ExportPreview, ImportCheck, ImportItem, Me, Overview, Point, ReadOptions, RequestAnswer, RetentionLevel, RunInfo, RunsSeries, Series, Settings, Source, SourceEvent, SourceIntegration, SourceSettings, Variable } from "./types";
 
 const client = createApiClient({ app: "histcraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -122,6 +122,7 @@ export const api = {
   deleteSavedExport: (exportId: string) => request<{ deleted: string }>(`/api/export/saved/${id(exportId)}`, { method: "DELETE" }),
   settings: () => request<Settings>("/api/settings"),
   saveSettings: (settings: Partial<Settings>) => request<Settings>("/api/settings", body("PUT", settings)),
+  retention: () => request<RetentionLevel[]>("/api/retention"),
 };
 
 /** Ask the collector something (browse, test) and wait for its answer. */

@@ -134,6 +134,9 @@ export type Point = {
 
 export type Settings = {
   retention_days: number;
+  hourly_retention_days: number;
+  daily_retention_days: number;
+  monthly_retention_days: number;
   default_scan_seconds: number;
   default_deviation_percent: number;
   default_max_seconds: number;
@@ -216,3 +219,6 @@ export type ImportItem = {
 };
 
 export type ImportRepeat = { pattern: string; check_minutes: number; by: string; checked_ms: number | null; files: number; problem: string };
+
+/** The disk one retention takes (H9): raw values or a rollup level, now and at full retention. */
+export type RetentionLevel = { level: "raw" | "hour" | "day" | "month"; days: number; now: number; full: number; per_year: boolean };

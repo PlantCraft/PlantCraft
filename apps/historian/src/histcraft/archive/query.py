@@ -79,6 +79,13 @@ EXTREMES_DAYS = 7
 ROLLED_WINDOW_HOURS = 3
 
 
+def _daily(start_ms: int, step_ms: float) -> bool:
+    """Whether a grid of ``step_ms`` from ``start_ms`` is made of whole UTC days: then its cells
+    read the daily and monthly rollups (H9)."""
+
+    return start_ms % rollup.DAY_MS == 0 and step_ms % rollup.DAY_MS == 0
+
+
 class Reader:
     def __init__(self, archive: ArchiveStore, source_read: SourceRead | None = None):
         self.archive = archive
@@ -279,7 +286,9 @@ class Reader:
         if self.rollups_help(point, start_ms, step):
             # Whole hours: the hourly rollups keep each hour's extremes, past EXTREMES_DAYS too.
             held = bool(point.step or recorded_on_change(point.tag, change_kind(point.kind)))
-            kept = self.archive.rollups(point.id, held, start_ms, int(edges[-1]))
+            kept = rollup.kept(
+                self.archive, point.id, held, start_ms, int(edges[-1]), _daily(start_ms, step_ms)
+            )
             low, high, whole = rollup.grid_extremes(kept, edges)
             missing = np.flatnonzero(~whole)
         if not len(missing):
@@ -326,7 +335,9 @@ class Reader:
         if count > MAX_POINTS:
             return None  # the samples path says why
         edges = start_ms + np.arange(count + 1, dtype=float) * step_ms
-        kept = self.archive.rollups(point.id, held, start_ms, int(edges[-1]))
+        kept = rollup.kept(
+            self.archive, point.id, held, start_ms, int(edges[-1]), _daily(start_ms, step_ms)
+        )
         if not kept:
             return None
         means, whole = rollup.grid_means(kept, edges)
@@ -439,24 +450,15 @@ class Reader:
             or last - first < ROLLED_WINDOW_HOURS * HOUR_MS
         ):
             return None
-        kept = self.archive.rollups(point.id, held, first, last)
-        # The longest run of hours kept with their extremes (the newest hours are not rolled
-        # up yet, nor a point's first one): the rest is read from the samples.
-        best, run = (first, first), first
-        for hour in range(first, last + HOUR_MS, HOUR_MS):
-            item = kept.get(hour) if hour < last else None
-            if item is None or item[4] is None:
-                if hour - run > best[1] - best[0]:
-                    best = (run, hour)
-                run = hour + HOUR_MS
-        if best[1] - best[0] < ROLLED_WINDOW_HOURS * HOUR_MS:
+        # Whole months and days from their rollups, the hours at either end from theirs.
+        kept = rollup.kept(self.archive, point.id, held, first, last)
+        head, middle, rows = rollup.longest_run(kept, first, last)
+        if middle - head < ROLLED_WINDOW_HOURS * HOUR_MS:
             return None
-        head, middle = best
-        hours = [kept[hour] for hour in range(head, middle, HOUR_MS)]
-        cover = sum(item[0] for item in hours)
-        area = sum(item[1] for item in hours)
-        picks = [item[2] for item in hours if item[2] is not None]
-        picks += [item[3] for item in hours if item[3] is not None]
+        cover = sum(item[1] for item in rows)
+        area = sum(item[2] for item in rows)
+        picks = [item[3] for item in rows if item[3] is not None]
+        picks += [item[4] for item in rows if item[4] is not None]
         for low, high, closed in ((start_ms, head, False), (middle, end_ms, True)):
             times, values = self.samples(point, low, high)
             numbers = np.asarray(values, dtype=float)

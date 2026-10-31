@@ -35,7 +35,7 @@ from histcraft.archive import forecast, rollup
 from histcraft.archive.compression import Compressor
 from histcraft.archive.store import ArchiveStore, compaction_start, now_ms
 from histcraft.catalog import ranges
-from histcraft.catalog.models import GATEWAY_KINDS, IMPORT_KIND, LIVE_KINDS, RETIRED_DAYS
+from histcraft.catalog.models import GATEWAY_KINDS, LIVE_KINDS, RETIRED_DAYS
 from histcraft.catalog.store import CatalogStore
 from histcraft.collector import held, imports
 from histcraft.collector.backfill import MAX_HOURS, backfill
@@ -516,20 +516,14 @@ class Collector:
         current = now_ms()
         # Each point's retention in effect: its own, else its source's, else the general one.
         # An import is kept until it is deleted, unless it was given a retention of its own.
-        # A retention of 0 days keeps the point forever.
-        cutoffs = {
-            int(point["id"]): current - int(point["retention_days"]) * 86400000
-            for point in self.catalog.points()
-            if int(point["retention_days"] or 0) > 0
-            and (
-                point["source_kind"] != IMPORT_KIND
-                or point["origins"]["retention_days"] != "general"
-            )
-        }
+        # A retention of 0 days keeps the point forever. Each rollup level has its own (H9).
+        cutoffs, rollup_cutoffs = forecast.cutoffs(
+            self.catalog.points(), self.catalog.settings(), current
+        )
         purged = self.catalog.purge_retired(older_than_ms=current - RETIRED_DAYS * 86400000)
         if purged:
             LOGGER.info("Retired points deleted for good after %s days: %s", RETIRED_DAYS, purged)
-        pruned = self.archive.prune(cutoffs)
+        pruned = self.archive.prune(cutoffs, rollup_cutoffs)
         # Snapshots a database crash emptied (an UNLOGGED table), from the archive.
         self.archive.refill_snapshots()
         older = current - COMPACT_AGE_MS

@@ -93,7 +93,7 @@ def test_housekeeping_keeps_a_forever_point(runtime, pc, monkeypatch):  # noqa: 
     _write(pc, "app-linkcraft:short", "number", [1.0], retention_days=5)
     archive = ArchiveStore(Database(runtime.settings.archive_target))
     seen: dict[int, int] = {}
-    monkeypatch.setattr(archive, "prune", lambda cutoffs: seen.update(cutoffs) or 0)
+    monkeypatch.setattr(archive, "prune", lambda cutoffs, levels=None: seen.update(cutoffs) or 0)
     before = now_ms()
     Collector(runtime.settings, runtime.catalog, archive).housekeeping(force=True)
     keep = runtime.catalog.point("app-linkcraft:keep")["id"]

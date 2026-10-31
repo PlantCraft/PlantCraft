@@ -86,3 +86,108 @@ def _days_to_full(growth: list[tuple[float, float]], free: float) -> float | Non
         used += rate * (end - day)
         day = end
     return None
+
+
+# Rollup levels (H9): rows a point keeps per day, and bytes per row on disk with its index
+# (measured on PostgreSQL 16, ``ci/bench/storage/rollups.md``).
+LEVEL_ROWS_PER_DAY = {"hour": 24.0, "day": 1.0, "month": 12.0 / 365.0}
+ROW_BYTES = {"hour": 125, "day": 150, "month": 150}
+LEVEL_SETTINGS = {
+    "hour": "hourly_retention_days",
+    "day": "daily_retention_days",
+    "month": "monthly_retention_days",
+}
+
+
+def level_days(raw_days: int, settings: dict[str, Any]) -> dict[str, int]:
+    """The days each rollup level keeps for a point whose raw values are kept ``raw_days`` (0:
+    forever): its setting, but never less than the finer levels and the raw values (a level
+    shorter than those would be summed again from them)."""
+
+    out: dict[str, int] = {}
+    floor = int(raw_days)
+    for level, key in LEVEL_SETTINGS.items():
+        days = int(settings.get(key) or 0)
+        floor = 0 if floor == 0 or days == 0 else max(days, floor)
+        out[level] = floor
+    return out
+
+
+def retention_disk(
+    points: list[dict[str, Any]],
+    stats: dict[int, dict[str, Any]],
+    rows: dict[str, int],
+    settings: dict[str, Any],
+    raw_days: dict[int, int],
+) -> list[dict[str, Any]]:
+    """The disk each retention takes (the Settings page, H9): per level (``raw``, ``hour``,
+    ``day``, ``month``) what it holds now and what it holds once every point keeps its full
+    retention at the values archived in the last 24 h; ``per_year`` when some point keeps it
+    forever (then the yearly growth of those points is counted for one year)."""
+
+    stored = sum(int(item["bytes"]) for item in stats.values())
+    values = sum(int(item["values"]) for item in stats.values())
+    average = stored / values if values else DEFAULT_BYTES_PER_VALUE
+    levels = {
+        "raw": {"level": "raw", "days": int(settings.get("retention_days") or 0), "now": stored},
+    }
+    for level, key in LEVEL_SETTINGS.items():
+        levels[level] = {
+            "level": level,
+            "days": int(settings.get(key) or 0),
+            "now": int(rows.get(level, 0)) * ROW_BYTES[level],
+        }
+    full = {name: 0.0 for name in levels}
+    forever = {name: False for name in levels}
+    for point in points:
+        item = stats.get(int(point["id"]))
+        if not item or not item.get("day"):
+            continue
+        days = int(raw_days.get(int(point["id"]), 0))
+        per_value = item["bytes"] / item["values"] if item["values"] else average
+        kept = {"raw": days, **level_days(days, settings)}
+        rates = {"raw": float(item["day"]) * per_value}
+        if point.get("kind", "number") == "number":
+            rates.update(
+                {level: LEVEL_ROWS_PER_DAY[level] * ROW_BYTES[level] for level in LEVEL_SETTINGS}
+            )
+        for name, rate in rates.items():
+            if kept[name] <= 0:
+                forever[name] = True
+                full[name] += rate * 365.0
+            else:
+                full[name] += rate * kept[name]
+    return [
+        {**levels[name], "full": round(full[name]), "per_year": forever[name]}
+        for name in ("raw", "hour", "day", "month")
+    ]
+
+
+def raw_days(points: list[dict[str, Any]]) -> dict[int, int]:
+    """Each point's raw retention in effect, in days (0: forever): its own, else its source's,
+    else the general one; an import keeps its values until it is deleted, unless it was given a
+    retention of its own."""
+
+    return {
+        int(point["id"]): int(point["retention_days"] or 0)
+        if point.get("source_kind") != "import"
+        or (point.get("origins") or {}).get("retention_days") != "general"
+        else 0
+        for point in points
+    }
+
+
+def cutoffs(
+    points: list[dict[str, Any]], settings: dict[str, Any], now: int
+) -> tuple[dict[int, int], dict[str, dict[int, int]]]:
+    """The raw cutoff of each point kept for a time (ms), and each rollup level's (H9)."""
+
+    raw: dict[int, int] = {}
+    levels: dict[str, dict[int, int]] = {level: {} for level in LEVEL_SETTINGS}
+    for point, days in raw_days(points).items():
+        if days > 0:
+            raw[point] = now - days * DAY_MS
+        for level, kept in level_days(days, settings).items():
+            if kept > 0:
+                levels[level][point] = now - kept * DAY_MS
+    return raw, levels
