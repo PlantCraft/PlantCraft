@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { currentTarget, minutesText, slaText } from "./OperationsRequests";
+import { currentTarget, minutesText, slaText, workingHoursText } from "./OperationsRequests";
 import { grantState, readGrantPrefill } from "./OperationsSupport";
 import type { SlaClock } from "./collabApi";
 
@@ -29,5 +29,10 @@ describe("Operations, targets and support access", () => {
     expect(grantState({ active: false, ends_at: "2026-10-31T09:00:00Z", ended_at: "2026-10-31T09:00:00Z" }, now).text).toMatch(/^ended early/);
     expect(readGrantPrefill("?new=1&request=12&user=ana")).toEqual({ username: "ana", request: "12" });
     expect(readGrantPrefill("?x=1")).toBeNull();
+  });
+
+  it("writes a queue's working hours", () => {
+    expect(workingHoursText({ days: ["mon", "tue", "wed", "thu", "fri"], start: "08:00", end: "17:00" })).toBe("Mon–Fri 08:00–17:00");
+    expect(workingHoursText({ days: ["sat", "mon"], start: "06:00", end: "14:00" })).toBe("Mon, Sat 06:00–14:00");
   });
 });

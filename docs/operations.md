@@ -349,13 +349,23 @@ Requests list shows the target that matters now (the first answer until there is
 the late ones; the request's page shows both. An archived request has none. A target changed
 applies to the open requests at once.
 
+**Working hours** (`PUT /api/operations/service-hours` `{queue, hours}`, administrators, audited
+`operations.service_hours`; read in `GET /api/operations/targets`). A queue may work only some
+days and hours (`{"days": ["mon", ...], "start": "08:00", "end": "17:00"}` on the plant's clock);
+its requests' clocks then run only inside them, due times land on the next working minute, and
+the request's page says so. The default calendar (`queue` null) covers requests without a queue
+and queues without their own; with none set, every clock runs day and night. Holidays are not
+modelled. Set on Requests › Targets.
+
 **The month's approval** (`POST /api/operations/hours/approve` `{month, company}`, audited
 `operations.hours.approved`; `POST /api/operations/hours/reopen`, administrators, audited
 `operations.hours.reopened`). Once a month has ended, a company's hours are approved by an
 administrator or by the company's sponsor at the plant (the plant's own people's hours by an
 administrator), on its Partners card; the approval keeps who, when and the total. From then on no
 entry of that month is added or removed for that company's people (409: an administrator reopens
-the month first), and the request's page shows those entries locked.
+the month first), and the request's page shows those entries locked. A sponsor who is not in
+Operations still opens it with Requests and Partners only, and Partners shows only the companies
+they sponsor (the session's `access.sponsor_of`); status, logs and the rest stay closed.
 
 **Support access** (`/ops/support`, `plantcraft.auth.support_access`; `GET
 /api/operations/support-access`, `POST /api/operations/support-access/grants`

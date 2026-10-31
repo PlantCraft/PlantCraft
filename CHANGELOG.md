@@ -9,6 +9,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Working hours for a request queue.** An administrator sets the days and hours a queue works
+  (and a default); its requests' first answer and resolution clocks run only inside them, and
+  due times land on the next working minute.
+- **Partners for a company's sponsor.** A sponsor at the plant without the Operations role opens
+  Operations with Requests and Partners only, sees the companies they sponsor and approves their
+  months' hours.
+
 - **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
   app switcher, for administrators and for a new **Operations** role (Users: IT, or an
   integrator's team, without making them administrators). **Status** shows every app's CPU and

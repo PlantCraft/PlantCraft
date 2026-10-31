@@ -244,6 +244,9 @@ def test_targets_the_month_s_approval_and_support_access(page):
     page.get_by_role("button", name="Targets").click()
     dialog = page.get_by_role("dialog")
     dialog.get_by_label("High · First answer (h)").fill("2")
+    # Working hours: the default queue works Monday to Friday, 08:00 to 17:00.
+    dialog.get_by_role("button", name="Save working hours").click()
+    expect(dialog.get_by_text("Mon–Fri 08:00–17:00")).to_be_visible()
     _shot(page, "10-targets")
     dialog.get_by_role("button", name="Save targets").click()
     expect(page.get_by_role("dialog")).to_have_count(0)
@@ -316,3 +319,19 @@ def test_targets_the_month_s_approval_and_support_access(page):
         other.close()
     page.goto(f"/actions/{request_id}")
     expect(page.locator(".act-time-locked")).to_have_count(1)
+
+    # The sponsor at the plant, without the Operations role, opens Partners for their company.
+    sponsor = page.context.browser.new_context(base_url=base)
+    try:
+        rui = sponsor.new_page()
+        signed = rui.request.post(
+            "/api/login", data={"username": "rui.planta", "password": "e2e-person-123"}
+        )
+        assert signed.ok, signed.text()
+        rui.goto("/ops/partners")
+        expect(rui.get_by_role("article", name="Beta Controls")).to_be_visible()
+        expect(rui.get_by_role("link", name="Logs")).to_have_count(0)
+        _shot(rui, "13-sponsor-partners")
+        assert rui.request.get("/api/operations/health").status == 403
+    finally:
+        sponsor.close()
