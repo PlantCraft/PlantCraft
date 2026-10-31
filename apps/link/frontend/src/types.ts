@@ -498,3 +498,63 @@ export interface TuningSuggestion {
   settings?: Array<{ choice: "tight" | "moderate" | "robust"; lambda_seconds: number; kc: number; ti_seconds: number }>;
   source_start?: string | null; source_end?: string | null;
 }
+
+/** A third-party multivariable controller, read from its own signals (`GET /api/apc`, A16/A17). */
+export interface ApcSummary {
+  on_now: boolean;
+  on_pct: number | null;
+  mvs: number;
+  mvs_in_service: number;
+  mv_in_service_pct: number | null;
+  cvs: number;
+  cvs_at_limit: number;
+  cv_at_limit_pct: number | null;
+  constraints_active: number;
+  state: "ok" | "warning" | "alarm" | null;
+}
+
+export interface ApcVariable {
+  id: string;
+  name: string;
+  kind: "mv" | "cv";
+  signals: Record<string, string>;
+  value: number | null;
+  lo: number | null;
+  hi: number | null;
+  target: number | null;
+  shadow_price: number | null;
+  in_service: boolean;
+  at: "lo" | "hi" | null;
+  in_service_pct: number | null;
+  at_limit_pct: number | null;
+  at_lo_pct: number | null;
+  at_hi_pct: number | null;
+}
+
+export interface ApcConstraint {
+  variable_id: string;
+  name: string;
+  kind: "mv" | "cv";
+  side: "lo" | "hi";
+  hours: number;
+  share_pct: number | null;
+  active_now: boolean;
+  shadow_price: number | null;
+  worth_1pct: number | null;
+}
+
+export interface ApcController {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  vendor: string;
+  cost_unit: string;
+  summary: ApcSummary;
+  variables?: ApcVariable[];
+  constraints: ApcConstraint[];
+  failed: string[];
+  since?: string;
+  until?: string;
+}
+
+export interface ApcList { since: string | null; until: string | null; controllers: ApcController[] }

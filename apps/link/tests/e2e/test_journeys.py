@@ -252,6 +252,7 @@ def test_the_overview_shows_what_is_bad_and_where(signed_in, app_url, screenshot
             "Queue",
             "Loop-hours lost, 7 days",
             "Effective control",
+            "Oscillations shared by several loops",
         ]
     )
     # Every loop and signal a square, each opening its page.
@@ -1035,3 +1036,33 @@ def test_folders_hold_algorithms_and_schedules_and_moving_is_deliberate(
     expect(blocks.get_by_role("heading", name="Folders")).to_have_count(0)
     if screenshots:
         page.screenshot(path=str(screenshots / "folders-blocks.png"), full_page=True)
+
+
+def test_a_multivariable_controller_shows_its_health_and_costliest_limits(
+    signed_in, app_url, screenshots
+):
+    """A16/A17: the APC list gives on, MVs in service and CVs at a limit; one controller ranks
+    its active limits by what 1 % more range is worth, and lists its MVs and CVs."""
+
+    page = signed_in
+    page.goto(f"{app_url}/link/results")
+    page.get_by_role("link", name="Multivariable controllers", exact=True).click()
+    expect(page).to_have_url(re.compile(r"/link/apc$"))
+    row = page.locator(".pc-dt tbody tr", has_text="Crude preheat APC")
+    expect(row).to_be_visible()
+    expect(row).to_contain_text("75%")
+    expect(row).to_contain_text("1/2")
+    if screenshots:
+        page.screenshot(path=str(screenshots / "apc-list.png"), full_page=True)
+    row.click()
+    expect(page).to_have_url(re.compile(r"/link/apc/apc-c1$"))
+    expect(page.get_by_role("heading", name="Crude preheat APC")).to_be_visible()
+    limits = page.locator(".pc-dt").first.locator("tbody tr")
+    expect(limits.first).to_contain_text("Furnace duty")
+    expect(limits.first).to_contain_text("2 $/h")
+    expect(limits.nth(1)).to_contain_text("Column dP")
+    expect(page.locator(".pc-dt").nth(1)).to_contain_text("Out of service")
+    page.get_by_label("Window").select_option("7")
+    expect(limits.first).to_contain_text("Furnace duty")
+    if screenshots:
+        page.screenshot(path=str(screenshots / "apc-controller.png"), full_page=True)

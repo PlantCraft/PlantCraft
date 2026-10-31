@@ -641,6 +641,14 @@ kind = "list"
 sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
 
 [[contributes.widgets]]
+id = "apc-health"
+title = "Analytics: multivariable controllers"
+description = "Each third-party APC over the last day: the time it was on, its MVs in service, its CVs at a limit and the limit that costs the most. Read only."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
 id = "oscillation-groups"
 title = "Analytics: oscillations shared by several loops"
 description = "Loops oscillating at the same period, grouped, with the loop to look at first in each group: where a plant-wide oscillation likely starts."

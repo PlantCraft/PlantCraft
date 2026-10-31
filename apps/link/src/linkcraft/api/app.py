@@ -16,6 +16,7 @@ from plantcraft_sdk.server import web
 
 from linkcraft import APP_ID, __version__
 from linkcraft.api.routers import (
+    apc,
     assets,
     assistant,
     blocks,
@@ -82,6 +83,7 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
             signals.router,
             results.router,
             losses.router,
+            apc.router,
             oscillations.router,
             runs.router,
             groups.router,

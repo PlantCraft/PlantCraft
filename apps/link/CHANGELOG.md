@@ -8,6 +8,14 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **Third-party multivariable controllers (APC), read only: health and the cost of each active
+  limit** (gaps A16, A17). Results has a *Multivariable controllers* tab: per controller, over the
+  last day, week or month, the time it was on, its MVs in service and its CVs at a limit; one
+  controller's page ranks its active limits by the worth of 1% more range (its shadow price times
+  1% of the variable's range) and lists each MV and CV with its value, target, limits and state.
+  The weekly report has the same tables, and the widget "Analytics: multivariable controllers"
+  shows each controller on the Overview and on Desk. It reads the assets of types `apc`, `apc_mv`
+  and `apc_cv` (`GET /api/apc`, `GET /api/apc/<id>`) and writes nothing.
 - **Oscillations several loops share, grouped by period, with where each likely starts.**
   The loops the last runs found oscillating are grouped when their periods are within 15% of
   each other: a plant-wide oscillation starts in one place and travels. In each group the loop

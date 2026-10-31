@@ -9,6 +9,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- `plantcraft-sdk`: starter asset types for a third-party multivariable controller:
+  *Multivariable controller* (`apc`, role `on`, attributes `vendor` and `cost_unit`) and inside it
+  *Manipulated variable* (`apc_mv`) and *Controlled variable* (`apc_cv`), both from *Controller
+  variable* (`apc_variable`: roles `value`, `lo`, `hi`, `target`, `status`, `shadow_price`,
+  attribute `limit_band`). An existing installation gets them at its next start. Analytics' APC
+  health and View's MV/CV widget read them.
 - **The owners of a failing source hear of it** (gap H13): a condition the Historian reports
   with `owners` in its payload (`source.disconnected`, `source.late`) is told to them as a
   Historian notification, in Messages and by email, with the team's contact and a link to the
