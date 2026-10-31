@@ -178,3 +178,33 @@ def test_the_wizard_writes_only_known_keys_and_values():
         wizard.conf_text({"APPS": "analytics", "HTTPS_PORT": "443\nLLM=on"})
     with pytest.raises(ValueError):
         wizard.conf_text({"APPS": "spreadsheet"})
+
+
+def test_preflight_ignore_turns_that_failure_into_a_warning(tmp_path):
+    import json
+
+    def run(*extra):
+        done = subprocess.run(
+            [
+                str(ROOT / "deploy" / "preflight.sh"),
+                "--json",
+                "--prefix",
+                str(tmp_path),
+                "--config",
+                str(tmp_path / "none.conf"),
+                *extra,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        return json.loads(done.stdout)
+
+    plain = run()
+    failing = [check["id"] for check in plain["checks"] if check["state"] == "FAIL"]
+    assert all(check["id"] for check in plain["checks"])
+    if not failing:
+        pytest.skip("nothing fails on this machine")
+    ignored = run("--ignore", ",".join(failing))
+    assert ignored["fails"] == 0
+    assert all("Ignored on purpose" in c["fix"] for c in ignored["checks"] if c["id"] in failing)

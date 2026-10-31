@@ -10,7 +10,9 @@
 #   ./install.sh --restore NAME  return to a backup; the current state is set aside, not deleted
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
-#   ./install.sh --check         check this server's requirements (preflight.sh) and change nothing
+#   ./install.sh --check         check this server's requirements (preflight.sh) and change nothing;
+#                                --ignore ID[,ID] lets those checks fail (ids in the report)
+#   ./install.sh --show-config   the installation file, each value it sets and what .env holds now
 #   ./install.sh --uninstall     stop and remove the containers; data and backups are kept
 #   ./install.sh --uninstall --purge   also delete data, backups and the suite's images
 #   ./install.sh --add FILE.pcapp       install or upgrade an app from a signed package
@@ -129,6 +131,9 @@ while [ $# -gt 0 ]; do
         --drill) ACTION="drill" ;;
         --diagnostics) ACTION="diagnostics" ;;
         --check) ACTION="check" ;;
+        --show-config) ACTION="show-config" ;;
+        --ignore) [ $# -ge 2 ] || die "--ignore needs check ids (see --check)"; export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}$2"; shift ;;
+        --ignore=*) export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}${1#*=}" ;;
         --config) [ $# -ge 2 ] || die "--config needs a file"; INSTALLATION_CONF="$2"; shift ;;
         --config=*) INSTALLATION_CONF="${1#*=}" ;;
         --restore) [ $# -ge 2 ] || die "--restore needs a backup name (see --list-backups)"; ACTION="restore"; BACKUP_NAME="$2"; shift ;;
@@ -1466,9 +1471,39 @@ do_check() {
         "$BUNDLE_DIR/preflight.sh" --prefix "$PREFIX"
 }
 
-case "$ACTION" in install | check) load_installation_conf ;; esac
+# What the installation file sets against what .env holds: "differs" means .env was edited by
+# hand (or install.sh was not run since the file changed): the next run puts the file's value back.
+do_show_config() {
+    [ -n "$INSTALLATION_CONF" ] || { log "No installation file (/etc/plantcraft/installation.conf): .env alone decides."; return 0; }
+    local env="$PREFIX/.env" pair key want have state applied current
+    printf 'Installation file: %s\n' "$INSTALLATION_CONF"
+    current="$(sha256sum "$INSTALLATION_CONF" | cut -c 1-64)"
+    applied="$(env_get PLANTCRAFT_INSTALLATION_CONF_SHA256 "$env")"
+    if [ -z "$applied" ]; then
+        printf 'Never applied to %s: run %s/install.sh\n\n' "$env" "$PREFIX"
+    elif [ "$applied" != "$current" ]; then
+        printf 'Changed since it was last applied: run %s/install.sh to apply it\n\n' "$PREFIX"
+    else
+        printf 'Applied (SHA-256 %s)\n\n' "${current:0:16}"
+    fi
+    printf '  %-36s %-28s %-28s %s\n' "Setting (.env)" "Installation file" ".env now" ""
+    for pair in "${CONF_ENV[@]}"; do
+        key="${pair%%=*}"
+        want="${pair#*=}"
+        have="$(env_get "$key" "$env")"
+        state=""
+        [ "$want" = "$have" ] || state="differs"
+        printf '  %-36s %-28s %-28s %s\n' "$key" "${want:-(empty)}" "${have:-(empty)}" "$state"
+    done
+    if [ -n "$CONF_APPS" ]; then
+        printf '  %-36s %-28s %-28s\n' "COMPOSE_PROFILES (apps)" "$(printf '%s' "$CONF_APPS" | xargs | tr ' ' ',')" "$(env_get COMPOSE_PROFILES "$env")"
+    fi
+}
+
+case "$ACTION" in install | check | show-config) load_installation_conf ;; esac
 case "$ACTION" in
     check) do_check ;;
+    show-config) do_show_config ;;
     install)
         # A server that fails the requirements stops here, before anything is changed.
         if [ -x "$BUNDLE_DIR/preflight.sh" ] && [ "$DEV" = 0 ] && [ "${PLANTCRAFT_SKIP_CHECK:-0}" != 1 ]; then

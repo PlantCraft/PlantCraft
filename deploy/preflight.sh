@@ -5,6 +5,8 @@
 #   ./preflight.sh --apps "link,hist"   check for these apps only (ids or short names)
 #   ./preflight.sh --prefix DIR         the install folder whose disk is checked (default /opt/plantcraft)
 #   ./preflight.sh --json               the same report as JSON, for the setup wizard
+#   ./preflight.sh --ignore swap,disk   these checks (ids in brackets in the report) may fail:
+#                                       their FAIL is reported as WARN (also PLANTCRAFT_PREFLIGHT_IGNORE)
 #
 # It changes nothing and needs no network. Every line is PASS, WARN or FAIL; the exit code is 1
 # when one line is FAIL (install.sh --check and the setup wizard stop there), 0 otherwise.
@@ -16,6 +18,7 @@ set -uo pipefail
 PREFIX="${PLANTCRAFT_HOME:-/opt/plantcraft}"
 APPS=""
 JSON=0
+IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:-}"
 CONF="${PLANTCRAFT_INSTALLATION_CONF:-/etc/plantcraft/installation.conf}"
 BUNDLE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MIN_DOCKER="24.0.0"
@@ -30,6 +33,8 @@ while [ $# -gt 0 ]; do
         --prefix=*) PREFIX="${1#*=}" ;;
         --config) CONF="$2"; shift ;;
         --json) JSON=1 ;;
+        --ignore) IGNORE="${IGNORE:+$IGNORE,}$2"; shift ;;
+        --ignore=*) IGNORE="${IGNORE:+$IGNORE,}${1#*=}" ;;
         -h | --help) sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
@@ -70,8 +75,16 @@ fi
 RESULTS=()
 FAILS=0
 WARNS=0
+check_id() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed "s/[^a-z0-9]\{1,\}/-/g; s/^-//; s/-$//; s/^docker-s-disk$/docker-disk/; s/^port-[0-9]*$/port/"; }
 add() { # add STATE NAME FOUND NEEDED [HOW TO FIX]
-    RESULTS+=("$1|$2|$3|$4|${5:-}")
+    local state="$1" id fix="${5:-}"
+    id="$(check_id "$2")"
+    if [ "$state" = FAIL ] && [[ ",$IGNORE," == *",$id,"* ]]; then
+        state=WARN
+        fix="Ignored on purpose (--ignore $id). $fix"
+    fi
+    set -- "$state" "$2" "$3" "$4" "$fix"
+    RESULTS+=("$1|$2|$3|$4|$5|$id")
     [ "$1" = FAIL ] && FAILS=$((FAILS + 1))
     [ "$1" = WARN ] && WARNS=$((WARNS + 1))
     return 0
@@ -252,18 +265,18 @@ if [ "$JSON" = 1 ]; then
     printf '{"apps":"%s","fails":%d,"warnings":%d,"checks":[' "$(esc "$APP_IDS")" "$FAILS" "$WARNS"
     first=1
     for r in "${RESULTS[@]}"; do
-        IFS='|' read -r s n f w h <<<"$r"
+        IFS='|' read -r s n f w h i <<<"$r"
         [ "$first" = 1 ] || printf ','
         first=0
-        printf '{"state":"%s","name":"%s","found":"%s","needed":"%s","fix":"%s"}' \
-            "$s" "$(esc "$n")" "$(esc "$f")" "$(esc "$w")" "$(esc "$h")"
+        printf '{"id":"%s","state":"%s","name":"%s","found":"%s","needed":"%s","fix":"%s"}' \
+            "$i" "$s" "$(esc "$n")" "$(esc "$f")" "$(esc "$w")" "$(esc "$h")"
     done
     printf ']}\n'
 else
     printf 'PlantCraft requirements check (apps:%s)\n\n' "${APP_IDS:- none}"
     for r in "${RESULTS[@]}"; do
-        IFS='|' read -r s n f w h <<<"$r"
-        printf '  %-4s  %-18s %-40s needs %s\n' "$s" "$n" "$f" "$w"
+        IFS='|' read -r s n f w h i <<<"$r"
+        printf '  %-4s  %-18s %-40s needs %s  [%s]\n' "$s" "$n" "$f" "$w" "$i"
         [ -n "$h" ] && [ "$s" != PASS ] && printf '        %s\n' "$h"
     done
     printf '\n%d failed, %d warnings. %s\n' "$FAILS" "$WARNS" \
