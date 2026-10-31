@@ -59,6 +59,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Installer, from the first tries on Windows 11 (WSL) and a clean Linux VM.** The setup
+  wizard asks the apps before the requirements (it stopped on a memory FAIL for apps you would
+  have left out), starts from an installation file already there, says on its first screens when
+  it does not run from a complete release bundle (install.sh refused it only at the end), and a
+  failed install can go back. `install.sh --check` checks the apps that run would install (it
+  checked all six: 10 GB instead of 7) and takes `--json`. `--install-docker` adds the person
+  who ran sudo to the docker group.
 - **`PLANTCRAFT_MCP=off` and `PLANTCRAFT_NOTEBOOKS=off` in `.env` now take effect.** Compose never
   passed them to PlantCraft, so turning assistants through MCP or Notebooks off for a whole
   installation did nothing.
