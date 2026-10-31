@@ -55,7 +55,7 @@ below still answers the `/api/v1/assistant` routes of apps on `@plantcraft/ui` 0
   `/actions?new=1&ref=asset:FIC-101&title=...`, with `text=` for the description and
   `attach=<key>` for an image the app left in the tab's sessionStorage under
   `plantcraft.action-attachment.<key>` as `{"name", "data"}` (a PNG, JPEG or WebP data URL; read
-  once, `frontend/src/actionPrefill.ts`). Analytics opens it from a verdict that way, with the
+  once, `frontend/src/actionPrefill.ts`). Analytics opens it from a loop result that way, with the
   loop's chart. The form attaches the image to the new action: `POST /api/actions/{id}/files`
   (`{name, data}` in base64; the first bytes must be PNG, JPEG or WebP, up to 2 MB and 10 per
   action) and `GET /api/actions/{id}/files/{file_id}` (only who sees the action; served with

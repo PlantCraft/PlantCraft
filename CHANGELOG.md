@@ -12,7 +12,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **An action keeps the chart it was opened from.** An app's link to the action form can carry the
   description (`text=`) and an image left in the tab (`attach=`); the new action keeps the image
   (PNG, JPEG or WebP, up to 2 MB) and its page shows it. Analytics uses it to open an action from a
-  loop's verdict with the loop's chart (docs/collaboration.md).
+  loop's result with the loop's chart (docs/collaboration.md).
 - **Windows without Docker Desktop: Rancher Desktop.** `./install.sh --check` in WSL now accepts
   Rancher Desktop's Linux `docker`, which reaches Ubuntu through Windows' PATH. It refused that
   path before, as if it were Docker Desktop's. `docs/install.md` gives the Rancher Desktop

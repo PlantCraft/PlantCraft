@@ -2,7 +2,7 @@
  * `/actions?new=1&title=...&ref=kind:id&text=...&attach=<key>`. `attach` names an image the app
  * left in this tab's sessionStorage (same origin: every app is served under PlantCraft's host),
  * under `plantcraft.action-attachment.<key>` as `{name, data}` with a PNG, JPEG or WebP data URL:
- * the chart of the verdict the action is opened from (LACUNAS A19). It is read once and removed. */
+ * the chart of the result the action is opened from (LACUNAS A19). It is read once and removed. */
 
 export type Attachment = { name: string; data: string };
 export type Prefill = { title: string; refs: string[]; text: string; attachment: Attachment | null };

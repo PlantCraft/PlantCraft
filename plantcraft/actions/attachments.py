@@ -1,4 +1,4 @@
-"""Images attached to an action: the chart of the verdict it was opened from (docs/collaboration.md).
+"""Images attached to an action: the chart of the result it was opened from (docs/collaboration.md).
 
 An app opening PlantCraft's action form can hand it a picture of what it showed (Analytics hands
 the loop's chart, LACUNAS A19); the form attaches it to the new action. Only PNG, JPEG and WebP

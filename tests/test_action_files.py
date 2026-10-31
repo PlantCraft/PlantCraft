@@ -1,4 +1,4 @@
-"""Images on an action: the chart of the verdict it was opened from (plantcraft.actions.attachments)."""
+"""Images on an action: the chart of the result it was opened from (plantcraft.actions.attachments)."""
 # ruff: noqa: F811 (the fixture "signed" of tests/test_collaboration.py, imported to share it)
 
 from __future__ import annotations
