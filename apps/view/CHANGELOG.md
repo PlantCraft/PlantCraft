@@ -8,6 +8,12 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **A multivariable controller panel (V10).** A dashboard panel of kind **Multivariable
+  controller** shows a third-party APC read only: whether it is on and its mode, then each MV and
+  CV with its value, limits, steady-state target, status and shadow price, a bar of its range,
+  its value and target over the time span, and **At high limit** / **At low limit** where the
+  controller is constrained. It reads assets of kind `apc`, `apc_mv` and `apc_cv` (the names
+  Analytics' APC health reads too). Not offered in reports.
 - **Evidence footnotes in an assistant section (V4).** Every fact the model gets has an id (A1
   for an asset's counted row, R1 for a result, E1 for an event) and the model cites it after
   each number, date or finding it states. The section shows the citations as numbered footnotes
