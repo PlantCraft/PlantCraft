@@ -22,6 +22,11 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   are valves; arrows drawn along a line, away from any symbol, give the line's direction; a
   pump drawn small to scale is still a pump. On the DEXPI example the reader finds 4 of its 6
   equipment feeds with none wrong (3, one of them reversed, before).
+- **Hand valves drawn with no tag are followed.** A small circle in a gap of the line (a
+  ball or hand valve as DIN/ISO 10628 tools draw it) is a valve the line runs through. A valve
+  between two lines with arrows takes its direction from the line where it is alone. On the
+  DEXPI example the reader now finds all 6 equipment feeds, with none wrong (4 before). The
+  demo P&IDs are still read completely.
 - **The plant map in DEXPI.** **DEXPI (XML)** under Lists downloads the map in the open P&ID
   exchange format (Proteus XML): equipment with its class and tag, each process line between
   two pieces of equipment with a nozzle at each end, and each instrument loop with its valves
