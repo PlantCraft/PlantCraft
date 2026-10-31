@@ -267,7 +267,7 @@ def test_the_revocation_list_ends_tokens_in_every_app_that_verifies_offline(cent
     old = _token(central, "eng")
     assert verifier.user(old).username == "eng"
     listed = central.get("/api/v1/auth/revoked").json()  # public, like the keys
-    assert set(listed) == {"users", "keys"}
+    assert set(listed) == {"users", "keys", "sessions"}
     assert all(set(item) == {"sub_sha256", "not_before"} for item in listed["users"])
     assert "eng" not in json.dumps(listed)  # people appear only as a digest
 
