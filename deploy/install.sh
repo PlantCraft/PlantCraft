@@ -675,6 +675,25 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
     env_set PLANTCRAFT_DOCKER_GID "$(docker_gid)" "$env"
     apply_installation_conf "$env"
     fit_cpu_limits "$env"
+    cap_parallel_runs "$env"
+}
+
+# MAX_PARALLEL_RUNS of the installation file: no executor runs more tasks at once than that,
+# whatever the machine profile or a hand edit chose (applied last).
+cap_parallel_runs() {
+    local env="$1" most key value default
+    most="$(env_get PLANTCRAFT_MAX_PARALLEL_RUNS "$env")"
+    [[ "$most" =~ ^[1-9][0-9]*$ ]] || return 0
+    for key in LINKCRAFT_EXECUTOR_SLOTS:4 MODELCRAFT_EXECUTOR_SLOTS:2 MODELCRAFT_RUN_WORKERS:2; do
+        default="${key#*:}"
+        key="${key%%:*}"
+        value="$(env_get "$key" "$env")"
+        value="${value:-$default}"
+        if [ "$value" -gt "$most" ] 2>/dev/null; then
+            log "$key=$value is over MAX_PARALLEL_RUNS of the installation file: using $most"
+            env_set "$key" "$most" "$env"
+        fi
+    done
 }
 
 # PLANTCRAFT_APPS: PlantCraft lists every app whose profile is on (launcher, access, API v1)

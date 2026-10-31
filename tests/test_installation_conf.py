@@ -208,3 +208,25 @@ def test_preflight_ignore_turns_that_failure_into_a_warning(tmp_path):
     ignored = run("--ignore", ",".join(failing))
     assert ignored["fails"] == 0
     assert all("Ignored on purpose" in c["fix"] for c in ignored["checks"] if c["id"] in failing)
+
+
+def test_max_parallel_runs_caps_every_executor(tmp_path):
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "PLANTCRAFT_MAX_PARALLEL_RUNS=2\nLINKCRAFT_EXECUTOR_SLOTS=8\nMODELCRAFT_RUN_WORKERS=1\n"
+    )
+    script = "\n".join(
+        [
+            "log() { :; }",
+            _function("env_get"),
+            _function("env_set"),
+            _function("cap_parallel_runs"),
+            'cap_parallel_runs "$1"',
+        ]
+    )
+    subprocess.run(["bash", "-c", script, "-", str(env_file)], check=True)
+    values = dict(line.split("=", 1) for line in env_file.read_text().splitlines())
+    # 8 and the default 4... capped at 2; the default 2 of Models' executor stays; 1 stays.
+    assert values["LINKCRAFT_EXECUTOR_SLOTS"] == "2"
+    assert values["MODELCRAFT_RUN_WORKERS"] == "1"
+    assert "MODELCRAFT_EXECUTOR_SLOTS" not in values
