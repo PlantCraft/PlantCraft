@@ -116,7 +116,8 @@ class Settings(AppSettings):
     opcua_timeout: float = 10.0
     # Seconds a read of series may run in PostgreSQL before it is cancelled (504).
     query_timeout: float = 30.0
-    # Values the series answers in flight may hold together (api/read_budget.py).
+    # Values the series answers in flight may hold together (api/read_budget.py), shared by
+    # the server's processes (``HISTCRAFT_WORKERS``): each holds its part.
     read_values: int = 4_000_000
     read_batch: int = 500
     # How long recent reads of ``source``-mode signals are kept in memory (0: off).
@@ -168,7 +169,10 @@ class Settings(AppSettings):
             config_seconds=positive("HISTCRAFT_CONFIG_SECONDS", 5.0),
             opcua_timeout=positive("HISTCRAFT_OPCUA_TIMEOUT", 10.0),
             query_timeout=positive("HISTCRAFT_QUERY_TIMEOUT", 30.0),
-            read_values=int(positive("HISTCRAFT_READ_VALUES", 4_000_000)),
+            read_values=int(
+                positive("HISTCRAFT_READ_VALUES", 4_000_000)
+                // max(1, int(positive("HISTCRAFT_SERVER_PROCESSES", 1)))
+            ),
             read_batch=int(positive("HISTCRAFT_READ_BATCH", 500)),
             source_cache_seconds=positive("HISTCRAFT_SOURCE_CACHE_SECONDS", 300.0),
             secret_key_file=env_text("HISTCRAFT_SECRET_KEY_FILE"),
