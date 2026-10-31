@@ -96,8 +96,8 @@ def login(
                 detail=t("Too many attempts. Wait a few minutes and try again."),
                 headers={"Retry-After": str(max(1, math.ceil(wait)))},
             )
-        admin = hmac.compare_digest(username, rt.auth.username) and hmac.compare_digest(
-            payload.password, rt.auth.password
+        admin = hmac.compare_digest(_raw(username), _raw(rt.auth.username)) and hmac.compare_digest(
+            _raw(payload.password), _raw(rt.auth.password)
         )
         local = (
             not admin
@@ -124,6 +124,12 @@ def login(
     open_session(request, rt, username)
     refresh_browser_token(request, response, rt)
     return _session_payload(username, rt, request)
+
+
+def _raw(text: str) -> bytes:
+    """Bytes to compare in constant time (``compare_digest`` refuses non-ASCII text)."""
+
+    return text.encode("utf-8", "surrogatepass")
 
 
 def audit_sign_in(rt: Any, request: Request, username: str, action: str, **detail: Any) -> None:

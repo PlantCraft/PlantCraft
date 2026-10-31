@@ -34,7 +34,7 @@ class Indexed:
 def index_file(
     data: bytes, filename: str, tag_ids: dict[str, str], embedder: Embedder, title: str = ""
 ) -> Indexed:
-    extracted = reader.extract(data, filename)
+    extracted = reader.extract_isolated(data, filename)
     passages = cut(extracted.sections)
     if not passages:
         raise reader.Unreadable(

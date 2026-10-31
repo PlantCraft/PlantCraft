@@ -79,3 +79,10 @@ def test_import_reports_each_bad_line_and_applies_nothing(client, runtime):
 def test_a_file_without_source_or_tag_columns_is_refused(client, runtime):
     preview = client.post("/hist/api/points/import", content="name,unit\nx,y\n").json()
     assert preview["errors"][0]["line"] == 1 and "source_id" in preview["errors"][0]["message"]
+
+
+def test_an_odd_source_id_gives_a_safe_file_name(client):
+    # API fuzzing, 2026-10-31 (D17): control and non-latin characters in the header were a 500.
+    answer = client.get("/hist/api/points/export", params={"source_id": "\x84\x16羞\x16+\x02"})
+    assert answer.status_code == 200
+    assert 'filename="historian-points-' in answer.headers["content-disposition"]

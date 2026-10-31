@@ -126,3 +126,46 @@ def test_the_keyword_query_quotes_words_and_drops_stopwords():
     assert fts_query("the of and") == '""'
     # Quotes and FTS5 operators in a question are words, never syntax.
     assert fts_query('valve" OR NEAR(x') == '"valve" OR "near"'
+
+
+def test_a_bad_folder_id_in_the_query_is_refused_not_a_crash(client):
+    # API fuzzing, 2026-10-31 (D17): this answered 500.
+    answer = client.post(
+        "/api/documents",
+        params={"filename": "a.txt", "folder": "woo\x80", "issued": "k\x19a"},
+        content=b"hello",
+    )
+    assert answer.status_code == 422, answer.text
+
+
+def test_a_file_that_takes_too_long_to_read_is_stopped():
+    # Security test 2026-10-31 (D10): reading runs in a worker with a time limit; when the
+    # worker stops it, the person reads why.
+    import pytest
+    from plantcraft_sdk import sandbox
+
+    from doccraft.library import extract
+
+    class Stopped:
+        timeout = 1.0
+        crashes = 0
+
+        def run(self, fn, payload):
+            raise sandbox.CodeError("The code did not finish in 1 s and was stopped.")
+
+        def shutdown(self):
+            return None
+
+    sandbox.use_pool(extract.EXTRACT, Stopped())
+    try:
+        with pytest.raises(extract.Unreadable, match="within the limits"):
+            extract.extract_isolated(b"x", "slow.txt")
+    finally:
+        sandbox.use_pool(extract.EXTRACT, None)
+
+
+def test_a_file_is_read_in_a_worker_process():
+    from doccraft.library import extract
+
+    found = extract.extract_isolated(b"Pump P-101 trips on low flow.", "note.txt")
+    assert "P-101" in found.sections[0].text

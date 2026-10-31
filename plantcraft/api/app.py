@@ -346,6 +346,18 @@ def create_app(runtime: ApiRuntime | None = None) -> FastAPI:
         ]
         return JSONResponse(status_code=422, content={"detail": errors})
 
+    @app.exception_handler(OverflowError)
+    async def too_large(_request: Request, _exc: OverflowError):
+        # A number larger than the database stores (an id of 22 digits): nothing has it.
+        return JSONResponse(status_code=404, content={"detail": t("Not found.")})
+
+    @app.exception_handler(UnicodeError)
+    async def broken_text(_request: Request, _exc: UnicodeError):
+        # Text with half of a character (a lone surrogate) cannot be stored or compared.
+        return JSONResponse(
+            status_code=422, content={"detail": t("The text has characters that are not valid.")}
+        )
+
     for module in ROUTERS:
         # Conversations are open to readers (``open_to("viewer")`` on their writes).
         guard = [] if module in PUBLIC else [Depends(access_guard())]
