@@ -38,7 +38,7 @@ import threading
 import time
 from pathlib import Path
 
-RUNNER_VERSION = "3"
+RUNNER_VERSION = "4"
 KINDS = ("check", "simulate", "sweep", "fmu", "instance", "library_index")
 METHODS = ("dassl", "ida", "cvode", "euler", "heun", "rungekutta", "impeuler", "trapezoid")
 CLASS_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$")
@@ -52,6 +52,13 @@ SETTINGS = ("@tolerance", "@method", "@stop", "@intervals")
 FILE_NAME = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,120}$")
 NUMBER = re.compile(r"^-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?$")
 LIBRARIES = ("Modelica",)
+# The libraries in the runner image (``deploy/runner/Dockerfile``) and their versions. A library
+# besides those every job loads (``LIBRARIES``) is loaded when the project's files name it: the
+# open process library OMChemSim (FOSSEE, IIT Bombay, BSD-3-Clause), whose package is
+# ``Simulator``. ThermoSysPro is not shipped: its Modelica License 2 asks a modified copy to keep
+# that license, which is not Apache-2.0 (docs/process-libraries.md).
+LIBRARY_VERSIONS = {"Modelica": "4.0.0", "Simulator": "OMChemSim 2645129"}
+OPTIONAL_LIBRARIES = ("Simulator",)
 LOG_LIMIT = 200_000
 # A sweep: the model is built once, then its program runs once per variant.
 MAX_VARIANTS = 100
@@ -204,6 +211,24 @@ def project_files(job_dir: Path) -> list[str]:
     return found
 
 
+def named_libraries(job_dir: Path) -> list[str]:
+    """The optional libraries the project's files use (``Simulator.`` anywhere in a file)."""
+
+    root = job_dir / "files"
+    if not root.is_dir():
+        return []
+    found: set[str] = set()
+    for path in sorted(root.rglob("*.mo")):
+        if path.is_symlink() or not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        found.update(lib for lib in OPTIONAL_LIBRARIES if re.search(rf"\b{lib}\s*[.(,)]", text))
+    return [lib for lib in OPTIONAL_LIBRARIES if lib in found]
+
+
 def mos_string(text: str) -> str:
     """A path the runner built itself, as a Modelica string literal."""
 
@@ -234,8 +259,10 @@ def script_for(job: dict, job_dir: Path, libraries: Path, *, built: bool = False
         lines.append(f"writeFile({mos_string(str(out / (name + '.err')))}, getErrorString());")
 
     libs = job.get("libraries", list(LIBRARIES))
-    if not isinstance(libs, list) or any(lib not in LIBRARIES for lib in libs):
+    if not isinstance(libs, list) or any(lib not in LIBRARY_VERSIONS for lib in libs):
         raise JobError("unknown library")
+    if kind != "library_index":
+        libs = libs + [lib for lib in named_libraries(job_dir) if lib not in libs]
     if built and kind != "sweep":
         raise JobError("only a sweep runs a built model")
     for lib in libs if not built else []:
@@ -599,7 +626,7 @@ class Runner:
             "version": f"runner-{RUNNER_VERSION}",
             "runner": RUNNER_VERSION,
             "omc": self.version,
-            "libraries": {lib: "4.0.0" for lib in LIBRARIES},
+            "libraries": dict(LIBRARY_VERSIONS),
             "workers": self.workers,
             # The memory one task may use: PlantCraft places by it (sizes, docs/compute.md).
             "memory_mb": self.memory_mb,

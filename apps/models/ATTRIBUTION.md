@@ -19,6 +19,7 @@ PlantCraft authors (Apache-2.0).
 |---|---|---|
 | OpenModelica 1.24.4 (omc), used as a separate program in its own container, never linked into this code | `openmodelica/openmodelica:v1.24.4-minimal` image, https://openmodelica.org | OSMC Public License 1.8 (OSMC-PL) / GPL 3 |
 | Modelica Standard Library 4.0.0 (also ModelicaServices, Complex) | https://github.com/modelica/ModelicaStandardLibrary (commit `6626538a`) | BSD-3-Clause |
+| OMChemSim (package `Simulator`: chemical components, thermodynamic packages, unit operations), fetched into the runner image, never copied into this repository | https://github.com/FOSSEE/OMChemSim (commit `26451297`), FOSSEE, IIT Bombay | BSD-3-Clause |
 | Python 3 (runs the runner, standard library only) | Debian package | PSF License |
 
 The class icons and documentation shown in the interface are drawn from the Modelica Standard
@@ -51,6 +52,7 @@ Library's own annotations at run time; none is copied into this repository.
 
 No third-party dataset is committed. The test plant (`plantcraft_sdk.testplant`, a port of
 The Simulator's loop equations) is synthetic. The example models (`src/modelcraft/examples/`) are
-original work of the PlantCraft authors (Apache-2.0); `PlantCraftTwin` is PlantCraft Twin's.
+original work of the PlantCraft authors (Apache-2.0), `PlantCraftProcess` included: it only uses
+OMChemSim's classes by name; `PlantCraftTwin` is PlantCraft Twin's.
 The runner answers in `tests/fixtures/` were recorded from OpenModelica on those examples (the
 library index lists the MSL's class names and descriptions, BSD-3-Clause).
