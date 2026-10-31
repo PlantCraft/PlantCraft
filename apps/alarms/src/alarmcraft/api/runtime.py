@@ -24,6 +24,7 @@ from plantcraft_sdk.server.store import Database
 from plantcraft_sdk.utc import use_installation_zone
 
 from alarmcraft import APP_ID
+from alarmcraft.alarms.alarmlist import AlarmListStore
 from alarmcraft.alarms.incoming import IncomingStore
 from alarmcraft.alarms.notices import NoticeStore
 from alarmcraft.alarms.philosophy import PhilosophyStore
@@ -63,6 +64,7 @@ class Runtime(PlatformRuntime):
         self.rules = RuleStore(self.db)
         self.incoming = IncomingStore(self.db)
         self.philosophy = PhilosophyStore(self.db)
+        self.alarm_lists = AlarmListStore(self.db)
         self.connect(
             APP_ID,
             settings,

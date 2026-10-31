@@ -1,7 +1,7 @@
 import { createApiClient, jsonBody, query, type ExploreAnswer, type ExploreHit, type HelpEntry, type HelpPage } from "@plantcraft/ui";
 import type { Diagram, DiagramCheck } from "@plantcraft/ui/blockEditor";
 import { href } from "./nav";
-import type { Alarm, AlarmHistory, AssetAlarms, AssetOption, Catalog, Condition, Directory, EventDetail, Incoming, JournalEntry, Me, Performance, Philosophy, PhilosophyRecord, Rule, RuleDraft, Sent, SignalOption, Silence, SilenceDraft, SimpleLogic, Summary, TryResult, Execution } from "./types";
+import type { Alarm, AlarmListImport, AlarmHistory, AssetAlarms, AssetOption, Catalog, Condition, Directory, EventDetail, Incoming, JournalEntry, Me, Performance, Philosophy, PhilosophyRecord, Rule, RuleDraft, Sent, SignalOption, Silence, SilenceDraft, SimpleLogic, Summary, TryResult, Execution } from "./types";
 
 const client = createApiClient({ app: "alarmcraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -55,6 +55,11 @@ export const api = {
   silences: () => request<Silence[]>("/api/silences"),
   addSilence: (draft: SilenceDraft) => request<Silence>("/api/silences", body("POST", draft)),
   endSilence: (silenceId: number) => request<Silence>(`/api/silences/${silenceId}/end`, { method: "POST" }),
+  alarmLists: () => request<AlarmListImport[]>("/api/alarm-list"),
+  alarmList: (importId: number) => request<AlarmListImport>(`/api/alarm-list/${importId}`),
+  readAlarmList: (filename: string, content: string) => request<AlarmListImport>("/api/alarm-list", body("POST", { filename, content })),
+  applyAlarmList: (importId: number, skip: string[]) => request<AlarmListImport>(`/api/alarm-list/${importId}/apply`, body("POST", { skip })),
+  discardAlarmList: (importId: number) => request<AlarmListImport>(`/api/alarm-list/${importId}/discard`, { method: "POST" }),
   help: () => request<HelpEntry[]>("/api/help"),
   helpPage: (pageId: string) => request<HelpPage>(`/api/help/${id(pageId)}`),
 };
