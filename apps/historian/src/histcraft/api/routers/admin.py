@@ -35,6 +35,7 @@ from histcraft.archive.forecast import forecast, free_bytes
 from histcraft.archive.query import SourceUnavailable, iso_ms
 from histcraft.catalog import points_csv
 from histcraft.catalog.models import (
+    INTEGRATION_FIELDS,
     RETIRED_DAYS,
     SOURCE_SETTINGS,
     WRITTEN_KINDS,
@@ -177,9 +178,27 @@ def update_source(
             "mode": body.mode,
             "password": body.password is not None,
             **{key: getattr(body, key) for key in SOURCE_SETTINGS if key in body.model_fields_set},
+            **{
+                key: getattr(body, key)
+                for key in INTEGRATION_FIELDS
+                if key in body.model_fields_set
+            },
         },
     )
     return source
+
+
+@router.get("/sources/{source_id}/history")
+def source_history(
+    source_id: str, runtime: RuntimeDep, _user: CurrentUser, limit: int = 100
+) -> list[dict[str, Any]]:
+    """When the collector found the source connected and disconnected, the newest first."""
+
+    try:
+        runtime.catalog.source(source_id)
+    except CatalogError as exc:
+        raise _fail(exc) from exc
+    return runtime.catalog.source_events(source_id, limit)
 
 
 @router.delete("/sources/{source_id}", status_code=204)

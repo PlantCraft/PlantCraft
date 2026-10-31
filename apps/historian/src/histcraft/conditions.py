@@ -10,6 +10,13 @@ source's state, each point's snapshot), so it costs no read of the archive:
 - ``collector.stalled``: the collector wrote no heartbeat for two minutes (it ran before). While
   it is stalled nothing else is said: the sources' and points' states are its own, old.
 - ``source.disconnected``: a live source the collector cannot read (key ``source:<id>``).
+- ``source.late``: a source with an expected interval (``heartbeat_seconds``, H13) whose newest
+  value, over all its archived points, is older than that interval (key ``source:<id>``). Its
+  points are then this one condition, not one each.
+
+Both conditions of a source carry the source's ``owners`` and ``contact`` in their payload:
+PlantCraft tells the owners (with an email) when the condition opens and settles it when it ends
+(``plantcraft.events.conditions``).
 - ``point.no_data``: an archived point of a connected source whose last value is bad or older
   than ten of its scans (at least ten minutes; key ``point:<id>``). Points of a disconnected
   source are its source's condition, not one each. Each point is one condition, said once
@@ -71,6 +78,7 @@ def open_conditions(catalog: Any, archive: Any, *, now: int | None = None) -> li
             continue
         down.add(source["id"])
         detail = str(current.get("detail") or "")
+
         found.append(
             Condition(
                 name="source.disconnected",
@@ -85,13 +93,24 @@ def open_conditions(catalog: Any, archive: Any, *, now: int | None = None) -> li
                     "source": source["id"],
                     "detail": detail[:300],
                     "since_ms": current.get("since"),
+                    **_integration(source),
                 },
             )  # fmt: skip
         )
-    skipped = down | {
-        source["id"] for source in catalog.sources() if source.get("kind") in UNCOLLECTED
-    }
-    found += _points(catalog, archive, skipped, now)
+    points = [
+        point
+        for point in catalog.points(enabled_only=True, modes=ARCHIVED)
+        if point.get("source_id") not in down
+    ]
+    snaps = archive.snapshots([int(point["id"]) for point in points])
+    late = _late_sources(catalog.sources(), points, snaps, status, down, now)
+    found += late
+    skipped = (
+        down
+        | {str(item.payload["source"]) for item in late}
+        | {source["id"] for source in catalog.sources() if source.get("kind") in UNCOLLECTED}
+    )
+    found += _points([p for p in points if p.get("source_id") not in skipped], snaps, now)
     found += _disk(state.get("forecast") or {})
     return found
 
@@ -122,13 +141,75 @@ def stale_ms(point: dict[str, Any]) -> int:
     return max(STALE_MIN_MS, int(STALE_SCANS * scan_ms))
 
 
-def _points(catalog: Any, archive: Any, down: set[str], now: int) -> list[Condition]:
-    points = [
-        point
-        for point in catalog.points(enabled_only=True, modes=ARCHIVED)
-        if point.get("source_id") not in down
-    ]
-    snaps = archive.snapshots([int(point["id"]) for point in points])
+def _integration(source: dict[str, Any]) -> dict[str, Any]:
+    """Who answers for a source and how to reach them, for a condition's payload."""
+
+    return {"owners": list(source.get("owners") or []), "contact": source.get("contact") or ""}
+
+
+def _late_sources(
+    sources: list[dict[str, Any]],
+    points: list[dict[str, Any]],
+    snaps: dict[int, dict[str, Any]],
+    status: dict[str, Any],
+    down: set[str],
+    now: int,
+) -> list[Condition]:
+    """The sources with an expected interval whose newest value is older than it."""
+
+    newest: dict[str, int] = {}
+    for point in points:
+        snap = snaps.get(int(point["id"]))
+        if snap is None:
+            continue
+        at = int(snap.get("ts") or snap.get("updated") or 0)
+        source_id = str(point.get("source_id"))
+        newest[source_id] = max(newest.get(source_id, 0), at)
+    found = []
+    for source in sources:
+        limit_ms = int(source.get("heartbeat_seconds") or 0) * 1000
+        if not limit_ms or not source.get("enabled", True) or source["id"] in down:
+            continue
+        if source.get("kind") == IMPORT_KIND:
+            continue  # loaded once, never again: nothing is expected
+        # Never a value yet: counted from when the collector found it connected.
+        last = newest.get(source["id"]) or (status.get(source["id"]) or {}).get("since")
+        if not last or now - int(last) <= limit_ms:
+            continue
+        minutes = round((now - int(last)) / 60_000)
+        found.append(
+            Condition(
+                name="source.late",
+                key=f"source:{source['id']}",
+                subject=f"source:{source['id']}",
+                summary=t(
+                    "Source {name} sent no value for {minutes} min (expected every {expected})",
+                    name=source.get("name") or source["id"],
+                    minutes=minutes,
+                    expected=_interval(limit_ms // 1000),
+                )[:500],
+                payload={
+                    "source": source["id"],
+                    "last_ms": int(last),
+                    "heartbeat_seconds": limit_ms // 1000,
+                    **_integration(source),
+                },
+            )
+        )
+    return found
+
+
+def _interval(seconds: int) -> str:
+    if seconds % 3600 == 0:
+        return f"{seconds // 3600} h"
+    if seconds % 60 == 0:
+        return f"{seconds // 60} min"
+    return f"{seconds} s"
+
+
+def _points(
+    points: list[dict[str, Any]], snaps: dict[int, dict[str, Any]], now: int
+) -> list[Condition]:
     late: list[tuple[int, dict[str, Any], str]] = []
     for point in points:
         snap = snaps.get(int(point["id"]))

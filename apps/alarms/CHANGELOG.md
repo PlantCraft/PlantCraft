@@ -8,6 +8,9 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- A late source (`histcraft.source.late`, an integration that stopped delivering) holds back the
+  *no data* alarms of its signals, as a disconnected source already did.
+
 - **Shelving has a time limit by priority.** The alarm philosophy sets the longest an alarm may be shelved: 1 hour for critical, 4 for high, 12 for medium and 24 for low by default (ISA-18.2). The shelve dialog offers only durations up to that limit, and the server refuses anything longer.
 - **Performance: the EEMUA 191 level, floods with hysteresis and what the journal tells.**
   - **EEMUA 191 level.** The period shows as one point, average against peak alarms per 10 minutes, on the four EEMUA 191 bands: robust, stable, reactive and overloaded.

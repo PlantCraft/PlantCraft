@@ -8,6 +8,16 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Sources as integrations** (gap H13): each source has **owners** (`user:`/`group:` of
+  PlantCraft), a **contact** for the team that runs it and an **expected interval** (at least a
+  minute; empty: not watched), in the source's form, its page and `GET/POST/PUT /api/sources`
+  (a client that leaves them out keeps them). A new condition `histcraft.source.late` opens when
+  the newest value of all of a source's archived signals is older than its interval (its
+  signals' *no data* conditions are then this one). `source.disconnected` and `source.late`
+  carry the owners and contact: PlantCraft tells the owners by message and email and settles it
+  when the condition ends. The collector writes each change of a source's state to its
+  **history** (`GET /api/sources/{id}/history`, kept 90 days).
+
 - **Notes on a signal**, at an instant or over an interval: the signal's page lists the notes of
   the period shown and editors add them (their own removed by them, any by an administrator);
   `GET`, `POST` and `DELETE /api/v1/annotations` for scripts and apps. Each note is told to
