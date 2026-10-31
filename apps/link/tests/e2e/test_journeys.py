@@ -94,6 +94,17 @@ def test_a_loop_gets_a_tuning_suggestion_on_demand(signed_in, app_url, screensho
         panel.screenshot(path=str(screenshots / "loop-tuning.png"))
 
 
+def test_a_loop_lists_its_setpoint_steps_on_demand(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/link/loops/fic-101")
+    panel = page.get_by_test_id("step-response")
+    panel.get_by_role("button", name="Find steps").click()
+    expect(panel.get_by_text("Median overshoot")).to_be_visible()
+    expect(panel.locator("table.table")).to_contain_text("50 → 55")
+    if screenshots:
+        panel.screenshot(path=str(screenshots / "loop-steps.png"))
+
+
 def test_the_plant_map_colours_loops_by_a_kpi_and_sizes_them_by_criticality(
     signed_in, app_url, screenshots
 ):

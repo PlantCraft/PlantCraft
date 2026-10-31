@@ -1,4 +1,4 @@
-import { ArrowUpRight, BookOpen, ChevronRight, ClipboardList, FileDown, Pencil, Pin, Play, RotateCcw, Trash2, Wrench } from "lucide-react";
+import { Activity, ArrowUpRight, BookOpen, ChevronRight, ClipboardList, FileDown, Pencil, Pin, Play, RotateCcw, Trash2, Wrench } from "lucide-react";
 import { DataTable, FollowUp, NextSteps, PhoneFold, confirmAction, useAssistantPage, plotTheme, statusVar, type DataColumn, type JourneyStep } from "@plantcraft/ui";
 import { useEffect, useMemo, useState } from "react";
 import { processCraftAssetUrl } from "./AssetLink";
@@ -11,7 +11,7 @@ import { href, navigate } from "./nav";
 import { Plot } from "@plantcraft/ui/plot";
 import { opBins } from "./chart";
 import { resultLabel, statusLabel, suiteLabel } from "./status";
-import type { Algorithm, LoopDetail, Me, MethodResult, SettingSource, TuningSuggestion } from "./types";
+import type { Algorithm, LoopDetail, Me, MethodResult, SettingSource, SetpointStep, StepResponses, TuningSuggestion } from "./types";
 import { AlgorithmDiagram } from "./AlgorithmDiagramLazy";
 import { algorithmOf } from "./algorithms";
 import { ErrorBox, Health, Heading, Link, Loading, Pill, ResultHeadline } from "./ui";
@@ -86,6 +86,47 @@ function TuningSuggestionPanel({ detail }: { detail: LoopDetail }) {
         { key: "kc", label: t("Kc (% OP per PV unit)"), render: (item) => formatNumber(item.kc, 4) },
         { key: "ti", label: t("Ti (s)"), render: (item) => formatNumber(item.ti_seconds, 1) },
       ]} />
+    </>}
+  </section>;
+}
+
+const seconds = (value: number | null) => (value === null ? "—" : t("{n} s", { n: formatNumber(value, 0) }));
+
+const STEP_COLUMNS: DataColumn<SetpointStep>[] = [
+  { key: "at", label: t("Step at"), sort: (item) => item.at ?? "", render: (item) => (item.at ? formatDate(item.at) : "—") },
+  { key: "size", label: t("SP change"), sort: (item) => item.size, render: (item) => `${formatNumber(item.sp_before, 2)} → ${formatNumber(item.sp_after, 2)}` },
+  { key: "overshoot", label: t("Overshoot"), sort: (item) => item.overshoot_pct, render: (item) => `${formatNumber(item.overshoot_pct, 1)} %` },
+  { key: "rise", label: t("Rise time"), sort: (item) => item.rise_seconds ?? Infinity, render: (item) => (item.reached ? seconds(item.rise_seconds) : t("Not reached")) },
+  { key: "settling", label: t("Settling time"), sort: (item) => item.settling_seconds ?? Infinity, render: (item) => (item.settled ? seconds(item.settling_seconds) : t("Not settled")) },
+  { key: "iae", label: t("IAE per unit of step"), sort: (item) => item.iae_seconds, render: (item) => seconds(item.iae_seconds) },
+];
+
+/** How the loop answered the setpoint steps of its last window (A10): overshoot, rise and
+ * settling times and IAE, asked for on demand since it reads the window again. */
+function StepResponsePanel({ detail }: { detail: LoopDetail }) {
+  const [found, setFound] = useState<StepResponses | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function ask() {
+    setBusy(true); setError("");
+    try { setFound(await api.stepResponses(detail.loop.loop_id)); } catch (err) { setError(err instanceof Error ? err.message : String(err)); } finally { setBusy(false); }
+  }
+  const summary = found?.summary;
+  return <section className="panel" data-testid="step-response">
+    <div className="panel-header"><div><h2>{t("Setpoint steps")}</h2><p>{t("Each setpoint change in the last window and how the PV answered it: overshoot, rise time (10 to 90 %), settling time (inside 5 % of the step) and IAE. Read from the history, no test on the plant.")}</p></div>
+      {!detail.incomplete && <div className="row-actions"><button className="button button-secondary" disabled={busy} onClick={() => void ask()}><Activity size={15} />{busy ? t("Reading…") : found ? t("Read again") : t("Find steps")}</button></div>}
+    </div>
+    {error && <div className="notice notice-error" role="alert">{error}</div>}
+    {found && !found.available && <p className="muted">{found.reason}</p>}
+    {found?.available && summary && <>
+      <dl className="facts">
+        <div><dt>{t("Steps")}</dt><dd>{summary.steps}</dd></div>
+        <div><dt>{t("Median overshoot")}</dt><dd>{summary.overshoot_pct === null ? "—" : `${formatNumber(summary.overshoot_pct, 1)} %`}</dd></div>
+        <div><dt>{t("Median rise time")}</dt><dd>{seconds(summary.rise_seconds)}</dd></div>
+        <div><dt>{t("Median settling time")}</dt><dd>{seconds(summary.settling_seconds)}</dd></div>
+        <div><dt>{t("Settled")}</dt><dd>{`${formatNumber(summary.settled_pct, 0)} %`}</dd></div>
+      </dl>
+      <DataTable rows={found.steps ?? []} rowKey={(item) => `${item.at}-${item.sp_after}`} label={t("Setpoint steps")} columns={STEP_COLUMNS} initialSort={{ key: "at", descending: true }} />
     </>}
   </section>;
 }
@@ -368,6 +409,7 @@ export function LoopPage({ loopId, me }: { loopId: string; me: Me }) {
       </PhoneFold>
       <PhoneFold title={t("Input signals")}><section className="panel"><div className="panel-header"><div><h2>{t("Input signals")}</h2><p>{t("The window the algorithm read, from PlantCraft.")}</p></div></div><Trends detail={detail} /></section></PhoneFold>
       <PhoneFold title={t("Derived signals")}><HealthHistory detail={detail} /></PhoneFold>
+      <PhoneFold title={t("Setpoint steps")}><StepResponsePanel detail={detail} /></PhoneFold>
       <PhoneFold title={t("Tuning suggestion")}><TuningSuggestionPanel detail={detail} /></PhoneFold>
       <PhoneFold title={t("Against the reference")}><AgainstReference detail={detail} me={me} onChanged={() => void load()} /></PhoneFold>
     </>}

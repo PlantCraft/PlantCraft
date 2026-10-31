@@ -20,6 +20,7 @@ from linkcraft.catalog.loop_types import known_loop_type
 from linkcraft.catalog.registry import METHOD_SPECS
 from linkcraft.config import LoopConfig, LoopSignals
 from linkcraft.engine.references import compare
+from linkcraft.engine.step_response import step_responses
 from linkcraft.engine.tuning import suggest
 from linkcraft.i18n import t
 from linkcraft.loops.defaults import record_defaults, setting_sources
@@ -172,6 +173,31 @@ def tuning_suggestion(
         plant=rt.user_plant(user),
     )
     found = suggest(frame, rt.monitor.analysis.resample_seconds)
+    if found.get("reason"):
+        found["reason"] = t(found["reason"])
+    return {
+        **found,
+        "source_start": latest.get("source_start"),
+        "source_end": latest.get("source_end"),
+    }
+
+
+@router.get("/api/loops/{loop_id}/step-response")
+def step_response(loop_id: str, user: CurrentUser, rt: RuntimeDep, scope: Scope) -> dict[str, Any]:
+    """Overshoot, rise and settling times and IAE of each setpoint step in the loop's last
+    window, and their medians (A10): how the loop answers its own setpoint changes."""
+
+    loop = _loop_or_404(rt, loop_id, scope)
+    latest = rt.latest.get(APPLICATION_ID, SUBJECT_KIND, loop_id)
+    if loop.incomplete or latest is None or not latest.get("source_end"):
+        return {"available": False, "reason": t("Run the loop first: there is no window to read.")}
+    frame = rt.monitor.frame_for_loop(
+        loop_id,
+        start=latest.get("source_start"),
+        end=latest.get("source_end"),
+        plant=rt.user_plant(user),
+    )
+    found = step_responses(frame, rt.monitor.analysis.resample_seconds)
     if found.get("reason"):
         found["reason"] = t(found["reason"])
     return {

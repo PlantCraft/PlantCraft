@@ -19,6 +19,12 @@ Criticality from the record (low, medium, high) weights the ranking: points lost
 - **Where the output spent the window**: the share of the window in each 5% band of the output.
   A loop that lives near 0 or 100% is saturated; one squeezed into a few percent has little room
   left.
+- **Setpoint steps** (read only): "Find steps" lists each setpoint change of the last window that
+  stands clear of the PV's noise and was held at least ten samples, with how the PV answered it:
+  overshoot past the new setpoint, rise time (10 to 90% of the step), settling time (until the PV
+  stays within 5% of the step, wider when the PV is noisy) and IAE divided by the step's size, in
+  seconds, so steps of different sizes compare. A short ramp of up to three samples counts as one
+  step; steps taken in manual are left out. The medians sit above the table.
 - **Suggest tuning** (read only): fits a first order plus dead time from the OP to the PV on the
   last window and gives PI settings by Lambda (IMC) rules for three speeds: tight (lambda = dead
   time), moderate (lambda = time constant) and robust (lambda = 3 time constants), with the
