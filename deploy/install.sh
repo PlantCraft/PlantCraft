@@ -18,6 +18,10 @@
 #   ./install.sh --check         check this server's requirements (preflight.sh) and change nothing;
 #                                --ignore ID[,ID] lets those checks fail (ids in the report); --json for tools
 #   ./install.sh --show-config   the installation file, each value it sets and what .env holds now
+#   ./install.sh --rotate-admin-password
+#                                a new password for the emergency administrator, shown once
+#                                (data/initial-admin-password; the security check asks for it
+#                                every 90 days)
 #   ./install.sh --uninstall     stop and remove the containers; data and backups are kept
 #   ./install.sh --uninstall --purge   also delete data, backups and the suite's images
 #   ./install.sh --add FILE.pcapp       install or upgrade an app from a signed package
@@ -152,6 +156,7 @@ while [ $# -gt 0 ]; do
         --check) ACTION="check" ;;
         --json) CHECK_JSON=1 ;;
         --show-config) ACTION="show-config" ;;
+        --rotate-admin-password) ACTION="rotate-admin-password" ;;
         --ignore) [ $# -ge 2 ] || die "--ignore needs check ids (see --check)"; export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}$2"; shift ;;
         --ignore=*) export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}${1#*=}" ;;
         --config) [ $# -ge 2 ] || die "--config needs a file"; INSTALLATION_CONF="$2"; shift ;;
@@ -1176,6 +1181,7 @@ print_access() {
     if [ -n "$NEW_PASSWORD" ]; then
         echo "  Password:      $NEW_PASSWORD"
         echo "  (shown once; stored in $PREFIX/data/initial-admin-password, mode 0600)"
+        echo "  (an emergency account: change it every 90 days with ./install.sh --rotate-admin-password)"
     else
         echo "  Password:      unchanged (data/initial-admin-password)"
     fi
@@ -1613,6 +1619,37 @@ do_export_backup() {
     log "Written: $out ($(du -h "$out" | cut -f1)). Keep the passphrase apart from the file."
 }
 
+# A new password for the emergency administrator (data/initial-admin-password, read by
+# PlantCraft when it starts). The file is rewritten in place by the helper image, as root, so it
+# keeps its owner (PlantCraft's user) and mode 0600; the password reaches the helper on stdin, not
+# on its command line. PlantCraft restarts to read it; sessions of named accounts are unaffected.
+do_rotate_admin_password() {
+    check_docker
+    installed_prefix
+    [ -e "$PREFIX/data/initial-admin-password" ] || die "no data/initial-admin-password in $PREFIX"
+    local password
+    password="$(random_secret)"
+    [ "${#password}" -ge 20 ] || die "could not generate a password"
+    log "Writing a new password for the emergency administrator"
+    printf '%s\n' "$password" | docker run --rm -i --network none --user 0:0 --pull never \
+        --cap-drop ALL --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER \
+        --security-opt no-new-privileges:true \
+        -v "$PREFIX:/install" --entrypoint /bin/sh "$(helper_image)" -c "
+            set -e
+            umask 077
+            cat >/install/data/initial-admin-password
+            chown $PLANTCRAFT_UID:$PLANTCRAFT_UID /install/data/initial-admin-password
+            chmod 0600 /install/data/initial-admin-password" ||
+        die "could not write data/initial-admin-password"
+    log "Restarting PlantCraft to read it"
+    compose restart processcraft >/dev/null
+    echo
+    echo "Emergency administrator: $(env_get PLANTCRAFT_ADMIN_USERNAME "$PREFIX/.env")"
+    echo "  New password:  $password"
+    echo "  (shown once; stored in $PREFIX/data/initial-admin-password, mode 0600)"
+    echo "  Change it again within 90 days: ./install.sh --rotate-admin-password"
+}
+
 do_diagnostics() {
     check_docker
     installed_prefix
@@ -1829,6 +1866,7 @@ case "$ACTION" in
     list-backups) do_list_backups ;;
     drill) do_drill ;;
     diagnostics) do_diagnostics ;;
+    rotate-admin-password) do_rotate_admin_password ;;
     restore) do_restore ;;
     export-backup) do_export_backup ;;
     security-check)

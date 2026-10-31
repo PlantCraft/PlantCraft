@@ -9,6 +9,18 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Uptime by app and maintenance windows.** Operations › Status shows each app's uptime over
+  24 hours, 7 and 30 days, from the watch's incidents and without planned maintenance. An
+  administrator plans a maintenance window (now or later, every app or some, up to 72 hours):
+  while it lasts the watch keeps quiet about those apps.
+- **An official Zabbix template.** `monitoring/plantcraft_zabbix_agent.yaml` in the bundle
+  (Zabbix 7.0 and later): a Zabbix agent on the PlantCraft machine reads the installer's
+  `metrics.json` and watches the machine, the free disk and every service (state, health,
+  restarts, CPU and memory against its own limit), with the same 80 % and 95 % levels as
+  Operations' load alerts (`docs/operations.md`, section 4).
+- **`./install.sh --rotate-admin-password`.** A new password for the emergency administrator,
+  shown once and written to `data/initial-admin-password` (0600); PlantCraft restarts to read it.
+  The security check (PC-ACC-01) now gives the password's age, and fails after 90 days.
 - **Working hours for a request queue.** An administrator sets the days and hours a queue works
   (and a default); its requests' first answer and resolution clocks run only inside them, and
   due times land on the next working minute.
@@ -85,6 +97,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   They now load with their own page: 758 KB to 509 KB for the sign-in and for every page but the
   Desk and the assets (Notes 1,267 to 1,026 KB, To-do 851 to 610 KB).
 
+- **Operations suggests the machine profile that fits.** When the machine, within the installation's
+  `MAX_CPUS`/`MAX_MEMORY`, fits another profile than the one applied (more memory added, a
+  profile pinned by hand), suite health names it and the command that applies it
+  (`sudo ./install.sh --machine auto`), with a copy button. The installation stays root's:
+  nothing is written from the web (plan B, 2026-10-31).
 - **State files are written whole or not at all, everywhere (storage tests, 2026-10-31).**
   `plantcraft-sdk` 0.91.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
   unique temporary file created with its final mode, `fsync`, then a rename, so a process killed

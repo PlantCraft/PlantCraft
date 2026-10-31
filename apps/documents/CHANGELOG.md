@@ -22,6 +22,13 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   are valves; arrows drawn along a line, away from any symbol, give the line's direction; a
   pump drawn small to scale is still a pump. On the DEXPI example the reader finds 4 of its 6
   equipment feeds with none wrong (3, one of them reversed, before).
+- **Links to check: a queue for the assets found in documents.** The library's **Links to
+  check** lists the links between documents and the assets named in their text that wait for a
+  person, in the folders you change. Pick several and mark them **Correct**, which links them,
+  or **Wrong**. A link marked Wrong is not suggested again when the document is read again.
+  `DOCCRAFT_ASSET_AUTO_MENTIONS` sets a threshold: an asset named that many times in a document
+  is linked at once (source `auto`), and removing it on the document's page rejects it. The
+  default 0 sends every link to the queue, as before.
 - **Tags on a P&ID open the plant.** On a diagram's page, the box of a tag that PlantCraft
   has opens the asset, its signals and what the apps say about it. A sheet linked from the
   plant map opens with the item already picked.

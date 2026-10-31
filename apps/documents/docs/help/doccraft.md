@@ -30,6 +30,10 @@ files are not read: save them in the new format first.
 - The tags found in the text (FIC-1003, FV-1003, P-1003) that exist in PlantCraft's asset tree
   are **suggested** as the document's assets. Confirm them on the document's page: the
   assistant ranks a document linked to an asset first when you ask about that asset.
+- **Links to check** (in the Library, if you can edit) lists the assets found in the text of
+  every document you can change. Pick several and mark them **Correct**, to link them, or
+  **Wrong**, so they are not suggested again. An administrator can set a number of mentions
+  from which an asset is linked at once (`DOCCRAFT_ASSET_AUTO_MENTIONS`, off by default).
 
 ## Find something
 

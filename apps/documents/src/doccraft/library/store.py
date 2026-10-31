@@ -140,6 +140,8 @@ class DocumentStore(Store):
         self.files = files
         self.files.mkdir(parents=True, exist_ok=True)
         self.version = 0  # bumped on every change of the passages (the vector cache follows it)
+        # Mentions from which a suggested asset is linked with no one checking it (0: never).
+        self.auto_mentions = 0
 
     # Folders
 
@@ -237,7 +239,7 @@ class DocumentStore(Store):
             params.extend(sorted(folders))
         if asset_ids:
             where.append(
-                "d.doc_id IN (SELECT doc_id FROM document_assets WHERE source != 'suggested' "
+                "d.doc_id IN (SELECT doc_id FROM document_assets WHERE source IN ('manual', 'auto') "
                 f"AND asset_id IN ({','.join('?' * len(asset_ids))}))"
             )
             params.extend(asset_ids)
@@ -474,6 +476,14 @@ class DocumentStore(Store):
                     "DO UPDATE SET mentions = excluded.mentions",
                     (rev["doc_id"], asset, mentions),
                 )
+            # Above the installation's threshold a suggestion is taken at once ("auto"); below
+            # it waits in the queue of links to check (``link_queue``). Rejected ones stay out.
+            if self.auto_mentions > 0:
+                connection.execute(
+                    "UPDATE document_assets SET source = 'auto' WHERE doc_id = ? "
+                    "AND source = 'suggested' AND mentions >= ?",
+                    (rev["doc_id"], self.auto_mentions),
+                )
         self.version += 1
 
     # Diagrams (P&ID pages) and what was read on them
@@ -612,6 +622,12 @@ class DocumentStore(Store):
         """The assets a person gave or confirmed; suggestions they did not take stay suggestions."""
 
         with self._lock, self._connect() as connection:
+            # A link taken at once (``auto``) that the person removed stays out from now on.
+            connection.execute(
+                "UPDATE document_assets SET source = 'rejected' WHERE doc_id = ? "
+                f"AND source = 'auto' AND asset_id NOT IN ({','.join('?' * len(assets)) or 'NULL'})",
+                (doc_id, *assets),
+            )
             connection.execute(
                 "DELETE FROM document_assets WHERE doc_id = ? AND source = 'manual'", (doc_id,)
             )
@@ -623,13 +639,45 @@ class DocumentStore(Store):
                 )
         self.version += 1
 
+    def link_queue(self, doc_ids: set[str], limit: int = 500) -> list[dict[str, Any]]:
+        """The suggested document-asset links waiting for a person, most mentioned first."""
+
+        if not doc_ids:
+            return []
+        ids = sorted(doc_ids)
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT a.doc_id, a.asset_id, a.mentions, d.number, d.title, d.folder_id "
+                "FROM document_assets a JOIN documents d ON d.doc_id = a.doc_id "
+                f"WHERE a.source = 'suggested' AND a.doc_id IN ({','.join('?' * len(ids))}) "
+                "ORDER BY a.mentions DESC, d.number, a.asset_id LIMIT ?",
+                [*ids, limit],
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def review_links(self, links: list[tuple[str, str]], verdict: str) -> int:
+        """Suggested links approved (they become a person's, ``manual``) or rejected (kept as
+        ``rejected``, so reading the document again does not suggest them again)."""
+
+        source = "manual" if verdict == "approved" else "rejected"
+        done = 0
+        with self._lock, self._connect() as connection:
+            for doc_id, asset_id in links:
+                done += connection.execute(
+                    "UPDATE document_assets SET source = ? WHERE doc_id = ? AND asset_id = ? "
+                    "AND source IN ('suggested', 'auto')",
+                    (source, doc_id, asset_id),
+                ).rowcount
+        self.version += 1
+        return done
+
     def _assets(self, connection: Any, doc_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
         found: dict[str, list[dict[str, Any]]] = {doc_id: [] for doc_id in doc_ids}
         if not doc_ids:
             return found
         rows = connection.execute(
             f"SELECT * FROM document_assets WHERE doc_id IN ({','.join('?' * len(doc_ids))}) "
-            "ORDER BY source, mentions DESC, asset_id",
+            "AND source != 'rejected' ORDER BY source, mentions DESC, asset_id",
             doc_ids,
         ).fetchall()
         for row in rows:
@@ -730,8 +778,8 @@ class DocumentStore(Store):
             return set()
         with self._lock, self._connect() as connection:
             rows = connection.execute(
-                f"SELECT DISTINCT doc_id FROM document_assets WHERE asset_id IN "
-                f"({','.join('?' * len(asset_ids))})",
+                f"SELECT DISTINCT doc_id FROM document_assets WHERE source != 'rejected' "
+                f"AND asset_id IN ({','.join('?' * len(asset_ids))})",
                 asset_ids,
             ).fetchall()
         return {row[0] for row in rows}
