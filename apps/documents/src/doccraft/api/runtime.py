@@ -44,6 +44,7 @@ class Runtime(PlatformRuntime):
         settings.data_dir.mkdir(parents=True, exist_ok=True)
         self.db = Database(settings.database_path, version=__version__)
         self.store = DocumentStore(self.db, settings.files_dir)
+        self.store.auto_mentions = settings.asset_auto_mentions
         self.library = LibraryService(
             self.store,
             embedder(settings.embedding_dir),
