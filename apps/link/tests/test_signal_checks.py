@@ -108,6 +108,38 @@ def test_the_sources_quality_reaches_availability():
     assert "quality_bad" not in result(verdict(values), "sq_availability")["metrics"]
 
 
+def test_source_quality_shows_the_share_of_time_bad_substituted_and_uncertain():
+    values = base(4)
+    tenth = len(values) // 10
+    clean = result(verdict(values, quality=[]), "sq_source_quality")
+    assert clean["status"] == "ok" and clean["metrics"]["not_good_share"] == 0
+    # 2% bad, then 3% substituted, then 10% uncertain: 5% not data is unusable.
+    marks = [
+        change(1000, "bad"),
+        change(1000 + tenth // 5, "substituted"),
+        change(1000 + tenth // 2, "good"),
+        change(5000, "uncertain"),
+        change(5000 + tenth, "good"),
+    ]
+    found = result(verdict(values, quality=marks), "sq_source_quality")
+    metrics = found["metrics"]
+    assert 0.019 < metrics["quality_bad"] < 0.021
+    assert 0.029 < metrics["quality_substituted"] < 0.031
+    assert 0.099 < metrics["quality_uncertain"] < 0.101
+    assert metrics["not_good_spans"] == 3 and metrics["apt"] is False
+    assert found["status"] == "bad"
+    assert {item["details"]["quality"] for item in found["events"]} == {
+        "bad",
+        "substituted",
+        "uncertain",
+    }
+    # Uncertain alone is doubtful data: a warning, never bad.
+    doubtful = [{"t": "2000-01-01T00:00:00+00:00", "quality": "uncertain"}]
+    assert result(verdict(values, quality=doubtful), "sq_source_quality")["status"] == "warning"
+    # A source that keeps no quality: the check does not apply.
+    assert result(verdict(values), "sq_source_quality")["status"] == "not_applicable"
+
+
 def test_no_samples_at_all_is_bad_not_a_crash():
     found = verdict(pd.Series(dtype=float))
     assert found["status"] == "bad"
@@ -167,10 +199,14 @@ def test_drift_against_a_reference_is_bad_and_without_one_not_judged():
     assert alone["metrics"]["trend"] is True
 
 
-def test_text_signals_get_only_availability_and_freshness():
+def test_text_signals_get_only_availability_source_quality_and_freshness():
     labels = pd.Series(["AUTO"] * len(times()), index=times())
     found = verdict(labels, {"kind": "text", "low": None, "high": None})
-    assert [item["check"] for item in found["checks"]] == ["sq_availability", "sq_freshness"]
+    assert [item["check"] for item in found["checks"]] == [
+        "sq_availability",
+        "sq_source_quality",
+        "sq_freshness",
+    ]
     assert found["status"] == "good"
 
 

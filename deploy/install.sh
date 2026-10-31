@@ -1790,7 +1790,7 @@ do_worker() {
 
 # The apps this run would install, for the requirements check: the installation file's, or
 # --all-apps, or Analytics (on by default) and the --with-<app> ones.
-check_apps() {
+requirement_apps() {
     local apps
     if [ "$ALL_APPS" = 1 ]; then echo all; return; fi
     apps="$(printf '%s' "$WITH_APPS" | xargs)"
@@ -1800,7 +1800,7 @@ check_apps() {
 
 do_check() {
     [ -x "$BUNDLE_DIR/preflight.sh" ] || die "preflight.sh is missing next to install.sh"
-    local args=(--prefix "$PREFIX" --apps "$(check_apps)")
+    local args=(--prefix "$PREFIX" --apps "$(requirement_apps)")
     [ "$CHECK_JSON" = 1 ] && args+=(--json)
     PLANTCRAFT_INSTALLATION_CONF="${INSTALLATION_CONF:-/etc/plantcraft/installation.conf}" \
         "$BUNDLE_DIR/preflight.sh" "${args[@]}"

@@ -8,6 +8,7 @@ import { formatPercent, methodLabel, performanceOf } from "./labels";
 import { LoopForm } from "./LoopForm";
 import { href, navigate } from "./nav";
 import { Plot } from "@plantcraft/ui/plot";
+import { opBins } from "./chart";
 import { resultLabel, statusLabel, suiteLabel } from "./status";
 import type { Algorithm, LoopDetail, Me, MethodResult, SettingSource } from "./types";
 import { AlgorithmDiagram } from "./AlgorithmEditor";
@@ -34,7 +35,18 @@ function Trends({ detail }: { detail: LoopDetail }) {
   return <div className="charts">
     <Plot data={[line("PV", detail.series.map((p) => p.pv)), line("SP", detail.series.map((p) => p.sp), "dot")]} layout={layout(t("PV and SP"))} config={{ displaylogo: false, responsive: true }} useResizeHandler style={{ width: "100%" }} />
     <Plot data={[line("OP", detail.series.map((p) => p.op))]} layout={layout(t("Controller output (%)"))} config={{ displaylogo: false, responsive: true }} useResizeHandler style={{ width: "100%" }} />
+    <OpHistogram values={detail.series.map((p) => p.op)} />
   </div>;
+}
+
+function OpHistogram({ values }: { values: Array<number | null | undefined> }) {
+  const theme = plotTheme();
+  const bins = opBins(values);
+  if (!bins.y.some((share) => share > 0)) return null;
+  return <Plot
+    data={[{ type: "bar", name: "OP", x: bins.x, y: bins.y, width: 4.6, hovertemplate: "%{x:.0f}% ± 2.5: %{y:.1f}%<extra></extra>" }]}
+    layout={{ ...theme, height: 220, margin: { l: 48, r: 12, t: 30, b: 40 }, title: { text: t("Controller output: share of the window in each 5% band"), font: { size: 12 } }, showlegend: false, bargap: 0.05, xaxis: { ...theme.xaxis, range: [0, 100], title: { text: t("Controller output (%)") } }, yaxis: { ...theme.yaxis, title: { text: t("% of the window") } } }}
+    config={{ displaylogo: false, responsive: true }} useResizeHandler style={{ width: "100%" }} />;
 }
 
 function HealthHistory({ detail }: { detail: LoopDetail }) {

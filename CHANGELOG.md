@@ -92,6 +92,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **The platform's pages load a quarter less script.** The Desk's widget grid
+  (react-grid-layout) and the asset pages were in the script every page of the platform loads.
+  They now load with their own page: 758 KB to 509 KB for the sign-in and for every page but the
+  Desk and the assets (Notes 1,267 to 1,026 KB, To-do 851 to 610 KB).
+
 - **Operations suggests the machine profile that fits.** When the machine, within the installation's
   `MAX_CPUS`/`MAX_MEMORY`, fits another profile than the one applied (more memory added, a
   profile pinned by hand), suite health names it and the command that applies it
@@ -226,6 +231,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **`APPS=all` in the installation file, and `--all-apps`, installed Analytics alone.** A second
+  `check_apps` function in `install.sh` (the requirements check's) replaced the one that turns on
+  every app of the bundle and checks each `--with-<app>` image. It is now `requirement_apps`, and a
+  test fails when a deploy script defines a function twice.
 - **Long trends come from the Historian already reduced.** PlantCraft's charts read every raw
   sample of the window and kept each stretch's lowest and highest value themselves: a day at 1 s
   moved 4 MB and took 0.2 s, and a week was refused (over 200,000 values). The platform now asks

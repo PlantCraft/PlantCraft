@@ -35,6 +35,14 @@ TEXTS: dict[str, tuple[str, str]] = {
         "Ok above the warning coverage, warning below it, bad below the minimum coverage: the "
         "data is then too sparse to judge anything else.",
     ),
+    "sq_source_quality": (
+        "Measures how much of the window the source itself marked bad, substituted or "
+        "uncertain (OPC UA, PI and Canary keep a quality with every value). A value can be "
+        "present at every instant and still be one the source did not trust.",
+        "Ok while bad and substituted time stays under the warning share, warning above it, bad "
+        "above the unusable share; uncertain time is a warning at most. Without quality from the "
+        "source the check does not apply.",
+    ),
     "sq_freshness": (
         "Measures the age of the last sample at the end of the window. A signal whose source "
         "stopped updating keeps its last value in many systems, so a stale value looks normal "
