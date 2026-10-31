@@ -30,7 +30,8 @@ who may read, then asks PlantCraft Historian (`/hist/api/v1/data`, only with Pla
 
 - PlantCraft Historian is the only component on both networks. It talks to plant systems **read-only**: PI
   Web API with GET only; OPC UA with Read, Browse and HistoryRead only (`tests/test_read_only.py`).
-  There is no route that writes to a plant system; derived series stay in PlantCraft Historian.
+  There is no route that writes to a plant system; derived series and laboratory results
+  (`POST /api/v1/lab`, stored at their sampling time) stay in PlantCraft Historian.
 - Two containers from one image (2026-10-22): `histcraft serve` (pages and API,
   `HISTCRAFT_COLLECTOR=off`) and `histcraft-collector` (`histcraft collect`, no port). Updating
   or restarting the server, or a heavy query, never stops the recording; the collector's health

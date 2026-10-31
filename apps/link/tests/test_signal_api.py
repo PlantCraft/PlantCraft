@@ -57,6 +57,21 @@ def test_signals_are_listed_worst_first_and_filtered(checked, sq_client):
     assert [item["id"] for item in frozen] == ["historian:TI-101.PV"]
 
 
+def test_the_overview_answer_is_kept_a_few_seconds(checked, sq_client, monkeypatch):
+    from linkcraft.api.routers import signal_quality
+
+    calls = []
+    real = signal_quality._overview
+    monkeypatch.setattr(
+        signal_quality, "_overview", lambda scope, rt: calls.append(1) or real(scope, rt)
+    )
+    first = sq_client.get("/link/api/overview").json()
+    assert sq_client.get("/link/api/overview").json() == first and len(calls) == 1
+    monkeypatch.setattr(signal_quality, "OVERVIEW_SECONDS", 0.0)
+    sq_client.get("/link/api/overview")
+    assert len(calls) == 2
+
+
 def test_roles_come_from_processcraft_assets(checked, sq_client):
     signal = sq_client.get("/link/api/signals/historian:FIC-110.SP").json()
     assert signal["roles"] == ["sp"]

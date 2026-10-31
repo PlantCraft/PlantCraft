@@ -5,7 +5,7 @@ import { type DataColumn, DataTable, displayTimeZone, FormSection, formatDate, H
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { locale, t } from "./i18n";
 import { navigate } from "./nav";
-import { forecastText, operationsApi, type Backup, type Certificate, type Operation, type OperationsOverview, type ServiceMetrics, type Schedule, type SuiteHealth, type SuiteStatus } from "./operationsApi";
+import { forecastText, operationsApi, type Backup, type Certificate, type MachineInfo, type Operation, type OperationsOverview, type ServiceMetrics, type Schedule, type SuiteHealth, type SuiteStatus } from "./operationsApi";
 import { useAdminView, useIsAdmin } from "./session";
 import "./access.css";
 import "./apps.css";
@@ -354,10 +354,22 @@ const serviceGood = (item: ServiceMetrics) => item.state === "running" && item.h
 const SERVICE_COLUMNS: DataColumn<ServiceMetrics>[] = [
   { key: "service", label: t("Service"), sort: (item) => item.service, render: (item) => <><strong>{item.service}</strong>{item.started_at && <small className="apps-sub">{t("since {date}", { date: when(item.started_at) })}</small>}</> },
   { key: "state", label: t("State"), sort: (item) => (serviceGood(item) ? 1 : 0), filter: { value: (item) => item.health ? `${item.state} · ${item.health}` : item.state }, render: (item) => <span className={`apps-state apps-state-${serviceGood(item) ? "running" : "failed"}`}>{item.health ? `${item.state} · ${item.health}` : item.state}</span> },
-  { key: "cpu_pct", label: t("CPU"), numeric: true, sort: (item) => item.cpu_pct, render: (item) => (item.cpu_pct != null ? `${item.cpu_pct} %` : "—") },
+  { key: "cpu_pct", label: t("CPU"), numeric: true, sort: (item) => item.cpu_pct, render: (item) => <>{item.cpu_pct != null ? `${item.cpu_pct} %` : "—"}{item.cpu_limit != null && <small className="apps-sub">{t("limit {count} CPUs", { count: item.cpu_limit })}</small>}</> },
   { key: "mem_bytes", label: t("Memory"), numeric: true, sort: (item) => item.mem_bytes, render: (item) => <>{size(item.mem_bytes)}{item.mem_pct != null && <small className="apps-sub">{t("{pct} % of its limit", { pct: item.mem_pct })}</small>}</> },
   { key: "restarts", label: t("Restarts"), numeric: true, phone: "hide", sort: (item) => item.restarts, render: (item) => item.restarts ?? "—" },
 ];
+
+/** The machine the suite runs on and the profile that sized it (install.sh --machine): CPU 100 %
+ * in the table is one core, so a container at its limit shows 100 % times its CPUs. */
+function MachineLine({ machine }: { machine?: MachineInfo | null }) {
+  if (!machine || machine.cpus == null) return null;
+  const sizes: Record<string, string> = { small: t("small"), medium: t("medium"), large: t("large"), xlarge: t("extra large") };
+  const profile = machine.size
+    ? t("profile {size} ({how})", { size: sizes[machine.size] ?? machine.size, how: machine.profile === "auto" || !machine.profile ? t("chosen by the machine") : t("chosen at install") })
+    : t("no machine profile: limits as set in .env");
+  const ceilings = [machine.max_cpus && t("at most {count} CPUs", { count: machine.max_cpus }), machine.max_memory && t("at most {size}", { size: machine.max_memory })].filter(Boolean).join(", ");
+  return <p className="muted" data-testid="ops-machine">{t("Machine: {cpus} CPUs, {memory}, as Docker sees it", { cpus: machine.cpus, memory: size(machine.memory_bytes) })} · {profile}{ceilings ? ` · ${ceilings}` : ""}</p>;
+}
 
 function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean }) {
   if (!health.watching) return <section className="panel apps-installed"><h2><Activity size={17} /> {t("Suite health")}</h2><p className="muted">{t("Nothing to watch: this PlantCraft runs without the suite's installer.")}</p></section>;
@@ -374,6 +386,7 @@ function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean 
     <p className="muted">{t("Checked every 30 s from Docker's health checks of each service, the free disk, the backups and the last restore drill. Last check: {date}.", { date: when(health.at) })}{health.held ? ` ${t("Service checks are on hold while an operation runs or the installer is silent.")}` : ""}</p>
     {health.open.length ? <ul className="ops-incidents">{health.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small></li>)}</ul>
       : <p className="ops-all-good"><CheckCircle2 size={15} /> {t("Everything is running.")}</p>}
+    <MachineLine machine={health.metrics?.machine} />
     {services.length > 0 && <DataTable rows={services} columns={SERVICE_COLUMNS} rowKey={(item) => item.service} searchText={(item) => item.service} searchPlaceholder={t("Filter by name")} initialSort={{ key: "service", descending: false }} label={t("Services")} />}
     {disk && <p className="muted">{t("Free disk: {size}", { size: size(disk.free_bytes) })}{disk.free_pct != null ? ` (${disk.free_pct} %)` : ""}{forecastText(health.disk_forecast, size) ? ` · ${forecastText(health.disk_forecast, size)}` : ""}</p>}
     {recent.length > 0 && <details className="ops-recent"><summary>{t("Recent incidents")}</summary>

@@ -81,6 +81,15 @@ PROXY = "proxy"
 LOG_TAIL = 4000
 
 
+# The only settings of .env the Machine panel reads (never a secret).
+MACHINE_KEYS = (
+    "PLANTCRAFT_MACHINE",
+    "PLANTCRAFT_MACHINE_SIZE",
+    "PLANTCRAFT_MAX_CPUS",
+    "PLANTCRAFT_MAX_MEMORY",
+)
+
+
 def now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -291,12 +300,13 @@ class Installer:
         if ids:
             shown = self.docker.run(
                 "inspect", "--format",
-                "{{.Id}}|{{.RestartCount}}|{{.State.StartedAt}}|{{.State.OOMKilled}}",
+                "{{.Id}}|{{.RestartCount}}|{{.State.StartedAt}}|{{.State.OOMKilled}}"
+                "|{{.HostConfig.NanoCpus}}",
                 *ids, check=False, timeout=60,
             ).stdout  # fmt: skip
             for line in shown.splitlines():
                 parts = line.strip().split("|")
-                if len(parts) == 4:
+                if len(parts) >= 4:
                     details[parts[0]] = parts[1:]
         running = [
             str(c["Name"]) for c in containers if c.get("State") == "running" and c.get("Name")
@@ -318,6 +328,7 @@ class Installer:
             used = usage.get(str(container.get("Name"))) or {}
             memory = str(used.get("MemUsage") or "").split("/")
             restarts = extra[0] if extra else ""
+            nanos = extra[3] if extra and len(extra) > 3 else ""
             value["services"].append(
                 {
                     "service": container.get("Service"),
@@ -330,13 +341,41 @@ class Installer:
                     "restarts": int(restarts) if restarts.isdigit() else None,
                     "started_at": extra[1] if extra else None,
                     "oom_killed": (extra[2] == "true") if extra else None,
+                    # Its CPU limit (compose's cpus:); None without one.
+                    "cpu_limit": int(nanos) / 1e9 if nanos.isdigit() and int(nanos) else None,
                     "cpu_pct": percent(used["CPUPerc"]) if used.get("CPUPerc") else None,
                     "mem_bytes": size_bytes(memory[0]) if used else None,
                     "mem_limit_bytes": size_bytes(memory[1]) if len(memory) == 2 else None,
                     "mem_pct": percent(used["MemPerc"]) if used.get("MemPerc") else None,
                 }
             )
+        value["machine"] = self.machine()
         return value
+
+    def machine(self) -> dict[str, Any]:
+        """The machine as Docker sees it (Docker Desktop: its virtual machine) and the machine
+        profile install.sh applied (``--machine``, docs/install-offline.md)."""
+
+        found: dict[str, Any] = {"cpus": None, "memory_bytes": None}
+        shown = self.docker.run(
+            "info", "--format", "{{.NCPU}}|{{.MemTotal}}", check=False, timeout=30
+        ).stdout.strip()
+        parts = shown.split("|")
+        if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+            found["cpus"], found["memory_bytes"] = int(parts[0]), int(parts[1])
+        settings: dict[str, str] = {}
+        try:
+            for line in (self.install_dir / ".env").read_text().splitlines():
+                key, _, text = line.partition("=")
+                if key in MACHINE_KEYS:
+                    settings[key] = text.strip()
+        except OSError:
+            pass
+        found["profile"] = settings.get("PLANTCRAFT_MACHINE") or None
+        found["size"] = settings.get("PLANTCRAFT_MACHINE_SIZE") or None
+        found["max_cpus"] = settings.get("PLANTCRAFT_MAX_CPUS") or None
+        found["max_memory"] = settings.get("PLANTCRAFT_MAX_MEMORY") or None
+        return found
 
     def publish_metrics(self) -> None:
         self._json(self.state / "status" / "metrics.json", self.metrics())

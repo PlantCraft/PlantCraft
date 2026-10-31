@@ -24,6 +24,7 @@ from doccraft.library.access import Permissions
 from doccraft.library.embed import embedder
 from doccraft.library.service import LibraryService
 from doccraft.library.store import DocumentStore
+from doccraft.plantmap import llm as diagram_llm
 
 LOGGER = logging.getLogger(__name__)
 GROUPS_SECONDS = 60
@@ -60,6 +61,11 @@ class Runtime(PlatformRuntime):
             service_client=service_client,
             http_client=http_client,
         )
+
+    def read_diagram_with_model(self, png: bytes, result: dict[str, Any]) -> dict[str, Any]:
+        """The model of ``diagram-read`` reading a page (``doccraft.plantmap.llm.ask``)."""
+
+        return diagram_llm.ask(self.service_client, png, result)
 
     def _known_ids(self) -> list[str]:
         if self.service_client is None:

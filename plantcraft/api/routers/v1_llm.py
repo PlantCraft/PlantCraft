@@ -34,7 +34,8 @@ from plantcraft_sdk.llm import messages_body, split_use
 router = APIRouter(prefix="/api/v1")
 logger = logging.getLogger(__name__)
 
-# The longest text an app may send in one call (characters, every message together).
+# The longest text an app may send in one call (characters, every message together). Images
+# are counted apart: at most 4 a call, 5 MB each (plantcraft_sdk.llm).
 MAX_CHARS = 200_000
 
 
@@ -43,6 +44,29 @@ def first_choice(app: str, declared: str) -> str:
     the suite's bundle, off for any other app."""
 
     return declared if app in {item.id for item in suite_apps()} else "off"
+
+
+def _with_images(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The turns as the model reads them: a turn with images becomes the images' blocks, then
+    its text (Anthropic's form, which ``ChatModel`` translates for OpenAI)."""
+
+    out = []
+    for item in messages:
+        pictures = item.get("images") or []
+        if not pictures:
+            out.append({"role": item["role"], "content": item["content"]})
+            continue
+        blocks: list[dict[str, Any]] = [
+            {
+                "type": "image",
+                "source": {"type": "base64", "media_type": p["media_type"], "data": p["data"]},
+            }
+            for p in pictures
+        ]
+        if item["content"]:
+            blocks.append({"type": "text", "text": item["content"]})
+        out.append({"role": item["role"], "content": blocks})
+    return out
 
 
 def _daily() -> int:
@@ -86,6 +110,7 @@ def llm(use: str, caller: V1Caller, rt: Runtime, body: Any = Body(None)) -> dict
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     sent = len(request["system"]) + sum(len(item["content"]) for item in request["messages"])
+    images = sum(len(item.get("images") or []) for item in request["messages"])
     if sent > MAX_CHARS:
         raise HTTPException(
             status_code=413, detail=t("At most {count} characters a call.", count=MAX_CHARS)
@@ -115,7 +140,7 @@ def llm(use: str, caller: V1Caller, rt: Runtime, body: Any = Body(None)) -> dict
         reasoning=found["reasoning"],
     )
     try:
-        text = model.answer(request["system"], request["messages"])
+        text = model.answer(request["system"], _with_images(request["messages"]))
     except Exception as exc:  # the model's server: down, wrong key, refused
         logger.warning("Model of %s did not answer: %s", qualified, exc)
         raise HTTPException(
@@ -125,6 +150,12 @@ def llm(use: str, caller: V1Caller, rt: Runtime, body: Any = Body(None)) -> dict
         caller.username,
         "language_model.used",
         f"settings:language-model:{qualified}",
-        {"provider": found["label"], "model": found["name"], "sent": sent, "answer": len(text)},
+        {
+            "provider": found["label"],
+            "model": found["name"],
+            "sent": sent,
+            "images": images,
+            "answer": len(text),
+        },
     )
     return {"use": qualified, "model": f"{found['label']} · {found['name']}", "text": text}

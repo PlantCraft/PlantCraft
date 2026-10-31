@@ -360,6 +360,16 @@
       ],
       "title": "End"
      },
+     "extremes": {
+      "default": false,
+      "title": "Extremes",
+      "type": "boolean"
+     },
+     "quality": {
+      "default": false,
+      "title": "Quality",
+      "type": "boolean"
+     },
      "signals": {
       "items": {
        "maxLength": 300,
@@ -3529,7 +3539,7 @@
   },
   "/api/v1/series": {
    "post": {
-    "description": "Many signals' series in one request and one source read; each failure is listed\nin ``errors`` (404, 422, 502, or 413 when the request ran out of points).",
+    "description": "Many signals' series in one request and one source read; each failure is listed\nin ``errors`` (404, 422, 502, or 413 when the request ran out of points). A caller that\naccepts ``application/x-plantcraft-series`` gets the Historian's binary answer, passed on\nas it came (``plantcraft_sdk.wire``), when the Historian is the data layer.",
     "operationId": "series_batch_api_v1_series_post",
     "requestBody": {
      "content": {

@@ -141,7 +141,8 @@ def _given(values: Any) -> pd.Series:
 
 
 def assess(task: dict[str, Any]) -> dict[str, Any]:
-    """Verdict of one signal. ``task``: signal, values, reference, start, end, checks, resampled."""
+    """Verdict of one signal. ``task``: signal, values, reference, start, end, checks, resampled,
+    quality (the source's quality changes, when the Historian keeps them)."""
 
     signal = task["signal"]
     start, end = naive(task["start"]), naive(task["end"])
@@ -157,6 +158,7 @@ def assess(task: dict[str, Any]) -> dict[str, Any]:
             # The parameters ``plan`` resolved win over the diagram's.
             "check_layers": {check_id: [parameters] for check_id, parameters in checks.items()},
             "resampled": bool(task.get("resampled")),
+            "quality": task.get("quality"),
         },
     )
     # The samples go in as given: a text signal keeps its text.

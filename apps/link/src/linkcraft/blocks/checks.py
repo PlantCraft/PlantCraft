@@ -144,7 +144,9 @@ def _check_block(check_id: str) -> Block:
         resampled = ctx.extra.get("resampled")
         if resampled is None:
             resampled = not series.attrs.get("recorded", False)
-        dataset = dataset_for(record, series, start, end, inputs.get("reference"))
+        dataset = dataset_for(
+            record, series, start, end, inputs.get("reference"), ctx.extra.get("quality")
+        )
         outcome = check_result(check_id, parameters, dataset, bool(resampled))
         status = outcome["status"] if outcome["status"] in JUDGED else "unknown"
         value = None if status == "unknown" else 100.0 - float(outcome["score"])
