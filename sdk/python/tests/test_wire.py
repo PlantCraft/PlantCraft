@@ -116,3 +116,23 @@ def test_quality_is_asked_for_only_when_wanted_and_kept_on_the_pandas_series():
     assert checked["plant:A"].attrs["quality"] == changes
     as_json = {"signal": "plant:A", "t": [], "v": [], "quality": changes}
     assert series_to_pandas(as_json).attrs["quality"] == changes
+
+
+def test_a_grid_read_can_bring_each_steps_extremes():
+    from datetime import datetime, timedelta, timezone
+
+    from plantcraft_sdk.testing import FakePlantCraft
+
+    fake = FakePlantCraft()
+    client = fake.client()
+    signal = next(item["id"] for item in client.signals() if item.get("kind") == "number")
+    end = datetime(2026, 10, 30, tzinfo=timezone.utc)
+    start = end - timedelta(hours=2)
+    plain = client.series_many([signal], start, end, 600)["series"][0]
+    banded = client.series_many([signal], start, end, 600, extremes=True)["series"][0]
+    assert "low" not in plain and banded["v"] == plain["v"]
+    assert len(banded["low"]) == len(banded["high"]) == len(banded["t"]) == 12
+    assert all(lo <= mean <= hi for lo, mean, hi in zip(banded["low"], banded["v"], banded["high"]))
+    # Without a step there is nothing to band.
+    raw = client.series_many([signal], start, start + timedelta(minutes=5), extremes=True)
+    assert "low" not in raw["series"][0]

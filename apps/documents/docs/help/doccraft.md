@@ -69,6 +69,11 @@ On the map you can work with what was read:
   column) to see which tags are on both, and which are only on one. The file stays in your
   browser.
 
+On a scan, an editor can also choose **Read again with the language model** on the diagram's
+page. The page's image and what was found on it go to the model an administrator chose for
+"Read a scanned diagram again" in Setup › Language models (off until then). What the model adds
+is marked as the model's, with medium certainty: check it on the map.
+
 How well it reads depends on the drawing:
 
 - A clean vector P&ID is read almost completely.

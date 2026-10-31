@@ -93,7 +93,7 @@ input. Times are ISO 8601 with offset; series timestamps are UTC.
 | `GET /api/v1/signals` | `[{"id", "name", "source", "unit", "description", "low", "high", "kind", "source_kind"}]`; `source_kind` is the source's type (`opcua`, `pi_web_api`, `csv`, `derived`; `null` when unknown): a `csv` signal is sampled (laboratory analyses) and judged by its own rules; filter `q`; derived signals add `app`, `subject`, `result` and filter by them |
 | `GET /api/v1/signals/{id}` | One signal, same shape |
 | `GET /api/v1/signals/{id}/series?start&end&step` | `{"signal", "kind", "t": [iso...], "v": [number \| string \| null...]}` (typed by the point's kind); `step` in seconds (optional: recorded values); at most 200,000 points. A runs point answers `{"signal", "kind": "runs", "runs": [{"run_at", "t", "v"}]}` (`run`, `runs`) |
-| `POST /api/v1/series` | Body `{"signals": [id...], "start", "end", "step", "quality"}` (1 to 500 ids; `quality` optional): `{"series": [{"signal", "kind", "t", "v"}...], "errors": [{"signal", "status", "detail"}...]}` |
+| `POST /api/v1/series` | Body `{"signals": [id...], "start", "end", "step", "quality", "extremes"}` (1 to 500 ids; `quality` and `extremes` optional): `{"series": [{"signal", "kind", "t", "v"}...], "errors": [{"signal", "status", "detail"}...]}` |
 | `GET /api/v1/signals/{id}/value?agg&window&end` | `{"signal", "agg", "window", "value", "at"}`; `agg` one of `last, mean, min, max, std`; `window` like `1h`, `24h`, `7d`; optional `end` (ISO 8601, never later than now) reads a window that closed earlier, like last week |
 | `PUT /api/v1/series` | Derived series, an app's service token only. Body: up to 500 items `[{"signal": "app-<app id>:<name>", "t": [iso...], "v": [...], "name", "unit", "kind", "subject", "result"}]`: `{"written", "errors"}` |
 | `PUT /api/v1/series/runs` | Runs points, an app's service token only. Body: up to 500 runs `[{"signal": "app-<app id>:<name>", "run_at", "t": [iso...], "v": [number...], "keep_runs", "keep_days", ...}]`: `{"written", "errors"}` (see "Value kinds, retention and runs") |
@@ -286,6 +286,9 @@ Additive to v1; `plantcraft-sdk` 0.3.0 (`plantcraft_sdk.assets`, `client.asset_t
   state at `start`, then its `t` is at or before `start`; an empty list: good all along). A bad
   sample is still a null value, and an uncertain or substituted one keeps its value, so this is
   the only place they show. A source that keeps no quality leaves the list out.
+  With `step`, `"extremes": true` adds each cell's lowest and highest recorded value to a
+  number series (`"low"`, `"high"`, beside the means in `v`; `null` where a cell had none). A
+  source read live, or a span past what the Historian keeps extremes for, leaves them out.
   A client may also ask for the binary answer (`Accept: application/x-plantcraft-series`, when
   `GET /api/v1/reads` lists `pcs1` in `formats`; `plantcraft_sdk.wire`): the same series, with
   times and values as arrays.
@@ -594,10 +597,11 @@ starts off whatever it declares, until an administrator gives it a model.
 
 | Endpoint | Shape |
 |---|---|
-| `POST /api/v1/llm/{use}` | An app's service token only, with `write.llm` (403 otherwise); `use` is `<id>` or `<app id>:<id>` of one of its own uses. Body `{"system"?: text, "messages": [{"role": "user" \| "assistant", "content"}]}`, the last message the user's, at most 200,000 characters in all: `{"use": "<app>:<id>", "model", "text"}`. 404 for a use the app did not declare, 409 when the use has no model now (off, nothing set up, or models forbidden in the installation), 429 past `PLANTCRAFT_LLM_APP_DAILY` calls of the app per plant day (500), 502 when the model's server did not answer. Each call is audited (`language_model.used`: provider, model, characters sent and received). Added 2026-10-25, SDK 0.32.0 |
+| `POST /api/v1/llm/{use}` | An app's service token only, with `write.llm` (403 otherwise); `use` is `<id>` or `<app id>:<id>` of one of its own uses. Body `{"system"?: text, "messages": [{"role": "user" \| "assistant", "content", "images"?}]}`, the last message the user's, at most 200,000 characters in all; a user's turn may carry `images` (`[{"media_type": "image/png" \| "image/jpeg" \| "image/webp" \| "image/gif", "data": base64}]`, at most 4 a call, 5 MB each, for a model that reads images; added 2026-10-31): `{"use": "<app>:<id>", "model", "text"}`. 404 for a use the app did not declare, 409 when the use has no model now (off, nothing set up, or models forbidden in the installation), 429 past `PLANTCRAFT_LLM_APP_DAILY` calls of the app per plant day (500), 502 when the model's server did not answer. Each call is audited (`language_model.used`: provider, model, characters sent, images sent and characters received). Added 2026-10-25, SDK 0.32.0 |
 
-`client.llm(use, messages, system=...)` sends it (a question or the turns of a chat; 120 s
-timeout). `FakePlantCraft` answers it for the uses the app sent in its contributions, keeps
+`client.llm(use, messages, system=..., images=[png_bytes])` sends it (a question or the turns
+of a chat, images with the last user turn; `plantcraft_sdk.llm.image(data, media_type)` for a
+JPEG; 120 s timeout). `FakePlantCraft` answers it for the uses the app sent in its contributions, keeps
 `fake.links.llm_calls` and answers `fake.links.llm_answer` (a text, a function of the call, or
 None for 409). The model only reads what the app sends: it never acts on the plant or the suite.
 

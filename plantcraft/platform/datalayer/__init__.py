@@ -90,6 +90,7 @@ class DataLayer:
         step: float | None,
         *,
         quality: bool = False,
+        extremes: bool = False,
     ) -> dict[str, Any]:
         raise NotImplementedError
 

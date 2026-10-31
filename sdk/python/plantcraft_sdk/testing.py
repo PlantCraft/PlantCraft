@@ -1734,7 +1734,34 @@ class FakePlantCraft(_LinksRoutes):
                 batch.fail(signal_id, abort.status, str(abort.detail))
                 continue
             batch.add(signal_id, self.kind(found), stamps, values)
+            if payload.get("extremes") is True and step and self.kind(found) == "number":
+                band = self._extremes(found, start_at, end_at, step, len(stamps))
+                if band is not None and batch.series and batch.series[-1]["signal"] == signal_id:
+                    batch.series[-1]["low"], batch.series[-1]["high"] = band
         return batch.payload()
+
+    def _extremes(
+        self, signal_id: str, start: datetime, end: datetime, step: float, cells: int
+    ) -> tuple[list[Any], list[Any]] | None:
+        """Each ``step`` cell's lowest and highest recorded value, as the Historian's
+        ``extremes`` (None when the raw values do not fit one read)."""
+
+        try:
+            stamps, values = self._values(signal_id, start, end, None)
+        except (ContractError, _Abort):
+            return None
+        numbers = pd.to_numeric(pd.Series(values, dtype=object), errors="coerce").to_numpy(float)
+        at = pd.DatetimeIndex(pd.to_datetime(list(stamps), utc=True)).as_unit("ns").asi8 / 1e9
+        index = np.floor((at - start.timestamp()) / step).astype(np.int64)
+        keep = (index >= 0) & (index < cells) & ~np.isnan(numbers)
+        low, high = np.full(cells, np.nan), np.full(cells, np.nan)
+        np.fmin.at(low, index[keep], numbers[keep])
+        np.fmax.at(high, index[keep], numbers[keep])
+
+        def listed(found: np.ndarray) -> list[Any]:
+            return [None if np.isnan(value) else float(value) for value in found]
+
+        return listed(low), listed(high)
 
     def _route_put_series(self, request: "_Request") -> dict[str, Any]:
         claims = self._caller(request)

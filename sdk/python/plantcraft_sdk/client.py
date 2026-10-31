@@ -698,6 +698,7 @@ class PlantCraftClient:
         *,
         binary: bool = False,
         quality: bool = False,
+        extremes: bool = False,
     ) -> SeriesBatch:
         """Many signals' series: ``{"series": [...], "errors": [{signal, status, detail}]}``.
 
@@ -711,6 +712,11 @@ class PlantCraftClient:
         just a null value and an uncertain one looks good. A server that keeps no quality
         leaves the list out.
 
+        ``extremes`` (with ``step``): each number series also holds every step's lowest and
+        highest value, ``"low"`` and ``"high"`` beside the means in ``"v"`` (``None`` where a
+        step had none), so a min or max trend needs no raw samples. A server that cannot tell
+        them (a source read live, a span past what it keeps) leaves them out.
+
         One ``POST /api/v1/series`` per 500 signals; signals a request had no
         room for (413) are asked for again in the next one, so ``errors`` holds
         only real failures (404 unknown signal, 422 too many points, 502 source
@@ -723,7 +729,9 @@ class PlantCraftClient:
         errors: dict[str, SeriesError] = {}
         while pending:
             chunk, pending = pending[:MAX_BATCH_SIGNALS], pending[MAX_BATCH_SIGNALS:]
-            answer = self._series_batch(chunk, start, end, step, binary=binary, quality=quality)
+            answer = self._series_batch(
+                chunk, start, end, step, binary=binary, quality=quality, extremes=extremes
+            )
             for item in answer.get("series") or []:
                 item.setdefault("kind", "number")
                 found[item["signal"]] = item
@@ -758,6 +766,7 @@ class PlantCraftClient:
         *,
         binary: bool = False,
         quality: bool = False,
+        extremes: bool = False,
     ) -> dict[str, Any]:
         body: dict[str, Any] = {
             "signals": signal_ids,
@@ -767,6 +776,8 @@ class PlantCraftClient:
         }
         if quality:
             body["quality"] = True
+        if extremes and step:
+            body["extremes"] = True
         historian = self._historian
         if historian is not None and self._historian_serves(historian):
             accept = (
@@ -1185,9 +1196,10 @@ class PlantCraftClient:
     def llm(
         self,
         use: str,
-        messages: list[Mapping[str, str]] | str,
+        messages: list[Mapping[str, Any]] | str,
         *,
         system: str = "",
+        images: Iterable[Any] = (),
         timeout: float = LLM_TIMEOUT,
     ) -> dict[str, Any]:
         """``POST /api/v1/llm/{use}``: one answer from the model PlantCraft gives one of the
@@ -1195,12 +1207,15 @@ class PlantCraftClient:
 
         ``messages`` is a question, or the turns of a chat (``role`` user or assistant). A use
         with no model now (off, or nothing set up) raises ``BadRequest`` with status 409: say
-        so, and that an administrator chooses one in Setup › Language models."""
+        so, and that an administrator chooses one in Setup › Language models.
+
+        ``images`` (PNG bytes, or ``plantcraft_sdk.llm.image(data, media_type)``) go with the
+        last user turn, for a model that reads images: at most 4, 5 MB each."""
 
         return self._send(
             "POST",
             f"/api/v1/llm/{quote(use, safe=':')}",
-            json=messages_body(messages, system=system),
+            json=messages_body(messages, system=system, images=images),
             idempotent=False,
             timeout=timeout,
         )

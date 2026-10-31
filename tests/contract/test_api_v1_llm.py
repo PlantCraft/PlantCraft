@@ -32,7 +32,9 @@ class EchoModel:
 
     def answer(self, system, messages, tool=None, tools=None):
         EchoModel.calls.append({"system": system, "messages": messages})
-        return f"Echo: {messages[-1]['content']}"
+        content = messages[-1]["content"]
+        text = content if isinstance(content, str) else content[-1].get("text", "")
+        return f"Echo: {text}"
 
 
 def _body(uses: list[dict]) -> dict:
@@ -86,6 +88,21 @@ def test_an_app_declares_its_uses_and_writes_with_the_model_each_was_given(centr
     assert central.post(url, json=ask, headers=_as(central, "eng")).status_code == 403
     last_is_mine = {"messages": [{"role": "assistant", "content": "Hi"}]}
     assert central.post(url, json=last_is_mine, headers=headers).status_code == 422
+    # An image goes to the model as an image block before the turn's text; it is audited.
+    png = {"media_type": "image/png", "data": "iVBORw0KGgo="}
+    seen = {"messages": [{"role": "user", "content": "What is drawn?", "images": [png]}]}
+    assert central.post(url, json=seen, headers=headers).status_code == 200
+    blocks = EchoModel.calls[-1]["messages"][-1]["content"]
+    assert [b["type"] for b in blocks] == ["image", "text"]
+    assert blocks[0]["source"] == {"type": "base64", **png}
+    used = [i for i in rt.workspace.audit.list() if i["action"] == "language_model.used"]
+    assert used[0]["detail"]["images"] == 1
+    pdf = {
+        "messages": [
+            {"content": "x", "images": [{"media_type": "application/pdf", "data": "AA=="}]}
+        ]
+    }
+    assert central.post(url, json=pdf, headers=headers).status_code == 422
     # An administrator turns the off use on with another model.
     store.save_settings(
         actor=ADMIN,
