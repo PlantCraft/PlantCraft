@@ -209,6 +209,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Long trends come from the Historian already reduced.** PlantCraft's charts read every raw
+  sample of the window and kept each stretch's lowest and highest value themselves: a day at 1 s
+  moved 4 MB and took 0.2 s, and a week was refused (over 200,000 values). The platform now asks
+  the Historian for about 750 cells with each cell's low and high (hourly rollups past a week):
+  a day in 0.02 s and 67 KB, a week in 0.13 s, the same spikes. Text signals, and signals the
+  Historian gives no extremes for, are still read raw and cut as before.
+
 - **`install.sh --uninstall --purge` no longer deletes another installation's images.** With
   two installations on one Docker (test and production), purging one removed the image tags the
   other's containers were created from, and the other could not start again. Purge now keeps
