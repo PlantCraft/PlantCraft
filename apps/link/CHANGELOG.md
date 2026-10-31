@@ -8,6 +8,12 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **SKAB regression test.** The Deviation (T²) block is now scored against the 34 labelled
+  experiments of the Skoltech Anomaly Benchmark, a real pump and water circuit. The data is
+  GPL-3.0, so `tests/oracles/fetch_skab.py` downloads it at a pinned commit and checks the
+  sha256 of every file, and nothing of it is committed. The tests on main download it before
+  `make ci`. Per sample, F1 is 75 (SKAB's leaderboard gives T² 66). The false alarms are high,
+  docs/gaps.md G44. The four scores are floors that only rise.
 - **Days to the limit.** For loops whose health is falling, a line fitted to the last 14 days
   (6-hour means) says how many days are left until the health reaches the alarm limit (50). The
   forecast is shown only when the line fits (R² of at least 0.5) and the limit is less than a year
