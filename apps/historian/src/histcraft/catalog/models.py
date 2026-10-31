@@ -129,6 +129,7 @@ MANAGED = (
     "step",
     "profile",
     "exception",
+    "min_seconds",
 )
 # Point settings whose column is NOT NULL: inheritance is recorded in ``inherits``.
 INHERITABLE = ("scan_seconds", "deviation", "max_seconds")
@@ -346,6 +347,8 @@ class PointIn(BaseModel):
     # The exception in engineering units (None: the profile's) and the compression profile.
     exception: float | None = Field(default=None, ge=0)
     profile: str | None = None
+    # Lines only: the least time between archived values (None or 0: none; PI's CompMin).
+    min_seconds: float | None = Field(default=None, ge=0, le=86400)
     max_seconds: float | None = Field(default=None, ge=1, le=7 * 86400)
     # 0 keeps the values forever.
     retention_days: int | None = Field(default=None, ge=0, le=36500)
@@ -408,6 +411,8 @@ class PointPatch(BaseModel):
     # The exception in engineering units (None: the profile's) and the compression profile.
     exception: float | None = Field(default=None, ge=0)
     profile: str | None = None
+    # Lines only: the least time between archived values (None or 0: none; PI's CompMin).
+    min_seconds: float | None = Field(default=None, ge=0, le=86400)
     max_seconds: float | None = Field(default=None, ge=1, le=7 * 86400)
     # 0 keeps the values forever.
     retention_days: int | None = Field(default=None, ge=0, le=36500)

@@ -18,6 +18,7 @@ from plantcraft_sdk.server.workers import startup
 from histcraft import APP_ID, __version__
 from histcraft.api.routers import (
     admin,
+    annotations,
     certificates,
     data,
     export,
@@ -67,6 +68,7 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
             export.router,
             imports.router,
             lab.router,
+            annotations.router,
             widgets.router,
             search.router,
             start.router,

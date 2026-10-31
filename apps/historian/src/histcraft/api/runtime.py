@@ -26,6 +26,7 @@ from histcraft.api import queue
 from histcraft.api.read_budget import ReadBudget
 from histcraft.archive.query import PointRef, Reader, SourceUnavailable
 from histcraft.archive.store import ArchiveStore
+from histcraft.catalog.annotations import Annotations
 from histcraft.catalog.store import CatalogStore
 from histcraft.collector.service import Collector, CollectorThread, source_password
 from histcraft.conditions import open_conditions
@@ -72,6 +73,8 @@ class Runtime(PlatformRuntime):
         self.archive = ArchiveStore(Database(settings.archive_target, password=password))
         # Export choices kept under a name, beside the catalog (``export.saved``).
         self.saved_exports = SavedExports(self.catalog.db)
+        # Notes on signals, at an instant or over an interval (``catalog.annotations``).
+        self.annotations = Annotations(self.catalog.db)
         self.vault = Vault(settings.secret_key_path)
         self.reader = Reader(self.archive, self.source_read)
         self.read_budget = ReadBudget(settings.read_values, settings.query_timeout)
