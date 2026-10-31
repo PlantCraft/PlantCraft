@@ -21,8 +21,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from doccraft.api.deps import CurrentUser, EditorUser, RuntimeDep
 from doccraft.api.runtime import Runtime
 from doccraft.i18n import t
-from doccraft.plantmap.build import LIST_COLUMNS, asset_file, build_map, lists
 from doccraft.plantmap import llm as diagram_llm
+from doccraft.plantmap.build import LIST_COLUMNS, asset_file, build_map, lists
 from doccraft.plantmap.dexpi import dexpi_xml
 
 router = APIRouter(prefix="/api", tags=["plant map"])
@@ -117,7 +117,7 @@ def read_with_model(
             status_code=422, detail=t("An SVG is read exactly already; the model reads scans.")
         )
     try:
-        answer = diagram_llm.ask(rt.service_client, png, found["result"])
+        answer = rt.read_diagram_with_model(png, found["result"])
     except diagram_llm.NoModel as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     except PlantCraftError as exc:

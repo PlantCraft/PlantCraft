@@ -284,24 +284,25 @@ def test_an_editor_has_a_page_read_again_by_the_language_model(
     fake.links.llm_answer = None
     assert client.post(url).status_code == 409
     before = client.get(f"/api/diagrams/{one['rev_id']}/1").json()["result"]
+    pump = next(i["tag"] for i in before["items"] if i["family"] == "equipment")
     answer = {
-        "items": [{"tag": "XV 9001", "family": "instrument", "cls": "valve"}],
-        "relations": [{"from": "XV-9001", "type": "on", "to": "P-1001"}],
+        "items": [{"tag": "HV 9001", "family": "instrument", "cls": "valve"}],
+        "relations": [{"from": "HV-9001", "type": "on", "to": pump}],
     }
     fake.links.llm_answer = "Here it is: " + json.dumps(answer)
     read = client.post(url)
     assert read.status_code == 200, read.text
     result = read.json()["result"]
-    added = next(i for i in result["items"] if i["tag"] == "XV-9001")
+    added = next(i for i in result["items"] if i["tag"] == "HV-9001")
     assert added["confidence"] == "medium" and "language model" in added["why"]
-    assert {"from": "XV-9001", "type": "on", "to": "P-1001"}.items() <= next(
-        r for r in result["relations"] if r["from"] == "XV-9001"
+    assert {"from": "HV-9001", "type": "on", "to": pump}.items() <= next(
+        r for r in result["relations"] if r["from"] == "HV-9001"
     ).items()
     assert len(result["items"]) == len(before["items"]) + 1
     call = fake.links.llm_calls[-1]
     assert call["use"] == "diagram-read" and len(call["messages"][-1]["images"]) == 1
     # The map has it, to be checked; an operator cannot ask.
     plant = client.get("/api/plant-map").json()
-    assert any(i["tag"] == "XV-9001" for i in plant["items"])
+    assert any(i["tag"] == "HV-9001" for i in plant["items"])
     with client_for(runtime, fake, "operator") as operator:
         assert operator.post(url).status_code == 403
