@@ -32,7 +32,7 @@ from plantcraft.api.identity import issue_user_token
 from plantcraft.apps.manager import AppError
 from plantcraft.auth.public_demo import public_demo
 from plantcraft.auth.support_access import MAX_HOURS as SUPPORT_MAX_HOURS
-from plantcraft.config import plant_clock, plant_today
+from plantcraft.config import plant_clock, plant_timezone, plant_today
 from plantcraft.i18n import t
 from plantcraft.platform.datalayer import DataLayerError
 from plantcraft_sdk.server import logread
@@ -353,15 +353,41 @@ def _entries_by_company(rt: Any, entries: list[dict[str, Any]]) -> list[dict[str
     return entries
 
 
+def sponsored(rt: Any, username: str) -> list[str]:
+    """The companies ``username`` sponsors at the plant (group ids)."""
+
+    return [
+        item["group_id"]
+        for item in rt.workspace.groups.list()
+        if item["kind"] == "company" and item.get("sponsor") == username
+    ]
+
+
+def _partner_scope(rt: Any, user: str) -> set[str] | None:
+    """None: every company (an administrator, the Operations role, the demo's visitor); else
+    the companies the person sponsors. 403 for anyone else."""
+
+    access = user_access(rt, user)
+    demo = public_demo()
+    if (access is not None and access.can_operate) or (demo and demo.username == user):
+        return None
+    mine = set(sponsored(rt, user))
+    if not mine:
+        raise HTTPException(status_code=403, detail=t("Operations is not open to you."))
+    return mine
+
+
 @router.get("/partners")
 def partners(
-    _reader: OperationsView,
+    user: CurrentUser,
     rt: Runtime,
     month: str | None = Query(default=None, pattern=MONTH),
 ) -> dict[str, Any]:
     """Every company (a group of kind ``company``) with its teams, people, sponsor, the end of its
-    access, its open requests and the hours its people logged in ``month``."""
+    access, its open requests and the hours its people logged in ``month``. A sponsor at the plant
+    who is not in Operations reads the companies they sponsor, and approves their months."""
 
+    scope = _partner_scope(rt, user)
     month, first, last = _month_bounds(month)
     today = plant_today()
     groups = rt.workspace.groups
@@ -370,7 +396,11 @@ def partners(
     entries = _entries_by_company(rt, rt.workspace.actions.hours_between(first, last))
     requests = rt.workspace.actions.list(kind="request", statuses=list(OPEN_STATUSES))
     found = []
-    for company in (item for item in every if item["kind"] == "company"):
+    for company in (
+        item
+        for item in every
+        if item["kind"] == "company" and (scope is None or item["group_id"] in scope)
+    ):
         teams = [
             item
             for item in every
@@ -435,7 +465,7 @@ def partners(
 
 @router.get("/hours")
 def hours(
-    reader: OperationsView,
+    reader: CurrentUser,
     rt: Runtime,
     month: str | None = Query(default=None, pattern=MONTH),
     company: str | None = Query(default=None, max_length=60),
@@ -443,8 +473,11 @@ def hours(
     """Every time entry of ``month`` with who logged it, the request and their company
     (``company``: one company's; ``plant``: the plant's own people), for the month's report."""
 
+    scope = _partner_scope(rt, reader)
     month, first, last = _month_bounds(month)
     entries = _entries_by_company(rt, rt.workspace.actions.hours_between(first, last))
+    if scope is not None:
+        entries = [entry for entry in entries if entry["company_id"] in scope]
     if company == "plant":
         entries = [entry for entry in entries if entry["company_id"] is None]
     elif company:
@@ -457,7 +490,11 @@ def hours(
         "entries": entries,
         "hours": round(sum(entry["hours"] for entry in entries), 2),
         "billable_hours": round(sum(entry["hours"] for entry in entries if entry["billable"]), 2),
-        "approvals": list(rt.workspace.actions.approvals(month).values()),
+        "approvals": [
+            item
+            for key, item in rt.workspace.actions.approvals(month).items()
+            if scope is None or key in scope
+        ],
     }
 
 
@@ -529,10 +566,48 @@ def reopen_hours(payload: MonthApproval, admin: AdminUser, rt: Runtime) -> dict[
 def targets(_user: CurrentUser, rt: Runtime) -> dict[str, Any]:
     """The first answer and resolution targets of requests, by priority, in hours."""
 
+    return _targets_answer(rt)
+
+
+def _targets_answer(rt: Any) -> dict[str, Any]:
+    calendars = rt.workspace.actions.service_hours()
+    names = {item["group_id"]: item["name"] for item in rt.workspace.groups.list()}
     return {
         "targets": rt.workspace.actions.targets().as_dict(),
         "defaults": Targets.defaults().as_dict(),
+        # When each queue works ('' : the default); none: day and night.
+        "service_hours": [
+            {"queue": key or None, "queue_name": names.get(key) if key else None, **hours.as_dict()}
+            for key, hours in sorted(calendars.items())
+        ],
+        "timezone": str(plant_timezone()),
     }
+
+
+class QueueHours(BaseModel):
+    # A group's id; None: the default (requests without a queue, queues without hours).
+    queue: str | None = Field(default=None, max_length=60)
+    # {"days": ["mon", ...], "start": "08:00", "end": "17:00"}; None: day and night.
+    hours: dict[str, Any] | None = None
+
+
+@router.put("/service-hours")
+def set_service_hours(payload: QueueHours, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    """When a queue works: its requests' clocks run only then."""
+
+    if payload.queue and rt.workspace.groups.get(payload.queue) is None:
+        raise HTTPException(status_code=404, detail=t("Group not found."))
+    try:
+        value = rt.workspace.actions.set_service_hours(payload.queue, payload.hours, actor=admin)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    _audit(
+        rt,
+        admin,
+        "operations.service_hours",
+        {"queue": payload.queue, "hours": value.as_dict() if value else None},
+    )
+    return _targets_answer(rt)
 
 
 @router.put("/targets")
@@ -543,7 +618,7 @@ def set_targets(payload: dict[str, Any], admin: AdminUser, rt: Runtime) -> dict[
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     _audit(rt, admin, "operations.targets", {"before": before, "after": value.as_dict()})
-    return {"targets": value.as_dict(), "defaults": Targets.defaults().as_dict()}
+    return _targets_answer(rt)
 
 
 # Temporary support access ------------------------------------------------------------------
