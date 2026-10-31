@@ -457,6 +457,15 @@ Import), link it to the host and set `{$PLANTCRAFT.DIR}` to the install folder (
 `/opt/plantcraft`). `tests/test_zabbix_template.py` checks that every field it reads is one the
 installer writes.
 
+**Analytics history and its file.** Analytics keeps loop health and signal checks
+`LINKCRAFT_HISTORY_DAYS` (90 by default); past `LINKCRAFT_HISTORY_FULL_DAYS` (14) it keeps the
+last point of each hour, and every signal problem. The hourly upkeep thins a day per pass, so the
+file stops growing, but SQLite only reuses the freed pages: a file that grew before (2050 loops
+and 8214 signals reached 18.5 GB) keeps its size until it is compacted. In a quiet hour:
+`docker compose exec linkcraft linkcraft compact --dry-run`, then without `--dry-run`. It runs
+only when at least 20 % of the file is free (`--min-free`) and the disk can hold the copy, and it
+holds the database while it writes (about 16 s for 1.9 GB).
+
 ## 5. Tests
 
 | Promise | Test |

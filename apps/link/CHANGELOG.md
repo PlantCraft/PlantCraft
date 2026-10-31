@@ -61,7 +61,8 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   pass (about 2 s for 205 loops and 821 signals), so a large existing file is worked down over
   days without holding the database. With 2050 loops and 8214
   signals the file grew without bound (F9, 2.5 to 18.5 GB in about an hour of replay); it now
-  levels off. Freed space is reused, and the file only shrinks after `VACUUM`.
+  levels off. Freed space is reused; `linkcraft compact` gives
+  the disk back from a file that grew before (`docs/operations.md`, section 4).
 - The Overview keeps its answer 3 s per asset scope: with 50 people on it during a round its p95
   went from 2.0 to 0.15 s (0.6.0 load test C4 with an account per person).
 - **The stiction screen finds stiction behind a smooth controller.** Beside the stick-slip
