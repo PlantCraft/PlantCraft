@@ -202,14 +202,14 @@ list the operating-system packages of the images or the Caddy binary (G13).
 | CR 7.1 Denial of service protection | Partial: resource limits, sign-in throttling |
 | CR 7.3 / 7.4 Backup and recovery | Met: scheduled online backups (the Historian's database full and incremental), a restore drill, backup before upgrade, rollback |
 | CR 7.7 Least functionality | Met: non-root, read-only, no capabilities, no admin API, no build tools (SL2) |
-| CR 7.6 RE1 Machine-readable reporting of security settings | Met: `./install.sh --security-check` (below) |
+| CR 7.6 RE1 Machine-readable reporting of security settings | Met: `./install.sh --security-check --format evidence` (below) |
 | Depends on the client | Host hardening, patching, physical security, disk encryption, central logging |
 
 ### Security check
 
 `./install.sh --security-check` (or `./security-check.sh` in the install folder) checks the running
 suite against this guide and changes nothing. It reads `docker inspect`, the folder's files and the
-proxy's HTTPS answer; nothing leaves the server. Each of its 36 checks has a stable id
+proxy's HTTPS answer; nothing leaves the server. Each of its 37 checks has a stable id
 (`PC-<area>-NN`: `INT` integrity, `CTR` containers, `NET` network, `TLS`, `SEC` secrets, `ACC`
 accounts, `AUD` records, `REC` recovery, `MIN` least functionality, `HOST`), a severity, a result
 (pass, warn, fail, info, na), the evidence it saw, how to fix it and its references (IEC 62443-4-2
@@ -217,13 +217,49 @@ CR, NIST SP 800-53). The score is 0-100, weighted by severity, with a warning co
 
 - `--format json` gives one document for the plant's own tools, `--format junit` a test report
   (a failure is a failed test case) and `--format sarif` a code-scanning report.
-- `--skip PC-HOST-03,...` leaves checks out. Write down why in the plant's change record.
+- `--format evidence` gives the evidence report for an audit (IEC 62443-4-2 CR 7.6 RE 1,
+  IEC 62443-3-3 SR 7.6): the scope (host, folder, version, installation id), the settings in
+  force from `.env` (any key that names a secret, password, token or key is left out), each
+  requirement (CR 1.1, CR 3.4, ...) with the checks that give its evidence and the worst result,
+  the exceptions with their reason and state, every check, and the SHA-256 of the check and its
+  catalogue with the result of `PC-INT-01`. Keep it with the plant's change record.
+- `--skip PC-HOST-03,...` leaves checks out of one run. For a risk the plant accepts, use an
+  exception instead.
+- Exceptions: `security-exceptions.conf` in the install folder (or `--exceptions FILE`), one line
+  per accepted risk, `ID YYYY-MM-DD reason`:
+
+  ```
+  # accepted risks, reviewed by the plant's security officer
+  PC-REC-01 2026-12-31 backups go to the plant NAS nightly (change 1234)
+  ```
+
+  Until that day (UTC, inclusive) a warning or failure of the check reports as `excepted`, with
+  the reason: half the points, and not a failure for the exit code. From the next day the check
+  reports its own result again, with "the exception expired on ...". A line with an unknown id or
+  without a date and a reason is reported and ignored.
 - `--url https://name` checks the HTTPS answer at another address.
 - Exit code 0: no failure; 1: a failure; 2: the check could not run.
 
-The host itself (operating system, SSH, AppArmor or SELinux) is the plant's. Run a host benchmark
-such as Lynis or OpenSCAP for it; the check only reports whether the host firewall and disk
-encryption are on.
+The checks' severities, titles and references are data: `security-checks.tsv`, in the bundle
+beside the script and covered by its signed `SHA256SUMS`. The installer keeps that file as
+`release-SHA256SUMS` (and `release-SHA256SUMS.sig`) in the install folder, and `PC-INT-01` checks
+the script and the catalogue against it, the signature checked with the server's own OpenSSL
+against `trusted-publishers/`. A severity lowered by hand, or a check edited, fails `PC-INT-01`.
+
+The host itself (operating system, SSH, AppArmor or SELinux) is the plant's. The check reports
+whether the host firewall and disk encryption are on. It also includes a host benchmark when the
+host has one, and asks for neither:
+
+- `PC-HOST-05` Lynis. As root the check runs `lynis audit system --quick`; otherwise it reads the
+  last report (`LYNIS_REPORT`, default `/var/log/lynis-report.dat`). It passes with a hardening
+  index of 70 or more and no warnings.
+- `PC-HOST-06` OpenSCAP. As root, with the SCAP Security Guide content for the host's system, the
+  check evaluates its CIS level 1 server profile, or the standard one (`OSCAP_PROFILE` names
+  another). Otherwise it reads an XCCDF results file given as `OSCAP_RESULTS`. It passes when no
+  rule failed.
+
+Without the tool the check reports `na`. A run takes at most `SECURITY_CHECK_SCAN_TIMEOUT` seconds
+(900), and `--skip PC-HOST-05,PC-HOST-06` leaves the benchmarks out.
 
 ## 9. Contact
 

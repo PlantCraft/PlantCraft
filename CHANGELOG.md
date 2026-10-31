@@ -9,6 +9,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Security check: signed catalogue, exceptions that expire, an evidence report.** The checks'
+  severities, titles and references move to `security-checks.tsv`, which the bundle signs with the
+  rest; the installer keeps the signed hashes beside it, and the new check `PC-INT-01` fails when
+  the check or its catalogue was changed (a severity lowered by hand, for one). Accepted risks go in
+  `security-exceptions.conf` as `ID YYYY-MM-DD reason`: until that day the check reports
+  `excepted`, then its own result again with "the exception expired". `--format evidence` writes
+  the evidence report for an audit (IEC 62443-4-2 CR 7.6 RE 1): scope, settings in force without
+  secrets, results by requirement, exceptions and the hashes of the checks that ran
+  (`docs/security-guide.md`).
+
 - **Uptime by app and maintenance windows.** Operations › Status shows each app's uptime over
   24 hours, 7 and 30 days, from the watch's incidents and without planned maintenance. An
   administrator plans a maintenance window (now or later, every app or some, up to 72 hours):
@@ -213,6 +223,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **The security check includes Lynis and OpenSCAP when the host has them** (`PC-HOST-05`,
+  `PC-HOST-06`). As root it runs `lynis audit system --quick` and the SCAP Security Guide's CIS
+  level 1 (or standard) profile. Otherwise it reads their last report. A host without them reports
+  `na`; nothing is required.
 - **A daily limit on what the assistant reads for each person, and extraction flags in the audit
   log** (backlog B13). Each tool call counts the signals it reads. Past
   `PLANTCRAFT_ASSISTANT_DAILY_READS` (2000 a day) the assistant reads nothing more for that person

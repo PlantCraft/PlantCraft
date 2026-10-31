@@ -6,8 +6,17 @@
 #   ./security-check.sh --format json       one JSON document (checks, summary, score)
 #   ./security-check.sh --format junit      JUnit XML (a failed check is a failed test case)
 #   ./security-check.sh --format sarif      SARIF 2.1.0 (code-scanning tools)
+#   ./security-check.sh --format evidence   the evidence report for an audit (IEC 62443-4-2 CR 7.6
+#                                           RE 1, 3-3 SR 7.6): settings, results by requirement,
+#                                           exceptions and the hashes of the checks that ran (JSON)
 #   ./security-check.sh --url https://plantcraft.plant.local   check the HTTPS answer at this address
-#   ./security-check.sh --skip PC-HOST-03,PC-TLS-01   leave checks out (the reason belongs in your notes)
+#   ./security-check.sh --skip PC-HOST-03,PC-TLS-01   leave checks out of this run
+#   ./security-check.sh --exceptions FILE   accepted risks (default security-exceptions.conf here)
+#
+# An exception is a line "ID YYYY-MM-DD reason": until that day (inclusive) a warning or failure
+# of that check reports as "excepted" (half the points, not a failure); from the day after, the
+# check reports its own warning or failure again and says the exception expired. The checks' severities, titles and references come
+# from security-checks.tsv, which the bundle signs with the rest (PC-INT-01 checks both files).
 #
 # Each check has a stable id (PC-<area>-NN), a severity, a result (pass, warn, fail, info, na), the
 # evidence it saw, how to fix it and its references (IEC 62443-4-2 CR, NIST SP 800-53). The score
@@ -18,21 +27,25 @@ set -Euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$HERE/.env"
+CATALOG="$HERE/security-checks.tsv"
+EXCEPTIONS="$HERE/security-exceptions.conf"
+EXCEPTIONS_GIVEN=0
 FORMAT=text
 URL=""
 SKIP=","
 while [ $# -gt 0 ]; do
     case "$1" in
         --json) FORMAT=json ;;
-        --format) [ $# -ge 2 ] || { echo "--format needs text, json, junit or sarif" >&2; exit 2; }; FORMAT="$2"; shift ;;
+        --format) [ $# -ge 2 ] || { echo "--format needs text, json, junit, sarif or evidence" >&2; exit 2; }; FORMAT="$2"; shift ;;
         --url) [ $# -ge 2 ] || { echo "--url needs an address" >&2; exit 2; }; URL="$2"; shift ;;
         --skip) [ $# -ge 2 ] || { echo "--skip needs check ids" >&2; exit 2; }; SKIP=",$2,"; shift ;;
-        -h | --help) sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        --exceptions) [ $# -ge 2 ] || { echo "--exceptions needs a file" >&2; exit 2; }; EXCEPTIONS="$2"; EXCEPTIONS_GIVEN=1; shift ;;
+        -h | --help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "unknown option $1 (--help)" >&2; exit 2 ;;
     esac
     shift
 done
-case "$FORMAT" in text | json | junit | sarif) ;; *) echo "unknown format $FORMAT" >&2; exit 2 ;; esac
+case "$FORMAT" in text | json | junit | sarif | evidence) ;; *) echo "unknown format $FORMAT" >&2; exit 2 ;; esac
 
 env_get() { [ -f "$ENV_FILE" ] && sed -n "s/^$1=//p" "$ENV_FILE" | tail -n 1; return 0; }
 mode_of() { stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1" 2>/dev/null || echo "?"; }
@@ -41,11 +54,63 @@ PROJECT="$(env_get COMPOSE_PROJECT_NAME)"
 PROJECT="${PROJECT:-processcraft}"
 NOW="$(date +%s)"
 
+TODAY="$(date -u +%Y-%m-%d)"
+
+# The catalogue (signed with the bundle): severity, title and references by check id.
+declare -A CAT_SEV=() CAT_TITLE=() CAT_REFS=()
+if [ -f "$CATALOG" ]; then
+    while IFS=$'\t' read -r id sev title refs; do
+        case "$id" in '' | '#'*) continue ;; esac
+        CAT_SEV[$id]="$sev" CAT_TITLE[$id]="$title" CAT_REFS[$id]="${refs:-}"
+    done <"$CATALOG"
+fi
+
+# Exceptions: "ID YYYY-MM-DD reason", valid through that day (UTC).
+declare -A EXC_UNTIL=() EXC_REASON=() EXC_USED=()
+EXC_IDS=()
+if [ -f "$EXCEPTIONS" ]; then
+    while read -r id until reason; do
+        case "$id" in '' | '#'*) continue ;; esac
+        if ! [[ "$id" =~ ^PC-[A-Z]+-[0-9][0-9]$ ]] || ! [[ "$until" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || [ -z "$reason" ]; then
+            echo "$(basename "$EXCEPTIONS"): line ignored, it is not \"ID YYYY-MM-DD reason\": $id $until $reason" >&2
+            continue
+        fi
+        if [ "${#CAT_SEV[@]}" -gt 0 ] && [ -z "${CAT_SEV[$id]:-}" ]; then
+            echo "$(basename "$EXCEPTIONS"): line ignored, $id is not a check of this release" >&2
+            continue
+        fi
+        [ -n "${EXC_UNTIL[$id]:-}" ] || EXC_IDS+=("$id")
+        EXC_UNTIL[$id]="$until" EXC_REASON[$id]="$reason"
+    done <"$EXCEPTIONS"
+elif [ "$EXCEPTIONS_GIVEN" = 1 ]; then
+    echo "--exceptions: $EXCEPTIONS is not a file" >&2
+    exit 2
+fi
+exception_state() { # active, expired, or "not needed" (the check passed or did not run)
+    if [ -z "${EXC_USED[$1]:-}" ]; then echo "not needed"; elif [[ "$TODAY" > "${EXC_UNTIL[$1]}" ]]; then echo expired; else echo active; fi
+}
+
 IDS=() TITLES=() SEVERITIES=() RESULTS=() EVIDENCE=() FIXES=() REFS=()
-# check ID SEVERITY RESULT TITLE EVIDENCE REMEDIATION REFS
+# check ID SEVERITY RESULT TITLE EVIDENCE REMEDIATION REFS (the catalogue's severity, title and
+# references win over the ones given here; an exception in force turns warn or fail into excepted)
 check() {
     case "$SKIP" in *",$1,"*) return 0 ;; esac
-    IDS+=("$1") SEVERITIES+=("$2") RESULTS+=("$3") TITLES+=("$4") EVIDENCE+=("$5") FIXES+=("$6") REFS+=("$7")
+    local sev="$2" result="$3" title="$4" evidence="$5" refs="$7"
+    if [ -n "${CAT_SEV[$1]:-}" ]; then sev="${CAT_SEV[$1]}" title="${CAT_TITLE[$1]}" refs="${CAT_REFS[$1]}"; fi
+    if [ -n "${EXC_UNTIL[$1]:-}" ]; then
+        case "$result" in
+            warn | fail)
+                EXC_USED[$1]=1
+                if [[ "$TODAY" > "${EXC_UNTIL[$1]}" ]]; then
+                    evidence="$evidence (the exception expired on ${EXC_UNTIL[$1]}: ${EXC_REASON[$1]})"
+                else
+                    evidence="$evidence (excepted until ${EXC_UNTIL[$1]}: ${EXC_REASON[$1]}; it was $result)"
+                    result=excepted
+                fi
+                ;;
+        esac
+    fi
+    IDS+=("$1") SEVERITIES+=("$sev") RESULTS+=("$result") TITLES+=("$title") EVIDENCE+=("$evidence") FIXES+=("$6") REFS+=("$refs")
 }
 # The evidence: PREFIX and the offenders, or DEFAULT when there is none.
 ev() { if [ -n "$1" ]; then printf '%s%s' "$2" "$1"; else printf '%s' "$3"; fi; }
@@ -68,6 +133,46 @@ if [ -n "$latest" ] && [ -f "$HERE/backups/$latest/data.tar.gz" ]; then
 fi
 
 # --- Integrity -------------------------------------------------------------------------------
+# This check and its catalogue against the release's signed SHA256SUMS (install.sh keeps a copy
+# as release-SHA256SUMS and release-SHA256SUMS.sig), the signature checked with this server's
+# OpenSSL against trusted-publishers/.
+sha256_of() { { sha256sum "$1" 2>/dev/null || shasum -a 256 "$1" 2>/dev/null; } | awk '{print $1}'; }
+SCRIPT_SHA="$(sha256_of "$HERE/security-check.sh")"
+CATALOG_SHA="$([ -f "$CATALOG" ] && sha256_of "$CATALOG" || true)"
+SUMS="$HERE/release-SHA256SUMS" sig="$HERE/release-SHA256SUMS.sig"
+# Installed in the bundle's own folder: the bundle's files themselves.
+if [ ! -f "$SUMS" ] && [ -f "$HERE/SHA256SUMS" ]; then SUMS="$HERE/SHA256SUMS" sig="$HERE/SHA256SUMS.sig"; fi
+if [ ! -f "$SUMS" ]; then
+    check PC-INT-01 high warn "The security check and its catalogue are the ones the signed release ships" "no release-SHA256SUMS in the folder (installed before 0.6.0, or run from a source tree)" \
+        "Install the signed bundle again (./install.sh --yes): it keeps the signed hashes beside the check." "CR 3.4 / SI-7"
+else
+    differ=""
+    for f in security-check.sh security-checks.tsv; do
+        want="$(awk -v f="$f" '$2 == f {print $1}' "$SUMS")"
+        if [ ! -f "$HERE/$f" ] || [ -z "$want" ] || [ "$want" != "$(sha256_of "$HERE/$f")" ]; then differ="$differ $f"; fi
+    done
+    sigstate=""
+    if [ -n "$differ" ]; then
+        sigstate="fail"
+    elif [ ! -f "$sig" ]; then
+        sigstate="warn" sigtext="the hashes match release-SHA256SUMS, which is not signed (a development bundle)"
+    elif ! command -v openssl >/dev/null 2>&1 || ! openssl pkeyutl -help 2>&1 | grep -q -- '-rawin'; then
+        sigstate="warn" sigtext="the hashes match release-SHA256SUMS; its signature needs OpenSSL 1.1.1 or later to check here"
+    else
+        publisher="$(sed -n 's/^ *"publisher": *"\([a-z0-9-]*\)".*/\1/p' "$sig" | head -n 1)"
+        raw="$(sed -n 's/^ *"signature": *"\([A-Za-z0-9+\/=]*\)".*/\1/p' "$sig" | head -n 1)"
+        sigbin="$(mktemp)"
+        if [ -n "$publisher" ] && [ -f "$HERE/trusted-publishers/$publisher.pub" ] && printf '%s' "$raw" | base64 -d >"$sigbin" 2>/dev/null &&
+            openssl pkeyutl -verify -pubin -inkey "$HERE/trusted-publishers/$publisher.pub" -rawin -in "$SUMS" -sigfile "$sigbin" >/dev/null 2>&1; then
+            sigstate="pass" sigtext="the hashes match release-SHA256SUMS, signed by $publisher (trusted-publishers/$publisher.pub)"
+        else
+            sigstate="fail" differ=" release-SHA256SUMS (its signature does not verify against trusted-publishers/${publisher:-?}.pub)"
+        fi
+        rm -f "$sigbin"
+    fi
+    check PC-INT-01 high "$sigstate" "The security check and its catalogue are the ones the signed release ships" "$(ev "$differ" "differ from the signed release:" "${sigtext:-}")" \
+        "Install the signed bundle again (./install.sh --yes): a changed check or catalogue cannot be trusted." "CR 3.4 / SI-7"
+fi
 if docker info --format '{{json .DriverStatus}}' 2>/dev/null | grep -q containerd.snapshotter; then
     # The containerd image store names an image by its manifest, release.json by its config.
     check PC-INT-02 high na "The images in use are the ones the signed release lists" \
@@ -311,14 +416,75 @@ check PC-HOST-03 medium "$([ -n "$hostfw" ] && echo pass || echo info)" "The hos
 crypt="$(lsblk -o TYPE 2>/dev/null | grep -c crypt || true)"
 check PC-HOST-04 info info "The data disk is encrypted" "${crypt:-0} encrypted volumes (lsblk)" "Use full-disk encryption (LUKS, BitLocker) on the server." "CR 4.1 / SC-28"
 
+# Host benchmarks, only when the host has them: Lynis and OpenSCAP look at the whole operating
+# system, which the checks above do not. As root the check runs them (Lynis --quick, OpenSCAP with
+# the SCAP Security Guide's CIS level 1 or standard profile); otherwise it reads their last report
+# (LYNIS_REPORT, default /var/log/lynis-report.dat; OSCAP_RESULTS, an XCCDF results file). A
+# host without either reports "na": nothing is installed for this check.
+skipped() { case "$SKIP" in *",$1,"*) return 0 ;; esac; return 1; }
+SCAN_TIMEOUT="${SECURITY_CHECK_SCAN_TIMEOUT:-900}"
+if ! skipped PC-HOST-05; then
+    report="${LYNIS_REPORT:-/var/log/lynis-report.dat}" how="its last report"
+    if command -v lynis >/dev/null && [ "$(id -u)" -eq 0 ]; then
+        report="$(mktemp)" how="lynis audit system --quick"
+        timeout "$SCAN_TIMEOUT" lynis audit system --quick --no-colors --quiet --report-file "$report" --logfile /dev/null >/dev/null 2>&1 || true
+    fi
+    if [ -r "$report" ] && grep -q '^hardening_index=' "$report" 2>/dev/null; then
+        hi="$(grep -m1 '^hardening_index=' "$report" | cut -d= -f2)"
+        lw="$(grep -c '^warning\[\]=' "$report" || true)"
+        ls_="$(grep -c '^suggestion\[\]=' "$report" || true)"
+        r=pass; { [ "${hi:-0}" -lt 70 ] 2>/dev/null || [ "${lw:-0}" -gt 0 ]; } && r=warn
+        check PC-HOST-05 medium "$r" "The host passes a Lynis audit (hardening index 70 or more, no warnings)" \
+            "Lynis hardening index ${hi:-?}, ${lw:-0} warnings, ${ls_:-0} suggestions ($how)" \
+            "Read the warnings in the Lynis report (lynis show details <id>) and apply them to the host." "CM-6 / CIS Benchmark"
+    elif command -v lynis >/dev/null; then
+        check PC-HOST-05 medium info "The host passes a Lynis audit (hardening index 70 or more, no warnings)" \
+            "Lynis is installed; no readable report (run the check as root, or sudo lynis audit system)" \
+            "Run the security check as root to include Lynis." "CM-6 / CIS Benchmark"
+    else
+        check PC-HOST-05 medium na "The host passes a Lynis audit (hardening index 70 or more, no warnings)" \
+            "Lynis is not installed" "Install Lynis (apt install lynis) for a host audit." "CM-6 / CIS Benchmark"
+    fi
+fi
+if ! skipped PC-HOST-06; then
+    results="${OSCAP_RESULTS:-}" how="its results file"
+    if command -v oscap >/dev/null && [ "$(id -u)" -eq 0 ] && [ -z "$results" ]; then
+        os_id="$(. /etc/os-release 2>/dev/null; echo "${ID:-}${VERSION_ID//./}")"
+        ds="$(ls /usr/share/xml/scap/ssg/content/ssg-"$os_id"-ds.xml 2>/dev/null || ls /usr/share/xml/scap/ssg/content/ssg-"${os_id%%[0-9]*}"*-ds.xml 2>/dev/null | tail -n 1 || true)"
+        if [ -n "$ds" ]; then
+            profiles="$(oscap info --profiles "$ds" 2>/dev/null | cut -d: -f1)"
+            profile="${OSCAP_PROFILE:-$(printf '%s\n' "$profiles" | grep -m1 'cis_level1_server' || printf '%s\n' "$profiles" | grep -m1 'standard' || true)}"
+            if [ -n "$profile" ]; then
+                results="$(mktemp)" how="oscap xccdf eval, profile ${profile##*profile_}"
+                timeout "$SCAN_TIMEOUT" oscap xccdf eval --profile "$profile" --results "$results" "$ds" >/dev/null 2>&1 || true
+            fi
+        fi
+    fi
+    if [ -n "$results" ] && [ -r "$results" ] && grep -q '<result>' "$results" 2>/dev/null; then
+        of="$(grep -o '<result>fail</result>' "$results" | wc -l | tr -d ' ')"
+        op="$(grep -o '<result>pass</result>' "$results" | wc -l | tr -d ' ')"
+        check PC-HOST-06 medium "$([ "$of" -eq 0 ] && echo pass || echo warn)" "The host passes its OpenSCAP benchmark" \
+            "$op rules passed, $of failed ($how)" \
+            "Read the failed rules (oscap xccdf generate report) and fix them on the host." "CM-6 / CIS Benchmark"
+    elif command -v oscap >/dev/null; then
+        check PC-HOST-06 medium info "The host passes its OpenSCAP benchmark" \
+            "OpenSCAP is installed; no results (run the check as root with the SCAP Security Guide content, or give OSCAP_RESULTS)" \
+            "Run the security check as root to include OpenSCAP." "CM-6 / CIS Benchmark"
+    else
+        check PC-HOST-06 medium na "The host passes its OpenSCAP benchmark" "OpenSCAP is not installed" \
+            "Install OpenSCAP and the SCAP Security Guide for a host benchmark (optional)." "CM-6 / CIS Benchmark"
+    fi
+fi
+
 # --- Report ----------------------------------------------------------------------------------
 weight() { case "$1" in critical) echo 10 ;; high) echo 5 ;; medium) echo 3 ;; low) echo 1 ;; *) echo 0 ;; esac; }
-PASS=0 WARN=0 FAIL=0 INFO=0 NA=0 got=0 total=0
+PASS=0 WARN=0 FAIL=0 INFO=0 NA=0 EXCEPTED=0 got=0 total=0
 for i in "${!IDS[@]}"; do
     w="$(weight "${SEVERITIES[$i]}")"
     case "${RESULTS[$i]}" in
         pass) PASS=$((PASS + 1)); got=$((got + 2 * w)); total=$((total + 2 * w)) ;;
         warn) WARN=$((WARN + 1)); got=$((got + w)); total=$((total + 2 * w)) ;;
+        excepted) EXCEPTED=$((EXCEPTED + 1)); got=$((got + w)); total=$((total + 2 * w)) ;;
         fail) FAIL=$((FAIL + 1)); total=$((total + 2 * w)) ;;
         info) INFO=$((INFO + 1)) ;;
         *) NA=$((NA + 1)) ;;
@@ -330,24 +496,103 @@ xml() { printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/
 VERSION="$(env_get PLANTCRAFT_VERSION)"
 INSTALL_ID="$(env_get PLANTCRAFT_INSTALLATION_ID)"
 RAN_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+summary_json() {
+    printf '{"pass":%s,"warn":%s,"fail":%s,"excepted":%s,"info":%s,"na":%s}' "$PASS" "$WARN" "$FAIL" "$EXCEPTED" "$INFO" "$NA"
+}
+checks_json() { # the checks as a JSON list; an excepted or expired one carries its exception
+    local i x
+    printf '['
+    for i in "${!IDS[@]}"; do
+        [ "$i" -eq 0 ] || printf ','
+        x=""
+        if [ -n "${EXC_USED[${IDS[$i]}]:-}" ]; then
+            x="$(printf ',"exception":{"until":"%s","reason":"%s","state":"%s"}' "${EXC_UNTIL[${IDS[$i]}]}" "$(esc "${EXC_REASON[${IDS[$i]}]}")" "$(exception_state "${IDS[$i]}")")"
+        fi
+        printf '{"id":"%s","title":"%s","severity":"%s","result":"%s","evidence":"%s","remediation":"%s","refs":"%s"%s}' \
+            "${IDS[$i]}" "$(esc "${TITLES[$i]}")" "${SEVERITIES[$i]}" "${RESULTS[$i]}" "$(esc "${EVIDENCE[$i]}")" "$(esc "${FIXES[$i]}")" "$(esc "${REFS[$i]}")" "$x"
+    done
+    printf ']'
+}
 
 case "$FORMAT" in
     text)
         for i in "${!IDS[@]}"; do
-            printf '%-5s %-11s %-8s %s\n      %s\n' "$(printf '%s' "${RESULTS[$i]}" | tr a-z A-Z)" "${IDS[$i]}" "${SEVERITIES[$i]}" "${TITLES[$i]}" "${EVIDENCE[$i]}"
-            case "${RESULTS[$i]}" in warn | fail) [ -z "${FIXES[$i]}" ] || printf '      fix: %s\n' "${FIXES[$i]}" ;; esac
+            printf '%-8s %-11s %-8s %s\n         %s\n' "$(printf '%s' "${RESULTS[$i]}" | tr a-z A-Z)" "${IDS[$i]}" "${SEVERITIES[$i]}" "${TITLES[$i]}" "${EVIDENCE[$i]}"
+            case "${RESULTS[$i]}" in warn | fail | excepted) [ -z "${FIXES[$i]}" ] || printf '         fix: %s\n' "${FIXES[$i]}" ;; esac
         done
-        printf '\nScore %s/100: %s passed, %s warnings, %s failures, %s info, %s not applicable\n' "$SCORE" "$PASS" "$WARN" "$FAIL" "$INFO" "$NA"
+        printf '\nScore %s/100: %s passed, %s warnings, %s failures, %s excepted, %s info, %s not applicable\n' "$SCORE" "$PASS" "$WARN" "$FAIL" "$EXCEPTED" "$INFO" "$NA"
+        for id in "${EXC_IDS[@]}"; do
+            printf 'Exception %s until %s (%s): %s\n' "$id" "${EXC_UNTIL[$id]}" "$(exception_state "$id")" "${EXC_REASON[$id]}"
+        done
         ;;
     json)
         printf '{"tool":"plantcraft-security-check","version":"%s","installation_id":"%s","ran_at":"%s","score":%s,' "$(esc "$VERSION")" "$(esc "$INSTALL_ID")" "$RAN_AT" "$SCORE"
-        printf '"summary":{"pass":%s,"warn":%s,"fail":%s,"info":%s,"na":%s},"checks":[' "$PASS" "$WARN" "$FAIL" "$INFO" "$NA"
-        for i in "${!IDS[@]}"; do
-            [ "$i" -eq 0 ] || printf ','
-            printf '{"id":"%s","title":"%s","severity":"%s","result":"%s","evidence":"%s","remediation":"%s","refs":"%s"}' \
-                "${IDS[$i]}" "$(esc "${TITLES[$i]}")" "${SEVERITIES[$i]}" "${RESULTS[$i]}" "$(esc "${EVIDENCE[$i]}")" "$(esc "${FIXES[$i]}")" "$(esc "${REFS[$i]}")"
+        printf '"summary":%s,"checks":' "$(summary_json)"
+        checks_json
+        printf '}\n'
+        ;;
+    evidence)
+        # IEC 62443-4-2 CR 7.6 RE 1: the security settings in force, reported machine-readably,
+        # with what was checked against what requirement, the accepted risks and the check set.
+        printf '{"report":"plantcraft-security-evidence","format":1,'
+        printf '"standard":["IEC 62443-4-2 CR 7.6 RE 1 Machine-readable reporting of current security settings","IEC 62443-3-3 SR 7.6 Network and security configuration settings"],'
+        printf '"guide":"docs/security-guide.md",'
+        printf '"scope":{"host":"%s","install_folder":"%s","compose_project":"%s","version":"%s","installation_id":"%s"},' \
+            "$(esc "$(hostname 2>/dev/null || uname -n)")" "$(esc "$HERE")" "$(esc "$PROJECT")" "$(esc "$VERSION")" "$(esc "$INSTALL_ID")"
+        printf '"ran_at":"%s","check_set":{"script_sha256":"%s","catalog_sha256":"%s","integrity":"%s"},' \
+            "$RAN_AT" "$SCRIPT_SHA" "$CATALOG_SHA" "$(for i in "${!IDS[@]}"; do [ "${IDS[$i]}" = PC-INT-01 ] && esc "${RESULTS[$i]}: ${EVIDENCE[$i]}"; done)"
+        printf '"score":%s,"summary":%s,"settings":{' "$SCORE" "$(summary_json)"
+        # The .env settings in force, without anything that names a secret.
+        first=1
+        while IFS= read -r line; do
+            key="${line%%=*}"
+            [[ "$key" =~ ^[A-Z][A-Z0-9_]*$ ]] || continue
+            [[ "$key" =~ (SECRET|PASSWORD|PASSWD|TOKEN|KEY|CREDENTIAL|PRIVATE) ]] && continue
+            [ "$first" = 1 ] || printf ','
+            first=0
+            printf '"%s":"%s"' "$key" "$(esc "${line#*=}")"
+        done < <([ -f "$ENV_FILE" ] && grep -v '^ *#' "$ENV_FILE" | grep '=' |
+            awk -F= '{ if (!($1 in last)) order[n++] = $1; last[$1] = $0 } END { for (i = 0; i < n; i++) print last[order[i]] }')
+        printf '},"exceptions":['
+        first=1
+        for id in "${EXC_IDS[@]}"; do
+            [ "$first" = 1 ] || printf ','
+            first=0
+            printf '{"id":"%s","until":"%s","reason":"%s","state":"%s"}' "$id" "${EXC_UNTIL[$id]}" "$(esc "${EXC_REASON[$id]}")" "$(exception_state "$id")"
         done
-        printf ']}\n'
+        printf '],"requirements":['
+        # Each requirement (CR, SAR or SR of IEC 62443) with the checks that give its evidence.
+        declare -A REQ=()
+        for i in "${!IDS[@]}"; do
+            iec="${REFS[$i]%% / *}"
+            case "$iec" in CR\ * | SAR\ *) ;; *) continue ;; esac
+            kind="${iec%% *}"
+            for n in $(printf '%s' "${iec#* }" | tr ',' ' '); do REQ["$kind $n"]="${REQ["$kind $n"]:-} ${IDS[$i]}:${RESULTS[$i]}"; done
+        done
+        first=1
+        while IFS= read -r req; do
+            [ -n "$req" ] || continue
+            [ "$first" = 1 ] || printf ','
+            first=0
+            # The worst result decides: fail, then warn, excepted, pass; na when nothing ran.
+            worst=na list=""
+            for pair in ${REQ[$req]}; do
+                r="${pair#*:}"
+                case "$r:$worst" in
+                    fail:*) worst=fail ;;
+                    warn:fail) ;;
+                    warn:*) worst=warn ;;
+                    excepted:fail | excepted:warn) ;;
+                    excepted:*) worst=excepted ;;
+                    pass:na | info:na) worst=pass ;;
+                esac
+                list="$list${list:+,}\"${pair%%:*}\""
+            done
+            printf '{"requirement":"%s","result":"%s","checks":[%s]}' "$req" "$worst" "$list"
+        done < <(printf '%s\n' "${!REQ[@]}" | sort -V)
+        printf '],"checks":'
+        checks_json
+        printf '}\n'
         ;;
     junit)
         printf '<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="plantcraft-security-check" tests="%s" failures="%s" skipped="%s" timestamp="%s">\n' \
@@ -357,7 +602,7 @@ case "$FORMAT" in
             case "${RESULTS[$i]}" in
                 fail) printf '<failure message="%s">%s</failure>' "$(xml "${EVIDENCE[$i]}")" "$(xml "${FIXES[$i]}")" ;;
                 warn) printf '<system-out>WARN: %s</system-out>' "$(xml "${EVIDENCE[$i]}")" ;;
-                info | na) printf '<skipped message="%s"/>' "$(xml "${RESULTS[$i]}: ${EVIDENCE[$i]}")" ;;
+                info | na | excepted) printf '<skipped message="%s"/>' "$(xml "${RESULTS[$i]}: ${EVIDENCE[$i]}")" ;;
             esac
             printf '</testcase>\n'
         done

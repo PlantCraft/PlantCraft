@@ -11,7 +11,7 @@
 #   ./install.sh --export-backup NAME --passphrase-file FILE [--out FILE]
 #                                an encrypted copy of a backup to take off the server
 #                                (AES-256, key from the passphrase; backups hold every key)
-#   ./install.sh --security-check [--format json|junit|sarif]
+#   ./install.sh --security-check [--format json|junit|sarif|evidence]
 #                                the installed suite against its security promises (security-check.sh)
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
@@ -616,6 +616,12 @@ copy_files() {
     log "Copying the suite files to $PREFIX"
     cp "$BUNDLE_DIR/compose.yaml" "$BUNDLE_DIR/.env.example" "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/firewall.sh" "$PREFIX/"
     if [ -f "$BUNDLE_DIR/security-check.sh" ]; then cp "$BUNDLE_DIR/security-check.sh" "$PREFIX/"; chmod 0755 "$PREFIX/security-check.sh"; fi
+    # The security check's catalogue and the release's signed hashes, which it checks itself
+    # against (PC-INT-01). Named release-* so the folder is not taken for a bundle.
+    if [ -f "$BUNDLE_DIR/security-checks.tsv" ]; then cp "$BUNDLE_DIR/security-checks.tsv" "$PREFIX/"; fi
+    rm -f "$PREFIX/release-SHA256SUMS" "$PREFIX/release-SHA256SUMS.sig"
+    if [ -f "$BUNDLE_DIR/SHA256SUMS" ]; then cp "$BUNDLE_DIR/SHA256SUMS" "$PREFIX/release-SHA256SUMS"; fi
+    if [ -f "$BUNDLE_DIR/SHA256SUMS.sig" ]; then cp "$BUNDLE_DIR/SHA256SUMS.sig" "$PREFIX/release-SHA256SUMS.sig"; fi
     local file
     for file in bundle.env release.json RELEASE-NOTES.md; do
         if [ -f "$BUNDLE_DIR/$file" ]; then cp "$BUNDLE_DIR/$file" "$PREFIX/"; fi

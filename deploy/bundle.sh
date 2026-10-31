@@ -139,7 +139,7 @@ done
 log "Writing $OUT (linux/$ARCH)"
 rm -rf "$OUT" "$DIST/$NAME.tar.gz" "$DIST/$NAME.tar.gz.sha256" "$DIST/$NAME.tar.gz.sha256.sig"
 mkdir -p "$OUT/certs" "$OUT/docs" "$OUT/monitoring" "$OUT/sbom" "$OUT/trusted-publishers"
-cp "$ROOT/deploy/compose.yaml" "$ROOT/deploy/compose-worker.yaml" "$ROOT/deploy/install.sh" "$ROOT/deploy/preflight.sh" "$ROOT/deploy/installation.conf.example" "$ROOT/deploy/firewall.sh" "$ROOT/deploy/security-check.sh" "$OUT/"
+cp "$ROOT/deploy/compose.yaml" "$ROOT/deploy/compose-worker.yaml" "$ROOT/deploy/install.sh" "$ROOT/deploy/preflight.sh" "$ROOT/deploy/installation.conf.example" "$ROOT/deploy/firewall.sh" "$ROOT/deploy/security-check.sh" "$ROOT/deploy/security-checks.tsv" "$OUT/"
 cp "$ROOT/deploy/certs/README.md" "$OUT/certs/"
 cp "$ROOT/deploy/monitoring/zabbix/plantcraft_zabbix_agent.yaml" "$OUT/monitoring/" # docs/operations.md, section 4
 cp "$ROOT/LICENSE" "$ROOT/NOTICE" "$OUT/"
