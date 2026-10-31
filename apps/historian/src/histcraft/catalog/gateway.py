@@ -21,6 +21,8 @@ OPTIONS: dict[str, dict[str, Any]] = {
         "measurement": "sql",
         "time_column": "",
         "tag_columns": [],
+        # A LIMS: each row is a laboratory result (``histcraft.lab``), not a plant value.
+        "laboratory": False,
     },
 }
 MQTT_SCHEMES = ("tcp://", "ssl://", "ws://", "wss://", "mqtt://", "mqtts://")
@@ -218,12 +220,22 @@ def _sql(endpoint: str, options: dict[str, Any]) -> dict[str, Any]:
     for column in [time_column, *tag_columns]:
         if column and not _COLUMN.match(column):
             raise ValueError(t("Column {name} is not a plain column name.", name=column))
+    laboratory = bool(options.get("laboratory"))
+    if laboratory and (not time_column or len(tag_columns) != 1):
+        raise ValueError(
+            t(
+                "A laboratory source names its sampling time column and one tag column, the "
+                "analysis; the query gives value and, if it has them, status, received_at and "
+                "approved_at."
+            )
+        )
     return {
         "driver": driver,
         "query": query,
         "measurement": measurement,
         "time_column": time_column,
         "tag_columns": tag_columns,
+        "laboratory": laboratory,
     }
 
 

@@ -56,6 +56,8 @@ export function GatewayFields({ draft, setDraft, passwordFields }: { draft: Sour
     <label>{t("Time column (optional)")}<input className="pc-mono" value={String(draft.options.time_column ?? "")} onChange={(event) => set("time_column", event.target.value)} /><small>{t("Empty: the time the query ran.")}</small></label>
     <label>{t("Tag columns (optional)")}<input className="pc-mono" value={lines(draft.options.tag_columns).replace(/\n/g, ", ")} onChange={(event) => set("tag_columns", event.target.value.split(","))} /><small>{t("Comma separated, e.g. tag")}</small></label>
     <label>{t("Measurement")}<input className="pc-mono" value={String(draft.options.measurement ?? "sql")} onChange={(event) => set("measurement", event.target.value)} /></label>
+    <label className="check field-span"><input type="checkbox" checked={Boolean(draft.options.laboratory)} onChange={(event) => set("laboratory", event.target.checked)} />{t("Laboratory results (LIMS)")}
+      <small>{t("Each row is a result at laboratory:<analysis>: the time column is the sampling time, the tag column the analysis; columns value, and status, received_at and approved_at (ISO text) when it has them.")}</small></label>
     {passwordFields}
   </>;
 }
