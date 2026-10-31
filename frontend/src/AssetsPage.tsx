@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode, useRef } from "react";
 import { AlertTriangle, Bell, BellRing, ChevronDown, ChevronRight, CircleAlert, Download, ListTree, LoaderCircle, Pencil, Plus, Search, Table2, Upload, X } from "lucide-react";
 import { deskApi } from "./deskApi";
 import { ExportDialog } from "./AssetImport";
@@ -14,6 +14,7 @@ import { AssistantTitleButton, DataTable, FollowUp, PageTabs, type DataColumn, u
 import { ADMIN_ONLY, useCanEdit, useIsAdmin } from "./session";
 import type { SuiteAppCard } from "./types";
 import "./assets.css";
+import { useDialogKeys } from "./dialogKeys";
 
 /** The plant's asset tree: the apps of the suite read it through API v1. */
 
@@ -273,6 +274,8 @@ function TypeTable({ type, items, all, labels, icons }: { type: AssetType; items
 
 /** Create an asset under a parent, or rename and retype one. */
 function AssetForm({ kinds, types, assets, parentId, asset, onClose, onSaved }: { kinds: AssetKind[]; types: AssetType[]; assets?: Asset[]; parentId?: string; asset?: Asset; onClose: () => void; onSaved: (asset: Asset) => void }) {
+  const box = useRef<HTMLFormElement>(null);
+  useDialogKeys(box, onClose);
   const [name, setName] = useState(asset?.name ?? "");
   const [tag, setTag] = useState("");
   const [kind, setKind] = useState(asset?.kind ?? "equipment");
@@ -294,7 +297,7 @@ function AssetForm({ kinds, types, assets, parentId, asset, onClose, onSaved }: 
   const usual = kinds.filter((item) => allowed.has(item.kind) && item.kind !== "site");
   const rest = kinds.filter((item) => !allowed.has(item.kind) && item.kind !== "site");
   return <div className="modal-backdrop" onClick={onClose}>
-    <form className="modal" onClick={(event) => event.stopPropagation()} onSubmit={save} role="dialog" aria-label={asset ? t("Edit asset") : t("New asset")}>
+    <form ref={box} className="modal" onClick={(event) => event.stopPropagation()} onSubmit={save} role="dialog" aria-modal="true" aria-label={asset ? t("Edit asset") : t("New asset")}>
       <header><div><span className="eyebrow">{t("Assets")}</span><h2>{asset ? t("Edit asset") : t("New asset")}</h2><p>{asset ? t("Name, type and description. An asset edited by hand is no longer changed by the scenario file.") : t("A plant asset: unit, area, equipment or a type you created.")}</p></div><button type="button" className="icon-button" onClick={onClose} aria-label={t("Close")}><X /></button></header>
       {error && <div className="form-error">{error}</div>}
       <div className="form-grid">

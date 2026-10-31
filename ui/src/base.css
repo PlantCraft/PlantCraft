@@ -237,7 +237,7 @@ a.kpi-split-item:hover { background: var(--pc-surface-2); }
    pages to go to from here, at the bottom of a page; .pc-follow-up: an asset's actions. */
 .pc-journey { margin-bottom: var(--pc-space-6); }
 .pc-journey-head { margin-bottom: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.pc-journey-hide, .pc-journey-toggle { border: 0; background: transparent; color: var(--pc-text-3); font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-body, inherit); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 6px; border-radius: var(--pc-radius-md); }
+.pc-journey-hide, .pc-journey-toggle { border: 0; background: transparent; color: var(--pc-text-3); font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-sans); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 6px; border-radius: var(--pc-radius-md); }
 .pc-journey-hide:hover, .pc-journey-toggle:hover { color: var(--pc-text); background: var(--pc-surface-3); }
 .pc-journey-hide:focus-visible, .pc-journey-toggle:focus-visible { outline: 2px solid var(--pc-primary); outline-offset: 1px; }
 .pc-journey-folded { margin-bottom: var(--pc-space-4); }
@@ -361,7 +361,7 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 
 /* MultiSelect: a filter of several values in a dropdown (Results, Actions, lists). */
 .pc-multi { position: relative; display: inline-flex; }
-.pc-multi-button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 10px 6px 12px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text-2); font: 500 var(--pc-fs-sm)/1.2 var(--pc-font-body, inherit); cursor: pointer; }
+.pc-multi-button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 10px 6px 12px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text-2); font: 500 var(--pc-fs-sm)/1.2 var(--pc-font-sans); cursor: pointer; }
 .pc-multi-button:hover { border-color: var(--pc-border-strong, var(--pc-border)); }
 .pc-multi-label { color: var(--pc-text-3); font-weight: 600; }
 .pc-multi-value { color: var(--pc-text); font-weight: 600; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -369,13 +369,13 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 .pc-multi-active .pc-multi-value { color: var(--pc-primary-text); }
 .pc-multi-pop { position: absolute; top: calc(100% + 4px); left: 0; z-index: 40; min-width: 220px; padding: 6px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); box-shadow: 0 12px 32px color-mix(in srgb, var(--pc-shadow-color, #000) 16%, transparent); display: flex; flex-direction: column; gap: 1px; }
 .pc-multi-pop-left { left: auto; right: 0; }
-.pc-multi-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: var(--pc-radius-sm, 6px); background: transparent; color: var(--pc-text-2); font: 500 var(--pc-fs-sm)/1.3 var(--pc-font-body, inherit); text-align: left; cursor: pointer; }
+.pc-multi-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: var(--pc-radius-sm, 6px); background: transparent; color: var(--pc-text-2); font: 500 var(--pc-fs-sm)/1.3 var(--pc-font-sans); text-align: left; cursor: pointer; }
 .pc-multi-option:hover { background: var(--pc-surface-2); }
-.pc-multi-check { width: 16px; height: 16px; flex: none; display: grid; place-items: center; border: 1px solid var(--pc-border); border-radius: 4px; color: var(--pc-on-primary, #fff); }
+.pc-multi-check { width: 16px; height: 16px; flex: none; display: grid; place-items: center; border: 1px solid var(--pc-border); border-radius: 4px; color: var(--pc-on-accent); }
 .pc-multi-option.on .pc-multi-check { background: var(--pc-primary); border-color: var(--pc-primary); }
 .pc-multi-text { flex: 1; }
 .pc-multi-count { color: var(--pc-text-3); font-variant-numeric: tabular-nums; }
-.pc-multi-clear { margin-top: 4px; padding: 7px 8px; border: 0; border-top: 1px solid var(--pc-border-subtle); background: transparent; color: var(--pc-primary-text); font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-body, inherit); text-align: left; cursor: pointer; }
+.pc-multi-clear { margin-top: 4px; padding: 7px 8px; border: 0; border-top: 1px solid var(--pc-border-subtle); background: transparent; color: var(--pc-primary-text); font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-sans); text-align: left; cursor: pointer; }
 
 /* The assistant as the content of a page (an app's Assistant page). */
 .pc-assistant-inline { width: 100%; height: min(72vh, 760px); min-height: 460px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); box-shadow: none; animation: none; }
@@ -617,7 +617,7 @@ a.pc-wg-square:hover, a.pc-wg-square:focus-visible, span.pc-wg-square:hover, spa
 /* The assistant's mark (AssistantDrawer.tsx): a rounded box with a spark, wherever it is offered. */
 .pc-assistant-mark { flex: none; display: block; }
 .pc-assistant-mark-box { fill: var(--pc-primary); }
-.pc-assistant-mark-spark { fill: var(--pc-on-primary, #fff); }
+.pc-assistant-mark-spark { fill: var(--pc-on-accent); }
 /* Beside an object: only the mark, quiet until hovered. */
 .pc-ask-assistant { display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 8px; background: transparent; cursor: pointer; opacity: .72; vertical-align: middle; transition: opacity .12s ease, transform .12s ease, background .12s ease; }
 .pc-ask-assistant:hover, .pc-ask-assistant:focus-visible { opacity: 1; background: var(--pc-primary-soft); transform: scale(1.06); }
@@ -639,7 +639,7 @@ a.pc-wg-square:hover, a.pc-wg-square:focus-visible, span.pc-wg-square:hover, spa
 .pc-drawer-head > div { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .pc-drawer-head strong { color: var(--pc-text); font: 700 var(--pc-fs-base)/1.2 var(--pc-font-display); }
 .pc-drawer-head small { color: var(--pc-text-3); font-size: var(--pc-fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pc-drawer-keep { border: 1px solid var(--pc-border); background: var(--pc-surface); color: var(--pc-text-2); border-radius: var(--pc-radius-md); padding: 5px 9px; display: inline-flex; align-items: center; gap: 5px; font: 600 var(--pc-fs-xs)/1.2 var(--pc-font-body, inherit); cursor: pointer; white-space: nowrap; }
+.pc-drawer-keep { border: 1px solid var(--pc-border); background: var(--pc-surface); color: var(--pc-text-2); border-radius: var(--pc-radius-md); padding: 5px 9px; display: inline-flex; align-items: center; gap: 5px; font: 600 var(--pc-fs-xs)/1.2 var(--pc-font-sans); cursor: pointer; white-space: nowrap; }
 .pc-drawer-keep:hover { border-color: var(--pc-primary-border); color: var(--pc-primary-text); }
 /* Messages over any app (MessagesDrawer.tsx): PlantCraft's Messages page in the panel, wider than the assistant's. */
 a.pc-drawer-keep { text-decoration: none; }
@@ -647,7 +647,7 @@ a.pc-drawer-keep { text-decoration: none; }
 .pc-drawer-close { border: 0; background: transparent; color: var(--pc-text-3); padding: 6px; border-radius: var(--pc-radius-md); cursor: pointer; display: grid; place-items: center; }
 .pc-drawer-close:hover { background: var(--pc-surface-3); color: var(--pc-text); }
 .pc-drawer-context { padding: 6px 14px; border-bottom: 1px solid var(--pc-border-subtle); background: var(--pc-surface-2); font-size: var(--pc-fs-xs); }
-.pc-drawer-context > button, .pc-drawer-steps { border: 0; background: transparent; padding: 3px 0; display: inline-flex; align-items: center; gap: 4px; color: var(--pc-text-3); font: 600 var(--pc-fs-xs)/1.3 var(--pc-font-body, inherit); cursor: pointer; }
+.pc-drawer-context > button, .pc-drawer-steps { border: 0; background: transparent; padding: 3px 0; display: inline-flex; align-items: center; gap: 4px; color: var(--pc-text-3); font: 600 var(--pc-fs-xs)/1.3 var(--pc-font-sans); cursor: pointer; }
 .pc-drawer-context svg.open, .pc-drawer-steps svg.open { transform: rotate(90deg); }
 .pc-drawer-context dl { margin: 6px 0 4px; display: grid; gap: 6px; max-height: 30vh; overflow-y: auto; }
 .pc-drawer-context dt { color: var(--pc-text-3); font-weight: 700; }
@@ -666,7 +666,7 @@ a.pc-drawer-keep { text-decoration: none; }
 .pc-drawer-task { flex: 0 0 100%; justify-content: space-between; display: flex; align-items: center; gap: 4px; padding: 2px 4px 2px 9px; border-radius: var(--pc-radius-md); color: var(--pc-primary-text); background: var(--pc-primary-soft); font-size: var(--pc-fs-xs); font-weight: 600; }
 .pc-drawer-task button { width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; color: inherit; background: transparent; cursor: pointer; }
 .pc-drawer-suggestions { display: flex; flex-wrap: wrap; gap: 6px; }
-.pc-drawer-suggestions button { border: 1px solid var(--pc-primary-border); background: var(--pc-primary-soft); color: var(--pc-primary-text); border-radius: 999px; padding: 6px 11px; font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-body, inherit); cursor: pointer; text-align: left; }
+.pc-drawer-suggestions button { border: 1px solid var(--pc-primary-border); background: var(--pc-primary-soft); color: var(--pc-primary-text); border-radius: 999px; padding: 6px 11px; font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-sans); cursor: pointer; text-align: left; }
 .pc-drawer-off { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; border: 1px dashed var(--pc-border); border-radius: var(--pc-radius-lg); color: var(--pc-text-2); font-size: var(--pc-fs-sm); }
 .pc-drawer-off p { margin: 0; line-height: 1.5; }
 .pc-drawer-off small { color: var(--pc-text-3); }
@@ -677,7 +677,7 @@ a.pc-drawer-keep { text-decoration: none; }
 .pc-drawer-step-list { margin: 0; padding: 0 0 0 4px; list-style: none; display: grid; gap: 3px; font-size: var(--pc-fs-xs); color: var(--pc-text-3); }
 .pc-drawer-step-list li { display: flex; gap: 6px; align-items: flex-start; }
 .pc-drawer-step-list li svg { flex: none; margin-top: 2px; }
-.pc-drawer-step-list li.error { color: var(--pc-danger-text, var(--pc-text-2)); }
+.pc-drawer-step-list li.error { color: var(--pc-problem-text); }
 .pc-drawer-markdown { line-height: 1.55; overflow-wrap: anywhere; }
 .pc-drawer-markdown > :first-child { margin-top: 0; }
 .pc-drawer-markdown > :last-child { margin-bottom: 0; }
@@ -697,7 +697,7 @@ a.pc-drawer-keep { text-decoration: none; }
 .pc-answer-chart-tools a { color: var(--pc-primary-text, var(--pc-primary)); }
 .pc-answer-chart-full { padding: 16px 20px; overflow: auto; border-radius: 0; }
 .pc-answer-chart-wait { min-height: 120px; display: grid; place-items: center; color: var(--pc-text-3); }
-.pc-answer-chart-errors { margin: 4px 0 0; color: var(--pc-danger-text, var(--pc-text-2)); font-size: var(--pc-fs-xs); }
+.pc-answer-chart-errors { margin: 4px 0 0; color: var(--pc-problem-text); font-size: var(--pc-fs-xs); }
 .pc-answer-chart-note { margin: 4px 0 0; }
 .pc-answer-progress { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
 .pc-answer-progress small { font-variant-numeric: tabular-nums; }
@@ -710,12 +710,12 @@ a.pc-drawer-keep { text-decoration: none; }
 /* The text as it is written: a caret after its last line. */
 .pc-answer-writing > :last-child::after { content: ""; display: inline-block; width: .5em; height: 1em; margin-left: 2px; vertical-align: -2px; background: currentColor; opacity: .5; animation: pc-answer-caret 1s steps(2) infinite; }
 @keyframes pc-answer-caret { 50% { opacity: 0; } }
-.pc-answer-retry { margin-left: auto; flex: none; min-height: 28px; padding: 0 10px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text); font: 600 var(--pc-fs-xs)/1 var(--pc-font-body, inherit); cursor: pointer; }
+.pc-answer-retry { margin-left: auto; flex: none; min-height: 28px; padding: 0 10px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text); font: 600 var(--pc-fs-xs)/1 var(--pc-font-sans); cursor: pointer; }
 /* A proposed object's card (a "create" work): its fields, editable, Create and Put aside. */
 .pc-proposal { margin: 4px 0 0; padding: 10px 12px; display: grid; gap: 8px; border: 1px solid var(--pc-primary-border); border-radius: var(--pc-radius-lg); background: var(--pc-surface); color: var(--pc-text); }
 .pc-proposal header { display: flex; align-items: center; gap: 6px; font-size: var(--pc-fs-sm); }
 .pc-proposal-field { display: grid; gap: 3px; font-size: var(--pc-fs-xs); color: var(--pc-text-2); }
-.pc-proposal-field b { color: var(--pc-danger-text, var(--pc-text-2)); }
+.pc-proposal-field b { color: var(--pc-problem-text); }
 .pc-proposal-field input, .pc-proposal-field select, .pc-proposal-field textarea { width: 100%; min-height: 32px; padding: 5px 8px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text); font: inherit; font-size: var(--pc-fs-sm); }
 .pc-proposal-field textarea { resize: vertical; }
 .pc-proposal-field small, .pc-proposal-note, .pc-proposal-missing { color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
@@ -725,17 +725,17 @@ a.pc-drawer-keep { text-decoration: none; }
 .pc-proposal dt { color: var(--pc-text-3); }
 .pc-proposal dd { margin: 0; }
 .pc-proposal footer { display: flex; flex-wrap: wrap; gap: 8px; }
-.pc-proposal footer button { min-height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text); font: 600 var(--pc-fs-sm)/1 var(--pc-font-body, inherit); cursor: pointer; }
-.pc-proposal footer .pc-proposal-create { border-color: var(--pc-primary); background: var(--pc-primary); color: var(--pc-on-primary, #fff); }
+.pc-proposal footer button { min-height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text); font: 600 var(--pc-fs-sm)/1 var(--pc-font-sans); cursor: pointer; }
+.pc-proposal footer .pc-proposal-create { border-color: var(--pc-primary); background: var(--pc-primary); color: var(--pc-on-accent); }
 .pc-proposal footer button:disabled { opacity: .5; cursor: default; }
 .pc-proposal-done, .pc-proposal-aside { display: flex; align-items: center; gap: 8px; font-size: var(--pc-fs-sm); }
 .pc-proposal-done a { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: var(--pc-primary-text); }
 .pc-proposal-aside { border-style: dashed; border-color: var(--pc-border); color: var(--pc-text-3); }
 .pc-drawer-wait { margin: 0; display: flex; align-items: center; gap: 6px; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
-.pc-drawer-failed { margin: 0; display: flex; align-items: flex-start; gap: 6px; color: var(--pc-danger-text, var(--pc-text-2)); font-size: var(--pc-fs-sm); }
+.pc-drawer-failed { margin: 0; display: flex; align-items: flex-start; gap: 6px; color: var(--pc-problem-text); font-size: var(--pc-fs-sm); }
 .pc-drawer-composer { padding: 10px 12px; border-top: 1px solid var(--pc-border-subtle); display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
 .pc-drawer-composer textarea { flex: 1 1 180px; resize: none; min-height: 40px; max-height: 160px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); padding: 8px 10px; font: inherit; font-size: var(--pc-fs-sm); background: var(--pc-surface); color: var(--pc-text); }
-.pc-drawer-send { width: 36px; height: 36px; border: 0; border-radius: 10px; display: grid; place-items: center; background: var(--pc-primary); color: var(--pc-on-primary, #fff); cursor: pointer; }
+.pc-drawer-send { width: 36px; height: 36px; border: 0; border-radius: 10px; display: grid; place-items: center; background: var(--pc-primary); color: var(--pc-on-accent); cursor: pointer; }
 .pc-drawer-send:disabled { opacity: .45; cursor: default; }
 .pc-drawer-head > svg { flex: none; color: var(--pc-text-2); }
 .pc-drawer-earlier { margin-top: 18px; }
@@ -747,7 +747,7 @@ a.pc-drawer-keep { text-decoration: none; }
 .pc-drawer-earlier strong { font-size: var(--pc-fs-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pc-drawer-earlier small { color: var(--pc-text-3); font-size: var(--pc-fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pc-drawer-all { display: inline-block; margin: 8px 10px 0; color: var(--pc-primary-text); font-size: var(--pc-fs-xs); font-weight: 600; }
-.pc-drawer-back { align-self: flex-start; border: 0; background: transparent; padding: 2px 0; display: inline-flex; align-items: center; gap: 4px; color: var(--pc-text-3); font: 600 var(--pc-fs-xs)/1.3 var(--pc-font-body, inherit); cursor: pointer; }
+.pc-drawer-back { align-self: flex-start; border: 0; background: transparent; padding: 2px 0; display: inline-flex; align-items: center; gap: 4px; color: var(--pc-text-3); font: 600 var(--pc-fs-xs)/1.3 var(--pc-font-sans); cursor: pointer; }
 .pc-drawer-back:hover { color: var(--pc-text); }
 .pc-queue-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .pc-queue-app { width: 100%; padding: 10px 12px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: transparent; display: flex; align-items: flex-start; gap: 12px; color: var(--pc-text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
@@ -806,7 +806,7 @@ button.pc-version:hover { border-color: color-mix(in srgb, var(--pc-primary) 35%
 .pc-explore-item span { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .pc-explore-item small { color: var(--pc-text-3); text-align: right; overflow-wrap: anywhere; }
 .pc-explore-empty, .pc-explore-error { margin: 0; font-size: var(--pc-fs-xs); color: var(--pc-text-3); padding: 4px 8px; }
-.pc-explore-error { color: var(--pc-danger-text, var(--pc-text)); }
+.pc-explore-error { color: var(--pc-problem-text); }
 .pc-explore-chosen { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--pc-border); padding-top: 8px; }
 .pc-explore-chosen div { display: flex; flex-direction: column; min-width: 0; }
 .pc-explore-chosen small { color: var(--pc-text-3); overflow-wrap: anywhere; }
@@ -814,12 +814,12 @@ button.pc-version:hover { border-color: color-mix(in srgb, var(--pc-primary) 35%
 /* Folders (Folders.tsx): a list's folders on the left, its objects on the right. */
 .pc-folder-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: start; }
 .pc-folders { position: sticky; top: 16px; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
-.pc-folder { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 9px 10px; border: 0; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-2); font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-body, inherit); text-align: left; cursor: pointer; }
+.pc-folder { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 9px 10px; border: 0; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-2); font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-sans); text-align: left; cursor: pointer; }
 .pc-folder:hover { background: var(--pc-surface-2); }
 .pc-folder.active { background: var(--pc-primary-soft); color: var(--pc-primary-text); }
 .pc-folder small { color: var(--pc-text-3); }
 .pc-folder-heading { margin: 12px 10px 4px; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.pc-folder-new { display: inline-flex; align-items: center; gap: 6px; margin: 6px 10px 4px; padding: 0; border: 0; background: none; color: var(--pc-primary-text); font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-body, inherit); cursor: pointer; }
+.pc-folder-new { display: inline-flex; align-items: center; gap: 6px; margin: 6px 10px 4px; padding: 0; border: 0; background: none; color: var(--pc-primary-text); font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-sans); cursor: pointer; }
 .pc-folder-new:hover { text-decoration: underline; }
 .pc-folder-place { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; color: var(--pc-text-2); font-size: var(--pc-fs-sm); }
 .pc-folder-field { max-width: 360px; }
@@ -881,7 +881,7 @@ button.pc-version:hover { border-color: color-mix(in srgb, var(--pc-primary) 35%
 .pc-job-top a:hover strong { text-decoration: underline; }
 .pc-job-status { flex: none; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-variant-numeric: tabular-nums; }
 .pc-job-status-failed { color: var(--pc-problem-text); font-weight: 650; }
-.pc-job-status-done { color: var(--pc-success-text, var(--pc-text-2)); }
+.pc-job-status-done { color: var(--pc-good-text); }
 .pc-job-main small { color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
 .pc-job-bar { height: 5px; border-radius: 3px; background: var(--pc-border-subtle); overflow: hidden; }
 .pc-job-bar i { display: block; height: 100%; background: var(--pc-primary, var(--pc-chrome-accent)); transition: width var(--pc-duration-slow, .3s) ease; }

@@ -52,7 +52,6 @@ export function SupportPage({ people }: { people: SupportPerson[] }) {
   ];
   return <div className="apps-page ops-support">
     <Heading title={t("Support access")} actions={admin ? <button type="button" className="button button-primary" onClick={() => setGranting({ username: "", request: "" })}><Plus size={15} /> {t("Give support access")}</button> : undefined} />
-    <p className="muted ops-intro">{t("Someone called for a problem opens Operations for a few hours: the suite's status, load and logs, and every request. Nothing else they may do changes. The access ends by itself, and both its start and its end are in the audit log.")}</p>
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
     {!grants && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
     {grants && <DataTable rows={grants} columns={columns} rowKey={(item) => String(item.grant_id)} label={t("Support access")} initialSort={{ key: "state", descending: false }}

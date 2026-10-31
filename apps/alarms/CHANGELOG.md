@@ -24,6 +24,9 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- A new rule no longer asks the server for its sentence before its first condition is complete
+  (it answered 422 in the browser's console); an alarm's Acknowledge and Shelve are as tall as the
+  other buttons beside its title.
 - Colours and shadows named after tokens that do not exist use the suite's tokens, so they follow
   the dark theme.
 

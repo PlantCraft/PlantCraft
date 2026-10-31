@@ -126,10 +126,10 @@ def test_every_colour_and_size_token_a_screen_uses_exists():
         defined |= set(re.findall(r"[\"'](--pc-[a-z0-9-]+)[\"']", text))
     missing = [
         f"{path.relative_to(ROOT)}:{number} {name}"
-        for path in _styles("frontend/src", "apps/*/frontend/src")
+        for path in every
         if ".test." not in path.name
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
-        for name in re.findall(r"var\((--pc-[a-z0-9-]+[a-z0-9])", line)
+        for name in re.findall(r"var\((--pc-[a-z0-9-]+[a-z0-9])(?![-$\w{])", line)
         if name not in defined
     ]
     assert not missing, "tokens that do not exist: " + ", ".join(missing)

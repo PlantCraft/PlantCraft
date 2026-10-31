@@ -30,6 +30,7 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- A report's event tables scroll inside their section on a phone instead of pushing the page sideways.
 - Colours and shadows named after tokens that do not exist use the suite's tokens, so they follow
   the dark theme.
 - **A process display opens in under a second.** The demo's Riverbend plant has 289 bindings,

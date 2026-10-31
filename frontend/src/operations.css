@@ -71,7 +71,6 @@
 }
 
 /* Requests and Partners */
-.ops-intro { margin: -4px 0 var(--pc-space-3); max-width: 80ch; }
 .ops-request-title { display: block; font-weight: 600; }
 .ops-waiting { color: var(--pc-attention-text); font-weight: 700; }
 .ops-ask { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pc-space-3); }

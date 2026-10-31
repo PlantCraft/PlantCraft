@@ -83,7 +83,6 @@ export function PartnersPage() {
       <label className="ops-month"><span>{t("Month")}</span><input type="month" value={month} onChange={(event) => event.target.value && setMonth(event.target.value)} /></label>
       <button type="button" className="button button-secondary" disabled={!report?.entries.length} onClick={() => report && saveFile(`plantcraft-hours-${report.month}.csv`, hoursCsv(report.entries), "text/csv")}><Download size={15} /> {t("Export hours")}</button>
     </>} />
-    <p className="muted ops-intro">{t("The companies working at the plant: who they are, until when they have access, who sponsors them here, and the time they logged on requests.")}</p>
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
     {!partners && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
     {partners && !companies.length && <section className="panel ops-empty"><Building2 size={22} /><div><strong>{t("No company yet")}</strong><p className="muted">{t("A company is a group of kind Company in People › Groups: its coordinator on its side, its teams as groups under it, the last day of its access and its sponsor at the plant.")}</p>{admin && <Go to="/users/groups">{t("Open Groups")}</Go>}</div></section>}

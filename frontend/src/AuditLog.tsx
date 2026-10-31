@@ -57,11 +57,13 @@ export function actionLabel(action: string): string {
   return words[action] ?? action;
 }
 
-/** The detail in one line: "address 10.0.0.5 · method ldap", or the JSON. */
+/** The detail in one line: "address 10.0.0.5 · method ldap", or the JSON. Empty fields
+ * (null, "") are left out: the drawer shows the whole record. */
 export function detailText(detail: unknown): string {
   if (detail == null) return "";
   if (typeof detail !== "object" || Array.isArray(detail)) return JSON.stringify(detail);
   return Object.entries(detail as Record<string, unknown>)
+    .filter(([, value]) => value !== null && value !== undefined && value !== "")
     .map(([key, value]) => `${key} ${typeof value === "string" ? value : JSON.stringify(value)}`)
     .join(" · ");
 }

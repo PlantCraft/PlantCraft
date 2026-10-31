@@ -348,6 +348,8 @@ body.tc-screen .pcs-content, body.tc-screen .content { max-width: none; padding:
 .tc-report-count { display: grid; gap: 1px; min-width: 110px; padding: 8px 12px; border-radius: var(--pc-radius-md); background: var(--pc-surface-2); }
 .tc-report-count b { font-size: var(--pc-fs-xl, 20px); line-height: 1.1; }
 .tc-report-count small { color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
+/* A report's table scrolls inside its section on a narrow screen, never the page. */
+.tc-report-events, .tc-report-scroll { max-width: 100%; overflow-x: auto; }
 .tc-report-table { width: 100%; border-collapse: collapse; font-size: var(--pc-fs-sm); }
 .tc-report-table th { text-align: left; font-size: var(--pc-fs-xs); font-weight: 600; color: var(--pc-text-3); padding: 6px 8px; border-bottom: 1px solid var(--pc-border); }
 .tc-report-table td { padding: 6px 8px; border-bottom: 1px solid var(--pc-border-subtle); vertical-align: top; }

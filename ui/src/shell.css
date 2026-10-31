@@ -334,13 +334,13 @@
 .pcs-frame-icon svg { width: 18px; height: 18px; }
 
 /* A critical or high notification over any app (UrgentNotice.tsx) */
-.pcs-urgent { align-items: flex-start; bottom: max(84px, calc(env(safe-area-inset-bottom, 0px) + 84px)); border-left: 4px solid var(--pc-warning, var(--pc-chrome-accent)); }
-.pcs-urgent-critical { border-left-color: var(--pc-danger, var(--pc-chrome-accent)); }
+.pcs-urgent { align-items: flex-start; bottom: max(84px, calc(env(safe-area-inset-bottom, 0px) + 84px)); border-left: 4px solid var(--pc-attention-fill); }
+.pcs-urgent-critical { border-left-color: var(--pc-chrome-problem); }
 .pcs-urgent-main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
 .pcs-urgent-main strong { overflow-wrap: anywhere; }
 .pcs-urgent-main small { opacity: .8; }
 .pcs-urgent-ok { color: var(--pc-chrome-accent-text); }
-.pcs-urgent-error { color: var(--pc-danger, var(--pc-chrome-text)); opacity: 1 !important; }
+.pcs-urgent-error { color: var(--pc-chrome-problem); opacity: 1 !important; }
 .pcs-urgent-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .pcs-toast .pcs-urgent-button { margin: 0; padding: 4px 10px; border-radius: var(--pc-radius-sm, 6px); border: 1px solid color-mix(in srgb, var(--pc-chrome-text) 25%, transparent); background: transparent; color: var(--pc-chrome-text); font: inherit; font-size: var(--pc-fs-sm); font-weight: 600; cursor: pointer; text-decoration: none; }
 .pcs-toast .pcs-urgent-primary { border-color: var(--pc-chrome-accent); background: var(--pc-chrome-accent); color: var(--pc-on-accent); }

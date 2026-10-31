@@ -19,6 +19,17 @@ export const NO_WHERE = (): Where => ({ assets: [], under: [], types: [], execut
 
 export const NO_VALUE = (): SimpleValue => ({ signal: "", role: "pv", name: "", unit: "" });
 
+/** Whether every condition is filled in as the server wants it (``SimpleCondition._complete``):
+ * until then there is no sentence to ask for, and asking would only answer 422. */
+export function simpleComplete(simple: SimpleLogic): boolean {
+  return simple.conditions.every((item) => {
+    if (item.input === "event") return item.event !== null;
+    if (item.value === null) return false;
+    if (item.op === "between" || item.op === "outside") return item.limit !== null && item.high !== null && item.high >= item.limit;
+    return item.op === "changed" || item.op === "unchanged" || item.limit !== null;
+  });
+}
+
 export function valueCondition(value: SimpleValue = NO_VALUE()): SimpleCondition {
   return {
     input: "value", value, op: ">", limit: null, high: null, deadband: 0,

@@ -245,6 +245,15 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Interface pass, second round** (every page clicked like a person, light, dark and phone):
+  the platform's windows (new action, calendar event, messages, people, asset forms) close with
+  Escape, keep Tab inside and give focus back, like the ui's `Dialog`; Installed apps is a section
+  over the suite's table instead of a table inside a panel; Operations' Partners, Requests and
+  Support lose the line of purpose under their title (rule 3); the audit log's one-line detail
+  leaves out empty fields (no more "company null"); an action's checklist wraps on a phone.
+  `@plantcraft/ui`: colours named after tokens that do not exist (`--pc-danger-text`,
+  `--pc-success-text`, `--pc-on-primary`, `--pc-warning`, `--pc-danger`, `--pc-font-body`)
+  use the real ones, so errors read red again in the assistant and the urgent notice.
 - **Interface pass.** Asking before a delete, a revoke or an uninstall is the suite's dialog everywhere
   (16 places still used the browser's `window.confirm`); 13 page titles of the platform drawn by
   hand use `@plantcraft/ui`'s `Heading`, so they get the assistant button like every other

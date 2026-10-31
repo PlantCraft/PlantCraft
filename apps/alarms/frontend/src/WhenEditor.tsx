@@ -14,7 +14,7 @@ import { api } from "./api";
 import { t } from "./i18n";
 import {
   canBeRelative, eventCondition, inputLabel, MAX_CONDITIONS, overAssets, pythonDiagram, pythonForm, pythonFromSimple, pythonTemplate,
-  valueCondition, valueOfPick, valueWords, type PythonForm,
+  simpleComplete, valueCondition, valueOfPick, valueWords, type PythonForm,
 } from "./rules";
 import type { Editor, Op, RuleDraft, Severity, SimpleCondition, SimpleLogic, SimpleValue, Where } from "./types";
 import { ErrorBox, message } from "./ui";
@@ -123,6 +123,7 @@ function ConditionRow({ condition, where, onChange, onRemove, index }: { conditi
 function SimpleForm({ simple, where, onChange }: { simple: SimpleLogic; where: Where; onChange: (simple: SimpleLogic) => void }) {
   const [sentence, setSentence] = useState("");
   useEffect(() => {
+    if (!simpleComplete(simple)) { setSentence(""); return; }
     const timer = window.setTimeout(() => { api.simple(simple).then((found) => setSentence(found.sentence)).catch(() => setSentence("")); }, 300);
     return () => window.clearTimeout(timer);
   }, [simple]);

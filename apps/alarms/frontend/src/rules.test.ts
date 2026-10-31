@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ExplorePick } from "@plantcraft/ui";
-import { EMPTY_RULE, inputLabel, pythonDiagram, pythonForm, pythonFromSimple, relativeSignal, scheduleRule, valueCondition, valueOfPick } from "./rules";
+import { EMPTY_RULE, inputLabel, pythonDiagram, pythonForm, pythonFromSimple, relativeSignal, scheduleRule, simpleComplete, valueCondition, valueOfPick } from "./rules";
 import { scopeOf } from "./RuleEditor";
 
 const step = (id: string, name = id) => ({ id, name });
@@ -50,5 +50,15 @@ describe("the Python form", () => {
   it("names inputs as Python can read them", () => {
     expect(inputLabel("2nd flow", [])).toBe("v_2nd_flow");
     expect(inputLabel("pv", ["pv"])).toBe("pv_2");
+  });
+});
+
+describe("simpleComplete", () => {
+  it("waits for a limit before asking the server for the sentence", () => {
+    const condition = valueCondition();
+    expect(simpleComplete({ conditions: [condition], combine: "and", clear_after_seconds: 0 })).toBe(false);
+    expect(simpleComplete({ conditions: [{ ...condition, limit: 80 }], combine: "and", clear_after_seconds: 0 })).toBe(true);
+    expect(simpleComplete({ conditions: [{ ...condition, op: "between", limit: 10, high: 5 }], combine: "and", clear_after_seconds: 0 })).toBe(false);
+    expect(simpleComplete({ conditions: [{ ...condition, op: "changed" }], combine: "and", clear_after_seconds: 0 })).toBe(true);
   });
 });

@@ -335,6 +335,12 @@
 .act-item-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 10px; font-size: var(--pc-fs-sm); }
 .act-item-meta select, .act-item-meta input[type="date"] { height: 30px; padding: 0 8px; font-size: var(--pc-fs-sm); }
 .act-item-meta small { color: var(--pc-text-4); }
+/* On a phone the person and date go under the item's text, which keeps the width. */
+@media (max-width: 640px) {
+  .act-checklist li { flex-wrap: wrap; }
+  .act-item-text { flex: 1 1 calc(100% - 30px); }
+  .act-item-meta { flex: 1 1 100%; justify-content: flex-start; padding-left: 27px; }
+}
 .act-item-add { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
 .act-item-add input:first-child { flex: 1 1 240px; min-width: 0; }
 .act-item-add select, .act-item-add input { height: 36px; }
