@@ -160,6 +160,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
   unit: "Unit", min: "Min", max: "Max", decimals: "Decimals", display_name: "Display name", no_value: "No value",
   color_mode: "Colour scheme", color: "Colour", thresholds: "Thresholds", mappings: "Value mappings",
   draw: "Draw as", interpolation: "Line interpolation", line_width: "Line width", dash: "Line style", fill: "Fill opacity", axis: "Axis placement",
+  normal_low: "Normal range from", normal_high: "Normal range to",
 };
 const STYLE_KEYS: FieldKey[] = ["draw", "interpolation", "line_width", "dash", "fill", "axis"];
 
@@ -170,6 +171,8 @@ function FieldInput({ name, config, onChange, lines }: { name: FieldKey; config:
   switch (name) {
     case "unit": case "display_name": case "no_value":
       return <input aria-label={label} maxLength={name === "display_name" ? 80 : 20} value={(config[name] as string | null) ?? ""} placeholder={name === "unit" ? t("From the signal") : name === "no_value" ? "—" : t("From the signal")} onChange={(event) => set(event.target.value)} />;
+    case "normal_low": case "normal_high":
+      return <NumberInput label={label} value={config[name] as number | null} onChange={(value) => set(value)} placeholder={t("From the thresholds")} />;
     case "min": case "max": case "fill": case "line_width":
       return <NumberInput label={label} value={config[name] as number | null} onChange={(value) => set(value)} placeholder={name === "min" || name === "max" ? t("From the signal's range") : t("Automatic")} />;
     case "decimals":
@@ -467,6 +470,7 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
               <Opt label={t("Names")}><Toggle label={t("Show each signal's name")} checked={options.show_name} onChange={(value) => setOption("show_name", value)} /></Opt>
             </Group>}
             {kind === "gauge" && <Group title={t("Gauge")}>
+              <Opt label={t("Style")} words="isa-101 isa101 analog indicator bar dial" hint={t("Analog indicator (ISA-101): a grey bar with the normal range, the LL, L, H and HH limits from the thresholds and the setpoint (a signal of role SP of the same asset); the pointer takes a colour only out of normal.")}><Select value={options.gauge_style} onChange={(value) => setOption("gauge_style", value)} label={t("Style")} options={[["dial", t("Dial")], ["analog", t("Analog indicator (ISA-101)")]]} /></Opt>
               <Opt label={t("Layout")} words="orientation"><Select value={options.orientation} onChange={(value) => setOption("orientation", value)} label={t("Layout")} options={[["auto", t("Automatic")], ["horizontal", t("Side by side")], ["vertical", t("One under the other")]]} /></Opt>
               <Opt label={t("Threshold bands")} words="markers"><Toggle label={t("Colour the dial's threshold bands")} checked={options.threshold_markers} onChange={(value) => setOption("threshold_markers", value)} /></Opt>
               <Opt label={t("Threshold labels")}><Toggle label={t("Write each threshold's value")} checked={options.threshold_labels} onChange={(value) => setOption("threshold_labels", value)} /></Opt>
@@ -513,8 +517,8 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
               <Opt label={t("Axis label")} words="y label"><input maxLength={40} value={options.y_label} onChange={(event) => setOption("y_label", event.target.value)} /></Opt>
             </Group>}
             {!noItems && <Group title={t("Standard options")}>
-              {(["unit", "min", "max", "decimals", "display_name", "no_value", "color_mode", "color"] as FieldKey[]).filter((key) => kind !== "scatter" || ["unit", "decimals"].includes(key)).map((key) => <Opt key={key} label={t(FIELD_LABELS[key])}
-                hint={key === "min" || key === "max" ? t("Of the dial, the bars and the axis; empty: the signal's range.") : key === "display_name" ? t("Instead of the signal's name (one signal; use overrides for several).") : key === "no_value" ? t("Shown when there is no value.") : undefined}>
+              {(["unit", "min", "max", "normal_low", "normal_high", "decimals", "display_name", "no_value", "color_mode", "color"] as FieldKey[]).filter((key) => kind !== "scatter" || ["unit", "decimals"].includes(key)).filter((key) => !key.startsWith("normal_") || kind === "gauge" || kind === "stat").map((key) => <Opt key={key} label={t(FIELD_LABELS[key])}
+                hint={key === "normal_low" || key === "normal_high" ? t("Where the value should run: a darker band on the analog indicator and under a stat's line. Empty: between the thresholds' normal step and the next.") : key === "min" || key === "max" ? t("Of the dial, the bars and the axis; empty: the signal's range.") : key === "display_name" ? t("Instead of the signal's name (one signal; use overrides for several).") : key === "no_value" ? t("Shown when there is no value.") : undefined}>
                 <FieldInput name={key} config={field} onChange={setField} lines={charted} />
               </Opt>)}
             </Group>}

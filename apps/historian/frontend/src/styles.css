@@ -123,3 +123,7 @@
 .preview-table { font-size: var(--pc-fs-sm); }
 .preview-table caption { text-align: left; padding: 8px 12px; font-weight: 500; }
 .preview-table td.bad { color: var(--pc-problem-text); }
+
+/* Notes on a signal (PointNotes). */
+.note-list { list-style: none; margin: 0 0 var(--pc-space-3, 12px); padding: 0; display: grid; gap: 6px; }
+.note-list li { overflow-wrap: anywhere; }

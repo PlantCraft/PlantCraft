@@ -73,6 +73,8 @@ def judge(slot: str, binding: dict[str, Any], row: dict[str, Any]) -> dict[str, 
         else:
             limits = Limits.model_validate(binding.get("limits") or {})
             out["state"] = limits.state(value)
+    elif slot == "setpoint":
+        out["state"] = "unknown" if value is None else "ok"
     elif slot == "level":
         low, high = float(binding.get("min", 0.0)), float(binding.get("max", 100.0))
         out["fraction"] = (

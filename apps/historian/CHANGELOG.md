@@ -8,6 +8,16 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Notes on a signal**, at an instant or over an interval: the signal's page lists the notes of
+  the period shown and editors add them (their own removed by them, any by an administrator);
+  `GET`, `POST` and `DELETE /api/v1/annotations` for scripts and apps. Each note is told to
+  PlantCraft as the event `histcraft.annotation.added` (*Note on a signal*), posted by the page in
+  the person's name, since the Historian never calls the suite.
+- **Shortest interval between archived values** per number signal (`min_seconds`, PI's
+  CompMin; empty: none), on the signal's page and in `PATCH /api/points/{signal}`: a faster
+  change is held until then. Gaps, quality changes, step and text signals are never held back.
+  The step marker (a held value that jumps is archived at its last read before the jump, so a
+  trend draws a step) is now pinned by tests and described in the compression help.
 - **Laboratory results as signals (`laboratory:<analysis>`).** `POST /api/v1/lab` (editors, or a
   bridge from the LIMS with a person's key) stores each result at its sampling time, however late
   it arrives, with the times it reached the laboratory and was approved; it reads as `uncertain`

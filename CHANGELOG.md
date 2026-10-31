@@ -9,6 +9,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Windows without Docker Desktop: Rancher Desktop.** `./install.sh --check` in WSL now accepts
+  Rancher Desktop's Linux `docker`, which reaches Ubuntu through Windows' PATH. It refused that
+  path before, as if it were Docker Desktop's. `docs/install.md` gives the Rancher Desktop
+  settings (dockerd, Kubernetes off, WSL integration). The tested way is still Docker Engine
+  inside WSL (`--install-docker`).
+
 - `plantcraft-sdk`: `PlantCraftClient.lab_samples(signal, start, end)` reads a laboratory
   signal's samples from the Historian, each with its status and its received and approved times
   (an empty list without a Historian). View's trends use it.
@@ -113,6 +119,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   Plotly from the platform and `fonts.css` lists the platform's copy before the app's own. An
   app run on its own, or a platform with another Plotly build, answers 404 and the app uses its
   own copy as before. `node ui/scripts/shared-vendor-names.mjs` prints the names after an upgrade.
+- **Analytics › Algorithms opens without the diagram editor.** The list moved to its own module
+  (`AlgorithmList.tsx`), so opening it no longer loads React Flow and the test tools: 724 KB to
+  443 KB of script. The algorithm's page still loads them.
 - **Schedules and the block pages open without the block editor (`@plantcraft/ui`).**
   `ParameterField` and `typeLabel` have their own subpath, `@plantcraft/ui/blockParameter`
   (still exported from `blockEditor`), so Analytics › Schedules and Models › Blocks no longer

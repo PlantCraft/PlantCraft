@@ -61,6 +61,16 @@ export interface LoopDetail {
   record_defaults?: { profile_id: string; criticality: string } | null;
   source_start?: string | null; source_end?: string | null; analyzed_at?: string | null;
   series: SeriesPoint[]; history: Array<{ source_end: string; status: string; health: number | null }>; jobs: Job[];
+  /** The last run against the run someone recorded as the loop's reference (A8); null without one. */
+  reference?: LoopReference | null;
+}
+
+export interface ReferenceIndicator { reference: number; now: number; index: number | null }
+
+export interface LoopReference {
+  recorded_at: string; recorded_by: string; source_start?: string | null; source_end?: string | null;
+  health_reference: number | null; health_now: number | null; health_change: number | null; version_changed: boolean;
+  methods: Array<{ method_id: string; status_reference: string; status_now: string; score_reference: number | null; score_now: number | null; score_change: number | null; indicators: Record<string, ReferenceIndicator> }>;
 }
 
 export interface Job {

@@ -11,6 +11,12 @@ this category.
 4. Step and text signals archive every change, with the value held just before it, so a rebuilt
    step is exact.
 5. Bad quality or a lost connection archives a gap marker; the next good value starts a new line.
+6. A value that holds and then jumps by more than the deviation is archived at its last read
+   before the jump (a *step marker*), so the trend draws a step, not a ramp from the last
+   archived value.
+7. A number signal may set a *shortest interval between archived values* (empty: none, like
+   PI's CompMin): a faster change is held until then, and the compression goes on from it.
+   Gaps, changes of quality and step or text signals are never held back.
 
 A trend rebuilt by joining archived values with straight lines is never further than the
 deviation from any value read. Averages over a grid are exact time-weighted integrals of that

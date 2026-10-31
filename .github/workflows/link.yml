@@ -89,6 +89,8 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/link/frontend/package-lock.json
+      # SKAB (GPL-3.0) is downloaded here at a pinned commit for its oracle, never committed.
+      - run: python tests/oracles/fetch_skab.py
       # plantcraft-sdk comes from vendor/ only (pip install --no-index --find-links vendor).
       - run: make ci
 

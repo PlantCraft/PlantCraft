@@ -32,6 +32,16 @@ isdb_loops = 0
 # curve-fitting shape test, 21 of 27 once half cycles may spread to half their mean (stiction
 # 12/13, tuning 9/14), docs/gaps.md G3.
 sacac_loops = 21
+# SKAB (tests/oracles/test_skab_oracle.py; GPL-3.0 data pinned 2026-10-31, fetched in CI, never
+# committed): the Deviation (T²) block calibrated on each experiment's first 400 samples. F1 and
+# the share of normal samples or runs left quiet, in %, rounded down. 2026-10-31: per sample F1
+# 74.99 with 44.1% quiet (SKAB's leaderboard: T² 66 and 80.8%, T²+Q 76 and 73.4%); per run of 60
+# samples F1 75.8 with 30.6% quiet. The false alarms are docs/gaps.md G44.
+skab_experiments = 34
+skab_sample_f1 = 74
+skab_sample_quiet = 44
+skab_run_f1 = 75
+skab_run_quiet = 30
 # Synthetic signal oracle (tests/oracles/test_signal_synthetic_oracle.py): cases whose verdict
 # the signal checks get right, and the number of cases.
 signal_synthetic_cases = 90

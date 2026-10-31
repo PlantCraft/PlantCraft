@@ -99,6 +99,7 @@ class PointState:
         self.compressor.exception = float(point.get("exception") or 0.0)
         self.compressor.exception_percent = point.get("exception_percent")
         self.compressor.max_seconds = float(point["max_seconds"])
+        self.compressor.min_seconds = float(point.get("min_seconds") or 0.0)
 
     @property
     def reads_text(self) -> bool:
@@ -138,6 +139,7 @@ def _compressor(point: dict[str, Any]) -> Compressor:
     return Compressor(
         deviation=float(point["deviation"]),
         max_seconds=float(point["max_seconds"]),
+        min_seconds=float(point.get("min_seconds") or 0.0),
         percent=point.get("deviation_percent"),
         exception=float(point.get("exception") or 0.0),
         exception_percent=point.get("exception_percent"),

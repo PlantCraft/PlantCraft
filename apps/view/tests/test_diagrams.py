@@ -509,3 +509,42 @@ def test_a_display_reads_values_now_and_results_in_one_batch_each():
     assert [row["state"] for row in data["bindings"][6:]] == ["ok"] * 4
     assert plant.calls.count("value") == 1 and plant.calls.count("results") == 1
     assert "series step=None" in plant.calls
+
+
+def test_a_value_with_an_analog_indicator_reads_its_setpoint(runtime, fake):
+    body = unit()
+    value = next(element for element in body["elements"] if element["id"] == "pv")
+    value["indicator"] = {
+        "normal_low": 10,
+        "normal_high": 90,
+        "setpoint": {"asset_id": "fic-101", "role": "sp"},
+    }
+    diagram = DiagramPayload.model_validate(body).stored()
+    reader, _ = runtime.dashboard_reader(None)
+    data = read_diagram(reader, diagram, "1h")
+    setpoint = next(row for row in data["bindings"] if row["slot"] == "setpoint")
+    assert setpoint["element"] == "pv" and setpoint["error"] is None
+    assert isinstance(setpoint["value"], int | float) and setpoint["state"] == "ok"
+
+
+@pytest.mark.parametrize(
+    "indicator",
+    [
+        {"min": 5, "max": 5},
+        {"normal_low": 9, "normal_high": 1},
+        {"setpoint": {"asset_id": "fic-101", "result": "linkcraft.loop_health"}},
+    ],
+)
+def test_an_indicator_needs_ordered_ranges_and_a_signal_setpoint(indicator):
+    body = unit()
+    next(element for element in body["elements"] if element["id"] == "pv")["indicator"] = indicator
+    with pytest.raises(ValueError):
+        DiagramPayload.model_validate(body)
+
+
+def test_a_field_s_normal_range_is_ordered():
+    from dashcraft.dashboards.fields import FieldConfig
+
+    assert FieldConfig(normal_low=1, normal_high=2).normal_high == 2
+    with pytest.raises(ValueError):
+        FieldConfig(normal_low=2, normal_high=1)

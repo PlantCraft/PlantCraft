@@ -180,6 +180,9 @@ class CardOptions(BaseModel):
     y_label: str = Field(default="", max_length=40)
     soft_min: float | None = None
     soft_max: float | None = None
+    # Gauge: a dial, or the ISA-101 analog indicator (a grey bar with the normal range, the
+    # LL/L/H/HH limits, the setpoint and a pointer that takes a colour only out of normal).
+    gauge_style: Literal["dial", "analog"] = "dial"
     # Gauge: marks and numbers at the thresholds.
     threshold_markers: bool = True
     threshold_labels: bool = False

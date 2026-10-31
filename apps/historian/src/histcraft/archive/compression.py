@@ -23,6 +23,14 @@ trending algorithm (Bristol, 1990), the method historians of this category use.
   exception of the last value passed on is taken as that value again, so noise smaller than
   it never reaches the compression. A line then never strays more than the exception plus the
   deviation from a value read, and a value is still passed on at least every ``max_seconds``.
+- **Step marker** (what Proficy's collector adds by hand): on a line point, a value that holds
+  and then jumps by more than the deviation is archived at its last read before the jump (the
+  swinging door's held snapshot), so a trend draws a step, not a ramp from the last archived
+  value.
+- **Minimum time between values** (``min_seconds``, PI's CompMin; 0 by default): on a line
+  point, nothing is archived less than ``min_seconds`` after the last archived value; the
+  newest value read is held and the compression goes on from it. Gaps, quality changes, step
+  and text points are never held back.
 """
 
 from __future__ import annotations
@@ -47,6 +55,8 @@ class Compressor:
     # The exception before the compression (lines only): engineering units, or a % of the value.
     exception: float = 0.0
     exception_percent: float | None = None
+    # Lines only: no value archived sooner than this after the last one (0: no minimum).
+    min_seconds: float = 0.0
     # Last archived (time ms, value); None before the first value or after a gap.
     archived: Sample | None = None
     # Newest value read and not archived yet.
@@ -93,7 +103,13 @@ class Compressor:
             return [(at_ms, value)]
         if self.kind != "number" or self.step:
             return self._feed_step(at_ms, value)
-        return self._feed_line(at_ms, self._excepted(at_ms, value))
+        value = self._excepted(at_ms, value)
+        if self.min_seconds > 0 and (at_ms - self.archived[0]) <= self.min_seconds * 1000.0:
+            # Too soon after the last archived value: held, the door narrowed as usual.
+            self._narrow(at_ms, value)
+            self.snapshot = (at_ms, value)
+            return []
+        return self._feed_line(at_ms, value)
 
     def gap(self, at_ms: int) -> list[Sample]:
         """No value at ``at_ms`` (bad quality, connection lost): close the line with a marker."""
