@@ -1,0 +1,442 @@
+# PlantCraft's official Zabbix template (Zabbix 7.0 and later). docs/operations.md, section 4.
+zabbix_export:
+  version: '7.0'
+  template_groups:
+  - uuid: f2a8d7fdf6d85462b03f34c2d651132a
+    name: Templates/Applications
+  templates:
+  - uuid: 6f014d701c9b5ba1a0f517f82cb80119
+    template: PlantCraft by Zabbix agent
+    name: PlantCraft by Zabbix agent
+    description: 'PlantCraft''s official template: the suite''s services and machine as the installer sees them (data/installer/status/metrics.json), read by a Zabbix agent on the PlantCraft machine. Set {$PLANTCRAFT.DIR} to the install folder. Thresholds match PlantCraft''s own load alerts. docs/operations.md, section 4 (Zabbix).'
+    vendor:
+      name: PlantCraft
+      version: 7.0-1
+    groups:
+    - name: Templates/Applications
+    items:
+    - uuid: de1e94eb7b485e4386462fc9bce558b0
+      name: 'PlantCraft: metrics.json'
+      key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      delay: 1m
+      history: '0'
+      value_type: TEXT
+      trends: '0'
+      description: 'The installer''s view of every service and of the machine, rewritten every 30 s (docs/operations.md, section 4). The Zabbix agent must be able to read the file: data/ is 0711 and data/installer/status/ 0755, metrics.json 0644.'
+      tags:
+      - tag: component
+        value: raw
+    - uuid: 0b5e40790c99520ab9bb4e89a63ba5d7
+      name: 'PlantCraft: metrics age'
+      type: DEPENDENT
+      key: plantcraft.metrics.age
+      delay: '0'
+      value_type: FLOAT
+      description: Seconds since the installer last wrote metrics.json (field at). Above 180 s the installer is silent; PlantCraft's own watch uses the same limit.
+      preprocessing:
+      - type: JAVASCRIPT
+        parameters:
+        - return Math.round((Date.now() - Date.parse(JSON.parse(value).at)) / 1000);
+      master_item:
+        key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      tags:
+      - tag: component
+        value: host
+      units: s
+      triggers:
+      - uuid: 9887dbdcf04c555abc4d51bbca52cf75
+        expression: min(/PlantCraft by Zabbix agent/plantcraft.metrics.age,3m)>{$PLANTCRAFT.METRICS.AGE.MAX}
+        name: 'PlantCraft: the installer is silent (metrics older than {$PLANTCRAFT.METRICS.AGE.MAX}s)'
+        priority: HIGH
+        description: 'The installer container is down or stuck: docker compose ps installer, and ./install.sh --diagnostics.'
+      - uuid: 86fc57abfa1a59e4a5fc0e2157c95edb
+        expression: nodata(/PlantCraft by Zabbix agent/plantcraft.metrics.age,5m)=1
+        name: 'PlantCraft: no metrics read for 5 minutes'
+        priority: AVERAGE
+        description: The Zabbix agent cannot read metrics.json (a wrong {$PLANTCRAFT.DIR}, permissions) or the agent stopped.
+    - uuid: f494b0928472579cad9144210b9b108b
+      name: 'PlantCraft: machine CPU'
+      type: DEPENDENT
+      key: plantcraft.host.cpu_pct
+      delay: '0'
+      value_type: FLOAT
+      description: ''
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.host.cpu_pct
+        error_handler: DISCARD_VALUE
+      master_item:
+        key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      tags:
+      - tag: component
+        value: host
+      units: '%'
+      triggers:
+      - uuid: 7a983502ad9a585495a9fe0eb027287d
+        expression: min(/PlantCraft by Zabbix agent/plantcraft.host.cpu_pct,5m)>{$PLANTCRAFT.CPU.CRIT}
+        name: 'PlantCraft: machine CPU above {$PLANTCRAFT.CPU.CRIT}% for 5 minutes'
+        priority: HIGH
+        description: ''
+      - uuid: efe89acba2995c00b8ab244cc19b1c56
+        expression: min(/PlantCraft by Zabbix agent/plantcraft.host.cpu_pct,5m)>{$PLANTCRAFT.CPU.WARN}
+        name: 'PlantCraft: machine CPU above {$PLANTCRAFT.CPU.WARN}% for 5 minutes'
+        priority: WARNING
+        description: ''
+        dependencies:
+        - name: 'PlantCraft: machine CPU above {$PLANTCRAFT.CPU.CRIT}% for 5 minutes'
+          expression: min(/PlantCraft by Zabbix agent/plantcraft.host.cpu_pct,5m)>{$PLANTCRAFT.CPU.CRIT}
+    - uuid: 3631d64594ce5037be2315edd3dd201e
+      name: 'PlantCraft: machine memory'
+      type: DEPENDENT
+      key: plantcraft.host.mem_pct
+      delay: '0'
+      value_type: FLOAT
+      description: ''
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.host.mem_pct
+        error_handler: DISCARD_VALUE
+      master_item:
+        key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      tags:
+      - tag: component
+        value: host
+      units: '%'
+      triggers:
+      - uuid: 8a9498769c145d19b01db55465ee4034
+        expression: min(/PlantCraft by Zabbix agent/plantcraft.host.mem_pct,5m)>{$PLANTCRAFT.MEM.CRIT}
+        name: 'PlantCraft: machine memory above {$PLANTCRAFT.MEM.CRIT}% for 5 minutes'
+        priority: HIGH
+        description: ''
+      - uuid: e7a4581a6f45536caa4a863de48db574
+        expression: min(/PlantCraft by Zabbix agent/plantcraft.host.mem_pct,5m)>{$PLANTCRAFT.MEM.WARN}
+        name: 'PlantCraft: machine memory above {$PLANTCRAFT.MEM.WARN}% for 5 minutes'
+        priority: WARNING
+        description: ''
+        dependencies:
+        - name: 'PlantCraft: machine memory above {$PLANTCRAFT.MEM.CRIT}% for 5 minutes'
+          expression: min(/PlantCraft by Zabbix agent/plantcraft.host.mem_pct,5m)>{$PLANTCRAFT.MEM.CRIT}
+    - uuid: 67ed61990c425eef84613febd21d214d
+      name: 'PlantCraft: machine load (1 min)'
+      type: DEPENDENT
+      key: plantcraft.host.load_1m
+      delay: '0'
+      value_type: FLOAT
+      description: ''
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.host.load_1m
+        error_handler: DISCARD_VALUE
+      master_item:
+        key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      tags:
+      - tag: component
+        value: host
+    - uuid: 6522d5624cad5dfcb1cac75b34b60ce1
+      name: 'PlantCraft: machine CPUs'
+      type: DEPENDENT
+      key: plantcraft.host.cpus
+      delay: '0'
+      value_type: FLOAT
+      description: ''
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.host.cpus
+        error_handler: DISCARD_VALUE
+      master_item:
+        key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      tags:
+      - tag: component
+        value: host
+    - uuid: 4d289edd87c557a3a9fc53701737c9f2
+      name: 'PlantCraft: free disk of the install folder'
+      type: DEPENDENT
+      key: plantcraft.disk.free_pct
+      delay: '0'
+      value_type: FLOAT
+      description: ''
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.disk.free_pct
+        error_handler: DISCARD_VALUE
+      master_item:
+        key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      tags:
+      - tag: component
+        value: disk
+      units: '%'
+      triggers:
+      - uuid: bae1c9dcdf2055e6aa22d7fa559dc215
+        expression: last(/PlantCraft by Zabbix agent/plantcraft.disk.free_pct)<{$PLANTCRAFT.DISK.FREE.MIN}
+        name: 'PlantCraft: free disk below {$PLANTCRAFT.DISK.FREE.MIN}%'
+        priority: HIGH
+        description: 'The Historian and the backups stop being safe without disk: docs/operations.md, sections 2 and 4.'
+    - uuid: 25dc767ecfb550a5aada5efa985fbfeb
+      name: 'PlantCraft: free disk (bytes)'
+      type: DEPENDENT
+      key: plantcraft.disk.free_bytes
+      delay: '0'
+      value_type: FLOAT
+      description: ''
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.disk.free_bytes
+        error_handler: DISCARD_VALUE
+      master_item:
+        key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      tags:
+      - tag: component
+        value: disk
+      units: B
+    - uuid: de0435a8e4c1570ebd876dc43be076c1
+      name: 'PlantCraft: installer error'
+      type: DEPENDENT
+      key: plantcraft.error
+      delay: '0'
+      value_type: CHAR
+      description: The installer's last error reading Docker (empty when none).
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.error
+        error_handler: DISCARD_VALUE
+      master_item:
+        key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      tags:
+      - tag: component
+        value: raw
+      trends: '0'
+    discovery_rules:
+    - uuid: 5991813d24f7507aa08128de01113111
+      name: 'PlantCraft: services'
+      type: DEPENDENT
+      key: plantcraft.services.discovery
+      delay: '0'
+      description: One entry per Compose service in metrics.json (processcraft, histcraft, linkcraft, ...).
+      item_prototypes:
+      - uuid: 7602cf44901b5da38a75178d77a604c5
+        name: 'PlantCraft {#SERVICE}: state'
+        type: DEPENDENT
+        key: plantcraft.service.state[{#SERVICE}]
+        delay: '0'
+        value_type: CHAR
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.services[?(@.service=='{#SERVICE}')].state.first()
+          error_handler: DISCARD_VALUE
+        master_item:
+          key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+        tags:
+        - tag: component
+          value: service
+        - tag: service
+          value: '{#SERVICE}'
+        trends: '0'
+        trigger_prototypes:
+        - uuid: b85763ce344e5925aa4e848ea60fba75
+          expression: last(/PlantCraft by Zabbix agent/plantcraft.service.state[{#SERVICE}])<>"running"
+          name: 'PlantCraft {#SERVICE}: not running'
+          priority: HIGH
+          description: 'Docker reports the container as not running: ./install.sh --diagnostics.'
+      - uuid: 466d9faf451a57a89fa5d755533821a4
+        name: 'PlantCraft {#SERVICE}: health'
+        type: DEPENDENT
+        key: plantcraft.service.health[{#SERVICE}]
+        delay: '0'
+        value_type: CHAR
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.services[?(@.service=='{#SERVICE}')].health.first()
+          error_handler: DISCARD_VALUE
+        master_item:
+          key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+        tags:
+        - tag: component
+          value: service
+        - tag: service
+          value: '{#SERVICE}'
+        trends: '0'
+        trigger_prototypes:
+        - uuid: 32d2990692c55d73b8cdea35e63832df
+          expression: last(/PlantCraft by Zabbix agent/plantcraft.service.health[{#SERVICE}])="unhealthy"
+          name: 'PlantCraft {#SERVICE}: unhealthy'
+          priority: HIGH
+          description: The server's own /healthz answers that it is not well.
+      - uuid: 2df0c5defead5eaaa9469b45da61c82b
+        name: 'PlantCraft {#SERVICE}: restarts'
+        type: DEPENDENT
+        key: plantcraft.service.restarts[{#SERVICE}]
+        delay: '0'
+        value_type: UNSIGNED
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.services[?(@.service=='{#SERVICE}')].restarts.first()
+          error_handler: DISCARD_VALUE
+        master_item:
+          key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+        tags:
+        - tag: component
+          value: service
+        - tag: service
+          value: '{#SERVICE}'
+        trigger_prototypes:
+        - uuid: 6122a103082258e89512c403c631622f
+          expression: change(/PlantCraft by Zabbix agent/plantcraft.service.restarts[{#SERVICE}])>0
+          name: 'PlantCraft {#SERVICE}: restarted'
+          priority: WARNING
+          description: ''
+      - uuid: 8253dbfcaeb856e48b1456046989e5e1
+        name: 'PlantCraft {#SERVICE}: killed for memory'
+        type: DEPENDENT
+        key: plantcraft.service.oom_killed[{#SERVICE}]
+        delay: '0'
+        value_type: CHAR
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.services[?(@.service=='{#SERVICE}')].oom_killed.first()
+          error_handler: DISCARD_VALUE
+        master_item:
+          key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+        tags:
+        - tag: component
+          value: service
+        - tag: service
+          value: '{#SERVICE}'
+        trends: '0'
+        trigger_prototypes:
+        - uuid: 7d9a61bf25da5b719b5c0be216e1cdac
+          expression: last(/PlantCraft by Zabbix agent/plantcraft.service.oom_killed[{#SERVICE}])="true"
+          name: 'PlantCraft {#SERVICE}: killed for lack of memory'
+          priority: HIGH
+          description: Raise its memory limit or reduce its load (docs/operations.md, section 4).
+      - uuid: 5deafad43df856058f2fd025764e2fa0
+        name: 'PlantCraft {#SERVICE}: CPU (share of its limit)'
+        type: DEPENDENT
+        key: plantcraft.service.cpu_load_pct[{#SERVICE}]
+        delay: '0'
+        value_type: FLOAT
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.services[?(@.service=='{#SERVICE}')].cpu_load_pct.first()
+          error_handler: DISCARD_VALUE
+        master_item:
+          key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+        tags:
+        - tag: component
+          value: service
+        - tag: service
+          value: '{#SERVICE}'
+        units: '%'
+        trigger_prototypes:
+        - uuid: cfc967b074a8563ab13ac6f963f5b699
+          expression: min(/PlantCraft by Zabbix agent/plantcraft.service.cpu_load_pct[{#SERVICE}],5m)>{$PLANTCRAFT.CPU.CRIT}
+          name: 'PlantCraft {#SERVICE}: CPU above {$PLANTCRAFT.CPU.CRIT}% of its limit for 5 minutes'
+          priority: HIGH
+          description: ''
+        - uuid: 05ccaf24dd6b5fa583275d9a1a0a96e0
+          expression: min(/PlantCraft by Zabbix agent/plantcraft.service.cpu_load_pct[{#SERVICE}],5m)>{$PLANTCRAFT.CPU.WARN}
+          name: 'PlantCraft {#SERVICE}: CPU above {$PLANTCRAFT.CPU.WARN}% of its limit for 5 minutes'
+          priority: WARNING
+          description: ''
+          dependencies:
+          - name: 'PlantCraft {#SERVICE}: CPU above {$PLANTCRAFT.CPU.CRIT}% of its limit for 5 minutes'
+            expression: min(/PlantCraft by Zabbix agent/plantcraft.service.cpu_load_pct[{#SERVICE}],5m)>{$PLANTCRAFT.CPU.CRIT}
+      - uuid: 5de82e7ca5c75ac293d4bb05e4b86989
+        name: 'PlantCraft {#SERVICE}: memory (share of its limit)'
+        type: DEPENDENT
+        key: plantcraft.service.mem_pct[{#SERVICE}]
+        delay: '0'
+        value_type: FLOAT
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.services[?(@.service=='{#SERVICE}')].mem_pct.first()
+          error_handler: DISCARD_VALUE
+        master_item:
+          key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+        tags:
+        - tag: component
+          value: service
+        - tag: service
+          value: '{#SERVICE}'
+        units: '%'
+        trigger_prototypes:
+        - uuid: 0dbd97f2825a54678a7e51d3866d960b
+          expression: min(/PlantCraft by Zabbix agent/plantcraft.service.mem_pct[{#SERVICE}],5m)>{$PLANTCRAFT.MEM.CRIT}
+          name: 'PlantCraft {#SERVICE}: memory above {$PLANTCRAFT.MEM.CRIT}% of its limit for 5 minutes'
+          priority: HIGH
+          description: ''
+        - uuid: 77ae0a9061da52f4b31f52ea1e14a473
+          expression: min(/PlantCraft by Zabbix agent/plantcraft.service.mem_pct[{#SERVICE}],5m)>{$PLANTCRAFT.MEM.WARN}
+          name: 'PlantCraft {#SERVICE}: memory above {$PLANTCRAFT.MEM.WARN}% of its limit for 5 minutes'
+          priority: WARNING
+          description: ''
+          dependencies:
+          - name: 'PlantCraft {#SERVICE}: memory above {$PLANTCRAFT.MEM.CRIT}% of its limit for 5 minutes'
+            expression: min(/PlantCraft by Zabbix agent/plantcraft.service.mem_pct[{#SERVICE}],5m)>{$PLANTCRAFT.MEM.CRIT}
+      - uuid: 902f884752525643a3161a0cc267177d
+        name: 'PlantCraft {#SERVICE}: memory used'
+        type: DEPENDENT
+        key: plantcraft.service.mem_bytes[{#SERVICE}]
+        delay: '0'
+        value_type: FLOAT
+        preprocessing:
+        - type: JSONPATH
+          parameters:
+          - $.services[?(@.service=='{#SERVICE}')].mem_bytes.first()
+          error_handler: DISCARD_VALUE
+        master_item:
+          key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+        tags:
+        - tag: component
+          value: service
+        - tag: service
+          value: '{#SERVICE}'
+        units: B
+      master_item:
+        key: vfs.file.contents["{$PLANTCRAFT.DIR}/data/installer/status/metrics.json"]
+      lld_macro_paths:
+      - lld_macro: '{#SERVICE}'
+        path: $.service
+      preprocessing:
+      - type: JSONPATH
+        parameters:
+        - $.services
+    tags:
+    - tag: class
+      value: application
+    - tag: target
+      value: plantcraft
+    macros:
+    - macro: '{$PLANTCRAFT.DIR}'
+      value: /opt/plantcraft
+      description: The install folder (the one with install.sh and data/).
+    - macro: '{$PLANTCRAFT.CPU.WARN}'
+      value: '80'
+      description: 'CPU warning, %: PlantCraft''s own load alert.'
+    - macro: '{$PLANTCRAFT.CPU.CRIT}'
+      value: '95'
+      description: CPU critical, %.
+    - macro: '{$PLANTCRAFT.MEM.WARN}'
+      value: '80'
+      description: Memory warning, %.
+    - macro: '{$PLANTCRAFT.MEM.CRIT}'
+      value: '95'
+      description: Memory critical, %.
+    - macro: '{$PLANTCRAFT.DISK.FREE.MIN}'
+      value: '10'
+      description: Lowest free disk, %.
+    - macro: '{$PLANTCRAFT.METRICS.AGE.MAX}'
+      value: '180'
+      description: Oldest metrics.json, s, before the installer counts as silent.

@@ -175,9 +175,13 @@ the images. If the suite does not become healthy,
    archives the OPC UA variables you pick: in the Historian, **Sources > Add source**
    (`opc.tcp://plantcraft:4840/plantcraft/` with `--demo`), browse, pick the variables, archive.
 
-The administrator password is the content of `data/initial-admin-password`. To change it, write
-the new password into that file (one line) and run `docker compose restart processcraft` in the
-install folder. Keep it as the emergency account; people sign in with their own accounts.
+The administrator password is the content of `data/initial-admin-password`. Keep it as the
+emergency account; people sign in with their own accounts. Change it at least every 90 days:
+`./install.sh --rotate-admin-password` writes a new random password into that file (owner and
+mode kept), restarts PlantCraft and shows the password once. The security check
+(`./install.sh --security-check`, PC-ACC-01) warns while the file exists and fails once its
+password is more than 90 days old. To set a password of your own instead, write it into the file
+(one line) and run `docker compose restart processcraft` in the install folder.
 
 ## 5. Settings
 
