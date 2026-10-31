@@ -21,6 +21,7 @@ import json
 import os
 import re
 import ssl
+import struct
 import sys
 import time
 import urllib.error
@@ -32,7 +33,7 @@ from typing import Any
 
 import pandas as pd
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __all__ = [
     "PlantCraftError",
     "app",
@@ -54,6 +55,9 @@ __all__ = [
 ]
 
 IN_BROWSER = sys.platform == "emscripten"
+# The binary series answer PlantCraft passes on from the Historian (``plantcraft_sdk.wire``).
+WIRE_MEDIA_TYPE = "application/x-plantcraft-series"
+WIRE_MAGIC = b"PCS1"
 # Over its limits PlantCraft answers 429 with Retry-After: wait (at most MAX_WAIT s) and retry.
 RETRIES = 4
 MAX_WAIT = 30.0
@@ -193,20 +197,29 @@ class Client:
             return None
 
     def _computer(self, method: str, path: str, body: bytes | None) -> tuple[int, str, str]:
+        status, data, retry, _ = self._fetch(method, path, body, "application/json")
+        return status, data.decode("utf-8", "replace"), retry
+
+    def _fetch(
+        self, method: str, path: str, body: bytes | None, accept: str
+    ) -> tuple[int, bytes, str, str]:
+        """One request from this computer: status, body bytes, Retry-After, content type."""
+
         if not self.token:
             import getpass
 
             self.token = getpass.getpass("PlantCraft access token (pcat_...): ").strip()
-        headers = {"Accept": "application/json", "Authorization": f"Bearer {self.token}"}
+        headers = {"Accept": accept, "Authorization": f"Bearer {self.token}"}
         if body is not None:
             headers["Content-Type"] = "application/json"
         request = urllib.request.Request(self.url + path, data=body, method=method, headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=120, context=self._context()) as answer:
-                return answer.status, answer.read().decode("utf-8"), ""
+                kind = answer.headers.get("Content-Type", "") if answer.headers else ""
+                return answer.status, answer.read(), "", kind
         except urllib.error.HTTPError as error:
             retry = error.headers.get("Retry-After") if error.headers else None
-            return error.code, error.read().decode("utf-8", "replace"), str(retry or "")
+            return error.code, error.read(), str(retry or ""), ""
         except urllib.error.URLError as error:
             # No answer at all: say why in one line instead of a traceback.
             if isinstance(error.reason, ssl.SSLCertVerificationError):
@@ -253,6 +266,27 @@ class Client:
 
     def get(self, path: str, **params: Any) -> Any:
         return self.request("GET", path, **params)
+
+    def series_batch(self, payload: dict[str, Any]) -> list[pd.Series]:
+        """``POST /api/v1/series`` as columns. From a computer it asks for the binary answer
+        (times and values as arrays, several times faster to read than JSON); a PlantCraft
+        that does not write it answers JSON, read as before. ``PLANTCRAFT_BINARY_READS=0``
+        keeps JSON."""
+
+        if IN_BROWSER or os.environ.get("PLANTCRAFT_BINARY_READS", "1").strip() == "0":
+            return _columns(self.request("POST", "/api/v1/series", payload))
+        body = json.dumps(payload).encode("utf-8")
+        accept = f"{WIRE_MEDIA_TYPE}, application/json;q=0.5"
+        for attempt in range(RETRIES + 1):
+            status, data, retry, kind = self._fetch("POST", "/api/v1/series", body, accept)
+            if status != 429 or attempt == RETRIES:
+                break
+            time.sleep(min(MAX_WAIT, max(1.0, float(retry or 2))))
+        if status >= 400 or status == 0:
+            raise PlantCraftError(status, _detail(data.decode("utf-8", "replace")))
+        if kind.startswith(WIRE_MEDIA_TYPE) or data[: len(WIRE_MAGIC)] == WIRE_MAGIC:
+            return _binary_columns(data)
+        return _columns(json.loads(data) if data else {})
 
     def download(self, path: str) -> bytes:
         """A file (an app's runtime): its bytes."""
@@ -356,6 +390,42 @@ def _columns(answer: dict[str, Any]) -> list[pd.Series]:
     return columns
 
 
+def _binary_columns(data: bytes) -> list[pd.Series]:
+    """The columns of a binary series answer (the format of ``plantcraft_sdk.wire``: a JSON
+    header, then int64 ms times and float64 values per number series)."""
+
+    import numpy as np
+
+    if len(data) < 8 or data[:4] != WIRE_MAGIC:
+        raise PlantCraftError(0, "PlantCraft sent a series answer this package cannot read.")
+    size = struct.unpack("<I", data[4:8])[0]
+    header = json.loads(data[8 : 8 + size])
+    offset = 8 + size + (-(8 + size)) % 8
+    for error in header.get("errors") or []:
+        warnings.warn(f"{error.get('signal')}: {error.get('detail')}", stacklevel=4)
+    columns = []
+    for item in header.get("series") or []:
+        count = item.get("n")
+        if count is None:
+            stamps = np.asarray(item.get("t") or [], dtype=np.int64)
+            values: Any = list(item.get("v") or [])
+            if item.get("kind") != "text":
+                values = pd.to_numeric(pd.Series(values, dtype=object), errors="coerce").to_numpy()
+        else:
+            count = int(count)
+            if offset + 16 * count > len(data):
+                raise PlantCraftError(0, "PlantCraft sent a truncated series answer.")
+            stamps = np.frombuffer(data, dtype="<i8", count=count, offset=offset)
+            values = np.frombuffer(data, dtype="<f8", count=count, offset=offset + 8 * count)
+            offset += 16 * count
+        # Microseconds, as the ISO times of the JSON answer read (pandas 2 and later).
+        micros = np.asarray(stamps, dtype=np.int64) * 1000
+        index = pd.DatetimeIndex(micros.astype("datetime64[us]")).tz_localize("UTC")
+        column = pd.Series(values, index=index, name=item["signal"])
+        columns.append(column[~column.index.duplicated(keep="last")])
+    return columns
+
+
 def series(
     signal_ids: str | list[str], start: Any = "-24h", end: Any = "now", step: float | None = None
 ) -> pd.DataFrame:
@@ -384,7 +454,7 @@ def series(
             }
             if step:
                 payload["step"] = step
-            parts += _columns(client().request("POST", "/api/v1/series", payload))
+            parts += client().series_batch(payload)
         piece = until
     if not parts:
         return pd.DataFrame(index=pd.DatetimeIndex([], tz=zone(), name="time"), columns=ids)

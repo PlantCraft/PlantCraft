@@ -51,6 +51,7 @@ import pandas as pd
 from plantcraft.i18n import t
 from plantcraft.industrial_data.thinning import thin_extremes
 from plantcraft.platform.datalayer import DataLayer, DataLayerError
+from plantcraft_sdk.wire import MEDIA_TYPE as WIRE_MEDIA_TYPE
 
 DATA = "/api/v1/data"
 TOKEN_SECONDS = 300
@@ -155,6 +156,7 @@ class HistCraftDataLayer(DataLayer):
         params: dict[str, Any] | None = None,
         json: Any = None,
         raw: bool = False,
+        accept: str = "application/json",
     ) -> Any:
         """One request to HistCraft's data API; raises ``DataLayerError`` (status to answer).
 
@@ -162,7 +164,7 @@ class HistCraftDataLayer(DataLayer):
 
         params = {key: value for key, value in (params or {}).items() if value not in (None, "")}
         for attempt in (0, 1):
-            headers = {"Authorization": f"Bearer {self.token()}", "Accept": "application/json"}
+            headers = {"Authorization": f"Bearer {self.token()}", "Accept": accept}
             try:
                 response = self.http.request(
                     method, f"{self.url}{DATA}{path}", params=params, json=json, headers=headers
@@ -286,13 +288,18 @@ class HistCraftDataLayer(DataLayer):
         *,
         quality: bool = False,
         extremes: bool = False,
+        binary: bool = False,
     ) -> bytes:
+        """The answer's bytes: JSON, or with ``binary`` the Historian's binary answer when it
+        writes one (``plantcraft_sdk.wire``; it starts with ``wire.MAGIC``)."""
+
         body = {"signals": signals, "start": start, "end": end, "step": step}
         if quality:
             body["quality"] = True
         if extremes:
             body["extremes"] = True
-        return self.call("POST", "/series", json=body, raw=True)
+        accept = f"{WIRE_MEDIA_TYPE}, application/json;q=0.5" if binary else "application/json"
+        return self.call("POST", "/series", json=body, raw=True, accept=accept)
 
     def value(self, signal_id: str, agg: str, window: str) -> dict[str, Any]:
         params = {"agg": agg, "window": window}

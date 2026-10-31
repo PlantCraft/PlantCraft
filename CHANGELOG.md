@@ -33,6 +33,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Notebooks read raw series 7 to 9 times faster (2026-10-31).** `plantcraft-notebook` 0.3.0
+  on a computer asks `POST /api/v1/series` for the binary answer, and PlantCraft passes the
+  Historian's binary answer on as it came, without parsing it (`Accept:
+  application/x-plantcraft-series`; other callers and a local data layer still get JSON). 10
+  dense signals x 24 h raw: 1.46 to 0.17 s; 50: 5.1 to 0.7 s; the same frames. In the browser
+  (JupyterLite) the package keeps JSON; `PLANTCRAFT_BINARY_READS=0` keeps it on a computer too.
 - **Min and max trend lines come from the Historian, 10× faster (2026-10-31).** A View trend's
   min or max line read every raw sample of its period and summarised them in Python (50 dense
   signals x 24 h: 1.8 million values, 7.5 s). `POST /api/v1/series` with a `step` now takes

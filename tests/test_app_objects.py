@@ -190,7 +190,7 @@ def test_a_notebook_lists_and_runs_an_apps_objects(app, dist, link, monkeypatch,
         vera = _login(app, "vera", "vera-strong-password")
         token = vera.post("/api/assistant-access/mine", json={"label": "laptop"}).json()["token"]
         reader = TestClient(app)
-        monkeypatch.setattr(pc.Client, "_computer", _routed(reader))
+        monkeypatch.setattr(pc.Client, "_fetch", _routed(reader))
         monkeypatch.setattr(
             pc.Client,
             "download",
