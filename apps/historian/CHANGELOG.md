@@ -4,6 +4,14 @@ Every release of PlantCraft Historian (`histcraft`), newest first, in the
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) form. PlantCraft's `deploy/bundle.sh`
 joins it into the bundle's release notes.
 
+## [Unreleased]
+
+### Added
+
+- **A limit on the points it records**, from `MAX_SIGNALS` of PlantCraft's installation file
+  (`PLANTCRAFT_MAX_SIGNALS`): points past it are skipped with the reason; the series apps write
+  do not count.
+
 ## [0.5.1] - 2026-10-30
 
 - Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).
