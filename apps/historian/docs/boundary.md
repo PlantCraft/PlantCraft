@@ -82,4 +82,5 @@ PI signals in `archive` mode are a gap (`docs/gaps.md`).
 ## Open points
 
 - MQTT, Modbus TCP and SQL sources are read by the gateway (`docs/gateway.md`). Sparkplug B,
-  OPC DA and store and forward from an edge box are gaps, not designs yet (`docs/gaps.md`).
+  OPC DA and store and forward from an OPC UA edge box are gaps (`docs/gaps.md`); the gateway's
+  sources are buffered on disk while the collector is away (`docs/gateway.md`).

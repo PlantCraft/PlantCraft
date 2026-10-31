@@ -94,6 +94,7 @@ def test_the_conditions_ride_on_the_metrics_with_the_catalog(runtime):
         assert names == [
             "collector.stalled",
             "source.disconnected",
+            "gateway.backlog",
             "source.late",
             "point.no_data",
             "archive.disk_low",
@@ -199,4 +200,20 @@ def test_a_late_source_that_never_sent_counts_from_its_connection(runtime):
     )
     assert _keys(runtime, now) == [("source.late", "source:north")]
     _integrate(runtime, "north", heartbeat_seconds=0)  # not watched
+    assert _keys(runtime, now) == []
+
+
+def test_a_full_gateway_buffer_is_one_condition(runtime):
+    now = now_ms()
+    _plant(runtime, "plant")
+    runtime.archive.set_state(
+        "collector",
+        {"heartbeat": now, "sources": {}, "gateway_buffer_bytes": 300 * 1024 * 1024},
+    )
+    [backlog] = open_conditions(runtime.catalog, runtime.archive, now=now)
+    assert (backlog.name, backlog.key) == ("gateway.backlog", "gateway")
+    assert "300 MB" in backlog.summary
+    runtime.archive.set_state(
+        "collector", {"heartbeat": now, "sources": {}, "gateway_buffer_bytes": 1024}
+    )
     assert _keys(runtime, now) == []

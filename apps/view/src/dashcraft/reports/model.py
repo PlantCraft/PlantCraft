@@ -17,7 +17,7 @@ A report names fixed signals and assets: no variables (one report for each asset
 from __future__ import annotations
 
 import re
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -50,6 +50,32 @@ SectionKind = Literal["text", "card", "events", "break", "assistant"]
 GROUP_BY = re.compile(r"^(subject|kind|severity|payload\.[a-z][a-z0-9_]{0,40})$")
 
 
+class EventTrigger(BaseModel):
+    """Make the report when an event ends something: a batch, a start-up, a shutdown (V5).
+
+    Each new event of ``end_kind`` (about ``subject``, or any subject) makes one report over
+    the period it closes: from the newest ``start_kind`` event about the same subject before it,
+    else from the ``start`` (or ``started_at``) in its payload, else the report's own period
+    before it. A period is at most ``MAX_EVENT_DAYS`` long."""
+
+    end_kind: str = Field(max_length=200)
+    start_kind: str = Field(default="", max_length=200)
+    subject: str = Field(default="", max_length=300)
+
+    @field_validator("end_kind", "start_kind")
+    @classmethod
+    def _kind(cls, value: str, info: Any) -> str:
+        value = (value or "").strip()
+        if (value or info.field_name == "end_kind") and not EVENT_KIND.match(value):
+            raise ValueError(t("Unknown kind of event: {kind}.", kind=value))
+        return value
+
+    @field_validator("subject")
+    @classmethod
+    def _subject(cls, value: str) -> str:
+        return (value or "").strip()
+
+
 class Schedule(BaseModel):
     """When the report is made and sent, in the installation's time zone (``PLANTCRAFT_TIMEZONE``):
     every day at ``at``, every week (or every other week) on ``weekday`` at ``at``, every month (or
@@ -65,6 +91,8 @@ class Schedule(BaseModel):
     # Cover the last whole calendar period of the cadence (yesterday, last Monday to Sunday,
     # last month, last quarter) instead of the report's period ending when it is made.
     closed: bool = False
+    # Also (or only) when an event ends a batch or a start-up: a report over that period.
+    on_event: EventTrigger | None = None
 
     @field_validator("at")
     @classmethod
@@ -152,7 +180,7 @@ class Section(BaseModel):
                 raise ValueError(t("A panel section needs its panel."))
             if self.card.kind == "text":
                 raise ValueError(t("Write notes in a text section, not in a panel."))
-            if self.card.kind == "diagram":
+            if self.card.kind in ("diagram", "apc"):
                 raise ValueError(
                     t("A report shows panels of signals; process displays stay on screens.")
                 )

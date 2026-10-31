@@ -187,6 +187,8 @@ export interface Algorithm {
   diagram: Diagram; check: DiagramCheck; docs: AlgorithmDocs; docs_generated: AlgorithmDocs;
   method_ids: string[]; aliases?: string[]; created_at?: string | null; updated_at?: string | null; docs_problems?: string[];
   timing?: AssetTiming; assets?: string[];
+  /** PlantCraft equipment types whose every asset it also runs on, subtypes included (A20). */
+  asset_types?: string[];
   /** Where its runs go on the suite's compute workers: the environment (image) and the size. */
   compute?: ComputePlacement;
   /** Who wrote it ("PlantCraft" for the ones that ship), who answers for it, its tags and the
@@ -558,3 +560,14 @@ export interface ApcController {
 }
 
 export interface ApcList { since: string | null; until: string | null; controllers: ApcController[] }
+
+/** The plant map (A6): each loop's KPIs, banded on one scale (higher is better). */
+export type PlantMapBand = "good" | "fair" | "poor" | "bad" | "none";
+export interface PlantMapLoop {
+  loop_id: string; name: string; area: string; criticality: string; weight: number; status: string | null;
+  values: Record<string, number | null>; bands: Record<string, PlantMapBand>;
+}
+export interface PlantMap { kpis: Array<{ key: string; label: string }>; bands: Array<{ band: PlantMapBand; from: number }>; loops: PlantMapLoop[] }
+
+/** A PlantCraft asset type an algorithm on assets can run on every asset of (A20). */
+export interface AssetTypeChoice { id: string; name: string; parent?: string | null; roles: string[] }

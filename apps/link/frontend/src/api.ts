@@ -1,7 +1,7 @@
 import { configureFolders, createApiClient, jsonBody, withImageHrefs, type PromptText } from "@plantcraft/ui";
 import type { Diagram, DiagramCheck } from "@plantcraft/ui/blockEditor";
 import { href } from "./nav";
-import type { Algorithm, ApcController, ApcList, AlgorithmDocs, AlgorithmVersion, AlgorithmTest, AlgorithmUsage, AssetChoice, AssetLink, AssetRun, AssetTiming, BlockCheck, BlockCode, BlockDetail, BlockFileDoc, Blocks, BlockSaved, BlockTestAnswer, CalibrationAnswer, CheckSpec, ComputeOffer, DefaultsVersion, ComputePlacement, Execution, ExecutionGroup, ExecutionList, GroupSubject, OwnSeries, SubjectHistory, HelpDocEntry, HistoryPoint, Job, LoopConfig, LoopDetail, LoopReference, LoopRow, TuningSuggestion, Me, MethodGroup, MethodSpec, ModelExample, ModelExampleCreated, ModelRow, ModelStarter, Overview, QualityRun, RepeatedAlgorithm, ResultList, ResultQuery, RunRow, Schedule, SchedulePreview, SignalAlgorithm, SignalData, SignalDetail, SignalOption, SignalRow, Status_, SyncResult, UserGroup, Verdict } from "./types";
+import type { Algorithm, AlgorithmDocs, AlgorithmVersion, AlgorithmTest, AlgorithmUsage, AssetChoice, AssetTypeChoice, AssetLink, AssetRun, AssetTiming, BlockCheck, BlockCode, BlockDetail, BlockFileDoc, Blocks, BlockSaved, BlockTestAnswer, CalibrationAnswer, CheckSpec, ComputeOffer, DefaultsVersion, ComputePlacement, Execution, ExecutionGroup, ExecutionList, GroupSubject, OwnSeries, SubjectHistory, HelpDocEntry, HistoryPoint, Job, LoopConfig, LoopDetail, LoopReference, LoopRow, TuningSuggestion, Me, PlantMap, MethodGroup, MethodSpec, ModelExample, ModelExampleCreated, ModelRow, ModelStarter, Overview, QualityRun, RepeatedAlgorithm, ResultList, ResultQuery, RunRow, Schedule, SchedulePreview, SignalAlgorithm, SignalData, SignalDetail, SignalOption, SignalRow, Status_, SyncResult, UserGroup, Verdict, ApcController, ApcList } from "./types";
 import { RESULT_FILTERS } from "./types";
 
 const client = createApiClient({ app: "linkcraft", href });
@@ -41,6 +41,7 @@ export const api = {
   updateLoop: (loopId: string, payload: Record<string, unknown>) => request<{ loop: LoopConfig }>(`/api/loops/${id(loopId)}`, body("PATCH", payload)),
   deleteLoop: (loopId: string) => request<void>(`/api/loops/${id(loopId)}`, { method: "DELETE" }),
   tuningSuggestion: (loopId: string) => request<TuningSuggestion>(`/api/loops/${id(loopId)}/tuning`),
+  plantMap: () => request<PlantMap>("/api/plant-map"),
   recordReference: (loopId: string) => request<LoopReference>(`/api/loops/${id(loopId)}/reference`, { method: "POST" }),
   deleteReference: (loopId: string) => request<void>(`/api/loops/${id(loopId)}/reference`, { method: "DELETE" }),
   signalSearch: (q: string) => request<SignalOption[]>(`/api/signal-search?${new URLSearchParams({ q, limit: "20" })}`),
@@ -170,6 +171,7 @@ export const api = {
   runAlgorithm: (algorithmId: string) => request<AssetRun[]>(`/api/algorithms/${id(algorithmId)}/run`, { method: "POST" }),
   /** Every asset of PlantCraft, for an algorithm on assets to name. */
   assetChoices: () => request<AssetChoice[]>("/api/asset-choices"),
+  assetTypeChoices: () => request<AssetTypeChoice[]>("/api/asset-type-choices"),
   qualityRun: (runId: string | number) => request<QualityRun>(`/api/signal-quality/runs/${id(String(runId))}`),
 };
 

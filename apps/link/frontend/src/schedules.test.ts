@@ -5,7 +5,7 @@ import { BLANK_WHEN, timingOf, whenOf, whenProblem } from "./scheduleWhen";
 import type { Execution, RecordedOutput } from "./types";
 
 const FORM = {
-  name: " Night run ", profile_id: "", owner: "ana", mode: "list" as const, ids: "FIC-101, LIC-102\nTIC-104", assets: [] as string[], q: "",
+  name: " Night run ", profile_id: "", owner: "ana", mode: "list" as const, ids: "FIC-101, LIC-102\nTIC-104", assets: [] as string[], q: "", allAssets: false,
   when: { ...BLANK_WHEN, freq: "days" as const, times: ["00:00"] }, timezone: "America/Sao_Paulo",
   lookback_minutes: 1440, priority: 20, spread_minutes: 30, enabled: true, retry: DEFAULT_RETRY, outputs: {}, node_parameters: {},
 };
@@ -30,6 +30,8 @@ describe("schedules", () => {
     expect(payloadOf({ ...FORM, mode: "filter", q: " FIC " }).selector).toEqual({ mode: "filter", q: "FIC" });
     // An algorithm on assets runs on the assets chosen, whatever the loop fields say.
     expect(payloadOf({ ...FORM, assets: ["u-100-furnaces"] }, true).selector).toEqual({ mode: "list", ids: ["u-100-furnaces"] });
+    // Every asset of the algorithm (its own and those of its equipment types, A20).
+    expect(payloadOf({ ...FORM, assets: ["u-100-furnaces"], allAssets: true }, true).selector).toEqual({ mode: "all" });
     // An empty data window is Analytics' default: not sent (the API refuses 0, and the loop
     // monitor's page answered every preview and save with 422).
     expect(payloadOf(FORM).lookback_minutes).toBe(1440);

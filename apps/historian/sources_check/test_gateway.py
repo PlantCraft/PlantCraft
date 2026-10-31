@@ -143,3 +143,60 @@ def test_sql_wide_long_and_naive_tables_archive_the_plant(historian, telegraf, p
             assert inside, (signal, len(samples))
             again = rebuilt(times, values, [t for t, _ in inside], step=False)
             assert again == pytest.approx([v for _, v in inside], rel=1e-9), signal
+
+
+def test_values_read_while_the_collector_is_away_arrive_after_a_gateway_restart(
+    historian, telegraf, series
+):
+    # Store and forward (H3): the collector stops, the gateway keeps reading into its disk
+    # buffer, is killed and started again, and every second read meanwhile reaches the
+    # collector once it is back, in order.
+    import time
+
+    from histcraft.collector.service import Collector, CollectorThread
+
+    port = free_port()
+    device = modbus.ModbusPlant(series, port=port)
+    with Background(device.start, device.stop):
+        historian.add(
+            SourceIn(
+                id="plc",
+                name="PLC",
+                kind="modbus",
+                endpoint=device.url,
+                default_scan_seconds=1,
+                options=modbus.options(),
+            ),
+            [],
+        )
+        historian.thread.start()
+        historian.start_gateway(telegraf)
+        browse_and_add(historian, "plc", len(modbus.expected(series)))
+        historian.thread.stop()
+        away_from = int(time.time() * 1000)
+        time.sleep(6)
+        assert historian.gateway is not None
+        historian.gateway.kill()  # no clean shutdown: only the disk keeps what it read
+        historian.gateway.wait(10)
+        historian.start_gateway(telegraf)
+        time.sleep(4)
+        away_until = int(time.time() * 1000)
+        collector = Collector(historian.settings, historian.catalog, historian.archive)
+        times: list[int] = []
+        taken = collector.ingest
+
+        def recording(metrics):
+            times.extend(m.at_ms for m in metrics if m.tags.get("histcraft_source") == "plc")
+            return taken(metrics)
+
+        collector.ingest = recording  # type: ignore[method-assign]
+        historian.thread = CollectorThread(collector)
+        historian.thread.start()
+        inside = lambda: sorted({at // 1000 for at in times if away_from < at < away_until})  # noqa: E731
+        # At one read a second, at least 8 of the 10 seconds away (the first may fall before).
+        wait(
+            lambda: len(inside()) >= 8,
+            timeout=60,
+            what=lambda: f"reads while away: {inside()}\n{historian.gateway_log()[-3000:]}",
+        )
+        assert "buffer" in (historian.data_dir / "gateway" / "telegraf.conf").read_text()

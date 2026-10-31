@@ -10,6 +10,13 @@ it (``--watch-config poll``). Only what is written here runs in the gateway:
 - one output, ``outputs.influxdb_v2``, to the collector (``collector.ingest``) with the token
   in ``<data>/gateway/token``.
 
+Store and forward (H3): what the collector has not taken yet waits in Telegraf's disk buffer,
+``<data>/gateway-buffer`` (the gateway's ``/var/lib/telegraf-buffer``), and goes in order when
+the collector answers again, even after the gateway restarted. Telegraf refuses to start when
+it cannot write that folder, so the collector makes it and writes ``memory`` instead when it is
+not writable (or with ``HISTCRAFT_GATEWAY_BUFFER=memory``). A batch sent twice (an answer lost)
+is taken once: the collector keeps the first value at each time (``Collector.ingest``).
+
 MQTT subscribes, Modbus reads registers and coils, SQL runs the source's SELECT: nothing writes
 to a plant system. Every value is a TOML basic string written by ``json.dumps``, so no text a
 person typed can add a line, a table or another plugin.
@@ -18,6 +25,8 @@ person typed can add a line, a table or another plugin.
 from __future__ import annotations
 
 import json
+import logging
+import os
 import secrets
 from collections.abc import Callable
 from pathlib import Path
@@ -30,7 +39,9 @@ from histcraft.catalog.models import GATEWAY_KINDS
 from histcraft.collector.ingest import GATEWAY_SOURCE, SOURCE_TAG
 from histcraft.config import Settings
 
+LOGGER = logging.getLogger(__name__)
 FOLDER = "gateway"
+BUFFER_FOLDER = "gateway-buffer"
 CONFIG = "telegraf.conf"
 TOKEN = "token"
 # Telegraf plugins Historian configures; tests/test_read_only.py checks no other appears.
@@ -74,14 +85,64 @@ def gateway_token(data_dir: Path) -> str:
     return token
 
 
+def buffer_folder(data_dir: Path) -> Path:
+    """The gateway's disk buffer as the collector sees it."""
+
+    return Path(data_dir) / BUFFER_FOLDER
+
+
+def buffer_ready(settings: Settings) -> bool:
+    """Whether the gateway keeps its buffer on disk: asked for, and the folder writable (made
+    here, owner only, when missing)."""
+
+    if settings.gateway_buffer != "disk":
+        return False
+    folder = buffer_folder(settings.data_dir)
+    try:
+        folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+    except OSError:
+        pass
+    if folder.is_dir() and os.access(folder, os.W_OK | os.X_OK):
+        return True
+    LOGGER.warning(
+        "%s cannot be written: the gateway keeps its buffer in memory (lost if it restarts "
+        "while the collector is away)",
+        folder,
+    )
+    return False
+
+
+def buffer_bytes(data_dir: Path) -> int:
+    """What the gateway's disk buffer holds now (bytes; 0 without one)."""
+
+    total = 0
+    for root, _dirs, files in os.walk(buffer_folder(data_dir)):
+        for name in files:
+            try:
+                total += (Path(root) / name).stat().st_size
+            except OSError:
+                continue
+    return total
+
+
 def render(
     settings: Settings,
     sources: list[dict[str, Any]],
     password: Callable[[dict[str, Any]], str],
     general_scan: float,
+    *,
+    disk: bool = False,
 ) -> str:
-    """The gateway's whole configuration for these sources."""
+    """The gateway's whole configuration for these sources (``disk``: its buffer on disk)."""
 
+    buffer = (
+        [
+            '  buffer_strategy = "disk"',
+            f"  buffer_directory = {_quote(settings.gateway_buffer_dir)}",
+        ]
+        if disk
+        else []
+    )
     lines = [
         "# PlantCraft Historian's gateway. Written by the collector: changes here are replaced",
         "# when a source changes. Sources are set up on Historian's Sources page.",
@@ -91,6 +152,7 @@ def render(
         '  flush_interval = "2s"',
         "  metric_batch_size = 1000",
         "  metric_buffer_limit = 100000",
+        *buffer,
         "  omit_hostname = true",
         "",
         "[[outputs.influxdb_v2]]",
@@ -223,7 +285,7 @@ def write_config(
 ) -> str:
     """Write the configuration when it changed; the text written."""
 
-    text = render(settings, sources, password, general_scan)
+    text = render(settings, sources, password, general_scan, disk=buffer_ready(settings))
     path = Path(settings.data_dir) / FOLDER / CONFIG
     if text != previous or not path.exists():
         _private(path, text)

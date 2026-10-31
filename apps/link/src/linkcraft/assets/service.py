@@ -29,12 +29,14 @@ SUBJECT_KIND = "asset"
 
 
 def asset_algorithms(profiles: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """The algorithms that run on assets, with at least one asset."""
+    """The algorithms that run on assets, with at least one asset or equipment type."""
 
     found = []
     for profile in profiles:
         config = profile.get("method_config") or {}
-        if config.get("subject_kind") == SUBJECT_KIND and config.get("assets"):
+        if config.get("subject_kind") == SUBJECT_KIND and (
+            config.get("assets") or config.get("asset_types")
+        ):
             found.append(profile)
     return found
 

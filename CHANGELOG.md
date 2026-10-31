@@ -15,6 +15,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   variable* (`apc_variable`: roles `value`, `lo`, `hi`, `target`, `status`, `shadow_price`,
   attribute `limit_band`). An existing installation gets them at its next start. Analytics' APC
   health and View's MV/CV widget read them.
+- The Historian's gateway writes its buffer to `data/histcraft/gateway-buffer` (made by
+  `install.sh`; mounted read-write in `histcraft-gateway`, its only writable folder), so values
+  read while the collector is away survive a gateway restart.
+
 - **The owners of a failing source hear of it** (gap H13): a condition the Historian reports
   with `owners` in its payload (`source.disconnected`, `source.late`) is told to them as a
   Historian notification, in Messages and by email, with the team's contact and a link to the
@@ -125,6 +129,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Customizing an overview shows that it is on.** A tinted bar that stays in view says
+  "Customizing this page", explains the moves and keeps **Done** at hand; each widget gets a
+  stronger outline (ui 0.97.0, interface pass of 2026-10-31).
 - **Plotly and the fonts download once for the whole suite, not once per app (ui 0.96.0).**
   The platform serves them at `/static/vendor/` under names that carry a hash of their bytes
   (kept a year by the proxy), and every app asks there first: `@plantcraft/ui/plot` loads

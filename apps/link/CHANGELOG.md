@@ -16,6 +16,18 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   The weekly report has the same tables, and the widget "Analytics: multivariable controllers"
   shows each controller on the Overview and on Desk. It reads the assets of types `apc`, `apc_mv`
   and `apc_cv` (`GET /api/apc`, `GET /api/apc/<id>`) and writes nothing.
+- **A plant map on the Overview: every loop coloured by the KPI you pick.** The KPIs are health,
+  effective control, time in normal mode, time inside the band, and time with the output off its
+  limits. All of them are percentages where higher is better, so one scale colours them: good
+  from 90, fair from 75, poor from 50, bad below. Two views: a heat map grouped by area, and a
+  treemap whose rectangles are sized by the loop's criticality (critical, high, medium, low), so
+  the critical loops take the most room. Each loop opens its page. `GET /api/plant-map`.
+- **An algorithm on assets can run on every asset of an equipment type.** On the algorithm's
+  page, "And every asset of a type" adds PlantCraft asset types, subtypes included, for example
+  every pump or every exchanger. A monitor on "Every asset of the algorithm" reads the type's
+  assets from PlantCraft at each run (at most once a minute), so an asset added later is picked
+  up without changing the algorithm. Saving without naming the types keeps them. New route:
+  `GET /api/asset-type-choices`.
 - **Oscillations several loops share, grouped by period, with where each likely starts.**
   The loops the last runs found oscillating are grouped when their periods are within 15% of
   each other: a plant-wide oscillation starts in one place and travels. In each group the loop
