@@ -358,3 +358,28 @@ def test_show_config_exits_1_when_env_differs_from_the_file(tmp_path):
     assert run(applied + "PLANTCRAFT_LLM=off\n") == 0
     assert run(applied + "PLANTCRAFT_LLM=\n") == 1  # edited by hand
     assert run("PLANTCRAFT_LLM=off\n") == 1  # never applied
+
+
+def test_preflight_in_wsl_refuses_only_docker_desktops_docker():
+    """P9: Rancher Desktop's Linux docker reaches WSL through Windows' PATH (/mnt/c/...) and works
+    with its WSL integration; Docker Desktop's, found the same way, is refused."""
+
+    text = (ROOT / "deploy" / "preflight.sh").read_text()
+    start = text.index('if [ "$wsl" = 1 ] && [[ "$(command -v docker')
+    condition = text[start : text.index("; then", start)].removeprefix("if ")
+    script = (
+        "wsl=1\n"
+        'docker_path="$1"\n'
+        'command() { echo "$docker_path"; }\n'
+        f"if {condition}; then echo refused; else echo accepted; fi\n"
+    )
+
+    def verdict(path: str) -> str:
+        done = subprocess.run(["bash", "-c", script, "x", path], capture_output=True, text=True)
+        return done.stdout.strip()
+
+    assert verdict("/mnt/c/Program Files/Docker/Docker/resources/bin/docker") == "refused"
+    assert verdict("/mnt/c/Program Files/Docker/Docker/resources/bin/docker.exe") == "refused"
+    rancher = "/mnt/c/Users/me/AppData/Local/Programs/Rancher Desktop/resources/resources/linux/bin/docker"
+    assert verdict(rancher) == "accepted"
+    assert verdict("/usr/bin/docker") == "accepted"

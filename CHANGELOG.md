@@ -9,6 +9,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Windows without Docker Desktop: Rancher Desktop.** `./install.sh --check` in WSL now accepts
+  Rancher Desktop's Linux `docker`, which reaches Ubuntu through Windows' PATH. It refused that
+  path before, as if it were Docker Desktop's. `docs/install.md` gives the Rancher Desktop
+  settings (dockerd, Kubernetes off, WSL integration). The tested way is still Docker Engine
+  inside WSL (`--install-docker`).
+
 - `plantcraft-sdk`: `PlantCraftClient.lab_samples(signal, start, end)` reads a laboratory
   signal's samples from the Historian, each with its status and its received and approved times
   (an empty list without a Historian). View's trends use it.
