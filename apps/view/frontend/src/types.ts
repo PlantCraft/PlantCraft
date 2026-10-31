@@ -146,10 +146,13 @@ export interface TrendLineSpec { signal_id: string; label?: string; agg?: TrendA
 /** A trend line as read: the summary used ("recorded" for the samples as they are) and a note when it fell back. */
 /** A laboratory result (`laboratory:<analysis>`): drawn at its sampling time, with its other times. */
 export interface LabSample { sampled_at: string; value: number | null; status: "entered" | "approved" | "rejected" | string; received_at?: string | null; approved_at?: string | null }
-export type TrendLine = Line & { agg?: TrendAgg | "recorded"; step?: number; style?: LineStyle; note?: string | null; samples?: LabSample[] }
+/** `compare`: an earlier period's line moved onto the trend's time axis; `source`: the index of its line in the plot. */
+export type TrendLine = Line & { agg?: TrendAgg | "recorded"; step?: number; style?: LineStyle; note?: string | null; samples?: LabSample[]; compare?: TrendCompare; source?: number }
 export interface TrendPlotSpec { title?: string; lines: TrendLineSpec[] }
 export interface TrendPeriod { mode: "relative" | "fixed"; window: string; start?: string | null; end?: string | null }
-export interface TrendView { plots: TrendPlotSpec[]; period: TrendPeriod; step_seconds: number | null }
+/** An earlier period drawn over the trend's own: the one just before, or a day, a week or four weeks back. */
+export type TrendCompare = "previous" | "1d" | "7d" | "28d";
+export interface TrendView { plots: TrendPlotSpec[]; period: TrendPeriod; step_seconds: number | null; compare?: TrendCompare[] }
 export interface Trend extends TrendView {
   trend_id: string; name: string; description: string; created_by: string | null; created_at: string; updated_by: string | null; updated_at: string;
 }
