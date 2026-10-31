@@ -26,6 +26,7 @@ from alarmcraft.alarms.blocks import (
     ASSET,
     CATALOG,
     EVENT_BLOCKS,
+    GRADE_BLOCK,
     PYTHON_BLOCK,
     VALUE_BLOCK,
     _time,
@@ -232,7 +233,12 @@ def run(
     execute(plan, CATALOG, context)
     extra = context.extra
     outcome.transitions = [(kind, moment.to_pydatetime()) for kind, moment in extra["transitions"]]
-    shown = extra.get("shown") or {}
+    shown = dict(extra.get("shown") or {})
+    # The value an alarm shows is what it watches, not the grade code feeding a Grade limit.
+    graded = {node["id"] for node in nodes(diagram, GRADE_BLOCK)}
+    for edge in diagram.get("edges") or []:
+        if edge.get("target") in graded and len(shown) > 1:
+            shown.pop(edge.get("source"), None)
     if shown:
         value, unit, signal = next(iter(shown.values()))
         outcome.value, outcome.unit, outcome.signal = value, unit, signal
@@ -243,9 +249,10 @@ def run(
     if matched:
         outcome.heard = heard(matched[-1])
     raise_node = nodes(diagram, ALARM_BLOCK)
-    state["active"] = bool(
-        (state["nodes"].get(raise_node[0]["id"]) or {}).get("active") if raise_node else False
-    )
+    raised = (state["nodes"].get(raise_node[0]["id"]) or {}) if raise_node else {}
+    state["active"] = bool(raised.get("active"))
+    # Suppressed by design: the rule's permissive does not hold (``alarm.raise`` Enabled when).
+    state["suppressed"] = bool(raised.get("suppressed"))
     state["evaluated_until"] = stop.isoformat()
     return outcome
 

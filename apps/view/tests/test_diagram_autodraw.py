@@ -5,7 +5,13 @@ from __future__ import annotations
 
 import random
 
-from dashcraft.diagrams.autodraw import draw_unit, unit_diagrams
+from dashcraft.diagrams.autodraw import (
+    OVERVIEW_PAGE,
+    draw_unit,
+    plant_display,
+    plant_units,
+    unit_diagrams,
+)
 from dashcraft.diagrams.model import MAX_SIZE, PAGE_ELEMENTS, DiagramPayload
 from tests.conftest import client_for
 
@@ -303,3 +309,62 @@ def test_a_new_plants_first_step_draws_the_plant_with_a_page_per_unit(client, ru
     assert again["counts"] == {"created": 0, "kept": 1, "pages": 0}
     with client_for(runtime, fake, "operator") as viewer:
         assert viewer.post("/dash/api/start/unit-diagrams", json=body).status_code == 403
+
+
+def _two_units() -> list[dict]:
+    second = [
+        {"id": "U2", "name": "Unit 2", "kind": "unit", "parent_id": None},
+        {"id": "P9", "name": "P-9", "kind": "pump", "parent_id": "U2"},
+    ] + [
+        {"id": f"F{n}", "name": f"FIC-2{n:02d}", "kind": "loop", "parent_id": "U2"}
+        for n in range(12)
+    ]
+    return _tree() + second
+
+
+def test_a_plant_of_two_units_opens_on_an_overview_with_a_block_per_unit():
+    display = plant_display(_two_units(), ["U", "U2"], name="Plant")
+    DiagramPayload.model_validate(display)
+    assert [page["id"] for page in display["pages"]] == [OVERVIEW_PAGE, "p1", "p2"]
+    first = [element for element in display["elements"] if element["page"] == OVERVIEW_PAGE]
+    blocks = [element for element in first if element.get("symbol") == "shape.panel"]
+    assert [block["link"] for block in blocks] == [
+        {"kind": "page", "target": "p1"},
+        {"kind": "page", "target": "p2"},
+    ]
+    counts = [element["text"] for element in first if element["id"].startswith("count")]
+    assert counts == ["5 equipment · 2 control loops", "1 equipment · 12 control loops"]
+    bubbles = [element for element in first if element.get("symbol") == "instrument.bubble"]
+    # Unit 1's two loops and Unit 2's first eight, each coloured by its health.
+    assert len(bubbles) == 10
+    item = bubbles[0]["state"]["item"]
+    assert (item["asset_id"], item["result"]) == ("L2", "linkcraft.loop_health")
+    assert any(element["text"] == "+4 more" for element in first if element["type"] == "text")
+    # Each unit's page has its way back.
+    back = [element for element in display["elements"] if element["id"].endswith("-back")]
+    assert {element["page"] for element in back} == {"p1", "p2"}
+    assert all(element["link"] == {"kind": "page", "target": OVERVIEW_PAGE} for element in back)
+
+
+def test_one_unit_has_no_overview():
+    display = plant_display(_tree(), ["U"], name="Plant")
+    assert [page["id"] for page in display["pages"]] == ["p1"]
+    assert not [element for element in display["elements"] if element["id"].endswith("-back")]
+
+
+def test_the_plants_units_are_its_unit_kinds_else_the_assets_that_hold_others():
+    assert plant_units(_two_units()) == ["A", "U", "U2"]
+    loose = [
+        {"id": "top", "name": "Top", "kind": "thing"},
+        {"id": "p", "name": "P", "kind": "pump", "parent_id": "top"},
+    ]
+    assert plant_units(loose) == ["top"]
+
+
+def test_drawing_the_whole_plant_is_an_editors(client, runtime, fake):
+    drawn = client.post("/dash/api/diagrams/draw-plant")
+    assert drawn.status_code in (200, 404), drawn.text
+    if drawn.status_code == 200:
+        DiagramPayload.model_validate(drawn.json()["diagram"])
+    with client_for(runtime, fake, "operator") as operator:
+        assert operator.post("/dash/api/diagrams/draw-plant").status_code == 403

@@ -9,6 +9,7 @@ runs are kept here and simply not reported.
 
 from __future__ import annotations
 
+import copy
 import logging
 from datetime import UTC, datetime, timedelta
 from importlib import resources
@@ -24,12 +25,15 @@ from plantcraft_sdk.server.store import Database
 
 from modelcraft import APP_ID
 from modelcraft.config import Settings
+from modelcraft.omc import results
 from modelcraft.omc.jobs import Executor, LocalExecutor, QueueExecutor, SuiteExecutor
 from modelcraft.projects.models import SYSTEM
 from modelcraft.projects.store import ProjectStore
+from modelcraft.runs.plant import read_plant
 from modelcraft.runs.service import Workbench
 from modelcraft.runs.store import RunStore
-from modelcraft.suite import Suite
+from modelcraft.runs.tracking import Tracker, TrackingStore
+from modelcraft.suite import Suite, events
 
 LOGGER = logging.getLogger(__name__)
 # The example models every install shows, kept as Models ships them (a person duplicates one
@@ -59,6 +63,35 @@ EXAMPLE_STUDY = {
         "options": {"start": 0.0, "stop": 900.0, "intervals": 450},
         "sweep": [{"name": "controller.k", "mode": "list", "values": [2, 4, 8]}],
         "indicators": ["tank.level"],
+    },
+}
+# The example optimization: the first order plus dead time loop's PI tuned for the least IAE,
+# from a sluggish start, with the overshoot kept to 10 %. On that process (gain 2, lag 20 s,
+# dead time 5 s) it ends near k 1.2 and Ti 21 s in about 35 simulations, beside the SIMC rule's
+# k 1.0 and Ti 20 s (Skogestad 2003, tests/test_optimize.py checks it on the same loop).
+EXAMPLE_OPTIMIZATION = {
+    "model": "PlantCraftExamples.FirstOrderDeadTimeLoop",
+    "name": "Example: tune the PI for the least IAE",
+    "description": "The PI controller's gain and integral time that bring the loop to its new "
+    "setpoint with the least integral of absolute error (IAE), overshooting by 10 % at most. "
+    "Made by Models as an example: open it to follow the optimizer, or tune your own loop the "
+    "same way with Find the best values.",
+    "spec": {
+        "options": {"start": 0.0, "stop": 300.0, "intervals": 600, "overrides": {}},
+        "sweep": [],
+        "indicators": ["dead_time.y"],
+        "optimization": {
+            "variables": [
+                {"name": "controller.k", "start": 0.4, "min": 0.1, "max": 4.0},
+                {"name": "controller.Ti", "start": 60.0, "min": 2.0, "max": 100.0},
+            ],
+            "objective": {"variable": "dead_time.y", "statistic": "iae", "goal": "minimize"},
+            "constraints": [
+                {"variable": "dead_time.y", "statistic": "overshoot", "op": "<=", "value": 10.0}
+            ],
+            "method": "cobyla",
+            "max_simulations": 60,
+        },
     },
 }
 # Example projects of earlier versions -> the package that took their place: the project is kept
@@ -169,10 +202,24 @@ class Runtime(PlatformRuntime):
             check_timeout=settings.check_seconds,
             run_timeout=settings.run_seconds,
             workers=settings.run_workers,
-            publish=self.suite.run_finished,
+            publish=self._run_changed,
             publish_study=self.suite.study_finished,
             batch=settings.run_batch,
             blocks=self.projects.library_files,
+        )
+        # Models run against the plant on a schedule, their error kept as signals (M3).
+        self.trackings = TrackingStore(self.db)
+        self.tracker = Tracker(
+            self.trackings,
+            self.runs,
+            start=self.start_tracking,
+            series=lambda run_id, names: results.series(
+                self.workbench.run_dir(run_id), names, max_points=20_000
+            ),
+            compare=self.workbench.compare,
+            client=lambda: self.service_client,
+            events=events.tracking_mismatch,
+            delete_run=self.workbench.delete_run,
         )
         self.queue_metrics = QueueMetrics(self.db)
         self.queue_sampler = QueueSampler(self.queue_metrics, self.queue_now)
@@ -248,12 +295,17 @@ class Runtime(PlatformRuntime):
                 )
 
     def seed_example_study(self) -> dict[str, Any] | None:
-        """The example study, queued once (at the first start, or when it was deleted): its
-        simulations run with the queue, so it is ready to read a moment after the install."""
+        """The example study and the example optimization, each queued once (at the first start,
+        or when it was deleted): their simulations run with the queue, so they are ready to read
+        a moment after the install. Returns the example study when it was queued now."""
 
+        self._seed_example(EXAMPLE_OPTIMIZATION, self.workbench.start_optimization)
+        return self._seed_example(EXAMPLE_STUDY, self.workbench.start_study)
+
+    def _seed_example(self, example: dict[str, Any], start: Any) -> dict[str, Any] | None:
         if any(
-            study["name"] == EXAMPLE_STUDY["name"] and study.get("created_by") == SYSTEM
-            for study in self.runs.studies(model=EXAMPLE_STUDY["model"])
+            study["name"] == example["name"] and study.get("created_by") == SYSTEM
+            for study in self.runs.studies(model=example["model"])
         ):
             return None
         project = next(
@@ -267,18 +319,74 @@ class Runtime(PlatformRuntime):
         if project is None:
             return None
         try:
-            return self.workbench.start_study(
+            return start(
                 project["id"],
-                EXAMPLE_STUDY["model"],
-                name=EXAMPLE_STUDY["name"],
-                description=EXAMPLE_STUDY["description"],
-                spec=EXAMPLE_STUDY["spec"],
+                example["model"],
+                name=example["name"],
+                description=example["description"],
+                spec=copy.deepcopy(example["spec"]),
                 by=SYSTEM,
                 max_runs=self.settings.study_max_runs,
             )
         except Exception:  # an example never stops the app from starting
-            LOGGER.exception("The example study could not be queued")
+            LOGGER.exception("The example %r could not be queued", example["name"])
             return None
+
+    def _run_changed(self, run: dict[str, Any]) -> None:
+        """A run queued, started or ended: the suite hears of it; a tracking's writes its error."""
+
+        self.suite.run_finished(run)
+        tracker = getattr(self, "tracker", None)
+        if tracker is None:
+            return
+        try:
+            tracker.finished(run)
+        except Exception:  # noqa: BLE001 - the run itself is kept; the tracking says nothing new
+            LOGGER.exception("Tracking result of run %s not written", run.get("id"))
+
+    def start_tracking(
+        self, tracking: dict[str, Any], start: datetime, end: datetime
+    ) -> dict[str, Any]:
+        """Queue one simulation of a tracking over ``start``..``end``, the plant read with the
+        app's service token; the run."""
+
+        client = self.service_client
+        if client is None:
+            raise RuntimeError("Models has no app key: it cannot read the plant on its own.")
+        config = tracking["config"]
+        extra, compare, duration = read_plant(
+            lambda *args: client.series_many(*args),
+            start,
+            end,
+            config.get("step_seconds"),
+            config.get("inputs") or {},
+            config.get("compare") or {},
+        )
+        options = {
+            "start": 0.0,
+            "stop": duration,
+            "intervals": int(config.get("intervals") or 500),
+            "tolerance": 1e-6,
+            "method": "dassl",
+            "overrides": config.get("overrides") or {},
+            "plant": {
+                "start": start.astimezone(UTC).isoformat(),
+                "end": end.astimezone(UTC).isoformat(),
+                "inputs": config.get("inputs") or {},
+                "compare": config.get("compare") or {},
+            },
+            "tracking": tracking["id"],
+        }
+        return self.workbench.start(
+            tracking["project_id"],
+            tracking["model"],
+            "simulate",
+            options,
+            by=tracking.get("created_by") or "",
+            label=f"Tracking: {tracking['name']}"[:120],
+            extra=extra,
+            compare=compare,
+        )
 
     def start(self) -> None:
         interrupted = self.runs.interrupted()
@@ -295,8 +403,10 @@ class Runtime(PlatformRuntime):
             self.seed_example_study()
         self.workbench.queue.wake()
         self.queue_sampler.start()
+        self.tracker.begin()
 
     def shutdown(self) -> None:
+        self.tracker.end()
         self.queue_sampler.stop()
         self.workbench.shutdown()
         self.close_platform()

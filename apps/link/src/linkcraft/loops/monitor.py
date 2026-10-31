@@ -36,6 +36,7 @@ from linkcraft.engine.dispatcher import RetryLater, unreachable
 from linkcraft.engine.jobs import JobStore
 from linkcraft.engine.latest import LatestStore
 from linkcraft.engine.losses import LossStore
+from linkcraft.engine.references import ReferenceStore
 from linkcraft.engine.samples import ROUND_SCOPE, loop_run_key
 from linkcraft.i18n import t
 from linkcraft.loops.analysis import analyze_loop, analyze_loop_task, loop_priority, loop_summary
@@ -106,6 +107,8 @@ class MonitorService:
         self.jobs = JobStore(db)
         self.latest = LatestStore(db)
         self.losses = LossStore(db)
+        # Each loop's recorded reference run, to compare later runs with (A8).
+        self.references = ReferenceStore(db)
         self._lock = threading.RLock()
         self._run_lock = threading.Lock()
         self._snapshot: dict[str, Any] = {"status": "idle", "summary": {}, "failed_tags": []}

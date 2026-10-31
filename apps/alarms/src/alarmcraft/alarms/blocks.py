@@ -49,7 +49,7 @@ from plantcraft_sdk.blocks import (
     inport,
     outport,
 )
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from alarmcraft.alarms.model import EVENT_KIND, kind_matches
 from alarmcraft.i18n import t
@@ -58,6 +58,7 @@ LIBRARY = "alarm"
 ALARM_BLOCK = "alarm.raise"
 PYTHON_BLOCK = "alarm.python"
 VALUE_BLOCK = "alarm.value"
+GRADE_BLOCK = "alarm.grade_limit"
 EVENT_BLOCKS = ("alarm.event_open", "alarm.event_count")
 # A Python block runs at most this often (its answer holds in between).
 PYTHON_EVERY_SECONDS = 60
@@ -299,25 +300,136 @@ def run_compare(inputs: dict[str, Any], params: CompareParams, context: Context)
     values: pd.Series = inputs["value"]
     state = context.state
     active = bool(state.get("active"))
+    # Limits by product grade: a Limit input (Grade limit) replaces the fixed limit wherever it
+    # gives one; elsewhere (no grade yet, a grade without its own limit) the fixed one holds.
+    given = inputs.get("limit")
+    limits = np.full(len(values), params.limit, dtype=float)
+    if isinstance(given, pd.Series) and len(given) and len(values):
+        moving = given.reindex(values.index, method="ffill").to_numpy(dtype=float)
+        limits = np.where(np.isfinite(moving), moving, params.limit)
     found = []
-    for value in values.to_numpy(dtype=float):
+    for value, limit in zip(values.to_numpy(dtype=float), limits, strict=True):
         if not math.isfinite(value):
             found.append(active)
             continue
-        now = compare(value, params.op, params.limit)
+        now = compare(value, params.op, limit)
         if active and not now and params.deadband and params.op in (">", ">=", "<", "<="):
             # Inside the deadband the condition holds (a value hovering at the limit).
             upper = params.op in (">", ">=")
-            back = (
-                value < params.limit - params.deadband
-                if upper
-                else value > params.limit + params.deadband
-            )
+            back = value < limit - params.deadband if upper else value > limit + params.deadband
             now = not back
         active = now
         found.append(now)
     state["active"] = active
     return {"condition": pd.Series(found, index=values.index, dtype=bool)}
+
+
+class GradeEntry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    grade: str = Field(min_length=1, max_length=60, description="The grade, as the plant names it.")
+    limit: float = Field(description="The limit while this grade is made.")
+
+    @field_validator("grade")
+    @classmethod
+    def _grade(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("a grade has a name")
+        return value
+
+    @field_validator("limit")
+    @classmethod
+    def _finite(cls, value: float) -> float:
+        if not math.isfinite(value):
+            raise ValueError("a finite number")
+        return value
+
+
+class GradeParams(EventParams):
+    about: str = Field(
+        default="any",
+        max_length=320,
+        description="Whose grade events: any (the line's), subject (each asset's), or a ref.",
+    )
+    field: str = Field(
+        default="grade",
+        min_length=1,
+        max_length=60,
+        pattern=r"^[A-Za-z_][A-Za-z0-9_.-]{0,59}$",
+        description="With events: the payload field that names the grade.",
+    )
+    limits: list[GradeEntry] = Field(
+        min_length=1, max_length=100, description="The limit of each grade."
+    )
+
+    @model_validator(mode="after")
+    def _unique(self) -> GradeParams:
+        names = [item.grade for item in self.limits]
+        if len(set(names)) != len(names):
+            raise ValueError("each grade once")
+        return self
+
+
+def grade_name(value: Any) -> str | None:
+    """A grade as text: a code from a signal (3.0 is "3") or a name from an event."""
+
+    if value is None:
+        return None
+    number = _number(value)
+    if number is not None:
+        return f"{number:g}"
+    text = str(value).strip()
+    return text or None
+
+
+def run_grade_limit(
+    inputs: dict[str, Any], params: GradeParams, context: Context
+) -> dict[str, Any]:
+    """The limit of the grade being made, moment by moment. The grade comes from the Grade
+    input (a signal holding the grade's code) or, without it, from the latest event of the
+    kinds given (the grade in its payload ``field``). Unknown, or a grade without a limit of
+    its own: no limit (the Compare's fixed one holds)."""
+
+    index = _index(context)
+    state = context.state
+    table = {item.grade: item.limit for item in params.limits}
+    current = state.get("grade")
+    grades: list[str | None] = []
+    given = inputs.get("grade")
+    if isinstance(given, pd.Series):
+        held = given.reindex(index, method="ffill")
+        for value in held.to_numpy(dtype=float):
+            current = grade_name(value) if math.isfinite(value) else current
+            grades.append(current)
+    elif params.kinds and not isinstance(given, NoData):
+        events = [
+            item
+            for item in context.extra.get("events") or []
+            if _matches(params, item, context) and str(item.get("phase") or "instant") != "end"
+        ]
+        position = 0
+        for moment in index:
+            while (
+                position < len(events) and (_time(events[position].get("at")) or moment) <= moment
+            ):
+                payload = events[position].get("payload") or {}
+                found = payload.get(params.field) if isinstance(payload, dict) else None
+                current = grade_name(found) or current
+                position += 1
+            grades.append(current)
+    else:
+        grades = [current] * len(index)
+    state["grade"] = current
+    if current is not None:
+        shown = table.get(current)
+        context.extra.setdefault("messages", {})[context.node_id] = (
+            t("Grade {grade}: limit {limit:g}.", grade=current, limit=shown)
+            if shown is not None
+            else t("Grade {grade} has no limit of its own: the fixed limit holds.", grade=current)
+        )
+    found = [table.get(grade, np.nan) if grade is not None else np.nan for grade in grades]
+    return {"limit": pd.Series(found, index=index, dtype=float)}
 
 
 class BetweenParams(BaseModel):
@@ -548,6 +660,12 @@ class RaiseParams(BaseModel):
         le=24 * 3600,
         description="The condition must stay false this many seconds before the alarm clears.",
     )
+    enable_delay_seconds: float = Field(
+        default=0.0,
+        ge=0,
+        le=24 * 3600,
+        description="With an Enabled when input: the alarm is judged only once it held this long.",
+    )
 
 
 def run_raise(inputs: dict[str, Any], params: RaiseParams, context: Context) -> dict[str, Any]:
@@ -561,7 +679,29 @@ def run_raise(inputs: dict[str, Any], params: RaiseParams, context: Context) -> 
     active = bool(state.get("active"))
     clearing = _time(state.get("clear_since"))
     transitions = context.extra.setdefault("transitions", [])
+    # State-based alarming (ISA-18.2 designed suppression): with a permissive wired to Enabled
+    # when, the alarm is judged only while it holds (and, with a delay, once it held that long).
+    # A permissive that cannot be judged leaves the alarm enabled: a bad signal never hides one.
+    enabled = inputs.get("enabled")
+    allowed = None
+    if enabled is not None and not isinstance(enabled, NoData) and len(condition):
+        allowed = enabled.reindex(condition.index, method="ffill").fillna(True).astype(bool)
+    since = _time(state.get("enabled_since"))
+    suppressed = False
     for moment, value in condition.items():
+        if allowed is not None:
+            if not bool(allowed.get(moment, True)):
+                since = None
+            else:
+                since = since or moment
+            suppressed = since is None or (
+                (moment - since).total_seconds() < params.enable_delay_seconds
+            )
+            if suppressed:
+                if active:
+                    active, clearing = False, None
+                    transitions.append(("cleared", moment))
+                continue
         if bool(value):
             clearing = None
             if not active:
@@ -573,6 +713,17 @@ def run_raise(inputs: dict[str, Any], params: RaiseParams, context: Context) -> 
                 active, clearing = False, None
                 transitions.append(("cleared", moment))
     state["active"], state["clear_since"] = active, _iso(clearing)
+    state["enabled_since"] = _iso(since) if allowed is not None else None
+    state["suppressed"] = suppressed
+    if suppressed:
+        context.extra.setdefault("messages", {})[context.node_id] = t(
+            "Suppressed by design: its permissive does not hold."
+        )
+    elif isinstance(enabled, NoData):
+        context.extra.setdefault("messages", {})[context.node_id] = t(
+            "Its permissive cannot be judged ({reason}): the alarm stays enabled.",
+            reason=enabled.reason,
+        )
     return {}
 
 
@@ -656,12 +807,53 @@ SPECS: list[tuple[BlockSpec, Callable]] = [
                 "so a value hovering at the limit does not chatter.",
                 "True while the comparison holds (with the deadband once it held).",
             ),
-            inputs=(inport("value", SERIES, "Value", "The value compared with the limit."),),
+            inputs=(
+                inport("value", SERIES, "Value", "The value compared with the limit."),
+                inport(
+                    "limit",
+                    SERIES,
+                    "Limit",
+                    "A limit that moves (by product grade); where it gives none, the fixed "
+                    "limit holds.",
+                    required=False,
+                ),
+            ),
             outputs=(outport("condition", CONDITION, "Condition", "True while it holds."),),
             parameters=CompareParams,
             group="Logic",
         ),
         run_compare,
+    ),
+    (
+        BlockSpec(
+            GRADE_BLOCK,
+            "1.0",
+            LIBRARY,
+            "Grade limit",
+            _docs(
+                "The limit of the product grade being made, for a Compare's Limit input.",
+                "Each grade the plant makes has its own limit (a melt index, a viscosity). The "
+                "grade comes from a signal holding its code, wired to Grade, or from the latest "
+                "event of the kinds given, whose payload names it (mes.grade.changed, field "
+                "grade). Until a grade is known, or for a grade not listed, the Compare keeps "
+                "its fixed limit.",
+                "The limit of the current grade; none when the grade is unknown or not listed.",
+            ),
+            inputs=(
+                inport(
+                    "grade",
+                    SERIES,
+                    "Grade",
+                    "A signal holding the grade's code; without it, the events give the grade.",
+                    required=False,
+                ),
+            ),
+            outputs=(outport("limit", SERIES, "Limit", "The current grade's limit."),),
+            parameters=GradeParams,
+            runs_on_missing=True,
+            group="Inputs",
+        ),
+        run_grade_limit,
     ),
     (
         BlockSpec(
@@ -887,7 +1079,17 @@ SPECS: list[tuple[BlockSpec, Callable]] = [
                 "be judged (no data yet), the alarm keeps its state and says why.",
                 "Raised while true; cleared after the condition stays false long enough.",
             ),
-            inputs=(inport("condition", CONDITION, "Condition", "When the alarm is raised."),),
+            inputs=(
+                inport("condition", CONDITION, "Condition", "When the alarm is raised."),
+                inport(
+                    "enabled",
+                    CONDITION,
+                    "Enabled when",
+                    "A permissive: while it is false the alarm is suppressed by design (a low "
+                    "flow alarm only while the pump runs). Unknown leaves the alarm enabled.",
+                    required=False,
+                ),
+            ),
             parameters=RaiseParams,
             runs_on_missing=True,
             group="Output",

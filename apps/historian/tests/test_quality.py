@@ -30,7 +30,7 @@ def test_an_uncertain_value_is_archived_where_the_quality_changes():
     times = [at for at, _ in point.pending]
     # The value where it turned uncertain and where it came back are archived as read.
     assert 5000 in times and 7000 in times
-    assert point.changes == [(5000, "uncertain"), (7000, "good")]
+    assert point.changes == [(5000, "uncertain", None, None), (7000, "good", None, None)]
 
 
 def test_a_bad_value_is_a_gap_marked_bad_once():
@@ -39,7 +39,7 @@ def test_a_bad_value_is_a_gap_marked_bad_once():
     point.take(Reading(1000, None, False, "BadSensorFailure", "bad"))
     point.take(Reading(2000, None, False, "BadSensorFailure", "bad"))
     assert point.status == "bad"
-    assert point.changes == [(1000, "bad")]
+    assert point.changes == [(1000, "bad", None, None)]
     assert math.isnan(point.pending[-1][1])
 
 
@@ -112,3 +112,55 @@ def test_a_batch_read_says_where_the_quality_was_not_good(client, loaded):  # no
         {"t": "2026-10-19T00:10:00+00:00", "quality": "uncertain"}
     ]
     assert marked["series"][0]["t"] == plain["series"][0]["t"]
+
+
+def test_the_opc_ua_sub_code_and_limit_bits_are_kept_and_read_back(client, loaded):  # noqa: F811
+    """H6: the whole status code rides with each change of quality (Part 4 §7.39)."""
+
+    from asyncua import ua
+
+    from histcraft.collector.opcua import OpcUaReader
+    from histcraft.opc_status import described, limit_of
+    from tests.test_reads import V1
+
+    last_usable_high = int(ua.StatusCodes.UncertainLastUsableValue) | 0x200
+    assert limit_of(last_usable_high) == "high"
+    assert described(0) == {} and described(0x300) == {"limit": "constant"}
+    assert described(last_usable_high) == {"status": "0x40900000", "limit": "high"}
+    reader = OpcUaReader({"endpoint": "opc.tcp://x"})
+    data = ua.DataValue(
+        ua.Variant(5.0, ua.VariantType.Double), StatusCode_=ua.StatusCode(last_usable_high)
+    )
+    reading = reader._reading("ns=2;s=X", data, 1000)
+    assert (reading.quality, reading.status, reading.status_name) == (
+        "uncertain",
+        last_usable_high,
+        "UncertainLastUsableValue",
+    )
+    # A good value pinned at its low limit is a change too, though the quality stays good.
+    point = state()
+    point.take(Reading(0, 1.0, True))
+    point.take(Reading(1000, 1.0, True, quality="good", status=0x100))
+    point.take(Reading(2000, 1.0, True))
+    assert point.changes == [(1000, "good", 0x100, None), (2000, "good", None, None)]
+    # Stored and read back through API v1.
+    signal = loaded.catalog.point("plant:TI-100.PV")
+    at = to_ms(datetime(2026, 10, 19, 0, 10, tzinfo=timezone.utc))
+    loaded.archive.put_qualities(
+        [(int(signal["id"]), at, "uncertain", last_usable_high, "UncertainLastUsableValue")]
+    )
+    body = {
+        "signals": ["plant:TI-100.PV"],
+        "start": "2026-10-19T00:00:00Z",
+        "end": "2026-10-19T01:00:00Z",
+        "quality": True,
+    }
+    marked = client.post(f"{V1}/series", json=body).json()
+    assert marked["series"][0]["quality"] == [
+        {
+            "t": "2026-10-19T00:10:00+00:00",
+            "quality": "uncertain",
+            "status": "UncertainLastUsableValue",
+            "limit": "high",
+        }
+    ]

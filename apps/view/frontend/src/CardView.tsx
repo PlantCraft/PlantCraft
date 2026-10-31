@@ -10,6 +10,8 @@ import { formatDate, t } from "./i18n";
 import { AGG_LABELS, cardCsv, cardPixels, cardCsvName, cardTitle, formatValue, interpolate, stateLabel, stateStatus, windowLabel } from "./model";
 import { cursorShape, useSharedCursor } from "./cursor";
 import { DiagramCardBody } from "./diagrams/DiagramCard";
+import { AnalogBar, limitsFromSteps, normalRange } from "./analog";
+import { ApcPanel } from "./apc";
 import { Plot } from "@plantcraft/ui/plot";
 import type { Card, CardData, CardOptions, FieldConfig, Line, State, ValueRow } from "./types";
 
@@ -71,15 +73,32 @@ function toneOf(config: FieldConfig, row: ValueRow, index: number): string | und
   return coloured ? valueColor(config, row.value, index, rangeOf(row)) : undefined;
 }
 
-/** The value with its line over the window underneath (no axes). */
-function Sparkline({ line, color }: { line: Line | undefined; color: string }) {
+/** The value with its line over the window underneath (no axes), over the normal range shaded
+ * grey when there is one (ISA-101: the line leaving the band is what catches the eye). */
+export function Sparkline({ line, color, normal }: { line: Line | undefined; color: string; normal?: { low: number | null; high: number | null } | null }) {
   const points = (line?.t ?? []).map((time, index) => [Date.parse(time), line!.v[index]] as const).filter((pair): pair is readonly [number, number] => typeof pair[1] === "number");
   if (points.length < 2) return null;
   const xs = points.map((pair) => pair[0]);
   const ys = points.map((pair) => pair[1]);
-  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  const path = points.map(([x, y], index) => `${index ? "L" : "M"} ${((x - x0) / (x1 - x0 || 1)) * 300} ${56 - ((y - y0) / (y1 - y0 || 1)) * 52}`).join(" ");
-  return <svg className="tc-spark" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true"><path d={`${path} L 300 60 L 0 60 Z`} fill={color} opacity="0.14" /><path d={path} stroke={color} fill="none" strokeWidth="1.6" vectorEffect="non-scaling-stroke" /></svg>;
+  let [y0, y1] = [Math.min(...ys), Math.max(...ys)];
+  const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
+  const band = sparkBand(normal, y0, y1);
+  if (band) [y0, y1] = [Math.min(y0, band[0]), Math.max(y1, band[1])];
+  const yOf = (y: number) => 56 - ((y - y0) / (y1 - y0 || 1)) * 52;
+  const path = points.map(([x, y], index) => `${index ? "L" : "M"} ${((x - x0) / (x1 - x0 || 1)) * 300} ${yOf(y)}`).join(" ");
+  return <svg className="tc-spark" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
+    {band && <rect className="tc-spark-normal" x="0" width="300" y={yOf(band[1])} height={Math.max(1, yOf(band[0]) - yOf(band[1]))} />}
+    <path d={`${path} L 300 60 L 0 60 Z`} fill={color} opacity={band ? "0.08" : "0.14"} /><path d={path} stroke={color} fill="none" strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
+  </svg>;
+}
+
+/** The shaded band of a sparkline: the normal range, an open end reaching just past the line. */
+export function sparkBand(normal: { low: number | null; high: number | null } | null | undefined, y0: number, y1: number): [number, number] | null {
+  if (!normal || (normal.low === null && normal.high === null)) return null;
+  const pad = (y1 - y0 || Math.abs(y1) || 1) * 0.05;
+  const low = normal.low ?? Math.min(y0, normal.high as number) - pad;
+  const high = normal.high ?? Math.max(y1, normal.low as number) + pad;
+  return high > low ? [low, high] : null;
 }
 
 /** How several values are laid out: in a row when the card is wide, else in a column. */
@@ -116,7 +135,7 @@ function Stats({ card, rows, lines }: { card: Card; rows: ValueRow[]; lines?: Li
           <small>{options.show_name ? `${name} · ` : ""}{item.result ? (item.stale ? t("stale: its app has not updated it") : item.at ? formatDate(item.at) : "") : item.agg === "last" ? (item.at ? formatDate(item.at) : t("no recent value")) : `${AGG_LABELS[item.agg as "mean"]?.toLowerCase() ?? item.agg}, ${windowLabel(card.window)}`}</small>
           {item.summary && <small className="tc-kpi-summary">{item.summary}</small>}
         </div>}
-        {line && <Sparkline line={line} color={background ? "currentColor" : tone ?? BRAND_COLORS[currentTheme()].series[index % 8]} />}
+        {line && <Sparkline line={line} color={background ? "currentColor" : tone ?? BRAND_COLORS[currentTheme()].series[index % 8]} normal={background ? null : normalRange(config, limitsFromSteps(config, rangeOf(item)))} />}
       </div>;
     })}
   </div>;
@@ -169,10 +188,47 @@ function GaugeDial({ card, row, index, options }: { card: Card; row: ValueRow; i
   </div>;
 }
 
+/** The setpoint of a value: a row of role SP of the same asset (a card of FIC-101 with PV and SP). */
+export function setpointFor(rows: ValueRow[], row: ValueRow): number | null {
+  if ((row.role ?? "").toLowerCase() === "sp") return null;
+  const found = rows.find((other) => other !== row && (other.role ?? "").toLowerCase() === "sp" && (other.asset ?? null) === (row.asset ?? null) && typeof other.value === "number");
+  return found ? found.value as number : null;
+}
+
+/** ISA-101 analog indicators, one per value; a setpoint row marks its PV's bar instead of its own. */
+function AnalogGauges({ card, rows }: { card: Card; rows: ValueRow[] }) {
+  const options = optionsOf(card);
+  const paired = rows.filter((row) => (row.role ?? "").toLowerCase() !== "sp" || !rows.some((other) => other !== row && (other.asset ?? null) === (row.asset ?? null) && (other.role ?? "").toLowerCase() !== "sp"));
+  return <div className={`tc-analogs${across(options, card, paired.length) ? " tc-stats-row" : ""}`} style={{ "--tc-stat-count": paired.length } as CSSProperties}>
+    {paired.map((row, index) => {
+      const config = effective(card, row);
+      const [low, high] = gaugeRange(config, row);
+      const limits = limitsFromSteps(config, rangeOf(row));
+      const sp = setpointFor(rows, row);
+      const value = typeof row.value === "number" ? row.value : null;
+      const state = value === null ? "unknown" : row.state;
+      const unit = unitOf(config, row);
+      const spec = { value, min: low, max: high, limits, normal: normalRange(config, limits), sp, state };
+      return <div key={index} className="tc-analog" data-state={state}>
+        <div className="tc-analog-head">
+          <span className="tc-analog-name" title={row.label}>{config.display_name || row.label}</span>
+          <b className="pc-num">{shownValue(config, row.value)}</b>{unit && <span className="tc-analog-unit">{unit}</span>}
+          {sp !== null && <small className="tc-analog-sp">SP {formatValue(sp, config.decimals ?? undefined)}</small>}
+        </div>
+        <svg viewBox="-8 0 216 34" role="img" aria-label={`${row.label}: ${shownValue(config, row.value)} ${unit}${sp !== null ? `, SP ${formatValue(sp, config.decimals ?? undefined)}` : ""}${hasState(state) && state !== "ok" ? `, ${stateLabel(state)}` : ""}`}>
+          <AnalogBar spec={spec} width={200} height={30} decimals={config.decimals} />
+        </svg>
+        <div className="tc-analog-ends"><span>{formatValue(low, Number.isInteger(low) ? 0 : config.decimals)}</span><span>{formatValue(high, Number.isInteger(high) ? 0 : config.decimals)}</span></div>
+      </div>;
+    })}
+  </div>;
+}
+
 function Gauges({ card, rows }: { card: Card; rows: ValueRow[] }) {
   const options = optionsOf(card);
   const shown = rows.filter((row) => !row.error);
   if (!shown.length) return null;
+  if (options.gauge_style === "analog") return <AnalogGauges card={card} rows={shown} />;
   return <div className={`tc-gauges${across(options, card, shown.length) ? " tc-stats-row" : ""}`} style={{ "--tc-stat-count": shown.length } as CSSProperties}>
     {shown.map((row, index) => <GaugeDial key={index} card={card} row={row} index={index} options={options} />)}
   </div>;
@@ -442,6 +498,7 @@ export function CardBody({ card, data, height, texts = {} }: { card: Card; data:
   if (!height && below) height = Math.max(80, plotHeight(card.height) - below);
   if (card.kind === "text") return <div className="tc-text markdown">{renderMarkdown(interpolate(card.text ?? "", texts))}</div>;
   if (card.kind === "diagram") return <DiagramCardBody data={data} />;
+  if (card.kind === "apc") return <ApcPanel data={data.apc} />;
   return <>
     {card.kind === "stat" && <Stats card={card} rows={rows} lines={data.lines} />}
     {card.kind === "gauge" && <Gauges card={card} rows={rows} />}

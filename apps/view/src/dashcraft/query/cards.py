@@ -28,6 +28,7 @@ from dashcraft.dashboards.model import (
 )
 from dashcraft.dashboards.variables import MAX_VALUES, interpolate, referenced, whole
 from dashcraft.i18n import t
+from dashcraft.query.apc import read_apc
 from dashcraft.query.cache import TtlCache
 
 # Signals one card reads at most once its variables and "every signal" items are expanded.
@@ -817,6 +818,8 @@ def read_card(
     result: dict[str, Any] = {"card_id": card.card_id, "kind": card.kind, "window": window}
     if card.kind in {"trend", "scatter"}:
         result["lines"], result["range"] = read_trend(reader, card, items, window)
+    elif card.kind == "apc":
+        result["apc"] = read_apc(reader, card.apc_id.strip(), window)
     elif card.kind in ("text", "diagram"):
         # A diagram card's drawing and values come from the diagram it names, which the api
         # layer reads as its viewer may (``api.views.diagram_card``, a layer above this one).

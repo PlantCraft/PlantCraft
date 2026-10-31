@@ -48,6 +48,13 @@ start and bounds, a link to the best simulation, and a chart of the objective of
 (those that miss a constraint in another colour) with the best so far. The rest of the page reads
 as any study's: every simulation the optimizer asked for is in **Simulations**, with its values.
 
+Every install has an example: **Example: tune the PI for the least IAE** changes the PI controller
+of `FirstOrderDeadTimeLoop` (gain `controller.k` from 0.1 to 4, integral time `controller.Ti` from
+2 to 100 s, starting sluggish at 0.4 and 60 s) to make the IAE of the measurement `dead_time.y`
+least, with its overshoot at most 10 % (COBYLA). It ends near k 1.2 and Ti 21 s. The IAE is measured
+from the variable's final value, so let the simulation run until the loop settles (here 300 s).
+To tune a loop of your own, put its process model in front of a PID block and do the same.
+
 Optimizations are sequential (each point depends on the last): about 20 to 60 simulations for two
 or three values. The runner builds the model at the first one and keeps it, so every next step
 only runs it (about a second each for the examples). If PlantCraft restarts during one,

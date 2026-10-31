@@ -2,7 +2,7 @@
  * screen with the card's preview on top, its signals under it and its options on the side, in
  * groups that open and close and a search over them. "Visualization" changes the kind and keeps
  * what still applies. */
-import { BarChart3, ChevronDown, Gauge, LineChart, Plus, ScatterChart, Search, Table2, Trash2, Type, Workflow, X, Hash } from "lucide-react";
+import { BarChart3, ChevronDown, Gauge, LineChart, Plus, ScatterChart, Search, Table2, Trash2, Type, Workflow, X, Hash, SlidersHorizontal } from "lucide-react";
 import { createContext, useContext, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { api } from "./api";
 import { diagramsApi } from "./diagrams/api";
@@ -13,7 +13,7 @@ import { t } from "./i18n";
 import { AGG_LABELS, ALL_ROLES, cardPixels, cardTitle, defaultCard, HEIGHTS, itemMode, KIND_HINTS, KIND_LABELS, KINDS, maxItemsOf, minHeight, NO_ITEM_KINDS, type Mode, resultLabel, variableOf, VALUE_KINDS, WIDTHS, WINDOWS, windowLabel } from "./model";
 import type { Aggregation, AssetKind, AssetOption, Card, CardData, CardItem, CardOptions, FieldConfig, Kind, Level, Mapping, Override, Page, ResultKind, SignalOption, Step, TableColumn, Thresholds, Variable } from "./types";
 
-const KIND_ICONS: Record<Kind, typeof Gauge> = { stat: Hash, gauge: Gauge, trend: LineChart, bar: BarChart3, table: Table2, scatter: ScatterChart, text: Type, diagram: Workflow };
+const KIND_ICONS: Record<Kind, typeof Gauge> = { stat: Hash, gauge: Gauge, trend: LineChart, bar: BarChart3, table: Table2, scatter: ScatterChart, text: Type, diagram: Workflow, apc: SlidersHorizontal };
 
 function message(error: unknown) {
   return error instanceof Error ? error.message : t("Couldn't complete the operation.");
@@ -160,6 +160,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
   unit: "Unit", min: "Min", max: "Max", decimals: "Decimals", display_name: "Display name", no_value: "No value",
   color_mode: "Colour scheme", color: "Colour", thresholds: "Thresholds", mappings: "Value mappings",
   draw: "Draw as", interpolation: "Line interpolation", line_width: "Line width", dash: "Line style", fill: "Fill opacity", axis: "Axis placement",
+  normal_low: "Normal range from", normal_high: "Normal range to",
 };
 const STYLE_KEYS: FieldKey[] = ["draw", "interpolation", "line_width", "dash", "fill", "axis"];
 
@@ -170,6 +171,8 @@ function FieldInput({ name, config, onChange, lines }: { name: FieldKey; config:
   switch (name) {
     case "unit": case "display_name": case "no_value":
       return <input aria-label={label} maxLength={name === "display_name" ? 80 : 20} value={(config[name] as string | null) ?? ""} placeholder={name === "unit" ? t("From the signal") : name === "no_value" ? "—" : t("From the signal")} onChange={(event) => set(event.target.value)} />;
+    case "normal_low": case "normal_high":
+      return <NumberInput label={label} value={config[name] as number | null} onChange={(value) => set(value)} placeholder={t("From the thresholds")} />;
     case "min": case "max": case "fill": case "line_width":
       return <NumberInput label={label} value={config[name] as number | null} onChange={(value) => set(value)} placeholder={name === "min" || name === "max" ? t("From the signal's range") : t("Automatic")} />;
     case "decimals":
@@ -316,6 +319,7 @@ export function changeKind(current: Card, kind: Kind): Card {
     items: current.items.slice(0, maxItemsOf(kind)),
     text: kind === "text" ? current.text ?? "" : current.text,
     diagram_id: kind === "diagram" ? current.diagram_id ?? "" : current.diagram_id,
+    apc_id: kind === "apc" ? current.apc_id ?? "" : current.apc_id,
     height: current.height === old.height ? fresh.height : Math.max(minHeight(kind), current.height),
     width: current.width === old.width ? fresh.width : current.width,
   };
@@ -372,7 +376,9 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
   const text = card.kind === "text";
   // Text and diagram panels show no signal: no field, threshold, mapping or override options.
   const noItems = NO_ITEM_KINDS.includes(card.kind);
-  const complete = text ? Boolean(card.text?.trim()) : isDiagram ? Boolean(card.diagram_id) : card.items.length > 0 && (card.kind !== "scatter" || card.items.length === 2) && card.items.every((item) => (item.signal_id ? true : Boolean(item.asset_id && (item.role || item.result))));
+  const isApc = card.kind === "apc";
+  const controllers = assets.filter((option) => option.kind === "apc");
+  const complete = text ? Boolean(card.text?.trim()) : isDiagram ? Boolean(card.diagram_id) : isApc ? Boolean(card.apc_id) : card.items.length > 0 && (card.kind !== "scatter" || card.items.length === 2) && card.items.every((item) => (item.signal_id ? true : Boolean(item.asset_id && (item.role || item.result))));
   const previewKey = JSON.stringify({ ...card, x: 0, y: 0, title: "", description: "" });
   const valuesKey = JSON.stringify(values);
   useEffect(() => {
@@ -427,7 +433,7 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
                 {text ? <CardBody card={card} data={{ card_id: card.card_id, kind: "text", window: card.window, read_at: "" }} texts={texts} />
                   : previewError ? <div className="tc-card-error">{previewError}</div>
                   : preview ? <CardBody card={card} data={preview} texts={texts} />
-                  : <p className="muted">{isDiagram ? t("Choose the process display to see the panel.") : t("Choose the signals to see the panel.")}</p>}
+                  : <p className="muted">{isDiagram ? t("Choose the process display to see the panel.") : isApc ? t("Choose the controller to see the panel.") : t("Choose the signals to see the panel.")}</p>}
               </div>
             </article>
           </div>
@@ -439,6 +445,14 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
                   {(diagrams ?? []).map((item) => <option key={item.diagram_id} value={item.diagram_id}>{item.name}</option>)}
                 </select>
                 <small className="muted">{t("Shown live, scaled to the panel, with the dashboard's time window (else the panel's). Viewers who may not see the process display's folder see that it is not available.")}</small>
+              </label>
+              : isApc ? <label className="tc-text-input">{t("Multivariable controller")}
+                <select aria-label={t("Multivariable controller")} value={card.apc_id ?? ""} onChange={(event) => set("apc_id", event.target.value)}>
+                  <option value="">{controllers.length ? t("Choose a controller") : t("No controller yet: add an asset of kind apc, with its MVs (apc_mv) and CVs (apc_cv) under it.")}</option>
+                  {card.apc_id && !controllers.some((item) => item.id === card.apc_id) && <option value={card.apc_id}>{card.apc_id}</option>}
+                  {controllers.map((item) => <option key={item.id} value={item.id}>{item.parent ? `${item.parent} / ` : ""}{item.name}</option>)}
+                </select>
+                <small className="muted">{t("Read only: each MV and CV with its value, limits, target and status now, and its value and target over the time span. View never writes to the controller.")}</small>
               </label>
               : text ? <label className="tc-text-input">{t("Text (Markdown; ${variable} is replaced by its value)")}<textarea rows={8} maxLength={2000} value={card.text ?? ""} onChange={(event) => set("text", event.target.value)} placeholder={t("What this dashboard is for, what to watch, who to call.")} /></label>
               : <>
@@ -467,6 +481,7 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
               <Opt label={t("Names")}><Toggle label={t("Show each signal's name")} checked={options.show_name} onChange={(value) => setOption("show_name", value)} /></Opt>
             </Group>}
             {kind === "gauge" && <Group title={t("Gauge")}>
+              <Opt label={t("Style")} words="isa-101 isa101 analog indicator bar dial" hint={t("Analog indicator (ISA-101): a grey bar with the normal range, the LL, L, H and HH limits from the thresholds and the setpoint (a signal of role SP of the same asset); the pointer takes a colour only out of normal.")}><Select value={options.gauge_style} onChange={(value) => setOption("gauge_style", value)} label={t("Style")} options={[["dial", t("Dial")], ["analog", t("Analog indicator (ISA-101)")]]} /></Opt>
               <Opt label={t("Layout")} words="orientation"><Select value={options.orientation} onChange={(value) => setOption("orientation", value)} label={t("Layout")} options={[["auto", t("Automatic")], ["horizontal", t("Side by side")], ["vertical", t("One under the other")]]} /></Opt>
               <Opt label={t("Threshold bands")} words="markers"><Toggle label={t("Colour the dial's threshold bands")} checked={options.threshold_markers} onChange={(value) => setOption("threshold_markers", value)} /></Opt>
               <Opt label={t("Threshold labels")}><Toggle label={t("Write each threshold's value")} checked={options.threshold_labels} onChange={(value) => setOption("threshold_labels", value)} /></Opt>
@@ -513,8 +528,8 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
               <Opt label={t("Axis label")} words="y label"><input maxLength={40} value={options.y_label} onChange={(event) => setOption("y_label", event.target.value)} /></Opt>
             </Group>}
             {!noItems && <Group title={t("Standard options")}>
-              {(["unit", "min", "max", "decimals", "display_name", "no_value", "color_mode", "color"] as FieldKey[]).filter((key) => kind !== "scatter" || ["unit", "decimals"].includes(key)).map((key) => <Opt key={key} label={t(FIELD_LABELS[key])}
-                hint={key === "min" || key === "max" ? t("Of the dial, the bars and the axis; empty: the signal's range.") : key === "display_name" ? t("Instead of the signal's name (one signal; use overrides for several).") : key === "no_value" ? t("Shown when there is no value.") : undefined}>
+              {(["unit", "min", "max", "normal_low", "normal_high", "decimals", "display_name", "no_value", "color_mode", "color"] as FieldKey[]).filter((key) => kind !== "scatter" || ["unit", "decimals"].includes(key)).filter((key) => !key.startsWith("normal_") || kind === "gauge" || kind === "stat").map((key) => <Opt key={key} label={t(FIELD_LABELS[key])}
+                hint={key === "normal_low" || key === "normal_high" ? t("Where the value should run: a darker band on the analog indicator and under a stat's line. Empty: between the thresholds' normal step and the next.") : key === "min" || key === "max" ? t("Of the dial, the bars and the axis; empty: the signal's range.") : key === "display_name" ? t("Instead of the signal's name (one signal; use overrides for several).") : key === "no_value" ? t("Shown when there is no value.") : undefined}>
                 <FieldInput name={key} config={field} onChange={setField} lines={charted} />
               </Opt>)}
             </Group>}
@@ -532,7 +547,7 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
               <Opt label={t("Height")}><select value={card.height} onChange={(event) => set("height", Number(event.target.value))}>{HEIGHTS.filter((rows) => rows >= minHeight(kind)).map((rows) => <option key={rows} value={rows}>{rows === 1 ? t("1 row") : t("{n} rows", { n: rows })}</option>)}</select></Opt>
               {pages.length > 1 && <Opt label={t("Page")}><select value={card.page_id ?? pages[0].page_id} onChange={(event) => set("page_id", event.target.value)}>{pages.map((page) => <option key={page.page_id} value={page.page_id}>{page.name}</option>)}</select></Opt>}
             </Group>
-            {variables.length > 0 && !isDiagram && <Group title={t("Repeat options")} open={Boolean(card.repeat)}>
+            {variables.length > 0 && !isDiagram && !isApc && <Group title={t("Repeat options")} open={Boolean(card.repeat)}>
               <Opt label={t("Repeat for")} words="repeat variable" hint={t("One copy of the panel for each value picked.")}>
                 <select value={card.repeat?.variable ?? ""} onChange={(event) => set("repeat", event.target.value ? { variable: event.target.value, direction: card.repeat?.direction ?? "h", max_per_row: card.repeat?.max_per_row ?? 4 } : null)}>
                   <option value="">{t("Off")}</option>

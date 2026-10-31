@@ -22,6 +22,23 @@ removes its archive too (admins only).
 The table's **Type** filter (on the Scan and deviation column) shows one kind of signal: read
 from the plant, calculated, imported, written by an app or by PlantCraft.
 
+## Notes
+
+A signal's page lists the notes written on it in the period shown: what happened that the values
+do not say ("analyser recalibrated", "pump B on manual from 14:00 to 15:30"). Editors add one at an
+instant or over an interval, and remove their own (administrators any). Each note is also told to
+PlantCraft as an event (*Note on a signal*), so Events, Alarms and the assistant see it.
+Scripts and other apps read and write them with `GET` and `POST /api/v1/annotations`.
+
+## Edited values
+
+An editor can insert a value where there was none, change one or delete one (a reading taken
+while the sensor was being calibrated, a value typed in by hand), always with a reason. The
+value read then carries its mark (*inserted*, *edited* or *deleted*), the value it replaced is
+kept with who changed it, when and why (the list under **Edited values**, or
+`GET /api/v1/edits/{signal}`), and each edit is in PlantCraft's audit log. Signals an app writes
+are changed in that app. Scripts use `POST /api/v1/edits`.
+
 ## The signal list in a spreadsheet
 
 **Export signal list**, on the Exports page, writes every signal with its own

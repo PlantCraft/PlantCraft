@@ -29,12 +29,14 @@ LAYERS = {
     "meta": 0,
     "notebook_examples": 0,
     "kinds": 0,
+    "opc_status": 0,
     "vault": 0,
     "archive": 1,
     "catalog": 1,
     "sources": 1,
     "export": 1,
     "collector": 2,
+    "lab": 1.5,
     "conditions": 2,
     "api": 3,
     "cli": 3,
@@ -116,7 +118,11 @@ def test_the_server_writes_only_derived_series_to_the_archive():
     data = (PACKAGE / "api" / "routers" / "data.py").read_text(encoding="utf-8")
     assert data.count("archive.replace(") == 1 and data.count("archive.put_run(") == 1
     assert data.count("archive.put_snapshots(") == 2
-    lab = (PACKAGE / "api" / "routers" / "lab.py").read_text(encoding="utf-8")
+    # Laboratory results: one writer (``histcraft.lab``), for the API and the LIMS source.
+    router = (PACKAGE / "api" / "routers" / "lab.py").read_text(encoding="utf-8")
+    assert router.count("lab.write(") == 1
+    assert not any(call in router for call in ("replace(", "put_qualities(", "put_snapshots("))
+    lab = (PACKAGE / "lab.py").read_text(encoding="utf-8")
     assert lab.count("archive.replace(") == 1 and lab.count("archive.put_snapshots(") == 1
 
 

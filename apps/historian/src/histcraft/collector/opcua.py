@@ -20,6 +20,7 @@ from histcraft.collector.reading import FUTURE_MS, Reading
 from histcraft.collector.reading import now_ms as _now_ms
 from histcraft.collector.reading import to_ms as _ms
 from histcraft.i18n import t
+from histcraft.opc_status import subcode
 from histcraft.sources import certificates
 
 # An OPC UA node id in text form (``ns=2;s=...``, ``i=85``, ``nsu=...;s=...``).
@@ -155,14 +156,20 @@ class OpcUaReader:
                 self._last_source_ms[address] = source_ms
                 at = source_ms
         name = getattr(status, "name", "") or "Bad"
+        # The whole code when it says more than Good: sub-code and LimitBits (H6).
+        code = int(getattr(status, "value", 0) or 0) or None
+        sub = _subcode_name(code)
         if status is not None and status.is_bad():
-            return Reading(at, None, False, name, "bad")
+            return Reading(at, None, False, sub or name, "bad", code, sub)
         # Uncertain values are kept, with their quality (G5): a historian records what it read.
         quality = "uncertain" if status is not None and status.is_uncertain() else "good"
         value = _plain(data.Value.Value if data.Value is not None else None)
         if value is None:
-            return Reading(at, None, False, t("The value is not a number or text."), "bad")
-        return Reading(at, value, True, name if quality != "good" else "", quality)
+            return Reading(
+                at, None, False, t("The value is not a number or text."), "bad", code, sub
+            )
+        detail = sub or name if quality != "good" else ""
+        return Reading(at, value, True, detail, quality, code, sub)
 
     async def test(self) -> dict[str, Any]:
         assert self.client is not None
@@ -295,3 +302,15 @@ async def _is_property(node: Any) -> bool:
     except Exception:  # noqa: BLE001
         return False
     return type_definition == ua.NodeId(ua.ObjectIds.PropertyType)
+
+
+def _subcode_name(code: int | None) -> str:
+    """The name of ``code``'s sub-code (``UncertainLastUsableValue``), '' for plain Good: OPC UA
+    names a code only without its LimitBits and info bits."""
+
+    if not subcode(code):
+        return ""
+    try:
+        return str(ua.StatusCode(subcode(code)).name)
+    except Exception:  # noqa: BLE001 - a code the library does not name
+        return f"0x{subcode(code):08X}"

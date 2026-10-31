@@ -6,6 +6,25 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Added
+
+- **Tracking: the model checked against the plant on a schedule.** A tracking simulates a model
+  over the last window of plant data every few minutes (both 5 minutes at least), writes model
+  minus plant for each compared variable as a signal (`app-modelcraft:tracking-<id>.<variable>.error`)
+  and, with an optional limit on the mean absolute error, opens the `tracking.mismatch` event
+  ("Model off the plant") while a variable stays above it. The new **Tracking** page lists them
+  with each variable's last error, runs one now, pauses and adds them; `/api/trackings` does the
+  same. Its runs are ordinary simulations labelled with the tracking, shown as scheduled in
+  Executions; the last 20 of each are kept. Models now asks for write access to series and events.
+
+- **An example optimization comes ready: tune a PI for the least IAE.** Next to the example
+  study, Models queues "Example: tune the PI for the least IAE" once. It is an optimization on
+  `FirstOrderDeadTimeLoop` that changes the controller's gain and integral time, from a sluggish
+  start (k 0.4, Ti 60 s), to bring the loop to its new setpoint with the least integral of
+  absolute error, overshooting by 10% at most (COBYLA). On that process it ends near k 1.2 and
+  Ti 21 s in about 35 simulations, close to the SIMC rule's k 1.0 and Ti 20 s.
+  `MODELCRAFT_EXAMPLE_STUDY=false` leaves it out too.
+
 ### Fixed
 
 - A study's ranking table scrolls inside its panel on a phone instead of pushing the page sideways.

@@ -438,3 +438,54 @@ body.tc-screen .pcs-content, body.tc-screen .content { max-width: none; padding:
 .tc-report-versions blockquote { margin: 2px 0; padding-left: 8px; border-left: 2px solid var(--pc-border-subtle); }
 .tc-report-asset-list { max-height: 220px; overflow: auto; display: grid; gap: 2px; padding: 4px 0; }
 .tc-report-feedback-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+
+/* ISA-101 analog indicator (analog.tsx): grey while normal; only the pointer takes a colour. */
+.isa-analog-track { fill: var(--pc-surface-2); stroke: var(--pc-border); stroke-width: .6; }
+.isa-analog-normal { fill: var(--pc-text-3); opacity: .35; }
+.isa-analog-limit line { stroke: var(--pc-text-2); stroke-width: 1.2; }
+.isa-analog-limit text { font: 600 7px/1 var(--pc-font-mono); fill: var(--pc-text-3); }
+.isa-analog-sp { fill: none; stroke: var(--pc-text); stroke-width: 1.2; }
+.isa-analog-pointer { fill: var(--pc-text); stroke: var(--pc-surface); stroke-width: .6; }
+.isa-analog[data-state="warning"] .isa-analog-pointer { fill: var(--pc-attention-fill); }
+.isa-analog[data-state="alarm"] .isa-analog-pointer { fill: var(--pc-problem-fill); }
+.isa-analog[data-state="unknown"] .isa-analog-pointer { fill: var(--pc-text-3); }
+.tc-analogs { flex: 1; min-height: 0; display: grid; gap: 8px; align-content: start; overflow: auto; }
+.tc-analogs.tc-stats-row { grid-template-columns: repeat(var(--tc-stat-count, 1), minmax(0, 1fr)); }
+.tc-analog { min-width: 0; display: grid; gap: 2px; }
+.tc-analog svg { width: 100%; height: auto; max-height: 64px; overflow: visible; }
+.tc-analog-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.tc-analog-name { flex: 1; min-width: 0; color: var(--pc-text-3); font-size: var(--pc-fs-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc-analog-head b { font: 700 18px/1 var(--pc-font-display); }
+.tc-analog[data-state="warning"] .tc-analog-head b { color: var(--pc-attention-text); }
+.tc-analog[data-state="alarm"] .tc-analog-head b { color: var(--pc-problem-text); }
+.tc-analog-unit, .tc-analog-sp { color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
+.tc-analog-ends { display: flex; justify-content: space-between; color: var(--pc-text-3); font: 10px/1 var(--pc-font-mono); }
+.tc-spark-normal { fill: var(--pc-text-3); opacity: .16; }
+
+/* Multivariable controller panel (apc.tsx): grey like the analog indicator; a limit the
+   controller sits on and a variable out of service are the only marks that stand out. */
+.apc { display: flex; flex-direction: column; gap: 8px; min-height: 0; height: 100%; }
+.apc-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0; font-size: 13px; color: var(--pc-text-2); }
+.apc-on { font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--pc-border); color: var(--pc-text); }
+.apc-on[data-on="false"] { background: var(--pc-attention-soft); border-color: var(--pc-attention-border); }
+.apc-on[data-on="unknown"] { color: var(--pc-text-3); }
+.apc-scroll { overflow: auto; min-height: 0; flex: 1; }
+.apc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.apc-table th, .apc-table td { padding: 4px 8px; border-bottom: 1px solid var(--pc-border); text-align: left; white-space: nowrap; vertical-align: middle; }
+.apc-table thead th { font-weight: 600; color: var(--pc-text-2); position: sticky; top: 0; background: var(--pc-surface); }
+.apc-table tbody th { font-weight: 500; }
+.apc-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.apc-type { font: 600 10px/1 var(--pc-font-mono); color: var(--pc-text-3); border: 1px solid var(--pc-border); border-radius: 3px; padding: 1px 3px; }
+.apc-table tr[data-limit] .apc-state { color: var(--pc-attention-text); font-weight: 600; }
+.apc-table tr[data-service="out"] { color: var(--pc-text-3); }
+.apc-bar { display: block; }
+.apc-bar-track { fill: var(--pc-surface-2); stroke: var(--pc-border); stroke-width: .6; }
+.apc-bar-range { fill: var(--pc-text-3); opacity: .35; }
+.apc-bar-limit { stroke: var(--pc-text-2); stroke-width: 1.4; }
+.apc-bar-limit.on { stroke: var(--pc-attention-fill); stroke-width: 2.4; }
+.apc-bar-target { fill: none; stroke: var(--pc-text); stroke-width: 1.2; }
+.apc-bar-value { fill: var(--pc-text); }
+.apc-spark { display: block; overflow: visible; }
+.apc-spark-limit { stroke: var(--pc-border); stroke-width: 1; stroke-dasharray: 2 2; }
+.apc-spark-target { fill: none; stroke: var(--pc-text-3); stroke-width: 1; stroke-dasharray: 3 2; }
+.apc-spark-value { fill: none; stroke: var(--pc-text); stroke-width: 1.4; }

@@ -154,6 +154,68 @@ def read_view(reader: Reader, view: TrendView) -> dict[str, Any]:
     assert start is not None and end is not None
     seconds = int((end - start).total_seconds())
     step = view.step_seconds if view.step_seconds is not None else trend_step(seconds)
+    plots, start, end, shifted = _read_plots(
+        reader, view, start, end, step, may_shift=period.mode == "relative"
+    )
+    for key in view.compare:
+        offset = compare_offset(key, end - start)
+        earlier = _read_plots(reader, view, start - offset, end - offset, step, may_shift=False)[0]
+        for plot, before in zip(plots, earlier, strict=True):
+            plot["lines"].extend(_compared(before["lines"], key, offset))
+    return {
+        "plots": plots,
+        "range": {
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+            "step": step,
+            "shifted": shifted,
+        },
+        "read_at": reader.clock().isoformat(),
+    }
+
+
+# How a compared period reads after a line's label.
+COMPARE_LABELS = {
+    "previous": "previous period",
+    "1d": "1 day earlier",
+    "7d": "1 week earlier",
+    "28d": "4 weeks earlier",
+}
+
+
+def compare_offset(key: str, span: timedelta) -> timedelta:
+    """How far back a compared period lies: the trend's own length for the previous period."""
+
+    return span if key == "previous" else timedelta(days=int(key.rstrip("d")))
+
+
+def _compared(lines: list[dict[str, Any]], key: str, offset: timedelta) -> list[dict[str, Any]]:
+    """The earlier period's lines moved forward by ``offset`` onto the trend's time axis, each
+    named after its period and pointing at its line (``source``) to take its colour. States
+    (text signals) and lines that failed are left out."""
+
+    moved = []
+    for index, line in enumerate(lines):
+        if line.get("error") or line.get("kind") == "text" or not line.get("t"):
+            continue
+        times = [(_instant(stamp) + offset).isoformat() for stamp in line["t"]]
+        item = {key_: value for key_, value in line.items() if key_ != "samples"}
+        label = f"{line['label']} · {t(COMPARE_LABELS[key])}"
+        moved.append({**item, "t": times, "label": label, "compare": key, "source": index})
+    return moved
+
+
+def _read_plots(
+    reader: Reader,
+    view: TrendView,
+    start: datetime,
+    end: datetime,
+    step: int,
+    *,
+    may_shift: bool,
+) -> tuple[list[dict[str, Any]], datetime, datetime, bool]:
+    """Every plot's lines between ``start`` and ``end``; with ``may_shift``, a period with no
+    samples at all moves to end at the newest sample (the returned start, end and True)."""
 
     def step_of(line: Any) -> int:
         return step if line.step_seconds is None else line.step_seconds
@@ -181,7 +243,7 @@ def read_view(reader: Reader, view: TrendView) -> dict[str, Any]:
     shifted = False
     if groups:
         answers, failures = _read_groups(reader, groups, start, end, banded)
-        if period.mode == "relative" and not failures and _empty(answers):
+        if may_shift and not failures and _empty(answers):
             every = sorted({signal for signals in groups.values() for signal in signals})
             anchor = _newest_sample(reader, every)
             if anchor is not None and anchor < end - timedelta(seconds=step or 1):
@@ -258,13 +320,4 @@ def read_view(reader: Reader, view: TrendView) -> dict[str, Any]:
                     line["agg"] = "recorded"
             lines.append(line)
         plots.append({"title": plot.title, "lines": lines})
-    return {
-        "plots": plots,
-        "range": {
-            "start": start.isoformat(),
-            "end": end.isoformat(),
-            "step": step,
-            "shifted": shifted,
-        },
-        "read_at": reader.clock().isoformat(),
-    }
+    return plots, start, end, shifted

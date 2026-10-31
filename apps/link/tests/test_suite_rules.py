@@ -33,6 +33,7 @@ LAYERS = {
     "i18n": -1,
     "db": 0,
     "config": 0,
+    "compact": 0,
     "notebook_examples": 0,
     "methods": 1,
     "models": 1,

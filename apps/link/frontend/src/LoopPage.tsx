@@ -1,4 +1,4 @@
-import { ArrowUpRight, BookOpen, ChevronRight, ClipboardList, FileDown, Pencil, Play, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowUpRight, BookOpen, ChevronRight, ClipboardList, FileDown, Pencil, Pin, Play, RotateCcw, Trash2, Wrench } from "lucide-react";
 import { DataTable, FollowUp, NextSteps, PhoneFold, confirmAction, useAssistantPage, plotTheme, statusVar, type DataColumn, type JourneyStep } from "@plantcraft/ui";
 import { useEffect, useMemo, useState } from "react";
 import { processCraftActionUrl, processCraftAssetUrl } from "./AssetLink";
@@ -10,7 +10,7 @@ import { href, navigate } from "./nav";
 import { Plot } from "@plantcraft/ui/plot";
 import { opBins } from "./chart";
 import { resultLabel, statusLabel, suiteLabel } from "./status";
-import type { Algorithm, LoopDetail, Me, MethodResult, SettingSource } from "./types";
+import type { Algorithm, LoopDetail, Me, MethodResult, SettingSource, TuningSuggestion } from "./types";
 import { AlgorithmDiagram } from "./AlgorithmDiagramLazy";
 import { algorithmOf } from "./algorithms";
 import { ErrorBox, Health, Heading, Link, Loading, Pill, ResultHeadline } from "./ui";
@@ -47,6 +47,93 @@ function OpHistogram({ values }: { values: Array<number | null | undefined> }) {
     data={[{ type: "bar", name: "OP", x: bins.x, y: bins.y, width: 4.6, hovertemplate: "%{x:.0f}% ± 2.5: %{y:.1f}%<extra></extra>" }]}
     layout={{ ...theme, height: 220, margin: { l: 48, r: 12, t: 30, b: 40 }, title: { text: t("Controller output: share of the window in each 5% band"), font: { size: 12 } }, showlegend: false, bargap: 0.05, xaxis: { ...theme.xaxis, range: [0, 100], title: { text: t("Controller output (%)") } }, yaxis: { ...theme.yaxis, title: { text: t("% of the window") } } }}
     config={{ displaylogo: false, responsive: true }} useResizeHandler style={{ width: "100%" }} />;
+}
+
+const CHOICE_LABELS: Record<string, string> = { tight: "Tight (λ = dead time)", moderate: "Moderate (λ = time constant)", robust: "Robust (λ = 3 × time constant)" };
+
+/** PI settings from a model fitted to the loop's last window (Lambda/IMC rules), read only (A12):
+ * asked for on demand, since the fit reads the window again. */
+function TuningSuggestionPanel({ detail }: { detail: LoopDetail }) {
+  const [found, setFound] = useState<TuningSuggestion | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function ask() {
+    setBusy(true); setError("");
+    try { setFound(await api.tuningSuggestion(detail.loop.loop_id)); } catch (err) { setError(err instanceof Error ? err.message : String(err)); } finally { setBusy(false); }
+  }
+  const model = found?.model;
+  return <section className="panel" data-testid="tuning-suggestion">
+    <div className="panel-header"><div><h2>{t("Tuning suggestion")}</h2><p>{t("PI settings from a first-order-plus-dead-time model fitted to the last window (OP to PV), by Lambda (IMC) rules. Read only: nothing is sent to the controller.")}</p></div>
+      {!detail.incomplete && <div className="row-actions"><button className="button button-secondary" disabled={busy} onClick={() => void ask()}><Wrench size={15} />{busy ? t("Fitting…") : found ? t("Fit again") : t("Suggest tuning")}</button></div>}
+    </div>
+    {error && <div className="notice notice-error" role="alert">{error}</div>}
+    {found && !found.available && <p className="muted">{found.reason}</p>}
+    {found?.available && model && <>
+      <div className={found.reliable ? "notice" : "notice notice-error"}>{found.reliable
+        ? t("Fitted from closed-loop data: a starting point to confirm with a step test, not settings to apply as they are.")
+        : t("Not reliable: {why}. Use it only with a step test.", { why: (found.caveats ?? []).join("; ") })}</div>
+      <dl className="facts">
+        <div><dt>{t("Process gain")}</dt><dd>{formatNumber(model.gain, 3)}</dd></div>
+        <div><dt>{t("Time constant")}</dt><dd>{t("{n} s", { n: formatNumber(model.tau_seconds, 1) })}</dd></div>
+        <div><dt>{t("Dead time")}</dt><dd>{t("{n} s", { n: formatNumber(model.dead_time_seconds, 1) })}</dd></div>
+        <div><dt>{t("Fit (R²)")}</dt><dd>{formatNumber(model.r2, 3)}</dd></div>
+        <div><dt>{t("Controller action")}</dt><dd>{found.action === "reverse" ? t("Reverse (more OP raises the PV)") : t("Direct (more OP lowers the PV)")}</dd></div>
+      </dl>
+      <DataTable rows={found.settings ?? []} rowKey={(item) => item.choice} label={t("Tuning suggestion")} columns={[
+        { key: "choice", label: t("Closed-loop speed"), render: (item) => t(CHOICE_LABELS[item.choice] ?? item.choice) },
+        { key: "lambda", label: t("λ (s)"), render: (item) => formatNumber(item.lambda_seconds, 1) },
+        { key: "kc", label: t("Kc (% OP per PV unit)"), render: (item) => formatNumber(item.kc, 4) },
+        { key: "ti", label: t("Ti (s)"), render: (item) => formatNumber(item.ti_seconds, 1) },
+      ]} />
+    </>}
+  </section>;
+}
+
+/** The last run against the run recorded as the loop's reference (A8): what got worse since a
+ * window someone called good, after commissioning or a retune. */
+function AgainstReference({ detail, me, onChanged }: { detail: LoopDetail; me: Me; onChanged: () => void }) {
+  const [error, setError] = useState("");
+  const reference = detail.reference;
+  const canRecord = me.can_edit && !detail.incomplete && detail.results.length > 0;
+  async function record() {
+    setError("");
+    if (reference && !(await confirmAction(t("Replace the reference of {date} with the last run?", { date: formatDate(reference.recorded_at) }), { confirm: t("Replace") }))) return;
+    try { await api.recordReference(detail.loop.loop_id); onChanged(); } catch (err) { setError(err instanceof Error ? err.message : String(err)); }
+  }
+  async function remove() {
+    if (!(await confirmAction(t("Remove this loop's reference?"), { confirm: t("Remove"), danger: true }))) return;
+    try { await api.deleteReference(detail.loop.loop_id); onChanged(); } catch (err) { setError(err instanceof Error ? err.message : String(err)); }
+  }
+  const change = (value: number | null) => (value === null ? "—" : `${value > 0 ? "+" : ""}${formatNumber(value, 1)}`);
+  const moved = (item: NonNullable<LoopDetail["reference"]>["methods"][number]) => {
+    const found = Object.entries(item.indicators).filter(([, value]) => value.index !== null && value.index !== 1).sort((a, b) => Math.abs(Math.log(b[1].index as number)) - Math.abs(Math.log(a[1].index as number)))[0];
+    return found ? `${found[0]}: ${formatNumber(found[1].reference, 3)} → ${formatNumber(found[1].now, 3)} (×${formatNumber(found[1].index as number, 2)})` : t("Unchanged");
+  };
+  return <section className="panel" data-testid="loop-reference">
+    <div className="panel-header"><div><h2>{t("Against the reference")}</h2><p>{reference
+      ? t("The last run against the run recorded on {date} by {who} (window up to {end}).", { date: formatDate(reference.recorded_at), who: reference.recorded_by, end: reference.source_end ? formatDate(reference.source_end) : "—" })
+      : t("Record a run you call good (after commissioning or a retune) and later runs are shown against it.")}</p></div>
+      {canRecord && <div className="row-actions">
+        <button className="button button-secondary" onClick={() => void record()}><Pin size={15} />{t("Record as reference")}</button>
+        {reference && <button className="button button-secondary danger" onClick={() => void remove()}><Trash2 size={15} />{t("Remove")}</button>}
+      </div>}
+    </div>
+    {error && <div className="notice notice-error" role="alert">{error}</div>}
+    {reference && <>
+      {reference.version_changed && <div className="notice">{t("The algorithm changed since the reference was recorded: some scores may differ for that reason alone.")}</div>}
+      <dl className="facts">
+        <div><dt>{t("Health then")}</dt><dd>{reference.health_reference === null ? "—" : formatNumber(reference.health_reference, 1)}</dd></div>
+        <div><dt>{t("Health now")}</dt><dd>{reference.health_now === null ? "—" : formatNumber(reference.health_now, 1)}</dd></div>
+        <div><dt>{t("Change")}</dt><dd>{change(reference.health_change)}</dd></div>
+      </dl>
+      {reference.methods.length ? <DataTable rows={reference.methods} rowKey={(item) => item.method_id} label={t("Against the reference")} columns={[
+        { key: "method", label: t("Method"), sort: (item) => methodLabel(item.method_id), render: (item) => methodLabel(item.method_id) },
+        { key: "status", label: t("Status then → now"), render: (item) => <><Pill status={item.status_reference} label={resultLabel(item.status_reference)} /> → <Pill status={item.status_now} label={resultLabel(item.status_now)} /></> },
+        { key: "score", label: t("Score change"), sort: (item) => item.score_change ?? 0, render: (item) => change(item.score_change) },
+        { key: "moved", label: t("Indicator that moved most"), render: moved },
+      ]} /> : <p className="muted">{t("No method was judged in both runs.")}</p>}
+    </>}
+  </section>;
 }
 
 function HealthHistory({ detail }: { detail: LoopDetail }) {
@@ -266,6 +353,8 @@ export function LoopPage({ loopId, me }: { loopId: string; me: Me }) {
       </PhoneFold>
       <PhoneFold title={t("Input signals")}><section className="panel"><div className="panel-header"><div><h2>{t("Input signals")}</h2><p>{t("The window the algorithm read, from PlantCraft.")}</p></div></div><Trends detail={detail} /></section></PhoneFold>
       <PhoneFold title={t("Derived signals")}><HealthHistory detail={detail} /></PhoneFold>
+      <PhoneFold title={t("Tuning suggestion")}><TuningSuggestionPanel detail={detail} /></PhoneFold>
+      <PhoneFold title={t("Against the reference")}><AgainstReference detail={detail} me={me} onChanged={() => void load()} /></PhoneFold>
     </>}
     <div className="pc-grid pc-grid-2">
       {detail.origin === "processcraft" && <FollowUp subject={`asset:${assetId(detail)}`} newTitle={actionTitle(detail)} platformUrl={me.processcraft_url} canCreate={me.can_edit}

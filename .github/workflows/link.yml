@@ -89,6 +89,8 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/link/frontend/package-lock.json
+      # SKAB (GPL-3.0) is downloaded here at a pinned commit for its oracle, never committed.
+      - run: python tests/oracles/fetch_skab.py
       # plantcraft-sdk comes from vendor/ only (pip install --no-index --find-links vendor).
       - run: make ci
 
@@ -112,7 +114,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/link/frontend/package-lock.json
-      - run: python -m pip install -q --force-reinstall --no-index --find-links vendor --no-deps "plantcraft-sdk==0.92.0"
+      - run: python -m pip install -q --force-reinstall --no-index --find-links vendor --no-deps "plantcraft-sdk==0.94.0"
       - run: python -m pip install -q --find-links vendor -e ".[dev,e2e]"
       # Chromium is downloaded in CI only; the product never fetches anything at runtime.
       - run: python -m playwright install --with-deps chromium

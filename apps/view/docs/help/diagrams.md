@@ -12,6 +12,10 @@ the name. In the editor, **Add page** makes one; the page's name, its place and 
 sit beside the tabs. A symbol, value or text can open another page (A click opens › Another
 page), like an off-page connector.
 
+A display drawn for the whole plant opens on its **Plant overview** (Level 1): a block per unit
+with its equipment and loop count and its loops' health bubbles; a click opens the unit's page,
+and **‹ Plant overview** on each unit page leads back.
+
 ## Watch a diagram
 
 - **Live** shows the values now, refreshed every few seconds (the diagram's own cadence).
@@ -26,7 +30,8 @@ page), like an off-page connector.
   and each line's look as in Trends; **Open in Trends** goes on with it there.
 - A click on a piece of equipment opens its panel beside the diagram: its values on the drawing,
   its signals (each a trend away), the dashboards that show it and **Asset page**. An element
-  its editor linked elsewhere opens that instead: another diagram or a dashboard.
+  its editor linked elsewhere opens that instead: another diagram or a dashboard. A diagram it
+  opens shows **Back** with the first one's name, which returns to the page you left.
 - **Full screen** is the browser's own: the diagram alone, live, for a control room screen, with
   the trend and the asset panel opening inside it; Esc leaves.
 - A vessel's level fills the vessel's own shape, with the liquid's surface drawn as a line.
@@ -81,10 +86,14 @@ Editors draw diagrams: **New diagram**, or **Edit** on a diagram.
 3. **Bind it**: click a symbol and pick the **asset it draws** (P-101, TK-1). Its colour, level
    and running are bound at once from the asset's signal roles; change any of them in the panel.
    **Value** adds a number beside the selected symbol (its PV first), with its own limits.
+   Tick **Analog indicator (ISA-101)** to draw a grey bar under it: the normal range as a darker
+   band (the low to high warning when not set), the limits as LL, L, H and HH ticks, the setpoint
+   (its asset's SP first) as a hollow mark and the value as a pointer. Only the pointer takes a
+   colour, and only out of normal.
 4. **Save**. Nothing is saved before; Cancel leaves the diagram as it was.
 
 Or start from a draft: **From assets** lays out a unit from its equipment, loops and relations
-(each with its bindings), and **Draft with assistant** drafts one from what you describe (when
+(each with its bindings), or **the whole plant**: an overview and a page per unit, and **Draft with assistant** drafts one from what you describe (when
 the language model use *diagram-draft* is on in Setup). Both replace the canvas, Undo brings it
 back, and a note says what was left out. Move things where you want them, then save.
 

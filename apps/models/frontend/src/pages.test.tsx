@@ -5,7 +5,7 @@ import { blockPath, blockTab, modelPath, modelTab, movedTo } from "./paths";
 describe("the frame's pages", () => {
   it("one level, in Link's order: Overview, Blocks, Models, Studies, Executions", () => {
     const [overview, blocks, models, studies, executions] = NAV;
-    expect(NAV.map((item) => item.to)).toEqual(["/", "/blocks", "/models", "/studies", "/executions"]);
+    expect(NAV.map((item) => item.to)).toEqual(["/", "/blocks", "/models", "/studies", "/executions", "/tracking"]);
     expect(NAV.some((item) => "children" in item)).toBe(false);
     expect(overview.match?.("/")).toBe(true);
     expect(overview.match?.("/models")).toBe(false);

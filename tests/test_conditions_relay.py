@@ -120,3 +120,54 @@ def test_what_a_keyless_app_adds_reaches_the_registry(tmp_path):
     # A refused body leaves what was there.
     relay.apply({"histcraft": {"contributions": {"contributes": {"widgets": "x"}}}})
     assert registry.get("histcraft")["contributes"]["widgets"][0]["id"] == "sources"
+
+
+class FakeNotifications:
+    def __init__(self):
+        self.sent: list[dict] = []
+        self.resolved: list[tuple] = []
+
+    def notify(self, app_id, app_name, **fields):
+        self.sent.append({"app": app_id, "name": app_name, **fields})
+        return {"delivered": [], "email_queued": 0, "unknown": []}
+
+    def resolve(self, app_id, key, note=""):
+        self.resolved.append((app_id, key, note))
+        return {"key": key}
+
+
+def test_the_owners_of_a_failing_source_are_told_with_an_email_and_settled_after(tmp_path):
+    db = Database(tmp_path / "platform.sqlite3")
+    events = EventStore(db)
+    told = FakeNotifications()
+    relay = ConditionRelay(
+        db, events, notifications=lambda: told, app_names=lambda: {"histcraft": "Historian"}
+    )
+    down = {"name": "source.disconnected", "key": "source:opc-1", "subject": "source:opc-1",
+            "summary": "Source OPC 1 disconnected: refused",
+            "payload": {"source": "opc-1", "owners": ["group:automation", "User:Ana", "admins"],
+                        "contact": "Automation team,\n ext. 4321"}}  # fmt: skip
+    relay.apply(_metrics(down))
+    [sent] = told.sent
+    assert sent["app"] == "histcraft" and sent["name"] == "Historian"
+    # Only user:/group: references, and an email beside the message in Messages.
+    assert sent["recipients"] == ["group:automation", "user:ana"]
+    assert sent["email"] is True and sent["priority"] == "critical"
+    assert sent["key"] == "condition:source:opc-1" and sent["url"] == "/hist/sources/opc-1"
+    assert "Automation team, ext. 4321" in sent["text"] and sent["refs"] == ["source:opc-1"]
+    relay.apply(_metrics(down))
+    assert len(told.sent) == 1  # once while it lasts
+    # A restart keeps who was told: the end settles it.
+    again = ConditionRelay(db, events, notifications=lambda: told)
+    again.apply(_metrics())
+    [(app, key, note)] = told.resolved
+    assert (app, key) == ("histcraft", "condition:source:opc-1") and "Back to normal" in note
+
+
+def test_a_condition_without_owners_tells_nobody(tmp_path):
+    db = Database(tmp_path / "platform.sqlite3")
+    told = FakeNotifications()
+    relay = ConditionRelay(db, EventStore(db), notifications=lambda: told)
+    relay.apply(_metrics({"name": "point.bad", "key": "point:7", "payload": {"owners": []}}))
+    relay.apply(_metrics())
+    assert told.sent == [] and told.resolved == []

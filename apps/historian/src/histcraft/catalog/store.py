@@ -56,6 +56,7 @@ from histcraft.catalog.models import (
     DEFAULT_SETTINGS,
     DROPPED_APPS,
     INHERITABLE,
+    INTEGRATION_FIELDS,
     LAB_SOURCE,
     LIVE_KINDS,
     MANAGED,
@@ -82,6 +83,9 @@ from histcraft.catalog.models import (
 from histcraft.db import Database, Store
 from histcraft.i18n import t
 from histcraft.kinds import on_change
+
+# How long a source's history is kept (``source_events``).
+SOURCE_EVENT_DAYS = 90
 
 
 class CatalogStore(Store):
@@ -150,6 +154,16 @@ class CatalogStore(Store):
         retired_by TEXT NOT NULL DEFAULT ''
     );
 
+    -- Each source's history (H13): when the collector found it connected, disconnected again.
+    CREATE TABLE IF NOT EXISTS source_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        source_id TEXT NOT NULL,
+        at_ms INTEGER NOT NULL,
+        status TEXT NOT NULL,
+        detail TEXT NOT NULL DEFAULT ''
+    );
+    CREATE INDEX IF NOT EXISTS idx_source_events ON source_events(source_id, at_ms);
+
     CREATE TABLE IF NOT EXISTS catalog_version (
         id INTEGER PRIMARY KEY CHECK (id = 1),
         version INTEGER NOT NULL
@@ -174,8 +188,14 @@ class CatalogStore(Store):
         # profile's), round 8 D1.
         ("points", "profile", "TEXT NOT NULL DEFAULT ''"),
         ("points", "exception", "REAL"),
+        # Lines only: the least time between archived values (NULL or 0: none; PI's CompMin).
+        ("points", "min_seconds", "REAL"),
         # Where its range comes from: source, edited, suggested, or '' (none yet), D2.
         ("points", "range_origin", "TEXT NOT NULL DEFAULT ''"),
+        # The integration around a source (H13, ``INTEGRATION_FIELDS``).
+        ("sources", "owners", "TEXT NOT NULL DEFAULT '[]'"),
+        ("sources", "contact", "TEXT NOT NULL DEFAULT ''"),
+        ("sources", "heartbeat_seconds", "INTEGER NOT NULL DEFAULT 0"),
     )
 
     TIMES = (("sources", "id", ("created", "updated")), ("points", "id", ("created", "updated")))
@@ -265,6 +285,11 @@ class CatalogStore(Store):
             for key in SOURCE_SETTINGS
             if create or key in data.model_fields_set
         }
+        integration = {
+            key: self._json(data.owners) if key == "owners" else getattr(data, key)
+            for key in INTEGRATION_FIELDS
+            if create or key in data.model_fields_set
+        }
         with self._lock, self._connect() as connection:
             row = connection.execute(
                 "SELECT kind, secret, endpoint, username FROM sources WHERE id = ?", (data.id,)
@@ -307,11 +332,12 @@ class CatalogStore(Store):
                     now,
                 ),
             )
-            if overrides:
-                assignments = ", ".join(f"{key} = ?" for key in overrides)
+            changes = {**overrides, **integration}
+            if changes:
+                assignments = ", ".join(f"{key} = ?" for key in changes)
                 connection.execute(
                     f"UPDATE sources SET {assignments} WHERE id = ?",
-                    (*overrides.values(), data.id),
+                    (*changes.values(), data.id),
                 )
             self._bump(connection)
         return self.source(data.id)
@@ -334,8 +360,50 @@ class CatalogStore(Store):
                 connection.execute("DELETE FROM points WHERE source_id = ?", (source_id,))
             if not connection.execute("DELETE FROM sources WHERE id = ?", (source_id,)).rowcount:
                 raise CatalogError(t("Source {id} not found.", id=source_id), 404)
+            connection.execute("DELETE FROM source_events WHERE source_id = ?", (source_id,))
             self._bump(connection)
         return int(used)
+
+    # A source's history (H13) -----------------------------------------------------------
+
+    def add_source_events(self, events: Iterable[tuple[str, int, str, str]]) -> None:
+        """Keep each ``(source_id, at_ms, status, detail)`` the collector saw change; older
+        than ``SOURCE_EVENT_DAYS`` days go."""
+
+        rows = [(sid, int(at), status, str(detail)[:500]) for sid, at, status, detail in events]
+        if not rows:
+            return
+        cutoff = int(time.time() * 1000) - SOURCE_EVENT_DAYS * 86_400_000
+        with self._lock, self._connect() as connection:
+            connection.executemany(
+                "INSERT INTO source_events (source_id, at_ms, status, detail) VALUES (?, ?, ?, ?)",
+                rows,
+            )
+            connection.execute("DELETE FROM source_events WHERE at_ms < ?", (cutoff,))
+
+    def source_events(self, source_id: str, limit: int = 100) -> list[dict[str, Any]]:
+        """A source's changes of state, the newest first."""
+
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT at_ms, status, detail FROM source_events WHERE source_id = ?"
+                " ORDER BY at_ms DESC, id DESC LIMIT ?",
+                (source_id, max(1, min(int(limit), 1000))),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def last_source_statuses(self) -> dict[str, str]:
+        """Each source's last recorded state (where the collector takes up after a restart)."""
+
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT e.source_id, e.status FROM source_events e
+                JOIN (SELECT source_id, MAX(id) AS id FROM source_events GROUP BY source_id) last
+                  ON last.id = e.id
+                """
+            ).fetchall()
+        return {str(row["source_id"]): str(row["status"]) for row in rows}
 
     def trust_server(self, source_id: str, thumbprint: str) -> dict[str, Any]:
         """Pin the SHA-256 of an OPC UA source's server certificate (G2); the source."""
@@ -582,8 +650,8 @@ class CatalogStore(Store):
                     INSERT INTO points (source_id, tag, address, name, description, unit,
                         kind, step, low, high, scan_seconds, deviation, max_seconds,
                         retention_days, mode, enabled, created, updated, inherits, profile,
-                        exception, range_origin)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        exception, range_origin, min_seconds)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT DO NOTHING
                     """,
                     (
@@ -609,6 +677,7 @@ class CatalogStore(Store):
                         item.profile or "",
                         item.exception,
                         range_origin if _has_span(item.low, item.high) else "",
+                        item.min_seconds,
                     ),
                 )
                 if inserted.rowcount:
@@ -1041,6 +1110,12 @@ def _source(row: Any) -> dict[str, Any]:
         item["options"] = json.loads(item["options"] or "{}")
     except json.JSONDecodeError:
         item["options"] = {}
+    try:
+        item["owners"] = list(json.loads(item.get("owners") or "[]"))
+    except json.JSONDecodeError:
+        item["owners"] = []
+    item["contact"] = item.get("contact") or ""
+    item["heartbeat_seconds"] = int(item.get("heartbeat_seconds") or 0)
     item["default_mode"] = DEFAULT_MODES.get(item["kind"], "archive")
     item["mode"] = item["mode"] or item["default_mode"]
     # Whether the source tells the quality of its values (else every value counts as good).

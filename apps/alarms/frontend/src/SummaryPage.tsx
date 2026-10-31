@@ -96,7 +96,7 @@ export function AlarmTable({ alarms, me, onChanged, searchable = true, toolbar, 
   const [shelving, setShelving] = useState<Alarm | null>(null);
   const columns: DataColumn<Alarm>[] = [
     { key: "priority", label: t("Priority"), phone: "hide", sort: (alarm) => RANK[alarm.priority] ?? 9, filter: searchable ? { options: labelled(PRIORITY_WORDS), value: (alarm) => alarm.priority } : undefined, render: (alarm) => <PriorityPill priority={alarm.priority} /> },
-    { key: "status", label: t("State"), phone: "hide", sort: (alarm) => STATE_RANK[alarm.status] ?? 9, filter: searchable ? { options: labelled(STATUS_WORDS), value: (alarm) => alarm.status } : undefined, render: (alarm) => <StatusPill status={alarm.status} /> },
+    { key: "status", label: t("State"), phone: "hide", sort: (alarm) => STATE_RANK[alarm.status] ?? 9, filter: searchable ? { options: labelled(STATUS_WORDS), value: (alarm) => alarm.status } : undefined, render: (alarm) => <><StatusPill status={alarm.status} />{alarm.suppressed && <div className="small muted">{t("Suppressed by design")}</div>}</> },
     { key: "name", label: t("Alarm"), className: "al-name", sort: (alarm) => alarm.name, render: (alarm) => <>
       <Link to={`/alarms/${alarm.alarm_id}`} className="strong">{alarm.name}</Link>
       {/* A phone leaves out the Priority and State columns: both show here, under the name. */}

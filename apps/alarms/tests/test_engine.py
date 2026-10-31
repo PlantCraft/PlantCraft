@@ -399,3 +399,148 @@ def test_the_performance_result_of_each_area_fits_platform_limits():
     for row in rows:
         assert len(json.dumps(row["detail"], separators=(",", ":"))) <= 16 * 1024
         assert row["expires_at"] > row["at"]
+
+
+# L3: state-based alarming, a permissive that enables the alarm (designed suppression).
+PUMP = "plantcraft:P-101.RUN"
+
+
+def permissive_rule(delay: float = 0.0) -> dict:
+    """Flow low (PV < 10), only while the pump runs (RUN >= 1), and ``delay`` s after it starts."""
+
+    logic = SimpleLogic.model_validate(
+        {
+            "conditions": [{"input": "value", "value": {"role": "pv"}, "op": "<", "limit": 10.0}],
+            "enable_when": {"input": "value", "value": {"signal": PUMP}, "op": ">=", "limit": 1},
+            "enable_delay_seconds": delay,
+        }
+    )
+    return to_diagram(logic)
+
+
+def judge_pump(diagram, flow, running, state=None):
+    stop = T0 + timedelta(seconds=len(flow) - 1)
+    return engine.run(diagram, ASSET, state or {},
+                      series={SIGNAL: series(flow), PUMP: series(running)}, events=[], end=stop)  # fmt: skip
+
+
+def test_a_permissive_suppresses_the_alarm_while_it_does_not_hold():
+    diagram = permissive_rule()
+    assert check(diagram).valid
+    # Pump off for 3 s (flow 0: no alarm, suppressed), then on with no flow (raised), then
+    # stopped again while still low: the alarm clears and stays suppressed.
+    found = judge_pump(diagram, [0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 1, 0])
+    assert kinds(found) == ["raised", "cleared"]
+    assert found.state["suppressed"] is True and found.state["active"] is False
+    assert "Suppressed by design" in found.message
+
+
+def test_a_permissive_delay_lets_the_flow_settle_after_a_start():
+    diagram = permissive_rule(delay=3)
+    found = judge_pump(diagram, [0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1])
+    assert [moment.second for kind, moment in found.transitions] == [3]
+    # The flow came up within the delay: never raised.
+    settled = judge_pump(diagram, [0, 0, 20, 20, 20], [1, 1, 1, 1, 1])
+    assert kinds(settled) == [] and settled.state["suppressed"] is False
+
+
+def test_an_unknown_permissive_leaves_the_alarm_enabled():
+    diagram = permissive_rule()
+    stop = T0 + timedelta(seconds=3)
+    found = engine.run(
+        diagram, ASSET, {}, series={SIGNAL: series([0, 0, 0, 0])}, events=[], end=stop
+    )
+    assert kinds(found) == ["raised"]
+    assert "stays enabled" in found.message
+
+
+def test_the_permissive_reads_in_the_sentence():
+    logic = SimpleLogic.model_validate(
+        {
+            "conditions": [{"input": "value", "value": {"role": "pv", "name": "Flow"}, "op": "<", "limit": 10}],
+            "enable_when": {"input": "value", "value": {"signal": PUMP, "name": "P-101 running"}, "op": ">=", "limit": 1},
+            "enable_delay_seconds": 30,
+        }
+    )  # fmt: skip
+    assert (
+        logic.sentence()
+        == "Flow < 10; only while P-101 running ≥ 1 (from 30 s after it starts holding)"
+    )
+    with pytest.raises(ValueError):
+        SimpleLogic.model_validate(
+            {"conditions": logic.model_dump()["conditions"],
+             "enable_when": {"input": "event", "event": {"kinds": ["a.b"]}}}
+        )  # fmt: skip
+
+
+# L8: limits by product grade (the grade from a signal holding its code, or from events).
+GRADE = "plantcraft:LINE-1.GRADE"
+GRADES = [{"grade": "1", "limit": 50.0}, {"grade": "2", "limit": 80.0}]
+
+
+def graded_rule(grade: dict, limits=GRADES, limit: float = 60.0) -> dict:
+    condition = {"input": "value", "value": {"role": "pv", "name": "Melt index"}, "op": ">",
+                 "limit": limit, "grade_limits": limits}  # fmt: skip
+    return to_diagram(SimpleLogic.model_validate({"conditions": [condition], "grade": grade}))
+
+
+def test_the_grade_from_a_signal_sets_the_limit():
+    diagram = graded_rule({"source": "value", "value": {"signal": GRADE}})
+    assert check(diagram).valid
+    stop = T0 + timedelta(seconds=5)
+    # 70 is over grade 1's 50 (raised), under grade 2's 80 (cleared), over 60 for grade 3,
+    # which has no limit of its own.
+    found = engine.run(diagram, ASSET, {}, end=stop, events=[], series={
+        SIGNAL: series([70, 70, 70, 70, 70, 70]), GRADE: series([1, 1, 2, 2, 3, 3])})  # fmt: skip
+    assert [(kind, moment.second) for kind, moment in found.transitions] == [
+        ("raised", 0), ("cleared", 2), ("raised", 4)]  # fmt: skip
+    assert "Grade 3 has no limit of its own" in found.message
+    assert found.signal == SIGNAL and found.value == 70  # the value shown is not the grade code
+
+
+def test_the_grade_from_events_sets_the_limit_and_is_kept_between_runs():
+    diagram = graded_rule({"source": "event", "kinds": ["mes.grade.changed"]})
+    changed = [
+        event(0.0, kind="mes.grade.changed", subject="line:L1", payload={"grade": "2"}),
+        event(0.05, kind="mes.grade.changed", subject="line:L1", payload={"grade": "1"}),
+    ]
+    stop = T0 + timedelta(seconds=5)
+    found = engine.run(
+        diagram, ASSET, {}, series={SIGNAL: series([70] * 6)}, events=changed, end=stop
+    )
+    assert [(kind, moment.second) for kind, moment in found.transitions] == [("raised", 3)]
+    assert "Grade 1: limit 50" in found.message
+    # The next run hears no grade event: grade 1 holds.
+    later = engine.run(diagram, ASSET, found.state, events=[], end=stop + timedelta(seconds=3),
+                       series={SIGNAL: series([70] * 9)})  # fmt: skip
+    assert later.state["active"] is True and "Grade 1" in later.message
+    # No grade known yet: the fixed limit (60) holds.
+    fresh = engine.run(diagram, ASSET, {}, series={SIGNAL: series([55, 65])}, events=[],
+                       end=T0 + timedelta(seconds=1))  # fmt: skip
+    assert kinds(fresh) == ["raised"]
+
+
+def test_grade_limits_read_in_the_sentence_and_are_checked():
+    logic = SimpleLogic.model_validate({
+        "conditions": [{"input": "value", "value": {"role": "pv", "name": "MI"}, "op": ">",
+                        "limit": 60, "grade_limits": GRADES}],
+        "grade": {"source": "event", "kinds": ["mes.grade.changed"], "name": "Grade change"},
+    })  # fmt: skip
+    assert (
+        logic.sentence() == "MI > 60 (1: 50, 2: 80 by grade); the grade from Grade change (grade)"
+    )
+    bad = [
+        {"conditions": logic.model_dump()["conditions"]},  # limits, no grade source
+        {"conditions": [{"input": "value", "value": {"role": "pv"}, "op": ">", "limit": 1}],
+         "grade": {"source": "value", "value": {"signal": GRADE}}},  # a source, no limits
+        {"conditions": [{"input": "value", "value": {"role": "pv"}, "op": "between", "limit": 1,
+                         "high": 2, "grade_limits": GRADES}],
+         "grade": {"source": "value", "value": {"signal": GRADE}}},
+        {"conditions": [{"input": "value", "value": {"role": "pv"}, "op": ">", "limit": 1,
+                         "grade_limits": [*GRADES, GRADES[0]]}],
+         "grade": {"source": "value", "value": {"signal": GRADE}}},
+        {"conditions": logic.model_dump()["conditions"], "grade": {"source": "event"}},
+    ]  # fmt: skip
+    for body in bad:
+        with pytest.raises(ValueError):
+            SimpleLogic.model_validate(body)

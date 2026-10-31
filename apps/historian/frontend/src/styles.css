@@ -77,6 +77,7 @@
 .settings-list { display: grid; grid-template-columns: max-content 1fr; gap: 8px 24px; margin: 0; font-size: var(--pc-fs-sm); }
 .settings-list dt { color: var(--pc-text-3); }
 .settings-list dd { margin: 0; }
+.source-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: var(--pc-fs-sm); }
 .levels { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; counter-reset: level; }
 .levels li { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); background: var(--pc-surface); font-size: var(--pc-fs-sm); }
 .levels li span { color: var(--pc-text-3); }
@@ -123,3 +124,7 @@
 .preview-table { font-size: var(--pc-fs-sm); }
 .preview-table caption { text-align: left; padding: 8px 12px; font-weight: 500; }
 .preview-table td.bad { color: var(--pc-problem-text); }
+
+/* Notes on a signal (PointNotes). */
+.note-list { list-style: none; margin: 0 0 var(--pc-space-3, 12px); padding: 0; display: grid; gap: 6px; }
+.note-list li { overflow-wrap: anywhere; }

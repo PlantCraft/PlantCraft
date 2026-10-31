@@ -439,14 +439,18 @@ def test_histcraft_collects_simcraft_and_keeps_its_own_database() -> None:
     )
     assert database["user"] == "10008:10008"
     assert _networks_of(database) == {"histdb"} and "ports" not in database
-    # The gateway (Telegraf, pinned): only the configuration the collector writes, read-only.
+    # The gateway (Telegraf, pinned): the configuration the collector writes, read-only, and
+    # its disk buffer (store and forward), the only folder it writes.
     gateway = services[HISTCRAFT_GATEWAY]
     assert gateway["profiles"] == ["histcraft"]
     assert re.fullmatch(
         r"\$\{HISTCRAFT_GATEWAY_IMAGE:-telegraf:[\w.-]+@sha256:[0-9a-f]{64}\}", gateway["image"]
     )
     assert gateway["user"] == "10008:10008" and "secrets" not in gateway
-    assert gateway["volumes"] == ["./data/histcraft/gateway:/etc/telegraf:ro"]
+    assert gateway["volumes"] == [
+        "./data/histcraft/gateway:/etc/telegraf:ro",
+        "./data/histcraft/gateway-buffer:/var/lib/telegraf-buffer",
+    ]
     assert gateway["command"][:3] == ["telegraf", "--config", "/etc/telegraf/telegraf.conf"]
     assert collector["environment"]["HISTCRAFT_INGEST_PORT"] == "8186"
     assert database["volumes"] == ["./data/histcraft-db:/var/lib/postgresql/data"]

@@ -35,12 +35,17 @@ SCADA and IIoT platforms. Sources are public only (clean room, see AGENTS.md).
 | Collection | Secure OPC UA (Sign, SignAndEncrypt, certificates) | Part 4 | done (client certificate made once; server trusted by SHA-256) | `tests/test_secure_opcua.py` |
 | Compression | Swinging-door compression with a deviation per point | Bristol 1990 | done | `tests/test_compression.py` |
 | Compression | Maximum time between archived values | | done | `tests/test_compression.py` |
+| Compression | Minimum time between archived values (per point, lines only; PI CompMin) | | done | `tests/test_compression.py`, `tests/test_settings_levels.py` |
+| Compression | Step marker: a held value that jumps is archived at its last read before the jump | | done (the swinging door's held snapshot) | `tests/test_compression.py` |
 | Compression | Exception deviation before compression (two-stage filter) | | done (exception 0.1 % and compression 0.2 % of the span by default, like PI; named profiles `fine` and `none`) | `tests/test_compression.py` |
 | Compression | Step points and text (digital states) archived on change | | done | `tests/test_compression.py` |
 | Archive | Compressed storage, merged over time | | done | `tests/test_archive.py`, bench |
 | Archive | Retention per point | | done (whole chunks; PostgreSQL drops whole past months) | `tests/test_archive.py`, `tests/test_partitions.py` |
 | Archive | PostgreSQL tables partitioned by month, an older archive migrated on start | | done | `tests/test_partitions.py` |
 | Admin | Settings in three levels (general, per source, per point; the most specific wins), with the origin of each value shown | | done | `tests/test_settings_levels.py` |
+| Archive | Notes on a signal at an instant or over an interval, told to PlantCraft as events | | done (`/api/v1/annotations`, the signal's page; the page posts `histcraft.annotation.added`) | `tests/test_annotations.py` |
+| Archive | The OPC UA status code kept with each change of quality: sub-code (`UncertainLastUsableValue`...) and LimitBits (low, high, constant) | Part 4 §7.39 | done (`status` and `limit` beside `quality` in reads) | `tests/test_quality.py` |
+| Archive | Audited edits of values: insert, edit, delete by editors, with a reason; the mark read with the value, the original kept with who and when, each edit in the audit log | 21 CFR Part 11 practice | done (`/api/v1/edits`, the signal's page) | `tests/test_edits.py` |
 | Archive | Quality flags stored with values (good, uncertain, substituted, bad) | Part 11 | done (changes of quality kept per point; sources without quality count as good) | `tests/test_quality.py` |
 | Archive | Backfill from the source's own history (OPC UA HistoryRead), up to where archiving began | Part 11 | done | `tests/test_backfill.py` |
 | Archive | Edits of archived values with an audit trail | Part 11 | missing | |

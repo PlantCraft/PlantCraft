@@ -8,8 +8,15 @@ import pytest
 from pydantic import ValidationError
 
 from dashcraft.reports import pdf
-from dashcraft.reports.model import ReportPayload, Schedule, Section
-from dashcraft.reports.schedule import cadence, closed_period, next_run, runs_between
+from dashcraft.reports.model import EventTrigger, ReportPayload, Schedule, Section
+from dashcraft.reports.schedule import (
+    MAX_EVENT_DAYS,
+    cadence,
+    closed_period,
+    event_periods,
+    next_run,
+    runs_between,
+)
 from tests.conftest import client_for, make_runtime
 from tests.plant import NOW
 
@@ -574,3 +581,101 @@ def test_an_alarm_performance_section_reads_what_alarms_publishes_in_every_forma
     assert week.json()["data"]["period"] == "7d" and not week.json()["data"]["exact"]
     with pytest.raises(ValidationError):
         Section.model_validate({"section_id": "x", "kind": "alarms"})
+
+
+# Reports an event makes (V5) ------------------------------------------------------------
+
+
+def _event(kind: str, at: datetime, subject: str = "asset:unit-100", **payload) -> dict:
+    return {"kind": kind, "at": at.isoformat(), "subject": subject, "payload": payload}
+
+
+def test_each_end_event_closes_the_period_from_its_start_event():
+    trigger = EventTrigger(end_kind="historian.batch.ended", start_kind="historian.batch.started")
+    t0 = NOW
+    starts = [
+        _event("historian.batch.started", t0),
+        _event("historian.batch.started", t0 + timedelta(hours=5)),
+        _event("historian.batch.started", t0 + timedelta(hours=1), subject="asset:unit-200"),
+    ]
+    ends = [
+        _event("historian.batch.ended", t0 + timedelta(hours=4)),
+        _event("historian.batch.ended", t0 + timedelta(hours=8)),
+        _event("historian.batch.ended", t0 + timedelta(hours=3), subject="asset:unit-200"),
+    ]
+    found = event_periods(
+        trigger, ends, starts, since=t0 - timedelta(days=1), fallback_seconds=3600
+    )
+    assert [(s - t0, e - t0) for s, e, _ in found] == [
+        (timedelta(hours=1), timedelta(hours=3)),  # unit-200's own start
+        (timedelta(0), timedelta(hours=4)),
+        (timedelta(hours=5), timedelta(hours=8)),  # not the start of the batch before
+    ]
+    # Only what ended after the last look, and only the subject asked for.
+    trigger = EventTrigger(end_kind="historian.batch.ended", subject="asset:unit-100")
+    later = event_periods(trigger, ends, [], since=t0 + timedelta(hours=4), fallback_seconds=3600)
+    assert [(s - t0, e - t0) for s, e, _ in later] == [(timedelta(hours=7), timedelta(hours=8))]
+
+
+def test_an_end_event_without_a_start_uses_its_payload_and_a_cap():
+    trigger = EventTrigger(end_kind="models.startup.ended")
+    end = NOW
+    with_payload = _event("models.startup.ended", end, start=(end - timedelta(hours=6)).isoformat())
+    [(start, _, _)] = event_periods(trigger, [with_payload], [], NOW - timedelta(days=1), 3600)
+    assert start == end - timedelta(hours=6)
+    old = _event("models.startup.ended", end, start=(end - timedelta(days=90)).isoformat())
+    [(start, _, _)] = event_periods(trigger, [old], [], NOW - timedelta(days=1), 3600)
+    assert start == end - timedelta(days=MAX_EVENT_DAYS)
+    with pytest.raises(ValidationError):
+        EventTrigger(end_kind="Not a kind")
+
+
+def test_the_cadence_names_the_event():
+    on_event = {"end_kind": "historian.batch.ended"}
+    assert cadence(Schedule(on_event=on_event)) == "When historian.batch.ended happens"
+    both = cadence(Schedule(every="day", at="06:00", on_event=on_event))
+    assert both == "Every day at 06:00; and when historian.batch.ended happens"
+
+
+def test_a_batch_end_makes_one_report_over_the_batch(tmp_path, fake):
+    runtime = make_runtime(tmp_path, fake)
+    try:
+        with client_for(runtime, fake, "engineer") as client:
+            schedule = {
+                "every": "off",
+                "on_event": {
+                    "end_kind": "historian.batch.ended",
+                    "start_kind": "historian.batch.started",
+                },
+            }
+            rid = client.post("/dash/api/reports", json=report(schedule=schedule)).json()[
+                "report_id"
+            ]
+            assert runtime.report_scheduler.tick() == []
+            begun = datetime.now(UTC) + timedelta(minutes=1)
+            for kind, at in (
+                ("historian.batch.started", begun),
+                ("historian.batch.ended", begun + timedelta(hours=3)),
+            ):
+                fake.links.events.append(
+                    {
+                        "id": len(fake.links.events) + 1,
+                        "at": at.isoformat(),
+                        "app": "historian",
+                        "kind": kind,
+                        "subject": "asset:unit-100",
+                        "actor": "app:historian",
+                        "summary": "Batch B-17",
+                        "refs": [],
+                        "payload": {},
+                        "severity": "info",
+                    }
+                )
+            sent = runtime.report_scheduler.tick()
+            assert [run["trigger"] for run in sent] == ["event"]
+            assert sent[0]["period_start"].startswith(begun.strftime("%Y-%m-%dT%H:%M"))
+            assert runtime.report_scheduler.tick() == []  # the same batch never twice
+            saved = client.get(f"/dash/api/reports/{rid}").json()
+            assert saved["cadence"] == "When historian.batch.ended happens"
+    finally:
+        runtime.shutdown()

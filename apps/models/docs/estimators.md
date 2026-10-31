@@ -3,7 +3,8 @@
 Status: prototype of 2026-10-31 (item E3.2 of the Saturday test plan). The math is in the SDK,
 `plantcraft_sdk.estimators` (NumPy only, tests in `sdk/python/tests/test_estimators.py`), so
 Models and Analytics share one copy. Analytics runs it as blocks (library "Estimators":
-`estimator.kalman`, `estimator.drift`, `estimator.soft_sensor`) and ships them wired as the
+`estimator.kalman`, `estimator.drift`, `estimator.soft_sensor`, `estimator.lab_fusion`) and
+ships them wired as the
 "Virtual sensor" algorithm (a loop's valve and measurement: filtered value, uncertainty, sensor
 bias, graded by the mean bias). The Models object below (estimator, fit as a study) is the next
 step.
@@ -20,7 +21,7 @@ shows in View, Analytics and Alarms like any other signal.
 | **Noise filter** (Kalman, no model) | "what is the value behind this noisy transmitter?" | the signal | filtered value, its uncertainty |
 | **Model-based filter** (Kalman with a first order plus dead time, FOPDT) | same, without the lag a moving average adds; bridges gaps | the signal and what drives it (a valve, a feed) | filtered value, uncertainty, innovation |
 | **Drift watch** (Kalman with a bias state) | "is this sensor drifting, and by how much?" | the signal and what drives it | corrected value, estimated bias (alarmable) |
-| **Lab fusion** (Kalman, sparse measurements) | "what is the quality between lab samples?" | the lab or analyzer value, when it exists, and the drivers | value every step, uncertainty that grows between samples |
+| **Lab fusion** (Kalman, delayed measurement; `fuse_lab`, block `estimator.lab_fusion`) | "what is the quality now, with the lab's accuracy and the analyzer's speed?" | the online value (analyzer or soft sensor) and the lab results at their sampling times, known when approved | corrected value, bias, uncertainty; `sensor_health` grades a virtual sensor 0 to 100 against the lab |
 | **Soft sensor** (ridge regression on lagged inputs) | "estimate X from Y and Z" when no physical model is at hand | several signals and the target's samples | estimate, validation error |
 
 Later, in the same frame: extended/unscented Kalman with a Modelica model (the model's FMU as
@@ -72,3 +73,15 @@ on smooth data the one-step fit alone calls the process an integrator.
 So the gain is what to refit from time to time (a fit is cheap: tuning and filtering 17,280
 samples takes 0.19 s). The Simulator's loops are FOPDT, the very structure the filter assumes,
 so the right-model rows are an upper bound; the next check is on recorded plant data.
+
+## Lab fusion: results that arrive late
+
+A lab result says what the quality was when the sample was taken, and it is known hours later,
+once approved (the Historian keeps both times, `lab_samples`). `fuse_lab` treats the online
+value's bias as a random walk; a result sampled at step s and approved at step a measures the
+bias of step s, so at step a it counts as a measurement of the bias now with the walk of the
+a − s steps added to its noise (Alexander, 1991). Nothing moves before a result is approved,
+and a result never approved never corrects: replayed on history, the estimate is what an
+operator would have seen. The walk is tuned by maximum likelihood of the results'
+innovations. In the tests, a drift of 3 units over 4 hours with a result every 5 minutes
+approved 100 s late is cut more than 4 times (`sdk/python/tests/test_lab_fusion.py`).

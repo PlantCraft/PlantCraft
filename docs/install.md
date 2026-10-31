@@ -1,6 +1,7 @@
 # Install PlantCraft
 
-> **Updated:** 2026-10-30 · suite 0.5.1
+> **Updated:** 2026-10-31 · suite 0.5.1; the steps marked *0.6.0* are on `main` and come with the
+> next release
 
 PlantCraft installs on your own machine or server, from one signed bundle, with no internet
 connection. This page helps you pick the right way to install it and says what you need on
@@ -57,6 +58,79 @@ Notebooks and how the disk grows: [requirements.md](requirements.md).
 | Account | On Linux, `root` or a member of the `docker` group. Nothing else: no Python, Node.js, compiler or registry |
 | Network | Inbound TCP 443 from the people who use it; outbound only to the plant's data sources you register |
 
+## Before you install (0.6.0)
+
+Four steps take a minute and save an install that stops halfway. Run them in the bundle folder,
+after you check and unpack it ([below](#the-release-files)).
+
+### 1. Decide the installation in one file
+
+Choices that belong to whoever installs the server, not to the administrators who use PlantCraft
+afterwards, go in `/etc/plantcraft/installation.conf`:
+
+- which apps exist, and the demo;
+- the machine profile and the share of the machine the suite may take;
+- the host name, port and internal networks;
+- whether language models may ever be used.
+
+Start from `installation.conf.example` in the bundle:
+
+```bash
+sudo install -D -m 644 -o root -g root installation.conf.example /etc/plantcraft/installation.conf
+sudoedit /etc/plantcraft/installation.conf      # APPS=all, MACHINE=auto, LLM=off...
+```
+
+The file must be owned by root (mode 644 or stricter) and is never mounted in a container, so no
+account inside PlantCraft can change it. Its values win over the command line and `.env` on every
+run of `install.sh`. `sudo ./install.sh --show-config` says whether what it decided is applied
+(exit 0) or not (exit 1). Every key: [installation-file.md](installation-file.md). Without the
+file, the command line and the defaults decide, as before.
+
+### 2. Check the machine: `--check`
+
+```bash
+./install.sh --check            # or ./preflight.sh; --json for tools, --ignore ID to accept one
+```
+
+It changes nothing. It checks:
+
+- the system and the processor;
+- Docker Engine and Compose versions, with a warning on Docker Desktop's licence;
+- control groups;
+- the CPUs and memory Docker sees, sized for the apps you chose;
+- swap and free disk;
+- the HTTPS port, the internal networks against the host's routes, and the clock;
+- the installation file's owner and mode.
+
+Every install runs it first and stops on a FAIL before anything changes. A Linux server with no
+Docker at all can take the Docker Engine and Compose the bundle carries, offline:
+`sudo ./install.sh --install-docker`.
+
+### 3. Size it: the machine profile
+
+One choice sets every container's CPU and memory limit, its processes and its pools:
+
+| Profile | For a machine with |
+|---|---|
+| `small` | up to 2 CPUs, or under 6 GB of memory |
+| `medium` | up to 4 CPUs, or under 14 GB |
+| `large` | up to 8 CPUs, or under 48 GB |
+| `xlarge` | more |
+
+`--machine auto`, the default, picks by the CPUs and memory Docker sees, within `MAX_CPUS` and
+`MAX_MEMORY` of the installation file on a shared server. `--machine large` pins a profile, and
+`--machine off` leaves every limit to `.env`. A value you changed by hand in `.env` is kept.
+Operations shows the machine and its profile. When memory is added it names the profile that now
+fits and the command that applies it, `sudo ./install.sh --machine auto`. Details:
+[install-offline.md](install-offline.md) and [requirements.md](requirements.md).
+
+### 4. Or let the wizard ask
+
+`sudo python3 wizard/wizard.py` opens the same choices in a browser on the server (127.0.0.1
+only; the address carries a random key, new on each start; from another computer through
+`ssh -L`). It asks for the apps, runs the requirements check for them, writes the installation
+file and, with `--apply`, installs and shows the log.
+
 ## The release files
 
 Each release has, per processor:
@@ -100,7 +174,10 @@ sudo ./install.sh --all-apps            # into /opt/plantcraft
 ./install.sh --all-apps --prefix ~/plantcraft
 ```
 
-The installer checks the signature, the free disk and the processor, loads the images, writes the
+With an installation file, `sudo ./install.sh` alone is enough: the file names the apps. On a
+server with no Docker, add `--install-docker`.
+
+The installer runs the requirements check, checks the signature, loads the images, writes the
 settings with fresh secrets, starts the suite, waits until every container is healthy and prints
 the address and where the administrator's password is. The whole procedure, with the settings,
 certificates, updates, backups and firewall rules, is [install-offline.md](install-offline.md).
@@ -183,14 +260,19 @@ Ubuntu in WSL 2, on an i5-8500T with 24 GB: the install with every app and the d
    Windows: `\\wsl$\Ubuntu\home\<you>\plantcraft\`) into **Trusted Root Certification
    Authorities** of the current user with `certmgr.msc`.
 
-**Known issues of 0.4.0 in WSL**, fixed for the next release:
+Run `./install.sh --check` in the Ubuntu window first: it names the Docker it found, warns
+when it is Docker Desktop (whose licence a company of more than 250 people pays for) and checks
+the memory WSL gives.
 
-- `https://localhost` fails with a certificate error, because the installer names the
-  certificate after the WSL machine instead. Set `PLANTCRAFT_HOSTNAME=localhost` in
-  `~/plantcraft/.env` and run `./install.sh` again (same folder, same flags).
-- Running `./install.sh` a second time as a normal user (not `root`) can stop with
-  `mkdir: Permission denied` under `data/compute-jobs/` or `data/histcraft/gateway`. Run that
-  second time with `sudo`.
+**Fixed since 0.4.0 in WSL:**
+
+- The certificate is now named `localhost` first, so `https://localhost` works without editing
+  `.env`.
+- A second run of `./install.sh` as a normal user no longer stops with `mkdir: Permission
+  denied` under `data/`, because the installer makes those folders as root.
+
+On 0.5.1 and earlier, set `PLANTCRAFT_HOSTNAME=localhost` in `~/plantcraft/.env` and run the
+second install with `sudo`.
 
 If port 443 is taken on Windows (IIS, another proxy), set `PLANTCRAFT_HTTPS_PORT` in
 `~/plantcraft/.env` and run `./install.sh` again. Docker Desktop must be running for the suite to
@@ -217,9 +299,20 @@ of revenue or more. Two free ways give the suite the same Linux containers:
   Desktop's, which stayed untouched): Docker installed in 10 s, and came back by itself after
   `wsl --terminate`. WSL may stop a distribution nobody uses; to keep the suite running, start
   it with Windows (a Task Scheduler entry `wsl -d Ubuntu --exec /bin/true` at sign-in).
-- **Rancher Desktop** (SUSE, Apache 2.0) with **Container engine: dockerd (moby)** in its
-  Preferences, instead of Docker Desktop in step 1; then the steps above as written (not
-  tested yet).
+- **Rancher Desktop** (SUSE, Apache 2.0), **not tested with PlantCraft yet**. Use it instead of
+  Docker Desktop in step 1, set up like this:
+  1. Preferences › Container Engine: **dockerd (moby)**. The suite needs the Docker API and
+     `docker compose`; containerd with nerdctl will not work.
+  2. Preferences › Kubernetes: turn it **off**. The suite does not use it, and it takes memory.
+  3. Preferences › WSL › Integrations: turn on **Ubuntu**. Rancher Desktop then gives Ubuntu
+     its Docker socket, and its Linux `docker` comes in through Windows' PATH.
+     `./install.sh --check` accepts that `docker`. It refuses only Docker Desktop's.
+  4. The memory limit is the same `%UserProfile%\.wslconfig` as in step 3 above (Rancher
+     Desktop runs in WSL 2 too).
+  5. Run steps 4 to 6 above as written, without `--install-docker`.
+
+  If `./install.sh --check` says "Docker Compose missing", install the compose plugin inside
+  Ubuntu (`sudo apt-get install docker-compose-plugin` from Docker's apt repository).
 
 `./install.sh --check` names the Docker it found and warns when it is Docker Desktop.
 
@@ -263,6 +356,20 @@ The rules every change follows are in [AGENTS.md](../AGENTS.md); building an app
 starts from the [app template](../templates/app).
 
 ## After the install
+
+Check the installation's security first (0.6.0):
+
+```bash
+sudo ./install.sh --security-check                   # about 1.5 s; exit 1 on a failure
+sudo ./install.sh --security-check --format evidence > evidence.md   # json, junit, sarif too
+```
+
+It runs 36 checks with stable ids (`PC-CTR-01` and so on), each with a severity, the evidence it
+saw, how to fix it and its IEC 62443-4-2 and NIST SP 800-53 references. When the host has Lynis
+and OpenSCAP, it runs them too. A risk you accept goes in an exception that expires. The
+evidence report is what IT and OT security file:
+[security guide](security-guide.md), "Security check". The emergency administrator's password
+changes with `sudo ./install.sh --rotate-admin-password` (shown once).
 
 | Next | Where |
 |---|---|

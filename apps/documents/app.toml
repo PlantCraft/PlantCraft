@@ -30,7 +30,7 @@ image = "doccraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.92.0"
+sdk = "0.94.0"
 asset_types = []        # any asset can have documents
 roles = {}
 

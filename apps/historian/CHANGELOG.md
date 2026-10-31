@@ -8,6 +8,44 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Store and forward at the gateway** (gap H3, G7): MQTT, Modbus and SQL values read while the
+  collector is away wait in Telegraf's disk buffer (`data/histcraft/gateway-buffer`) and arrive in
+  order when it is back, also after a gateway restart (before, a restart lost them). A batch sent
+  twice is taken once: the first value at a time wins. New condition `histcraft.gateway.backlog`
+  past 64 MB waiting. `HISTCRAFT_GATEWAY_BUFFER=memory` keeps the old memory buffer for gateways
+  reading more than about 2,000 values a second.
+
+- **Sources as integrations** (gap H13): each source has **owners** (`user:`/`group:` of
+  PlantCraft), a **contact** for the team that runs it and an **expected interval** (at least a
+  minute; empty: not watched), in the source's form, its page and `GET/POST/PUT /api/sources`
+  (a client that leaves them out keeps them). A new condition `histcraft.source.late` opens when
+  the newest value of all of a source's archived signals is older than its interval (its
+  signals' *no data* conditions are then this one). `source.disconnected` and `source.late`
+  carry the owners and contact: PlantCraft tells the owners by message and email and settles it
+  when the condition ends. The collector writes each change of a source's state to its
+  **history** (`GET /api/sources/{id}/history`, kept 90 days).
+
+- **Audited edits of archived values.** An editor inserts, changes or deletes values of a signal
+  with a reason (the signal's page, *Edited values*, or `POST /api/v1/edits`; all or nothing).
+  Reads with `quality` give each edited time's mark in `edits` (`inserted`, `edited`,
+  `deleted`); the value replaced is kept with who, when and why (`GET /api/v1/edits/{signal}`),
+  and each edit is in PlantCraft's audit log (`histcraft.values.edit`). Signals an app writes are
+  changed in that app.
+- **The OPC UA status code is kept with each change of quality**: a read with `quality` gives,
+  beside `uncertain`, `bad` or `good`, the sub-code (`status`, like `UncertainLastUsableValue` or
+  `BadSensorFailure`) and the LimitBits (`limit`: `low`, `high` or `constant`, a value pinned at
+  a limit or unable to move). A change of sub-code or limit is a change of quality too, so a
+  good value that hits its high limit is archived where it did.
+- **Notes on a signal**, at an instant or over an interval: the signal's page lists the notes of
+  the period shown and editors add them (their own removed by them, any by an administrator);
+  `GET`, `POST` and `DELETE /api/v1/annotations` for scripts and apps. Each note is told to
+  PlantCraft as the event `histcraft.annotation.added` (*Note on a signal*), posted by the page in
+  the person's name, since the Historian never calls the suite.
+- **Shortest interval between archived values** per number signal (`min_seconds`, PI's
+  CompMin; empty: none), on the signal's page and in `PATCH /api/points/{signal}`: a faster
+  change is held until then. Gaps, quality changes, step and text signals are never held back.
+  The step marker (a held value that jumps is archived at its last read before the jump, so a
+  trend draws a step) is now pinned by tests and described in the compression help.
 - **Laboratory results as signals (`laboratory:<analysis>`).** `POST /api/v1/lab` (editors, or a
   bridge from the LIMS with a person's key) stores each result at its sampling time, however late
   it arrives, with the times it reached the laboratory and was approved; it reads as `uncertain`
@@ -15,6 +53,9 @@ joins it into the bundle's release notes.
   its value and counts the write. `GET /api/v1/lab/{signal}` lists a window's samples with their
   times and how late each was written. Trends, Analytics and the estimators read the analysis as
   any signal, at the time the sample was taken (industry reference library, LIMS and MES).
+- **A LIMS read as a SQL source.** A SQL source marked **Laboratory results (LIMS)** writes each
+  row as a laboratory result at its sampling time, with its status and times, through the same
+  path as `POST /api/v1/lab`; a row read again unchanged is not rewritten (`docs/gateway.md`).
 - **A limit on the points it records**, from `MAX_SIGNALS` of PlantCraft's installation file
   (`PLANTCRAFT_MAX_SIGNALS`): points past it are skipped with the reason; the series apps write
   do not count.

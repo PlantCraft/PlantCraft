@@ -8,7 +8,7 @@ import { JournalTable } from "./JournalTable";
 import { AlarmActions, ShelveDialog } from "./SummaryPage";
 import { useDirectory, whoLabel } from "./people";
 import type { Alarm, AlarmHistory, Me, Sent } from "./types";
-import { ErrorBox, Heading, Link, Loading, PriorityPill, StatusPill, WindowPicker, message, reading } from "./ui";
+import { ErrorBox, Heading, Link, Loading, Pill, PriorityPill, StatusPill, WindowPicker, message, reading } from "./ui";
 
 const SENT_WORDS: Record<string, string> = { raised: "Raised", cleared: "Cleared", reminder: "Reminder", escalation: "Escalation" };
 const OUTBOX_WORDS: Record<string, string> = { pending: "Waiting", sent: "Sent", dropped: "Not sent" };
@@ -66,7 +66,7 @@ export function AlarmPage({ alarmId, me, ack = false }: { alarmId: string; me: M
   const events = alarm.hears.length > 0;
   const values = Boolean(alarm.signal) || data.chart.t.length > 0;
   const facts: Array<[string, ReactNode]> = [
-    [t("State"), <><StatusPill status={alarm.status} /> <PriorityPill priority={alarm.priority} /></>],
+    [t("State"), <><StatusPill status={alarm.status} /> <PriorityPill priority={alarm.priority} />{alarm.suppressed && <> <Pill status="unknown" label={t("Suppressed by design")} /></>}</>],
     [t("When"), alarm.condition],
     [t("About"), source || "–"],
     ...(values ? [[t("Last value"), <>{alarm.value === null ? "–" : reading(alarm.value, alarm.unit)}{alarm.value_at ? <span className="muted"> · {formatAgo(alarm.value_at)}</span> : null}</>] as [string, ReactNode]] : []),

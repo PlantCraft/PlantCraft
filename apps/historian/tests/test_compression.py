@@ -137,3 +137,41 @@ def test_the_exception_as_a_share_of_the_value():
     assert compressor.snapshot == (1000, 100.0)
     compressor.feed(2000, 101.0)
     assert compressor.snapshot == (2000, 101.0)
+
+
+def test_a_held_value_that_jumps_is_archived_before_the_jump():
+    """The step marker (Proficy's collector): a trend of a held value draws a step, no ramp."""
+
+    c = Compressor(deviation=0.5, exception=0.3, max_seconds=3600)
+    out = []
+    for s in range(100):
+        out += c.feed(s * 1000, 10.0 + (0.1 if s % 2 else -0.1))
+    out += c.feed(100_000, 20.0)
+    # the held value at its last read before the jump; the jump is the newest value held
+    assert out[-1][0] == 99_000 and abs(out[-1][1] - 10.0) <= 0.3
+    assert c.snapshot == (100_000, 20.0)
+
+
+def test_no_value_is_archived_sooner_than_min_seconds_after_the_last():
+    c = Compressor(deviation=0.0, max_seconds=3600, min_seconds=10)
+    out = []
+    for s in range(60):
+        out += c.feed(s * 1000, float(s % 7))  # bends every second
+    out += c.flush()
+    times = [at for at, _ in out]
+    assert all(b - a >= 10_000 for a, b in zip(times, times[1:-1]))
+    assert times[-1] == 59_000  # the newest value is still held and reaches the archive
+
+
+def test_min_seconds_never_holds_back_a_gap_or_a_quality_change():
+    c = Compressor(deviation=0.0, max_seconds=3600, min_seconds=60)
+    c.feed(0, 1.0)
+    assert c.feed(1000, 5.0, keep=True) == [(1000, 5.0)]
+    assert len(c.gap(2000)) == 1  # the marker
+    assert c.feed(3000, 2.0) == [(3000, 2.0)]
+
+
+def test_min_seconds_leaves_step_points_alone():
+    c = Compressor(step=True, max_seconds=3600, min_seconds=60)
+    out = c.feed(0, 0.0) + c.feed(1000, 1.0) + c.feed(2000, 0.0)
+    assert [v for _, v in out] == [0.0, 1.0, 0.0]

@@ -318,6 +318,7 @@ def _algorithm(
         "method_ids": config.get("method_ids") or [],
         "timing": timing_of(config).model_dump(),
         "assets": list(config.get("assets") or []),
+        "asset_types": list(config.get("asset_types") or []),
         # Where its work runs on the suite's compute workers (environment, size).
         "compute": compute_placement(config.get("compute")),
         # The 0.2 protocol ids a loop or schedule may still name, which open this algorithm.
@@ -350,7 +351,7 @@ def _uses(rt: Any) -> Counter[str]:
     for profile in rt.presets.list_profiles():
         config = profile.get("method_config") or {}
         if (config.get("subject_kind") or "loop") == "asset":
-            counts[profile["profile_id"]] = len(config.get("assets") or [])
+            counts[profile["profile_id"]] = len(rt.algorithm_assets(profile))
     counts[SIGNAL_QUALITY] = sum(
         1 for row in rt.signal_store.list() if row["enabled"] and not row["missing"]
     )
@@ -707,12 +708,18 @@ def save_algorithm(
         raise HTTPException(status_code=422, detail=" ".join(problems))
     docs = payload.docs.model_dump()
     assets = list(dict.fromkeys(item.strip() for item in payload.assets if item.strip()))
+    asset_types = (
+        [item.strip() for item in payload.asset_types if item.strip()]
+        if payload.asset_types is not None
+        else list(((existing or {}).get("method_config") or {}).get("asset_types") or [])
+    )
     config = method_config(
         payload.diagram,
         docs,
         payload.subject_kind,
         timing=payload.timing.model_dump(),
         assets=assets,
+        asset_types=asset_types,
         compute=payload.compute.model_dump(),
     )
     before = (existing or {}).get("method_config") or {}
@@ -738,7 +745,7 @@ def save_algorithm(
     saved = rt.presets.get_profile(algorithm_id)
     if payload.subject_kind == "asset":
         # Assets taken out lose their runs; a changed diagram starts its blocks' memory afresh.
-        rt.asset_runs.forget(algorithm_id, set(assets))
+        rt.asset_runs.forget(algorithm_id, set(rt.algorithm_assets(saved or {})))
         if before.get("diagram") != config["diagram"]:
             rt.asset_runs.reset_states(algorithm_id)
     else:
@@ -798,7 +805,7 @@ def run_algorithm_now(algorithm_id: str, user: EditorUser, rt: RuntimeDep) -> li
     job_ids = rt.queue_asset_runs(profile, user=user.username)
     rt.wait_for(job_ids, RUN_WAIT_SECONDS)
     rt.audit(user, "algorithm.run", f"algorithm:{algorithm_id}", {"assets": len(job_ids)})
-    assets = set((profile.get("method_config") or {}).get("assets") or [])
+    assets = set(rt.algorithm_assets(profile))
     return [
         asset_run_row(row) for row in rt.asset_runs.list(algorithm_id) if row["asset_id"] in assets
     ]

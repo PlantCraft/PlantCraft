@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "./api";
 import { AlgorithmDiagram, AssetTestControl, blockCatalog, TestControl } from "./AlgorithmEditor";
 import { CalibrateTool, DEVIATION_BLOCK } from "./Calibrate";
-import { assetChoices, AssetPicker, AssetRuns, TimingFields } from "./AssetSettings";
+import { assetChoices, AssetPicker, AssetRuns, AssetTypePicker, TimingFields } from "./AssetSettings";
 import { announceSaved, onSaved, openEditor, SIGNAL_QUALITY, tagOptions, withTags } from "./algorithms";
 import { LinkAssistant } from "./Assistant";
 import { algorithmComparison, ComparePicker, CompareView } from "./Compare";
@@ -25,92 +25,9 @@ import { href, navigate } from "./nav";
 import { resultLabel, statusLabel } from "./status";
 import { DEFAULT_TIMING, DOC_FIELDS, EMPTY_DOCS, type Algorithm, type AlgorithmOutput, type AlgorithmTest, type AlgorithmUsage, type AlgorithmVersion, type AssetChoice, type AssetTiming, type CatalogBlock, type ComputeOffer, type ComputePlacement, type Me, type ModelExample, type UserGroup } from "./types";
 import { ErrorBox, Health, Heading, Link, Loading, Pill } from "./ui";
+import { KIND_LABEL, Tags } from "./AlgorithmList";
 
-const KIND_LABEL = { loop: "Control loops", signal: "Signals", asset: "Assets" } as const;
-
-function Tags({ tags }: { tags: string[] }) {
-  return tags.length ? <span className="alg-tags">{tags.map((tag) => <span key={tag} className="tag">{tag}</span>)}</span> : <span className="muted">—</span>;
-}
-
-/** The Simulator demo plant's model algorithms on the built-in models, created with one button
- * (calibrated on the last hours) when the plant's loops are in PlantCraft. */
-function ModelExamples({ onCreated }: { onCreated: () => void }) {
-  const [items, setItems] = useState<ModelExample[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState("");
-  useEffect(() => { api.modelExamples().then(setItems).catch(() => setItems([])); }, []);
-  const missing = items.filter((item) => !item.exists);
-  if (!missing.length && !note) return null;
-  async function create() {
-    setBusy(true);
-    try {
-      const created = await api.createModelExamples();
-      const waiting = created.filter((item) => !item.calibrated).map((item) => item.name);
-      setNote(waiting.length
-        ? t("Created {count}. Not calibrated yet: {names} (open it and press Calibrate on the Deviation block).", { count: created.length, names: waiting.join(", ") })
-        : t("Created {count}, each calibrated on the last six hours.", { count: created.length }));
-      setItems(await api.modelExamples());
-      onCreated();
-    } catch (err) { setNote(err instanceof Error ? err.message : String(err)); } finally { setBusy(false); }
-  }
-  return <div className="panel empty">
-    {missing.length > 0 && <>
-      <p>{t("The Simulator plant is here: Analytics can add its example model algorithms ({names}), each a built-in process model running beside the plant and judged with T².", { names: missing.map((item) => item.name).join(", ") })}</p>
-      <div className="row-actions"><button className="button button-secondary" disabled={busy} onClick={() => void create()}><Factory size={16} />{busy ? t("Calibrating...") : t("Add the plant's model examples")}</button></div>
-    </>}
-    {note && <p className="muted small">{note}</p>}
-  </div>;
-}
-
-export function AlgorithmsPage({ me }: { me: Me }) {
-  const [items, setItems] = useState<Algorithm[] | null>(null);
-  const [tags, setTags] = useState<string[]>([]);
-  const [error, setError] = useState("");
-  // Folders (round 9, D14): the left column picks one, kept in ?folder=.
-  const [folders, reloadFolders] = useFolders("algorithm");
-  const [folder, setFolder] = useState(() => chosenFolder(window.location.search));
-  const load = () => api.algorithms().then((found) => { setItems(found); setError(""); }).catch((err: Error) => setError(err.message));
-  useEffect(() => { void load(); return onSaved(() => void load()); }, []);
-  useAssistantPage({ place: t("Analytics › Algorithms"), page: "linkcraft:algorithms", platformUrl: me.processcraft_url, facts: { algorithms: items?.length ?? 0 },
-    view: { tags, rows: (items ?? []).slice(0, 30).map((item) => `${item.algorithm_id}: ${item.name.slice(0, 80)} (${item.subject_kind}, v${item.version})`) } });
-  const options = useMemo(() => tagOptions(items ?? []), [items]);
-  if (error) return <ErrorBox text={error} />;
-  if (!items) return <Loading />;
-  const columns: DataColumn<Algorithm>[] = [
-    { key: "name", label: t("Algorithm"), sort: (item) => item.name.toLowerCase(), render: (item) => <><Link to={`/algorithms/${encodeURIComponent(item.algorithm_id)}`}><b>{item.name}</b></Link><small>{t(KIND_LABEL[item.subject_kind])}{item.group ? ` · ${t("group {name}", { name: item.group.name })}` : ""}</small></> },
-    { key: "tags", label: t("Labels"), sort: (item) => (item.tags ?? []).join(", "), render: (item) => <Tags tags={item.tags ?? []} /> },
-    { key: "author", label: t("Author"), sort: (item) => item.author, filter: true, render: (item) => item.author || "—" },
-    { key: "owner", label: t("Owner"), className: "hide-narrow", sort: (item) => item.owner_name, filter: { value: (item) => item.owner_name || "—", label: t("Owner") }, render: (item) => item.owner_name || "—" },
-    { key: "version", label: t("Version"), numeric: true, className: "hide-narrow", sort: (item) => item.version, render: (item) => item.version },
-    { key: "used_by", label: t("Assets using it"), numeric: true, sort: (item) => item.used_by ?? 0, render: (item) => item.used_by ?? "—" },
-    { key: "status", label: t("Status"), sort: (item) => (item.check.valid ? 1 : 0), filter: { options: [{ value: "ready", label: t("Ready") }, { value: "fix", label: t("Needs fixing") }], value: (item) => (item.check.valid ? "ready" : "fix"), label: t("Status") },
-      render: (item) => <Pill status={item.check.valid ? "ok" : "bad"} label={item.check.valid ? t("Ready") : t("Needs fixing")} /> },
-  ];
-  return <>
-    <Heading eyebrow={t("Algorithms and blocks")} title={t("Algorithms")}
-      detail={t("An algorithm is a block diagram: it reads an asset's signals, checks their data, runs the methods and combines their results into a health, results on the asset, derived signals and messages. PlantCraft's own are read-only: duplicate one to make it yours.")}
-      actions={me.can_edit && <Link to={folder && folder !== NO_FOLDER ? `/algorithms/new?folder=${encodeURIComponent(folder)}` : "/algorithms/new"} className="button button-primary"><Plus size={16} />{t("New algorithm")}</Link>} />
-    <div className="pc-folder-layout">
-    <FolderColumn kind="algorithm" list={folders} chosen={folder} onChoose={(value) => { setFolder(value); rememberFolder("/algorithms", value); }} total={items.length} canEdit={me.can_edit} onChanged={reloadFolders} />
-    <section className="methods-main">
-    <DataTable
-      rows={withTags(items, tags).filter((item) => inFolder(folders, item.algorithm_id, folder))}
-      columns={columns}
-      rowKey={(item) => item.algorithm_id}
-      onRowClick={(item) => navigate(`/algorithms/${encodeURIComponent(item.algorithm_id)}`)}
-      searchText={(item) => `${item.name} ${item.description} ${(item.tags ?? []).join(" ")} ${item.author} ${item.owner_name} ${item.group?.name ?? ""}`}
-      searchPlaceholder={t("Search name, label, author or owner")}
-      initialSort={{ key: "name", descending: false }}
-      toolbar={options.length > 0 && <MultiSelect label={t("Labels")} value={tags} onChange={setTags} options={options} />}
-      label={t("Algorithms")}
-      empty={folder ? t("No algorithm in this folder.") : t("No algorithm matches. Change the search or the filters.")}
-    />
-    </section>
-    </div>
-    {me.can_edit && !me.demo && <ModelExamples onCreated={() => void load()} />}
-    <p className="muted section-lead">{t("When each algorithm runs, and on what, is on")} <Link to="/schedules">{t("Monitors")}</Link>.</p>
-  </>;
-}
+export { AlgorithmsPage } from "./AlgorithmList";
 
 export const ALGORITHM_TABS = ["inputs", "diagram", "test", "used-by", "versions", "settings", "edit"] as const;
 export type AlgorithmTab = "overview" | (typeof ALGORITHM_TABS)[number] | "compare";
@@ -124,12 +41,13 @@ export function algorithmRoute(id: string): { algorithmId: string; tab: Algorith
 
 /** Saves the algorithm with a change (its texts, its diagram, its parameters, its assets): a new
  * version, with its own name and what changed when given. */
-async function saveChanged(algorithm: Algorithm, change: Partial<Pick<Algorithm, "name" | "description" | "docs" | "diagram" | "timing" | "assets" | "compute">>, note?: { name: string; description: string }): Promise<Algorithm> {
+async function saveChanged(algorithm: Algorithm, change: Partial<Pick<Algorithm, "name" | "description" | "docs" | "diagram" | "timing" | "assets" | "asset_types" | "compute">>, note?: { name: string; description: string }): Promise<Algorithm> {
   const next = { ...algorithm, ...change };
   const saved = await api.saveAlgorithm({
     algorithm_id: next.algorithm_id, name: next.name.trim(), description: next.description, subject_kind: next.subject_kind,
     diagram: next.diagram, docs: next.docs, timing: next.timing ?? DEFAULT_TIMING, assets: next.assets ?? [],
     ...(next.compute ? { compute: next.compute } : {}),
+    ...(change.asset_types ? { asset_types: change.asset_types } : {}),
     ...(note ? { version_name: note.name, version_note: note.description } : {}),
   });
   announceSaved(saved.algorithm_id);
@@ -649,20 +567,24 @@ function ShownVersion({ algorithm, read, editable, onUsed }: { algorithm: Algori
 function UsedByTab({ algorithm, me, onSaved }: { algorithm: Algorithm; me: Me; onSaved: (next: Algorithm) => void }) {
   const id = algorithm.algorithm_id;
   const [assets, setAssets] = useState(algorithm.assets ?? []);
+  const [types, setTypes] = useState(algorithm.asset_types ?? []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => { setAssets(algorithm.assets ?? []); }, [algorithm]);
-  const changed = JSON.stringify(assets) !== JSON.stringify(algorithm.assets ?? []);
+  useEffect(() => { setAssets(algorithm.assets ?? []); setTypes(algorithm.asset_types ?? []); }, [algorithm]);
+  const changed = JSON.stringify(assets) !== JSON.stringify(algorithm.assets ?? []) || JSON.stringify(types) !== JSON.stringify(algorithm.asset_types ?? []);
   async function save() {
     setBusy(true); setError("");
-    try { onSaved(await saveChanged(algorithm, { assets })); } catch (err) { setError(err instanceof Error ? err.message : String(err)); } finally { setBusy(false); }
+    try { onSaved(await saveChanged(algorithm, { assets, asset_types: types })); } catch (err) { setError(err instanceof Error ? err.message : String(err)); } finally { setBusy(false); }
   }
   if (algorithm.subject_kind === "signal" && id === SIGNAL_QUALITY) return <div className="panel used-by"><p>{t("Every active signal PlantCraft knows. The loop algorithms read its results before they judge a loop.")}</p><div className="row-actions"><Link to="/algorithms/signal_quality/settings" className="button button-secondary">{t("Monitor and checks")}</Link></div></div>;
   if (algorithm.subject_kind !== "asset") return <><Usage algorithmId={id} /><Schedules algorithmId={id} /></>;
   return <>
-    <AssetRuns algorithmId={id} assets={algorithm.assets ?? []} me={me} />
+    <AssetRuns algorithmId={id} assets={algorithm.assets ?? []} types={algorithm.asset_types ?? []} me={me} />
     {algorithm.editable && <section className="panel alg-docs"><div className="panel-header"><div><h2>{t("Its assets")}</h2><p>{t("The assets Run now and the monitors that follow the algorithm run it on.")}</p></div></div>
       <AssetPicker assets={assets} onChange={setAssets} />
+      <h3>{t("And every asset of a type")}</h3>
+      <p className="muted small">{t("The algorithm also runs on every asset of these PlantCraft types, subtypes included: one algorithm for every pump, every exchanger. An asset of the type added later is included at the next run of a monitor on every asset of the algorithm.")}</p>
+      <AssetTypePicker types={types} onChange={setTypes} />
       {error && <div className="notice notice-error" role="alert">{error}</div>}
       <div className="row-actions"><button type="button" className="button button-primary" disabled={!changed || busy} onClick={() => void save()}><Save size={16} />{busy ? t("Saving…") : t("Save as new version")}</button></div>
     </section>}

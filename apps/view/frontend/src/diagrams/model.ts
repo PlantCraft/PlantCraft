@@ -40,9 +40,11 @@ export interface SymbolElement extends Base {
   label_position: LabelPosition; asset_id?: string | null;
   state?: StateBinding | null; level?: LevelBinding | null; running?: OnBinding | null;
 }
+/** The ISA-101 analog indicator under a value (Indicator in diagrams/model.py). */
+export interface Indicator { min?: number | null; max?: number | null; normal_low?: number | null; normal_high?: number | null; setpoint?: Item | null; width: number }
 export interface ValueElement extends Base {
   type: "value"; x: number; y: number; item: Item; label: string; show_label: boolean;
-  show_unit: boolean; decimals?: number | null; size: number; limits?: Limits;
+  show_unit: boolean; decimals?: number | null; size: number; limits?: Limits; indicator?: Indicator | null;
 }
 export interface Endpoint { element: string; port: string }
 export interface LineElement extends Base {
@@ -54,7 +56,7 @@ export interface TextElement extends Base {
   type: "text"; x: number; y: number; text: string; size: number; align: "start" | "middle" | "end"; bold: boolean;
 }
 export type Element = SymbolElement | ValueElement | LineElement | TextElement;
-export type Slot = "state" | "level" | "running" | "value" | "flow";
+export type Slot = "state" | "level" | "running" | "value" | "setpoint" | "flow";
 
 /** A page of a diagram: a unit or an area of the plant. */
 export interface Page { id: string; name: string }
@@ -76,7 +78,7 @@ export interface BindingRow {
   element: string; slot: Slot; label: string; signal?: string | null; unit?: string; kind?: string;
   value?: number | string | null; at?: string | null; state: State; error?: string | null;
   stale?: boolean; summary?: string; fraction?: number | null; on?: boolean | null; history?: boolean;
-  role?: string | null; asset?: string | null; result?: string;
+  role?: string | null; asset?: string | null; result?: string; low?: number | null; high?: number | null;
 }
 export interface Series { t: string[]; v: Array<number | string | null>; error?: string }
 export interface DiagramData {
@@ -165,15 +167,19 @@ export function limitState(limits: Limits | undefined | null, value: unknown): S
 
 /** What a binding's slot shows for one value (`judge` in diagrams/read.py). */
 export interface Shown { state: State; value: number | string | null; fraction?: number | null; on?: boolean | null; unit: string; error?: string | null; stale?: boolean; summary?: string; label: string; at?: string | null;
+  /** The signal's range (its low and high), for an indicator without its own. */
+  low?: number | null; high?: number | null;
   /** The most urgent active alarm's priority (Alarms' alarm_state): the alarm mark's shape. */
   priority?: "critical" | "high" | "medium" | "low" | null }
 
 export function judge(slot: Slot, binding: Record<string, unknown>, row: BindingRow, value: number | string | null, stale = false): Shown {
-  const base: Shown = { state: "unknown", value, unit: row.unit ?? "", error: row.error, stale, summary: row.summary, label: row.label, at: row.at };
+  const base: Shown = { state: "unknown", value, unit: row.unit ?? "", error: row.error, stale, summary: row.summary, label: row.label, at: row.at, low: row.low, high: row.high };
   if (row.error) return base;
   const number = finite(value);
   if (slot === "state" || slot === "value") {
     base.state = row.kind === "result" ? row.state : limitState(binding.limits as Limits | undefined, value);
+  } else if (slot === "setpoint") {
+    base.state = number === null ? "unknown" : "ok";
   } else if (slot === "level") {
     const low = Number(binding.min ?? 0), high = Number(binding.max ?? 100);
     base.fraction = number === null ? null : Math.min(1, Math.max(0, (number - low) / (high - low)));
@@ -192,7 +198,10 @@ export function bindingsOf(elements: Element[]): Array<[string, Slot, Record<str
   for (const element of elements) {
     if (element.type === "symbol") {
       for (const slot of ["state", "level", "running"] as const) if (element[slot]) out.push([element.id, slot, element[slot] as unknown as Record<string, unknown>]);
-    } else if (element.type === "value") out.push([element.id, "value", { item: element.item, limits: element.limits }]);
+    } else if (element.type === "value") {
+      out.push([element.id, "value", { item: element.item, limits: element.limits }]);
+      if (element.indicator?.setpoint) out.push([element.id, "setpoint", { item: element.indicator.setpoint }]);
+    }
     else if (element.type === "line" && element.flow) out.push([element.id, "flow", element.flow as unknown as Record<string, unknown>]);
   }
   return out;

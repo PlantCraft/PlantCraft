@@ -27,6 +27,14 @@ change or remove sources.
 - **Settings of this source's signals**: retention, scan, deviation (% of span) and max
   interval for every signal of the source. Empty fields take the general settings; a signal's
   own value wins over the source's (see Settings).
+- **Integration**: who answers for the source and how often it must deliver. **Owners** are
+  people or groups of PlantCraft (`user:ana, group:automation`); **Contact** says how to reach
+  the team that runs the connection; **Expected interval** is how often a new value must arrive
+  on at least one of its signals (empty: not watched). When the source disconnects, or sends
+  nothing for longer than expected (*Source late*), PlantCraft tells the owners in Messages and
+  by email, with the contact, and settles the message when the source is back. The source's
+  page lists its owners and the **history** of its states (connected, disconnected), kept 90
+  days.
 - **Test** asks the collector to connect once and report the server's answer.
 - **CSV files**: a file, or a pattern in the last part of the path (`/csv/lab/*.csv`), that
   another application keeps writing. The collector checks it every **Check every (minutes)**

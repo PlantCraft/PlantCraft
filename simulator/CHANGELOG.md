@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased]
+
+- **Training: scheduled faults with a separate answer key.** `simcraft loops serve --faults FILE`
+  (or `SIMCRAFT_FAULTS`) applies a schedule of faults to the loop portfolio. Each fault is one of
+  sensor bias, frozen sensor, bad quality (status `BadSensorFailure`), stuck valve, load step or
+  loop left in manual, on a loop, from a UTC time, for so many minutes. Nothing on OPC UA names a
+  fault: the trainee sees only the tags. `simcraft loops faults check FILE` checks a schedule;
+  `simcraft loops faults key FILE` prints the instructor's answer key, with the symptoms to look
+  for and what the server saw when each fault began.
+- **Training: snapshots, freeze and speed.** `simcraft loops snapshot save|list|restore|delete`
+  keeps named copies of every loop's state and puts one back at the server's next step.
+  `simcraft loops freeze` and `resume` hold and release the model. `simcraft loops speed N`
+  (1 to 20) runs the model N seconds for each second of the clock, while timestamps stay real.
+  `simcraft loops status` shows the controls, the snapshots and the faults fired. All of these
+  act on the state file the server reads; no OPC UA node became writable.
+
 ## [0.5.1] - 2026-10-30
 
 - Suite 0.5.1: same Simulator, version aligned with the suite; its image now carries this

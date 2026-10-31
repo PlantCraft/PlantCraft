@@ -2,6 +2,7 @@
  * the library (their drawings come cleaned by the server), lines between their ports, values and
  * texts, each coloured by what its bindings show. The editor passes `selected`, `showPorts` and
  * the pointer handlers; the page passes `onOpen` for a click. */
+import { AnalogBar } from "../analog";
 import { memo, useId, useMemo, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { t } from "../i18n";
 import {
@@ -158,23 +159,48 @@ export function AlarmMark({ priority, x, y }: { priority: keyof typeof ALARM_MAR
   </g>;
 }
 
-function ValueView({ element, show, selected, onDown, onOpen }: { element: ValueElement; show?: Shown; selected: boolean; onDown?: (event: ReactPointerEvent, element: Element) => void; onOpen?: (element: Element) => void }) {
+/** The analog indicator's scale: its own, else the signal's range, else the limits and the
+ * value with a margin. */
+export function indicatorScale(element: ValueElement, show?: Shown): [number, number] {
+  const limits = element.limits ?? {};
+  const known = [limits.low_alarm, limits.low_warning, limits.high_warning, limits.high_alarm, element.indicator?.normal_low, element.indicator?.normal_high, typeof show?.value === "number" ? show.value : null]
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  let low = element.indicator?.min ?? show?.low ?? (known.length ? Math.min(...known) : 0);
+  let high = element.indicator?.max ?? show?.high ?? (known.length ? Math.max(...known) : 100);
+  if (!(high > low)) { low -= 1; high += 1; }
+  const pad = (high - low) * 0.1;
+  if (element.indicator?.min == null && show?.low == null) low -= pad;
+  if (element.indicator?.max == null && show?.high == null) high += pad;
+  return [low, high];
+}
+
+function ValueView({ element, show, sp, selected, onDown, onOpen }: { element: ValueElement; show?: Shown; sp?: Shown; selected: boolean; onDown?: (event: ReactPointerEvent, element: Element) => void; onOpen?: (element: Element) => void }) {
   const state = show?.state ?? "unknown";
   const text = show?.error ? "?" : formatValue(show?.value ?? null, element.decimals);
   const label = element.show_label && (element.label || show?.label) ? `${element.label || show?.label} ` : "";
   const unit = element.show_unit && show?.unit ? ` ${show.unit}` : "";
   const width = Math.max(40, (label.length + text.length + unit.length) * element.size * 0.6 + 12);
   const height = element.size + 10;
+  let indicator = null;
+  if (element.indicator) {
+    const [min, max] = indicatorScale(element, show);
+    const limits = element.limits ?? {};
+    const value = !show?.error && typeof show?.value === "number" ? show.value : null;
+    const setpoint = sp && !sp.error && typeof sp.value === "number" ? sp.value : null;
+    indicator = <AnalogBar spec={{ value, min, max, limits: { ll: limits.low_alarm, l: limits.low_warning, h: limits.high_warning, hh: limits.high_alarm }, normal: { low: element.indicator.normal_low ?? limits.low_warning ?? null, high: element.indicator.normal_high ?? limits.high_warning ?? null }, sp: setpoint, state: value === null ? "unknown" : state }}
+      x={element.x} y={element.y + height + 2} width={element.indicator.width} height={26} decimals={element.decimals} />;
+  }
   return <g className={`dg-el dg-value${selected ? " dg-selected" : ""}${onOpen ? " dg-clickable" : ""}`} data-state={state} data-element={element.id}
     onPointerDown={onDown ? (event) => onDown(event, element) : undefined} onClick={onOpen ? () => onOpen(element) : undefined}>
-    <title>{tooltip([show], "")}</title>
+    <title>{tooltip([show, sp], "")}</title>
     <rect className="dg-value-box" x={element.x} y={element.y} width={width} height={height} rx={3} />
     <text x={element.x + 6} y={element.y + element.size + 2} fontSize={element.size}>
       {label && <tspan className="dg-value-label">{label}</tspan>}
       <tspan className="dg-value-number">{text}</tspan>
       {unit && <tspan className="dg-value-unit">{unit}</tspan>}
     </text>
-    {selected && <rect className="dg-selection" x={element.x - 3} y={element.y - 3} width={width + 6} height={height + 6} rx={4} />}
+    {indicator}
+    {selected && <rect className="dg-selection" x={element.x - 3} y={element.y - 3} width={Math.max(width, element.indicator ? element.indicator.width : 0) + 6} height={height + (element.indicator ? 30 : 0) + 6} rx={4} />}
   </g>;
 }
 
@@ -233,7 +259,7 @@ export function DiagramCanvas({ diagram, symbols, shows, selected, showPorts, on
     {lines.map((line) => <LineView key={line.id} element={line} path={linePath(line, byId, symbols, diagram.grid)} show={shows?.get(line.id)?.flow} selected={picked.has(line.id)} onDown={onElementDown} />)}
     {others.map((element) => {
       if (element.type === "symbol") return <SymbolView key={element.id} element={element} def={symbols.get(element.symbol)} show={shows?.get(element.id)} selected={picked.has(element.id)} onDown={onElementDown} onOpen={onOpen} />;
-      if (element.type === "value") return <ValueView key={element.id} element={element} show={shows?.get(element.id)?.value} selected={picked.has(element.id)} onDown={onElementDown} onOpen={onOpen} />;
+      if (element.type === "value") return <ValueView key={element.id} element={element} show={shows?.get(element.id)?.value} sp={shows?.get(element.id)?.setpoint} selected={picked.has(element.id)} onDown={onElementDown} onOpen={onOpen} />;
       if (element.type === "text") return <TextView key={element.id} element={element} selected={picked.has(element.id)} onDown={onElementDown} />;
       return null;
     })}

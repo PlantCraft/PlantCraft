@@ -3,12 +3,18 @@
 | Kind | Shows | Signals |
 |---|---|---|
 | Stat | One value (last, mean, min, max, ...) per signal over a window, coloured by its thresholds, with its line underneath if you want | up to 24 |
-| Gauge | One value on a dial (or a bar gauge), with the threshold bands; one dial per signal | up to 24 |
+| Gauge | One value on a dial (or a bar gauge), with the threshold bands; one dial per signal. Style **Analog indicator (ISA-101)**: a grey bar with the normal range, the LL, L, H and HH limits from the thresholds and the setpoint (a signal of role SP of the same asset); the pointer takes a colour only out of normal | up to 24 |
 | Trend | Lines over a window; two units get two axes; thresholds as lines or areas | up to 24 |
 | Bar chart | One value per signal, vertical or horizontal, coloured by the thresholds | up to 24 |
 | Table | Last, mean, min and max per signal, cells coloured by the thresholds | up to 24 |
 | Scatter (X-Y) | One signal against another, on the same time grid: the first is x, the second y (PV against OP shows a sticky valve) | 2 |
 | Text | A note: what the dashboard is for, what to watch, who to call | none |
+| Multivariable controller | A third-party APC, read only: each manipulated (MV) and controlled (CV) variable with its value, low and high limits, steady-state target, status and shadow price now, a bar of its range (value as a pointer, target as a hollow mark) and its value and target over the time span (the horizon). A variable whose target (else its value) is within its band of a limit is marked **At high limit** or **At low limit** | none: the controller |
+
+The controller is an asset of kind `apc` (roles `on`, `mode`; attributes `vendor`, `cost_unit`)
+with assets of kind `apc_mv` and `apc_cv` under it (roles `value`, `lo`, `hi`, `target`, `status`,
+`shadow_price`; attribute `limit_band`, 1 % of high minus low when empty). Analytics reads the same
+names. View never writes to the controller.
 
 Panels saved before round 7 open as before: a KPI or a "value and line" panel is now a Stat (the
 second with its line on), and its limits are now thresholds.
@@ -39,7 +45,7 @@ A new trend, bar or table panel starts with every signal of the asset; a stat or
 | Panel | Title, description, page, time window of its own |
 | Stat, Gauge, Bar chart, Table, Graph, Scatter | What the kind draws: the value (last, mean, ...), the line under a stat, the dial or the bar gauge, bar direction, line style and points, the table's columns |
 | Legend, Axis | Legend place and table (with last, mean, min, max), axis labels, scale, soft min and max |
-| Standard options | Unit, decimals, min and max, colour of the values |
+| Standard options | Unit, decimals, min and max, the normal range (a stat's line and the analog indicator shade it; empty: between the thresholds' normal step and the next), colour of the values |
 | Thresholds | Steps from a base colour up: each step has a value and a colour; **absolute** or **percent** of min to max; on trends and bars shown as lines, areas, both or not at all, with their labels |
 | Value mappings | A value or a range shown as a word and a colour (0 as "Stopped", 1 as "Running") |
 | Overrides | Other options for some lines only, matched by role, signal or name (the SP dashed, OP on the right axis) |

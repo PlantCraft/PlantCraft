@@ -38,9 +38,10 @@ CONTEXT = "$context"
 # Round 7: stat (one number per signal, with or without its line; was kpi and spark), gauge (a
 # dial per signal), trend, bar, table, scatter (one signal against another: x, y) and text;
 # 2026-10-27: diagram (a saved diagram of View › Diagrams, live, scaled to the panel).
-KINDS = ("stat", "gauge", "trend", "bar", "table", "scatter", "text", "diagram")
+# 2026-10-31: apc (a multivariable controller's MVs and CVs, read only; ``query/apc.py``).
+KINDS = ("stat", "gauge", "trend", "bar", "table", "scatter", "text", "diagram", "apc")
 # Kinds that show no signal of their own.
-NO_ITEM_KINDS = ("text", "diagram")
+NO_ITEM_KINDS = ("text", "diagram", "apc")
 AGGREGATIONS = ("last", "mean", "min", "max", "std")
 # Columns of a table card, in order.
 TABLE_AGGREGATIONS = ("last", "mean", "min", "max", "std")
@@ -67,7 +68,7 @@ MAX_WINDOW_SECONDS = 366 * 86400
 WINDOW_PATTERN = re.compile(r"^([1-9][0-9]{0,4})([smhd])$")
 UNIT_SECONDS = {"s": 1, "m": 60, "h": 3600, "d": 86400}
 
-Kind = Literal["stat", "gauge", "trend", "bar", "table", "scatter", "text", "diagram"]
+Kind = Literal["stat", "gauge", "trend", "bar", "table", "scatter", "text", "diagram", "apc"]
 Aggregation = Literal["last", "mean", "min", "max", "std"]
 # A role of an asset, or ``*``: every signal of the asset (round 7, D5).
 ALL_ROLES = "*"
@@ -180,6 +181,9 @@ class CardOptions(BaseModel):
     y_label: str = Field(default="", max_length=40)
     soft_min: float | None = None
     soft_max: float | None = None
+    # Gauge: a dial, or the ISA-101 analog indicator (a grey bar with the normal range, the
+    # LL/L/H/HH limits, the setpoint and a pointer that takes a colour only out of normal).
+    gauge_style: Literal["dial", "analog"] = "dial"
     # Gauge: marks and numbers at the thresholds.
     threshold_markers: bool = True
     threshold_labels: bool = False
@@ -226,6 +230,8 @@ class Card(BaseModel):
     text: str = Field(default="", max_length=2000)
     # Diagram cards: the saved diagram they show (read at every refresh, as its viewer may).
     diagram_id: str = Field(default="", max_length=40, pattern=r"^[A-Za-z0-9_-]{0,40}$")
+    # Multivariable controller cards: the asset of kind ``apc`` they show.
+    apc_id: str = Field(default="", max_length=300)
     # The value shown by stats, gauges and bars. Trends and tables ignore it.
     agg: Aggregation = "last"
     # A window (``8h``), or an interval variable (``$period``).
@@ -267,6 +273,10 @@ class Card(BaseModel):
             raise ValueError(t("A process display panel shows its process display, not signals."))
         if self.kind == "diagram" and not self.diagram_id:
             raise ValueError(t("Pick the process display to show."))
+        if self.kind == "apc" and self.items:
+            raise ValueError(t("A controller panel shows its controller's variables, not signals."))
+        if self.kind == "apc" and not self.apc_id.strip():
+            raise ValueError(t("Pick the multivariable controller to show."))
         if self.kind not in NO_ITEM_KINDS and not self.items:
             raise ValueError(t("Pick at least one signal."))
         if self.kind == "text" and not self.text.strip():

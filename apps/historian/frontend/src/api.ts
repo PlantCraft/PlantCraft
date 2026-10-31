@@ -1,7 +1,7 @@
 import { ApiError, createApiClient, type HelpEntry, type HelpPage, jsonBody, saveFile } from "@plantcraft/ui";
 import { t } from "./i18n";
 import { href } from "./nav";
-import type { AppMeta, ExportOptions, ExportPreview, ImportCheck, ImportItem, Me, ReadOptions, Overview, Point, RequestAnswer, RunInfo, RunsSeries, Series, Settings, Source, SourceSettings, Variable } from "./types";
+import type { AppMeta, ExportOptions, ExportPreview, ImportCheck, ImportItem, Me, ReadOptions, Overview, Point, RequestAnswer, RunInfo, RunsSeries, Series, Settings, Source, SourceEvent, SourceIntegration, SourceSettings, Variable } from "./types";
 
 const client = createApiClient({ app: "histcraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -10,7 +10,7 @@ const body = jsonBody;
 const id = encodeURIComponent;
 
 /** What a source form sends: `password` only when typed (null keeps the stored one). */
-export type SourceIn = Pick<Source, "id" | "name" | "kind" | "endpoint" | "namespace_uri" | "username" | "password_env" | "options" | "enabled"> & SourceSettings & { mode: Source["mode"] | ""; password: string | null };
+export type SourceIn = Pick<Source, "id" | "name" | "kind" | "endpoint" | "namespace_uri" | "username" | "password_env" | "options" | "enabled"> & SourceSettings & SourceIntegration & { mode: Source["mode"] | ""; password: string | null };
 
 /** What each step of an export keeps. */
 export type Aggregate = "mean" | "first" | "last" | "min" | "max";
@@ -50,7 +50,20 @@ export type NewPoint = Partial<Point> & { tag: string; source_id: string; addres
 /** A point an admin removed, kept with its archive until ``purge_ms`` (``/api/points/retired``). */
 export type RetiredPoint = { id: number; signal: string; source_id: string; tag: string; name: string; unit: string; kind: string; retired_ms: number; retired_by: string; purge_ms: number };
 
+/** A note on a signal (``/api/v1/annotations``): an instant, or an interval when ``end`` is set. */
+export interface Note { id: number; signal: string; at: string; end: string | null; text: string; author: string; created_at: string }
+/** The PlantCraft event a new note answers, for the page to post (``POST /api/v1/events``). */
+export interface NoteEvent { app: string; kind: string; subject: string; summary: string; payload: Record<string, unknown> }
+
+/** A person's edit of an archived value (``/api/v1/edits``), with the value it replaced. */
+export interface ValueEdit { t: string; action: "inserted" | "edited" | "deleted"; old: number | string | null; new: number | string | null; by: string; at: string; reason: string }
+
 export const api = {
+  valueEdits: (signal: string, start: string, end: string) => request<{ signal: string; edits: ValueEdit[] }>(`/api/v1/edits/${id(signal)}?${new URLSearchParams({ start, end }).toString()}`),
+  editValues: (edit: { signal: string; reason: string; changes: { t: string; value?: number | string; delete?: boolean }[] }) => request<{ changes: { t: string; action: string; old: unknown; new: unknown }[] }>("/api/v1/edits", body("POST", edit)),
+  notes: (signal: string, start: string, end: string) => request<{ notes: Note[]; truncated: boolean }>(`/api/v1/annotations?${new URLSearchParams({ signal, start, end }).toString()}`),
+  addNote: (note: { signal: string; at: string; end: string | null; text: string }) => request<Note & { event: NoteEvent }>("/api/v1/annotations", body("POST", note)),
+  removeNote: (noteId: number) => request<void>(`/api/v1/annotations/${noteId}`, { method: "DELETE" }),
   me: () => request<Me>("/api/me"),
   meta: () => request<AppMeta>("/api/meta"),
   help: () => request<HelpEntry[]>("/api/help"),
@@ -59,6 +72,7 @@ export const api = {
   overview: () => request<Overview>("/api/overview"),
   sources: () => request<Source[]>("/api/sources"),
   addSource: (source: SourceIn) => request<Source>("/api/sources", body("POST", source)),
+  sourceHistory: (sourceId: string) => request<SourceEvent[]>(`/api/sources/${id(sourceId)}/history?limit=50`),
   updateSource: (source: SourceIn) => request<Source>(`/api/sources/${id(source.id)}`, body("PUT", source)),
   exportPoints: (sourceId?: string) => download(`/api/points/export${sourceId ? `?source_id=${id(sourceId)}` : ""}`, undefined, "historian-points.csv"),
   importPoints: (file: File, apply: boolean) => request<PointsImport>(`/api/points/import?apply=${apply}`, { method: "POST", body: file, headers: { "Content-Type": "text/csv" } }),
@@ -85,7 +99,7 @@ export const api = {
   answer: <T,>(requestId: number) => request<RequestAnswer<T>>(`/api/requests/${requestId}`),
   points: (q = "", source = "") => request<Point[]>(`/api/points?${new URLSearchParams({ q, ...(source ? { source } : {}) })}`),
   addPoints: (points: NewPoint[]) => request<{ added: string[]; skipped: { signal: string; tag: string; reason: string }[] }>("/api/points", body("POST", { points })),
-  updatePoint: (signal: string, patch: Partial<Omit<Point, "mode" | "own_mode" | "scan_seconds" | "deviation" | "max_seconds" | "retention_days" | "exception">> & { mode?: Point["own_mode"]; scan_seconds?: number | null; deviation?: number | null; exception?: number | null; max_seconds?: number | null; retention_days?: number | null }) => request<Point>(`/api/points/${id(signal)}`, body("PATCH", patch)),
+  updatePoint: (signal: string, patch: Partial<Omit<Point, "mode" | "own_mode" | "scan_seconds" | "deviation" | "max_seconds" | "retention_days" | "exception">> & { mode?: Point["own_mode"]; scan_seconds?: number | null; deviation?: number | null; exception?: number | null; min_seconds?: number | null; max_seconds?: number | null; retention_days?: number | null }) => request<Point>(`/api/points/${id(signal)}`, body("PATCH", patch)),
   deletePoints: (signals: string[]) => request<{ removed: number; retired: number; days: number }>("/api/points/delete", body("POST", { signals })),
   retiredPoints: () => request<{ points: RetiredPoint[]; days: number }>("/api/points/retired"),
   restorePoints: (ids: number[]) => request<{ restored: string[]; refused: { id: number; signal?: string; reason: string }[] }>("/api/points/restore", body("POST", { ids })),

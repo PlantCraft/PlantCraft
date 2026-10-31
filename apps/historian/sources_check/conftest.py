@@ -77,6 +77,8 @@ class Historian:
             tmp_path,
             ingest_port=port,
             ingest_url=f"http://127.0.0.1:{port}",
+            # The gateway's disk buffer (store and forward) where this Telegraf can write it.
+            gateway_buffer_dir=str(tmp_path / "gateway-buffer"),
         )
         self.catalog = CatalogStore(database(tmp_path, "config"))
         self.archive = ArchiveStore(database(tmp_path))

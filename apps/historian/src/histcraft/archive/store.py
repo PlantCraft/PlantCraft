@@ -204,6 +204,22 @@ class ArchiveStore(Store):
         PRIMARY KEY(point, t)
     );
 
+    -- People's edits of archived values (H7): each value inserted, edited or deleted by hand,
+    -- with the value it replaced (JSON, NULL when there was none), who and when, and why.
+    -- The value read carries the mark; the original stays here.
+    CREATE TABLE IF NOT EXISTS edits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        point INTEGER NOT NULL,
+        t INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        old_value TEXT,
+        new_value TEXT,
+        author TEXT NOT NULL DEFAULT '',
+        at INTEGER NOT NULL,
+        reason TEXT NOT NULL DEFAULT ''
+    );
+    CREATE INDEX IF NOT EXISTS edits_point_t ON edits (point, t);
+
     CREATE TABLE IF NOT EXISTS request_results (
         id INTEGER PRIMARY KEY,
         status TEXT NOT NULL,
@@ -218,6 +234,10 @@ class ArchiveStore(Store):
         ("rollups", "low", "REAL"),
         ("rollups", "high", "REAL"),
         ("rollups", "n", "INTEGER"),
+        # The source's whole status code at a change of quality (OPC UA sub-code and LimitBits,
+        # H6, ``histcraft.opc_status``); NULL when it said nothing more than the quality.
+        ("qualities", "status", "BIGINT"),
+        ("qualities", "status_name", "TEXT"),
     )
 
     def __init__(self, db: Database):
@@ -420,10 +440,27 @@ class ArchiveStore(Store):
             return 0
         return self._writing(lambda: self._replace(point, kind, samples))
 
-    def _replace(self, point: int, kind: str, samples: list[tuple[int, Any]]) -> int:
+    def edit(
+        self, point: int, kind: str, samples: list[tuple[int, Any]], drop: Iterable[int] = ()
+    ) -> int:
+        """A person's edit (``api.routers.edits``): ``samples`` written as ``replace`` does and
+        the values at the times in ``drop`` removed. The values not settled yet are settled
+        first, so an edit never races the collector's buffer."""
+
+        drop = sorted({int(at) for at in drop})
+        if not samples and not drop:
+            return 0
+        self.settle()
+        samples = sorted(samples, key=lambda item: item[0])
+        return self._writing(lambda: self._replace(point, kind, samples, drop))
+
+    def _replace(
+        self, point: int, kind: str, samples: list[tuple[int, Any]], drop: list[int] = ()
+    ) -> int:
         times = np.fromiter((at for at, _ in samples), dtype=np.int64, count=len(samples))
         values = [value for _, value in samples]
-        first, last = int(times.min()), int(times.max())
+        bounds = [*times.tolist(), *drop]
+        first, last = int(min(bounds)), int(max(bounds))
         with self._lock, self._connect() as connection:
             rows = connection.execute(
                 "SELECT t0, data FROM chunks WHERE point = ? AND t0 <= ? AND t1 >= ?",
@@ -457,6 +494,10 @@ class ArchiveStore(Store):
             order = np.argsort(times, kind="stable")
             times = times[order]
             values = [values[i] for i in order]
+            if len(drop):
+                keep = ~np.isin(times, np.asarray(drop, dtype=np.int64))
+                values = [value for value, kept in zip(values, keep.tolist(), strict=True) if kept]
+                times = times[keep]
             self._ensure("chunks", times[::CHUNK_VALUES].tolist())
             connection.executemany(
                 _PUT_CHUNK,
@@ -474,7 +515,7 @@ class ArchiveStore(Store):
                 ],
             )
             connection.executemany(_COUNT, _hour_counts(point, [at for at, _ in samples]))
-        return len(samples)
+        return len(samples) + len(drop)
 
     def put_run(self, point: int, run_at: int, samples: list[tuple[int, float]], keep: int) -> int:
         """Store one execution of a runs point (the same ``run_at`` replaces it) and keep only the
@@ -545,14 +586,18 @@ class ArchiveStore(Store):
             out.append((int(row["run_at"]), times, np.asarray(values, dtype=float)))
         return out
 
-    def put_qualities(self, changes: Iterable[tuple[int, int, str]]) -> None:
-        """Store ``(point, ms, quality)`` changes of quality (the collector's)."""
+    def put_qualities(self, changes: Iterable[tuple]) -> None:
+        """Store ``(point, ms, quality)``, or ``(point, ms, quality, status, name)``, changes of
+        quality (``status``: the source's whole status code, ``name`` its sub-code's; or None)."""
 
+        rows = [(*change[:3], *(tuple(change[3:5]) + (None, None))[:2]) for change in changes]
         with self._lock, self._connect() as connection:
             connection.executemany(
-                "INSERT INTO qualities VALUES (?, ?, ?) ON CONFLICT(point, t) DO UPDATE"
-                " SET quality = excluded.quality",
-                list(changes),
+                "INSERT INTO qualities (point, t, quality, status, status_name)"
+                " VALUES (?, ?, ?, ?, ?) ON CONFLICT(point, t) DO UPDATE"
+                " SET quality = excluded.quality, status = excluded.status,"
+                " status_name = excluded.status_name",
+                rows,
             )
 
     def put_lab_samples(self, rows: Iterable[tuple[Any, ...]]) -> None:
@@ -568,6 +613,36 @@ class ArchiveStore(Store):
                 " author = excluded.author, writes = lab_samples.writes + 1",
                 list(rows),
             )
+
+    def put_edits(self, rows: Iterable[tuple[Any, ...]]) -> None:
+        """Keep ``(point, t, action, old, new, author, at, reason)`` of people's edits (``old``
+        and ``new`` as JSON text, or None)."""
+
+        with self._lock, self._connect() as connection:
+            connection.executemany(
+                "INSERT INTO edits (point, t, action, old_value, new_value, author, at, reason)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                list(rows),
+            )
+
+    def edits(
+        self, points: Iterable[int], start_ms: int, end_ms: int
+    ) -> dict[int, list[dict[str, Any]]]:
+        """Per point, the edits of values in ``[start, end]``, by value time then edit order."""
+
+        ids = sorted({int(point) for point in points})
+        found: dict[int, list[dict[str, Any]]] = {point: [] for point in ids}
+        if not ids:
+            return found
+        with self._connect() as connection:
+            rows = connection.execute(
+                f"SELECT * FROM edits WHERE point IN ({_marks(ids)}) AND t >= ? AND t <= ?"
+                " ORDER BY point, t, id",
+                (*ids, start_ms, end_ms),
+            ).fetchall()
+        for row in rows:
+            found[int(row["point"])].append(dict(row))
+        return found
 
     def lab_samples(self, point: int, start_ms: int, end_ms: int) -> list[dict[str, Any]]:
         with self._lock, self._connect() as connection:
@@ -984,27 +1059,32 @@ class ArchiveStore(Store):
             for point, chunks in found.items()
         }
 
-    def qualities(self, point: int, start_ms: int, end_ms: int) -> list[tuple[int, str]]:
-        """The quality in effect at ``start`` (when not good) and its changes up to ``end``."""
+    def qualities(
+        self, point: int, start_ms: int, end_ms: int, *, with_status: bool = False
+    ) -> list[tuple]:
+        """The quality in effect at ``start`` (when not good, or good with a status) and its
+        changes up to ``end``: ``(ms, quality)``, or ``(ms, quality, status)``."""
 
         with self._connect() as connection:
             before = connection.execute(
-                "SELECT t, quality FROM qualities WHERE point = ? AND t <= ? ORDER BY t DESC"
-                " LIMIT 1",
+                "SELECT t, quality, status, status_name FROM qualities WHERE point = ? AND t <= ?"
+                " ORDER BY t DESC LIMIT 1",
                 (point, start_ms),
             ).fetchone()
             rows = connection.execute(
-                "SELECT t, quality FROM qualities WHERE point = ? AND t > ? AND t <= ? ORDER BY t",
+                "SELECT t, quality, status, status_name FROM qualities"
+                " WHERE point = ? AND t > ? AND t <= ?"
+                " ORDER BY t",
                 (point, start_ms, end_ms),
             ).fetchall()
-        out = [(int(row["t"]), str(row["quality"])) for row in rows]
-        if before is not None and before["quality"] != "good":
-            out.insert(0, (int(before["t"]), str(before["quality"])))
+        out = [_quality_row(row, with_status) for row in rows]
+        if before is not None and (before["quality"] != "good" or before["status"]):
+            out.insert(0, _quality_row(before, with_status))
         return out
 
     def qualities_many(
-        self, points: Iterable[int], start_ms: int, end_ms: int
-    ) -> dict[int, list[tuple[int, str]]]:
+        self, points: Iterable[int], start_ms: int, end_ms: int, *, with_status: bool = False
+    ) -> dict[int, list[tuple]]:
         """``qualities`` of many points: one round trip on PostgreSQL (one query per point on
         SQLite); a point whose quality stayed good has an empty list."""
 
@@ -1012,22 +1092,26 @@ class ArchiveStore(Store):
         if not ids:
             return {}
         if not self.db.postgres:
-            return {point: self.qualities(point, start_ms, end_ms) for point in ids}
+            return {
+                point: self.qualities(point, start_ms, end_ms, with_status=with_status)
+                for point in ids
+            }
         with self._connect() as connection:
             rows = connection.execute(
-                "SELECT point, t, quality FROM qualities WHERE point = ANY(?) AND t > ? AND t <= ?"
-                " UNION ALL SELECT q.point, q.t, q.quality FROM unnest(?::bigint[]) AS p(point)"
-                " CROSS JOIN LATERAL (SELECT point, t, quality FROM qualities WHERE point = p.point"
-                " AND t <= ? ORDER BY t DESC LIMIT 1) q ORDER BY 1, 2",
+                "SELECT point, t, quality, status, status_name FROM qualities"
+                " WHERE point = ANY(?) AND t > ? AND t <= ?"
+                " UNION ALL SELECT q.point, q.t, q.quality, q.status, q.status_name"
+                " FROM unnest(?::bigint[]) AS p(point)"
+                " CROSS JOIN LATERAL (SELECT point, t, quality, status, status_name FROM qualities"
+                " WHERE point = p.point AND t <= ? ORDER BY t DESC LIMIT 1) q ORDER BY 1, 2",
                 (ids, start_ms, end_ms, ids, start_ms),
             ).fetchall()
-        found: dict[int, list[tuple[int, str]]] = {point: [] for point in ids}
+        found: dict[int, list[tuple]] = {point: [] for point in ids}
         for row in rows:
-            point, at, code = int(row["point"]), int(row["t"]), str(row["quality"])
-            changes = found[point]
-            if at <= start_ms and code == "good":
-                continue  # good at the start: nothing to say
-            changes.append((at, code))
+            point, at = int(row["point"]), int(row["t"])
+            if at <= start_ms and row["quality"] == "good" and not row["status"]:
+                continue  # plainly good at the start: nothing to say
+            found[point].append(_quality_row(row, with_status))
         return found
 
     def point_ids(self) -> set[int]:
@@ -1278,6 +1362,7 @@ _POINT_TABLES = (
     "point_totals",
     "run_series",
     "lab_samples",
+    "edits",
 )
 DELETE_BATCH = 500
 DELETE_TRIES = 5
@@ -1434,3 +1519,11 @@ def _real(value: Any) -> float | None:
         return None
     number = float(value)
     return number if math.isfinite(number) else None
+
+
+def _quality_row(row: Any, with_status: bool) -> tuple:
+    if with_status:
+        status = row["status"]
+        code = None if status is None else int(status)
+        return (int(row["t"]), str(row["quality"]), code, row["status_name"])
+    return (int(row["t"]), str(row["quality"]))

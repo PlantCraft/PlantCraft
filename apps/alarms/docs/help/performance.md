@@ -17,6 +17,22 @@ out-of-service alarms raise nothing and are not counted.
 The priority distribution is compared with about 5 % high (critical and high), 15 % medium and
 80 % low.
 
+## Consoles (operator positions)
+
+The targets are for one operator. When the plant has several boards, set the **consoles** in
+Targets › Consoles. Each console lists:
+
+- the **areas** it answers, at any level of the asset tree (a unit, a section, one equipment);
+- who sits at it;
+- its own alarms-an-hour target, if it differs from the load per person.
+
+An alarm goes to the console that names the most specific of its areas. If two consoles name the
+same area, it goes to the first one. An alarm no console covers is counted under **No console**.
+
+Performance then shows a **Consoles** table with each console's load against its own target:
+alarms an hour, the peak in 10 minutes and the EEMUA 191 level. The **Console** selector shows
+every figure for one console. People who sit at a console see their own console first.
+
 ## What to do with it
 
 Start with the **most frequent alarms**: a handful of bad actors usually make most of the load.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import gzip
+import os
 import tomllib
 
 import pytest
@@ -12,7 +13,15 @@ from histcraft.archive.store import ArchiveStore
 from histcraft.catalog.models import PointIn, SourceIn
 from histcraft.catalog.store import CatalogStore
 from histcraft.collector import line_protocol
-from histcraft.collector.gateway import INPUTS, gateway_token, render, variable, write_config
+from histcraft.collector.gateway import (
+    INPUTS,
+    buffer_bytes,
+    buffer_folder,
+    gateway_token,
+    render,
+    variable,
+    write_config,
+)
 from histcraft.collector.ingest import ingest_app
 from histcraft.collector.service import Collector
 from tests.conftest import database, make_settings
@@ -275,3 +284,112 @@ def test_integer_registers_with_a_fractional_scale_keep_their_decimals(tmp_path)
     with pytest.raises(ValueError, match="whole-number scale"):
         one_byte = [{"name": "B", "address": 0, "data_type": "INT8L", "scale": 0.5}]
         SourceIn(**{**MODBUS.model_dump(), "options": {"registers": one_byte}})
+
+
+def test_a_lims_source_writes_laboratory_results_at_their_sampling_times(tmp_path):
+    settings = make_settings(tmp_path, ingest_port=8186)
+    catalog = CatalogStore(database(tmp_path, "config"))
+    lims = SQL.model_copy(
+        update={
+            "options": {
+                **SQL.options,
+                "query": "SELECT sampled, analysis, value, status, received_at FROM results",
+                "time_column": "sampled",
+                "tag_columns": ["analysis"],
+                "laboratory": True,
+            }
+        }
+    )
+    catalog.save_source(SourceIn.model_validate(lims.model_dump()), create=True)
+    archive = ArchiveStore(database(tmp_path))
+    collector = Collector(settings, catalog, archive)
+    collector.reload()
+    client = TestClient(ingest_app(collector, gateway_token(tmp_path)))
+    headers = {"Authorization": f"Token {gateway_token(tmp_path)}"}
+    sampled = 1_700_000_000
+    body = "\n".join(
+        [
+            f'sql,histcraft_source=lims,analysis=VISC-101 value=412,status="approved",'
+            f'received_at="2023-11-14T23:13:20Z" {sampled * 10**9}',
+            f'sql,histcraft_source=lims,analysis=VISC-101 value=415,status="entered" '
+            f"{(sampled + 3600) * 10**9}",
+            f'sql,histcraft_source=lims,analysis=VISC-101 value=1,status="lost" {sampled * 10**9}',
+        ]
+    )
+    assert client.post("/api/v2/write", content=body, headers=headers).status_code == 204
+    point = catalog.point("laboratory:VISC-101")
+    point_id = int(point["id"])
+    found = archive.lab_samples(point_id, 0, 2**62)
+    assert [(row["t"], row["status"], row["writes"]) for row in found] == [
+        (sampled * 1000, "approved", 1),
+        ((sampled + 3600) * 1000, "entered", 1),
+    ]
+    assert found[0]["received"] == (sampled + 3600) * 1000 and found[0]["author"] == "source:lims"
+    times, values = archive.read(point_id, 0, 2**62)
+    assert list(values) == [412.0, 415.0]
+    # The LIMS read again with nothing new: nothing is written again; an approval is.
+    client.post("/api/v2/write", content=body, headers=headers)
+    assert [row["writes"] for row in archive.lab_samples(point_id, 0, 2**62)] == [1, 1]
+    approved = body.splitlines()[1].replace('"entered"', '"approved"')
+    client.post("/api/v2/write", content=approved, headers=headers)
+    rows = archive.lab_samples(point_id, 0, 2**62)
+    assert [(row["status"], row["writes"]) for row in rows] == [("approved", 1), ("approved", 2)]
+
+
+def test_a_lims_source_names_its_sampling_time_and_analysis():
+    with pytest.raises(ValueError, match="laboratory source"):
+        SourceIn.model_validate(
+            {**SQL.model_dump(), "options": {**SQL.options, "time_column": "", "laboratory": True}}
+        )
+
+
+def test_the_gateway_keeps_its_buffer_on_disk_when_it_can(tmp_path):
+    # Store and forward (H3): what the collector has not taken survives a gateway restart.
+    settings = make_settings(tmp_path, ingest_port=8186)
+    catalog = CatalogStore(database(tmp_path, "config"))
+    catalog.save_source(MQTT, create=True)
+    agent = tomllib.loads(write_config(settings, catalog.sources(), lambda _: "", ""))["agent"]
+    assert agent["buffer_strategy"] == "disk"
+    assert agent["buffer_directory"] == "/var/lib/telegraf-buffer"
+    folder = buffer_folder(tmp_path)
+    assert folder.is_dir() and (folder.stat().st_mode & 0o777) == 0o700
+    (folder / "wal").mkdir()
+    (folder / "wal" / "00001").write_bytes(b"x" * 5000)
+    assert buffer_bytes(tmp_path) == 5000
+    # Asked for memory, or a folder the gateway could not write: Telegraf would refuse to start
+    # on a disk buffer it cannot write, so the configuration keeps it in memory.
+    memory = make_settings(tmp_path, ingest_port=8186, gateway_buffer="memory")
+    assert (
+        "buffer_strategy" not in tomllib.loads(write_config(memory, [], lambda _: "", ""))["agent"]
+    )
+    if os.geteuid() != 0:  # root writes anywhere
+        folder.chmod(0o500)
+        try:
+            text = write_config(settings, [], lambda _: "", "")
+            assert "buffer_strategy" not in tomllib.loads(text)["agent"]
+        finally:
+            folder.chmod(0o700)
+
+
+def test_a_value_sent_twice_keeps_the_first_one(tmp_path):
+    # A batch the gateway sends again (the collector's answer was lost) is taken once; a second
+    # value at a time already taken is dropped: the first wins.
+    settings = make_settings(tmp_path, ingest_port=8186)
+    catalog = CatalogStore(database(tmp_path, "config"))
+    catalog.save_source(MODBUS, create=True)
+    address = line_protocol.address(
+        "modbus", {"name": "plc", "slave_id": "3", "type": "holding_register"}, "FT-101"
+    )
+    catalog.add_points([PointIn(tag="FT-101", source_id="plc", address=address, deviation=0)])
+    collector = Collector(settings, catalog, ArchiveStore(database(tmp_path)))
+    collector.reload()
+    client = TestClient(ingest_app(collector, gateway_token(tmp_path)))
+    headers = {"Authorization": f"Token {gateway_token(tmp_path)}"}
+    line = "modbus,histcraft_source=plc,name=plc,type=holding_register,slave_id=3 FT-101={v} {t}"
+    at = 1_700_000_000 * 10**9
+    state = next(iter(collector.points.values()))
+    for value in (1.0, 9.0):
+        client.post("/api/v2/write", content=line.format(v=value, t=at), headers=headers)
+    assert state.reads == 1 and state.last == (1_700_000_000_000, 1.0)
+    client.post("/api/v2/write", content=line.format(v=2.0, t=at + 10**9), headers=headers)
+    assert state.reads == 2 and state.last == (1_700_000_001_000, 2.0)
