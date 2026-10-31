@@ -1,5 +1,5 @@
 """Loop-hours lost by cause, by area or loop and period (A13), and each loop's effective control
-(A7): ``report.losses``."""
+(A7): ``engine.losses``."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from linkcraft.api.deps import RuntimeDep
 from linkcraft.api.scope import Scope, sees_loop
 from linkcraft.i18n import t
 from linkcraft.loops.monitor import APPLICATION_ID, SUBJECT_KIND
-from linkcraft.report.losses import CAUSE_LABELS, CAUSES, effective_control, losses_by
+from linkcraft.engine.losses import CAUSE_LABELS, CAUSES, effective_control, losses_by
 
 router = APIRouter(prefix="/api")
 

@@ -221,6 +221,8 @@ def test_the_overview_shows_what_is_bad_and_where(signed_in, app_url, screenshot
             "Worst results",
             "Monitors",
             "Queue",
+            "Loop-hours lost, 7 days",
+            "Effective control",
         ]
     )
     # Every loop and signal a square, each opening its page.

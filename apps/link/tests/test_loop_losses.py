@@ -1,11 +1,11 @@
-"""Loop-hours lost by cause (A13) and each loop's effective control (A7): report.losses."""
+"""Loop-hours lost by cause (A13) and each loop's effective control (A7): engine.losses."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
 from linkcraft.db import Database
-from linkcraft.report.losses import LossStore, cause_fractions, effective_control, losses_by
+from linkcraft.engine.losses import LossStore, cause_fractions, effective_control, losses_by
 
 NOW = datetime(2026, 10, 31, 12, tzinfo=UTC)
 
