@@ -158,6 +158,10 @@ services:
       PLANTCRAFT_EGRESS_ALLOWLIST: /egress/allow.json
       PLANTCRAFT_LLM_NO_PROXY: "${PLANTCRAFT_LLM_NO_PROXY:-}"
       PLANTCRAFT_LLM: "${PLANTCRAFT_LLM:-}"
+      # What the assistant reads for one person: signal reads a day, and signals in one answer
+      # that the audit log flags as a possible extraction (docs/assistant.md, Limits).
+      PLANTCRAFT_ASSISTANT_DAILY_READS: "${PLANTCRAFT_ASSISTANT_DAILY_READS:-2000}"
+      PLANTCRAFT_ASSISTANT_BULK_SIGNALS: "${PLANTCRAFT_ASSISTANT_BULK_SIGNALS:-60}"
       # Security switches the installation may turn off for good (empty: allowed, off until an
       # administrator turns them on): assistants through MCP, and Notebooks.
       PLANTCRAFT_MCP: "${PLANTCRAFT_MCP:-}"

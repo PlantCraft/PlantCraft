@@ -217,3 +217,87 @@ def test_temporary_support_access_opens_operations_until_it_ends(world):
         admin.delete(f"/api/operations/support-access/grants/{grant['grant_id']}").status_code
         == 409
     )
+
+
+# Service hours and the sponsor's Partners ---------------------------------------------------
+
+
+def test_service_hours_stop_the_clock_outside_the_working_day():
+    from zoneinfo import ZoneInfo
+
+    from plantcraft.actions.sla import ServiceHours
+
+    zone = ZoneInfo("America/Sao_Paulo")
+    week = ServiceHours.check(
+        {"days": ["mon", "tue", "wed", "thu", "fri"], "start": "08:00", "end": "17:00"}
+    )
+    # Asked Friday 16:00 (19:00 UTC); a 2 h first answer target falls on Monday 09:00 (12:00 UTC).
+    friday = datetime(2026, 10, 30, 19, 0, tzinfo=UTC)
+    monday = datetime(2026, 11, 2, 12, 0, tzinfo=UTC)
+    assert week.add(friday, 120, zone) == monday
+    assert week.minutes(friday, monday, zone) == 120
+    targets = Targets({**Targets.defaults().minutes, "high": (120, 9 * 60)})
+    asked = _request(created_at="2026-10-30T19:00:00Z")
+    saturday = datetime(2026, 10, 31, 15, 0, tzinfo=UTC)
+    sla = request_sla(asked, [], targets, saturday, hours=week, zone=zone)
+    assert sla["response"]["used_minutes"] == 60  # Friday 16:00-17:00 only
+    assert sla["response"]["state"] == "running"
+    assert sla["response"]["due_at"] == "2026-11-02T12:00:00Z"
+    assert sla["service_hours"]["days"] == ["mon", "tue", "wed", "thu", "fri"]
+    for bad in (
+        {"days": [], "start": "08:00", "end": "17:00"},
+        {"days": ["mon"], "start": "18:00", "end": "17:00"},
+        {"days": ["mon"], "start": "8h", "end": "17:00"},
+    ):
+        with pytest.raises(ValueError):
+            ServiceHours.check(bad)
+
+
+def test_an_administrator_sets_a_queue_s_hours(world):
+    admin = sign_in(world.client())
+    op = sign_in(world.client(), "op", PASSWORD)
+    admin.post("/api/groups", json={"name": "IT", "group_id": "it", "kind": "team"})
+    week = {"days": ["mon", "tue", "wed", "thu", "fri"], "start": "08:00", "end": "17:00"}
+    assert (
+        op.put("/api/operations/service-hours", json={"queue": "it", "hours": week}).status_code
+        == 403
+    )
+    answer = admin.put("/api/operations/service-hours", json={"queue": "it", "hours": week})
+    assert answer.status_code == 200, answer.text
+    assert answer.json()["service_hours"][0]["queue_name"] == "IT"
+    assert audit(admin, "operations.service_hours")
+    request = op.post("/api/requests", json={"title": "VPN down", "group_id": "it"}).json()
+    assert request["sla"]["service_hours"]["start"] == "08:00"
+    other = op.post("/api/requests", json={"title": "Printer"}).json()
+    assert other["sla"]["service_hours"] is None
+    bad = admin.put(
+        "/api/operations/service-hours", json={"queue": "it", "hours": {"days": ["mon"]}}
+    )
+    assert bad.status_code == 422
+    cleared = admin.put("/api/operations/service-hours", json={"queue": "it", "hours": None})
+    assert cleared.json()["service_hours"] == []
+
+
+def test_a_sponsor_reads_and_approves_only_their_companies(world):
+    admin = sign_in(world.client())
+    users = admin.app.state.runtime.workspace.users
+    users.upsert_user("rui", "Rui Planta", "")
+    users.set_access("rui", "viewer", None)
+    users.set_password("rui", PASSWORD)
+    _company(admin, sponsor="rui")
+    _company(admin, name="Beta Controls", group_id="beta", coordinator=None, members=[])
+    op = sign_in(world.client(), "op", PASSWORD)
+    assert op.get("/api/operations/partners").status_code == 403
+    rui = sign_in(world.client(), "rui", PASSWORD)
+    session = rui.get("/api/session").json()["access"]
+    assert session["sponsor_of"] == ["acme"] and session["can_operate"] is False
+    shown = rui.get("/api/operations/partners").json()
+    assert [item["group_id"] for item in shown["companies"]] == ["acme"]
+    assert rui.get("/api/operations/hours").status_code == 200
+    # Still not Operations: status and logs stay closed.
+    assert rui.get("/api/operations/health").status_code == 403
+    month, _day = _last_month()
+    refused = rui.post("/api/operations/hours/approve", json={"month": month, "company": "beta"})
+    assert refused.status_code == 403
+    every = admin.get("/api/operations/partners").json()
+    assert {item["group_id"] for item in every["companies"]} == {"acme", "beta"}

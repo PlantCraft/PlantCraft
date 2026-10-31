@@ -28,7 +28,7 @@ from linkcraft.blocks.stored import convert_stored, system_rows
 from linkcraft.catalog.presets import PresetStore
 from linkcraft.config import AnalysisConfig, LoopConfig
 from linkcraft.data.frames import build_loop_frame, loop_signal_ids
-from linkcraft.data.plant import PlantData, utc_timestamp
+from linkcraft.data.plant import PlantData, Signals, utc_timestamp
 from linkcraft.data.suite import SuiteClient
 from linkcraft.db import Database
 from linkcraft.engine.compute import ComputePool, task_timeout
@@ -169,8 +169,20 @@ class MonitorService:
     def _read(
         self, plant: PlantData, loops: list[LoopConfig], start: Any, end: Any
     ) -> pd.DataFrame:
+        signals = self._read_batch(plant, loops, start, end)
+        return signals.frame(list(signals))
+
+    def _read_batch(
+        self, plant: PlantData, loops: list[LoopConfig], start: Any, end: Any
+    ) -> Signals:
+        """The batch's series; ``signals.frame(loop_signal_ids(loop))`` is one loop's frame.
+
+        Each loop's task carries its own signals' times only, as when it runs alone: one frame
+        of the whole batch on a raw day is 98% empty and every loop's task carried its rows.
+        """
+
         tags = sorted({tag for loop in loops for tag in loop_signal_ids(loop)})
-        return plant.read_range(
+        return plant.read_signals(
             start,
             end,
             self.analysis.resample_seconds,
@@ -241,7 +253,7 @@ class MonitorService:
             for offset in range(0, len(loops), READ_BATCH):
                 batch = loops[offset : offset + READ_BATCH]
                 try:
-                    raw = self._read(self.plant, batch, start, end)
+                    signals = self._read_batch(self.plant, batch, start, end)
                 except Exception as exc:  # one bad batch must not stop the round
                     # Unknown is not "no data": these loops keep their last result.
                     logger.warning(
@@ -251,12 +263,13 @@ class MonitorService:
                     unread += len(batch)
                     self.progress["total"] -= len(batch)
                     continue
-                failed_tags.extend(raw.attrs.get("failed_tags") or [])
-                if not raw.empty:
-                    first = raw.index.min() if first is None else min(first, raw.index.min())
-                    last = raw.index.max() if last is None else max(last, raw.index.max())
+                failed_tags.extend(signals.failed_tags)
                 verdicts = self._verdicts(batch)
                 for loop in batch:
+                    raw = signals.frame(loop_signal_ids(loop))
+                    if not raw.empty:
+                        first = raw.index.min() if first is None else min(first, raw.index.min())
+                        last = raw.index.max() if last is None else max(last, raw.index.max())
                     pv_found = pv_found or loop.signals.pv in raw.columns
                     config = self._round_config(loop, algorithms)
                     versions[loop.loop_id] = config.get("version")

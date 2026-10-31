@@ -99,6 +99,26 @@ def wide_frame(columns: dict[str, pd.Series]) -> pd.DataFrame:
     return frame[list(columns)]
 
 
+class Signals(dict[str, pd.Series]):
+    """Series read together, by signal id (``PlantData.read_signals``)."""
+
+    def __init__(self, series: dict[str, pd.Series], failed_tags: list[tuple[str, str]]):
+        super().__init__(series)
+        self.failed_tags = failed_tags
+
+    def frame(self, signal_ids: Iterable[str]) -> pd.DataFrame:
+        """These signals as ``read_range`` returns them: their own times only, one column each.
+
+        A signal that was not read is left out; ``attrs["failed_tags"]`` lists every failure
+        of the read.
+        """
+
+        shaped = {key: self[key] for key in dict.fromkeys(signal_ids) if key in self}
+        frame = wide_frame(shaped) if shaped else pd.DataFrame(index=pd.DatetimeIndex([]))
+        frame.attrs["failed_tags"] = self.failed_tags
+        return frame
+
+
 class PlantData:
     """Reads loops' signals through one ``PlantCraftClient`` (thread-safe)."""
 
@@ -178,6 +198,27 @@ class PlantData:
         (mode roles) come back as labels whatever their kind.
         """
 
+        signals = self.read_signals(
+            start, end, sample_seconds, tags=tags, text_signals=text_signals
+        )
+        return signals.frame(list(signals))
+
+    def read_signals(
+        self,
+        start: Any,
+        end: Any,
+        sample_seconds: float,
+        *,
+        tags: Iterable[str],
+        text_signals: Iterable[str] = (),
+    ) -> Signals:
+        """What ``read_range`` reads, one series per signal id and no frame yet.
+
+        A round reads 50 loops at once; their raw samples share almost no time, so one frame
+        of all of them is mostly empty (98% on a raw day). ``Signals.frame`` builds one
+        loop's frame from its own signals instead.
+        """
+
         start_at, end_at = utc_timestamp(start), utc_timestamp(end)
         names = list(dict.fromkeys(tag for tag in tags if tag))
         text = set(text_signals)
@@ -215,12 +256,7 @@ class PlantData:
             if signal_id in text or values.dtype == object:
                 values = mode_text(values)
             shaped[signal_id] = values
-        if shaped:
-            frame = wide_frame(shaped)
-        else:
-            frame = pd.DataFrame(index=pd.DatetimeIndex([]))
-        frame.attrs["failed_tags"] = failed
-        return frame
+        return Signals(shaped, failed)
 
     def data_end(self, signal_ids: Iterable[str], window_minutes: int) -> pd.Timestamp:
         """Where the newest data is: now for a live source, the last sample of a recorded one."""

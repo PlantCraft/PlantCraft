@@ -26,7 +26,14 @@ export const QUICK = [
   { value: "sign_ins", label: () => t("Sign-ins") },
   { value: "failed", label: () => t("Failed sign-ins") },
 ];
-const FAILED = new Set(["session.sign_in_failed", "session.sign_in_blocked"]);
+// Shown with a warning mark: failed or blocked sign-ins, and the assistant reading a lot for one
+// person (its daily limit reached, many signals in one answer: B13, 2026-10-31).
+const FAILED = new Set([
+  "session.sign_in_failed",
+  "session.sign_in_blocked",
+  "assistant.read_limit",
+  "assistant.bulk_read",
+]);
 
 function Link({ to, children }: { to: string; children: ReactNode }) {
   return <a href={to} onClick={(event) => { event.preventDefault(); navigate(to); }}>{children}</a>;
@@ -44,6 +51,8 @@ export function actionLabel(action: string): string {
     "session.sign_in_failed": t("Sign-in failed"),
     "session.sign_in_blocked": t("Sign-in blocked (too many attempts)"),
     "session.sign_out": t("Signed out"),
+    "assistant.read_limit": t("Assistant read limit reached (possible extraction)"),
+    "assistant.bulk_read": t("Assistant read many signals at once (possible extraction)"),
   };
   return words[action] ?? action;
 }
