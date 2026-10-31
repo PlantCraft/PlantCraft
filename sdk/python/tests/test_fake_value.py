@@ -32,3 +32,16 @@ def test_value_over_long_windows_of_a_recorded_series():
     long = FakePlantCraft(now=NOW, sample_seconds=1).client("engineer")
     assert long.value("fake:FIC-101.PV", "mean", "366d")["value"] is not None
     assert NOW - timedelta(days=1) < datetime.fromisoformat(long.value("fake:FIC-101.PV")["at"])
+
+
+def test_value_over_a_window_that_closed_earlier():
+    """``end`` reads a closed window (a report of last week), never past the newest data."""
+
+    stamps = pd.date_range("2026-01-01", periods=4, freq="7D", tz="UTC")
+    series = pd.Series([1.0, 2.0, 3.0, 4.0], index=stamps)
+    client = FakePlantCraft(series={"fake:FIC-101.PV": series}).client("engineer")
+    closed = client.value(
+        "fake:FIC-101.PV", "last", "8d", end=datetime(2026, 1, 9, tzinfo=timezone.utc)
+    )
+    assert closed["value"] == 2.0
+    assert client.value("fake:FIC-101.PV", "last", "8d", end="2999-01-01T00:00:00Z")["value"] == 4.0

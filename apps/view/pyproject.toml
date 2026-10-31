@@ -11,8 +11,8 @@ license = {text = "Apache-2.0"}
 requires-python = ">=3.11"
 dependencies = [
     # Not on any index: install it from vendor/ first
-    # (pip install --no-index --find-links vendor plantcraft-sdk==0.87.0).
-    "plantcraft-sdk==0.87.0",
+    # (pip install --no-index --find-links vendor plantcraft-sdk==0.88.0).
+    "plantcraft-sdk==0.88.0",
     "fastapi>=0.116,<1",
     "httpx>=0.27,<1",
     # Word reports' charts as images (HPND); reportlab installs it too.

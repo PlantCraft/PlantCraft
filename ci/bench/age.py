@@ -122,13 +122,19 @@ def write_past(suite: Suite, months: float, rate: float, state: dict) -> dict:
     return {"historian": hist, "analytics": link}
 
 
-def timed_calls(suite: Suite, calls: list[str], tries: int = 1) -> dict:
+def timed_calls(suite: Suite, calls: list, tries: int = 1) -> dict:
+    """Each call is a path (GET) or {method, path, body} (load_pages.json's POST pages)."""
+
     times, failed = [], 0
     for _ in range(tries):
         began = time.perf_counter()
-        for path in calls:
+        for call in calls:
+            if isinstance(call, dict):
+                method, path, body = call.get("method", "GET"), call["path"], call.get("body")
+            else:
+                method, path, body = "GET", call, None
             try:
-                suite.call("GET", path, timeout=300)
+                suite.call(method, path, body, timeout=300)
             except RuntimeError:
                 failed += 1
         times.append(time.perf_counter() - began)

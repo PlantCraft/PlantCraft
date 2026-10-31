@@ -301,8 +301,10 @@ class HistCraftDataLayer(DataLayer):
         accept = f"{WIRE_MEDIA_TYPE}, application/json;q=0.5" if binary else "application/json"
         return self.call("POST", "/series", json=body, raw=True, accept=accept)
 
-    def value(self, signal_id: str, agg: str, window: str) -> dict[str, Any]:
-        params = {"agg": agg, "window": window}
+    def value(
+        self, signal_id: str, agg: str, window: str, end: str | None = None
+    ) -> dict[str, Any]:
+        params = {"agg": agg, "window": window, **({"end": end} if end else {})}
         return self.call("GET", f"/signals/{_quoted(signal_id)}/value", params=params)
 
     # Derived series --------------------------------------------------------------

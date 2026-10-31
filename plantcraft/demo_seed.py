@@ -339,8 +339,12 @@ def _detail(payload: Any) -> str:
     return str(payload)[:400]
 
 
+_STARTED = time.monotonic()
+
+
 def log(message: str) -> None:
-    print(f"[demo] {message}", flush=True)
+    # Seconds since the seed started: the install log shows which step takes the time.
+    print(f"[demo +{time.monotonic() - _STARTED:.0f}s] {message}", flush=True)
 
 
 def _day(ahead: int = 0) -> str:
@@ -2550,6 +2554,7 @@ def histcraft(hist: Http, suite: Suite) -> None:
         return found if found and found.get("points") else None
 
     found = wait_until("The Simulator's signals in Historian", source, suite.wait)
+    began = time.monotonic()
     status, queued = hist.call(
         "POST", "/api/sources/plantcraft/backfill", {"hours": BACKFILL_HOURS}, ok=(404, 405)
     )
@@ -2574,7 +2579,8 @@ def histcraft(hist: Http, suite: Suite) -> None:
         result = answer.get("result") or {}
         log(
             f"Historian: {result.get('values', 0)} values of the Simulator's last {BACKFILL_HOURS} "
-            f"hours archived ({result.get('signals', 0)} signals)"
+            f"hours archived ({result.get('signals', 0)} signals) in "
+            f"{time.monotonic() - began:.0f} s"
         )
         return
     if found.get("mode") != "both":

@@ -48,6 +48,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   the industrial data key (now private from the first byte), the Historian's CSV sources and
   import files, Analytics' block files and compute answers, Models' jobs, results, runner state
   and library cache, and the SDK compute folder's files.
+- **The machine profile gives the Historian 1 GB on `small` and 1.5 GB on `medium`.** With 2
+  processes its peak under the 0.6.0 load test C2 reached 780 to 910 MiB, above the 768m `small`
+  gave it (plan B, 2026-10-31). The Historian also keeps the archive chunks it decoded, so reads
+  of the same day decode them once (`HISTCRAFT_CHUNK_CACHE_MB`).
+- **The demo's lines in the install log carry the seconds since the seed started**
+  (`[demo +42s] ...`), and the Historian backfill says how long it took: the seed is half of an
+  install with `--demo` (69 of 124 s on a 4 CPU arm64 VM), and the log now shows which step.
 - **The Historian's means on a grid take one pass (2026-10-31).** A grid read built each
   signal's segments four times to get its covered time and area; now once, with the same
   arithmetic and the same values to the bit. 200 dense signals x 24 h at 60 s: the Historian's
@@ -144,6 +151,27 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **`ci/e2e-upgrade.sh` stops at once when it cannot read the admin password.** On Linux the
+  installation's password file is readable by root only, and the test found out after an 11-minute
+  build; it now asks for root before anything starts. `docs/install.md` names the release key id
+  (`af2643fa16867976`) that `install.sh` prints next to the fingerprint.
+- **A backup restores on a machine with fewer CPUs (2026-10-31 VM test).** A backup carries the
+  `.env` of the server it was made on, so restoring a 4-CPU server's backup on a 2-CPU one failed
+  to start ("range of CPUs is from 0.01 to 2.00") and returned to the state before it. The restore
+  now caps every CPU limit of `compose.yaml` at the host's CPU count before the suite starts, as
+  `install.sh` already did on install and update.
+- **Accessibility: no WCAG AA finding left in the suite's frame.** An axe-core sweep of 35 pages
+  (desktop and phone, every app, 2026-10-31) found no critical issue and five small ones, all in
+  shared parts: the count badges on the sidebar had white on red or light blue (3.5:1 and 2.5:1;
+  now 5.4:1 and 6.7:1, `--pc-chrome-problem`), the tour card's head counted as a second page
+  banner, the frame's `main` around an app had no name of its own, To-do, Notes and Messages
+  jumped from `h1` to `h3`, a table column with only buttons had an empty header (now "Actions"
+  for screen readers, in `DataTable` and Historian's sources), and the block editor's status
+  lights had a label but no role (`role="img"`).
+- **The demo journeys (`tests/e2e_suite`) follow the current sign-in page and tour.** They still
+  looked for "Public demo" / "A visit lasts" (the visit clock went away on 2026-10-28), for the
+  older "read-only" refusal and for the tour's last step "Your apps"; 13 of 15 failed on a VM
+  after the update from 0.5.1, all from the first. 15 of 15 pass on main.
 - **Installer, from the first tries on Windows 11 (WSL) and a clean Linux VM.** The setup
   wizard asks the apps before the requirements (it stopped on a memory FAIL for apps you would
   have left out), starts from an installation file already there, says on its first screens when

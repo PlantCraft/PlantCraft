@@ -69,6 +69,7 @@ both from this repository's `Dockerfile` (`make image`), and `histcraft-db` from
 | `HISTCRAFT_OPCUA_TIMEOUT`, `HISTCRAFT_READ_BATCH` | 10, 500 | OPC UA request timeout (s), nodes per Read |
 | `HISTCRAFT_QUERY_TIMEOUT` | 30 | Seconds a read of series may run in PostgreSQL before it is cancelled (HTTP 504) |
 | `HISTCRAFT_READ_VALUES` | 4000000 | Values the series answers in flight may hold together; a read past it waits, then answers 503 (memory bound for many long reads at once) |
+| `HISTCRAFT_CHUNK_CACHE_MB` | 32 | Decoded archive chunks each process keeps for the next read of the same hours (0: off) |
 | `HISTCRAFT_SOURCE_CACHE_SECONDS` | 300 | How long recent reads of PI and OPC UA signals in `source` mode stay in memory; a refresh asks only for the newest minutes (0: off) |
 | `HISTCRAFT_SECRET_<NAME>` | none | A source password from the environment instead of the encrypted store (`password_env`) |
 | `HISTCRAFT_LOG_LEVEL` | `INFO` | Log level |

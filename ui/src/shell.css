@@ -218,7 +218,7 @@
 .pcs-inbox { position: relative; text-decoration: none; }
 .pcs-inbox.pcs-active { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-accent) 22%, transparent); }
 .pcs-inbox-icon { position: relative; }
-.pcs-badge { min-width: 22px; height: 20px; padding: 0 6px; flex: none; display: grid; place-items: center; border-radius: var(--pc-radius-pill, 999px); color: var(--pc-on-accent); background: var(--pc-chrome-accent); font-size: var(--pc-fs-xs); font-weight: 800; }
+.pcs-badge { min-width: 22px; height: 20px; padding: 0 6px; flex: none; display: grid; place-items: center; border-radius: var(--pc-radius-pill, 999px); color: var(--pc-chrome-bg); background: var(--pc-chrome-accent); font-size: var(--pc-fs-xs); font-weight: 800; } /* dark on the light accent: 6.7:1 (white was 2.5:1, WCAG AA needs 4.5) */
 .pcs-inbox-dot { display: none; position: absolute; top: -5px; right: -7px; min-width: 18px; height: 16px; padding: 0 4px; border-radius: var(--pc-radius-pill, 999px); place-items: center; color: var(--pc-on-accent); background: var(--pc-chrome-accent); font-size: var(--pc-fs-2xs); font-weight: 800; line-height: 1; box-shadow: 0 0 0 2px var(--pc-chrome-bg); }
 .pcs-inbox:focus-visible { outline: 2px solid var(--pc-chrome-accent); outline-offset: 1px; }
 .pcs-collapsed .pcs-inbox .pcs-badge { display: none; }
@@ -235,8 +235,8 @@
 .pcs-quick .pcs-queue-done { color: var(--pc-good-fill); }
 .pcs-quick .pcs-queue-failed { color: var(--pc-problem-fill); }
 .pcs-quick .pcs-queue-late { color: var(--pc-attention-fill); }
-.pcs-quick .pcs-queue-late .pcs-badge { background: var(--pc-attention-fill); }
-.pcs-quick .pcs-queue-running .pcs-badge, .pcs-quick .pcs-queue-waiting .pcs-badge, .pcs-quick .pcs-queue-done .pcs-badge { background: var(--pc-chrome-accent); }
+.pcs-quick .pcs-queue-late .pcs-badge { background: var(--pc-attention-fill); color: var(--pc-chrome-bg); }
+.pcs-quick .pcs-queue-running .pcs-badge, .pcs-quick .pcs-queue-waiting .pcs-badge, .pcs-quick .pcs-queue-done .pcs-badge { background: var(--pc-chrome-accent); color: var(--pc-chrome-bg); }
 
 /* Search (Search.tsx): the entry at the top of the sidebar and the box Ctrl+K opens. */
 .pcs-search-button { width: 100%; min-height: 36px; margin: -6px 0 10px; padding: 0 10px; border: 1px solid var(--pc-chrome-border); border-radius: var(--pc-radius-md); display: flex; align-items: center; gap: 10px; color: var(--pc-chrome-text-3); background: color-mix(in srgb, var(--pc-chrome-text-strong) 4%, transparent); font: inherit; font-size: var(--pc-fs-md); cursor: pointer; }
@@ -277,7 +277,7 @@
 .pct-spot { position: absolute; border-radius: var(--pc-radius-lg); box-shadow: 0 0 0 3px var(--pc-primary), 0 0 0 9999px color-mix(in srgb, var(--pc-scrim) 58%, transparent); transition: top .25s ease, left .25s ease, width .25s ease, height .25s ease; }
 .pct-card { position: absolute; width: min(380px, calc(100vw - 32px)); padding: 16px 18px 16px; display: grid; gap: 10px; pointer-events: auto; color: var(--pc-text-2); background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-xl); box-shadow: var(--pc-shadow-4); animation: pct-rise .22s ease; transition: top .25s ease, left .25s ease; }
 .pct-centred { top: 50%; left: 50%; width: min(460px, calc(100vw - 32px)); transform: translate(-50%, -50%); animation: pct-fade .22s ease; }
-.pct-card header { display: flex; align-items: center; gap: 10px; }
+.pct-card .pct-head { display: flex; align-items: center; gap: 10px; }
 .pct-count { color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 600; }
 .pct-close { width: 30px; height: 30px; padding: 0; border: 0; border-radius: var(--pc-radius-md); display: grid; place-items: center; color: var(--pc-text-3); background: transparent; cursor: pointer; }
 .pct-language { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: var(--pc-text-3); }
@@ -312,7 +312,7 @@
 .pcs-quick .pcs-quick-button.pcs-active { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-accent) 22%, transparent); }
 .pcs-quick .pcs-quick-button:focus-visible { outline: 2px solid var(--pc-chrome-accent); outline-offset: 1px; }
 .pcs-quick .pcs-quick-button.pcs-quick-off, .pcs-assistant-top.pcs-quick-off { opacity: .45; }
-.pcs-quick .pcs-badge, .pcs-collapsed .pcs-quick .pcs-badge { position: absolute; top: 2px; left: calc(50% + 4px); min-width: 17px; height: 17px; padding: 0 4px; display: grid; color: #fff; background: var(--pc-problem-fill); font-size: 10.5px; font-weight: 700; line-height: 1; box-shadow: 0 0 0 2px var(--pc-chrome-bg); }
+.pcs-quick .pcs-badge, .pcs-collapsed .pcs-quick .pcs-badge { position: absolute; top: 2px; left: calc(50% + 4px); min-width: 17px; height: 17px; padding: 0 4px; display: grid; color: #fff; background: var(--pc-chrome-problem); font-size: 10.5px; font-weight: 700; line-height: 1; box-shadow: 0 0 0 2px var(--pc-chrome-bg); }
 /* The fold button is the last of the quick buttons: quieter than the others. */
 .pcs-quick .pcs-fold { color: var(--pc-chrome-text-3); }
 @media (max-width: 820px) { .pcs-quick .pcs-fold { display: none; } }

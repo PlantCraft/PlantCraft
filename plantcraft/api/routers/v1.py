@@ -641,14 +641,16 @@ def value(
     scope: V1Scope,
     agg: str = Query(default="last", max_length=10),
     window: str = Query(default="1h", max_length=20),
+    end: str | None = Query(default=None, max_length=40),
 ) -> dict[str, Any]:
-    """One aggregate (``last, mean, min, max, std``) over the ``window`` that ends now.
+    """One aggregate (``last, mean, min, max, std``) over the ``window`` that ends now, or at
+    ``end`` (ISO 8601, never later than now): a report of last week reads the closed week.
 
     A text signal has only ``last``, its newest label.
     """
 
     _require_signal(scope, signal_id)
-    return _answer(rt.datalayer.value, signal_id, agg, window)
+    return _answer(rt.datalayer.value, signal_id, agg, window, end)
 
 
 @router.get("/signals/{signal_id:path}")

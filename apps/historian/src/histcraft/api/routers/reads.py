@@ -113,9 +113,10 @@ def value(
     scope: ReaderScope,
     agg: str = Query(default="last", max_length=10),
     window: str = Query(default="1h", max_length=20),
+    end: str | None = Query(default=None, max_length=40),
 ) -> Any:
     in_scope(scope, signal_id)
-    return JSONResponse(data.value(signal_id, runtime, None, agg=agg, window=window))
+    return JSONResponse(data.value(signal_id, runtime, None, agg=agg, window=window, end=end))
 
 
 @router.get("/signals/{signal_id:path}")

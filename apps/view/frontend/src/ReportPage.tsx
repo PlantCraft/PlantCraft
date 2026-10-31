@@ -12,7 +12,7 @@ import { ExportDialog } from "./ExportDialog";
 import { FolderSelect } from "./FolderDialogs";
 import { formatDate, t } from "./i18n";
 import { accessLabel, cardPixels, stateStatus, when, windowLabel } from "./model";
-import { cadenceLabel, deliveredLabel, insertSection, MAX_SECTIONS, MAX_TEXT, moveSection, outlineOf, newSection, PERIOD_FOR, PERIODS, pdfSize, periodLabel, periodRange, replaceSection, reportDraftOf, runState, runStatusLabel, sectionName, SECTION_LABELS, TRIGGER_LABELS, WEEKDAY_NAMES, WEEKDAYS } from "./reportModel";
+import { cadenceLabel, CLOSED_LABELS, deliveredLabel, insertSection, MAX_SECTIONS, MAX_TEXT, moveSection, outlineOf, newSection, PERIOD_FOR, PERIODS, pdfSize, periodLabel, periodRange, replaceSection, reportDraftOf, runState, runStatusLabel, sectionName, SECTION_LABELS, TRIGGER_LABELS, WEEKDAY_NAMES, WEEKDAYS } from "./reportModel";
 import type { Card, CardData, Directory, EventKind, EventsData, Folder, Me, Report, ReportDraft, ReportRun, Section, SectionData, SectionKind } from "./types";
 import type { OutlineEntry } from "./reportModel";
 import { ErrorBox, Link, Loading } from "./ui";
@@ -198,6 +198,7 @@ function ReportSettingsDialog({ draft, folders, zone, onApply, onClose }: { draf
   const [directory, setDirectory] = useState<Directory | null>(null);
   useEffect(() => { api.directory().then(setDirectory).catch(() => setDirectory({ people: [], groups: [] })); }, []);
   const schedule = value.schedule;
+  const closed = schedule.every !== "off" && Boolean(schedule.closed);
   const setEvery = (every: ReportDraft["schedule"]["every"]) => setValue({ ...value, schedule: { ...schedule, every }, period: every === schedule.every ? value.period : PERIOD_FOR[every] });
   function submit(event: FormEvent) { event.preventDefault(); onApply({ ...value, name: value.name.trim() }); }
   return <Dialog title={t("Report settings")} onClose={onClose} onSubmit={submit}>
@@ -213,11 +214,13 @@ function ReportSettingsDialog({ draft, folders, zone, onApply, onClose }: { draf
           {(schedule.every === "week" || schedule.every === "fortnight") && <label>{t("On")}<select value={schedule.weekday} onChange={(event) => setValue({ ...value, schedule: { ...schedule, weekday: event.target.value as typeof schedule.weekday } })}>{WEEKDAYS.map((day) => <option key={day} value={day}>{t(WEEKDAY_NAMES[day])}</option>)}</select></label>}
           {(schedule.every === "month" || schedule.every === "quarter") && <label>{t("On day")}<select value={schedule.day} onChange={(event) => setValue({ ...value, schedule: { ...schedule, day: Number(event.target.value) } })}>{Array.from({ length: 28 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}</select></label>}
           {schedule.every !== "off" && <label>{t("At")}<input type="time" required value={schedule.at} onChange={(event) => setValue({ ...value, schedule: { ...schedule, at: event.target.value } })} /></label>}
-          <label>{t("Covers")}<select value={value.period} onChange={(event) => setValue({ ...value, period: event.target.value })}>
-            {!PERIODS.includes(value.period) && <option value={value.period}>{periodLabel(value.period)}</option>}
-            {PERIODS.map((period) => <option key={period} value={period}>{periodLabel(period)}</option>)}
-          </select></label>
-          <small className="muted tc-wide">{schedule.every === "off" ? t("Made only with Download PDF or Send now.") : t("{cadence}, in the installation's time zone ({zone}), over {period} up to then.", { cadence: cadenceLabel(schedule), zone, period: periodLabel(value.period).toLowerCase() })}</small>
+          {closed ? <label>{t("Covers")}<input readOnly value={t(CLOSED_LABELS[schedule.every])} /></label>
+            : <label>{t("Covers")}<select value={value.period} onChange={(event) => setValue({ ...value, period: event.target.value })}>
+              {!PERIODS.includes(value.period) && <option value={value.period}>{periodLabel(value.period)}</option>}
+              {PERIODS.map((period) => <option key={period} value={period}>{periodLabel(period)}</option>)}
+            </select></label>}
+          {schedule.every !== "off" && <label className="check tc-wide"><input type="checkbox" checked={closed} onChange={() => setValue({ ...value, schedule: { ...schedule, closed: !closed } })} /> {t("Whole calendar periods (last week, last month), not the time up to the send")}</label>}
+          <small className="muted tc-wide">{schedule.every === "off" ? t("Made only with Download PDF or Send now.") : closed ? t("{cadence}, in the installation's time zone ({zone}), over {period}.", { cadence: cadenceLabel(schedule), zone, period: t(CLOSED_LABELS[schedule.every]).toLowerCase() }) : t("{cadence}, in the installation's time zone ({zone}), over {period} up to then.", { cadence: cadenceLabel(schedule), zone, period: periodLabel(value.period).toLowerCase() })}</small>
         </fieldset>
         <div className="tc-wide tc-field"><span>{t("Sent to")}</span>
           <RecipientPicker label={t("Sent to")} value={value.recipients} onChange={(recipients) => setValue({ ...value, recipients })} people={directory?.people ?? []} groups={directory?.groups ?? []} placeholder={t("A person or a group of the platform…")} />
