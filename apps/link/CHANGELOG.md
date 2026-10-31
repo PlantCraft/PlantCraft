@@ -6,8 +6,48 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+### Added
+
+- **Days to the limit.** For loops whose health is falling, a line fitted to the last 14 days
+  (6-hour means) says how many days are left until the health reaches the alarm limit (50). The
+  forecast is shown only when the line fits (R² of at least 0.5) and the limit is less than a year
+  away. `GET /api/loop-days-to-limit` lists the soonest first, and so does the widget "Analytics:
+  closest to the limit" (`engine/days_to_limit.py`).
+- **Two signal checks, rate of change (`sq_rate`) and transmitter fault levels (`sq_ne43`).**
+  Rate of change counts the changes, measured over at least a minute, that are faster than the
+  process can move: an absolute limit per minute, or half of the range per minute by default. NE 43
+  reads a 4-20 mA signal on its range as NAMUR NE 43 does. 3.8 to 20.5 mA is measurement, and
+  3.6 mA or less, 21 mA or more, is the transmitter reporting its own fault: any fault level is a
+  warning, over 1% of the values is bad, and saturation beyond the measuring range is a warning.
+  Both need the signal's limits (or, for the rate, a limit of its own), and otherwise do not apply.
+- **Loop-hours lost by cause.** Every monitoring round adds the part of its window no earlier
+  round on the loop covered, split by cause: out of normal mode, output at a limit, oscillating
+  and bad signal (missing or frozen PV). `GET /api/loop-losses?days=&until=&group_by=area|loop`
+  sums them by area or loop over any period up to 400 days; the widget "Analytics: loop-hours
+  lost, 7 days" shows them by area on the Overview and on Desk.
+- **Effective control**, a composite score per loop: the share of the time in normal mode x
+  inside its operating band x with the output off its limits, from the loop's own methods (a part
+  it does not measure counts as 1). `GET /api/loop-effective-control` and the widget "Analytics:
+  effective control" list the lowest first.
+- **Source quality, a signal check (`sq_source_quality`).** It shows how much of the window the
+  source itself marked bad, substituted or uncertain, per signal, from the per-sample quality
+  PlantCraft returns (OPC UA, PI and Canary keep one with every value). Bad or substituted time
+  over 1% of the window is a warning and over 5% makes the data unusable. Uncertain time is a
+  warning at most. On a source without quality the check does not apply. Signal quality runs it
+  on number and text signals.
+- **The loop page shows where the controller output spent the window**, as the share of the
+  window in each 5% band. A loop that lives near 0 or 100% is saturated, and one squeezed into a
+  few percent has little room left.
+
 ### Changed
 
+- A round hands each loop only its own signals' samples. It read 50 loops at once into one
+  frame of all their times and gave every loop its columns of it, so on a raw day each loop's task
+  carried every other loop's times as empty rows (99.5% of a 50-loop, 200-signal batch). Building
+  and shipping a batch's tasks went from 9.8 to 0.36 s, 1154 to 24 MB pickled to the compute
+  processes, and 896 to 20 MB of peak memory (`ci/bench/reads/roundframes.py`), with the same
+  results. A loop whose signals start later or stop earlier than the rest of its batch now gets
+  the result it gets when it runs alone.
 - History keeps a configurable time (`LINKCRAFT_HISTORY_DAYS`, default 90 days) and, past
   `LINKCRAFT_HISTORY_FULL_DAYS` (default 14), only the last point of each hour per loop, and per
   signal for good checks (every problem verdict stays). The hourly upkeep thins at most a day per

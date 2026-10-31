@@ -198,10 +198,10 @@ def test_schedules_are_created_listed_and_removed(client, analysed, fake):
 def test_method_catalog_lists_signal_checks_then_the_gate(client):
     groups = client.get("/link/api/method-groups").json()
     assert [item["group_id"] for item in groups] == ["signal_quality", "data_quality", "cpm"]
-    assert groups[0]["role"] == "signal" and groups[0]["method_count"] == 8
+    assert groups[0]["role"] == "signal" and groups[0]["method_count"] == 11
     assert groups[1]["role"] == "gate"
     methods = client.get("/link/api/methods").json()
-    assert len(methods) == 18 + 8
+    assert len(methods) == 18 + 11
     signal = [item for item in methods if item["application"] == "signal_quality"]
     assert {item["applies_to"] for item in signal} == {"signal"}
     assert all(item["method_id"].startswith("sq_") for item in signal)

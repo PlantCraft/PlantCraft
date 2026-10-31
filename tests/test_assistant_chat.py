@@ -750,3 +750,48 @@ def test_view_works_are_evaluated_on_the_first_dashboard_and_report():
     assert SUBJECTS["dashcraft:dashboard"](read) == ("dashboard:d1", "Feed")
     assert SUBJECTS["dashcraft:report"](read) is None
     assert SUBJECTS["dashcraft:report"](lambda *_: (404, {"detail": "no app"})) is None
+
+
+def test_the_assistant_reads_a_limited_amount_a_day_and_flags_extraction(signed):
+    """Security backlog B13 (2026-10-31): each person's signal reads a day are capped, and the
+    audit log flags the limit reached and an answer that read many signals at once."""
+
+    status, found = _reader(signed.app, signed.app.state.runtime, "admin")(
+        "GET", "/api/v1/signals", {"q": "pv"}
+    )
+    assert status == 200 and len(found) >= 2, found
+    pair = [found[0]["id"], found[1]["id"]]
+    chart = {
+        "signal_ids": pair,
+        "start": "2026-01-01T00:00:00Z",
+        "end": "2026-01-02T00:00:00Z",
+        "title": "Two",
+    }
+    _ready(
+        signed,
+        [
+            ("show_chart", chart),  # 2 reads, 2 signals in this answer: flagged
+            ("search_signals", {"query": "pv", "limit": 3}),  # 3 reads: the limit
+            ("search_signals", {"query": "tv", "limit": 3}),  # refused
+        ],
+    )
+    rt = signed.app.state.runtime
+    rt.assistant.reads.daily = 3
+    rt.assistant.bulk_signals = 2
+    chat_id, view = _ask(signed, "Plot both and find more")
+    answer = view["messages"][-1]
+    assert [step["state"] for step in answer["steps"]] == ["ok", "ok", "error"]
+    assert "limit of 3 signal reads" in answer["steps"][2]["error"]
+    # A second answer is refused too, and the limit is recorded once a day.
+    signed.post(f"/api/assistant/chats/{chat_id}/messages", json={"text": "Again"})
+    rt.assistant.drain(timeout=20)
+    actions = [item["action"] for item in rt.workspace.audit.list(limit=100)]
+    assert actions.count("assistant.read_limit") == 1
+    assert actions.count("assistant.bulk_read") == 1
+    flagged = rt.workspace.audit.list(action="assistant.read_limit")[0]
+    assert flagged["detail"] == {"read_today": 3, "asked": 1, "daily_limit": 3}
+    # After a restart the day's reads are counted again from the audit log.
+    from plantcraft.assistant_chat.engine import ReadBudget
+
+    again = ReadBudget(rt.workspace.audit, 3)
+    assert again.spend(flagged["username"], 1) is False

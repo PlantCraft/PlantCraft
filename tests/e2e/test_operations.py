@@ -87,6 +87,21 @@ def test_operations_shows_the_load_the_logs_and_the_alert_levels(page, runtime):
     expect(row.locator(".ops-load-warning")).to_have_count(1)
     _shot(page, "1-status")
 
+    # Uptime by app, and a maintenance window that keeps the watch quiet about the Historian.
+    uptime = page.get_by_role("region", name="Uptime")
+    expect(uptime.get_by_role("row").filter(has_text="histcraft")).to_contain_text("100 %")
+    uptime.get_by_role("button", name="Plan maintenance").click()
+    dialog = page.get_by_role("dialog")
+    dialog.get_by_label("What for").fill("Historian upgrade")
+    dialog.get_by_label("histcraft").check()
+    dialog.get_by_role("button", name="Plan", exact=True).click()
+    window = uptime.get_by_role("list", name="Maintenance windows")
+    expect(window).to_contain_text("In maintenance")
+    expect(window).to_contain_text("Historian upgrade")
+    _shot(page, "14-uptime-maintenance")
+    window.get_by_role("button", name="End now").click()
+    expect(window).to_contain_text("Ended")
+
     nav = page.locator("nav.pcs-nav")
     nav.get_by_role("link", name="Logs", exact=True).click()
     expect(page.get_by_role("heading", level=1, name="Logs", exact=True)).to_be_visible()
@@ -244,6 +259,9 @@ def test_targets_the_month_s_approval_and_support_access(page):
     page.get_by_role("button", name="Targets").click()
     dialog = page.get_by_role("dialog")
     dialog.get_by_label("High · First answer (h)").fill("2")
+    # Working hours: the default queue works Monday to Friday, 08:00 to 17:00.
+    dialog.get_by_role("button", name="Save working hours").click()
+    expect(dialog.get_by_text("Mon–Fri 08:00–17:00")).to_be_visible()
     _shot(page, "10-targets")
     dialog.get_by_role("button", name="Save targets").click()
     expect(page.get_by_role("dialog")).to_have_count(0)
@@ -316,3 +334,19 @@ def test_targets_the_month_s_approval_and_support_access(page):
         other.close()
     page.goto(f"/actions/{request_id}")
     expect(page.locator(".act-time-locked")).to_have_count(1)
+
+    # The sponsor at the plant, without the Operations role, opens Partners for their company.
+    sponsor = page.context.browser.new_context(base_url=base)
+    try:
+        rui = sponsor.new_page()
+        signed = rui.request.post(
+            "/api/login", data={"username": "rui.planta", "password": "e2e-person-123"}
+        )
+        assert signed.ok, signed.text()
+        rui.goto("/ops/partners")
+        expect(rui.get_by_role("article", name="Beta Controls")).to_be_visible()
+        expect(rui.get_by_role("link", name="Logs")).to_have_count(0)
+        _shot(rui, "13-sponsor-partners")
+        assert rui.request.get("/api/operations/health").status == 403
+    finally:
+        sponsor.close()

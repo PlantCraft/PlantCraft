@@ -37,7 +37,8 @@ def test_the_next_rounds_read_only_the_new_part_and_see_the_same_samples():
         columns, _ = read_incremental(cache, list("abc"), start, finish, source)
         whole, _ = Source()(list("abc"), start, finish)
         for name in "abc":
-            pd.testing.assert_series_equal(columns[name], whole[name])
+            # the Historian never sends a freq; joined samples carry none
+            pd.testing.assert_series_equal(columns[name], whole[name], check_freq=False)
     first, later = source.asked[0], source.asked[1:]
     assert first[1] == window(end)[0]
     # each later round from the last end minus the overlap: 25 minutes, not 24 hours
@@ -116,3 +117,70 @@ def test_quality_changes_are_joined_across_incremental_reads():
         "good",
         "bad",
     ]
+
+
+def test_samples_are_kept_compact_when_exact_and_come_back_identical():
+    stamps = pd.date_range(START, periods=2000, freq="1500ms", tz="UTC")
+    real = pd.Series(
+        np.random.default_rng(5).normal(50, 5, len(stamps)).astype(np.float32).astype(float),
+        index=stamps,
+        name="a",
+    )
+    exact = pd.Series(np.random.default_rng(6).normal(size=len(stamps)), index=stamps)
+    cache = RawCache(max_bytes=10**9)
+    end = stamps[-1]
+    cache.merge("real", real, START.tz_localize("UTC"), end, None)
+    cache.merge("exact", exact, START.tz_localize("UTC"), end, None)
+    pd.testing.assert_series_equal(cache._kept["real"].values, real)
+    pd.testing.assert_series_equal(cache._kept["exact"].values, exact)
+    # float32 numbers and int32 milliseconds: 8 bytes a sample; float64 ones: 12
+    assert cache.nbytes() == len(stamps) * 8 + len(stamps) * 12
+
+
+def test_the_least_recently_used_signals_are_dropped_past_the_memory_limit():
+    cache, source = RawCache(overlap_seconds=900, max_bytes=2 * 1440 * 12 + 1000), Source()
+    start, finish = window(START + pd.Timedelta(hours=30))
+    read_incremental(cache, ["a", "b"], start, finish, source)
+    assert set(cache._kept) == {"a", "b"}
+    read_incremental(cache, ["c"], start, finish, source)  # "a" was used least recently
+    assert set(cache._kept) == {"b", "c"} and cache.evicted == 1
+    assert cache.nbytes() <= cache.max_bytes
+    columns, _ = read_incremental(cache, ["a"], start, finish, source)
+    pd.testing.assert_series_equal(columns["a"], Source()(["a"], start, finish)[0]["a"])
+
+
+def test_scheduled_means_read_only_the_new_steps_and_match_a_whole_read():
+    from linkcraft.data.cache import read_means_incremental
+
+    asked = []
+
+    def means(names, begin, end, step):
+        asked.append((begin, end))
+        out = {}
+        for name in names:
+            raw = ALL[name][(ALL[name].index >= begin) & (ALL[name].index < end)]
+            out[name] = (
+                raw.resample(f"{step:g}s", origin=begin, closed="left", label="left")
+                .mean()
+                .dropna()
+            )
+        return out, []
+
+    cache = RawCache(overlap_seconds=900)
+    end = (START + pd.Timedelta(hours=30)).tz_localize("UTC")
+    for k in range(4):
+        finish = end + pd.Timedelta(minutes=10 * k)
+        begin = finish - pd.Timedelta(hours=24)
+        columns, _ = read_means_incremental(cache, ["a", "b"], begin, finish, 300.0, means)
+        whole, _ = means(["a", "b"], begin, finish, 300.0)
+        for name in "ab":
+            pd.testing.assert_series_equal(columns[name], whole[name], check_freq=False)
+    # after the first run: from the last whole step before the end minus 15 min, not 24 h
+    assert all(f - b <= pd.Timedelta(minutes=30) for b, f in asked[2::2])
+    assert len(asked) == 8
+    # a window off the grid of the kept means is read whole
+    asked.clear()
+    read_means_incremental(cache, ["a"], begin + pd.Timedelta(seconds=7), finish, 300.0, means)
+    assert asked[0][0] == begin + pd.Timedelta(seconds=7)
+    # kept apart from the raw samples of the same signal
+    assert "a@300s" in cache._kept and "a" not in cache._kept

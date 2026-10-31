@@ -35,6 +35,14 @@ TEXTS: dict[str, tuple[str, str]] = {
         "Ok above the warning coverage, warning below it, bad below the minimum coverage: the "
         "data is then too sparse to judge anything else.",
     ),
+    "sq_source_quality": (
+        "Measures how much of the window the source itself marked bad, substituted or "
+        "uncertain (OPC UA, PI and Canary keep a quality with every value). A value can be "
+        "present at every instant and still be one the source did not trust.",
+        "Ok while bad and substituted time stays under the warning share, warning above it, bad "
+        "above the unusable share; uncertain time is a warning at most. Without quality from the "
+        "source the check does not apply.",
+    ),
     "sq_freshness": (
         "Measures the age of the last sample at the end of the window. A signal whose source "
         "stopped updating keeps its last value in many systems, so a stale value looks normal "
@@ -62,6 +70,19 @@ TEXTS: dict[str, tuple[str, str]] = {
         "a wrong unit or wrong limits.",
         "Ok inside the range, warning with a few values outside, bad when the share outside "
         "reaches the limit. Without limits the check cannot judge.",
+    ),
+    "sq_ne43": (
+        "Reads the values as a 4-20 mA transmitter's current (NAMUR NE 43) on the signal's "
+        "range: 3.8 to 20.5 mA is measurement, 3.6 mA or less and 21 mA or more is the "
+        "transmitter signalling a failure.",
+        "Ok inside the measuring range, warning on saturation or any fault level, bad when "
+        "fault levels pass the unusable share. Switch it off for digital or calculated signals.",
+    ),
+    "sq_rate": (
+        "Measures how fast the signal changes between samples against the fastest the process "
+        "can move: an absolute limit, or a share of the range per minute.",
+        "Ok without fast steps, warning or bad as their share grows: a jumping instrument, "
+        "wiring or data, not the process.",
     ),
     "sq_noise": (
         "Estimates the high-frequency noise from the first differences of the samples (white "

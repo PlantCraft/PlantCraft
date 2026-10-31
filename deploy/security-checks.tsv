@@ -1,0 +1,43 @@
+# PlantCraft security check catalogue: the checks security-check.sh runs, as data. The bundle
+# carries it under the signed SHA256SUMS; the script takes the severity, title and references
+# from here, and PC-INT-01 checks this file and the script against the signed release.
+# Columns (tab-separated): id, severity, title, references (IEC 62443-4-2 CR, NIST SP 800-53, CIS).
+PC-ACC-01	medium	The emergency administrator is kept for emergencies	CR 1.5 / IA-5
+PC-ACC-02	high	Session cookies travel over HTTPS only	CR 4.1 / SC-23
+PC-ACC-04	critical	The API asks for sign-in	CR 1.1 / IA-2
+PC-AUD-02	medium	The data disk has room for the audit log and the series (more than 15% free)	CR 2.9 / AU-4
+PC-AUD-03	medium	The host clock is synchronised (NTP)	CR 2.11 / AU-8
+PC-CTR-01	high	Every container runs as a user other than root	CR 7.7 / CM-7
+PC-CTR-02	medium	Every container has a read-only file system	CR 7.7 / CM-7
+PC-CTR-03	high	Every container drops all capabilities and has no-new-privileges	CR 7.7 / AC-6
+PC-CTR-04	medium	Every container has a memory and a process limit	CR 7.1, 7.2 / SC-5
+PC-CTR-05	critical	No container is privileged or shares the host's network or processes	CR 5.1 / SC-7
+PC-CTR-06	critical	Only the installer holds the Docker socket, and it has no network	CR 2.1 / AC-6
+PC-CTR-07	low	Every container reports healthy	CR 7.6 / SI-4
+PC-HOST-01	medium	Docker Engine is a supported version (24 or later)	SI-2
+PC-HOST-02	high	The Docker daemon has no open TCP socket and keeps containers up on restart	CIS Docker 2.x
+PC-HOST-03	medium	The host firewall is on	CM-6
+PC-HOST-04	info	The data disk is encrypted	CR 4.1 / SC-28
+PC-HOST-05	medium	The host passes a Lynis audit (hardening index 70 or more, no warnings)	CM-6 / CIS Benchmark
+PC-HOST-06	medium	The host passes its OpenSCAP benchmark	CM-6 / CIS Benchmark
+PC-INT-01	high	The security check and its catalogue are the ones the signed release ships	CR 3.4 / SI-7
+PC-INT-02	high	The images in use are the ones the signed release lists	CR 3.4 / CM-14
+PC-INT-03	high	Installed apps are signed by a trusted publisher	SAR 3.2 / CM-14
+PC-MIN-01	info	Optional functions that are switched on	CR 7.7 / CM-7
+PC-MIN-02	high	The public demo is off	CR 7.7 / CM-7
+PC-MIN-03	low	No online catalog on an isolated install	CR 5.1 / CM-7
+PC-MIN-04	low	The route lists (openapi.json) are not served	CR 7.7 / CM-7
+PC-NET-01	critical	Only the proxy publishes a port on the host	CR 5.1 / SC-7
+PC-NET-02	high	The apps' networks have no way out (only edge, plant and egress reach outside)	CR 5.1 / SC-7
+PC-NET-03	medium	The plant firewall rules are loaded (DOCKER-USER)	CR 5.1 / SC-7
+PC-REC-01	high	The last backup is less than a day old and verified	CR 7.3 / CP-9
+PC-REC-02	medium	A restore was rehearsed in the last 90 days	CR 7.4 / CP-4
+PC-REC-03	low	Backups taken off the server are encrypted	CR 4.1 / SC-28
+PC-SEC-01	high	Secret files are readable by their owner only	CR 1.5 / IA-5
+PC-SEC-02	medium	.env holds no secret and only its owner and group read it	IA-5
+PC-SEC-03	high	The last backup holds the signing key and the session secret	CR 7.3 / CP-9
+PC-TLS-01	medium	The certificate is trusted (the plant's own, not the local CA)	CR 1.8 / SC-17
+PC-TLS-02	high	The certificate is valid for more than 30 days	CR 1.8 / SC-17
+PC-TLS-03	high	HTTPS answers carry HSTS and the security headers	CR 4.1 / SC-8
+PC-TLS-04	high	Only TLS 1.2 and 1.3 are accepted	CR 4.1 / SC-8
+PC-TLS-05	high	Plain HTTP is redirected to HTTPS or closed	CR 4.1 / SC-8

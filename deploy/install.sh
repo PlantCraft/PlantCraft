@@ -11,13 +11,17 @@
 #   ./install.sh --export-backup NAME --passphrase-file FILE [--out FILE]
 #                                an encrypted copy of a backup to take off the server
 #                                (AES-256, key from the passphrase; backups hold every key)
-#   ./install.sh --security-check [--format json|junit|sarif]
+#   ./install.sh --security-check [--format json|junit|sarif|evidence]
 #                                the installed suite against its security promises (security-check.sh)
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
 #   ./install.sh --check         check this server's requirements (preflight.sh) and change nothing;
 #                                --ignore ID[,ID] lets those checks fail (ids in the report); --json for tools
 #   ./install.sh --show-config   the installation file, each value it sets and what .env holds now
+#   ./install.sh --rotate-admin-password
+#                                a new password for the emergency administrator, shown once
+#                                (data/initial-admin-password; the security check asks for it
+#                                every 90 days)
 #   ./install.sh --uninstall     stop and remove the containers; data and backups are kept
 #   ./install.sh --uninstall --purge   also delete data, backups and the suite's images
 #   ./install.sh --add FILE.pcapp       install or upgrade an app from a signed package
@@ -152,6 +156,7 @@ while [ $# -gt 0 ]; do
         --check) ACTION="check" ;;
         --json) CHECK_JSON=1 ;;
         --show-config) ACTION="show-config" ;;
+        --rotate-admin-password) ACTION="rotate-admin-password" ;;
         --ignore) [ $# -ge 2 ] || die "--ignore needs check ids (see --check)"; export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}$2"; shift ;;
         --ignore=*) export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}${1#*=}" ;;
         --config) [ $# -ge 2 ] || die "--config needs a file"; INSTALLATION_CONF="$2"; shift ;;
@@ -611,6 +616,12 @@ copy_files() {
     log "Copying the suite files to $PREFIX"
     cp "$BUNDLE_DIR/compose.yaml" "$BUNDLE_DIR/.env.example" "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/firewall.sh" "$PREFIX/"
     if [ -f "$BUNDLE_DIR/security-check.sh" ]; then cp "$BUNDLE_DIR/security-check.sh" "$PREFIX/"; chmod 0755 "$PREFIX/security-check.sh"; fi
+    # The security check's catalogue and the release's signed hashes, which it checks itself
+    # against (PC-INT-01). Named release-* so the folder is not taken for a bundle.
+    if [ -f "$BUNDLE_DIR/security-checks.tsv" ]; then cp "$BUNDLE_DIR/security-checks.tsv" "$PREFIX/"; fi
+    rm -f "$PREFIX/release-SHA256SUMS" "$PREFIX/release-SHA256SUMS.sig"
+    if [ -f "$BUNDLE_DIR/SHA256SUMS" ]; then cp "$BUNDLE_DIR/SHA256SUMS" "$PREFIX/release-SHA256SUMS"; fi
+    if [ -f "$BUNDLE_DIR/SHA256SUMS.sig" ]; then cp "$BUNDLE_DIR/SHA256SUMS.sig" "$PREFIX/release-SHA256SUMS.sig"; fi
     local file
     for file in bundle.env release.json RELEASE-NOTES.md; do
         if [ -f "$BUNDLE_DIR/$file" ]; then cp "$BUNDLE_DIR/$file" "$PREFIX/"; fi
@@ -1176,6 +1187,7 @@ print_access() {
     if [ -n "$NEW_PASSWORD" ]; then
         echo "  Password:      $NEW_PASSWORD"
         echo "  (shown once; stored in $PREFIX/data/initial-admin-password, mode 0600)"
+        echo "  (an emergency account: change it every 90 days with ./install.sh --rotate-admin-password)"
     else
         echo "  Password:      unchanged (data/initial-admin-password)"
     fi
@@ -1613,6 +1625,37 @@ do_export_backup() {
     log "Written: $out ($(du -h "$out" | cut -f1)). Keep the passphrase apart from the file."
 }
 
+# A new password for the emergency administrator (data/initial-admin-password, read by
+# PlantCraft when it starts). The file is rewritten in place by the helper image, as root, so it
+# keeps its owner (PlantCraft's user) and mode 0600; the password reaches the helper on stdin, not
+# on its command line. PlantCraft restarts to read it; sessions of named accounts are unaffected.
+do_rotate_admin_password() {
+    check_docker
+    installed_prefix
+    [ -e "$PREFIX/data/initial-admin-password" ] || die "no data/initial-admin-password in $PREFIX"
+    local password
+    password="$(random_secret)"
+    [ "${#password}" -ge 20 ] || die "could not generate a password"
+    log "Writing a new password for the emergency administrator"
+    printf '%s\n' "$password" | docker run --rm -i --network none --user 0:0 --pull never \
+        --cap-drop ALL --cap-add CHOWN --cap-add DAC_OVERRIDE --cap-add FOWNER \
+        --security-opt no-new-privileges:true \
+        -v "$PREFIX:/install" --entrypoint /bin/sh "$(helper_image)" -c "
+            set -e
+            umask 077
+            cat >/install/data/initial-admin-password
+            chown $PLANTCRAFT_UID:$PLANTCRAFT_UID /install/data/initial-admin-password
+            chmod 0600 /install/data/initial-admin-password" ||
+        die "could not write data/initial-admin-password"
+    log "Restarting PlantCraft to read it"
+    compose restart processcraft >/dev/null
+    echo
+    echo "Emergency administrator: $(env_get PLANTCRAFT_ADMIN_USERNAME "$PREFIX/.env")"
+    echo "  New password:  $password"
+    echo "  (shown once; stored in $PREFIX/data/initial-admin-password, mode 0600)"
+    echo "  Change it again within 90 days: ./install.sh --rotate-admin-password"
+}
+
 do_diagnostics() {
     check_docker
     installed_prefix
@@ -1753,7 +1796,7 @@ do_worker() {
 
 # The apps this run would install, for the requirements check: the installation file's, or
 # --all-apps, or Analytics (on by default) and the --with-<app> ones.
-check_apps() {
+requirement_apps() {
     local apps
     if [ "$ALL_APPS" = 1 ]; then echo all; return; fi
     apps="$(printf '%s' "$WITH_APPS" | xargs)"
@@ -1763,7 +1806,7 @@ check_apps() {
 
 do_check() {
     [ -x "$BUNDLE_DIR/preflight.sh" ] || die "preflight.sh is missing next to install.sh"
-    local args=(--prefix "$PREFIX" --apps "$(check_apps)")
+    local args=(--prefix "$PREFIX" --apps "$(requirement_apps)")
     [ "$CHECK_JSON" = 1 ] && args+=(--json)
     PLANTCRAFT_INSTALLATION_CONF="${INSTALLATION_CONF:-/etc/plantcraft/installation.conf}" \
         "$BUNDLE_DIR/preflight.sh" "${args[@]}"
@@ -1829,6 +1872,7 @@ case "$ACTION" in
     list-backups) do_list_backups ;;
     drill) do_drill ;;
     diagnostics) do_diagnostics ;;
+    rotate-admin-password) do_rotate_admin_password ;;
     restore) do_restore ;;
     export-backup) do_export_backup ;;
     security-check)

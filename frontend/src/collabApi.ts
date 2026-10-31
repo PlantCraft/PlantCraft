@@ -52,7 +52,7 @@ export interface RequestDraft { title: string; description: string; category: st
 export interface TimeEntry { entry_id: number; username: string; display_name: string; day: string; hours: number; note: string; billable: boolean; created_at: string; /** Its month's hours are approved: closed to changes. */ locked?: boolean }
 /** Where a request stands against one target (plantcraft/actions/sla.py). */
 export interface SlaClock { target_minutes: number; used_minutes: number; state: "running" | "at_risk" | "met" | "breached"; due_at: string | null; paused_minutes?: number; paused?: boolean }
-export interface RequestSla { response: SlaClock; resolution: SlaClock }
+export interface RequestSla { response: SlaClock; resolution: SlaClock; /** The queue's working hours; null: day and night. */ service_hours?: { days: string[]; start: string; end: string } | null }
 export interface ActionHistory { kind: "created" | "changed" | "status" | "comment" | "checklist" | "hours"; text: string; actor: string; actor_name: string; created_at: string }
 /** One line of an action's checklist: what, who and by when, ticked when done. */
 export interface ActionItem { item_id: number; text: string; done: boolean; owner: string | null; owner_name: string | null; due_at: string | null; overdue: boolean; done_by: string | null; done_by_name: string | null; done_at: string | null }

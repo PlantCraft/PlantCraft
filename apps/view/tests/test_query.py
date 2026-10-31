@@ -10,7 +10,7 @@ import pytest
 from dashcraft.dashboards.model import CONTEXT, Card
 from dashcraft.query.cache import TtlCache
 from dashcraft.query.cards import Reader, read_card, read_trend, trend_step
-from tests.plant import APP_KEY, NOW, make_fake, publish_loop_health
+from tests.plant import APP_KEY, LINK_KEY, NOW, make_fake, publish_loop_health
 
 
 @pytest.fixture
@@ -189,6 +189,31 @@ def test_app_results_show_the_producers_status_and_score(fake, reader):
     # Limits never recolour another app's verdict.
     limited = card(items=[health], thresholds={"low_alarm": 90})
     assert read_card(reader, limited, context="fic-101")["rows"][0]["state"] == "warning"
+
+
+def test_an_alarm_result_gives_its_most_urgent_priority(fake, reader):
+    # Alarms' alarm_state lists its active alarms with their priority: the diagram's alarm
+    # mark takes the most urgent one's shape (ISA-101).
+    publisher = fake.client(None, app="linkcraft", key=LINK_KEY)
+    active = [{"alarm": "a", "priority": "medium"}, {"alarm": "b", "priority": "high"}]
+    receipt = publisher.put_results(
+        [
+            {
+                "subject": "asset:fic-101",
+                "kind": "loop_health",
+                "status": "alarm",
+                "summary": "2 alarms",
+                "detail": {"active": active},
+                "expires_at": "2026-10-02T12:00:00+00:00",
+            }
+        ]
+    )
+    assert not receipt["errors"], receipt
+    item = {"asset_id": CONTEXT, "result": "linkcraft.loop_health"}
+    row = read_card(reader, card(items=[item]), context="fic-101")["rows"][0]
+    assert row["state"] == "alarm" and row["priority"] == "high"
+    publish_loop_health(fake)  # no active alarms in its detail: no mark
+    assert read_card(reader, card(items=[item]), context="fic-101")["rows"][0]["priority"] is None
 
 
 def test_app_results_in_tables_and_bars_and_their_problems(fake, reader):

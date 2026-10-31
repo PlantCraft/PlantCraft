@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { locale, t } from "./i18n";
 import { navigate } from "./nav";
 import { askUrl } from "./OperationsRequests";
+import { UptimePanel } from "./OperationsUptime";
 import { forecastText, operationsApi, type Backup, type Certificate, type MachineInfo, type Operation, type OperationsOverview, type ServiceMetrics, type Schedule, type SuiteHealth, type SuiteStatus } from "./operationsApi";
 import { useAccess, useAdminView, useCanOperate, useIsAdmin } from "./session";
 import "./access.css";
@@ -138,6 +139,7 @@ export function HealthPage() {
       {data.free_bytes != null && <span className="apps-chip">{t("Free disk: {size}", { size: size(data.free_bytes) })}</span>}
     </section>}
     {health && <HealthPanel health={health} canAct={canAct} />}
+    {health?.watching && <UptimePanel admin={canAct} services={(health.metrics?.services ?? []).map((item) => item.service)} />}
     {health?.certificates && health.certificates.length > 0 && <CertificatesPanel certificates={health.certificates} onRenewed={() => void ops.load()} />}
   </div>;
 }
@@ -424,7 +426,12 @@ function MachineLine({ machine }: { machine?: MachineInfo | null }) {
     ? t("profile {size} ({how})", { size: sizes[machine.size] ?? machine.size, how: machine.profile === "auto" || !machine.profile ? t("chosen by the machine") : t("chosen at install") })
     : t("no machine profile: limits as set in .env");
   const ceilings = [machine.max_cpus && t("at most {count} CPUs", { count: machine.max_cpus }), machine.max_memory && t("at most {size}", { size: machine.max_memory })].filter(Boolean).join(", ");
-  return <p className="muted" data-testid="ops-machine">{t("Machine: {cpus} CPUs, {memory}, as Docker sees it", { cpus: machine.cpus, memory: size(machine.memory_bytes) })} · {profile}{ceilings ? ` · ${ceilings}` : ""}</p>;
+  const command = "sudo ./install.sh --machine auto";
+  const suggest = machine.recommended && machine.recommended !== machine.size;
+  return <>
+    <p className="muted" data-testid="ops-machine">{t("Machine: {cpus} CPUs, {memory}, as Docker sees it", { cpus: machine.cpus, memory: size(machine.memory_bytes) })} · {profile}{ceilings ? ` · ${ceilings}` : ""}</p>
+    {suggest && <p className="muted" data-testid="ops-machine-suggestion"><Sparkles size={14} /> {t("This machine fits the {size} profile{within}.", { size: sizes[machine.recommended!] ?? machine.recommended, within: ceilings ? t(" within the installation's ceilings") : "" })} {t("To apply it, run in the installation folder on the server:")} <code>{command}</code> <button className="button button-secondary button-small" onClick={() => { void navigator.clipboard?.writeText(command); }}>{t("Copy")}</button> {t("Values changed by hand in .env are kept. If the installation file sets MACHINE, change it there instead: it wins.")}</p>}
+  </>;
 }
 
 function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean }) {

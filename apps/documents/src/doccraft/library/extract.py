@@ -35,13 +35,15 @@ FORMATS = {
     ".htm": "html",
     # Drawings: no text layer to speak of; the plant map's reader says what they show.
     ".svg": "svg",
+    # A P&ID saved as DEXPI (Proteus XML) by a P&ID tool: read exactly into the plant map.
+    ".xml": "dexpi",
     ".png": "image",
     ".jpg": "image",
     ".jpeg": "image",
     ".tif": "image",
     ".tiff": "image",
 }
-DRAWING_ONLY = {"svg", "image"}
+DRAWING_ONLY = {"svg", "image", "dexpi"}
 
 
 @dataclass
@@ -363,6 +365,7 @@ def _drawing(data: bytes) -> Extracted:
 
 READERS = {
     "svg": _drawing,
+    "dexpi": _drawing,
     "image": _drawing,
     "pdf": _pdf,
     "docx": _docx,

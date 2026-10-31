@@ -115,7 +115,7 @@ def _performance(rt: Any, user: Any, root: str, widget_id: str) -> dict[str, Any
                     state=PRIORITY_STATE.get(row.get("priority") or "medium", "unknown"),
                     href=f"{root}/alarms/{quote(row['alarm_id'], safe='')}",
                 )
-                for row in found["top"]
+                for row in found["top"][:10]
             ],
             href=f"{root}/performance",
             empty=t("No alarm raised in the last 7 days."),

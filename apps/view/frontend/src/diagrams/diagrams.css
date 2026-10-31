@@ -193,3 +193,13 @@
   .dg-editor-stage { height: 60vh; }
   .dg-palette { max-height: 220px; }
 }
+
+/* ISA-101 alarm mark: shape and number by priority, colour as a third cue. */
+.dg-alarm-mark { pointer-events: none; }
+.dg-alarm-mark text { font-size: 11px; font-weight: 700; fill: #fff; }
+.dg-alarm-mark > :first-child { stroke: var(--pc-surface, #fff); stroke-width: 1.5; }
+.dg-alarm-critical > :first-child { fill: var(--pc-problem-fill); }
+.dg-alarm-high > :first-child { fill: var(--pc-serious-fill); }
+.dg-alarm-medium > :first-child { fill: var(--pc-attention-fill); }
+.dg-alarm-medium text { fill: #1d1d1f; }
+.dg-alarm-low > :first-child { fill: var(--pc-primary); }

@@ -12,6 +12,35 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - `plantcraft-sdk`: `PlantCraftClient.lab_samples(signal, start, end)` reads a laboratory
   signal's samples from the Historian, each with its status and its received and approved times
   (an empty list without a Historian). View's trends use it.
+- **Security check: signed catalogue, exceptions that expire, an evidence report.** The checks'
+  severities, titles and references move to `security-checks.tsv`, which the bundle signs with the
+  rest; the installer keeps the signed hashes beside it, and the new check `PC-INT-01` fails when
+  the check or its catalogue was changed (a severity lowered by hand, for one). Accepted risks go in
+  `security-exceptions.conf` as `ID YYYY-MM-DD reason`: until that day the check reports
+  `excepted`, then its own result again with "the exception expired". `--format evidence` writes
+  the evidence report for an audit (IEC 62443-4-2 CR 7.6 RE 1): scope, settings in force without
+  secrets, results by requirement, exceptions and the hashes of the checks that ran
+  (`docs/security-guide.md`).
+
+- **Uptime by app and maintenance windows.** Operations › Status shows each app's uptime over
+  24 hours, 7 and 30 days, from the watch's incidents and without planned maintenance. An
+  administrator plans a maintenance window (now or later, every app or some, up to 72 hours):
+  while it lasts the watch keeps quiet about those apps.
+- **An official Zabbix template.** `monitoring/plantcraft_zabbix_agent.yaml` in the bundle
+  (Zabbix 7.0 and later): a Zabbix agent on the PlantCraft machine reads the installer's
+  `metrics.json` and watches the machine, the free disk and every service (state, health,
+  restarts, CPU and memory against its own limit), with the same 80 % and 95 % levels as
+  Operations' load alerts (`docs/operations.md`, section 4).
+- **`./install.sh --rotate-admin-password`.** A new password for the emergency administrator,
+  shown once and written to `data/initial-admin-password` (0600); PlantCraft restarts to read it.
+  The security check (PC-ACC-01) now gives the password's age, and fails after 90 days.
+- **Working hours for a request queue.** An administrator sets the days and hours a queue works
+  (and a default); its requests' first answer and resolution clocks run only inside them, and
+  due times land on the next working minute.
+- **Partners for a company's sponsor.** A sponsor at the plant without the Operations role opens
+  Operations with Requests and Partners only, sees the companies they sponsor and approves their
+  months' hours.
+
 - **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
   app switcher, for administrators and for a new **Operations** role (Users: IT, or an
   integrator's team, without making them administrators). **Status** shows every app's CPU and
@@ -76,6 +105,23 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Schedules and the block pages open without the block editor (`@plantcraft/ui`).**
+  `ParameterField` and `typeLabel` have their own subpath, `@plantcraft/ui/blockParameter`
+  (still exported from `blockEditor`), so Analytics › Schedules and Models › Blocks no longer
+  load React Flow and the diagram editor to show a block's parameters. Analytics' block palette
+  (`blockCatalog.ts`) and Models' version helpers (`versionParts.tsx`) left the editor modules
+  for the same reason. Script on open: Analytics › Schedules 708 to 487 KB, Analytics › Blocks
+  1,155 to 941 KB, Models › Blocks 720 to 461 KB.
+- **The platform's pages load a quarter less script.** The Desk's widget grid
+  (react-grid-layout) and the asset pages were in the script every page of the platform loads.
+  They now load with their own page: 758 KB to 509 KB for the sign-in and for every page but the
+  Desk and the assets (Notes 1,267 to 1,026 KB, To-do 851 to 610 KB).
+
+- **Operations suggests the machine profile that fits.** When the machine, within the installation's
+  `MAX_CPUS`/`MAX_MEMORY`, fits another profile than the one applied (more memory added, a
+  profile pinned by hand), suite health names it and the command that applies it
+  (`sudo ./install.sh --machine auto`), with a copy button. The installation stays root's:
+  nothing is written from the web (plan B, 2026-10-31).
 - **State files are written whole or not at all, everywhere (storage tests, 2026-10-31).**
   `plantcraft-sdk` 0.91.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
   unique temporary file created with its final mode, `fsync`, then a rename, so a process killed
@@ -134,6 +180,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   is new since their last read (`LINKCRAFT_READ_CACHE`, 15 min overlap, whole read every 6 h).
   The Historian's CPU per round: 0.85 to 0.07 s on the demo's 200 signals, 59 to 0.8 s on
   2,000 dense signals (`ci/bench/reads`).
+  The cache keeps samples compact when that is exact (int32 milliseconds and float32, 8 bytes a
+  sample instead of 16: 453 to 226 MB on 2,000 dense signals x 24 h) and holds at most
+  `LINKCRAFT_READ_CACHE_MB` (512 MB by default), dropping the signals used least recently.
+  Scheduled methods read their step means through it too, only the steps new since their last
+  run; Run now still reads the whole window.
 - **Signal quality sees the source's quality (2026-10-31).** API v1 gave a bad sample as a null
   value and an uncertain or substituted one as good, so the `sq_*` checks never saw them.
   `POST /api/v1/series` takes `"quality": true` and then lists, per series, where the source's
@@ -180,6 +231,17 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **The security check includes Lynis and OpenSCAP when the host has them** (`PC-HOST-05`,
+  `PC-HOST-06`). As root it runs `lynis audit system --quick` and the SCAP Security Guide's CIS
+  level 1 (or standard) profile. Otherwise it reads their last report. A host without them reports
+  `na`; nothing is required.
+- **A daily limit on what the assistant reads for each person, and extraction flags in the audit
+  log** (backlog B13). Each tool call counts the signals it reads. Past
+  `PLANTCRAFT_ASSISTANT_DAILY_READS` (2000 a day) the assistant reads nothing more for that person
+  until the next day, and the audit log records `assistant.read_limit`. One answer that reads
+  more than `PLANTCRAFT_ASSISTANT_BULK_SIGNALS` (60) signals is recorded as
+  `assistant.bulk_read`. Both show with a warning mark in Settings › Audit. The count starts from
+  the day's audit records, so a restart does not reset it.
 - **The assistant no longer says it created what it only prepared** (security test D11). After
   it proposes an action, an event or another object, "I created" in its answer becomes "I
   prepared": only the card's button creates it. The tool's answer and the instructions say so too.
@@ -197,6 +259,20 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   Go binaries and curl.
 
 ### Fixed
+
+- **An app the installation left out no longer reads as broken.** Its address said "This
+  application is not running" and pointed visitors at `docker compose ps`; it now says the app is
+  not installed on this server or not running, and that the launcher lists the installed apps.
+- **`APPS=all` in the installation file, and `--all-apps`, installed Analytics alone.** A second
+  `check_apps` function in `install.sh` (the requirements check's) replaced the one that turns on
+  every app of the bundle and checks each `--with-<app>` image. It is now `requirement_apps`, and a
+  test fails when a deploy script defines a function twice.
+- **Long trends come from the Historian already reduced.** PlantCraft's charts read every raw
+  sample of the window and kept each stretch's lowest and highest value themselves: a day at 1 s
+  moved 4 MB and took 0.2 s, and a week was refused (over 200,000 values). The platform now asks
+  the Historian for about 750 cells with each cell's low and high (hourly rollups past a week):
+  a day in 0.02 s and 67 KB, a week in 0.13 s, the same spikes. Text signals, and signals the
+  Historian gives no extremes for, are still read raw and cut as before.
 
 - **`install.sh --uninstall --purge` no longer deletes another installation's images.** With
   two installations on one Docker (test and production), purging one removed the image tags the

@@ -15,7 +15,7 @@ export function splitName(filename: string): { number: string; title: string } {
   return found ? { number: found[1], title: found[2].trim() } : { number: "", title: stem };
 }
 
-export const ACCEPT = ".pdf,.docx,.docm,.xlsx,.xlsm,.pptx,.txt,.md,.markdown,.csv,.html,.htm,.svg,.png,.jpg,.jpeg,.tif,.tiff";
+export const ACCEPT = ".pdf,.docx,.docm,.xlsx,.xlsm,.pptx,.txt,.md,.markdown,.csv,.html,.htm,.svg,.xml,.png,.jpg,.jpeg,.tif,.tiff";
 
 /** The files the library reads (`extract.FORMATS` on the server), as a person reads the list. */
 export const FILE_TYPES = "PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx), text (.txt), Markdown (.md), CSV, HTML and drawings (SVG, PNG, JPEG, TIFF)";

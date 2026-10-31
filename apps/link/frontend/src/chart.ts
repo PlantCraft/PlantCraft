@@ -25,3 +25,13 @@ export function eventShapes(results: CheckResult[], colorOf: (check: string) => 
       };
     }));
 }
+
+/** Where the controller output spent the window: a loop that lives near 0 or 100% is saturated,
+ * one squeezed into a few percent has little room left (A9 of the 0.6 list). */
+export function opBins(values: Array<number | null | undefined>, width = 5): { x: number[]; y: number[] } {
+  const found = values.filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const count = Math.ceil(100 / width);
+  const y = new Array<number>(count).fill(0);
+  for (const value of found) y[Math.min(count - 1, Math.max(0, Math.floor(value / width)))] += 1;
+  return { x: y.map((_, index) => index * width + width / 2), y: y.map((n) => (found.length ? (100 * n) / found.length : 0)) };
+}

@@ -633,6 +633,30 @@ sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
 pick = "Target"
 
 [[contributes.widgets]]
+id = "loop-losses"
+title = "Analytics: loop-hours lost, 7 days"
+description = "By area, the loop-hours of the last 7 days lost out of normal mode, with the output at a limit, oscillating or on a bad signal, most first."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "effective-control"
+title = "Analytics: effective control"
+description = "The loops with the lowest effective control: the share of the time in normal mode, inside the band and with the output off its limits."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
+id = "closest-to-limit"
+title = "Analytics: closest to the limit"
+description = "The loops whose health is falling toward the alarm limit, with the days left by the trend of the last 14 days, soonest first."
+size = "m"
+kind = "list"
+sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
+
+[[contributes.widgets]]
 id = "last-run"
 title = "Analytics: last run"
 description = "The newest run of any algorithm."

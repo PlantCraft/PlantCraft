@@ -175,9 +175,13 @@ the images. If the suite does not become healthy,
    archives the OPC UA variables you pick: in the Historian, **Sources > Add source**
    (`opc.tcp://plantcraft:4840/plantcraft/` with `--demo`), browse, pick the variables, archive.
 
-The administrator password is the content of `data/initial-admin-password`. To change it, write
-the new password into that file (one line) and run `docker compose restart processcraft` in the
-install folder. Keep it as the emergency account; people sign in with their own accounts.
+The administrator password is the content of `data/initial-admin-password`. Keep it as the
+emergency account; people sign in with their own accounts. Change it at least every 90 days:
+`./install.sh --rotate-admin-password` writes a new random password into that file (owner and
+mode kept), restarts PlantCraft and shows the password once. The security check
+(`./install.sh --security-check`, PC-ACC-01) warns while the file exists and fails once its
+password is more than 90 days old. To set a password of your own instead, write it into the file
+(one line) and run `docker compose restart processcraft` in the install folder.
 
 ## 5. Settings
 
@@ -226,6 +230,11 @@ The values are one table in `install.sh` (`MACHINE_TABLE`); the ones it wrote la
 only replaces a value that is still its own (or the shipped default). `PLANTCRAFT_MACHINE=off`
 leaves every value as it is. The measurements behind the table are in `docs/bench/README.md`
 ("CPU, processes and the machine profile").
+
+Operations › Suite health shows the machine, the profile applied and its ceilings. When the
+machine fits another profile (memory added, a size pinned with `--machine`), it names that profile
+and the command that applies it, `sudo ./install.sh --machine auto`, run in the install folder.
+Nothing is written from the web: the installation stays root's.
 
 ## 6. Certificates
 
@@ -361,8 +370,10 @@ any new outbound connection from the proxy. They do not survive a reboot: save t
 | Uninstall, keep data | `./install.sh --uninstall` |
 | Uninstall and delete data, backups and images | `./install.sh --uninstall --purge` |
 
-A page saying "This application is not running" under `/link/`, `/dash/` or
-`/hist/` means that app's container is not up: check `COMPOSE_PROFILES` and `docker compose ps`.
+A page saying "This application is not installed on this server, or it is not running" under an
+app's address (`/link/`, `/dash/`, `/hist/`, ...) means that app's container is not up: either the
+app is not installed (check `COMPOSE_PROFILES`, or `APPS` in the installation file) or it stopped
+(`docker compose ps`).
 
 ## 10. Install folder
 

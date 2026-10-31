@@ -6,6 +6,14 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ### Added
 
+- **P&IDs saved as DEXPI (XML) go straight into the plant map.** Send the `.xml` a P&ID tool
+  (AVEVA, Hexagon Smart P&ID, Siemens COMOS...) exports as DEXPI (Proteus XML) and Documents reads
+  it with its own reader (pyDEXPI is AGPL and is not used): equipment, instruments and their
+  valves, and what feeds, measures, controls or sits on what, all certain since the tool says
+  so. The page is drawn from the file's data for the review page, and it is a diagram like any
+  other: in Diagrams, on the map, in search. On the 79 public DEXPI test files it reads 65 of 67
+  equipment-to-equipment feeds, none wrong; the example C01 gives all 12 tags and 6 feeds. A file
+  with a DOCTYPE or entities is refused.
 - **Diagrams and the plant map, read from the P&IDs in the library.** P&IDs sent as PDF, SVG or
   an image (PNG, JPEG, TIFF) are read offline, with no language model: ISA-5.1 tags, symbols,
   lines, flow arrows and off-page connectors, each finding with how sure it is and why. Every
@@ -22,6 +30,30 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   are valves; arrows drawn along a line, away from any symbol, give the line's direction; a
   pump drawn small to scale is still a pump. On the DEXPI example the reader finds 4 of its 6
   equipment feeds with none wrong (3, one of them reversed, before).
+- **Links to check: a queue for the assets found in documents.** The library's **Links to
+  check** lists the links between documents and the assets named in their text that wait for a
+  person, in the folders you change. Pick several and mark them **Correct**, which links them,
+  or **Wrong**. A link marked Wrong is not suggested again when the document is read again.
+  `DOCCRAFT_ASSET_AUTO_MENTIONS` sets a threshold: an asset named that many times in a document
+  is linked at once (source `auto`), and removing it on the document's page rejects it. The
+  default 0 sends every link to the queue, as before.
+- **Tags on a P&ID open the plant.** On a diagram's page, the box of a tag that PlantCraft
+  has opens the asset, its signals and what the apps say about it. A sheet linked from the
+  plant map opens with the item already picked.
+- **The plant map as a document the assistant cites.** **Write the plant summary** on the
+  plant map writes the map of a folder's P&IDs out as a document in that same folder:
+  - each unit, with its equipment in flow order and what feeds what;
+  - the control loops and the instruments;
+  - the sheets each item is drawn on.
+
+  It is indexed like any other document, so search and the assistant cite it. It is made with no
+  language model, and making it again adds a revision. Only that folder's drawings go into it,
+  so it has the same readers as they do.
+- **Hand valves drawn with no tag are followed.** A small circle in a gap of the line (a
+  ball or hand valve as DIN/ISO 10628 tools draw it) is a valve the line runs through. A valve
+  between two lines with arrows takes its direction from the line where it is alone. On the
+  DEXPI example the reader now finds all 6 equipment feeds, with none wrong (4 before). The
+  demo P&IDs are still read completely.
 - **The plant map in DEXPI.** **DEXPI (XML)** under Lists downloads the map in the open P&ID
   exchange format (Proteus XML): equipment with its class and tag, each process line between
   two pieces of equipment with a nozzle at each end, and each instrument loop with its valves

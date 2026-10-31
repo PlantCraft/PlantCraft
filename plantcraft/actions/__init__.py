@@ -23,12 +23,12 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
-from plantcraft.config import plant_today
+from plantcraft.config import plant_timezone, plant_today
 from plantcraft.db import Migration, Store, add_columns
 from plantcraft.i18n import t
 from plantcraft.refs import parse_ref
 
-from .sla import Targets, check_targets, request_sla
+from .sla import ServiceHours, Targets, check_targets, request_sla
 
 # English constants; read them through ``t()``.
 # A checklist entry of the history is stored as "<verb>:<item>" and read in the reader's language.
@@ -252,6 +252,16 @@ class ActionStore(Store):
         priority TEXT PRIMARY KEY,
         response_minutes INTEGER NOT NULL,
         resolution_minutes INTEGER NOT NULL,
+        updated_by TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
+
+    -- When a queue works ('' : requests without a queue, and queues with none of their own).
+    CREATE TABLE IF NOT EXISTS follow_up_queue_hours (
+        queue TEXT PRIMARY KEY,
+        days TEXT NOT NULL,
+        start_at TEXT NOT NULL,
+        end_at TEXT NOT NULL,
         updated_by TEXT NOT NULL,
         updated_at TEXT NOT NULL
     );
@@ -895,9 +905,18 @@ class ActionStore(Store):
         requests = [item for item in items if item["kind"] == "request"]
         if requests:
             targets = self.targets()
+            calendars = self.service_hours()
+            zone = plant_timezone()
             statuses = self._statuses([int(item["action_id"]) for item in requests])
             for item in requests:
-                item["sla"] = request_sla(item, statuses.get(int(item["action_id"]), []), targets)
+                hours = calendars.get(item["group_id"] or "") or calendars.get("")
+                item["sla"] = request_sla(
+                    item,
+                    statuses.get(int(item["action_id"]), []),
+                    targets,
+                    hours=hours,
+                    zone=zone,
+                )
         return items
 
     def _statuses(self, action_ids: list[int]) -> dict[int, list[tuple[str, str]]]:
@@ -956,6 +975,51 @@ class ActionStore(Store):
                 ],
             )
         return targets
+
+    def service_hours(self) -> dict[str, ServiceHours]:
+        """Each queue's working hours by group id ('' : the default), as set."""
+
+        with self._lock, self._connect() as connection:
+            rows = connection.execute("SELECT * FROM follow_up_queue_hours").fetchall()
+        return {
+            row["queue"]: ServiceHours.check(
+                {"days": row["days"].split(","), "start": row["start_at"], "end": row["end_at"]}
+            )
+            for row in rows
+        }
+
+    def set_service_hours(
+        self, queue: str | None, payload: dict[str, Any] | None, *, actor: str
+    ) -> ServiceHours | None:
+        """Sets (or with ``payload`` None, removes) a queue's working hours; ``queue`` None is the
+        default. ``ValueError`` when they make no sense."""
+
+        key = queue or ""
+        hours = ServiceHours.check(payload) if payload is not None else None
+        with self._lock, self._write() as connection:
+            if hours is None:
+                connection.execute("DELETE FROM follow_up_queue_hours WHERE queue = ?", (key,))
+            else:
+                shown = hours.as_dict()
+                connection.execute(
+                    """
+                    INSERT INTO follow_up_queue_hours
+                    (queue, days, start_at, end_at, updated_by, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(queue) DO UPDATE SET days = excluded.days,
+                        start_at = excluded.start_at, end_at = excluded.end_at,
+                        updated_by = excluded.updated_by, updated_at = excluded.updated_at
+                    """,
+                    (
+                        key,
+                        ",".join(shown["days"]),
+                        shown["start"],
+                        shown["end"],
+                        actor,
+                        self._now(),
+                    ),
+                )
+        return hours
 
     def approvals(self, month: str) -> dict[str, dict[str, Any]]:
         """The month's approved hours by company ('' for the plant): who, when, how many."""

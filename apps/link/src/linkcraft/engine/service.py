@@ -252,6 +252,8 @@ class Engine:
             schedule=self.rt.recording(schedule, profile),
             # The monitor's own parameter values go on top of the algorithm's.
             node_parameters=(schedule.get("method_config") or {}).get("node_parameters"),
+            # A schedule's runs read only what is new since the last one (the loops' cache).
+            cached=bool(job.get("schedule_id")),
         )
         summary = found.get("summary") or {}
         if found.get("error"):

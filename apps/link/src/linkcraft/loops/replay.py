@@ -28,6 +28,7 @@ from typing import Any
 import pandas as pd
 from plantcraft_sdk.refs import asset_ref
 
+from linkcraft.data.frames import loop_signal_ids
 from linkcraft.db import recorded_at
 from linkcraft.engine.jobs import PRIORITIES
 from linkcraft.engine.suite_compute import priority
@@ -199,7 +200,7 @@ class HistoryReplay:
         for offset in range(0, len(loops), READ_BATCH):
             batch = loops[offset : offset + READ_BATCH]
             try:
-                raw = self.monitor._read(self.monitor.plant, batch, start, end)
+                signals = self.monitor._read_batch(self.monitor.plant, batch, start, end)
             except Exception as exc:  # a gap in the archive: that batch has no point here
                 LOGGER.info("Replay: no data for %d loops at %s: %s", len(batch), end, exc)
                 continue
@@ -207,7 +208,7 @@ class HistoryReplay:
                 config = self.monitor._round_config(loop, cache)
                 task = self.monitor._task(
                     loop,
-                    raw,
+                    signals.frame(loop_signal_ids(loop)),
                     parameter_overrides=config.get("overrides"),
                     parameter_defaults=config.get("defaults"),
                     diagram=config.get("diagram"),

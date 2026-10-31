@@ -496,6 +496,7 @@ def test_machine_reads_docker_and_only_the_profile_settings(env):
         "size": "medium",
         "max_cpus": None,
         "max_memory": None,
+        "recommended": "medium",
     }
     assert "secret" not in json.dumps(machine)
 
@@ -508,3 +509,22 @@ def test_machine_without_docker_or_settings(env):
     env.installer.docker = Silent()
     machine = env.installer.machine()
     assert machine["cpus"] is None and machine["profile"] is None
+    assert machine["recommended"] is None
+
+
+@pytest.mark.parametrize(
+    ("cpus", "gb", "max_cpus", "max_memory", "size"),
+    [
+        (2, 4, None, None, "small"),
+        (4, 8, None, None, "medium"),
+        (8, 32, None, None, "large"),
+        (16, 64, None, None, "xlarge"),
+        (16, 64, "6", "12g", "medium"),
+        (16, 64, "", "4096m", "small"),
+        (16, 64, "32", "nonsense", "xlarge"),
+    ],
+)
+def test_recommended_size_follows_install_sh_within_the_ceilings(
+    cpus, gb, max_cpus, max_memory, size
+):
+    assert inst.recommended_size(cpus, gb * 1024**3, max_cpus, max_memory) == size

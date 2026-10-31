@@ -6,3 +6,5 @@ know that the code and `CHANGELOG.md` do not say. One short entry per change wor
 ## 0.5.1
 
 - The repository's public history starts here; earlier releases are summarized in `CHANGELOG.md`.
+- 2026-10-31: loop-hours lost by cause, by area and period, and effective control per loop (engine/losses.py, LACUNAS A13 and A7).
+- 2026-10-31: days until a falling loop health reaches its alarm limit (engine/days_to_limit.py, LACUNAS A18).

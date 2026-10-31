@@ -164,7 +164,9 @@ export function limitState(limits: Limits | undefined | null, value: unknown): S
 }
 
 /** What a binding's slot shows for one value (`judge` in diagrams/read.py). */
-export interface Shown { state: State; value: number | string | null; fraction?: number | null; on?: boolean | null; unit: string; error?: string | null; stale?: boolean; summary?: string; label: string; at?: string | null }
+export interface Shown { state: State; value: number | string | null; fraction?: number | null; on?: boolean | null; unit: string; error?: string | null; stale?: boolean; summary?: string; label: string; at?: string | null;
+  /** The most urgent active alarm's priority (Alarms' alarm_state): the alarm mark's shape. */
+  priority?: "critical" | "high" | "medium" | "low" | null }
 
 export function judge(slot: Slot, binding: Record<string, unknown>, row: BindingRow, value: number | string | null, stale = false): Shown {
   const base: Shown = { state: "unknown", value, unit: row.unit ?? "", error: row.error, stale, summary: row.summary, label: row.label, at: row.at };

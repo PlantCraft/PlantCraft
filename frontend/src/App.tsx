@@ -12,13 +12,7 @@ import { DemoContact, DemoEntry, DemoVisitBar } from "./DemoVisit";
 import type { DemoVisitInfo, PublicDemoInfo } from "./demoApi";
 import { directoryApi, ssoStartUrl, type SignInMethods } from "./directoryApi";
 import { EMBEDDED, isMessagesPath, navigate, openOutside } from "./nav";
-import { AssetPage, AssetsPage } from "./AssetsPage";
-import { AssetImportPage, AssetImportReview } from "./AssetImport";
-import { AssetTypesPage } from "./AssetTypes";
 import { currentAssetPath, sourcesUrl } from "./assetLinks";
-import { AttentionPage, PlatformHome } from "./PlatformHome";
-import { DeskToday, WidgetGalleryPage } from "./Desk";
-import { SetupPage } from "./SetupPage";
 import { platformTour } from "./PlatformTour";
 import SuiteHealthBanner from "./SuiteHealthBanner";
 import { LANGUAGES, language, setLanguage, t, type Language } from "./i18n";
@@ -27,6 +21,17 @@ import { suiteApi, TOKEN_RENEW_MS } from "./suiteApi";
 import { syncPreferences } from "./preferencesApi";
 import type { AccessInfo, HomeData, Installation, SessionInfo } from "./types";
 
+// The Desk's grid and the asset pages load with their page, not with every page of the suite.
+const AssetPage = lazy(() => import("./AssetsPage").then((module) => ({ default: module.AssetPage })));
+const AssetsPage = lazy(() => import("./AssetsPage").then((module) => ({ default: module.AssetsPage })));
+const AssetImportPage = lazy(() => import("./AssetImport").then((module) => ({ default: module.AssetImportPage })));
+const AssetImportReview = lazy(() => import("./AssetImport").then((module) => ({ default: module.AssetImportReview })));
+const AssetTypesPage = lazy(() => import("./AssetTypes").then((module) => ({ default: module.AssetTypesPage })));
+const AttentionPage = lazy(() => import("./PlatformHome").then((module) => ({ default: module.AttentionPage })));
+const PlatformHome = lazy(() => import("./PlatformHome").then((module) => ({ default: module.PlatformHome })));
+const DeskToday = lazy(() => import("./Desk").then((module) => ({ default: module.DeskToday })));
+const WidgetGalleryPage = lazy(() => import("./Desk").then((module) => ({ default: module.WidgetGalleryPage })));
+const SetupPage = lazy(() => import("./SetupPage").then((module) => ({ default: module.SetupPage })));
 const UsersPage = lazy(() => import("./UsersAdmin"));
 const AppKeysPage = lazy(() => import("./AppKeys"));
 const AppsPage = lazy(() => import("./AppsPage"));
@@ -158,6 +163,8 @@ export function isDeskPath(path: string) {
 /** Operations, built in like Desk: the suite's status, load and logs, its backups and updates
  * (docs/operations.md, section 4). Its pages keep the addresses they had in PlantCraft. */
 export const OPERATIONS_PATHS = ["/health", "/ops/logs", "/ops/requests", "/ops/partners", "/ops/support", "/ops/alerts", "/backups", "/updates"];
+/** What a sponsor at the plant opens in Operations without its role. */
+const SPONSOR_PATHS = ["/ops/requests", "/ops/partners"];
 export function isOperationsPath(path: string) {
   return OPERATIONS_PATHS.includes(path);
 }
@@ -181,8 +188,8 @@ function Page({ path, data, username, onInboxChange }: { path: string; data: Hom
   const access = useAccess();
   const operate = useCanOperate();
   const demoVisitor = Boolean(access.admin_view) && !access.is_admin && !access.can_operate;
-  if (path === "/") return <DeskToday data={data} me={data.users.find((item) => item.username === username) ?? null} />;
-  if (path === "/widgets") return <WidgetGalleryPage data={data} me={data.users.find((item) => item.username === username) ?? null} />;
+  if (path === "/") return <Suspense fallback={PAGE_LOADING}><DeskToday data={data} me={data.users.find((item) => item.username === username) ?? null} /></Suspense>;
+  if (path === "/widgets") return <Suspense fallback={PAGE_LOADING}><WidgetGalleryPage data={data} me={data.users.find((item) => item.username === username) ?? null} /></Suspense>;
   if (path === "/calendar") return <Suspense fallback={PAGE_LOADING}><CalendarPage /></Suspense>;
   if (path === "/todo") return <Suspense fallback={PAGE_LOADING}><TodoPage /></Suspense>;
   if (path === "/notes") return <Suspense fallback={PAGE_LOADING}><NotesPage /></Suspense>;
@@ -191,21 +198,21 @@ function Page({ path, data, username, onInboxChange }: { path: string; data: Hom
     return <Suspense fallback={PAGE_LOADING}><AssistantPage chatId={opened === null ? null : opened === "new" ? "new" : Number(opened)} /></Suspense>;
   }
   if (path === "/team") return <Suspense fallback={PAGE_LOADING}><TeamPage /></Suspense>;
-  if (path === "/admin") return <PlatformHome data={data} admin={canSee(access, "users")} />;
-  if (path === "/attention") return <AttentionPage data={data} />;
-  if (path === "/setup") return canSee(access, "users") ? <SetupPage /> : <NoAccess />;
+  if (path === "/admin") return <Suspense fallback={PAGE_LOADING}><PlatformHome data={data} admin={canSee(access, "users")} /></Suspense>;
+  if (path === "/attention") return <Suspense fallback={PAGE_LOADING}><AttentionPage data={data} /></Suspense>;
+  if (path === "/setup") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><SetupPage /></Suspense> : <NoAccess />;
   if (path === "/setup/calendars") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><CalendarSettingsPage /></Suspense> : <NoAccess />;
   if (path === "/setup/audit") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><AuditLogPage /></Suspense> : <NoAccess />;
   if (path === "/setup/email") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><MailSettingsPage /></Suspense> : <NoAccess />;
   if (path === "/setup/corporate-login") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><CorporateLoginPage /></Suspense> : <NoAccess />;
   if (path === "/setup/assistant-access") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><AssistantAccessPage /></Suspense> : <NoAccess />;
   if (path === "/setup/language-model") return canSee(access, "users") ? <Suspense fallback={PAGE_LOADING}><LanguageModelPage /></Suspense> : <NoAccess />;
-  if (path === "/assets") return <AssetsPage />;
-  if (path.startsWith("/assets/")) return <AssetPage key={path} assetId={decodeURIComponent(path.slice(8))} apps={data.apps} />;
-  if (path === "/asset-types" || path.startsWith("/asset-types/")) return <AssetTypesPage selected={path.length > 13 ? decodeURIComponent(path.slice(13)) : null} />;
+  if (path === "/assets") return <Suspense fallback={PAGE_LOADING}><AssetsPage /></Suspense>;
+  if (path.startsWith("/assets/")) return <Suspense fallback={PAGE_LOADING}><AssetPage key={path} assetId={decodeURIComponent(path.slice(8))} apps={data.apps} /></Suspense>;
+  if (path === "/asset-types" || path.startsWith("/asset-types/")) return <Suspense fallback={PAGE_LOADING}><AssetTypesPage selected={path.length > 13 ? decodeURIComponent(path.slice(13)) : null} /></Suspense>;
   if (path === "/data") return <SourcesPage data={data} />;
-  if (path === "/asset-import") return <AssetImportPage />;
-  if (path === "/asset-import/review") return <AssetImportReview />;
+  if (path === "/asset-import") return <Suspense fallback={PAGE_LOADING}><AssetImportPage /></Suspense>;
+  if (path === "/asset-import/review") return <Suspense fallback={PAGE_LOADING}><AssetImportReview /></Suspense>;
   // Hidden from the menu: each app shows its own runs; kept for a later return.
   if (path === "/executions") return access.can_edit ? <Suspense fallback={PAGE_LOADING}><ExecutionsPage /></Suspense> : <NoAccess />;
   if (path === "/users") return canSee(access, "administration") ? <Suspense fallback={PAGE_LOADING}><UsersPage /></Suspense> : <NoAccess />;
@@ -222,7 +229,7 @@ function Page({ path, data, username, onInboxChange }: { path: string; data: Hom
   if (path === "/ops/logs") return operate && !demoVisitor ? <Suspense fallback={PAGE_LOADING}><LogsPage /></Suspense> : <NoAccess />;
   // Everyone asks for help and follows their own requests; Operations sees them all.
   if (path === "/ops/requests") return <Suspense fallback={PAGE_LOADING}><RequestsPage /></Suspense>;
-  if (path === "/ops/partners") return operate ? <Suspense fallback={PAGE_LOADING}><PartnersPage /></Suspense> : <NoAccess />;
+  if (path === "/ops/partners") return operate || (access.sponsor_of ?? []).length > 0 ? <Suspense fallback={PAGE_LOADING}><PartnersPage /></Suspense> : <NoAccess />;
   if (path === "/ops/support") return operate ? <Suspense fallback={PAGE_LOADING}><SupportPage people={data.users.filter((item) => item.username !== username)} /></Suspense> : <NoAccess />;
   if (path === "/ops/alerts") return operate ? <Suspense fallback={PAGE_LOADING}><LoadAlertsPage /></Suspense> : <NoAccess />;
   if (path === "/backups") return canSee(access, "administration") ? <Suspense fallback={PAGE_LOADING}><BackupsPage /></Suspense> : <NoAccess />;
@@ -312,7 +319,9 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const desk = isDeskPath(path);
   // Operations is an app of its own for the people who may open it; for everyone else /health
   // stays PlantCraft's read-only "System health".
-  const operating = operate && isOperationsPath(path);
+  // A sponsor at the plant who is not in Operations opens its Requests and Partners only.
+  const sponsorOnly = !operate && (access.sponsor_of ?? []).length > 0;
+  const operating = operate ? isOperationsPath(path) : sponsorOnly && SPONSOR_PATHS.includes(path);
   // Desk: the person's day. PlantCraft: the plant's assets for everyone; the rest is administration.
   // Messages and the Assistant are not Desk pages any more: their buttons above the
   // person's name open them over any screen; /messages and /assistant stay as their full pages.
@@ -330,7 +339,10 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
     // Notebooks last, the most complex; the Python logo says what they are.
     ...(admin || notebooksOn ? [{ to: "/notebooks", label: t("Notebooks"), icon: <PythonMark /> }] : []),
   ];
-  const opsNav: ShellNavItem[] = [
+  const opsNav: ShellNavItem[] = sponsorOnly ? [
+    { to: "/ops/requests", label: t("Requests"), icon: <LifeBuoy /> },
+    { to: "/ops/partners", label: t("Partners"), icon: <Building2 /> },
+  ] : [
     { to: "/health", label: t("Status"), icon: <Activity /> },
     ...(demoVisitor ? [] : [{ to: "/ops/logs", label: t("Logs"), icon: <ScrollText /> }]),
     { to: "/ops/requests", label: t("Requests"), icon: <LifeBuoy /> },
@@ -359,7 +371,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const apps: SuiteApp[] = [
     { id: "desk", name: "Desk", url: "/" },
     { id: "processcraft", name: "PlantCraft", url: "/" },
-    ...(operate ? [{ id: "operations", name: "Operations", url: "/health" }] : []),
+    ...(operate || sponsorOnly ? [{ id: "operations", name: "Operations", url: sponsorOnly ? "/ops/partners" : "/health" }] : []),
     ...data.apps.filter((app) => app.access).map((app) => ({ id: app.id, name: app.name, url: app.url, version: app.version })),
   ];
   // Only the apps in frames have an address prefix: Desk, PlantCraft and Operations are pages of
@@ -387,7 +399,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
     <SuiteShell
       app={framed ? shown?.app ?? entry!.id : desk ? "desk" : operating ? "operations" : "processcraft"}
       appName={framed ? shown?.appName ?? entry!.name : undefined}
-      home={framed ? shown?.home ?? "/" : desk ? "/" : operating ? "/health" : "/admin"}
+      home={framed ? shown?.home ?? "/" : desk ? "/" : operating ? (sponsorOnly ? "/ops/partners" : "/health") : "/admin"}
       localApps={LOCAL}
       assistant={framed ? shown?.assistant ?? false : path !== "/assistant" && !path.startsWith("/assistant/")}
       assistantControl={framed ? assistantControl : undefined}
