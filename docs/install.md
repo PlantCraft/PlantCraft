@@ -196,6 +196,33 @@ If port 443 is taken on Windows (IIS, another proxy), set `PLANTCRAFT_HTTPS_PORT
 `~/plantcraft/.env` and run `./install.sh` again. Docker Desktop must be running for the suite to
 answer; it starts the containers again on its own.
 
+### Windows without Docker Desktop
+
+Docker Desktop needs a paid subscription in companies of 250 people or more, or US$10 million
+of revenue or more. Two free ways give the suite the same Linux containers:
+
+- **Docker Engine inside WSL (recommended).** Steps 2, 4, 5 and 6 above, without Docker Desktop.
+  Ubuntu 24.04 in WSL starts systemd by default (otherwise add `[boot]` `systemd=true` to
+  `/etc/wsl.conf` and run `wsl --shutdown`). On a PC that also has Docker Desktop, Windows' PATH
+  makes its `docker.exe` visible inside WSL: add `[interop]` `appendWindowsPath=false` to that
+  distribution's `/etc/wsl.conf` and run `wsl --terminate <name>` (`./install.sh --check` says
+  so). Install with the Docker Engine the bundle carries:
+
+  ```bash
+  sudo apt-get install -y iptables     # the one package Docker needs from Ubuntu
+  sudo ./install.sh --install-docker --all-apps --demo --prefix ~/plantcraft
+  ```
+
+  Tested on 2026-10-31 (Windows 11, WSL 3.0.3, a new Ubuntu 24.04 distribution next to Docker
+  Desktop's, which stayed untouched): Docker installed in 10 s, and came back by itself after
+  `wsl --terminate`. WSL may stop a distribution nobody uses; to keep the suite running, start
+  it with Windows (a Task Scheduler entry `wsl -d Ubuntu --exec /bin/true` at sign-in).
+- **Rancher Desktop** (SUSE, Apache 2.0) with **Container engine: dockerd (moby)** in its
+  Preferences, instead of Docker Desktop in step 1; then the steps above as written (not
+  tested yet).
+
+`./install.sh --check` names the Docker it found and warns when it is Docker Desktop.
+
 **Notebooks on Windows.** People who want JupyterLab on their own computer install the
 PlantCraft Notebooks kit from the Notebooks page: a setup for the current user only, no
 administrator and no Docker, installed in about two minutes ([Notebooks](en/notebooks.md)).

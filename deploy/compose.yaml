@@ -158,6 +158,23 @@ services:
       PLANTCRAFT_EGRESS_ALLOWLIST: /egress/allow.json
       PLANTCRAFT_LLM_NO_PROXY: "${PLANTCRAFT_LLM_NO_PROXY:-}"
       PLANTCRAFT_LLM: "${PLANTCRAFT_LLM:-}"
+      # Security switches the installation may turn off for good (empty: allowed, off until an
+      # administrator turns them on): assistants through MCP, and Notebooks.
+      PLANTCRAFT_MCP: "${PLANTCRAFT_MCP:-}"
+      PLANTCRAFT_NOTEBOOKS: "${PLANTCRAFT_NOTEBOOKS:-}"
+      # What the installation file decided (docs/installation-file.md): shown read-only in
+      # Settings › Installation, with the file's hash; a locked time zone cannot be changed there.
+      PLANTCRAFT_INSTALLATION_LOCKED: "${PLANTCRAFT_INSTALLATION_LOCKED:-}"
+      PLANTCRAFT_INSTALLATION_CONF_SHA256: "${PLANTCRAFT_INSTALLATION_CONF_SHA256:-}"
+      PLANTCRAFT_TIMEZONE_LOCKED: "${PLANTCRAFT_TIMEZONE_LOCKED:-}"
+      PLANTCRAFT_MACHINE: "${PLANTCRAFT_MACHINE:-}"
+      PLANTCRAFT_MAX_CPUS: "${PLANTCRAFT_MAX_CPUS:-}"
+      PLANTCRAFT_MAX_MEMORY: "${PLANTCRAFT_MAX_MEMORY:-}"
+      PLANTCRAFT_HTTPS_PORT: "${PLANTCRAFT_HTTPS_PORT:-443}"
+      PLANTCRAFT_BIND_ADDRESS: "${PLANTCRAFT_BIND_ADDRESS:-0.0.0.0}"
+      PLANTCRAFT_HOSTNAME: "${PLANTCRAFT_HOSTNAME:-}"
+      PLANTCRAFT_PLANT_SUBNET: "${PLANTCRAFT_PLANT_SUBNET:-172.30.10.0/24}"
+      PLANTCRAFT_EGRESS_SUBNET: "${PLANTCRAFT_EGRESS_SUBNET:-172.30.16.0/24}"
       # The local compute worker's credential (install.sh writes it once): PlantCraft keeps its
       # hash so `compute-gateway` is enrolled from the start (docs/compute.md).
       PLANTCRAFT_COMPUTE_LOCAL_KEY_FILE: /run/secrets/compute_local_key
@@ -736,6 +753,8 @@ services:
       # Its server processes: a number or auto (the CPUs of its limit, up to 4).
       HISTCRAFT_WORKERS: "${HISTCRAFT_WORKERS:-auto}"
       HISTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
+      # MAX_SIGNALS of the installation file: the most points it may record (empty: no limit).
+      PLANTCRAFT_MAX_SIGNALS: "${PLANTCRAFT_MAX_SIGNALS:-}"
     secrets:
       - histcraft_db_password
     volumes:

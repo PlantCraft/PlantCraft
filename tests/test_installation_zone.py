@@ -114,3 +114,49 @@ def test_a_backup_names_its_installation(tmp_path):
     ops.install = tmp_path
     ops.images = lambda: {}
     assert ops.context()["installation_id"] == "3b8c3b66-246e-4f08-a18c-efbbcf7562b0"
+
+
+def test_the_installation_file_shows_and_locks_what_it_decided(world, monkeypatch):
+    """docs/installation-file.md: install.sh lists what the file decided; Settings › Installation
+    shows it read-only, and a locked time zone cannot be changed from the interface."""
+
+    client = sign_in(world.client())
+    assert (
+        client.put("/api/setup/installation", json={"time_zone": "Asia/Tokyo"}).status_code == 200
+    )
+    monkeypatch.setenv("PLANTCRAFT_TIMEZONE", "America/Sao_Paulo")
+    monkeypatch.setenv("PLANTCRAFT_TIMEZONE_LOCKED", "true")
+    monkeypatch.setenv(
+        "PLANTCRAFT_INSTALLATION_LOCKED",
+        "COMPOSE_PROFILES,PLANTCRAFT_LLM,PLANTCRAFT_PLANT_SUBNET,PLANTCRAFT_APPS_SUBNET,"
+        "PLANTCRAFT_TIMEZONE",
+    )
+    monkeypatch.setenv("PLANTCRAFT_APPS", "linkcraft=/link/@0.5.1,histcraft=/hist/@0.5.1")
+    monkeypatch.setenv("PLANTCRAFT_LLM", "off")
+    monkeypatch.setenv("PLANTCRAFT_PLANT_SUBNET", "10.99.10.0/24")
+    monkeypatch.setenv("PLANTCRAFT_EGRESS_SUBNET", "10.99.16.0/24")
+    monkeypatch.setenv("PLANTCRAFT_INSTALLATION_CONF_SHA256", "a" * 64)
+    found = client.get("/api/setup/installation").json()
+    # The file's zone wins over the one an administrator had saved.
+    assert found["locked"] is True and found["time_zone"] == "America/Sao_Paulo"
+    assert config.plant_timezone(fresh=True).key == "America/Sao_Paulo"
+    file = found["installation_file"]
+    assert file["present"] is True and file["sha256"] == "a" * 64
+    shown = {entry["key"]: entry["value"] for entry in file["entries"]}
+    assert shown["COMPOSE_PROFILES"] == "linkcraft,histcraft"
+    assert shown["PLANTCRAFT_LLM"] == "off"
+    assert shown["PLANTCRAFT_PLANT_SUBNET"] == "10.99.10.0/24 … 10.99.16.0/24"
+    assert "PLANTCRAFT_APPS_SUBNET" not in shown
+    refused = client.put("/api/setup/installation", json={"time_zone": "UTC"})
+    assert refused.status_code == 409 and "installation.conf" in refused.json()["detail"]
+
+
+def test_without_an_installation_file_nothing_is_locked(world, monkeypatch):
+    monkeypatch.delenv("PLANTCRAFT_INSTALLATION_LOCKED", raising=False)
+    monkeypatch.delenv("PLANTCRAFT_TIMEZONE_LOCKED", raising=False)
+    found = sign_in(world.client()).get("/api/setup/installation").json()
+    assert found["locked"] is False
+    assert (
+        found["installation_file"]["present"] is False
+        and found["installation_file"]["entries"] == []
+    )

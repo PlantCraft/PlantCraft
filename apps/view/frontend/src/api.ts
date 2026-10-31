@@ -1,6 +1,6 @@
 import { createApiClient, jsonBody, query, type HelpEntry, type HelpPage } from "@plantcraft/ui";
 import { href } from "./nav";
-import type { EventKind, Report, ReportDraft, ReportRun, Section, SectionData, AssetDashboards, Directory, Folder, FolderDraft, ResultKind, Template, Version, AssetKind, AssetOption, Card, CardData, Dashboard, DashboardDraft, Me, ShareLink, ShareTarget, ExportFormat, SignalOption, Trend, TrendData, TrendView, Variable, VariableOption } from "./types";
+import type { Analysis, AssistantSpec, AssistantVersion, AssistantWritten, EventKind, Report, ReportDraft, ReportRun, Section, SectionData, AssetDashboards, Directory, Folder, FolderDraft, ResultKind, Template, Version, AssetKind, AssetOption, Card, CardData, Dashboard, DashboardDraft, Me, ShareLink, ShareTarget, ExportFormat, SignalOption, Trend, TrendData, TrendView, Variable, VariableOption } from "./types";
 
 const client = createApiClient({ app: "dashcraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -77,6 +77,11 @@ export const api = {
   reportSection: (reportId: string, sectionId: string, period: string | null) => request<SectionData>(`/api/reports/${id(reportId)}/sections/${id(sectionId)}${query({ period })}`),
   reportPreview: (section: Section, period: string) => request<SectionData>("/api/report-preview", body("POST", { section, period })),
   eventKinds: () => request<EventKind[]>("/api/event-kinds"),
+  analyses: () => request<Analysis[]>("/api/report-analyses"),
+  proposeScope: (description: string) => request<{ asset_ids: string[]; analyses: string[]; why: string; dropped: string[] }>("/api/report-assistant/scope", body("POST", { description })),
+  assistantHistory: (reportId: string, sectionId: string) => request<{ assistant: AssistantSpec; drafts: AssistantWritten[]; versions: AssistantVersion[] }>(`/api/reports/${id(reportId)}/assistant/${id(sectionId)}`),
+  assistantFeedback: (reportId: string, sectionId: string, feedback: string, runId: string | null) => request<{ requirements: string; previous: string; feedback: string; run_id: string | null; warnings: string[] }>(`/api/reports/${id(reportId)}/assistant/${id(sectionId)}/feedback`, body("POST", { feedback, run_id: runId })),
+  assistantRequirements: (reportId: string, sectionId: string, requirements: string, feedback = "", runId: string | null = null) => request<{ version: number; requirements: string; versions: AssistantVersion[] }>(`/api/reports/${id(reportId)}/assistant/${id(sectionId)}/requirements`, body("PUT", { requirements, feedback, run_id: runId })),
   reportRuns: (reportId: string) => request<ReportRun[]>(`/api/reports/${id(reportId)}/runs`),
   /** A new report's start from a dashboard: its pages as headings, its cards as cells. */
   dashboardAsReport: (dashboardId: string) => request<Pick<ReportDraft, "name" | "description" | "folder_id" | "sections">>(`/api/dashboards/${id(dashboardId)}/as-report`),

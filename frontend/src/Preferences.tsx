@@ -2,7 +2,7 @@
  * and Setup › Installation (administrators): the installation's time zone, the "Local time" of
  * every screen and of schedules saved at local time (owner, 2026-10-24/25). */
 import { cityName, deviceTimeZone, FormFooter, FormSection, Heading, offsetLabel, plantTimeZone, setTimeZoneMode, timeZoneLabel, timeZoneMode, TimeZoneSelect, type TimeZoneMode } from "@plantcraft/ui";
-import { AlertTriangle, Clock, Languages, LoaderCircle } from "lucide-react";
+import { AlertTriangle, Clock, Languages, LoaderCircle, Lock } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { language, LANGUAGES, setLanguage, t, type Language } from "./i18n";
 import { preferencesApi, type InstallationSettings, type Preferences } from "./preferencesApi";
@@ -116,15 +116,25 @@ export function InstallationSettingsPage() {
     {data && <form className="panel form-panel" onSubmit={(event) => void submit(event)}>
       <FormSection id="inst-zone" icon={<Clock size={17} />} title={t("Time zone")} detail={<>
         <p>{t("Where the plant is: the Local time of every screen, where a day and a shift begin, and the clock of the schedules saved at local time (backups, Analytics, Alarms).")}</p>
-        <p>{data.chosen
-          ? t("Chosen by {who}. The installer had set {zone}.", { who: data.updated_by ?? "", zone: data.installed_time_zone })
-          : t("Set by the installer from the server's clock. Change it if the server keeps another time.")}</p>
+        <p>{data.locked
+          ? t("Set by the installation: change it on the server, in the installation file.")
+          : data.chosen
+            ? t("Chosen by {who}. The installer had set {zone}.", { who: data.updated_by ?? "", zone: data.installed_time_zone })
+            : t("Set by the installer from the server's clock. Change it if the server keeps another time.")}</p>
       </>}>
         <div className="form-grid">
-          <label>{t("Time zone")}<TimeZoneSelect withLocal={false} value={zone} onChange={setZone} /></label>
+          <label>{t("Time zone")}{data.locked ? <input value={data.time_zone} disabled readOnly /> : <TimeZoneSelect withLocal={false} value={zone} onChange={setZone} />}</label>
         </div>
         <p className="muted">{t("Now at the plant: {time} ({zone})", { time: clock, zone: offsetLabel(data.time_zone) })}</p>
       </FormSection>
+      {data.installation_file?.present && <FormSection id="inst-file" icon={<Lock size={17} />} title={t("Set by the installation")} detail={<>
+        <p>{t("Decided before the suite was installed, in {path} on the server. No account here can change these: edit the file as root and run install.sh again.", { path: data.installation_file.path })}</p>
+        {data.installation_file.sha256 && <p className="muted">{t("File fingerprint (SHA-256): {sha}", { sha: data.installation_file.sha256.slice(0, 16) + "…" })}</p>}
+      </>}>
+        <table className="table"><tbody>
+          {data.installation_file.entries.map((entry) => <tr key={entry.key}><th scope="row">{t(entry.label)}</th><td>{entry.value || t("(default)")}</td></tr>)}
+        </tbody></table>
+      </FormSection>}
       <FormFooter note={t("Stored times do not change: they are in UTC. Only how they are shown and when local schedules run.")}>
         {zone !== data.time_zone && <button type="button" className="button button-secondary" onClick={() => setZone(data.time_zone)}>{t("Cancel")}</button>}
         <button className="button button-primary" disabled={busy || zone === data.time_zone}>{busy && <LoaderCircle className="spin" />} {t("Save")}</button>
