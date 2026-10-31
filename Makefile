@@ -163,7 +163,7 @@ SIMCRAFT_VERSION ?= 0.5.1
 SIMCRAFT_SRC ?= simulator
 # Optional: BUILD_CA=/path/ca.pem behind a TLS-inspecting proxy; DOCKER_BUILD_FLAGS for the rest
 # (for example --network host); PROXY_BUILD_FLAGS only for the proxy image (for example
-# --build-arg CADDY_IMAGE=<mirror>/caddy:2.11.2-alpine@sha256:<same digest>).
+# --build-arg CADDY_IMAGE=<mirror>/caddy:2.11.6-alpine@sha256:<same digest>).
 BUILD_CA ?=
 PROXY_BUILD_FLAGS ?=
 comma := ,

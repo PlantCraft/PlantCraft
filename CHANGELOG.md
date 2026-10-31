@@ -66,6 +66,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   output.** Each check (`PC-CTR-01` and so on) has a severity, the evidence it saw, how to fix it
   and its IEC 62443-4-2 and NIST SP 800-53 references; `--format json|junit|sarif`, `--skip`, and
   exit code 1 on a failure (docs/security-guide.md, "Security check").
+- **Fresher proxy and installer images.** The proxy moves to Caddy 2.11.6 and upgrades its Alpine
+  packages at build, and the installer's Docker CLI and Compose to 29.9.2. Trivy counted 3
+  critical and 84 high fixable findings in the proxy, and 3 and 87 in the installer, all in the old
+  Go binaries and curl.
 
 ### Fixed
 
