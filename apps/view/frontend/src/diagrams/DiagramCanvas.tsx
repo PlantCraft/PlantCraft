@@ -137,9 +137,26 @@ const SymbolView = memo(function SymbolView({ element, def, show, selected, onDo
       </g>
       {label && <text className={`dg-label${element.label_position === "inside" ? " dg-label-inside" : ""}`} x={lx} y={ly} textAnchor={anchor} dominantBaseline={baseline}>{label}</text>}
     </>}
+    {!nav && show?.state?.priority && (state === "alarm" || state === "warning") && <AlarmMark priority={show.state.priority} x={box.x + box.w} y={box.y} />}
     {selected && <rect className="dg-selection" x={box.x - 4} y={box.y - 4} width={box.w + 8} height={box.h + 8} rx={4} />}
   </g>;
 });
+
+/** ISA-101: an alarm is shown by shape and number as well as colour, so it reads without colour
+ * (colour blindness, a grey print): critical a square, high a triangle, medium a diamond, low a
+ * circle, each with its priority number. */
+const ALARM_MARK = { critical: "1", high: "2", medium: "3", low: "4" } as const;
+export function AlarmMark({ priority, x, y }: { priority: keyof typeof ALARM_MARK; x: number; y: number }) {
+  const r = 9;
+  const shape = priority === "critical" ? <rect x={-r} y={-r} width={2 * r} height={2 * r} rx={1.5} />
+    : priority === "high" ? <path d={`M0 ${-r - 2}L${r + 2} ${r}H${-r - 2}Z`} />
+    : priority === "medium" ? <path d={`M0 ${-r - 2}L${r + 2} 0L0 ${r + 2}L${-r - 2} 0Z`} />
+    : <circle r={r} />;
+  return <g className={`dg-alarm-mark dg-alarm-${priority}`} transform={`translate(${x} ${y})`} aria-label={`Priority ${ALARM_MARK[priority]} alarm`}>
+    {shape}
+    <text y={priority === "high" ? 4 : 1} textAnchor="middle" dominantBaseline="central">{ALARM_MARK[priority]}</text>
+  </g>;
+}
 
 function ValueView({ element, show, selected, onDown, onOpen }: { element: ValueElement; show?: Shown; selected: boolean; onDown?: (event: ReactPointerEvent, element: Element) => void; onOpen?: (element: Element) => void }) {
   const state = show?.state ?? "unknown";
