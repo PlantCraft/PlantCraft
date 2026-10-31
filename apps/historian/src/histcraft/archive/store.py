@@ -204,6 +204,22 @@ class ArchiveStore(Store):
         PRIMARY KEY(point, t)
     );
 
+    -- People's edits of archived values (H7): each value inserted, edited or deleted by hand,
+    -- with the value it replaced (JSON, NULL when there was none), who and when, and why.
+    -- The value read carries the mark; the original stays here.
+    CREATE TABLE IF NOT EXISTS edits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        point INTEGER NOT NULL,
+        t INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        old_value TEXT,
+        new_value TEXT,
+        author TEXT NOT NULL DEFAULT '',
+        at INTEGER NOT NULL,
+        reason TEXT NOT NULL DEFAULT ''
+    );
+    CREATE INDEX IF NOT EXISTS edits_point_t ON edits (point, t);
+
     CREATE TABLE IF NOT EXISTS request_results (
         id INTEGER PRIMARY KEY,
         status TEXT NOT NULL,
@@ -424,10 +440,27 @@ class ArchiveStore(Store):
             return 0
         return self._writing(lambda: self._replace(point, kind, samples))
 
-    def _replace(self, point: int, kind: str, samples: list[tuple[int, Any]]) -> int:
+    def edit(
+        self, point: int, kind: str, samples: list[tuple[int, Any]], drop: Iterable[int] = ()
+    ) -> int:
+        """A person's edit (``api.routers.edits``): ``samples`` written as ``replace`` does and
+        the values at the times in ``drop`` removed. The values not settled yet are settled
+        first, so an edit never races the collector's buffer."""
+
+        drop = sorted({int(at) for at in drop})
+        if not samples and not drop:
+            return 0
+        self.settle()
+        samples = sorted(samples, key=lambda item: item[0])
+        return self._writing(lambda: self._replace(point, kind, samples, drop))
+
+    def _replace(
+        self, point: int, kind: str, samples: list[tuple[int, Any]], drop: list[int] = ()
+    ) -> int:
         times = np.fromiter((at for at, _ in samples), dtype=np.int64, count=len(samples))
         values = [value for _, value in samples]
-        first, last = int(times.min()), int(times.max())
+        bounds = [*times.tolist(), *drop]
+        first, last = int(min(bounds)), int(max(bounds))
         with self._lock, self._connect() as connection:
             rows = connection.execute(
                 "SELECT t0, data FROM chunks WHERE point = ? AND t0 <= ? AND t1 >= ?",
@@ -461,6 +494,10 @@ class ArchiveStore(Store):
             order = np.argsort(times, kind="stable")
             times = times[order]
             values = [values[i] for i in order]
+            if len(drop):
+                keep = ~np.isin(times, np.asarray(drop, dtype=np.int64))
+                values = [value for value, kept in zip(values, keep.tolist(), strict=True) if kept]
+                times = times[keep]
             self._ensure("chunks", times[::CHUNK_VALUES].tolist())
             connection.executemany(
                 _PUT_CHUNK,
@@ -478,7 +515,7 @@ class ArchiveStore(Store):
                 ],
             )
             connection.executemany(_COUNT, _hour_counts(point, [at for at, _ in samples]))
-        return len(samples)
+        return len(samples) + len(drop)
 
     def put_run(self, point: int, run_at: int, samples: list[tuple[int, float]], keep: int) -> int:
         """Store one execution of a runs point (the same ``run_at`` replaces it) and keep only the
@@ -576,6 +613,36 @@ class ArchiveStore(Store):
                 " author = excluded.author, writes = lab_samples.writes + 1",
                 list(rows),
             )
+
+    def put_edits(self, rows: Iterable[tuple[Any, ...]]) -> None:
+        """Keep ``(point, t, action, old, new, author, at, reason)`` of people's edits (``old``
+        and ``new`` as JSON text, or None)."""
+
+        with self._lock, self._connect() as connection:
+            connection.executemany(
+                "INSERT INTO edits (point, t, action, old_value, new_value, author, at, reason)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                list(rows),
+            )
+
+    def edits(
+        self, points: Iterable[int], start_ms: int, end_ms: int
+    ) -> dict[int, list[dict[str, Any]]]:
+        """Per point, the edits of values in ``[start, end]``, by value time then edit order."""
+
+        ids = sorted({int(point) for point in points})
+        found: dict[int, list[dict[str, Any]]] = {point: [] for point in ids}
+        if not ids:
+            return found
+        with self._connect() as connection:
+            rows = connection.execute(
+                f"SELECT * FROM edits WHERE point IN ({_marks(ids)}) AND t >= ? AND t <= ?"
+                " ORDER BY point, t, id",
+                (*ids, start_ms, end_ms),
+            ).fetchall()
+        for row in rows:
+            found[int(row["point"])].append(dict(row))
+        return found
 
     def lab_samples(self, point: int, start_ms: int, end_ms: int) -> list[dict[str, Any]]:
         with self._lock, self._connect() as connection:
@@ -1295,6 +1362,7 @@ _POINT_TABLES = (
     "point_totals",
     "run_series",
     "lab_samples",
+    "edits",
 )
 DELETE_BATCH = 500
 DELETE_TRIES = 5

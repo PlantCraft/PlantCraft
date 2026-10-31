@@ -31,6 +31,7 @@ from histcraft.api.deps import (
 )
 from histcraft.api.routers.data import run_reads
 from histcraft.api.runtime import Runtime, point_ref
+from histcraft.archive.edit_marks import edit_marks
 from histcraft.archive.forecast import forecast, free_bytes
 from histcraft.archive.query import SourceUnavailable, iso_ms
 from histcraft.catalog import points_csv
@@ -472,12 +473,14 @@ def point_series(
         {"t": iso_ms(np.asarray([at]))[0], "quality": code, **described(status, name)}
         for at, code, status, name in changes
     ]
+    edited = runtime.archive.edits([int(point["id"])], begin_ms, finish_ms)[int(point["id"])]
     return {
         "signal": signal_id,
         "kind": point["kind"],
         "t": stamps,
         "v": values,
         "quality": quality,
+        "edits": edit_marks(edited),
         **({"low": bounds[0], "high": bounds[1]} if bounds else {}),
     }
 
