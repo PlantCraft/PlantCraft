@@ -402,22 +402,45 @@ class HistCraftDataLayer(DataLayer):
     ) -> dict[str, Any]:
         started = time.perf_counter()
         wanted = [f"{source}:{tag}" if source and ":" not in tag else tag for tag in tags]
-        answer = self.series_batch(wanted, self._utc(start), self._utc(end), None)
+        begin, finish = self._utc(start), self._utc(end)
+        # The Historian draws each cell's lowest and highest value itself (hourly rollups for long
+        # windows), so a long trend no longer reads every raw sample to keep half of a few.
+        span = (pd.Timestamp(finish) - pd.Timestamp(begin)).total_seconds()
+        step = max(1.0, span / max(1, max_points // 2))
+        answer = self.series_batch(wanted, begin, finish, step, extremes=True)
         series: dict[str, list[list[Any]]] = {}
+        raw_needed: list[tuple[str, str]] = []
+        refused = {error.get("signal") for error in answer.get("errors") or []}
         for tag, signal_id in zip(tags, wanted, strict=True):
-            item = next(
-                (s for s in answer.get("series") or [] if s.get("signal") == signal_id), None
-            )
+            item = _item(answer, signal_id)
             if item is None:
+                if signal_id in refused:  # e.g. a grid refused for text: try the raw read
+                    raw_needed.append((tag, signal_id))
                 continue
-            pairs = [
-                [stamp, value]
-                for stamp, value in zip(item.get("t") or [], item.get("v") or [], strict=False)
-                if value is not None
-            ]
-            pairs = thin_extremes(pairs, max_points)
+            pairs = _extreme_pairs(item)
+            if pairs is None:
+                raw_needed.append((tag, signal_id))
+                continue
             series[tag] = [[_local_text(stamp, self.timezone), value] for stamp, value in pairs]
-        failed = {error.get("signal") for error in answer.get("errors") or []}
+        retried = {signal_id for _, signal_id in raw_needed}
+        errors = [e for e in answer.get("errors") or [] if e.get("signal") not in retried]
+        if raw_needed:
+            # Text, a source read through, or past the Historian's extremes: the raw samples, cut
+            # to the lowest and highest of each stretch here.
+            raw = self.series_batch([signal_id for _, signal_id in raw_needed], begin, finish, None)
+            errors += raw.get("errors") or []
+            for tag, signal_id in raw_needed:
+                item = _item(raw, signal_id)
+                if item is None:
+                    continue
+                pairs = [
+                    [stamp, value]
+                    for stamp, value in zip(item.get("t") or [], item.get("v") or [], strict=False)
+                    if value is not None
+                ]
+                pairs = thin_extremes(pairs, max_points)
+                series[tag] = [[_local_text(stamp, self.timezone), value] for stamp, value in pairs]
+        failed = {error.get("signal") for error in errors}
         return {
             "start": pd.Timestamp(start).isoformat(),
             "end": pd.Timestamp(end).isoformat(),
@@ -730,3 +753,25 @@ def _receipt(answer: Any, items: list[Any]) -> dict[str, Any]:
         if isinstance(error, dict)
     ]
     return {"written": int(answer.get("written") or 0), "errors": errors}
+
+
+def _item(answer: dict[str, Any], signal_id: str) -> dict[str, Any] | None:
+    return next((s for s in answer.get("series") or [] if s.get("signal") == signal_id), None)
+
+
+def _extreme_pairs(item: dict[str, Any]) -> list[list[Any]] | None:
+    """Each cell's low then high, at the cell's time (the trend draws the cell's whole range);
+    None when the Historian sent no extremes for this signal."""
+
+    low, high = item.get("low"), item.get("high")
+    stamps = item.get("t") or []
+    if low is None or high is None or len(low) != len(stamps) or len(high) != len(stamps):
+        return None
+    pairs: list[list[Any]] = []
+    for stamp, bottom, top in zip(stamps, low, high, strict=True):
+        if bottom is None or top is None:
+            continue
+        pairs.append([stamp, bottom])
+        if top != bottom:
+            pairs.append([stamp, top])
+    return pairs

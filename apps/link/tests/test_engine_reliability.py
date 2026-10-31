@@ -106,14 +106,14 @@ def test_a_failed_batch_read_keeps_the_last_results_of_its_loops(runtime, monkey
     before = monitor.latest.get("cpm", "loop", "lic-102")
 
     plant = monitor.plant
-    original = plant.read_range
+    original = plant.read_signals
 
     def failing(start, end, sample_seconds, *, tags, text_signals=()):
         if sid("LIC-102.PV") in tags:
             raise ConnectionError("PlantCraft unreachable")
         return original(start, end, sample_seconds, tags=tags, text_signals=text_signals)
 
-    monkeypatch.setattr(plant, "read_range", failing)
+    monkeypatch.setattr(plant, "read_signals", failing)
     second = monitor.run_once()
     assert second["status"] == "ok"
     # The unread loop is not analysed as "no data": it keeps its last result.
@@ -150,6 +150,42 @@ def test_a_round_keeps_only_a_few_loops_out_at_once(runtime, monkeypatch):
     assert max(most) <= 2
 
 
+def test_each_loop_of_a_round_gets_only_its_own_samples(runtime, monkeypatch):
+    """A round reads 50 loops at once, but each loop's task carries its own signals' times
+    only, as when the loop runs alone (one frame of the batch is 98% empty on a raw day)."""
+
+    import pandas as pd
+
+    from linkcraft.data.frames import loop_signal_ids
+
+    monitor = runtime.monitor
+    original = monitor.plant.read_signals
+
+    def apart(*args, **kwargs):  # every signal recorded at its own times, as on a raw day
+        found = original(*args, **kwargs)
+        for n, key in enumerate(sorted(found)):
+            found[key] = found[key].set_axis(found[key].index + pd.Timedelta(milliseconds=n + 1))
+        return found
+
+    shipped = {}
+
+    class Recording(ComputePool):
+        def submit(self, function, argument):
+            shipped[argument["loop"]["loop_id"]] = argument["raw"]
+            return super().submit(function, argument)
+
+    monkeypatch.setattr(monitor.plant, "read_signals", apart)
+    runtime.sync_loops()
+    monitor.compute = Recording(0)
+    assert monitor.run_once()["status"] == "ok"
+    assert len(shipped) == 5
+    for loop in monitor.loops:
+        raw = shipped[loop.loop_id]
+        assert list(raw.columns) == [s for s in loop_signal_ids(loop) if s in raw.columns]
+        assert bool(raw.notna().any(axis=1).all())  # no row of another loop's times
+        assert len(raw) == int(raw.notna().sum().sum())
+
+
 def test_jobs_left_running_by_a_stopped_engine_cancel_their_compute_tasks(tmp_path):
     jobs = JobStore(Database(tmp_path / "jobs.sqlite3"))
     job = jobs.create_job(loop_id="L1", name="x", kind="manual")
@@ -173,7 +209,7 @@ def test_a_round_with_processcraft_down_reports_an_error(runtime, monkeypatch):
     def down(*_args, **_kwargs):
         raise ConnectionError("PlantCraft unreachable")
 
-    monkeypatch.setattr(runtime.monitor.plant, "read_range", down)
+    monkeypatch.setattr(runtime.monitor.plant, "read_signals", down)
     assert runtime.monitor.run_once()["status"] == "error"
 
 
