@@ -253,10 +253,14 @@ ci/bench/cpu_sweep.sh --prefix P --plan shares     # 2 cores, cpu_shares for peo
 | whole suite on 2 cores, Historian 1 / 2 processes | 35.1 / 23.9 | 18.3 / 12.4 | 4.7 / 3.6 |
 | whole suite on 4 cores, Historian 1 / 2 processes | 30.5 / 22.6 | 24.1 / 18.0 | 3.1 / 1.9 |
 | 2 cores, no priority / cpu_shares 4096 people, 256 background | 33.5 / 38.6 | 21.0 / 19.8 | 4.7 / 3.5 |
+| the same, three runs each (mean) | 42.5 / 56.4 | 28.7 / 30.1 | 3.1 / 4.3 |
 
 What it says: one container's CPU limit changes little (single runs vary by about 3 s); the
 Historian, one Python process at a full core, sets the pace, and a second process is the largest
-gain at 2 and 4 cores. Going from 2 to 4 cores without it gains almost nothing. Peak memory of
+gain at 2 and 4 cores. Going from 2 to 4 cores without it gains almost nothing. Priority by `cpu_shares` (people's containers 4096, the background 256) made rounds a third slower and did not make screens faster over three runs each, so the profile leaves it out. Peak memory of
 every container over all runs adds up to 4.5 GB (Historian 723 MiB with 2 processes, Analytics
 692, PlantCraft 623, its executor 615 with 8 slots), which is what the `small` profile's limits
-and its swap warning are built on.
+and its swap warning are built on. On a 2 CPU / 4 GB virtual machine with 2 GB of swap the
+`small` profile ran C2 four times without a container stopped (RAM peak 3.0 GB, swap 0.9 GB);
+with Analytics and its executor at 1 CPU and 1 slot its round was slower, so `small` gives
+them 2.
