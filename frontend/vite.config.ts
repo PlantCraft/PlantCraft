@@ -1,9 +1,10 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { sharedVendor } from "./sharedVendor.mjs";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), sharedVendor()],
   build: {
     outDir: "dist",
     // Built files live under /static/; /assets/<id> is the asset deep link (docs/app-standard.md).

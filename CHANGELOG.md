@@ -113,6 +113,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Plotly and the fonts download once for the whole suite, not once per app (ui 0.96.0).**
+  The platform serves them at `/static/vendor/` under names that carry a hash of their bytes
+  (kept a year by the proxy), and every app asks there first: `@plantcraft/ui/plot` loads
+  Plotly from the platform and `fonts.css` lists the platform's copy before the app's own. An
+  app run on its own, or a platform with another Plotly build, answers 404 and the app uses its
+  own copy as before. `node ui/scripts/shared-vendor-names.mjs` prints the names after an upgrade.
 - **Analytics › Algorithms opens without the diagram editor.** The list moved to its own module
   (`AlgorithmList.tsx`), so opening it no longer loads React Flow and the test tools: 724 KB to
   443 KB of script. The algorithm's page still loads them.
