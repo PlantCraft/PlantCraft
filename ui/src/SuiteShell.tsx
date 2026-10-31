@@ -553,7 +553,7 @@ function FullShell(props: SuiteShellProps) {
           <span className="pcs-mobile-only pcs-top-app"><AppLockup app={app} name={appName} size={26} /></span>
           <div className="pcs-top-actions">{actions}</div>
         </header>
-        <main className={`pcs-content${fill ? " pcs-content-fill" : ""}`} ref={contentRef}>{children}</main>
+        <main className={`pcs-content${fill ? " pcs-content-fill" : ""}`} ref={contentRef} aria-label={appName}>{children}</main>
       </div>
       {inbox && !inboxState.forbidden && urgentDue(urgent) && <UrgentToast key={urgent.key} notice={urgent} onOpen={openNotifications} onChanged={messagesRead} />}
       {arrived > 0 && inbox && !inboxState.forbidden && !urgentDue(urgent) && (

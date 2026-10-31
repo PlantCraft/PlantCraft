@@ -310,6 +310,7 @@
   --pc-chrome-accent: #7fa6d1;
   --pc-chrome-accent-strong: #3d78b6;
   --pc-chrome-accent-text: #b4cbe4;
+  --pc-chrome-problem: #d70015;   /* count badges on the chrome: white on it is 5.4:1 (problem-fill is 3.6:1) */
 
   /* Typography. Inter: a screen face with optical sizing (tighter in titles, open in body) and
      true tabular figures; JetBrains Mono for tags, values and code. Both self-hosted inside this

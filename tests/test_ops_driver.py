@@ -131,6 +131,35 @@ def test_restore_returns_the_data_and_keeps_what_it_replaced(driver):
     assert request["state"] == "done" and request["aside"] == outcome["aside"]
 
 
+def test_a_restore_from_a_bigger_machine_fits_the_cpu_limits_to_this_host(driver, monkeypatch):
+    # 31/10 test day: a backup from a 4-CPU server failed to start on a 2-CPU one
+    # ("range of CPUs is from 0.01 to 2.00").
+    (driver.install / "compose.yaml").write_text(
+        'services:\n  a:\n    cpus: "${PLANTCRAFT_CPUS:-1}"\n'
+        '  b:\n    cpus: "${LINKCRAFT_EXECUTOR_CPUS:-4}"\n  c:\n    cpus: "${HISTCRAFT_CPUS:-1.5}"\n'
+    )
+    env = driver.install / ".env"
+    env.write_text(env.read_text() + "PLANTCRAFT_CPUS=4\nHISTCRAFT_CPUS=1\n")
+    name = driver.run("backup", reason="manual")["name"]
+    monkeypatch.setattr(ops, "host_cpus", lambda: 2)
+    outcome = driver.run("restore", name=name)
+    assert outcome["state"] == "ok", outcome
+    values = ops.env_values(env)
+    assert values["PLANTCRAFT_CPUS"] == "2"  # set above the host: capped
+    assert values["LINKCRAFT_EXECUTOR_CPUS"] == "2"  # default above the host: written
+    assert values["HISTCRAFT_CPUS"] == "1"  # fits: untouched
+    assert env.read_text().count("PLANTCRAFT_CPUS=") == 1
+
+
+def test_fit_cpu_limits_leaves_a_host_with_enough_cpus_alone(tmp_path):
+    (tmp_path / "compose.yaml").write_text('x:\n  cpus: "${LINKCRAFT_EXECUTOR_CPUS:-4}"\n')
+    (tmp_path / ".env").write_text("A=1\n")
+    assert ops.fit_cpu_limits(tmp_path, 8) == {}
+    assert (tmp_path / ".env").read_text() == "A=1\n"
+    assert ops.fit_cpu_limits(tmp_path, 3) == {"LINKCRAFT_EXECUTOR_CPUS": "4"}
+    assert (tmp_path / ".env").read_text() == "A=1\nLINKCRAFT_EXECUTOR_CPUS=3\n"
+
+
 def test_a_restore_that_does_not_come_up_returns_by_itself(driver):
     name = driver.run("backup", reason="manual")["name"]
     db = driver.install / "data" / "linkcraft" / "linkcraft.sqlite3"
