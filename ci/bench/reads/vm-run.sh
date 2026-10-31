@@ -13,6 +13,7 @@ sudo apt-get install -y -q python3-venv python3-dev build-essential >/dev/null
 pip install -q -U pip
 grep -v "^ *--hash\|^#" plantcraft/apps/link/deploy/requirements.lock | grep "==" | sed 's/ *\\$//' > link-req.txt
 pip install -q -r link-req.txt psycopg[binary] psycopg-pool uvicorn
+pip install -q -r plantcraft/apps/historian/deploy/requirements.lock
 pip install -q -e plantcraft/sdk/python -e plantcraft/apps/historian -e plantcraft/apps/link --no-deps
 sudo docker rm -f a-pg >/dev/null 2>&1 || true
 sudo docker run -d --name a-pg -p 127.0.0.1:55432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=hist \
