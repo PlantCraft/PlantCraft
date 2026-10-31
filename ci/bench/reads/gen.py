@@ -10,8 +10,6 @@ templates (tiled in time, shifted in level), keeping real intervals and value pa
 
 from __future__ import annotations
 
-import sys
-
 import numpy as np
 
 pass
@@ -45,7 +43,9 @@ class Raw:
         out = np.empty((scans, n), dtype=np.float64)
         for i in range(scans):
             # targets: rare steps (set points ~2 h, digital ~30 min, others drift targets ~1 h)
-            p_step = np.choose(k, [scan_s / 3600, scan_s / 3600, scan_s / 3600, scan_s / 7200, scan_s / 1800])
+            p_step = np.choose(
+                k, [scan_s / 3600, scan_s / 3600, scan_s / 3600, scan_s / 7200, scan_s / 1800]
+            )
             step = r.random(n) < p_step
             new = r.uniform(20, 80, n)
             new = np.where(k == 4, np.where(self.target > 50, 0.0, 100.0), new)
@@ -91,7 +91,9 @@ def archive_stream(points: int, seconds: int, start_ms: int, seed: int = 1, scan
                     out_t[p].append(t)
                     out_v[p].append(v)
         done += b
-    return [(np.array(t, dtype=np.int64), np.array(v, dtype=np.float64)) for t, v in zip(out_t, out_v)]
+    return [
+        (np.array(t, dtype=np.int64), np.array(v, dtype=np.float64)) for t, v in zip(out_t, out_v)
+    ]
 
 
 class Templates:
@@ -114,7 +116,14 @@ class Templates:
             sum(len(lst) for lst in self.items) * 3600.0
         )
 
-    def hour(self, points: np.ndarray, kinds_of: np.ndarray, levels: np.ndarray, hour_index: int, hour_ms: int):
+    def hour(
+        self,
+        points: np.ndarray,
+        kinds_of: np.ndarray,
+        levels: np.ndarray,
+        hour_index: int,
+        hour_ms: int,
+    ):
         """Concatenated (point, t, v) for the given points over one hour starting at hour_ms."""
         ps, ts, vs = [], [], []
         for p, k, lev in zip(points, kinds_of, levels):

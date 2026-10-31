@@ -8,7 +8,11 @@ Written one chunk per point per hour (as the collector's settle leaves them afte
 compaction), then compacted by tiers like housekeeping: closed days become day chunks, the
 current day stays in hour chunks.
 """
-import argparse, json, time
+
+import argparse
+import json
+import time
+
 import numpy as np
 from gen import Templates, kinds
 from histcraft.archive.store import ArchiveStore
@@ -28,12 +32,30 @@ archive = ArchiveStore(Database(a.db))
 try:
     catalog.source(a.source)
 except Exception:
-    catalog.save_source(SourceIn(id=a.source, name="Bench", kind="opcua", enabled=False,
-        endpoint="opc.tcp://bench.invalid:4840/", namespace_uri="urn:bench"), create=True)
+    catalog.save_source(
+        SourceIn(
+            id=a.source,
+            name="Bench",
+            kind="opcua",
+            enabled=False,
+            endpoint="opc.tcp://bench.invalid:4840/",
+            namespace_uri="urn:bench",
+        ),
+        create=True,
+    )
 k = kinds(a.points)
 names = ["PV", "TI", "OP", "SP", "XS"]
-items = [PointIn(tag=f"P{n:05d}.{names[k[n]]}", source_id=a.source, unit="%", low=0, high=100,
-                 step=bool(k[n] in (3, 4))) for n in range(a.points)]
+items = [
+    PointIn(
+        tag=f"P{n:05d}.{names[k[n]]}",
+        source_id=a.source,
+        unit="%",
+        low=0,
+        high=100,
+        step=bool(k[n] in (3, 4)),
+    )
+    for n in range(a.points)
+]
 catalog.add_points(items)
 points = sorted(catalog.points(source_id=a.source), key=lambda p: p["tag"])
 ids = np.array([int(p["id"]) for p in points])
@@ -62,6 +84,17 @@ for h in range(hours):
         print("hour", h, written, round(time.perf_counter() - t0, 1), flush=True)
 t1 = time.perf_counter()
 merged = archive.compact(now_ms - 3_600_000 * 0 + 1)
-print(json.dumps({"points": a.points, "days": a.days, "thin": a.thin, "values": written,
-    "per_point_day": round(written / a.points / a.days), "write_s": round(t1 - t0, 1),
-    "compact_s": round(time.perf_counter() - t1, 1), "merged": merged}))
+print(
+    json.dumps(
+        {
+            "points": a.points,
+            "days": a.days,
+            "thin": a.thin,
+            "values": written,
+            "per_point_day": round(written / a.points / a.days),
+            "write_s": round(t1 - t0, 1),
+            "compact_s": round(time.perf_counter() - t1, 1),
+            "merged": merged,
+        }
+    )
+)
