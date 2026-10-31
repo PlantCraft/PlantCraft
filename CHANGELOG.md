@@ -38,6 +38,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **The demo's lines in the install log carry the seconds since the seed started**
+  (`[demo +42s] ...`), and the Historian backfill says how long it took: the seed is half of an
+  install with `--demo` (69 of 124 s on a 4 CPU arm64 VM), and the log now shows which step.
 - **The Historian's means on a grid take one pass (2026-10-31).** A grid read built each
   signal's segments four times to get its covered time and area; now once, with the same
   arithmetic and the same values to the bit. 200 dense signals x 24 h at 60 s: the Historian's
