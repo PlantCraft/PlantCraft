@@ -1,7 +1,8 @@
 import { ArrowUpRight, BookOpen, ChevronRight, ClipboardList, FileDown, Pencil, Play, RotateCcw, Trash2 } from "lucide-react";
 import { DataTable, FollowUp, NextSteps, PhoneFold, confirmAction, useAssistantPage, plotTheme, statusVar, type DataColumn, type JourneyStep } from "@plantcraft/ui";
 import { useEffect, useMemo, useState } from "react";
-import { processCraftActionUrl, processCraftAssetUrl } from "./AssetLink";
+import { processCraftAssetUrl } from "./AssetLink";
+import { chartsImage, leaveAttachment, verdictActionUrl } from "./verdict";
 import { api } from "./api";
 import { formatDate, formatNumber, t } from "./i18n";
 import { formatPercent, methodLabel, performanceOf } from "./labels";
@@ -32,7 +33,7 @@ function Trends({ detail }: { detail: LoopDetail }) {
   const line = (name: string, values: Array<number | null | undefined>, dash?: string) => ({ type: "scatter" as const, mode: "lines" as const, name, x: times, y: values.map((value) => value ?? null), line: { width: 1.6, ...(dash ? { dash } : {}) } });
   const layout = (title: string) => ({ ...theme, height: 260, margin: { l: 48, r: 12, t: 30, b: 32 }, title: { text: title, font: { size: 12 } }, showlegend: true, legend: { ...theme.legend, orientation: "h" as const, y: 1.18, x: 1, xanchor: "right" as const } });
   if (!times.length) return <p className="muted">{t("No trend data for this window.")}</p>;
-  return <div className="charts">
+  return <div className="charts loop-verdict-charts">
     <Plot data={[line("PV", detail.series.map((p) => p.pv)), line("SP", detail.series.map((p) => p.sp), "dot")]} layout={layout(t("PV and SP"))} config={{ displaylogo: false, responsive: true }} useResizeHandler style={{ width: "100%" }} />
     <Plot data={[line("OP", detail.series.map((p) => p.op))]} layout={layout(t("Controller output (%)"))} config={{ displaylogo: false, responsive: true }} useResizeHandler style={{ width: "100%" }} />
     <OpHistogram values={detail.series.map((p) => p.op)} />
@@ -206,6 +207,20 @@ export function LoopPage({ loopId, me }: { loopId: string; me: Me }) {
   const profileName = algorithm?.name ?? "";
   const algorithmId = algorithm?.id ?? detail?.loop.profile_id ?? "";
 
+  const [opening, setOpening] = useState(false);
+  // A19: PlantCraft's action form with this verdict written out and the loop's charts as one image.
+  async function newAction() {
+    if (!detail) return;
+    setOpening(true);
+    let key: string | null = null;
+    try {
+      const plotly = (await import("plotly.js-cartesian-dist-min")).default as unknown as Parameters<typeof chartsImage>[1];
+      const image = await chartsImage(document.querySelector<HTMLElement>(".loop-verdict-charts"), plotly);
+      if (image) key = leaveAttachment(`${detail.loop.loop_id} ${(detail.source_end ?? "").slice(0, 16).replace("T", " ")}.png`, image);
+    } catch { key = null; } // without the image the form still opens with the verdict
+    window.location.assign(verdictActionUrl(me, detail, key));
+  }
+
   async function runNow() {
     setMessage("");
     try {
@@ -239,7 +254,7 @@ export function LoopPage({ loopId, me }: { loopId: string; me: Me }) {
       detail={detail.incomplete ? t("Incomplete record: not analysed.") : detail.source_end ? t("Window {start} to {end}.", { start: formatDate(detail.source_start), end: formatDate(detail.source_end) }) : t("Not analysed yet: results appear after the next run.")}
       actions={<>
         <a className="button button-secondary" href={api.loopReportUrl(loopId)}><FileDown size={16} />{t("PDF report")}</a>
-        {me.can_edit && detail.origin === "processcraft" && <a className="button button-secondary" href={processCraftActionUrl(me, assetId(detail), actionTitle(detail))}><ClipboardList size={16} />{t("New action")}</a>}
+        {me.can_edit && !detail.incomplete && <button type="button" className="button button-secondary" disabled={opening} onClick={() => void newAction()} title={t("Opens PlantCraft's action form with this verdict and the loop's charts attached")}><ClipboardList size={16} />{opening ? t("Preparing…") : t("New action")}</button>}
         {me.can_edit && !detail.incomplete && <button className="button button-primary" onClick={() => void runNow()}><Play size={16} />{t("Run now")}</button>}
       </>}
     />

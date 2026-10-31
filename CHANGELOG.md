@@ -9,6 +9,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **An action keeps the chart it was opened from.** An app's link to the action form can carry the
+  description (`text=`) and an image left in the tab (`attach=`); the new action keeps the image
+  (PNG, JPEG or WebP, up to 2 MB) and its page shows it. Analytics uses it to open an action from a
+  loop's verdict with the loop's chart (docs/collaboration.md).
 - `plantcraft-sdk`: `PlantCraftClient.lab_samples(signal, start, end)` reads a laboratory
   signal's samples from the Historian, each with its status and its received and approved times
   (an empty list without a Historian). View's trends use it.

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from plantcraft.actions import ActionStore
+from plantcraft.actions.attachments import AttachmentStore
 from plantcraft.assets import AssetStore
 from plantcraft.assets.imports import AssetImportStore
 from plantcraft.assistant_access import AssistantAccessStore
@@ -62,6 +63,7 @@ class Workspace(Store):
         self.knowledge = KnowledgeStore(db)
         self.messages = ConversationStore(db, self.users)
         self.actions = ActionStore(db)
+        self.action_files = AttachmentStore(db)
         self.preferences = PreferenceStore(db)
         self.installation = InstallationStore(db)
         self.notebooks = NotebookStore(db)

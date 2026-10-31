@@ -8,6 +8,11 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **A new action from a loop's verdict, with its charts.** "New action" on every analysed loop's
+  page (not only loops from PlantCraft's assets) opens PlantCraft's action form with the verdict
+  written out (status, health, window, limiting finding, likely cause and what to do first), the
+  reference `#verdict:<loop>@<window end>` (declared in `app.toml`, it opens the loop again) and
+  the PV/SP and OP charts attached as one PNG (`frontend/src/verdict.ts`).
 - **Days to the limit.** For loops whose health is falling, a line fitted to the last 14 days
   (6-hour means) says how many days are left until the health reaches the alarm limit (50). The
   forecast is shown only when the line fits (R² of at least 0.5) and the limit is less than a year

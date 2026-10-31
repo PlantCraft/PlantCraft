@@ -6,6 +6,7 @@ import { href, navigate, SIGNAL_RUN_PREFIX, usePath } from "./nav";
 import { NAV, tourExamples, tourSteps, type TourExamples } from "./pages";
 import type { Me } from "./types";
 import { ErrorBox, Loading } from "./ui";
+import { parseVerdict } from "./verdict";
 
 // Each page loads when it is first opened: Plotly (1.4 MB), the code editor and the diagram
 // editor come only with the pages that draw them, not with every page of Link.
@@ -57,6 +58,12 @@ function Route({ path, me }: { path: string; me: Me }) {
   if (section === "results" && id === "runs") return <RunHistoryPage me={me} />;
   if (section === "results") return <ResultsPage me={me} />;
   if (section === "loops" && id) return <LoopPage loopId={id} me={me} />;
+  if (section === "verdicts" && id) {
+    // #verdict:<loop>@<window end> from an action (verdict.ts): the loop's page.
+    const target = `/loops/${encodeURIComponent(parseVerdict(id).loopId)}`;
+    window.history.replaceState({}, "", href(target));
+    return <LoopPage loopId={parseVerdict(id).loopId} me={me} />;
+  }
   if (section === "protocols") {
     // The protocols of 0.2 became algorithms.
     const target = !id ? "/algorithms" : id === "signal-quality" ? "/algorithms/signal_quality/settings" : `/algorithms/${encodeURIComponent(id)}`;

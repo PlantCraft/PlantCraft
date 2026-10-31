@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from "react";
 import { AssistantTitleButton, DataTable, Heading, useAssistantPage } from "@plantcraft/ui";
 import { AlertTriangle, ArrowLeft, AtSign, CalendarClock, CheckSquare, ClipboardCheck, Clock, Columns3, Hash, List, ListChecks, LoaderCircle, Lock, MessageSquare, Pencil, Plus, Rows2, Rows3, Search, SendHorizontal, Trash2, UserRound, Users, X } from "lucide-react";
+import { readPrefill, type Prefill } from "./actionPrefill";
 import { boardColumns, hoursText, timeText, type BoardColumn } from "./actionsBoard";
 import { Avatar, dayText, errorText, fullWhen, Go, MentionText, optionFromRef, PersonLink, plainMentions, ReferencePicker, RefChip, resolveOption, shortWhen } from "./collab";
 import { collabApi, type Action, type ActionDraft, type ActionItem, type ActionList, type ActionStatus, type ActionView, type Id, type RefOption } from "./collabApi";
@@ -17,12 +18,13 @@ import { RequestTargets } from "./OperationsRequests";
 
 export const DEFAULT_OPEN_STATUSES = ["open", "in_progress", "blocked"];
 
-type Prefill = { title: string; refs: string[] };
-
-function readPrefill(): Prefill | null {
-  const params = new URLSearchParams(window.location.search);
-  if (!params.get("new")) return null;
-  return { title: params.get("title") ?? "", refs: params.getAll("ref").filter(Boolean) };
+// Read once per address: the image an app left is taken from sessionStorage on the first read
+// (React may call a state initializer twice).
+let addressRead: { search: string; prefill: Prefill | null } | null = null;
+function prefillFromAddress(): Prefill | null {
+  const search = window.location.search;
+  if (addressRead?.search !== search) addressRead = { search, prefill: readPrefill(search) };
+  return addressRead.prefill;
 }
 
 function StatusBadge({ action }: { action: Pick<Action, "status" | "status_label"> }) {
@@ -65,7 +67,7 @@ export function ActionsPage({ actionId }: { actionId: string | null }) {
   const [scope, setScopeState] = useState<ActionView>(savedScope);
   const [q, setQ] = useState("");
   const [search, setSearch] = useState("");
-  const [prefill] = useState(readPrefill);
+  const [prefill] = useState(prefillFromAddress);
   const [form, setForm] = useState<{ action: Action | null; prefill: Prefill | null } | null>(null);
   const [notice, setNotice] = useState("");
   const setView = (value: View) => { setViewState(value); try { window.localStorage.setItem(VIEW_KEY, value); } catch { /* a private window */ } };
@@ -302,6 +304,7 @@ function ActionPage({ actionId, list, canEdit, onEdit, onChanged }: { actionId: 
       <section className="panel act-page-main">
         <h2 className="section-title">{t("Description")}</h2>
         {action.description ? <MentionText className="action-description act-description" text={action.description} refs={action.mentions ?? []} /> : <p className="muted">{t("No description.")}</p>}
+        {(action.files ?? []).length > 0 && <div className="act-files">{(action.files ?? []).map((file) => <a key={file.file_id} href={collabApi.fileUrl(action.action_id, file.file_id)} target="_blank" rel="noreferrer" className="act-file"><img src={collabApi.fileUrl(action.action_id, file.file_id)} alt={file.name} loading="lazy" /><span className="muted">{file.name}</span></a>)}</div>}
         <Checklist action={action} list={list} canEdit={canEdit} onChanged={(next) => { setAction(next); onChanged(); }} />
         {(action.kind === "request" || (action.hours ?? []).length > 0) && <TimeLog action={action} onChanged={(next) => { setAction(next); onChanged(); }} />}
         <h2 className="section-title">{t("About")}</h2>
@@ -423,7 +426,7 @@ function Checklist({ action, list, canEdit, onChanged }: { action: Action; list:
 }
 
 function ActionForm({ list, action, prefill, onClose, onSaved }: { list: ActionList; action: Action | null; prefill: Prefill | null; onClose: () => void; onSaved: (action: Action, created: boolean) => void }) {
-  const [draft, setDraft] = useState<ActionDraft>(() => action ? draftOf(action) : { title: prefill?.title ?? "", description: "", priority: list.priorities.find((item) => item.id === "medium")?.id ?? list.priorities[0]?.id ?? "medium", owner: null, group_id: null, due_at: null, refs: prefill?.refs ?? [] });
+  const [draft, setDraft] = useState<ActionDraft>(() => action ? draftOf(action) : { title: prefill?.title ?? "", description: prefill?.text ?? "", priority: list.priorities.find((item) => item.id === "medium")?.id ?? list.priorities[0]?.id ?? "medium", owner: null, group_id: null, due_at: null, refs: prefill?.refs ?? [] });
   const [status, setStatus] = useState<ActionStatus>(action?.status ?? "open");
   const [options, setOptions] = useState<Record<string, RefOption>>(() => Object.fromEntries((action?.refs ?? []).map((ref) => [ref.ref, { ref: ref.ref, kind: ref.kind, kind_label: ref.kind_label, title: ref.title || ref.id, detail: "" }])));
   const [picking, setPicking] = useState(false);
@@ -440,7 +443,13 @@ function ActionForm({ list, action, prefill, onClose, onSaved }: { list: ActionL
     event.preventDefault();
     setBusy(true); setError("");
     const payload = { ...draft, title: draft.title.trim(), owner: draft.owner || null, group_id: draft.group_id || null, due_at: draft.due_at || null };
-    try { onSaved(action ? await collabApi.updateAction(action.action_id, { ...payload, status }) : await collabApi.createAction(payload), !action); } catch (err) { setError(errorText(err)); setBusy(false); }
+    try {
+      if (action) { onSaved(await collabApi.updateAction(action.action_id, { ...payload, status }), false); return; }
+      const created = await collabApi.createAction(payload);
+      // The chart the app handed over goes on the new action; a refused image keeps the action.
+      const image = prefill?.attachment;
+      onSaved(image ? await collabApi.attachFile(created.action_id, image.name, image.data).catch(() => created) : created, true);
+    } catch (err) { setError(errorText(err)); setBusy(false); }
   }
   const title = action ? t("Edit action #{id}", { id: action.action_id }) : t("New action");
   return <Modal label={title} eyebrow={<><ClipboardCheck size={13} /> {t("Action")}</>} title={title} description={t("Creating an action or changing its status shows in the timeline of what it is about.")} onClose={onClose} className="ac-form">
@@ -459,6 +468,7 @@ function ActionForm({ list, action, prefill, onClose, onSaved }: { list: ActionL
         <p className="ac-hint field-span">{t("The owner and the group's people see the action, and so do the leaders of the groups above them. Without either, only you and the administrators see it.")}</p>
         <label>{t("Due date")}<input type="date" value={draft.due_at ?? ""} onChange={(event) => setDraft({ ...draft, due_at: event.target.value || null })} /></label>
         {action ? <label>{t("Status")}<select value={status} onChange={(event) => setStatus(event.target.value as ActionStatus)}>{list.statuses.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label> : <span />}
+        {!action && prefill?.attachment && <div className="field-span act-form-image"><span className="muted">{t("Attached image")}</span><img src={prefill.attachment.data} alt={prefill.attachment.name} /></div>}
         <div className="field-span act-form-refs">
           <span className="act-label">{t("About")}</span>
           <div className="act-ref-list">
