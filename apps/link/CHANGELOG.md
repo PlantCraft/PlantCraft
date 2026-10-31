@@ -6,6 +6,18 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+### Added
+
+- **Loop-hours lost by cause.** Every monitoring round adds the part of its window no earlier
+  round on the loop covered, split by cause: out of normal mode, output at a limit, oscillating
+  and bad signal (missing or frozen PV). `GET /api/loop-losses?days=&until=&group_by=area|loop`
+  sums them by area or loop over any period up to 400 days; the widget "Analytics: loop-hours
+  lost, 7 days" shows them by area on the Overview and on Desk.
+- **Effective control**, a composite score per loop: the share of the time in normal mode x
+  inside its operating band x with the output off its limits, from the loop's own methods (a part
+  it does not measure counts as 1). `GET /api/loop-effective-control` and the widget "Analytics:
+  effective control" list the lowest first.
+
 ### Changed
 
 - A round hands each loop only its own signals' samples. It read 50 loops at once into one

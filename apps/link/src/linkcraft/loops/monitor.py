@@ -40,6 +40,7 @@ from linkcraft.i18n import t
 from linkcraft.loops.analysis import analyze_loop, analyze_loop_task, loop_priority, loop_summary
 from linkcraft.loops.store import LoopStore
 from linkcraft.loops.suite import SuitePublisher
+from linkcraft.report.losses import LossStore
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +105,7 @@ class MonitorService:
         self.loop_store = LoopStore(db, self.presets)
         self.jobs = JobStore(db)
         self.latest = LatestStore(db)
+        self.losses = LossStore(db)
         self._lock = threading.RLock()
         self._run_lock = threading.Lock()
         self._snapshot: dict[str, Any] = {"status": "idle", "summary": {}, "failed_tags": []}
@@ -438,6 +440,21 @@ class MonitorService:
             )
         for offset in range(0, len(rows), 500):
             self.latest.save_many(APPLICATION_ID, SUBJECT_KIND, rows[offset : offset + 500])
+        try:  # loop-hours lost by cause (report.losses); never fails the round
+            self.losses.record(
+                [
+                    {
+                        "loop_id": row["subject_id"],
+                        "start": source_start,
+                        "end": source_end,
+                        "results": row["results"],
+                    }
+                    for row in rows
+                    if row["summary"].get("status") not in (None, "no_data", "pending", "inactive")
+                ]
+            )
+        except Exception:
+            logger.exception("Recording the loop losses of a round failed")
         for offset in range(0, len(kept), 500):
             self.jobs.samples.save(kept[offset : offset + 500])
         self.latest.forget_missing(
