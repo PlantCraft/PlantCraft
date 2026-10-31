@@ -8,6 +8,12 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **Oscillations several loops share, grouped by period, with where each likely starts.**
+  The loops the last runs found oscillating are grouped when their periods are within 15% of
+  each other: a plant-wide oscillation starts in one place and travels. In each group the loop
+  to look at first is the one whose valve shows stiction, then the one with the most regular
+  cycle (it is cleanest near its source). `GET /api/oscillation-groups` and the widget
+  "Analytics: oscillations shared by several loops" on the Overview and on Desk.
 - **A PI tuning suggestion on the loop page, read only.** "Suggest tuning" fits a first order
   plus dead time from the OP to the PV on the loop's last window and gives PI settings by Lambda
   (IMC) rules for three closed-loop speeds: tight (lambda = dead time), moderate (lambda = time

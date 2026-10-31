@@ -19,6 +19,7 @@ from linkcraft.api.deps import CurrentUser, RuntimeDep
 from linkcraft.api.plant_widgets import STATUS_WORDS, alarm_history, health_map
 from linkcraft.api.routers.groups import _algorithms, _group, _outputs, _rows
 from linkcraft.api.routers.losses import loop_days_to_limit, loop_effective_control, loop_losses
+from linkcraft.api.routers.oscillations import oscillation_groups
 from linkcraft.api.routers.results import BUILDERS, KIND_LABELS, KINDS, _key, scoped_rows
 from linkcraft.api.routers.runs import run_rows
 from linkcraft.api.scope import Scope
@@ -197,6 +198,32 @@ def widget(
             ],
             href=f"{root}/results?kind=loop",
             empty=t("No loop monitored in the last 7 days."),
+        )
+    if widget_id == "oscillation-groups":
+        found = oscillation_groups(scope, rt, tolerance=0.15)
+        return w.items(
+            [
+                w.item(
+                    t(
+                        "{count} loops at {period} min",
+                        count=group["loop_count"],
+                        period=f"{group['period_seconds'] / 60:.1f}",
+                    ),
+                    detail=t(
+                        "Look first at {loop}{why}; also {others}",
+                        loop=group["likely_origin"],
+                        why=f" ({', '.join(group['why'])})" if group["why"] else "",
+                        others=", ".join(item["loop_id"] for item in group["loops"][1:4])
+                        + ("…" if group["loop_count"] > 4 else ""),
+                    ),
+                    value=str(group["loop_count"]),
+                    state="warning",
+                    href=f"{root}/loops/{quote(group['likely_origin'], safe='')}",
+                )
+                for group in found["groups"][:8]
+            ],
+            href=f"{root}/results?kind=loop",
+            empty=t("No oscillation shared by several loops."),
         )
     if widget_id == "effective-control":
         rows = [row for row in loop_effective_control(scope, rt) if row["score"] is not None][:8]
