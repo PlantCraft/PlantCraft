@@ -15,6 +15,7 @@ export { setTourLanguage, tourLanguage, tourLanguageFor, tt, useTourLanguage, TO
 export { Heading, FormSection, FormFooter, Pill, Loading, ErrorBox, Health } from "./Blocks.js";
 export { startApp, useSuiteSession, type StartAppOptions } from "./startApp.js";
 export { ConfirmDialog, Dialog, confirmAction, type ConfirmOptions, type DialogProps } from "./Dialog.js";
+export { showToast, type ToastOptions, type ToastTone } from "./toast.js";
 export { VersionLock, VersionsTab, type VersionItem } from "./Versions.js";
 export { BlockDrawing, BlockImageField, IMAGE_MAX_BYTES, IMAGE_TYPES, imageProblem, withImageHrefs } from "./BlockDrawing.js";
 export { CodeDiff, COMPARE_MAX, ComparePicker, comparedVersions } from "./Compare.js";
