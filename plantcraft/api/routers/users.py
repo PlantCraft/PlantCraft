@@ -21,6 +21,7 @@ from plantcraft.api.deps import (
     Runtime,
     action_visibility,
     asset_roots,
+    is_admin,
     open_to,
     user_access,
 )
@@ -28,6 +29,9 @@ from plantcraft.auth.access import LEVEL_LABELS, level_label
 from plantcraft.auth.suite import FORMER_IDS, app_access
 from plantcraft.i18n import t
 from plantcraft.platform.asset_scope import MAX_SCOPE_ROOTS, scope_roots
+
+# What /api/users shows to someone who is not an administrator.
+DIRECTORY_FIELDS = ("username", "display_name", "role", "active", "kind")
 
 router = APIRouter()
 
@@ -150,10 +154,18 @@ def _app_roles(rt: Any, roles: dict[str, str]) -> dict[str, str]:
 
 @router.get("/api/users")
 @open_to("dashboards")
-def people(_user: CurrentUser, rt: Runtime) -> list[dict[str, Any]]:
-    """The people of the installation (names and roles), for anyone signed in."""
+def people(user: CurrentUser, rt: Runtime) -> list[dict[str, Any]]:
+    """The people of the installation, for anyone signed in: names and roles only.
 
-    return rt.workspace.users.list_users(kind="person")
+    An administrator gets each person's whole record (access, sign-in source, profile); anyone
+    else only what picking a person needs, so nobody copies everyone's e-mail, phone and access
+    in one call (a person's own page, ``/api/people/<name>``, still shows what they shared).
+    """
+
+    people = rt.workspace.users.list_users(kind="person")
+    if is_admin(rt, user):
+        return people
+    return [{key: person.get(key) for key in DIRECTORY_FIELDS} for person in people]
 
 
 @router.get("/api/users/accounts")

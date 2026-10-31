@@ -22,6 +22,9 @@ from plantcraft.i18n import t
 # password again as Argon2id (``UserStore.verify_password``).
 _HASHER = PasswordHasher()
 PBKDF2_PREFIX = "pbkdf2_sha256$"
+# Checked when the name has no password, so a wrong name takes as long as a wrong password and
+# the answer's timing does not tell which usernames exist (security test 2026-10-31, D3).
+_DECOY_HASH = _HASHER.hash("decoy password never accepted")
 
 
 def hash_password(password: str) -> str:
@@ -323,7 +326,10 @@ class UserStore(Store):
         """
 
         stored = self._password_hash(username)
-        if stored is None or not self.is_person(username) or not check_password(password, stored):
+        if stored is None:
+            check_password(password, _DECOY_HASH)
+            return False
+        if not self.is_person(username) or not check_password(password, stored):
             return False
         if rehash and needs_rehash(stored):
             with self._lock, self._write() as connection:

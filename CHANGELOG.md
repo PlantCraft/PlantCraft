@@ -7,7 +7,79 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Added
+
+- **Configuration decided before installing, outside the platform** (`docs/installation-file.md`).
+  `/etc/plantcraft/installation.conf`, owned by root and never mounted in a container, holds
+  which apps exist, whether apps may be installed from Settings › Apps, the demo, the machine
+  size and its CPU/memory ceilings, load ceilings (`MAX_SIGNALS`, `MAX_PARALLEL_RUNS`), the
+  network, and the security switches (language models, assistants through MCP, Notebooks, a locked
+  time zone). `install.sh` reads it on every run (`--config FILE`), refuses it when others may
+  write it, and its values win over options and `.env`. Settings › Installation shows these as
+  **Set by the installation**, read-only, with the file's fingerprint.
+- **Requirements check before installing**: `install.sh --check` (or `preflight.sh`, `--json`,
+  `--ignore ID`): system, processor, Docker and Compose, Docker Desktop's licence, control groups,
+  CPUs and memory as Docker sees them (memory sized by the chosen apps), swap, disk, the HTTPS
+  port, the internal networks, the clock and the installation file. Every install runs it first
+  and stops on a failure before changing anything. `install.sh --show-config` compares the file
+  with `.env`.
+- **Docker Engine in the bundle**: on a Linux server with no Docker, `install.sh --install-docker`
+  installs the Docker Engine 29.9.2 and Compose 5.6.1 the bundle carries (`docker-engine/`, pinned
+  hashes), offline, with its systemd units. `docs/install.md` adds Windows without Docker Desktop.
+- **Setup wizard** (`deploy/wizard/`, first version): the installer's screens in a browser on the
+  server (127.0.0.1, a random key per start): apps, requirements for those apps, machine and
+  load, network and security, review of the file, install log. Tried on Windows 11 (WSL): it
+  checks first that it runs from a complete release bundle, and a failed install can go back.
+
+### Changed
+
+- **The Historian's database has its own CPU limit, `HISTCRAFT_DB_CPUS` (default 2).** It
+  shared `HISTCRAFT_CPUS` with the Historian, so lowering the Historian's limit also slowed the
+  database it reads from (0.6.0 load tests, 2026-10-31). An installation that set
+  `HISTCRAFT_CPUS` keeps it for the Historian; the database gets its own default.
+- **Requirements: a 4 GB machine needs 2 GB of swap** for the demo with every app on.
+- **The Historian answers from several processes (0.6.0 load tests, 2026-10-31).** Heavy reads
+  ran in one Python process on one core. `histcraft serve` now starts as many processes as the
+  CPUs its container may use (`HISTCRAFT_WORKERS`, `auto` by default: the container's CPU limit,
+  up to 4; one where SQLite cannot use WAL, as on a Docker Desktop bind mount, or with the
+  collector inside). Each process holds its part of `HISTCRAFT_READ_VALUES`, and only one samples
+  the work queue. With ten methods at once (`ci/bench/extreme.py`, C2, 2 CPUs) Analytics' round
+  went from 16 to 12 s. `plantcraft-sdk` 0.80.0 gains `plantcraft_sdk.server.workers` (the
+  start lock, the leader and `worker_count`), which PlantCraft now uses too.
+- **One machine profile sizes the whole suite (plan B, 2026-10-31).** `install.sh --machine
+  small|medium|large|xlarge|auto|off` (default `auto`, from the CPUs and memory Docker sees,
+  within `PLANTCRAFT_MAX_CPUS`/`PLANTCRAFT_MAX_MEMORY`) fills about 30 settings from one table:
+  every container's limits, the processes of PlantCraft and the Historian, Analytics' executions
+  and compute slots, Models' runs, the Historian's read budget and database memory. Before, the
+  defaults added up to 30 CPUs and 34 GB on any machine. A value changed by hand is kept.
+  `compose.yaml` now passes `LINKCRAFT_WORKERS`, `LINKCRAFT_COMPUTE_SLOTS`,
+  `HISTCRAFT_READ_VALUES` and `HISTCRAFT_WORKERS`, which `.env` could not change before.
+- **Pools are sized by the container's CPUs, not the host's.** Inside a container
+  `os.cpu_count()` counts every core of the machine: Analytics ran 8 executions at once with a
+  4-CPU limit on a 12-core Mac mini. PlantCraft's processes, Analytics' executions and processes,
+  and a compute worker's slots now use `plantcraft_sdk.server.workers.available_cpus` (the cgroup
+  limit).
+- **`install.sh` fits every CPU limit to small hosts**, also the ones left at their default in
+  `compose.yaml` (a 2-CPU machine stopped on `LINKCRAFT_EXECUTOR_CPUS`, default 4).
+
 ### Fixed
+
+- **Installer, from the first tries on Windows 11 (WSL) and a clean Linux VM.** The setup
+  wizard asks the apps before the requirements (it stopped on a memory FAIL for apps you would
+  have left out), starts from an installation file already there, says on its first screens when
+  it does not run from a complete release bundle (install.sh refused it only at the end), and a
+  failed install can go back. `install.sh --check` checks the apps that run would install (it
+  checked all six: 10 GB instead of 7) and takes `--json`. `--install-docker` adds the person
+  who ran sudo to the docker group.
+- **`PLANTCRAFT_MCP=off` and `PLANTCRAFT_NOTEBOOKS=off` in `.env` now take effect.** Compose never
+  passed them to PlantCraft, so turning assistants through MCP or Notebooks off for a whole
+  installation did nothing.
+- **Trends keep their spikes.** When a trend had more points than a chart takes (1,500 by
+  default), PlantCraft kept every n-th point, so any event shorter than the gap vanished: a day at
+  1 s with twenty 5 s spikes showed none of them. Each stretch of the series now keeps its lowest
+  and highest value, in time order, so every spike, trip and step is drawn at its full height
+  with the same number of points (`plantcraft/industrial_data/thinning.py`; Historian and direct
+  sources alike). Values that are not numbers (states) still keep every n-th point.
 
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the

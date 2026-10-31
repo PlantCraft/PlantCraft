@@ -8,8 +8,14 @@
 #   ./install.sh --backup        back up now, while the suite runs (verified; docs/operations.md)
 #   ./install.sh --list-backups  the backups and their state
 #   ./install.sh --restore NAME  return to a backup; the current state is set aside, not deleted
+#   ./install.sh --export-backup NAME --passphrase-file FILE [--out FILE]
+#                                an encrypted copy of a backup to take off the server
+#                                (AES-256, key from the passphrase; backups hold every key)
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
+#   ./install.sh --check         check this server's requirements (preflight.sh) and change nothing;
+#                                --ignore ID[,ID] lets those checks fail (ids in the report); --json for tools
+#   ./install.sh --show-config   the installation file, each value it sets and what .env holds now
 #   ./install.sh --uninstall     stop and remove the containers; data and backups are kept
 #   ./install.sh --uninstall --purge   also delete data, backups and the suite's images
 #   ./install.sh --add FILE.pcapp       install or upgrade an app from a signed package
@@ -20,6 +26,9 @@
 #                                worker; --ca: PlantCraft's local-ca-root.crt; docs/compute.md)
 #
 # Options: --prefix DIR (install folder, default /opt/plantcraft or $PLANTCRAFT_HOME),
+#          --config FILE (the installation file, default /etc/plantcraft/installation.conf when
+#          it exists: apps, machine size, network and security ceilings decided outside the
+#          platform; its values win over these options; docs/installation-file.md),
 #          --with-linkcraft, --with-dashcraft, --with-histcraft,
 #          --with-alarmcraft, --with-modelcraft, --with-doccraft (turn that app on; LinkCraft is on by default when the bundle
 #          has it), --all-apps (every app the bundle has),
@@ -32,7 +41,13 @@
 #          loops, algorithms, model examples, dashboards, messages; `processcraft demo seed`),
 #          --public-demo (--demo left open to visitors: a read-only account `demo` shown on the
 #          sign-in page, no LLM for visitors, rate limits), --yes,
-#          --dev (run from a source checkout: no bundle checks, images built locally).
+#          --install-docker (no Docker on this Linux server: install the Docker Engine and Compose
+#          the bundle carries in docker-engine/, offline, as root),
+#          --dev (run from a source checkout: no bundle checks, images built locally),
+#          --machine small|medium|large|xlarge|auto|off (the machine profile: every container's
+#          CPU and memory limit, processes and pools from one choice; auto, the default, picks
+#          by the CPUs and memory Docker sees; a value changed by hand in .env is kept;
+#          MACHINE in the installation file wins over it).
 #
 # Needs Docker Engine and the Compose plugin, run as root or as a member of the `docker` group.
 # It never downloads anything: images come from images.tar in this bundle.
@@ -83,15 +98,25 @@ PURGE=0
 ASSUME_YES=0
 DEV=0
 WITH_APPS=" "    # " <id> <id> ": apps turned on by --with-<id>
+CHECK_JSON=0     # --check --json: the requirements report as JSON (preflight.sh --json)
 ALL_APPS=0
+MACHINE=""
 WITH_DEMO=0
 PUBLIC_DEMO=0
 APP_PACKAGE=""
 APP_ID=""
 BACKUP_NAME=""
+PASSPHRASE_FILE=""
+EXPORT_OUT=""
 ALLOW_UNSIGNED=0
 ALLOW_EMULATION=0
 PUBLISHER_KEY=""
+INSTALL_DOCKER=0
+# The installation file (docs/installation-file.md): read once, after the options.
+INSTALLATION_CONF="${PLANTCRAFT_INSTALLATION_CONF:-}"
+CONF_ENV=()      # KEY=VALUE pairs it sets in .env, applied last by write_env
+CONF_APPS=""     # " <id> <id> " when it names the apps: the others are switched off
+CONF_LOCKED=""   # the .env keys it decided, for Settings › Installation ("Set by the installation")
 # An update in progress (do_install): the version it started from, its backup, and whether the
 # suite is being changed (a failure then returns to UPDATE_FROM by itself, on_exit).
 UPDATE_FROM=""
@@ -108,7 +133,7 @@ die() {
     exit 1
 }
 
-usage() { sed -n '2,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,43p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -119,7 +144,17 @@ while [ $# -gt 0 ]; do
         --list-backups) ACTION="list-backups" ;;
         --drill) ACTION="drill" ;;
         --diagnostics) ACTION="diagnostics" ;;
+        --check) ACTION="check" ;;
+        --json) CHECK_JSON=1 ;;
+        --show-config) ACTION="show-config" ;;
+        --ignore) [ $# -ge 2 ] || die "--ignore needs check ids (see --check)"; export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}$2"; shift ;;
+        --ignore=*) export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}${1#*=}" ;;
+        --config) [ $# -ge 2 ] || die "--config needs a file"; INSTALLATION_CONF="$2"; shift ;;
+        --config=*) INSTALLATION_CONF="${1#*=}" ;;
         --restore) [ $# -ge 2 ] || die "--restore needs a backup name (see --list-backups)"; ACTION="restore"; BACKUP_NAME="$2"; shift ;;
+        --export-backup) [ $# -ge 2 ] || die "--export-backup needs a backup name (see --list-backups)"; ACTION="export-backup"; BACKUP_NAME="$2"; shift ;;
+        --passphrase-file) [ $# -ge 2 ] || die "--passphrase-file needs a file"; PASSPHRASE_FILE="$2"; shift ;;
+        --out) [ $# -ge 2 ] || die "--out needs a file name"; EXPORT_OUT="$2"; shift ;;
         --add) [ $# -ge 2 ] || die "--add needs a package file"; ACTION="add"; APP_PACKAGE="$2"; shift ;;
         --remove) [ $# -ge 2 ] || die "--remove needs an app id"; ACTION="remove"; APP_ID="$2"; shift ;;
         --uninstall) ACTION="uninstall" ;;
@@ -131,6 +166,9 @@ while [ $# -gt 0 ]; do
         --demo) WITH_DEMO=1 ;;
         --public-demo) WITH_DEMO=1; PUBLIC_DEMO=1 ;;
         --dev) DEV=1 ;;
+        --install-docker) INSTALL_DOCKER=1 ;;
+        --machine) [ $# -ge 2 ] || die "--machine needs small, medium, large, xlarge, auto or off"; MACHINE="$2"; shift ;;
+        --machine=*) MACHINE="${1#*=}" ;;
         --allow-unsigned) ALLOW_UNSIGNED=1 ;;
         --allow-emulation) ALLOW_EMULATION=1 ;;
         --publisher-key) [ $# -ge 2 ] || die "--publisher-key needs a public key file"; PUBLISHER_KEY="$2"; shift ;;
@@ -162,6 +200,103 @@ if [ "$ACTION" = "worker" ] && [ -z "${PLANTCRAFT_HOME:-}" ] && [ "$PREFIX" = "$
 fi
 [ "$PURGE" = 0 ] || [ "$ACTION" = "uninstall" ] || die "--purge only goes with --uninstall"
 
+# The installation file ----------------------------------------------------------------------
+# Decided outside the platform by whoever installs the server: it must be owned by root and
+# writable by nobody else (like sshd's StrictModes), or it is refused. Never mounted in a
+# container: PlantCraft sees only what is derived from it in .env.
+conf_value() { sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$INSTALLATION_CONF" | sed 's/[[:space:]]*#.*$//; s/^"//; s/"$//' | tail -n 1; }
+conf_set() { CONF_ENV+=("$1=$2"); CONF_LOCKED="${CONF_LOCKED:+$CONF_LOCKED,}$1"; }
+conf_app_id() {
+    case "$1" in
+        analytics | link | linkcraft) echo linkcraft ;; historian | hist | histcraft) echo histcraft ;;
+        view | dash | dashcraft) echo dashcraft ;; alarms | alarm | alarmcraft) echo alarmcraft ;;
+        models | model | modelcraft) echo modelcraft ;; documents | doc | doccraft) echo doccraft ;;
+        *) return 1 ;;
+    esac
+}
+load_installation_conf() {
+    if [ -z "$INSTALLATION_CONF" ]; then
+        [ -f /etc/plantcraft/installation.conf ] || return 0
+        INSTALLATION_CONF=/etc/plantcraft/installation.conf
+    fi
+    [ -f "$INSTALLATION_CONF" ] || die "--config: $INSTALLATION_CONF is not a file"
+    local owner mode value app id
+    owner="$(stat -c %u "$INSTALLATION_CONF")"
+    mode="$(stat -c %a "$INSTALLATION_CONF")"
+    if [ "$DEV" = 0 ] && { [ "$owner" != 0 ] || [ $((8#$mode & 8#022)) -ne 0 ]; }; then
+        die "$INSTALLATION_CONF must be owned by root and writable by root only (it is owner $owner, mode $mode): sudo chown root:root $INSTALLATION_CONF && sudo chmod 644 $INSTALLATION_CONF"
+    fi
+    log "Installation file: $INSTALLATION_CONF"
+    value="$(conf_value APPS)"
+    if [ -n "$value" ]; then
+        if [ "$value" = all ]; then
+            ALL_APPS=1
+        else
+            CONF_APPS=" "
+            for app in $(printf '%s' "$value" | tr ',' ' '); do
+                id="$(conf_app_id "$app")" || die "$INSTALLATION_CONF: APPS has an unknown app '$app'"
+                CONF_APPS="$CONF_APPS$id "
+            done
+            WITH_APPS="$CONF_APPS"
+        fi
+        CONF_LOCKED="${CONF_LOCKED:+$CONF_LOCKED,}COMPOSE_PROFILES"
+    fi
+    value="$(conf_value WEB_APP_INSTALL)"
+    case "$value" in "") ;; on | off) conf_set PLANTCRAFT_APP_INSTALL "$value" ;; *) die "$INSTALLATION_CONF: WEB_APP_INSTALL is on or off" ;; esac
+    value="$(conf_value DEMO)"
+    case "$value" in "" | off) ;; on) WITH_DEMO=1 ;; public) WITH_DEMO=1; PUBLIC_DEMO=1 ;; *) die "$INSTALLATION_CONF: DEMO is off, on or public" ;; esac
+    value="$(conf_value LLM)"
+    case "$value" in "") ;; off | on) conf_set PLANTCRAFT_LLM "$([ "$value" = off ] && echo off || echo '')" ;; *) die "$INSTALLATION_CONF: LLM is off or on" ;; esac
+    # The other security switches: assistants from outside (MCP) and Notebooks.
+    value="$(conf_value ASSISTANT_ACCESS)"
+    case "$value" in "") ;; on | off) conf_set PLANTCRAFT_MCP "$([ "$value" = on ] && echo true || echo false)" ;; *) die "$INSTALLATION_CONF: ASSISTANT_ACCESS is on or off" ;; esac
+    value="$(conf_value NOTEBOOKS)"
+    case "$value" in "") ;; on | off) conf_set PLANTCRAFT_NOTEBOOKS "$([ "$value" = on ] && echo true || echo false)" ;; *) die "$INSTALLATION_CONF: NOTEBOOKS is on or off" ;; esac
+    value="$(conf_value MACHINE)"
+    # The machine profile (install.sh --machine, thread "CPU and processes") reads PLANTCRAFT_MACHINE.
+    # MACHINE of the file wins over --machine.
+    if [ -n "$value" ]; then MACHINE="$value"; conf_set PLANTCRAFT_MACHINE "$value"; fi
+    value="$(conf_value MAX_CPUS)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_MAX_CPUS "$value"; fi
+    value="$(conf_value MAX_MEMORY)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_MAX_MEMORY "$value"; fi
+    value="$(conf_value HOSTNAME)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_HOSTNAME "$value"; fi
+    value="$(conf_value HTTPS_PORT)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_HTTPS_PORT "$value"; fi
+    value="$(conf_value BIND_ADDRESS)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_BIND_ADDRESS "$value"; fi
+    value="$(conf_value NETWORK_BASE)"
+    if [ -n "$value" ]; then
+        [[ "$value" =~ ^[0-9]{1,3}\.[0-9]{1,3}$ ]] || die "$INSTALLATION_CONF: NETWORK_BASE is like 172.30"
+        local net n=10
+        for net in PLANT APPS EDGE DEMO HISTDB LLM EGRESS; do
+            conf_set "PLANTCRAFT_${net}_SUBNET" "$value.$n.0/24"
+            n=$((n + 1))
+        done
+        conf_set PLANTCRAFT_PROXY_ADDRESS "$value.11.250"
+    fi
+    value="$(conf_value TIMEZONE)"; if [ -n "$value" ]; then conf_set PLANTCRAFT_TIMEZONE "$value"; fi
+    value="$(conf_value LOCK_TIMEZONE)"; if [ "$value" = yes ]; then conf_set PLANTCRAFT_TIMEZONE_LOCKED true; fi
+    for value in MAX_SIGNALS MAX_PARALLEL_RUNS MAX_SESSIONS; do
+        app="$(conf_value "$value")"
+        if [ -n "$app" ]; then conf_set "PLANTCRAFT_$value" "$app"; fi
+    done
+}
+apply_installation_conf() { # apply_installation_conf ENV_FILE: last step of write_env
+    [ -n "$INSTALLATION_CONF" ] || return 0
+    local pair profiles app
+    for pair in "${CONF_ENV[@]}"; do env_set "${pair%%=*}" "${pair#*=}" "$1"; done
+    if [ -n "$CONF_APPS" ]; then
+        profiles="$(env_get COMPOSE_PROFILES "$1")"
+        for app in $(app_ids); do
+            if [[ ",$profiles," == *",$app,"* ]] && [[ "$CONF_APPS" != *" $app "* ]]; then
+                warn "$app is not in APPS of $INSTALLATION_CONF: switched off"
+                profiles="$(printf '%s' ",$profiles," | sed "s/,$app,/,/; s/^,//; s/,\$//")"
+            fi
+        done
+        env_set COMPOSE_PROFILES "$profiles" "$1"
+        env_set PLANTCRAFT_APPS "$(suite_apps_setting "$profiles" "$(env_get PLANTCRAFT_APPS "$1")" "$1")" "$1"
+    fi
+    env_set PLANTCRAFT_INSTALLATION_LOCKED "$CONF_LOCKED" "$1"
+    env_set PLANTCRAFT_INSTALLATION_CONF_SHA256 "$(sha256sum "$INSTALLATION_CONF" | cut -c 1-64)" "$1"
+}
+
 confirm() {
     [ "$ASSUME_YES" = 1 ] && return 0
     [ -t 0 ] || die "$1 Re-run with --yes to confirm."
@@ -186,7 +321,11 @@ version_ge() {
 }
 
 check_docker() {
-    command -v docker >/dev/null 2>&1 || die "Docker is not installed (docs/install-offline.md, section 1)."
+    if ! command -v docker >/dev/null 2>&1 && [ "$INSTALL_DOCKER" = 1 ]; then
+        [ -x "$BUNDLE_DIR/docker-engine/docker-engine.sh" ] || die "--install-docker: this bundle has no docker-engine/ folder."
+        "$BUNDLE_DIR/docker-engine/docker-engine.sh" install "$BUNDLE_DIR/docker-engine"
+    fi
+    command -v docker >/dev/null 2>&1 || die "Docker is not installed: run again with --install-docker (the bundle carries Docker Engine), or see docs/install-offline.md, section 1."
     docker info >/dev/null 2>&1 ||
         die "cannot reach the Docker daemon: start it, and run as root or as a member of the docker group."
     local engine compose
@@ -358,6 +497,54 @@ check_signature() { # check_signature VERSION
     fi
 }
 
+# Before any image is loaded: the signature over SHA256SUMS checked with this server's own
+# OpenSSL (Ed25519, 1.1.1 or later), not with a program that came in the bundle being checked.
+# SHA256SUMS was already checked against every file (verify_bundle), so a good signature covers
+# images.tar too. Without a usable openssl the check runs, as before, in the installer image
+# after the load (check_signature), and a warning says so.
+host_signature() {
+    local sig="$BUNDLE_DIR/SHA256SUMS.sig" publisher raw key tmp
+    INSTALLED_TRUST=0
+    if has_installed_trust; then INSTALLED_TRUST=1; fi
+    set_trust_dir
+    if [ ! -f "$sig" ]; then
+        if compgen -G "$TRUST_DIR/*.pub" >/dev/null 2>&1 && [ "$ALLOW_UNSIGNED" != 1 ]; then
+            die "the bundle is not signed (SHA256SUMS.sig is missing) and this server trusts publisher keys: get the signed bundle, or pass --allow-unsigned for a development bundle. Nothing was loaded."
+        fi
+        host_signature_done
+        return 0
+    fi
+    if ! command -v openssl >/dev/null 2>&1 ||
+        ! openssl pkeyutl -help 2>&1 | grep -q -- '-rawin'; then
+        warn "openssl 1.1.1 or later is not on this server: the signature is checked after the images are loaded, by the bundle's installer."
+        host_signature_done
+        return 0
+    fi
+    publisher="$(sed -n 's/^ *"publisher": *"\([a-z0-9-]*\)".*/\1/p' "$sig" | head -n 1)"
+    raw="$(sed -n 's/^ *"signature": *"\([A-Za-z0-9+\/=]*\)".*/\1/p' "$sig" | head -n 1)"
+    [ -n "$publisher" ] && [ -n "$raw" ] || die "SHA256SUMS.sig cannot be read. Nothing was loaded."
+    key="$TRUST_DIR/$publisher.pub"
+    if [ ! -f "$key" ]; then
+        if [ "$FIRST_TRUST" = 0 ]; then
+            die "the bundle is signed by '$publisher', which this server does not trust (trusted-publishers/). Nothing was loaded."
+        fi
+        die "the bundle is signed by '$publisher' but carries no key for it. Nothing was loaded."
+    fi
+    tmp="$(mktemp)"
+    printf '%s' "$raw" | base64 -d >"$tmp" 2>/dev/null || { rm -f "$tmp"; die "SHA256SUMS.sig cannot be read. Nothing was loaded."; }
+    log "Checking the bundle's signature with this server's OpenSSL (before loading anything)"
+    if ! openssl pkeyutl -verify -pubin -inkey "$key" -rawin -in "$BUNDLE_DIR/SHA256SUMS" -sigfile "$tmp" >/dev/null 2>&1; then
+        rm -f "$tmp"
+        die "the signature does not match SHA256SUMS: the bundle was modified. Nothing was loaded."
+    fi
+    rm -f "$tmp"
+    echo "    signature checked: publisher $publisher"
+    host_signature_done
+}
+host_signature_done() {
+    if [ -n "$TRUST_TMP" ]; then rm -rf "$TRUST_TMP"; TRUST_TMP=""; fi
+}
+
 load_images() {
     log "Loading images from images.tar (no download)"
     docker load -i "$BUNDLE_DIR/images.tar" | sed 's/^/    /'
@@ -418,6 +605,7 @@ copy_files() {
     if [ "$PREFIX" = "$BUNDLE_DIR" ]; then return 0; fi
     log "Copying the suite files to $PREFIX"
     cp "$BUNDLE_DIR/compose.yaml" "$BUNDLE_DIR/.env.example" "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/firewall.sh" "$PREFIX/"
+    if [ -f "$BUNDLE_DIR/security-check.sh" ]; then cp "$BUNDLE_DIR/security-check.sh" "$PREFIX/"; chmod 0755 "$PREFIX/security-check.sh"; fi
     local file
     for file in bundle.env release.json RELEASE-NOTES.md; do
         if [ -f "$BUNDLE_DIR/$file" ]; then cp "$BUNDLE_DIR/$file" "$PREFIX/"; fi
@@ -551,7 +739,29 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
     # the Docker socket.
     env_set PLANTCRAFT_INSTALL_DIR "$PREFIX" "$env"
     env_set PLANTCRAFT_DOCKER_GID "$(docker_gid)" "$env"
+    # The installation file first: its MACHINE and MAX_CPUS/MAX_MEMORY feed the machine profile.
+    apply_installation_conf "$env"
+    apply_machine_profile "$env"
     fit_cpu_limits "$env"
+    cap_parallel_runs "$env"
+}
+
+# MAX_PARALLEL_RUNS of the installation file: no executor runs more tasks at once than that,
+# whatever the machine profile or a hand edit chose (applied last).
+cap_parallel_runs() {
+    local env="$1" most key value default
+    most="$(env_get PLANTCRAFT_MAX_PARALLEL_RUNS "$env")"
+    [[ "$most" =~ ^[1-9][0-9]*$ ]] || return 0
+    for key in LINKCRAFT_EXECUTOR_SLOTS:4 MODELCRAFT_EXECUTOR_SLOTS:2 MODELCRAFT_RUN_WORKERS:2; do
+        default="${key#*:}"
+        key="${key%%:*}"
+        value="$(env_get "$key" "$env")"
+        value="${value:-$default}"
+        if [ "$value" -gt "$most" ] 2>/dev/null; then
+            log "$key=$value is over MAX_PARALLEL_RUNS of the installation file: using $most"
+            env_set "$key" "$most" "$env"
+        fi
+    done
 }
 
 # PLANTCRAFT_APPS: PlantCraft lists every app whose profile is on (launcher, access, API v1)
@@ -568,19 +778,154 @@ suite_apps_setting() { # suite_apps_setting PROFILES CURRENT ENV_FILE
     printf '%s' "$entries${others:+${entries:+,}$others}"
 }
 
+# Machine profile (plan B3, 2026-10-31): one choice fills every CPU, memory, process and pool
+# value of the suite. Memory limits add up to what the machine has less about 1 GB for the system
+# and Docker. A value the profile wrote is the profile's until someone changes it in .env: the
+# values written last are kept in data/machine-profile.env, and a key whose value differs from
+# them is the person's and is left alone. Values: docs/bench (plan B, 2026-10-31).
+machine_size() { # machine_size CPUS MEMORY_MB -> small | medium | large | xlarge
+    if [ "$1" -le 2 ] || [ "$2" -lt 6000 ]; then echo small
+    elif [ "$1" -le 4 ] || [ "$2" -lt 14000 ]; then echo medium
+    elif [ "$1" -le 8 ] || [ "$2" -lt 48000 ]; then echo large
+    else echo xlarge
+    fi
+}
+
+# One line per key: KEY small medium large xlarge. "cpus" is the machine's CPUs, "half" half of
+# them, "rest" all but two.
+MACHINE_TABLE='
+PLANTCRAFT_WORKERS 2 3 4 8
+PLANTCRAFT_CPUS 2 cpus cpus 8
+PLANTCRAFT_MEMORY 768m 1536m 4g 8g
+LINKCRAFT_CPUS 1 2 4 4
+LINKCRAFT_MEMORY 896m 1g 4g 8g
+LINKCRAFT_WORKERS 2 3 6 rest
+LINKCRAFT_COMPUTE_SLOTS 1 3 6 rest
+LINKCRAFT_EXECUTOR_CPUS 1 3 6 rest
+LINKCRAFT_EXECUTOR_SLOTS 1 3 6 rest
+LINKCRAFT_EXECUTOR_MEMORY 1g 2g 8g 16g
+LINKCRAFT_TASK_MEMORY_MB 768 1024 2048 4096
+DASHCRAFT_CPUS 1 2 2 4
+DASHCRAFT_MEMORY 384m 512m 2g 2g
+ALARMCRAFT_CPUS 0.5 1 1 2
+ALARMCRAFT_MEMORY 384m 384m 1g 1g
+MODELCRAFT_CPUS 0.5 1 1 2
+MODELCRAFT_MEMORY 384m 512m 1g 2g
+MODELCRAFT_RUN_WORKERS 1 2 2 4
+MODELCRAFT_EXECUTOR_CPUS 1 2 4 half
+MODELCRAFT_EXECUTOR_SLOTS 1 2 3 half
+MODELCRAFT_EXECUTOR_MEMORY 1g 2g 4g 16g
+DOCCRAFT_CPUS 1 1 2 4
+DOCCRAFT_MEMORY 768m 1g 1536m 4g
+HISTCRAFT_CPUS 2 2 4 8
+HISTCRAFT_WORKERS 2 2 3 4
+HISTCRAFT_MEMORY 768m 1g 2g 4g
+HISTCRAFT_READ_VALUES 1500000 3000000 4000000 8000000
+HISTCRAFT_COLLECTOR_CPUS 1 1 2 2
+HISTCRAFT_COLLECTOR_MEMORY 384m 512m 1g 2g
+HISTCRAFT_DB_CPUS 2 2 4 8
+HISTCRAFT_DB_MEMORY 768m 1536m 8g 16g
+HISTCRAFT_DB_SHARED_BUFFERS 192MB 384MB 2GB 4GB
+HISTCRAFT_DB_CACHE_SIZE 512MB 1GB 6GB 12GB
+'
+
+machine_values() { # machine_values SIZE CPUS -> KEY=VALUE lines
+    local column
+    case "$1" in small) column=2 ;; medium) column=3 ;; large) column=4 ;; *) column=5 ;; esac
+    printf '%s\n' "$MACHINE_TABLE" | awk -v c="$column" -v n="$2" 'NF == 5 {
+        v = $c
+        if (v == "cpus") v = n
+        else if (v == "half") v = (n >= 4 ? int(n / 2) : 1)
+        else if (v == "rest") v = (n > 3 ? n - 2 : 1)
+        print $1 "=" v
+    }'
+}
+
+docker_machine() { # "CPUS MEMORY_MB" as Docker sees them (Docker Desktop: its VM, not the Mac)
+    local cpus mem
+    cpus="$(docker info --format '{{.NCPU}}' 2>/dev/null || true)"
+    mem="$(docker info --format '{{.MemTotal}}' 2>/dev/null || true)"
+    [ -n "$cpus" ] || cpus="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
+    if [ -n "$mem" ]; then
+        mem=$((mem / 1048576))
+    else
+        mem="$(awk '/^MemTotal:/ { print int($2 / 1024) }' /proc/meminfo 2>/dev/null || echo 4096)"
+    fi
+    printf '%s %s' "$cpus" "$mem"
+}
+
+apply_machine_profile() { # apply_machine_profile ENV_FILE
+    local env="$1" choice size cpus mem record line key value current previous kept=""
+    choice="${MACHINE:-$(env_get PLANTCRAFT_MACHINE "$env")}"
+    choice="${choice:-auto}"
+    read -r cpus mem <<<"$(docker_machine)"
+    # Ceilings for a shared server (installation.conf, plan H): the profile sizes for at most
+    # PLANTCRAFT_MAX_CPUS and PLANTCRAFT_MAX_MEMORY (6, 12g, 12288m), leaving the rest to others.
+    local max
+    max="$(env_get PLANTCRAFT_MAX_CPUS "$env")"
+    if [[ "$max" =~ ^[0-9]+$ ]] && [ "$max" -gt 0 ] && [ "$max" -lt "$cpus" ]; then cpus="$max"; fi
+    max="$(env_get PLANTCRAFT_MAX_MEMORY "$env")"
+    case "$max" in
+        *[gG]) max="${max%?}"; [[ "$max" =~ ^[0-9]+$ ]] && max=$((max * 1024)) || max="" ;;
+        *[mM]) max="${max%?}"; [[ "$max" =~ ^[0-9]+$ ]] || max="" ;;
+        *) max="" ;;
+    esac
+    if [ -n "$max" ] && [ "$max" -gt 0 ] && [ "$max" -lt "$mem" ]; then mem="$max"; fi
+    case "$choice" in
+        off) return 0 ;;
+        auto) size="$(machine_size "$cpus" "$mem")" ;;
+        small | medium | large | xlarge) size="$choice" ;;
+        *) die "--machine: $choice is not small, medium, large, xlarge, auto or off" ;;
+    esac
+    record="$PREFIX/data/machine-profile.env"
+    mkdir -p "$PREFIX/data"
+    touch "$record"
+    while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        key="${line%%=*}"
+        value="${line#*=}"
+        current="$(env_get "$key" "$env")"
+        previous="$(env_get "$key" "$record")"
+        # Before the first profile, the shipped default (.env.example) is nobody's choice either.
+        [ -n "$previous" ] || previous="$(env_get "$key" "$PREFIX/.env.example")"
+        if [ -z "$current" ] || [ "$current" = "$previous" ]; then
+            env_set "$key" "$value" "$env"
+        elif [ "$current" != "$value" ]; then
+            kept="${kept:+$kept, }$key=$current"
+        fi
+    done <<<"$(machine_values "$size" "$cpus")"
+    machine_values "$size" "$cpus" >"$record"
+    env_set PLANTCRAFT_MACHINE "$choice" "$env"
+    env_set PLANTCRAFT_MACHINE_SIZE "$size" "$env"
+    log "Machine profile: $size ($cpus CPUs, $((mem / 1024)) GB: what Docker sees, within PLANTCRAFT_MAX_*; chosen: $choice)"
+    if [ -n "$kept" ]; then log "Kept as set by hand in .env: $kept"; fi
+    # Every app on, the demo plant and a round at its peak use about 4.5 GB (plan B5): a small
+    # machine needs swap, or fewer apps (docs/requirements.md).
+    if [ "$size" = small ] && [ -r /proc/meminfo ] &&
+        [ "$(awk '/^SwapTotal:/ { print int($2 / 1024) }' /proc/meminfo)" -lt 1024 ]; then
+        warn "a small machine ($((mem / 1024)) GB) without swap: give it 2 GB of swap, or turn off apps it does not need (Documents, Models), or a busy moment stops a container"
+    fi
+}
+
 # Docker refuses to start a container whose CPU limit exceeds the host's CPU count ("range of
-# CPUs is from 0.01 to N"), so the limits in .env never ask for more than the host has.
+# CPUs is from 0.01 to N"), so the limits never ask for more than the host has: every
+# ${KEY:-default} CPU limit of compose.yaml, set in .env or left at its default (a 2-CPU
+# machine stopped on LINKCRAFT_EXECUTOR_CPUS's default 4, 0.6.0 load tests).
 fit_cpu_limits() {
-    local env="$1" cpus key value
+    local env="$1" cpus key default value file
     cpus="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
-    for key in PLANTCRAFT_CPUS LINKCRAFT_CPUS DASHCRAFT_CPUS HISTCRAFT_CPUS TWINCRAFT_CPUS ALARMCRAFT_CPUS MODELCRAFT_CPUS MODELCRAFT_EXECUTOR_CPUS LINKCRAFT_EXECUTOR_CPUS; do
+    for file in "$PREFIX/compose.yaml" "$BUNDLE_DIR/compose.yaml"; do
+        [ -f "$file" ] && break
+    done
+    [ -f "$file" ] || return 0
+    while IFS=' ' read -r key default; do
         value="$(env_get "$key" "$env")"
-        [ -n "$value" ] || continue
+        value="${value:-$default}"
         if awk -v a="$value" -v b="$cpus" 'BEGIN { exit !(a + 0 > b + 0) }'; then
             warn "$key=$value is more than the $cpus CPUs of this host: using $cpus"
             env_set "$key" "$cpus" "$env"
         fi
-    done
+    done < <(sed -n 's/^ *cpus: "${\([A-Z_]*_CPUS\):-\([0-9.]*\)}".*/\1 \2/p' "$file" | sort -u)
 }
 
 simcraft_image() { docker image inspect "simcraft:$1" >/dev/null 2>&1; }
@@ -713,6 +1058,10 @@ prepare_data() {
         # second install.sh run as a member of the docker group cannot reach inside it.
         mkdir -p data/compute-jobs/linkcraft data/compute-jobs/modelcraft
         chown -R $COMPUTE_UID:$COMPUTE_UID data/compute-jobs
+        # Alarms and its sandbox container share only this folder (its socket).
+        mkdir -p data/alarmcraft-sandbox
+        chown 10009:10009 data/alarmcraft-sandbox
+        chmod 0700 data/alarmcraft-sandbox
         chown $COMPUTE_UID:$PLANTCRAFT_UID data/compute-local-key
         chmod 0640 data/compute-local-key
         $owners
@@ -895,6 +1244,7 @@ do_install() {
         log "Version $version is already installed: applying settings and certificates again"
     fi
     if [ "$DEV" = 0 ] && [ -f "$BUNDLE_DIR/images.tar" ]; then
+        host_signature
         load_images
         # An update was checked above by the installed version, before anything changed.
         if [ "$UPDATE_APPLYING" = 0 ]; then check_signature "$version"; fi
@@ -1213,6 +1563,30 @@ do_restore() {
     print_access
 }
 
+# A backup holds .env, every app key, the admin and database passwords and the certificate
+# authority's key in clear (mode 0600, root): fine on the server, not on a disk that leaves it.
+# The copy is AES-256 (OpenSSL, key from the passphrase with PBKDF2, 600,000 rounds); the backup's
+# manifest checks every file again when it is restored.
+#   openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass file:PASS -in X.tar.enc | tar -x
+do_export_backup() {
+    check_docker
+    installed_prefix
+    [[ "$BACKUP_NAME" =~ ^[0-9]{8}-[0-9]{6}-[a-z][a-z0-9-]{1,30}$ ]] || die "invalid backup name: $BACKUP_NAME (see --list-backups)"
+    [ -n "$PASSPHRASE_FILE" ] && [ -r "$PASSPHRASE_FILE" ] || die "--passphrase-file FILE is needed: the passphrase, one line, at least 16 characters"
+    [ "$(head -n 1 "$PASSPHRASE_FILE" | tr -d '\n' | wc -c)" -ge 16 ] || die "the passphrase must have at least 16 characters"
+    command -v openssl >/dev/null 2>&1 || die "openssl is not on this server"
+    local out="${EXPORT_OUT:-$PWD/plantcraft-backup-$BACKUP_NAME.tar.enc}" image
+    image="$(helper_image)"
+    [ ! -e "$out" ] || die "$out exists: choose another --out"
+    log "Encrypting backups/$BACKUP_NAME to $out"
+    (umask 077 && as_root "$image" "cd /install/backups && test -d '$BACKUP_NAME' && tar --numeric-owner -cf - '$BACKUP_NAME'" |
+        openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass "file:$PASSPHRASE_FILE" -out "$out") ||
+        { rm -f "$out"; die "the backup could not be exported (is the name right? see --list-backups)."; }
+    [ -s "$out" ] || { rm -f "$out"; die "the export wrote nothing."; }
+    chmod 0600 "$out"
+    log "Written: $out ($(du -h "$out" | cut -f1)). Keep the passphrase apart from the file."
+}
+
 do_diagnostics() {
     check_docker
     installed_prefix
@@ -1281,6 +1655,7 @@ do_worker() {
     fi
     if [ "$PREFIX" != "$BUNDLE_DIR" ]; then
         if [ -f "$BUNDLE_DIR/images.tar" ]; then
+            host_signature
             load_images
             check_signature "$version"
         fi
@@ -1350,8 +1725,71 @@ do_worker() {
     log "The compute worker is running. Pause or revoke it in PlantCraft › Settings › Compute."
 }
 
+# The apps this run would install, for the requirements check: the installation file's, or
+# --all-apps, or Analytics (on by default) and the --with-<app> ones.
+check_apps() {
+    local apps
+    if [ "$ALL_APPS" = 1 ]; then echo all; return; fi
+    apps="$(printf '%s' "$WITH_APPS" | xargs)"
+    if [ -z "$CONF_APPS" ] && [[ " $apps " != *" linkcraft "* ]]; then apps="linkcraft $apps"; fi
+    printf '%s' "$apps" | xargs | tr ' ' ','
+}
+
+do_check() {
+    [ -x "$BUNDLE_DIR/preflight.sh" ] || die "preflight.sh is missing next to install.sh"
+    local args=(--prefix "$PREFIX" --apps "$(check_apps)")
+    [ "$CHECK_JSON" = 1 ] && args+=(--json)
+    PLANTCRAFT_INSTALLATION_CONF="${INSTALLATION_CONF:-/etc/plantcraft/installation.conf}" \
+        "$BUNDLE_DIR/preflight.sh" "${args[@]}"
+}
+
+# What the installation file sets against what .env holds: "differs" means .env was edited by
+# hand (or install.sh was not run since the file changed): the next run puts the file's value back.
+do_show_config() {
+    [ -n "$INSTALLATION_CONF" ] || { log "No installation file (/etc/plantcraft/installation.conf): .env alone decides."; return 0; }
+    local env="$PREFIX/.env" pair key want have state applied current
+    printf 'Installation file: %s\n' "$INSTALLATION_CONF"
+    current="$(sha256sum "$INSTALLATION_CONF" | cut -c 1-64)"
+    applied="$(env_get PLANTCRAFT_INSTALLATION_CONF_SHA256 "$env")"
+    if [ -z "$applied" ]; then
+        printf 'Never applied to %s: run %s/install.sh\n\n' "$env" "$PREFIX"
+    elif [ "$applied" != "$current" ]; then
+        printf 'Changed since it was last applied: run %s/install.sh to apply it\n\n' "$PREFIX"
+    else
+        printf 'Applied (SHA-256 %s)\n\n' "${current:0:16}"
+    fi
+    printf '  %-36s %-28s %-28s %s\n' "Setting (.env)" "Installation file" ".env now" ""
+    for pair in "${CONF_ENV[@]}"; do
+        key="${pair%%=*}"
+        want="${pair#*=}"
+        have="$(env_get "$key" "$env")"
+        state=""
+        [ "$want" = "$have" ] || state="differs"
+        printf '  %-36s %-28s %-28s %s\n' "$key" "${want:-(empty)}" "${have:-(empty)}" "$state"
+    done
+    if [ -n "$CONF_APPS" ]; then
+        want="$(printf '%s' "$CONF_APPS" | xargs | tr ' ' ',')"
+        have="$(env_get COMPOSE_PROFILES "$env" | tr ',' '\n' | grep -v '^demo$' | paste -sd, -)"
+        state=""
+        [ "$want" = "$have" ] || state="differs"
+        printf '  %-36s %-28s %-28s %s\n' "COMPOSE_PROFILES (apps)" "$want" "${have:-(empty)}" "$state"
+    fi
+}
+
+# With --check --json only the report goes to stdout, so tools can read it.
+if [ "$ACTION" = check ] && [ "$CHECK_JSON" = 1 ]; then log() { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" >&2; }; fi
+case "$ACTION" in install | check | show-config) load_installation_conf ;; esac
 case "$ACTION" in
-    install) do_install ;;
+    check) do_check ;;
+    show-config) do_show_config ;;
+    install)
+        # A server that fails the requirements stops here, before anything is changed.
+        # --install-docker puts the bundle's Docker Engine in place before the check looks for it.
+        if [ "$INSTALL_DOCKER" = 1 ]; then check_docker; fi
+        if [ -x "$BUNDLE_DIR/preflight.sh" ] && [ "$DEV" = 0 ] && [ "${PLANTCRAFT_SKIP_CHECK:-0}" != 1 ]; then
+            do_check || die "the requirements check failed (above); nothing was changed. PLANTCRAFT_SKIP_CHECK=1 skips it."
+        fi
+        do_install ;;
     worker) do_worker ;;
     add) do_add ;;
     remove) do_remove ;;
@@ -1361,5 +1799,6 @@ case "$ACTION" in
     drill) do_drill ;;
     diagnostics) do_diagnostics ;;
     restore) do_restore ;;
+    export-backup) do_export_backup ;;
     uninstall) do_uninstall ;;
 esac

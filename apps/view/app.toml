@@ -29,7 +29,7 @@ image = "dashcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.79.0"
+sdk = "0.83.0"
 asset_types = ["unit", "equipment", "loop"]   # asset pages link here (subtypes included)
 roles = {}
 
@@ -225,6 +225,20 @@ id = "diagram-draft"
 title = "Draft a process display"
 description = "Drafts a process display of a unit from what an editor describes; the editor checks and saves it."
 reads = "The editor's description, the symbol ids, and the names, kinds, signal roles and relations of the unit's assets; no signal values."
+default = "off"
+
+[[contributes.llm]]                  # Setup > Language models: reports/assistant.py (prototype)
+id = "report-write"
+title = "Write a report's assistant section"
+description = "Writes the assistant sections of reports from what the apps found about the assets an editor picked, following the editor's requirements."
+reads = "The picked assets' names, kinds and descriptions, the latest loop, signal-quality and alarm results about them and the period's events; no raw signal values."
+default = "off"
+
+[[contributes.llm]]                  # Setup > Language models: reports/assistant.py (prototype)
+id = "report-tune"
+title = "Tune a report's assistant section"
+description = "Turns an editor's feedback on what the assistant wrote into the section's next requirements, and proposes the assets a described report covers."
+reads = "The section's requirements, the text it wrote, the editor's feedback, and the names, kinds and parents of the assets the editor may see."
 default = "off"
 
 [suggests]

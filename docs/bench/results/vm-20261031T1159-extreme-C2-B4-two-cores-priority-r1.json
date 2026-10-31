@@ -1,0 +1,219 @@
+{
+ "scenario": "C2",
+ "at": "2026-10-31T11:59Z",
+ "label": "B4-two-cores-priority-r1",
+ "machine": {
+  "host": "vm",
+  "system": "Linux 6.18.44-fc-v185 x86_64",
+  "cpus": 4,
+  "memory_gib": 15.7,
+  "docker": "4 CPUs 16872808448 x86_64"
+ },
+ "versions": {
+  "linkcraft": {
+   "revision": "3333d91"
+  },
+  "dashcraft": {
+   "revision": "3333d91"
+  },
+  "histcraft": {
+   "revision": "3333d91"
+  }
+ },
+ "settings": {
+  "signals": 167,
+  "hours": 24,
+  "step": null,
+  "methods": 9,
+  "people": 3,
+  "rounds": true,
+  "limits": {
+   "PLANTCRAFT_CPUS": "4",
+   "PLANTCRAFT_MEMORY": "4g",
+   "LINKCRAFT_CPUS": "4",
+   "LINKCRAFT_MEMORY": "4g",
+   "DASHCRAFT_CPUS": "2",
+   "DASHCRAFT_MEMORY": "2g",
+   "HISTCRAFT_CPUS": "2",
+   "HISTCRAFT_MEMORY": "2g",
+   "HISTCRAFT_DB_MEMORY": "1g",
+   "HISTCRAFT_GATEWAY_CPUS": "1",
+   "HISTCRAFT_GATEWAY_MEMORY": "512m",
+   "ALARMCRAFT_CPUS": "1",
+   "ALARMCRAFT_MEMORY": "1g",
+   "MODELCRAFT_CPUS": "1",
+   "MODELCRAFT_MEMORY": "1g",
+   "MODELCRAFT_EXECUTOR_CPUS": "2",
+   "MODELCRAFT_EXECUTOR_MEMORY": "4g"
+  }
+ },
+ "seconds": 61,
+ "rounds": {
+  "checks": {
+   "seconds": 29.76,
+   "status": "ok",
+   "signals": 214,
+   "error": null
+  },
+  "round": {
+   "seconds": 38.558,
+   "status": "ok",
+   "loops": 50,
+   "failed_tags": 0
+  }
+ },
+ "methods": {
+  "each_s": [
+   17.0,
+   18.6,
+   19.4,
+   19.0,
+   19.3,
+   19.3,
+   19.1,
+   19.8,
+   18.6
+  ],
+  "n": 36,
+  "p50_s": 18.16,
+  "p95_s": 19.39,
+  "max_s": 19.81,
+  "statuses": {
+   "200": 36
+  }
+ },
+ "people": {
+  "person_analytics_overview": {
+   "n": 30,
+   "p50_s": 0.1,
+   "p95_s": 1.11,
+   "max_s": 1.21,
+   "statuses": {
+    "200": 30
+   }
+  },
+  "person_display_values": {
+   "n": 30,
+   "p50_s": 0.08,
+   "p95_s": 7.67,
+   "max_s": 7.98,
+   "statuses": {
+    "200": 29,
+    "429": 1
+   }
+  },
+  "person_trend_8h": {
+   "n": 30,
+   "p50_s": 0.03,
+   "p95_s": 3.47,
+   "max_s": 5.5,
+   "statuses": {
+    "200": 30
+   }
+  }
+ },
+ "containers": {
+  "alarmcraft": {
+   "cpu_peak": 37.8,
+   "cpu_mean": 6.0,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 226
+  },
+  "compute-gateway": {
+   "cpu_peak": 13.0,
+   "cpu_mean": 2.4,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 61
+  },
+  "dashcraft": {
+   "cpu_peak": 34.7,
+   "cpu_mean": 3.7,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 114
+  },
+  "doccraft": {
+   "cpu_peak": 36.8,
+   "cpu_mean": 2.6,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 90
+  },
+  "histcraft": {
+   "cpu_peak": 112.5,
+   "cpu_mean": 40.2,
+   "seconds_at_full_core": 17,
+   "mem_peak_mib": 568
+  },
+  "histcraft-collector": {
+   "cpu_peak": 43.8,
+   "cpu_mean": 6.1,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 151
+  },
+  "histcraft-db": {
+   "cpu_peak": 16.9,
+   "cpu_mean": 4.3,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 100
+  },
+  "histcraft-gateway": {
+   "cpu_peak": 0.5,
+   "cpu_mean": 0.3,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 132
+  },
+  "installer": {
+   "cpu_peak": 38.9,
+   "cpu_mean": 7.3,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 34
+  },
+  "linkcraft": {
+   "cpu_peak": 53.3,
+   "cpu_mean": 8.9,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 547
+  },
+  "linkcraft-executor": {
+   "cpu_peak": 136.8,
+   "cpu_mean": 19.0,
+   "seconds_at_full_core": 8,
+   "mem_peak_mib": 349
+  },
+  "llm-egress": {
+   "cpu_peak": 32.4,
+   "cpu_mean": 2.2,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 17
+  },
+  "modelcraft": {
+   "cpu_peak": 0.5,
+   "cpu_mean": 0.3,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 165
+  },
+  "modelcraft-executor": {
+   "cpu_peak": 0.6,
+   "cpu_mean": 0.4,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 10
+  },
+  "processcraft": {
+   "cpu_peak": 31.8,
+   "cpu_mean": 10.2,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 544
+  },
+  "proxy": {
+   "cpu_peak": 11.6,
+   "cpu_mean": 1.6,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 25
+  },
+  "simcraft": {
+   "cpu_peak": 99.2,
+   "cpu_mean": 27.0,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 337
+  }
+ }
+}

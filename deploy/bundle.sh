@@ -11,6 +11,8 @@
 #     notebook-kits/        optional: Python and JupyterLab for people's own computers (Notebooks ›
 #                           Run on your computer), when NOTEBOOK_KITS (default notebooks/kit/dist,
 #                           make notebook-kits) holds kits.json; NOTEBOOK_KITS=none leaves them out
+#     docker-engine/        Docker Engine and Compose (static, pinned hashes) for a server that has
+#                           no Docker: install.sh --install-docker. DOCKER_KIT=none leaves it out
 #     sbom/                 CycloneDX SBOMs (Python image dependencies, web interface) and each
 #                           app image's own SBOM when it carries one (/app/sbom.json)
 #     release.json          suite version, upgrade_from, each module's version, every image id,
@@ -137,7 +139,7 @@ done
 log "Writing $OUT (linux/$ARCH)"
 rm -rf "$OUT" "$DIST/$NAME.tar.gz" "$DIST/$NAME.tar.gz.sha256" "$DIST/$NAME.tar.gz.sha256.sig"
 mkdir -p "$OUT/certs" "$OUT/docs" "$OUT/sbom" "$OUT/trusted-publishers"
-cp "$ROOT/deploy/compose.yaml" "$ROOT/deploy/compose-worker.yaml" "$ROOT/deploy/install.sh" "$ROOT/deploy/firewall.sh" "$OUT/"
+cp "$ROOT/deploy/compose.yaml" "$ROOT/deploy/compose-worker.yaml" "$ROOT/deploy/install.sh" "$ROOT/deploy/preflight.sh" "$ROOT/deploy/installation.conf.example" "$ROOT/deploy/firewall.sh" "$ROOT/deploy/security-check.sh" "$OUT/"
 cp "$ROOT/deploy/certs/README.md" "$OUT/certs/"
 cp "$ROOT/LICENSE" "$ROOT/NOTICE" "$OUT/"
 cp "$ROOT/docs/install-offline.md" "$ROOT/docs/security-guide.md" "$ROOT/docs/app-package.md" "$OUT/docs/"
@@ -171,7 +173,10 @@ sed -e "s/^PLANTCRAFT_VERSION=.*/PLANTCRAFT_VERSION=$VERSION/" \
         echo "# $image $(docker image inspect --format '{{.Id}}' "$image")"
     done
 } >"$OUT/bundle.env"
-chmod 0755 "$OUT/install.sh" "$OUT/firewall.sh"
+chmod 0755 "$OUT/install.sh" "$OUT/firewall.sh" "$OUT/security-check.sh" "$OUT/preflight.sh"
+if [ "${DOCKER_KIT:-}" != none ]; then
+    "$ROOT/deploy/docker-engine.sh" fetch "$OUT/docker-engine" "$ARCH"
+fi
 if [ -n "$bundle_plant" ]; then
     # The demo's plant map: the Simulator source, its 50 loops and their loop types.
     mkdir -p "$OUT/demo"

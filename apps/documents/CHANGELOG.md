@@ -2,6 +2,22 @@
 
 All notable changes to this app are recorded here ([Keep a Changelog](https://keepachangelog.com)).
 
+## [Unreleased]
+
+### Added
+
+- **Diagrams and the plant map, read from the P&IDs in the library.** P&IDs sent as PDF, SVG or
+  an image (PNG, JPEG, TIFF) are read offline, with no language model: ISA-5.1 tags, symbols,
+  lines, flow arrows and off-page connectors, each finding with how sure it is and why. Every
+  diagram page is in **Diagrams**; **Plant map** joins the sheets into one plant (units,
+  equipment in flow order, control loops, lines across sheets), with a summary and what to check.
+  Editors mark an item or a line Correct or Wrong (with Undo); the map exports its equipment,
+  instrument, line and loop lists as CSV and an asset file for PlantCraft's Assets › Import, and
+  is compared with the plant's own tag list in the browser. Each diagram is also a passage in
+  words, so search and the assistant find what it shows ("P-1001 feeds E-1009"). Scans are read
+  with Tesseract OCR (now in the image), within a time budget. New dependencies: pdfplumber,
+  pypdfium2, pillow. A DEXPI example P&ID (CC BY 4.0) is a test file.
+
 ## [0.5.1] - 2026-10-30
 
 - Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).

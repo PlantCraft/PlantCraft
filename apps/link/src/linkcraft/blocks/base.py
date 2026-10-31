@@ -32,6 +32,11 @@ LIBRARIES: dict[str, dict[str, str]] = {
         "description": "Signal arithmetic, filters, engineering units and the operating "
         "window: a new series from one or more series.",
     },
+    "estimator": {
+        "name": "Estimators",
+        "description": "Virtual sensors: a better value of a noisy or drifting signal (Kalman "
+        "filters) and a sampled value at every step (soft sensors).",
+    },
     "stats": {
         "name": "Statistics",
         "description": "Numbers that summarise a series over the window: mean, spread, "

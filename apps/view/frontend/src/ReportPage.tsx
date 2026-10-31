@@ -1,9 +1,10 @@
 /** One report: the document as it reads now (its sections over its period), the PDFs it made
  * and sent, Download PDF and Send now, and the editor of its sections and settings. */
 import { Dialog, confirmAction, ApiError, MultiSelect, PageTabs, Pill, RecipientPicker, DataTable, errorMessage as message, renderMarkdown, useAssistantPage, type DataColumn, timeZoneLabel } from "@plantcraft/ui";
-import { AlertTriangle, ArrowDown, ArrowUp, CalendarClock, Check, Columns2, Download, FileText, Globe2, LayoutList, ListOrdered, ListTree, LoaderCircle, Pencil, Plus, RefreshCw, Rows3, Save, Send, Settings2, SquareSplitVertical, Trash2, Type, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, CalendarClock, Check, Columns2, Download, FileText, Globe2, LayoutList, ListOrdered, ListTree, LoaderCircle, Pencil, Plus, RefreshCw, Rows3, Save, Send, Settings2, Sparkles, SquareSplitVertical, Trash2, Type, X } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import { api, pdfUrl, type CardSource } from "./api";
+import { AssistantDialog, AssistantView } from "./AssistantSection";
 import { CardEditor } from "./CardEditor";
 import { CardView } from "./CardView";
 import { ShareDialog } from "./Dialogs";
@@ -97,10 +98,11 @@ function EventGroups({ events }: { events: EventsData }) {
   </>;
 }
 
-function SectionBody({ section, read, source, tick, editing }: { section: Section; read: () => Promise<SectionData>; source: CardSource; tick: number; editing: boolean }) {
+function SectionBody({ section, read, source, tick, editing, reportId = "", canEdit = false }: { section: Section; read: () => Promise<SectionData>; source: CardSource; tick: number; editing: boolean; reportId?: string; canEdit?: boolean }) {
   if (section.kind === "text") return <div className="tc-report-text"><div className="pc-markdown">{renderMarkdown(section.text)}</div></div>;
   if (section.kind === "break") return editing ? <div className="tc-report-break"><SquareSplitVertical size={14} aria-hidden /> {t("The PDF starts a new page here")}</div> : null;
   if (section.kind === "events") return <EventsView section={section} read={read} tick={tick} />;
+  if (section.kind === "assistant") return <AssistantView section={section} read={read} tick={tick} reportId={reportId} canEdit={canEdit} editing={editing} />;
   if (!section.card) return null;
   return <div className="tc-report-card" style={{ height: `${reportCardPixels(section.card)}px` } as CSSProperties}>
     <CardView card={section.card} source={source} vars={{}} window={null} tick={tick} />
@@ -206,10 +208,10 @@ function ReportSettingsDialog({ draft, folders, zone, onApply, onClose }: { draf
         <fieldset className="tc-wide tc-report-schedule">
           <legend>{t("When it is made and sent")}</legend>
           <label>{t("Repeat")}<select value={schedule.every} onChange={(event) => setEvery(event.target.value as typeof schedule.every)}>
-            <option value="off">{t("Not scheduled")}</option><option value="day">{t("Every day")}</option><option value="week">{t("Every week")}</option><option value="month">{t("Every month")}</option>
+            <option value="off">{t("Not scheduled")}</option><option value="day">{t("Every day")}</option><option value="week">{t("Every week")}</option><option value="fortnight">{t("Every other week")}</option><option value="month">{t("Every month")}</option><option value="quarter">{t("Every quarter")}</option>
           </select></label>
-          {schedule.every === "week" && <label>{t("On")}<select value={schedule.weekday} onChange={(event) => setValue({ ...value, schedule: { ...schedule, weekday: event.target.value as typeof schedule.weekday } })}>{WEEKDAYS.map((day) => <option key={day} value={day}>{t(WEEKDAY_NAMES[day])}</option>)}</select></label>}
-          {schedule.every === "month" && <label>{t("On day")}<select value={schedule.day} onChange={(event) => setValue({ ...value, schedule: { ...schedule, day: Number(event.target.value) } })}>{Array.from({ length: 28 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}</select></label>}
+          {(schedule.every === "week" || schedule.every === "fortnight") && <label>{t("On")}<select value={schedule.weekday} onChange={(event) => setValue({ ...value, schedule: { ...schedule, weekday: event.target.value as typeof schedule.weekday } })}>{WEEKDAYS.map((day) => <option key={day} value={day}>{t(WEEKDAY_NAMES[day])}</option>)}</select></label>}
+          {(schedule.every === "month" || schedule.every === "quarter") && <label>{t("On day")}<select value={schedule.day} onChange={(event) => setValue({ ...value, schedule: { ...schedule, day: Number(event.target.value) } })}>{Array.from({ length: 28 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}</select></label>}
           {schedule.every !== "off" && <label>{t("At")}<input type="time" required value={schedule.at} onChange={(event) => setValue({ ...value, schedule: { ...schedule, at: event.target.value } })} /></label>}
           <label>{t("Covers")}<select value={value.period} onChange={(event) => setValue({ ...value, period: event.target.value })}>
             {!PERIODS.includes(value.period) && <option value={value.period}>{periodLabel(value.period)}</option>}
@@ -246,6 +248,7 @@ const ADD: Array<{ kind: SectionKind; icon: typeof Type; hint: string }> = [
   { kind: "text", icon: Type, hint: "Markdown: headings, notes, lists, tables" },
   { kind: "card", icon: LayoutList, hint: "A chart, KPIs or a table" },
   { kind: "events", icon: ListOrdered, hint: "Alarms, runs, other events" },
+  { kind: "assistant", icon: Sparkles, hint: "Written by the assistant from the picked assets" },
   { kind: "break", icon: SquareSplitVertical, hint: "A new page in the PDF" },
 ];
 
@@ -475,7 +478,7 @@ export function ReportPage({ reportId, me }: { reportId: string; me: Me }) {
               ? <TextCell section={section} onChange={(next) => setSections(replaceSection(draft.sections, next))} onDone={() => doneWriting(section)} />
               : <div className={draft && section.kind === "text" ? "tc-report-writable" : undefined} onDoubleClick={draft && section.kind === "text" ? () => setWriting(section.section_id) : undefined}
                   title={draft && section.kind === "text" ? t("Double-click to write") : undefined}>
-                <SectionBody section={section} read={readOf(section)} source={source} tick={tick} editing={Boolean(draft)} />
+                <SectionBody section={section} read={readOf(section)} source={source} tick={tick} editing={Boolean(draft)} reportId={reportId} canEdit={canEdit} />
               </div>}
             {draft && adding === section.section_id && <div className="tc-report-add tc-report-add-here" role="group" aria-label={t("Add a cell below")}>
               {ADD.map(({ kind, icon: Icon }) => <button key={kind} type="button" className="tc-report-add-button" onClick={() => add(kind, index + 1)}><Plus size={13} aria-hidden /><Icon size={16} aria-hidden /><b>{t(SECTION_LABELS[kind])}</b></button>)}
@@ -493,6 +496,7 @@ export function ReportPage({ reportId, me }: { reportId: string; me: Me }) {
 
     {exporting && <ExportDialog reportId={reportId} busy={Boolean(busy)} onClose={() => setExporting(false)} onPdf={() => { setExporting(false); void makePdf(); }} />}
     {sharing && <ShareDialog target="report" dashboardId={reportId} name={saved.name} isAdmin={me.is_admin} onClose={() => setSharing(false)} />}
+    {editing?.kind === "assistant" && <AssistantDialog section={editing} onClose={() => { setEditing(null); setInsertAt(null); }} onSave={applySection} />}
     {editing?.kind === "events" && <EventsDialog section={editing} onClose={() => { setEditing(null); setInsertAt(null); }} onSave={applySection} />}
     {editing?.kind === "card" && editing.card && draft && <CardEditor initial={editing.card} isNew={!draft.sections.some((item) => item.section_id === editing.section_id)} period={draft.period}
       onClose={() => { setEditing(null); setInsertAt(null); }} onSave={(card) => applySection({ ...editing, card })} />}

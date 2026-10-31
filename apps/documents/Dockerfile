@@ -59,9 +59,9 @@ COPY src ./src
 # PlantCraft Documents wheel (--no-deps: the index only provides its build backend, setuptools).
 RUN --mount=type=secret,id=build_ca,required=false \
     if [ -s /run/secrets/build_ca ]; then export PIP_CERT=/run/secrets/build_ca; fi; \
-    grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.79.0-py3-none-any.whl' vendor/README.md \
+    grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.83.0-py3-none-any.whl' vendor/README.md \
         | (cd vendor && sha256sum -c -) \
-    && cp vendor/plantcraft_sdk-0.79.0-py3-none-any.whl /wheelhouse/ \
+    && cp vendor/plantcraft_sdk-0.83.0-py3-none-any.whl /wheelhouse/ \
     && pip wheel --no-cache-dir --no-deps --wheel-dir /wheelhouse . \
     && rm -rf build
 
@@ -96,6 +96,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DOCCRAFT_PORT=8150 \
     FORWARDED_ALLOW_IPS=127.0.0.1
 
+# OCR for scanned drawings (the plant map reads tags on scans with it): tesseract with its
+# English data, from Debian, nothing else. Without it scans are skipped, never an error.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=frontend /build/frontend/dist /app/ui
 COPY LICENSE ATTRIBUTION.md CHANGELOG.md app.toml /app/
@@ -109,7 +115,7 @@ RUN --mount=type=bind,from=wheels,source=/wheelhouse,target=/wheelhouse \
     python -m pip install --no-cache-dir --root-user-action=ignore --no-index --find-links /wheelhouse \
         --require-hashes --no-deps -r /tmp/requirements.lock \
     && python -m pip install --no-cache-dir --root-user-action=ignore --no-index --no-deps \
-        /wheelhouse/plantcraft_sdk-0.79.0-py3-none-any.whl /wheelhouse/doccraft-*.whl \
+        /wheelhouse/plantcraft_sdk-0.83.0-py3-none-any.whl /wheelhouse/doccraft-*.whl \
     && python -m pip check \
     && python -m compileall -q "$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/doccraft" \
     && python -m pip uninstall -y --root-user-action=ignore pip \

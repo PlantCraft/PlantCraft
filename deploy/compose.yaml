@@ -158,6 +158,23 @@ services:
       PLANTCRAFT_EGRESS_ALLOWLIST: /egress/allow.json
       PLANTCRAFT_LLM_NO_PROXY: "${PLANTCRAFT_LLM_NO_PROXY:-}"
       PLANTCRAFT_LLM: "${PLANTCRAFT_LLM:-}"
+      # Security switches the installation may turn off for good (empty: allowed, off until an
+      # administrator turns them on): assistants through MCP, and Notebooks.
+      PLANTCRAFT_MCP: "${PLANTCRAFT_MCP:-}"
+      PLANTCRAFT_NOTEBOOKS: "${PLANTCRAFT_NOTEBOOKS:-}"
+      # What the installation file decided (docs/installation-file.md): shown read-only in
+      # Settings › Installation, with the file's hash; a locked time zone cannot be changed there.
+      PLANTCRAFT_INSTALLATION_LOCKED: "${PLANTCRAFT_INSTALLATION_LOCKED:-}"
+      PLANTCRAFT_INSTALLATION_CONF_SHA256: "${PLANTCRAFT_INSTALLATION_CONF_SHA256:-}"
+      PLANTCRAFT_TIMEZONE_LOCKED: "${PLANTCRAFT_TIMEZONE_LOCKED:-}"
+      PLANTCRAFT_MACHINE: "${PLANTCRAFT_MACHINE:-}"
+      PLANTCRAFT_MAX_CPUS: "${PLANTCRAFT_MAX_CPUS:-}"
+      PLANTCRAFT_MAX_MEMORY: "${PLANTCRAFT_MAX_MEMORY:-}"
+      PLANTCRAFT_HTTPS_PORT: "${PLANTCRAFT_HTTPS_PORT:-443}"
+      PLANTCRAFT_BIND_ADDRESS: "${PLANTCRAFT_BIND_ADDRESS:-0.0.0.0}"
+      PLANTCRAFT_HOSTNAME: "${PLANTCRAFT_HOSTNAME:-}"
+      PLANTCRAFT_PLANT_SUBNET: "${PLANTCRAFT_PLANT_SUBNET:-172.30.10.0/24}"
+      PLANTCRAFT_EGRESS_SUBNET: "${PLANTCRAFT_EGRESS_SUBNET:-172.30.16.0/24}"
       # The local compute worker's credential (install.sh writes it once): PlantCraft keeps its
       # hash so `compute-gateway` is enrolled from the start (docs/compute.md).
       PLANTCRAFT_COMPUTE_LOCAL_KEY_FILE: /run/secrets/compute_local_key
@@ -362,6 +379,9 @@ services:
       # (`linkcraft-executor` here, more in Settings › Compute; docs/compute.md), never in this
       # container, which holds the app key. `local` runs them here, in worker processes.
       LINKCRAFT_COMPUTE: "${LINKCRAFT_COMPUTE:-suite}"
+      # Executions at once and the slots they take on the compute worker (the machine profile).
+      LINKCRAFT_WORKERS: "${LINKCRAFT_WORKERS:-}"
+      LINKCRAFT_COMPUTE_SLOTS: "${LINKCRAFT_COMPUTE_SLOTS:-}"
     secrets:
       - linkcraft_app_key
     volumes:
@@ -496,11 +516,15 @@ services:
       ALARMCRAFT_ROOT_PATH: /alarm
       ALARMCRAFT_DATA_DIR: /data
       ALARMCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
+      # The rules' Python runs in alarmcraft-sandbox, not here (plantcraft_sdk.sandbox_remote).
+      ALARMCRAFT_CODE_SOCKET: /sandbox/code.sock
+      ALARMCRAFT_CODE_TIMEOUT_SECONDS: "${ALARMCRAFT_CODE_TIMEOUT_SECONDS:-30}"
     secrets:
       - alarmcraft_app_key
     volumes:
       # Its alarms, occurrences and journal.
       - ./data/alarmcraft:/data
+      - ./data/alarmcraft-sandbox:/sandbox
     networks:
       - apps
     depends_on:
@@ -523,6 +547,49 @@ services:
           cpus: "${ALARMCRAFT_CPUS:-1}"
           memory: "${ALARMCRAFT_MEMORY:-1g}"
           pids: 1024
+
+  alarmcraft-sandbox:
+    <<: *hardening
+    profiles: ["alarmcraft"]
+    # The Python blocks of Alarms' rules (written by administrators) run here: same image as
+    # Alarms, but no network at all, no secret, none of Alarms' data, read-only, no capabilities,
+    # CPU, memory and process limits, and a time and memory limit per run. Alarms reaches it
+    # only through the socket in data/alarmcraft-sandbox (security test 2026-10-31, D8).
+    image: alarmcraft:${ALARMCRAFT_VERSION:-0.5.1}
+    user: "10009:10009"
+    network_mode: none
+    entrypoint: ["python", "-m", "plantcraft_sdk.sandbox_remote", "serve"]
+    command:
+      - --socket
+      - /sandbox/code.sock
+      - --prefix
+      - ALARMCRAFT_CODE
+      - --handler
+      - alarmcraft.engine.python:_evaluate
+    environment:
+      ALARMCRAFT_CODE_TIMEOUT_SECONDS: "${ALARMCRAFT_CODE_TIMEOUT_SECONDS:-30}"
+      ALARMCRAFT_CODE_MEMORY_MB: "${ALARMCRAFT_CODE_MEMORY_MB:-1024}"
+      ALARMCRAFT_CODE_WORKERS: "${ALARMCRAFT_CODE_WORKERS:-2}"
+    volumes:
+      - ./data/alarmcraft-sandbox:/sandbox
+    healthcheck:
+      # Its heartbeat beside the socket, written every 10 seconds.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json, time; s = json.load(open('/sandbox/sandbox.json')); assert time.time() - s['at'] < 60"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    stop_grace_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${ALARMCRAFT_SANDBOX_CPUS:-1}"
+          memory: "${ALARMCRAFT_SANDBOX_MEMORY:-3g}"
+          pids: 256
 
   modelcraft:
     <<: *hardening
@@ -681,7 +748,13 @@ services:
       HISTCRAFT_DATABASE_PASSWORD_FILE: /run/secrets/histcraft_db_password
       # The collector runs in histcraft-collector; this one answers pages and API only.
       HISTCRAFT_COLLECTOR: "off"
+      # Values the reads in flight build at once (the machine profile; histcraft/api/read_budget.py).
+      HISTCRAFT_READ_VALUES: "${HISTCRAFT_READ_VALUES:-4000000}"
+      # Its server processes: a number or auto (the CPUs of its limit, up to 4).
+      HISTCRAFT_WORKERS: "${HISTCRAFT_WORKERS:-auto}"
       HISTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
+      # MAX_SIGNALS of the installation file: the most points it may record (empty: no limit).
+      PLANTCRAFT_MAX_SIGNALS: "${PLANTCRAFT_MAX_SIGNALS:-}"
     secrets:
       - histcraft_db_password
     volumes:
@@ -877,7 +950,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "${HISTCRAFT_CPUS:-2}"
+          cpus: "${HISTCRAFT_DB_CPUS:-2}"
           memory: "${HISTCRAFT_DB_MEMORY:-2g}"
           pids: 256
 
