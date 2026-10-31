@@ -34,6 +34,31 @@ def evaluate(payload: dict[str, Any]) -> Any:  # noqa: ANN401 - runs in the work
         ("def check(i)\n    return 1\n", "Line 1"),
         ("import pandas as pd\ndef check(i):\n    pd.read_csv('/etc/x')\n", "read_csv"),
         ("from numpy.testing import runstring\ndef check(i):\n    return 1\n", "numpy"),
+        # class patterns read attributes by name (security test 2026-10-31, D8)
+        (
+            "def check(i):\n    match ():\n        case object(__class__=c):\n            return c\n",
+            "class patterns",
+        ),
+        (
+            "def check(i):\n    match i:\n        case K(c):\n            return c\n",
+            "class patterns",
+        ),
+        # pickle_compat.loads unpickles, and unpickling runs os.system
+        (
+            "import pandas\ndef check(i):\n    return pandas.compat.pickle_compat.loads(b'')\n",
+            "pickle_compat",
+        ),
+        ("from pandas.compat import pickle_compat\ndef check(i):\n    return 1\n", "pandas.compat"),
+        # Expr reads any attribute by name; import_optional_dependency imports any module
+        (
+            "import pandas\ndef check(i):\n    return pandas.core.computation.expr.Expr('x')\n",
+            "computation",
+        ),
+        (
+            "import pandas\ndef check(i):\n"
+            "    return pandas.core.apply.import_optional_dependency('os')\n",
+            "import_optional_dependency",
+        ),
     ],
 )
 def test_code_is_checked_before_it_runs(code, problem):
@@ -49,6 +74,7 @@ def test_code_is_checked_before_it_runs(code, problem):
         "import dataclasses\nos = dataclasses.sys.modules['os']",
         "import numpy as np\nos = np.testing",
         "import plantcraft_sdk.blocks\nos = plantcraft_sdk.client",
+        "import pandas\nos = pandas.compat",
     ],
 )
 def test_allowed_modules_never_lead_to_the_system(reach):
