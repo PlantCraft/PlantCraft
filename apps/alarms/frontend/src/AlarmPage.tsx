@@ -83,7 +83,7 @@ export function AlarmPage({ alarmId, me, ack = false }: { alarmId: string; me: M
   return <>
     <Heading eyebrow={<Link to="/alarms">{t("Alarms")}</Link>} title={alarm.name}
       actions={<>
-        <AlarmActions alarm={alarm} me={me} onChanged={() => void load()} onShelve={setShelving} />
+        <AlarmActions alarm={alarm} me={me} onChanged={() => void load()} onShelve={setShelving} heading />
         {me.can_edit && <>
           <button type="button" className="button button-secondary" onClick={() => void api.enable(alarm.alarm_id, !inService).then(load).catch((err) => setError(message(err)))}>
             <Power size={16} />{inService ? t("Take out of service") : t("Return to service")}

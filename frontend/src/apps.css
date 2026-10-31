@@ -8,7 +8,7 @@
 .apps-chip-warn, .apps-chip-off { border-color: var(--pc-attention-border); color: var(--pc-attention-text); background: var(--pc-attention-soft); }
 
 .apps-way { padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
-.apps-way h2, .apps-installed h2, .apps-preview h2 { margin: 0; color: var(--pc-text); font: 700 var(--pc-fs-lg) var(--pc-font-display); display: flex; align-items: center; gap: 8px; }
+.apps-way h2, .apps-preview h2 { margin: 0; color: var(--pc-text); font: 700 var(--pc-fs-lg) var(--pc-font-display); display: flex; align-items: center; gap: 8px; }
 .apps-way p { margin: 0; color: var(--pc-text-3); font-size: var(--pc-fs-md); line-height: 1.5; }
 .apps-file { position: relative; align-self: flex-start; cursor: pointer; }
 .apps-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
@@ -39,9 +39,7 @@
 .apps-preview-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .apps-preview .ac-notice { margin: 0; }
 
-.apps-installed { padding: 18px 0 6px; }
-.apps-installed h2 { padding: 0 20px 10px; }
-.apps-installed > p { padding: 0 20px 12px; }
+/* Installed apps: a section title over the suite's table, which draws its own panel. */
 .apps-sub { display: block; margin-top: 3px; color: var(--pc-text-4); font-size: var(--pc-fs-xs); }
 .apps-origin { padding: 2px 8px; border-radius: var(--pc-radius-pill); background: var(--pc-surface-3); color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 700; }
 .apps-origin-external { color: var(--pc-attention-text); background: var(--pc-attention-soft); }

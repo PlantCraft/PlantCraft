@@ -279,8 +279,8 @@ function InstalledTable({ apps, busy, installEnabled, onAct }: { apps: Installed
       </>;
     } },
   ];
-  return <section className="panel apps-installed" aria-labelledby="apps-installed-title">
-    <h2 id="apps-installed-title">{t("Installed apps")}</h2>
+  return <section className="apps-installed" aria-labelledby="apps-installed-title">
+    <h2 id="apps-installed-title" className="section-title">{t("Installed apps")}</h2>
     {!apps.length ? <p className="muted">{t("No apps yet. Install one from a file or the catalog.")}</p>
       : <DataTable rows={apps} columns={columns} rowKey={(app) => app.id} searchText={(app) => `${app.name} ${app.id} ${app.url} ${app.version ?? ""}`} searchPlaceholder={t("Filter by name")} initialSort={{ key: "name", descending: false }} label={t("Installed apps")} />}
   </section>;

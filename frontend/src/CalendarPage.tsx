@@ -25,6 +25,7 @@ import { addDays, deskApi, isoDay, type AppFeed, type CalendarEvent, type Calend
 import { language, t } from "./i18n";
 import { navigate } from "./nav";
 import { isLocalHref } from "./collab";
+import { useDialogKeys } from "./dialogKeys";
 import "./desk.css";
 
 const KINDS: Array<{ id: CalendarKind; label: string; color: string }> = [
@@ -127,6 +128,8 @@ export function draftBody(draft: Draft): EventDraft {
 }
 
 function EventDialog({ initial, repeats, onDone, onClose }: { initial: Draft; repeats: Array<{ id: Repeat; label: string }>; onDone: () => void; onClose: () => void }) {
+  const box = useRef<HTMLFormElement>(null);
+  useDialogKeys(box, onClose);
   const [draft, setDraft] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -164,7 +167,7 @@ function EventDialog({ initial, repeats, onDone, onClose }: { initial: Draft; re
   }
   const title = draft.id === null ? t("New event") : t("Event");
   return <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <form className="dialog dk-cal-dialog" role="dialog" aria-label={title} onSubmit={(event) => void submit(event)}>
+    <form ref={box} className="dialog dk-cal-dialog" role="dialog" aria-modal="true" aria-label={title} onSubmit={(event) => void submit(event)}>
       <header><h2>{title}</h2><button type="button" className="pcs-icon-button" onClick={onClose} aria-label={t("Close")}><X size={16} /></button></header>
       <label>{t("Title")}<input id="dk-ev-title" value={draft.title} maxLength={200} required autoFocus onChange={(event) => set({ title: event.target.value })} placeholder={t("Shift handover")} /></label>
       <label className="dk-check-label"><input type="checkbox" checked={draft.allDay} onChange={(event) => allDay(event.target.checked)} /> {t("All day")}</label>
@@ -192,10 +195,12 @@ function EventDialog({ initial, repeats, onDone, onClose }: { initial: Draft; re
 }
 
 function RunsDialog({ title, runs, onClose }: { title: string; runs: ScheduledRun[]; onClose: () => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  useDialogKeys(box, onClose);
   // The calendar draws on this device's clock (FullCalendar's), so its times do too: device clock.
   const time = (value: string) => new Date(value).toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" });
   return <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <div className="dialog dk-cal-dialog" role="dialog" aria-label={title}>
+    <div ref={box} className="dialog dk-cal-dialog" role="dialog" aria-modal="true" aria-label={title}>
       <header><h2>{title}</h2><button type="button" className="pcs-icon-button" onClick={onClose} aria-label={t("Close")}><X size={16} /></button></header>
       <ul className="dk-runs">{runs.map((run) => <li key={`${run.app}:${run.title}:${run.start}`}>
         <time>{time(run.start)}</time>
@@ -207,6 +212,8 @@ function RunsDialog({ title, runs, onClose }: { title: string; runs: ScheduledRu
 }
 
 function AddCalendar({ links, onDone, onClose }: { links: boolean; onDone: () => void; onClose: () => void }) {
+  const box = useRef<HTMLFormElement>(null);
+  useDialogKeys(box, onClose);
   const [mode, setMode] = useState<"file" | "url">("file");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
@@ -239,7 +246,7 @@ function AddCalendar({ links, onDone, onClose }: { links: boolean; onDone: () =>
     }
   }
   return <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <form className="dialog dk-cal-dialog" role="dialog" aria-label={t("Add a calendar")} onSubmit={(event) => void submit(event)}>
+    <form ref={box} className="dialog dk-cal-dialog" role="dialog" aria-modal="true" aria-label={t("Add a calendar")} onSubmit={(event) => void submit(event)}>
       <header><h2>{t("Add a calendar")}</h2><button type="button" className="pcs-icon-button" onClick={onClose} aria-label={t("Close")}><X size={16} /></button></header>
       <div className="pc-segmented" role="group" aria-label={t("How")}>
         <button type="button" className={mode === "file" ? "on" : ""} onClick={() => setMode("file")}><Upload size={14} /> {t("Import an .ics file")}</button>

@@ -59,8 +59,11 @@ export function ShelveDialog({ alarm, onClose, onDone }: { alarm: Alarm; onClose
   </Dialog>;
 }
 
-/** What the operator can do on one alarm: acknowledge, shelve, unshelve. */
-export function AlarmActions({ alarm, me, onChanged, onShelve }: { alarm: Alarm; me: Me; onChanged: () => void; onShelve: (alarm: Alarm) => void }) {
+/** What the operator can do on one alarm: acknowledge, shelve, unshelve. Small in a table row;
+ * `heading` draws them at the height of the other buttons beside a page's title. */
+export function AlarmActions({ alarm, me, onChanged, onShelve, heading = false }: { alarm: Alarm; me: Me; onChanged: () => void; onShelve: (alarm: Alarm) => void; heading?: boolean }) {
+  const size = heading ? "button" : "button button-small";
+  const icon = heading ? 16 : 14;
   const [busy, setBusy] = useState(false);
   async function act(run: () => Promise<unknown>) {
     setBusy(true);
@@ -68,9 +71,9 @@ export function AlarmActions({ alarm, me, onChanged, onShelve }: { alarm: Alarm;
   }
   if (!me.can_edit) return null;
   return <>
-    {!alarm.acked && <button type="button" className="button button-small button-primary" disabled={busy} onClick={() => void act(() => api.ack(alarm.alarm_id))}><Check size={14} />{t("Acknowledge")}</button>}
-    {alarm.status !== "shelved" && <button type="button" className="button button-small button-secondary" disabled={busy} onClick={() => onShelve(alarm)}><BellOff size={14} />{t("Shelve")}</button>}
-    {alarm.status === "shelved" && <button type="button" className="button button-small button-secondary" disabled={busy} onClick={() => void act(() => api.unshelve(alarm.alarm_id))}>{t("Unshelve")}</button>}
+    {!alarm.acked && <button type="button" className={`${size} button-primary`} disabled={busy} onClick={() => void act(() => api.ack(alarm.alarm_id))}><Check size={icon} />{t("Acknowledge")}</button>}
+    {alarm.status !== "shelved" && <button type="button" className={`${size} button-secondary`} disabled={busy} onClick={() => onShelve(alarm)}><BellOff size={icon} />{t("Shelve")}</button>}
+    {alarm.status === "shelved" && <button type="button" className={`${size} button-secondary`} disabled={busy} onClick={() => void act(() => api.unshelve(alarm.alarm_id))}>{t("Unshelve")}</button>}
   </>;
 }
 

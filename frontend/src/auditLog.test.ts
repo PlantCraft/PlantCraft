@@ -9,6 +9,7 @@ describe("audit log page", () => {
   it("shows the detail in one line", () => {
     expect(detailText({ address: "10.0.0.5", method: "ldap" })).toBe("address 10.0.0.5 · method ldap");
     expect(detailText({ count: 3 })).toBe("count 3");
+    expect(detailText({ month: "2026-10", company: null })).toBe("month 2026-10");
     expect(detailText(null)).toBe("");
     expect(detailText(["a"])).toBe('["a"]');
   });

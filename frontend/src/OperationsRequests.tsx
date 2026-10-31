@@ -133,7 +133,6 @@ export function RequestsPage() {
   const [targeting, setTargeting] = useState(false);
   return <div className="apps-page ops-requests">
     <Heading title={t("Requests")} actions={<button type="button" className="button button-primary" onClick={() => setAsking({ title: "", text: "", category: "other" })}><Plus size={15} /> {t("New request")}</button>} />
-    <p className="muted ops-intro">{operate ? t("What the people of the suite asked of IT and the integrators. A request is an action: open one to answer, change its status or log the time spent.") : t("What you asked of IT or an integrator, and their answers.")}</p>
     <div className="act-toolbar">
       <div className="act-filters" role="group" aria-label={t("Status")}>
         <button type="button" className={open ? "active" : ""} aria-pressed={open} onClick={() => setOpen(true)}>{t("Not done")}</button>
