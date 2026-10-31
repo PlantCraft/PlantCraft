@@ -1,7 +1,7 @@
 import { createApiClient, jsonBody, query, type ExploreAnswer, type ExploreHit, type HelpEntry, type HelpPage } from "@plantcraft/ui";
 import type { Diagram, DiagramCheck } from "@plantcraft/ui/blockEditor";
 import { href } from "./nav";
-import type { Alarm, AlarmHistory, AssetAlarms, AssetOption, Catalog, Condition, Directory, EventDetail, Incoming, JournalEntry, Me, Performance, Philosophy, PhilosophyRecord, Rule, RuleDraft, Sent, SignalOption, Silence, SilenceDraft, SimpleLogic, Summary, TryResult, Execution } from "./types";
+import type { Alarm, AlarmListImport, AlarmHistory, AssetAlarms, AssetOption, Catalog, Condition, ConsoleLoads, Directory, EventDetail, Incoming, JournalEntry, Me, Performance, Philosophy, PhilosophyRecord, Rule, RuleDraft, Sent, SignalOption, Silence, SilenceDraft, SimpleLogic, Summary, TryResult, Execution } from "./types";
 
 const client = createApiClient({ app: "alarmcraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -40,7 +40,8 @@ export const api = {
   condition: (app: string, key: string) => request<EventDetail>(`/api/incoming/condition${query({ app, key })}`),
   incoming: (filters: { window: string; app?: string; kind?: string; severity?: string; subject?: string }) => request<Incoming>(`/api/incoming${query({ ...filters, limit: "1000" })}`),
   journal: (window: string, alarm?: string) => request<JournalEntry[]>(`/api/journal${query({ window, alarm, limit: "2000" })}`),
-  performance: (window: string) => request<Performance>(`/api/performance${query({ window })}`),
+  performance: (window: string, console?: string) => request<Performance>(`/api/performance${query({ window, console })}`),
+  consoleLoads: (window: string) => request<ConsoleLoads>(`/api/performance/consoles${query({ window })}`),
   run: () => request<Record<string, number>>("/api/run", { method: "POST" }),
   assets: (q?: string) => request<AssetOption[]>(`/api/assets${query({ q })}`),
   signals: (q: string) => request<SignalOption[]>(`/api/signals${query({ q, limit: "30" })}`),
@@ -55,6 +56,11 @@ export const api = {
   silences: () => request<Silence[]>("/api/silences"),
   addSilence: (draft: SilenceDraft) => request<Silence>("/api/silences", body("POST", draft)),
   endSilence: (silenceId: number) => request<Silence>(`/api/silences/${silenceId}/end`, { method: "POST" }),
+  alarmLists: () => request<AlarmListImport[]>("/api/alarm-list"),
+  alarmList: (importId: number) => request<AlarmListImport>(`/api/alarm-list/${importId}`),
+  readAlarmList: (filename: string, content: string) => request<AlarmListImport>("/api/alarm-list", body("POST", { filename, content })),
+  applyAlarmList: (importId: number, skip: string[]) => request<AlarmListImport>(`/api/alarm-list/${importId}/apply`, body("POST", { skip })),
+  discardAlarmList: (importId: number) => request<AlarmListImport>(`/api/alarm-list/${importId}/discard`, { method: "POST" }),
   help: () => request<HelpEntry[]>("/api/help"),
   helpPage: (pageId: string) => request<HelpPage>(`/api/help/${id(pageId)}`),
 };

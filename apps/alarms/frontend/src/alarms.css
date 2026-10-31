@@ -27,6 +27,10 @@
 }
 
 /* Performance */
+/* Targets › Consoles: one bordered block per operator position. */
+.al-console { border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); padding: 12px 14px; margin-bottom: 12px; display: grid; gap: 10px; justify-items: start; }
+.al-console .form-grid { width: 100%; }
+.al-console-pick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
 .al-shares { display: grid; gap: 10px; }
 .al-share { display: grid; grid-template-columns: 90px 1fr 56px 90px; gap: 10px; align-items: center; font-size: var(--pc-fs-sm); }
 .al-share .health-bar { height: 8px; width: 100%; }
@@ -129,3 +133,8 @@
   .al-python-full { height: auto; }
   .al-python-full .pc-code { height: 60vh; }
 }
+
+/* Rules › Import alarm list */
+.al-file { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; margin: 4px 0 16px; }
+.al-list { margin: 6px 0 16px; padding-left: 18px; }
+.al-diff { margin: 0; padding-left: 16px; }

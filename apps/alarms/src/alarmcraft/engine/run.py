@@ -243,9 +243,10 @@ def run(
     if matched:
         outcome.heard = heard(matched[-1])
     raise_node = nodes(diagram, ALARM_BLOCK)
-    state["active"] = bool(
-        (state["nodes"].get(raise_node[0]["id"]) or {}).get("active") if raise_node else False
-    )
+    raised = (state["nodes"].get(raise_node[0]["id"]) or {}) if raise_node else {}
+    state["active"] = bool(raised.get("active"))
+    # Suppressed by design: the rule's permissive does not hold (``alarm.raise`` Enabled when).
+    state["suppressed"] = bool(raised.get("suppressed"))
     state["evaluated_until"] = stop.isoformat()
     return outcome
 

@@ -184,3 +184,67 @@ def test_the_two_ways_to_write_a_rule(browser, fake, app_url, screenshots):
         expect(page.get_by_role("dialog").locator(".pc-code")).to_be_visible()
         _shot(page, screenshots, "15-python-expanded")
         page.get_by_role("dialog").get_by_role("button", name="Done").click()
+
+
+def test_import_the_dcs_alarm_list_review_and_apply(signed_in, app_url, screenshots, tmp_path):
+    page = signed_in
+    exported = tmp_path / "dcs-alarms.csv"
+    exported.write_text(
+        "Tag;Alarm type;Limit;EU;Priority;Description;Operator action\n"
+        "FIC-1001.PV;PVHI;58;m3/h;2;Feed flow very high (DCS);Close FV-1001\n"
+        "FIC-1001.PV;PVLO;5;m3/h;3;Feed flow low (DCS);Check the feed pump\n"
+        "NOPE-9.PV;HI;1;;2;Not a signal;\n"
+    )
+    page.goto(f"{app_url}/alarm/rules")
+    page.get_by_role("link", name="Import alarm list").click()
+    page.locator("input[type=file]").set_input_files(str(exported))
+    expect(page.get_by_text("2 new, 0 changed, 0 removed, 0 the same")).to_be_visible()
+    expect(page.get_by_text("Rows not read: 1")).to_be_visible()
+    # Leave the LO alarm out, then apply the rest.
+    page.get_by_label("Apply FIC-1001.PV/LO").uncheck()
+    _shot(page, screenshots, "8-alarm-list-review")
+    page.get_by_role("button", name="Apply the changes (1)").click()
+    expect(
+        page.get_by_text("1 rules created, 0 changed, 0 turned off, 1 left out.")
+    ).to_be_visible()
+    page.goto(f"{app_url}/alarm/rules")
+    expect(page.get_by_role("link", name="Feed flow very high (DCS)")).to_be_visible()
+    expect(page.get_by_role("link", name="Feed flow low (DCS)")).to_have_count(0)
+
+
+def test_a_rule_only_while_its_permissive_holds(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/alarm/rules/new")
+    page.get_by_role("button", name="Only while…").click()
+    expect(page.get_by_role("group", name="Only while")).to_be_visible()
+    page.get_by_label("Permissive limit").fill("1")
+    page.get_by_label("Enabled after (s)").fill("30")
+    _shot(page, screenshots, "9-only-while")
+    page.get_by_role("button", name="Remove the permissive").click()
+    expect(page.get_by_role("button", name="Only while…")).to_be_visible()
+
+
+def test_consoles_split_the_load_by_operator(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/alarm/targets")
+    page.get_by_role("button", name="Add a console").click()
+    board = page.locator(".al-console").first
+    board.get_by_label("Console name").fill("Unit board")
+    board.get_by_label("Alarms an hour, at most").fill("4")
+    board.get_by_label("Areas", exact=True).fill("Simulated")
+    page.get_by_role("button", name=re.compile("Simulated unit")).first.click()
+    expect(board.locator(".al-chip", has_text="Simulated unit")).to_be_visible()
+    board.get_by_label("Operators", exact=True).select_option(index=1)
+    expect(board.locator(".al-chip")).to_have_count(2)
+    _shot(page, screenshots, "10-consoles")
+    page.get_by_role("button", name="Save").click()
+    expect(page.get_by_text(re.compile("Saved. The next shift summary goes at"))).to_be_visible()
+
+    page.goto(f"{app_url}/alarm/performance")
+    table = page.get_by_role("table", name="Consoles")
+    expect(table.get_by_role("button", name="Unit board")).to_be_visible()
+    page.get_by_label("Console", exact=True).select_option(label="Unit board")
+    expect(
+        page.get_by_text("Console Unit board: at most 4 alarms an hour for its operator.")
+    ).to_be_visible()
+    _shot(page, screenshots, "11-performance-by-console")

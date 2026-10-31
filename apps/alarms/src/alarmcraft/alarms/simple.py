@@ -184,10 +184,30 @@ class SimpleLogic(BaseModel):
     conditions: list[SimpleCondition] = Field(min_length=1, max_length=3)
     combine: Literal["and", "or"] = "and"
     clear_after_seconds: float = Field(default=0.0, ge=0, le=24 * 3600)
+    # State-based alarming: judged only while this permissive holds (the pump runs), and once
+    # it held ``enable_delay_seconds`` (the flow settles after a start). Off: suppressed by
+    # design, not raised and not counted.
+    enable_when: SimpleCondition | None = None
+    enable_delay_seconds: float = Field(default=0.0, ge=0, le=24 * 3600)
+
+    @model_validator(mode="after")
+    def _permissive(self) -> SimpleLogic:
+        if self.enable_when is not None and self.enable_when.input != "value":
+            raise ValueError("a permissive is a value (a pump's run signal), not an event")
+        if self.enable_when is None:
+            self.enable_delay_seconds = 0.0
+        return self
 
     def sentence(self) -> str:
         joiner = f" {t('and') if self.combine == 'and' else t('or')} "
         words = joiner.join(item.words() for item in self.conditions)
+        if self.enable_when is not None:
+            words += t("; only while {permissive}", permissive=self.enable_when.words())
+            if self.enable_delay_seconds:
+                words += t(
+                    " (from {time} after it starts holding)",
+                    time=seconds_words(self.enable_delay_seconds),
+                )
         if self.clear_after_seconds:
             words += t(
                 "; clears after {time} back to normal", time=seconds_words(self.clear_after_seconds)
@@ -248,8 +268,9 @@ def to_diagram(logic: SimpleLogic) -> dict[str, Any]:
             {"source": source, "source_port": port, "target": target, "target_port": target_port}
         )
 
-    ends: list[str] = []
-    for row, item in enumerate(logic.conditions):
+    def chain(item: SimpleCondition, row: int) -> str:
+        """The blocks of one condition; answers "node:port" of its last output."""
+
         if item.input == "value":
             assert item.value is not None
             source = node(
@@ -313,7 +334,9 @@ def to_diagram(logic: SimpleLogic) -> dict[str, Any]:
             )
             wire(end, port, held, "condition")
             end, port = held, "condition"
-        ends.append(f"{end}:{port}")
+        return f"{end}:{port}"
+
+    ends = [chain(item, row) for row, item in enumerate(logic.conditions)]
     if len(ends) > 1:
         joined = node(f"alarm.{logic.combine}", 3, 0)
         for item in ends:
@@ -322,6 +345,12 @@ def to_diagram(logic: SimpleLogic) -> dict[str, Any]:
         last, last_port = joined, "condition"
     else:
         last, _, last_port = ends[0].partition(":")
-    alarm = node(ALARM_BLOCK, 4, 0, {"clear_after_seconds": logic.clear_after_seconds})
+    raising: dict[str, Any] = {"clear_after_seconds": logic.clear_after_seconds}
+    if logic.enable_when is not None:
+        raising["enable_delay_seconds"] = logic.enable_delay_seconds
+    alarm = node(ALARM_BLOCK, 4, 0, raising)
     wire(last, last_port, alarm, "condition")
+    if logic.enable_when is not None:
+        source, _, port = chain(logic.enable_when, len(logic.conditions)).partition(":")
+        wire(source, port, alarm, "enabled")
     return {"version": 2, "nodes": nodes, "edges": edges}

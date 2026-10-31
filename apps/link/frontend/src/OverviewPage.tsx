@@ -9,7 +9,7 @@ const Plot = lazy(() => import("@plantcraft/ui/plot").then((m) => ({ default: m.
 /** A new person's board (which loops and signals are bad now, and where):
  * the results by status beside the last 14 days in alarm, then the health map by area beside the
  * worst results, then the monitors and the queue (kept on the board), then the loop-hours lost by area beside
- * the loops with the lowest effective control. */
+ * the loops with the lowest effective control, then the oscillations several loops share. */
 const DEFAULT_BOARD: BoardItem[] = [
   { i: "linkcraft:results", widget: "linkcraft:results", x: 0, y: 0, w: 8, h: 2 },
   { i: "linkcraft:in-alarm-history", widget: "linkcraft:in-alarm-history", x: 8, y: 0, w: 4, h: 2 },
@@ -19,6 +19,7 @@ const DEFAULT_BOARD: BoardItem[] = [
   { i: "linkcraft:queue", widget: "linkcraft:queue", x: 6, y: 5, w: 6, h: 3 },
   { i: "linkcraft:loop-losses", widget: "linkcraft:loop-losses", x: 0, y: 8, w: 6, h: 3 },
   { i: "linkcraft:effective-control", widget: "linkcraft:effective-control", x: 6, y: 8, w: 6, h: 3 },
+  { i: "linkcraft:oscillation-groups", widget: "linkcraft:oscillation-groups", x: 0, y: 11, w: 6, h: 3 },
 ];
 
 /**

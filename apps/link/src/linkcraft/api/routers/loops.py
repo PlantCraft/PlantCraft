@@ -18,6 +18,7 @@ from linkcraft.catalog.loop_types import known_loop_type
 from linkcraft.catalog.registry import METHOD_SPECS
 from linkcraft.config import LoopConfig, LoopSignals
 from linkcraft.engine.references import compare
+from linkcraft.engine.tuning import suggest
 from linkcraft.i18n import t
 from linkcraft.loops.defaults import record_defaults, setting_sources
 from linkcraft.loops.monitor import APPLICATION_ID, SUBJECT_KIND, incomplete_reason, missing_roles
@@ -147,6 +148,33 @@ def loop_detail(loop_id: str, user: CurrentUser, rt: RuntimeDep, scope: Scope) -
             summary.get("health"),
             summary.get("algorithm_version"),
         ),
+    }
+
+
+@router.get("/api/loops/{loop_id}/tuning")
+def tuning_suggestion(
+    loop_id: str, user: CurrentUser, rt: RuntimeDep, scope: Scope
+) -> dict[str, Any]:
+    """PI settings from a model fitted to the loop's last window (Lambda/IMC rules), read only:
+    nothing is written to the controller (A12)."""
+
+    loop = _loop_or_404(rt, loop_id, scope)
+    latest = rt.latest.get(APPLICATION_ID, SUBJECT_KIND, loop_id)
+    if loop.incomplete or latest is None or not latest.get("source_end"):
+        return {"available": False, "reason": t("Run the loop first: there is no window to fit.")}
+    frame = rt.monitor.frame_for_loop(
+        loop_id,
+        start=latest.get("source_start"),
+        end=latest.get("source_end"),
+        plant=rt.user_plant(user),
+    )
+    found = suggest(frame, rt.monitor.analysis.resample_seconds)
+    if found.get("reason"):
+        found["reason"] = t(found["reason"])
+    return {
+        **found,
+        "source_start": latest.get("source_start"),
+        "source_end": latest.get("source_end"),
     }
 
 

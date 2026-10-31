@@ -491,3 +491,26 @@ def test_a_value_that_did_not_change_is_a_simple_condition(client):
     assert "did not change" in logic.conditions[0].words()
     blocks = [node["block"] for node in to_diagram(logic)["nodes"]]
     assert blocks[:3] == ["alarm.value", "alarm.changed", "alarm.not"] and "alarm.for" in blocks
+
+
+def test_a_permissive_that_does_not_hold_suppresses_the_alarm_by_design(client):
+    # L3: FIC-1001's PV (about 55) is above 50, but the alarm is enabled only while TIC-1104's
+    # PV is at or above 1000, which it never is: suppressed by design, not raised.
+    rule = high(50.0)
+    permissive = {"input": "value", "value": {"signal": "plantcraft:CPM.Loops.TIC-1104.PV"},
+                  "op": ">=", "limit": 1000.0}  # fmt: skip
+    rule["simple"] = {**rule["simple"], "enable_when": permissive, "enable_delay_seconds": 30}
+    made = client.post("/api/rules", json=rule)
+    assert made.status_code == 201, made.text
+    assert "only while" in made.json()["sentence"]
+    assert client.post("/api/run").json()["raised"] == 0
+    [alarm] = made.json()["alarm_rows"] or client.get("/api/alarms").json()
+    alarm = client.get(f"/api/alarms/{alarm['alarm_id']}").json()
+    assert alarm["suppressed"] is True and alarm["active"] is False
+    assert "Suppressed by design" in alarm["message"]
+    # The permissive taken away: the same rule raises.
+    rule["simple"] = {**rule["simple"], "enable_when": None}
+    changed = client.put(f"/api/rules/{made.json()['rule_id']}",
+                         json={**rule, "base_updated_at": made.json()["updated_at"]})  # fmt: skip
+    assert changed.status_code == 200, changed.text
+    assert client.post("/api/run").json()["raised"] == 1

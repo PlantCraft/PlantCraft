@@ -31,6 +31,7 @@ from histcraft.api.deps import (
 )
 from histcraft.api.routers.data import run_reads
 from histcraft.api.runtime import Runtime, point_ref
+from histcraft.archive.edit_marks import edit_marks
 from histcraft.archive.forecast import forecast, free_bytes
 from histcraft.archive.query import SourceUnavailable, iso_ms
 from histcraft.catalog import points_csv
@@ -48,6 +49,7 @@ from histcraft.clock import now_ms
 from histcraft.collector.backfill import MAX_HOURS
 from histcraft.i18n import t
 from histcraft.kinds import RUNS, outward_one
+from histcraft.opc_status import described
 from histcraft.sources import certificates
 
 router = APIRouter(prefix="/api", tags=["historian"])
@@ -485,14 +487,19 @@ def point_series(
         raise HTTPException(502, str(exc)) from exc
     # Where the quality was not good (G5): uncertain, substituted or bad, from t to the next.
     begin_ms, finish_ms = int(begin.timestamp() * 1000), int(finish.timestamp() * 1000)
-    changes = runtime.archive.qualities(int(point["id"]), begin_ms, finish_ms)
-    quality = [{"t": iso_ms(np.asarray([at]))[0], "quality": code} for at, code in changes]
+    changes = runtime.archive.qualities(int(point["id"]), begin_ms, finish_ms, with_status=True)
+    quality = [
+        {"t": iso_ms(np.asarray([at]))[0], "quality": code, **described(status, name)}
+        for at, code, status, name in changes
+    ]
+    edited = runtime.archive.edits([int(point["id"])], begin_ms, finish_ms)[int(point["id"])]
     return {
         "signal": signal_id,
         "kind": point["kind"],
         "t": stamps,
         "v": values,
         "quality": quality,
+        "edits": edit_marks(edited),
         **({"low": bounds[0], "high": bounds[1]} if bounds else {}),
     }
 
