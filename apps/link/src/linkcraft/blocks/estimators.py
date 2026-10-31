@@ -211,9 +211,7 @@ BLOCKS = (
             inputs=(X, U),
             outputs=(
                 outport("value", "series", "Estimate", "The filtered signal, on the same grid."),
-                outport(
-                    "uncertainty", "series", "Uncertainty", "One standard deviation of it."
-                ),
+                outport("uncertainty", "series", "Uncertainty", "One standard deviation of it."),
             ),
             parameters=KalmanParameters,
             group="Kalman",
@@ -283,8 +281,20 @@ BLOCKS = (
             inputs=(
                 inport("target", "series", "Target", "The sampled value (gaps between samples)."),
                 inport("x1", "series", "Input 1", "A signal that explains the target."),
-                inport("x2", "series", "Input 2", "Another one.", required=False),
-                inport("x3", "series", "Input 3", "Another one.", required=False),
+                inport(
+                    "x2",
+                    "series",
+                    "Input 2",
+                    "A second signal that explains the target.",
+                    required=False,
+                ),
+                inport(
+                    "x3",
+                    "series",
+                    "Input 3",
+                    "A third signal that explains the target.",
+                    required=False,
+                ),
             ),
             outputs=(outport("value", "series", "Estimate", "The target at every step."),),
             parameters=SoftSensorParameters,
