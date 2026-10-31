@@ -74,6 +74,19 @@ HE_2007_CURVE_FITTING_STICTION = ScientificReference(
     "tuning keeps it sinusoidal. Index = sine error / (sine + triangle error).",
 )
 
+HORCH_1999_CROSS_CORRELATION_STICTION = ScientificReference(
+    title="A simple method for detection of stiction in control valves",
+    authors=["Alexander Horch"],
+    year=1999,
+    venue="Control Engineering Practice, 7(10), 1221-1231",
+    doi="10.1016/S0967-0661(99)00100-0",
+    url="https://doi.org/10.1016/S0967-0661(99)00100-0",
+    reference_type="article",
+    notes="In a self-regulating loop that oscillates, the cross-correlation of the controller "
+    "output and the PV is odd (zero at lag 0) when a sticky valve causes the cycle and even "
+    "(largest at lag 0) when tuning or a disturbance does.",
+)
+
 CHOUDHURY_THORNHILL_SHAH_2005_STICTION_MODEL = ScientificReference(
     title="Modelling valve stiction",
     authors=["M.A.A. Shoukat Choudhury", "N.F. Thornhill", "S.L. Shah"],

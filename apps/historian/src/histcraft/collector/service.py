@@ -894,6 +894,7 @@ class Collector:
 
         now = now_ms()
         taken = 0
+        results: dict[str, list[Any]] = {}
         with self._lock:
             for metric in metrics:
                 source_id, values = split(metric)
@@ -907,6 +908,10 @@ class Collector:
                 if at > now + FUTURE_MS:
                     at = now
                 self._gateway_last[source_id] = now
+                if (source.get("options") or {}).get("laboratory"):
+                    # A LIMS: each row is a laboratory result (histcraft.lab), not a value.
+                    results.setdefault(source_id, []).append(metric)
+                    continue
                 seen = self.seen.setdefault(source_id, {})
                 for address, (value, series) in values.items():
                     if address in seen or len(seen) < SEEN_LIMIT:
@@ -916,7 +921,49 @@ class Collector:
                             continue  # the archive only moves forward
                         state.take(Reading(at, _pushed_value(value, state.point["kind"]), True))
                         taken += 1
+        for source_id, rows in results.items():
+            taken += self._laboratory(self.sources[source_id], rows, now)
         return taken
+
+    def _laboratory(self, source: dict[str, Any], metrics: list[Any], now: int) -> int:
+        """A LIMS source's rows as laboratory results: ``laboratory:<analysis>`` at the
+        sampling time, with status and times; a row read again unchanged is not rewritten."""
+
+        from histcraft import lab
+
+        column = ((source.get("options") or {}).get("tag_columns") or [""])[0]
+        samples, refused = [], 0
+        for metric in metrics:
+            fields, analysis = metric.fields, str(metric.tags.get(column) or "").strip()
+            try:
+                samples.append(
+                    lab.checked(
+                        f"laboratory:{analysis}",
+                        metric.at_ms if metric.at_ms is not None else now,
+                        fields.get("value"),
+                        now,
+                        received=lab.stamp_ms(fields.get("received_at"), "received_at"),
+                        approved=lab.stamp_ms(fields.get("approved_at"), "approved_at"),
+                        status=str(fields.get("status") or "").strip().lower() or None,
+                    )
+                )
+            except ValueError:
+                refused += 1
+        if refused:
+            LOGGER.warning("Laboratory source %s: %d rows refused", source["id"], refused)
+        if not samples:
+            return 0
+        try:
+            written, errors = lab.write(
+                self.catalog, self.archive, samples, f"source:{source['id']}", now,
+                only_changed=True,
+            )  # fmt: skip
+        except Exception:
+            LOGGER.exception("Laboratory source %s: the results were not written", source["id"])
+            return 0
+        if errors:
+            LOGGER.warning("Laboratory source %s: %s", source["id"], errors[0]["detail"])
+        return written
 
     def check_gateway(self) -> None:
         """Each gateway source connected while values arrive; a silence is a gap."""

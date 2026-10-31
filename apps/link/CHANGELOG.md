@@ -8,6 +8,12 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **Horch's cross-correlation in the stiction screen.** When the loop cycles, the screen reports
+  `horch_index`: the cross-correlation of OP and PV at lag 0 over its largest value within half
+  a period. Near 0 means a quarter-cycle shift (stiction behind a controller output), and near 1
+  means in or against phase (tuning or a disturbance). The new parameter `op_is` says what the
+  OP records. With `controller_output`, an index of `horch_even` (0.8) or more leaves the shape
+  evidence out. The default `valve_command` keeps the screen as it was (docs/gaps.md G28).
 - **SKAB regression test.** The Deviation (T²) block is now scored against the 34 labelled
   experiments of the Skoltech Anomaly Benchmark, a real pump and water circuit. The data is
   GPL-3.0, so `tests/oracles/fetch_skab.py` downloads it at a pinned commit and checks the
@@ -74,7 +80,8 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   pass (about 2 s for 205 loops and 821 signals), so a large existing file is worked down over
   days without holding the database. With 2050 loops and 8214
   signals the file grew without bound (F9, 2.5 to 18.5 GB in about an hour of replay); it now
-  levels off. Freed space is reused, and the file only shrinks after `VACUUM`.
+  levels off. Freed space is reused; `linkcraft compact` gives
+  the disk back from a file that grew before (`docs/operations.md`, section 4).
 - The Overview keeps its answer 3 s per asset scope: with 50 people on it during a round its p95
   went from 2.0 to 0.15 s (0.6.0 load test C4 with an account per person).
 - **The stiction screen finds stiction behind a smooth controller.** Beside the stick-slip

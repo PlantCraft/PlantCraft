@@ -140,6 +140,8 @@ export interface RuleDraft {
   /** Its alarms colour their assets and show in the Active alarms widgets. */
   dashboards: boolean;
   cause: string; consequence: string; action: string;
+  /** The alarm's id in the DCS alarm list it was imported from (``<tag>/<type>``). */
+  external_id?: string | null;
 }
 
 export interface Rule extends RuleDraft {
@@ -200,4 +202,26 @@ export interface OutboxRow {
 export interface Sent {
   outbox: OutboxRow[]; limited: Array<{ recipient: string; held: number }>; limit_per_hour: number;
   inhibited: number; error: string; service_key: boolean;
+}
+
+/** One alarm of a DCS alarm list, in the fields the list has. */
+export interface AlarmListValues {
+  name: string; signal_id: string; kind: string; limit: number; unit: string; deadband: number;
+  on_delay_seconds: number; priority: string; enabled: boolean; cause: string; consequence: string; action: string;
+}
+
+export interface AlarmListItem {
+  key: string; line: number | null; change: "new" | "changed" | "removed" | "same";
+  before: AlarmListValues | null; after: AlarmListValues | null; fields: string[];
+  rule_id: string | null; rule_updated_at: string | null;
+}
+
+/** A DCS alarm list read as a draft (Rules › Import alarm list). */
+export interface AlarmListImport {
+  import_id: number; filename: string; created_at: string; created_by: string;
+  state: "draft" | "applied" | "discarded"; done_at: string | null; done_by: string | null;
+  counts: { new: number; changed: number; removed: number; same: number };
+  format?: string; columns?: Record<string, string>; rows?: number;
+  problems: Array<{ line: number; message: string }>; items?: AlarmListItem[];
+  result: { created: number; changed: number; turned_off: number; left_out: number; not_applied: Array<{ key: string; reason: string }> } | null;
 }

@@ -135,6 +135,9 @@ class RuleDraft(BaseModel):
     cause: str = Field(default="", max_length=2000)
     consequence: str = Field(default="", max_length=2000)
     action: str = Field(default="", max_length=2000)
+    # The alarm's id in the system it was imported from (a DCS alarm list: ``<tag>/<type>``,
+    # ``alarms.alarmlist``); the next import of that list matches the rule by it.
+    external_id: str | None = Field(default=None, max_length=210)
 
     @field_validator("name")
     @classmethod

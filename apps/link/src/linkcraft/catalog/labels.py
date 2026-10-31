@@ -185,6 +185,16 @@ PARAMETER_LABELS = {
         "Minimum half cycles",
         "Regular half cycles of the oscillation needed before its shape is judged.",
     ),
+    "op_is": (
+        "The OP is",
+        "What the OP series records: the valve command (default) or the controller's own output, "
+        "which lets the cross-correlation test (Horch) rule out a cycle in phase with the PV.",
+    ),
+    "horch_even": (
+        "In-phase cross-correlation",
+        "Cross-correlation at lag 0, over its largest value, above which an OP-PV cycle counts as "
+        "tuning or a disturbance rather than stiction.",
+    ),
     "jump_fraction_reference": (
         "Reference jump fraction",
         "Share of stick-then-slip moves at which the slip part of the stiction score is full.",
