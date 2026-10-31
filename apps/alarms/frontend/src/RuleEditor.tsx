@@ -125,6 +125,8 @@ export function RuleEditor({ me, ruleId, fromEvent, fromCatalog, schedule }: { m
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
+    // A reader sees only the read-only notice: the editor's lists are for editors (403 otherwise).
+    if (!me.can_edit) return;
     api.assets().then(setAssets).catch(() => setAssets([]));
     api.assetTypes().then(setTypes).catch(() => setTypes([]));
     api.executions().then(setExecutions).catch(() => setExecutions([]));
@@ -135,7 +137,7 @@ export function RuleEditor({ me, ruleId, fromEvent, fromCatalog, schedule }: { m
     if (ruleId) api.rule(ruleId).then((rule) => { setStored(rule); setDraft(draftOf(rule)); }).catch((err) => setError(message(err)));
     else if (fromEvent) api.ruleFromEvent(fromEvent).then(started).catch(failed);
     else if (fromCatalog) api.ruleFromCatalog(fromCatalog).then(started).catch(failed);
-  }, [ruleId, fromEvent, fromCatalog]);
+  }, [ruleId, fromEvent, fromCatalog, me.can_edit]);
   if (!me.can_edit) return <ErrorBox text={t("Your access to Alarms is read-only.")} />;
   if (!draft) return error ? <ErrorBox text={error} /> : <Loading />;
   const update = (patch: Partial<RuleDraft>) => { setDraft({ ...draft, ...patch }); setTried(null); };

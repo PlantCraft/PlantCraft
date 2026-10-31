@@ -31,6 +31,7 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- **A read-only visitor opening a rule no longer gets a 403 in the console.** The rule editor shows the read-only notice without asking for the assets, types and monitors that only editors may read.
 - The flood count reads only the last minutes of the outbox (index on its time): 0.08 ms a person instead of 4 to 15 ms with 30 days and 300,000 notices, on every notifier cycle during a flood.
 - A new rule no longer asks the server for its sentence before its first condition is complete
   (it answered 422 in the browser's console); an alarm's Acknowledge and Shelve are as tall as the
