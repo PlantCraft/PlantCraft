@@ -180,3 +180,33 @@ def test_a_drawing_is_read_in_the_worker_process_too():
     extracted, diagrams = extract.read_isolated(data, "PID-U-100-01.svg")
     assert diagrams and diagrams[0]["items"]
     assert extracted.format == "drawing"
+
+
+def test_meaning_search_walks_past_passages_the_person_may_not_read():
+    """The best passages by meaning are checked a chunk at a time: when the whole first chunk
+    is in folders the person may not see, the next chunks are read until enough are found."""
+
+    import numpy as np
+
+    from doccraft.library.search import CANDIDATES, Searcher
+
+    class Store:
+        asked: list[int] = []
+
+        def allowed_among(self, ids, folders, assistant):
+            self.asked.append(len(ids))
+            return {i for i in ids if i >= 1500}  # only the 500 weakest are readable
+
+    ids = np.arange(2000, dtype=np.int64)
+    scores = -ids.astype(np.float32)  # passage 0 is the best by meaning
+    best = Searcher(Store(), HashEmbedder())._best(ids, scores, {"f"}, False)
+    assert best == list(range(1500, 1500 + CANDIDATES))
+    assert len(set(best)) == len(best)
+
+    class Everyone(Store):
+        def allowed_among(self, ids, folders, assistant):
+            return None
+
+    assert Searcher(Everyone(), HashEmbedder())._best(ids, scores, None, False) == list(
+        range(CANDIDATES)
+    )
