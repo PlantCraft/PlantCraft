@@ -69,3 +69,8 @@ export function forecastLine(forecast: Forecast): { text: string; warn: boolean 
   const when = days >= 730 ? t("{count} years", { count: formatNumber(days / 365, 1) }) : t("{count} days", { count: formatNumber(Math.floor(days), 0) });
   return { text: t("{growth}; the disk ({free} free) is full in {when}.", { growth, free: formatBytes(forecast.free_bytes), when }), warn: days < forecast.alert_days };
 }
+
+/** "user:ana, group:operations" as the list the API takes (a bare name is a user). */
+export function ownerList(text: string): string[] {
+  return text.split(/[,;\s]+/).map((item) => item.trim().toLowerCase()).filter(Boolean).map((item) => (item.includes(":") ? item : `user:${item}`));
+}

@@ -9,6 +9,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **The owners of a failing source hear of it** (gap H13): a condition the Historian reports
+  with `owners` in its payload (`source.disconnected`, `source.late`) is told to them as a
+  Historian notification, in Messages and by email, with the team's contact and a link to the
+  source; when the condition ends the notification is settled ("Back to normal at …"). No alarm
+  rule is needed for it.
+
 - **Windows without Docker Desktop: Rancher Desktop.** `./install.sh --check` in WSL now accepts
   Rancher Desktop's Linux `docker`, which reaches Ubuntu through Windows' PATH. It refused that
   path before, as if it were Docker Desktop's. `docs/install.md` gives the Rancher Desktop

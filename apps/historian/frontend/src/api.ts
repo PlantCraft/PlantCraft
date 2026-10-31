@@ -1,7 +1,7 @@
 import { ApiError, createApiClient, type HelpEntry, type HelpPage, jsonBody, saveFile } from "@plantcraft/ui";
 import { t } from "./i18n";
 import { href } from "./nav";
-import type { AppMeta, ExportOptions, ExportPreview, ImportCheck, ImportItem, Me, ReadOptions, Overview, Point, RequestAnswer, RunInfo, RunsSeries, Series, Settings, Source, SourceSettings, Variable } from "./types";
+import type { AppMeta, ExportOptions, ExportPreview, ImportCheck, ImportItem, Me, ReadOptions, Overview, Point, RequestAnswer, RunInfo, RunsSeries, Series, Settings, Source, SourceEvent, SourceIntegration, SourceSettings, Variable } from "./types";
 
 const client = createApiClient({ app: "histcraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -10,7 +10,7 @@ const body = jsonBody;
 const id = encodeURIComponent;
 
 /** What a source form sends: `password` only when typed (null keeps the stored one). */
-export type SourceIn = Pick<Source, "id" | "name" | "kind" | "endpoint" | "namespace_uri" | "username" | "password_env" | "options" | "enabled"> & SourceSettings & { mode: Source["mode"] | ""; password: string | null };
+export type SourceIn = Pick<Source, "id" | "name" | "kind" | "endpoint" | "namespace_uri" | "username" | "password_env" | "options" | "enabled"> & SourceSettings & SourceIntegration & { mode: Source["mode"] | ""; password: string | null };
 
 /** What each step of an export keeps. */
 export type Aggregate = "mean" | "first" | "last" | "min" | "max";
@@ -72,6 +72,7 @@ export const api = {
   overview: () => request<Overview>("/api/overview"),
   sources: () => request<Source[]>("/api/sources"),
   addSource: (source: SourceIn) => request<Source>("/api/sources", body("POST", source)),
+  sourceHistory: (sourceId: string) => request<SourceEvent[]>(`/api/sources/${id(sourceId)}/history?limit=50`),
   updateSource: (source: SourceIn) => request<Source>(`/api/sources/${id(source.id)}`, body("PUT", source)),
   exportPoints: (sourceId?: string) => download(`/api/points/export${sourceId ? `?source_id=${id(sourceId)}` : ""}`, undefined, "historian-points.csv"),
   importPoints: (file: File, apply: boolean) => request<PointsImport>(`/api/points/import?apply=${apply}`, { method: "POST", body: file, headers: { "Content-Type": "text/csv" } }),
