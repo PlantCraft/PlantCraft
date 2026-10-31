@@ -6,10 +6,15 @@ import type { AccessInfo } from "./types";
 export const FULL_ACCESS: AccessInfo = { level: "admin", label: t("Admin"), applications: null, can_edit: true, is_admin: true };
 
 /** What components need to know about the signed-in person. */
-export const SessionContext = createContext<{ isAdmin: boolean; access?: AccessInfo }>({ isAdmin: false });
+export const SessionContext = createContext<{ isAdmin: boolean; access?: AccessInfo; username?: string }>({ isAdmin: false });
 
 export function useIsAdmin() {
   return useContext(SessionContext).isAdmin;
+}
+
+/** The signed-in person's username ("" before the session is read). */
+export function useUsername() {
+  return useContext(SessionContext).username ?? "";
 }
 
 /** The built-in Operations app's id in a person's app roles (plantcraft.auth.access.OPERATIONS_APP). */

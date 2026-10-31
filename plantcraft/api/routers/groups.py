@@ -29,7 +29,7 @@ router = APIRouter()
 class GroupPayload(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     group_id: str | None = Field(default=None, max_length=60)
-    kind: Literal["department", "area", "discipline", "team"] = "team"
+    kind: Literal["department", "area", "discipline", "team", "company"] = "team"
     parent_id: str | None = Field(default=None, max_length=60)
     description: str = Field(default="", max_length=500)
     asset_id: str | None = Field(default=None, max_length=300)
@@ -40,6 +40,9 @@ class GroupPayload(BaseModel):
     asset_scope: list[Annotated[str, Field(min_length=1, max_length=200)]] | None = Field(
         default=None, max_length=MAX_SCOPE_ROOTS
     )
+    # A company's last day of access (YYYY-MM-DD) and its sponsor at the plant (plantcraft.groups).
+    access_until: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    sponsor: str | None = Field(default=None, max_length=60)
 
 
 class MembersPayload(BaseModel):
@@ -106,6 +109,10 @@ def create_group(payload: GroupPayload, admin: AdminUser, rt: Runtime) -> dict[s
         )
         if scope is not None:
             created = rt.workspace.groups.set_asset_scope(created["group_id"], scope)
+        if payload.kind == "company":
+            created = rt.workspace.groups.set_company(
+                created["group_id"], access_until=payload.access_until, sponsor=payload.sponsor
+            )
     except KeyError as exc:
         raise HTTPException(
             status_code=409, detail=t("A group with this id already exists.")
@@ -136,6 +143,9 @@ def update_group(
         )
         if scope_given:
             updated = rt.workspace.groups.set_asset_scope(group_id, scope)
+        updated = rt.workspace.groups.set_company(
+            group_id, access_until=payload.access_until, sponsor=payload.sponsor
+        )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     _audit(rt, admin, "group.updated", group_id, payload.model_dump())

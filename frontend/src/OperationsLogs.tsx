@@ -1,10 +1,12 @@
 /** Operations › Logs: every server of the suite in one list, newest first, with the filters the
  * servers apply themselves (period, lowest level, text, request) and the messages that come back
  * most often. A row opens the whole record; "Same request" follows one request through every app. */
-import { AlertTriangle, Download, LoaderCircle, RefreshCw, Search, X } from "lucide-react";
+import { AlertTriangle, Download, LifeBuoy, LoaderCircle, RefreshCw, Search, X } from "lucide-react";
 import { type DataColumn, DataTable, Dialog, fileStamp, formatDate, Heading, saveFile } from "@plantcraft/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { t } from "./i18n";
+import { navigate } from "./nav";
+import { askUrl } from "./OperationsRequests";
 import { LOG_LEVELS, operationsApi, type LogRecord, type LogsAnswer, type LogsQuery } from "./operationsApi";
 import "./access.css";
 import "./apps.css";
@@ -144,10 +146,21 @@ export function LogsPage() {
   </div>;
 }
 
+/** A log record as the text of a request: enough for whoever answers to find it again. */
+export function recordText(record: LogRecord): string {
+  const lines = [`${serviceName(record.service)} · ${record.level} · ${record.time}`, record.message];
+  if (record.request_id) lines.push(`request id: ${record.request_id}`);
+  if (record.error) lines.push("", String(record.error).split("\n").slice(-12).join("\n"));
+  return lines.join("\n");
+}
+
 function RecordDialog({ record, onClose, onSameRequest }: { record: LogRecord; onClose: () => void; onSameRequest: (record: LogRecord) => void }) {
   const extra = Object.entries(record).filter(([key]) => !SHOWN_FIELDS.has(key));
   return <Dialog title={`${serviceName(record.service)} · ${record.level}`} onClose={onClose} wide
-    footer={record.request_id ? <button type="button" className="button button-secondary" onClick={() => onSameRequest(record)}>{t("Same request in every app")}</button> : undefined}>
+    footer={<>
+      {record.request_id && <button type="button" className="button button-secondary" onClick={() => onSameRequest(record)}>{t("Same request in every app")}</button>}
+      <button type="button" className="button button-secondary" onClick={() => navigate(askUrl({ title: `${serviceName(record.service)}: ${record.message}`, text: recordText(record), category: "error" }))}><LifeBuoy size={15} /> {t("Open a request")}</button>
+    </>}>
     <dl className="ops-record">
       <dt>{t("Time")}</dt><dd>{formatDate(record.time, SECONDS)} <small className="muted">({record.time})</small></dd>
       <dt>{t("Logger")}</dt><dd><code>{record.logger ?? "—"}</code></dd>

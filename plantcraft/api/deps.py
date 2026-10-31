@@ -58,6 +58,9 @@ def session_user(request: Request, rt: ApiRuntime) -> str | None:
         return None
     if username == rt.auth.username:
         return str(username)
+    if rt.workspace.groups.access_ended(str(username)):
+        # Their company's access ended (plantcraft.groups, ``access_until``).
+        return None
     source, _external_id = rt.workspace.users.identity(str(username))
     if source == "local":
         if not rt.directory.settings().local_passwords:
@@ -153,6 +156,7 @@ def action_visibility(rt: ApiRuntime, username: str) -> Visibility:
         everything=bool(access and access.is_admin) or bool(demo and demo.username == username),
         people=frozenset(scope["people"]),
         groups=frozenset(scope["groups"]),
+        requests=bool(access and access.can_operate),
         # Actions only about assets out of their asset scope (docs/asset-scope.md).
         out_of_scope=frozenset()
         if assets.everything

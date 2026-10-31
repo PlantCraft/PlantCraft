@@ -105,4 +105,31 @@ export const operationsApi = {
     return requestJson<LogsAnswer>(`/api/operations/logs?${params.toString()}`);
   },
   schedule: (value: Partial<Schedule>) => requestJson<Schedule>("/api/operations/schedule", { method: "PUT", body: JSON.stringify(value) }),
+  partners: (month?: string) => requestJson<PartnersAnswer>(`/api/operations/partners${month ? `?month=${encodeURIComponent(month)}` : ""}`),
+  hours: (month?: string, company?: string) => {
+    const params = new URLSearchParams();
+    if (month) params.set("month", month);
+    if (company) params.set("company", company);
+    const text = params.toString();
+    return requestJson<HoursReport>(`/api/operations/hours${text ? `?${text}` : ""}`);
+  },
 };
+
+/** A company working at the plant (a group of kind "company"), as Operations › Partners shows it. */
+export interface Company {
+  group_id: string; name: string; description: string;
+  coordinator: string | null; coordinator_name: string | null; sponsor: string | null; sponsor_name: string | null;
+  access_until: string | null;
+  /** open: no end date; active; ending: in 30 days or less; ended: nobody of it signs in. */
+  state: "open" | "active" | "ending" | "ended";
+  teams: Array<{ group_id: string; name: string; members: number }>;
+  people: Array<{ username: string; display_name: string; active: boolean; teams: string[]; coordinator: boolean }>;
+  open_requests: number; hours: number; billable_hours: number;
+}
+export interface PartnersAnswer { month: string; today: string; companies: Company[] }
+export interface HoursEntry {
+  entry_id: number; action_id: number; title: string; kind: string; category: string | null; group_id: string | null;
+  username: string; display_name: string; day: string; hours: number; note: string; billable: boolean; created_at: string;
+  company_id?: string | null; company_name?: string | null;
+}
+export interface HoursReport { month: string; first: string; last: string; entries: HoursEntry[]; hours: number; billable_hours: number }

@@ -338,6 +338,21 @@
 .act-item-add { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
 .act-item-add input:first-child { flex: 1 1 240px; min-width: 0; }
 .act-item-add select, .act-item-add input { height: 36px; }
+/* An action's time (requests, Operations): who, which day, how long. */
+.act-time .section-title small { font: 500 var(--pc-fs-sm) var(--pc-font-body, inherit); margin-left: 6px; }
+.act-time-list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 2px; }
+.act-time-list li { display: grid; grid-template-columns: 4.5em 6.5em minmax(7em, auto) minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 36px; padding: 2px 6px; border-radius: var(--pc-radius-md); font-size: var(--pc-fs-sm); }
+.act-time-list li:hover { background: var(--pc-surface-2); }
+.act-time-list strong { font-variant-numeric: tabular-nums; }
+.act-time-note { color: var(--pc-text-2); overflow-wrap: anywhere; }
+.act-time-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; }
+.act-time-form input:not([type="checkbox"]) { height: 36px; }
+.act-time-form input:first-child { width: 6em; }
+.act-time-form input:nth-child(3) { flex: 1 1 200px; min-width: 0; }
+@media (max-width: 640px) {
+  .act-time-list li { grid-template-columns: 4em 1fr auto; }
+  .act-time-list li > :nth-child(3), .act-time-list li > .act-time-note { grid-column: 2 / 3; }
+}
 .comment-form .act-mention { color: var(--pc-text-3); background: var(--pc-surface-2); border-radius: 0; border-left: 1px solid var(--pc-border); }
 .act-form-description { display: grid; gap: 6px; }
 .act-form-description > .as-link-button { justify-self: start; display: inline-flex; align-items: center; gap: 5px; }

@@ -5,6 +5,7 @@ import { type DataColumn, DataTable, displayTimeZone, FormSection, formatDate, H
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { locale, t } from "./i18n";
 import { navigate } from "./nav";
+import { askUrl } from "./OperationsRequests";
 import { forecastText, operationsApi, type Backup, type Certificate, type Operation, type OperationsOverview, type ServiceMetrics, type Schedule, type SuiteHealth, type SuiteStatus } from "./operationsApi";
 import { useAdminView, useCanOperate, useIsAdmin } from "./session";
 import "./access.css";
@@ -429,7 +430,7 @@ function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean 
     </div>
     <p className="muted">{t("Checked every 30 s from Docker's health checks of each service, each one's load against its limits, the free disk, the backups and the last restore drill. Last check: {date}.", { date: when(health.at) })}{health.held ? ` ${t("Service checks are on hold while an operation runs or the installer is silent.")}` : ""}</p>
     <HostLine health={health} />
-    {health.open.length ? <ul className="ops-incidents">{health.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small></li>)}</ul>
+    {health.open.length ? <ul className="ops-incidents">{health.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small> <a className="ops-incident-ask" href={askUrl({ title: `${item.subject}: ${item.detail}`, text: t("Incident since {date}", { date: item.opened_at }), category: "error" })} onClick={(event) => { if (event.metaKey || event.ctrlKey) return; event.preventDefault(); navigate(askUrl({ title: `${item.subject}: ${item.detail}`, text: t("Incident since {date}", { date: item.opened_at }), category: "error" })); }}>{t("Open a request")}</a></li>)}</ul>
       : <p className="ops-all-good"><CheckCircle2 size={15} /> {t("Everything is running.")}</p>}
     {services.length > 0 && <DataTable rows={services} columns={columns} rowKey={(item) => item.service} searchText={(item) => item.service} searchPlaceholder={t("Filter by name")} initialSort={{ key: "service", descending: false }} label={t("Services")} />}
     {disk && forecastText(health.disk_forecast, size) && <p className="muted">{t("Disk: {forecast}", { forecast: forecastText(health.disk_forecast, size) })}</p>}

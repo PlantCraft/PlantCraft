@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -130,3 +130,100 @@ def test_the_phone_reads_the_logs(browser, server):
     _shot(page, "5-logs-phone")
     context.close()
     assert not errors, errors
+
+
+def _person(page, username: str, name: str, **extra) -> None:
+    answer = page.request.post(
+        "/api/users",
+        data={"username": username, "display_name": name, "password": "e2e-person-123", **extra},
+    )
+    assert answer.ok or answer.status == 409, answer.text()
+
+
+def test_a_request_is_asked_answered_timed_and_counted_for_its_company(page):
+    # A company with its person, and its sponsor at the plant.
+    _person(
+        page,
+        "ana.integra",
+        "Ana Integra",
+        access_level="viewer",
+        app_roles={"operations": "viewer"},
+    )
+    _person(page, "rui.planta", "Rui Planta", access_level="editor")
+    until = (datetime.now(timezone.utc) + timedelta(days=20)).date().isoformat()
+    company = page.request.post("/api/groups", data={
+        "name": "Acme Automation", "group_id": "acme", "kind": "company",
+        "coordinator": "ana.integra", "members": ["ana.integra"],
+        "sponsor": "rui.planta", "access_until": until,
+        "description": "OPC UA and historian integrator",
+    })  # fmt: skip
+    assert company.ok or company.status == 409, company.text()
+
+    # "Ask for help" from an app's menu: the form opens with the app and page in it.
+    # The person's menu in every app has it (here on Assets: the form names the app and page).
+    page.goto("/assets")
+    page.locator(".pcs-profile").click()
+    page.get_by_role("menuitem", name="Ask for help").click()
+    dialog = page.get_by_role("dialog")
+    expect(dialog.get_by_label("Details")).to_have_value(
+        re.compile("Asked from PlantCraft · /assets")
+    )
+    dialog.get_by_role("button", name="Cancel").click()
+    # An app's link carries its name and page the same way.
+    page.goto("/ops/requests?new=1&from=Analytics&page=%2Fruns%2F42")
+    dialog = page.get_by_role("dialog")
+    expect(dialog).to_contain_text("Ask for help")
+    expect(dialog.get_by_label("Details")).to_have_value(re.compile("Analytics · /runs/42"))
+    dialog.get_by_label("What do you need?").fill("Run 42 stops at 30 s")
+    dialog.get_by_label("Kind of problem").select_option("slow")
+    dialog.get_by_label("Who should answer").select_option(label="Acme Automation")
+    _shot(page, "6-ask-for-help")
+    dialog.get_by_role("button", name="Send request").click()
+    expect(page).to_have_url(re.compile(r"/actions/\d+$"))
+    expect(page.get_by_role("heading", level=1, name="Run 42 stops at 30 s")).to_be_visible()
+    expect(page.get_by_text("Slow or overloaded")).to_be_visible()
+
+    # Answered and timed: the first answer is counted, the time logged.
+    page.get_by_role("textbox", name="Comment").fill("Looking at the Historian's queue")
+    page.get_by_role("button", name="Comment", exact=True).click()
+    page.get_by_label("Hours", exact=True).fill("1.5")
+    page.get_by_label("What was done", exact=True).fill("Raised the read timeout")
+    page.get_by_role("button", name="Log time").click()
+    expect(page.locator(".act-time-list")).to_contain_text("1.5 h")
+    _shot(page, "7-request")
+
+    # The integrator answers and logs their time: the first answer, and hours for Acme.
+    request_id = page.url.rsplit("/", 1)[1]
+    base = page.url.split("/actions/")[0]
+    other = page.context.browser.new_context(base_url=base)
+    signed = other.request.post(
+        "/api/login", data={"username": "ana.integra", "password": "e2e-person-123"}
+    )
+    assert signed.ok, signed.text()
+    answered = other.request.post(
+        f"/api/actions/{request_id}/comments", data={"text": "On it: the read timeout is 30 s"}
+    )
+    assert answered.ok, answered.text()
+    logged = other.request.post(
+        f"/api/actions/{request_id}/hours",
+        data={"hours": 2, "note": "Tuned the Historian's read pool", "billable": True},
+    )
+    assert logged.ok, logged.text()
+    other.close()
+
+    page.goto("/ops/requests")
+    row = page.get_by_role("row").filter(has_text="Run 42 stops at 30 s")
+    expect(row).to_contain_text("Acme Automation")
+    expect(row).to_contain_text("3.5 h")
+    expect(row).to_contain_text("after")
+    _shot(page, "8-requests")
+
+    page.goto("/ops/partners")
+    card = page.get_by_role("article", name="Acme Automation")
+    expect(card).to_contain_text("Access ends")
+    expect(card).to_contain_text("Rui Planta")
+    expect(card).to_contain_text("2 h")  # Ana's; the administrator's 1.5 h are the plant's
+    hours = page.get_by_role("table", name="Time logged")
+    expect(hours).to_contain_text("Raised the read timeout")
+    expect(hours).to_contain_text("Tuned the Historian's read pool")
+    _shot(page, "9-partners")

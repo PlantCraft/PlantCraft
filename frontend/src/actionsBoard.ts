@@ -39,3 +39,9 @@ export function timeText(action: Pick<Action, "status" | "created_at" | "updated
   if (action.status === "blocked") return t("Blocked for {span}", { span: spanText(since(moved)) });
   return t("In progress for {span}", { span: spanText(since(moved)) });
 }
+
+/** "1.5 h", "45 min": time logged, as people read it. */
+export function hoursText(hours: number): string {
+  if (hours < 1) return t("{count} min", { count: Math.round(hours * 60) });
+  return t("{count} h", { count: Number(hours.toFixed(2)) });
+}

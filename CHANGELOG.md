@@ -19,6 +19,19 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   administrators (Suite health, and an event for Alarms) when an app or the machine stays above a
   level: CPU or memory 80 % (warning) and 95 % (critical), or errors logged a minute, held 5
   minutes; levels changed on the page (`docs/operations.md`, section 4).
+- **Requests: anyone asks IT or an integrator for help, from any app.** "Ask for help" in the
+  person's menu of every app opens a short form (what, which kind of problem, who should answer)
+  with the app and page filled in; a log record and an open incident have "Open a request".
+  A request is an action of kind `request` with a category, a queue and its first answer timed;
+  Operations › Requests lists them (waiting for a first answer in amber), and the Operations role
+  answers them whatever its access level. Time is logged on any request or action (hours on a
+  day, note, billable or not).
+- **Partners: the companies working at the plant.** A group of the new kind **Company** has its
+  coordinator on its side, its teams under it, a sponsor at the plant and a last day of access:
+  from the next day nobody in it signs in (the sign-in says why) and their sessions end.
+  Operations › Partners shows each company's people, teams, access, open requests and the month's
+  hours, and exports the month's time report as CSV.
+- The public demo's visitors no longer see the server logs.
 - SDK: `GET /api/ops/logs` on every server (`plantcraft_sdk.server.logread`), read with the `ops`
   scope.
 

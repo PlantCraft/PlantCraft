@@ -6,12 +6,12 @@
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from "react";
 import { AssistantTitleButton, DataTable, Heading, useAssistantPage } from "@plantcraft/ui";
 import { AlertTriangle, ArrowLeft, AtSign, CalendarClock, CheckSquare, ClipboardCheck, Clock, Columns3, Hash, List, ListChecks, LoaderCircle, MessageSquare, Pencil, Plus, Rows2, Rows3, Search, SendHorizontal, Trash2, UserRound, Users, X } from "lucide-react";
-import { boardColumns, timeText, type BoardColumn } from "./actionsBoard";
+import { boardColumns, hoursText, timeText, type BoardColumn } from "./actionsBoard";
 import { Avatar, dayText, errorText, fullWhen, Go, MentionText, optionFromRef, PersonLink, plainMentions, ReferencePicker, RefChip, resolveOption, shortWhen } from "./collab";
 import { collabApi, type Action, type ActionDraft, type ActionItem, type ActionList, type ActionStatus, type ActionView, type Id, type RefOption } from "./collabApi";
 import { t } from "./i18n";
 import { navigate } from "./nav";
-import { READ_ONLY, useCanEdit } from "./session";
+import { READ_ONLY, useAccess, useCanEdit, useIsAdmin, useUsername } from "./session";
 import { Modal } from "./Modal";
 
 export const DEFAULT_OPEN_STATUSES = ["open", "in_progress", "blocked"];
@@ -246,7 +246,7 @@ function draftOf(action: Action): ActionDraft {
   return { title: action.title, description: action.description, priority: action.priority, owner: action.owner, group_id: action.group_id ?? null, due_at: action.due_at ? action.due_at.slice(0, 10) : null, refs: action.refs.map((item) => item.ref) };
 }
 
-const HISTORY_ICON = { created: <Plus size={13} />, changed: <Pencil size={13} />, status: <ClipboardCheck size={13} />, comment: <MessageSquare size={13} />, checklist: <ListChecks size={13} /> };
+const HISTORY_ICON = { created: <Plus size={13} />, changed: <Pencil size={13} />, status: <ClipboardCheck size={13} />, comment: <MessageSquare size={13} />, checklist: <ListChecks size={13} />, hours: <Clock size={13} /> };
 
 /** Puts a #reference into a text at the end, with a space before it when needed. */
 export function withMention(text: string, ref: string): string {
@@ -260,7 +260,10 @@ function ActionPage({ actionId, list, canEdit, onEdit, onChanged }: { actionId: 
   const [comment, setComment] = useState("");
   const [mentioning, setMentioning] = useState(false);
   const [busy, setBusy] = useState(false);
+  const operate = Boolean(useAccess().can_operate);
   const reload = useCallback(() => collabApi.action(actionId).then(setAction).catch((err) => setError(errorText(err))), [actionId]);
+  // The Operations role answers requests (status, edit) whatever its access level.
+  const editable = canEdit || (operate && action?.kind === "request");
   useEffect(() => { void reload(); }, [reload]);
   useAssistantPage({
     subject: `action:${actionId}`, title: action?.title ?? t("Action #{id}", { id: actionId }), place: t("Actions › #{id}", { id: actionId }), page: "processcraft:action",
@@ -280,13 +283,16 @@ function ActionPage({ actionId, list, canEdit, onEdit, onChanged }: { actionId: 
     try { setAction(await collabApi.comment(action.action_id, comment.trim())); setComment(""); setError(""); onChanged(); } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
   }
   return <>
-    <nav className="as-breadcrumb act-breadcrumb"><a href="/actions" onClick={(event) => { event.preventDefault(); navigate("/actions"); }}><ArrowLeft size={13} /> {t("Actions")}</a></nav>
+    {/* A request goes back to Operations › Requests, where it was asked or answered. */}
+    <nav className="as-breadcrumb act-breadcrumb">{action?.kind === "request"
+      ? <a href="/ops/requests" onClick={(event) => { event.preventDefault(); navigate("/ops/requests"); }}><ArrowLeft size={13} /> {t("Requests")}</a>
+      : <a href="/actions" onClick={(event) => { event.preventDefault(); navigate("/actions"); }}><ArrowLeft size={13} /> {t("Actions")}</a>}</nav>
     <div className="page-heading">
-      <div><span className="eyebrow"><ClipboardCheck size={14} /> {t("Action #{id}", { id: actionId })}</span><div className="page-heading-title"><h1>{action?.title ?? ""}</h1><AssistantTitleButton /></div>
+      <div><span className="eyebrow"><ClipboardCheck size={14} /> {action?.kind === "request" ? t("Request #{id}", { id: actionId }) : t("Action #{id}", { id: actionId })}</span><div className="page-heading-title"><h1>{action?.title ?? ""}</h1><AssistantTitleButton /></div>
         {action && <p className="act-page-sub pc-heading-keep"><StatusBadge action={action} /> <span className="muted"><Clock size={13} /> {timeText(action)}</span></p>}</div>
       {action && <div className="heading-actions">
-        {canEdit && <label className="act-move"><span>{t("Status")}</span><select value={action.status} disabled={busy} onChange={(event) => void move(event.target.value as ActionStatus)}>{list.statuses.map((status) => <option key={status.id} value={status.id}>{status.label}</option>)}</select></label>}
-        {canEdit && <button type="button" className="button button-secondary" onClick={() => onEdit(action)}><Pencil size={15} /> {t("Edit")}</button>}
+        {editable && <label className="act-move"><span>{t("Status")}</span><select value={action.status} disabled={busy} onChange={(event) => void move(event.target.value as ActionStatus)}>{list.statuses.map((status) => <option key={status.id} value={status.id}>{status.label}</option>)}</select></label>}
+        {editable && <button type="button" className="button button-secondary" onClick={() => onEdit(action)}><Pencil size={15} /> {t("Edit")}</button>}
       </div>}
     </div>
     {!action && !error && <div className="module-state"><LoaderCircle className="spin" /></div>}
@@ -296,6 +302,7 @@ function ActionPage({ actionId, list, canEdit, onEdit, onChanged }: { actionId: 
         <h2 className="section-title">{t("Description")}</h2>
         {action.description ? <MentionText className="action-description act-description" text={action.description} refs={action.mentions ?? []} /> : <p className="muted">{t("No description.")}</p>}
         <Checklist action={action} list={list} canEdit={canEdit} onChanged={(next) => { setAction(next); onChanged(); }} />
+        {(action.kind === "request" || (action.hours ?? []).length > 0) && <TimeLog action={action} onChanged={(next) => { setAction(next); onChanged(); }} />}
         <h2 className="section-title">{t("About")}</h2>
         {action.refs.length ? <div className="act-ref-list">{action.refs.map((ref) => <RefChip key={ref.ref} item={ref} label={`${ref.kind_label}: ${ref.title || ref.id}`} />)}</div> : <p className="muted">{t("No references.")}</p>}
         <h2 className="section-title">{t("History and comments")}</h2>
@@ -309,6 +316,9 @@ function ActionPage({ actionId, list, canEdit, onEdit, onChanged }: { actionId: 
       <aside className="panel act-page-facts">
         <div className="fact-grid act-facts">
           <div><span>{t("Status")}</span><strong><StatusBadge action={action} /></strong></div>
+          {action.kind === "request" && <div><span>{t("Category")}</span><strong>{action.category_label ?? "—"}</strong></div>}
+          {action.kind === "request" && <div><span>{t("First answer")}</span><strong>{action.first_response_at ? fullWhen(action.first_response_at) : <span className="muted">{t("Waiting")}</span>}</strong></div>}
+          {(action.hours_logged ?? 0) > 0 && <div><span>{t("Time logged")}</span><strong>{hoursText(action.hours_logged ?? 0)}</strong></div>}
           <div><span>{t("Priority")}</span><strong><span className={`priority-pill priority-${action.priority}`}>{action.priority_label}</span></strong></div>
           <div><span>{t("Owner")}</span><strong><PersonLink username={action.owner} name={action.owner_name} /></strong></div>
           <div><span>{t("Group")}</span><strong>{action.group_id ? <Go to={`/groups/${encodeURIComponent(action.group_id)}`}>{action.group_name ?? action.group_id}</Go> : "—"}</strong></div>
@@ -321,6 +331,49 @@ function ActionPage({ actionId, list, canEdit, onEdit, onChanged }: { actionId: 
       </aside>
     </div>}
   </>;
+}
+
+/** Time spent on a request (or an action): who, which day, how long, a note, billable or not.
+ * Whoever sees the action logs their own time; who logged it, or an administrator, removes it. */
+function TimeLog({ action, onChanged }: { action: Action; onChanged: (action: Action) => void }) {
+  const me = useUsername();
+  const admin = useIsAdmin();
+  const entries = action.hours ?? [];
+  const [hours, setHours] = useState("");
+  const [day, setDay] = useState("");
+  const [note, setNote] = useState("");
+  const [billable, setBillable] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function add(event: FormEvent) {
+    event.preventDefault();
+    const value = Number(hours.replace(",", "."));
+    if (!(value > 0)) return;
+    setBusy(true);
+    try { onChanged(await collabApi.logHours(action.action_id, { hours: value, day: day || null, note: note.trim(), billable })); setHours(""); setNote(""); setError(""); } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
+  }
+  async function remove(entryId: number) {
+    setBusy(true);
+    try { onChanged(await collabApi.deleteHours(action.action_id, entryId)); setError(""); } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
+  }
+  return <section className="act-time" aria-labelledby="act-time-title">
+    <h2 className="section-title" id="act-time-title">{t("Time")} {entries.length > 0 && <small className="muted">{hoursText(action.hours_logged ?? 0)}</small>}</h2>
+    {entries.length > 0 && <ul className="act-time-list">{entries.map((entry) => <li key={entry.entry_id}>
+      <strong>{hoursText(entry.hours)}</strong>
+      <span>{dayText(entry.day)}</span>
+      <PersonLink username={entry.username} name={entry.display_name} />
+      <span className="act-time-note">{entry.note}{!entry.billable && <small className="muted"> · {t("not billable")}</small>}</span>
+      {(entry.username === me || admin) && <button type="button" className="icon-button" disabled={busy} onClick={() => void remove(entry.entry_id)} aria-label={t("Remove this time")} title={t("Remove this time")}><Trash2 size={14} /></button>}
+    </li>)}</ul>}
+    <form className="act-time-form" onSubmit={add} aria-label={t("Log time")}>
+      <input inputMode="decimal" value={hours} onChange={(event) => setHours(event.target.value)} placeholder={t("Hours")} aria-label={t("Hours")} />
+      <input type="date" value={day} onChange={(event) => setDay(event.target.value)} aria-label={t("Day (today when empty)")} title={t("Day (today when empty)")} />
+      <input value={note} maxLength={300} onChange={(event) => setNote(event.target.value)} placeholder={t("What was done")} aria-label={t("What was done")} />
+      <label className="act-mine"><input type="checkbox" checked={billable} onChange={(event) => setBillable(event.target.checked)} /> {t("Billable")}</label>
+      <button className="button button-secondary" disabled={busy || !(Number(hours.replace(",", ".")) > 0)}><Clock size={14} /> {t("Log time")}</button>
+    </form>
+    {error && <div className="form-error"><AlertTriangle size={15} /> {error}</div>}
+  </section>;
 }
 
 /** The action's checklist: tick items, add one with its owner and due date, remove one. */

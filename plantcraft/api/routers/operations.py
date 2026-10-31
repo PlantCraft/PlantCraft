@@ -10,16 +10,19 @@ Every request is in the audit log.
 from __future__ import annotations
 
 import hmac
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from plantcraft.actions import OPEN_STATUSES
 from plantcraft.api.deps import AdminUser, AdminView, CurrentUser, OperationsView, Runtime
 from plantcraft.api.identity import issue_user_token
 from plantcraft.apps.manager import AppError
+from plantcraft.auth.public_demo import public_demo
+from plantcraft.config import plant_today
 from plantcraft.i18n import t
 from plantcraft.platform.datalayer import DataLayerError
 from plantcraft_sdk.server import logread
@@ -132,7 +135,12 @@ def logs(
 ) -> dict[str, Any]:
     """The logs of every server of the suite (or ``services``, comma-separated), newest first,
     with the messages that come back most often. Each read is in the audit log: logs name
-    people and what they did."""
+    people and what they did. Never to the public demo's visitors: the logs of a public server
+    name its visitors' addresses and requests."""
+
+    demo = public_demo()
+    if demo is not None and reader == demo.username:
+        raise HTTPException(403, t("The public demo does not show its server logs."))
 
     bounds: dict[str, datetime | None] = {}
     for name, value in (("since", since), ("until", until)):
@@ -288,3 +296,141 @@ def outcome(request_id: str, _admin: AdminUser, rt: Runtime) -> dict[str, Any]:
         return rt.operations.outcome(request_id)
     except AppError as exc:
         raise _http(exc) from exc
+
+
+# Partners: the companies working at the plant, and the hours they logged ------------------------
+
+MONTH = r"^\d{4}-(0[1-9]|1[0-2])$"
+ENDING_DAYS = 30
+
+
+def _month_bounds(month: str | None) -> tuple[str, str, str]:
+    """``YYYY-MM`` (this month by default) -> (month, first day, last day)."""
+
+    today = date.fromisoformat(plant_today())
+    if month:
+        first = date.fromisoformat(f"{month}-01")
+    else:
+        first = today.replace(day=1)
+    following = (first.replace(day=28) + timedelta(days=4)).replace(day=1)
+    return first.strftime("%Y-%m"), first.isoformat(), (following - timedelta(days=1)).isoformat()
+
+
+def _company_state(company: dict[str, Any], today: str) -> str:
+    until = company.get("access_until")
+    if not until:
+        return "open"
+    if until < today:
+        return "ended"
+    if until <= (date.fromisoformat(today) + timedelta(days=ENDING_DAYS)).isoformat():
+        return "ending"
+    return "active"
+
+
+def _entries_by_company(rt: Any, entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Each time entry with the company of who logged it (None: the plant's own people)."""
+
+    groups = rt.workspace.groups
+    companies: dict[str, dict[str, Any] | None] = {}
+    for entry in entries:
+        name = entry["username"]
+        if name not in companies:
+            found = groups.companies_of(name)
+            companies[name] = found[0] if found else None
+        company = companies[name]
+        entry["company_id"] = company["group_id"] if company else None
+        entry["company_name"] = company["name"] if company else None
+    return entries
+
+
+@router.get("/partners")
+def partners(
+    _reader: OperationsView,
+    rt: Runtime,
+    month: str | None = Query(default=None, pattern=MONTH),
+) -> dict[str, Any]:
+    """Every company (a group of kind ``company``) with its teams, people, sponsor, the end of its
+    access, its open requests and the hours its people logged in ``month``."""
+
+    month, first, last = _month_bounds(month)
+    today = plant_today()
+    groups = rt.workspace.groups
+    every = groups.list()
+    users = rt.workspace.users
+    entries = _entries_by_company(rt, rt.workspace.actions.hours_between(first, last))
+    requests = rt.workspace.actions.list(kind="request", statuses=list(OPEN_STATUSES))
+    found = []
+    for company in (item for item in every if item["kind"] == "company"):
+        teams = [
+            item
+            for item in every
+            if item["group_id"] != company["group_id"]
+            and (groups.company_of(item["group_id"], every) or {}).get("group_id")
+            == company["group_id"]
+        ]
+        people: dict[str, dict[str, Any]] = {}
+        for group in [company, *teams]:
+            for member in group["members"]:
+                people.setdefault(member["username"], {**member, "teams": [], "coordinator": False})
+                if group is not company:
+                    people[member["username"]]["teams"].append(group["name"])
+        if company["coordinator"] in people:
+            people[company["coordinator"]]["coordinator"] = True
+        ids = {company["group_id"], *(item["group_id"] for item in teams)}
+        mine = [entry for entry in entries if entry["company_id"] == company["group_id"]]
+        sponsor = users.get_user(company["sponsor"]) if company.get("sponsor") else None
+        found.append(
+            {
+                "group_id": company["group_id"],
+                "name": company["name"],
+                "description": company["description"],
+                "coordinator": company["coordinator"],
+                "coordinator_name": company["coordinator_name"],
+                "sponsor": company.get("sponsor"),
+                "sponsor_name": (sponsor or {}).get("display_name") or company.get("sponsor"),
+                "access_until": company.get("access_until"),
+                "state": _company_state(company, today),
+                "teams": [
+                    {
+                        "group_id": item["group_id"],
+                        "name": item["name"],
+                        "members": len(item["members"]),
+                    }
+                    for item in teams
+                ],
+                "people": sorted(people.values(), key=lambda item: item["display_name"].lower()),
+                "open_requests": sum(1 for item in requests if item["group_id"] in ids),
+                "hours": round(sum(entry["hours"] for entry in mine), 2),
+                "billable_hours": round(
+                    sum(entry["hours"] for entry in mine if entry["billable"]), 2
+                ),
+            }
+        )
+    return {"month": month, "today": today, "companies": found}
+
+
+@router.get("/hours")
+def hours(
+    reader: OperationsView,
+    rt: Runtime,
+    month: str | None = Query(default=None, pattern=MONTH),
+    company: str | None = Query(default=None, max_length=60),
+) -> dict[str, Any]:
+    """Every time entry of ``month`` with who logged it, the request and their company
+    (``company``: one company's; ``plant``: the plant's own people), for the month's report."""
+
+    month, first, last = _month_bounds(month)
+    entries = _entries_by_company(rt, rt.workspace.actions.hours_between(first, last))
+    if company == "plant":
+        entries = [entry for entry in entries if entry["company_id"] is None]
+    elif company:
+        entries = [entry for entry in entries if entry["company_id"] == company]
+    _audit(rt, reader, "operations.hours.read", {"month": month, "company": company})
+    return {
+        "month": month,
+        "first": first,
+        "last": last,
+        "entries": entries,
+        "hours": round(sum(entry["hours"] for entry in entries), 2),
+        "billable_hours": round(sum(entry["hours"] for entry in entries if entry["billable"]), 2),
+    }

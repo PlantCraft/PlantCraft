@@ -8,7 +8,7 @@ import { DataTable } from "@plantcraft/ui";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { api } from "./api";
 import { collabApi } from "./collabApi";
-import { Avatar, Go, PersonLink } from "./collab";
+import { Avatar, dayText, Go, PersonLink } from "./collab";
 import { groupAndBelow, groupTree, groupsApi, type Group, type GroupDraft, type GroupKind, type GroupList } from "./groupsApi";
 import { AssetScopeField } from "./AssetScopeField";
 import { t } from "./i18n";
@@ -28,6 +28,7 @@ const KIND_HINTS: Record<GroupKind, string> = {
   area: t("The people of a part of the plant: a unit, an area, a shift."),
   discipline: t("An engineering discipline across the plant: instrumentation, process, electrical."),
   team: t("Any other team: a project, a committee, a contractor's crew."),
+  company: t("An outside company working at the plant (an integrator, a contractor): its coordinator is on its side, its teams sit under it. Nobody in it signs in after its last day of access; it shows in Operations › Partners."),
 };
 
 export function GroupsPage() {
@@ -97,7 +98,7 @@ export function MemberPicker({ people, value, onChange, locked }: { people: Work
 }
 
 function GroupForm({ kinds, people, groups, group, onClose, onSaved }: { kinds: GroupList["kinds"]; people: WorkspaceUser[]; groups: Group[]; group: Group | null; onClose: () => void; onSaved: (group: Group, created: boolean) => void }) {
-  const [draft, setDraft] = useState<GroupDraft>({ name: group?.name ?? "", kind: group?.kind ?? "area", description: group?.description ?? "", asset_id: group?.asset_id ?? null, coordinator: group?.coordinator ?? null, members: group?.members.map((member) => member.username) ?? [], parent_id: group?.parent_id ?? null, asset_scope: group?.asset_scope ?? null });
+  const [draft, setDraft] = useState<GroupDraft>({ name: group?.name ?? "", kind: group?.kind ?? "area", description: group?.description ?? "", asset_id: group?.asset_id ?? null, coordinator: group?.coordinator ?? null, members: group?.members.map((member) => member.username) ?? [], parent_id: group?.parent_id ?? null, asset_scope: group?.asset_scope ?? null, access_until: group?.access_until ?? null, sponsor: group?.sponsor ?? null });
   // A group never sits under itself or under a group below it.
   const parents = useMemo(() => { const below = group ? groupAndBelow(groups, group.group_id) : new Set<string>(); return groupTree(groups).filter((item) => !below.has(item.group.group_id)); }, [groups, group]);
   const [busy, setBusy] = useState(false);
@@ -127,6 +128,11 @@ function GroupForm({ kinds, people, groups, group, onClose, onSaved }: { kinds: 
           <option value="">{t("None")}</option>
           {people.map((person) => <option key={person.username} value={person.username}>{person.display_name}</option>)}
         </select></label>
+        {draft.kind === "company" && <label>{t("Last day of access")}<input type="date" value={draft.access_until ?? ""} onChange={(event) => setDraft({ ...draft, access_until: event.target.value || null })} /></label>}
+        {draft.kind === "company" && <label>{t("Sponsor at the plant")}<select value={draft.sponsor ?? ""} onChange={(event) => setDraft({ ...draft, sponsor: event.target.value || null })}>
+          <option value="">{t("None")}</option>
+          {people.filter((person) => !draft.members.includes(person.username)).map((person) => <option key={person.username} value={person.username}>{person.display_name}</option>)}
+        </select></label>}
         {draft.kind === "area" && <label>{t("Asset it covers (optional)")}<input value={draft.asset_id ?? ""} maxLength={300} placeholder={t("E.g. the unit's asset id")} onChange={(event) => setDraft({ ...draft, asset_id: event.target.value || null })} /></label>}
         <AssetScopeField legend={t("Assets members see")} hint={t("Members see only these assets, their signals and what apps publish about them. A person in several limited groups sees all of their assets; administrators always see the whole plant.")} value={draft.asset_scope ?? null} onChange={(asset_scope) => setDraft({ ...draft, asset_scope })} />
         <fieldset className="field-span ac-fieldset"><legend>{t("Members")}</legend><MemberPicker people={people} value={draft.members} locked={draft.coordinator} onChange={(members) => setDraft({ ...draft, members })} /></fieldset>
@@ -178,6 +184,8 @@ export function GroupPage({ groupId }: { groupId: string }) {
         <dl className="pp-facts">
           <div><dt>{t("Kind")}</dt><dd>{group.kind_label}</dd></div>
           <div><dt>{t("Coordinator (leader)")}</dt><dd>{group.coordinator ? <PersonLink username={group.coordinator} name={group.coordinator_name} /> : t("None")}</dd></div>
+          {group.kind === "company" && <div><dt>{t("Last day of access")}</dt><dd>{group.access_until ? dayText(group.access_until) : t("No end date")}</dd></div>}
+          {group.kind === "company" && <div><dt>{t("Sponsor at the plant")}</dt><dd>{group.sponsor ? <PersonLink username={group.sponsor} /> : t("None")}</dd></div>}
           <div><dt>{t("Under")}</dt><dd>{group.parent_id ? <Go to={`/groups/${encodeURIComponent(group.parent_id)}`}>{group.parent_name}</Go> : t("Top level")}</dd></div>
           {(group.subgroups ?? []).length > 0 && <div><dt>{t("Groups below")}</dt><dd>{(group.subgroups ?? []).map((item, index) => <span key={item.group_id}>{index > 0 && ", "}<Go to={`/groups/${encodeURIComponent(item.group_id)}`}>{item.name}</Go></span>)}</dd></div>}
           {group.asset_id && <div><dt>{t("Asset")}</dt><dd><Go to={`/assets/${encodeURIComponent(group.asset_id)}`}>{group.asset_id}</Go></dd></div>}

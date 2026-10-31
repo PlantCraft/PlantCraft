@@ -11,7 +11,12 @@ know that the code and `CHANGELOG.md` do not say. One short entry per change wor
   which PlantCraft does not mount, so each server reads its own (`GET /api/ops/logs`) and PlantCraft
   fans out with an `ops` token instead of a log shipper: no new container, nothing leaves the
   machine. The load checks stay in the core watch, not in Alarms, so they still speak when Alarms
-  is down. Phase 2 (tickets, integrator companies and teams, hours) is designed in the E4 report.
+  is down. Requests are actions of kind `request`, not a ticket system of their own: comments,
+  checklist, history, notifications and Desk come with them. A company is a kind of group, so its
+  teams, coordinator, asset scope and notifications are the groups' own; its last day of access is
+  checked on every request (one indexed query; the tree only once a company has ended). Hours
+  count for the company of who logged them, not of the queue: what an integrator bills is their
+  people's time.
 
 ## 0.5.1
 

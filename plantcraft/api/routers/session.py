@@ -113,6 +113,16 @@ def login(
                 audit_sign_in(rt, request, username, "session.sign_in_failed", reason="password")
                 raise HTTPException(status_code=401, detail=t("Incorrect username or password."))
             username = found
+        ended = None if admin else rt.workspace.groups.access_ended(username)
+        if ended:
+            audit_sign_in(rt, request, username, "session.sign_in_failed", reason="access_ended")
+            raise HTTPException(
+                status_code=403,
+                detail=t(
+                    "Your company's access ended on {date}. Ask your sponsor at the plant to extend it.",
+                    date=ended,
+                ),
+            )
         method = "admin" if admin else "local" if local else "ldap"
         audit_sign_in(rt, request, username, "session.sign_in", method=method)
     elif not rt.workspace.users.is_person(username):

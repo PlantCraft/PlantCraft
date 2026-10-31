@@ -299,8 +299,32 @@ IT or an integrator's team that keeps the suite running without being an adminis
 **Status** (`/health`: the last check, open and recent incidents, the machine's CPU, memory, load
 and free disk, every service's state, CPU and memory against its limit with the levels' colours,
 restarts; `GET /api/operations/health`, which carries the `limits`), **Logs** (`/ops/logs`, below),
-**Load alerts** (`/ops/alerts`); Backups and Updates stay for administrators. The Operations
+**Requests** and **Partners** (below), **Load alerts** (`/ops/alerts`); Backups and Updates stay
+for administrators. The Operations
 role reads; installing, updating, restoring and changing levels stay with administrators.
+
+**Requests** (`/ops/requests`, Operations › Requests). What the people of the suite ask of IT or
+an integrator: an action of kind `request` (`plantcraft.actions`), with a category (something
+not working, slow, access, data, a change, other), a queue (the group that answers it: IT, a
+company) and `first_response_at`, set the first time someone other than who asked comments,
+changes it or logs time. Anyone who signs in asks, a viewer too (`POST /api/requests`): "Ask for
+help" in the person's menu of every app (`@plantcraft/ui` SuiteShell) opens the form with the app
+and page filled in; a log record and an open incident have "Open a request". Who asked follows
+theirs; the Operations role sees and answers every request (status and edit too, whatever its
+access level: `Visibility.requests`); each request is an action on its own page, with its
+comments, checklist and **time**: hours on a day, a note, billable or not
+(`POST /api/actions/{id}/hours`, by whoever sees it; removed by who logged it or an admin).
+
+**Partners** (`/ops/partners`, `GET /api/operations/partners?month=`,
+`GET /api/operations/hours?month=&company=`, audited `operations.hours.read`). The companies
+working at the plant: a group of kind `company` (docs/groups.md) with its teams (groups under it),
+people, coordinator on its side, sponsor at the plant, last day of access (no end, active, ending in
+30 days, ended: from the next day nobody in it signs in, and the sign-in says why) and open
+requests; the hours its people logged in the month (an entry counts for the company of who logged
+it; the plant's own people are "Plant"), with the month's report exported as CSV.
+
+The public demo's visitor opens Operations read-only, without Logs (a public server's logs name
+its visitors).
 
 **Reading the logs** (`GET /api/operations/logs`, audited `operations.logs.read`). One list of
 every server's records, newest first: PlantCraft reads its own file, and asks every running
