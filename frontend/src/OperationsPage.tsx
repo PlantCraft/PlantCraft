@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { locale, t } from "./i18n";
 import { navigate } from "./nav";
 import { askUrl } from "./OperationsRequests";
+import { UptimePanel } from "./OperationsUptime";
 import { forecastText, operationsApi, type Backup, type Certificate, type MachineInfo, type Operation, type OperationsOverview, type ServiceMetrics, type Schedule, type SuiteHealth, type SuiteStatus } from "./operationsApi";
 import { useAccess, useAdminView, useCanOperate, useIsAdmin } from "./session";
 import "./access.css";
@@ -138,6 +139,7 @@ export function HealthPage() {
       {data.free_bytes != null && <span className="apps-chip">{t("Free disk: {size}", { size: size(data.free_bytes) })}</span>}
     </section>}
     {health && <HealthPanel health={health} canAct={canAct} />}
+    {health?.watching && <UptimePanel admin={canAct} services={(health.metrics?.services ?? []).map((item) => item.service)} />}
     {health?.certificates && health.certificates.length > 0 && <CertificatesPanel certificates={health.certificates} onRenewed={() => void ops.load()} />}
   </div>;
 }

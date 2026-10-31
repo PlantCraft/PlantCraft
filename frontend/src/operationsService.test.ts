@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { currentTarget, minutesText, slaText, workingHoursText } from "./OperationsRequests";
 import { grantState, readGrantPrefill } from "./OperationsSupport";
+import { uptimeText, uptimeTone, windowState } from "./OperationsUptime";
 import type { SlaClock } from "./collabApi";
 
 const clock = (changes: Partial<SlaClock>): SlaClock => ({ target_minutes: 240, used_minutes: 60, state: "running", due_at: null, ...changes });
@@ -34,5 +35,19 @@ describe("Operations, targets and support access", () => {
   it("writes a queue's working hours", () => {
     expect(workingHoursText({ days: ["mon", "tue", "wed", "thu", "fri"], start: "08:00", end: "17:00" })).toBe("Mon–Fri 08:00–17:00");
     expect(workingHoursText({ days: ["sat", "mon"], start: "06:00", end: "14:00" })).toBe("Mon, Sat 06:00–14:00");
+  });
+});
+
+describe("Operations, uptime", () => {
+  it("reads uptime and maintenance windows", () => {
+    expect(uptimeText(100)).toBe("100 %");
+    expect(uptimeText(99.5)).toBe("99.50 %");
+    expect(uptimeText(null)).toBe("—");
+    expect(uptimeTone(98.2)).toBe("warn");
+    expect(uptimeTone(90)).toBe("bad");
+    const now = Date.parse("2026-10-31T12:00:00Z");
+    expect(windowState({ starts_at: "2026-10-31T13:00:00Z", ends_at: "2026-10-31T15:00:00Z", ended_at: null }, now)).toBe("planned");
+    expect(windowState({ starts_at: "2026-10-31T11:00:00Z", ends_at: "2026-10-31T15:00:00Z", ended_at: null }, now)).toBe("active");
+    expect(windowState({ starts_at: "2026-10-31T11:00:00Z", ends_at: "2026-10-31T15:00:00Z", ended_at: "2026-10-31T11:30:00Z" }, now)).toBe("ended");
   });
 });
