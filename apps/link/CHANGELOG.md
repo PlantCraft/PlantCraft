@@ -8,6 +8,12 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **SKAB regression test.** The Deviation (T²) block is now scored against the 34 labelled
+  experiments of the Skoltech Anomaly Benchmark, a real pump and water circuit. The data is
+  GPL-3.0, so `tests/oracles/fetch_skab.py` downloads it at a pinned commit and checks the
+  sha256 of every file, and nothing of it is committed. The tests on main download it before
+  `make ci`. Per sample, F1 is 75 (SKAB's leaderboard gives T² 66). The false alarms are high,
+  docs/gaps.md G44. The four scores are floors that only rise.
 - **A loop compared with a recorded reference.** "Record as reference" on the loop page keeps the
   loop's last run (health, and each method's status, score and numeric indicators) as the run to
   compare against, after commissioning or a retune. The page then shows health then and now, and

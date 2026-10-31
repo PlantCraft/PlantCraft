@@ -334,7 +334,7 @@ def test_the_queue_answers_the_suite_panel(client, runtime):
 def test_an_example_study_is_ready_after_the_first_start(tmp_path, fake):
     """Round 9 (D13): every install starts with a study already run, queued once by Models."""
 
-    from modelcraft.api.runtime import EXAMPLE_STUDY
+    from modelcraft.api.runtime import EXAMPLE_OPTIMIZATION, EXAMPLE_STUDY
 
     runtime = make_runtime(tmp_path, fake, example_study=True)
     try:
@@ -344,7 +344,13 @@ def test_an_example_study_is_ready_after_the_first_start(tmp_path, fake):
             study = wait_study(client, found["id"])
             assert study["model"] == TLC and study["created_by"] == "modelcraft"
             assert study["total"] == 3 and study["done"] == 3
+            # And the example optimization (M2): the PI of the dead-time loop tuned by IAE.
+            [tuning] = [s for s in listed if s["name"] == EXAMPLE_OPTIMIZATION["name"]]
+            assert tuning["kind"] == "optimization" and tuning["created_by"] == "modelcraft"
+            assert tuning["model"] == EXAMPLE_OPTIMIZATION["model"]
             assert runtime.seed_example_study() is None  # once: a restart does not queue again
+            names = [s["name"] for s in client.get("/api/studies").json()]
+            assert names.count(EXAMPLE_OPTIMIZATION["name"]) == 1
     finally:
         runtime.shutdown()
 
