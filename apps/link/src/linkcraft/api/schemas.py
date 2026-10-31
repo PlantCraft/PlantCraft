@@ -218,6 +218,9 @@ class AlgorithmPayload(BaseModel):
     # An algorithm on assets: when it runs and on which assets.
     timing: AssetTiming = Field(default_factory=AssetTiming)
     assets: list[AssetId] = Field(default_factory=list, max_length=500)
+    # And every asset of these PlantCraft equipment types, subtypes included (A20); None keeps
+    # the types the algorithm had.
+    asset_types: list[AssetId] | None = Field(default=None, max_length=50)
     # Where its work runs on the suite's compute workers.
     compute: ComputePlacementPayload = Field(default_factory=ComputePlacementPayload)
     # Free tags and the user group that may edit it (None keeps what the algorithm had).

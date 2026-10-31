@@ -14,6 +14,12 @@ joins it into the bundle's release notes.
   its value and target over the time span, and **At high limit** / **At low limit** where the
   controller is constrained. It reads assets of kind `apc`, `apc_mv` and `apc_cv` (the names
   Analytics' APC health reads too). Not offered in reports.
+- **Evidence footnotes in an assistant section (V4).** Every fact the model gets has an id (A1
+  for an asset's counted row, R1 for a result, E1 for an event) and the model cites it after
+  each number, date or finding it states. The section shows the citations as numbered footnotes
+  and lists under **Evidence** what each one is: the result with its status, score and time,
+  the event with its time and summary, or the period's counts. A citation of a fact the model
+  was not given is dropped and named in a check.
 - **The plant's process display opens on a generated overview (Level 1).** From assets › **The
   whole plant** draws a first page with a block per unit (its equipment and loop count and up
   to eight loop-health bubbles, linked to the unit's page) and a page per unit, each with

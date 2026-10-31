@@ -365,12 +365,25 @@ def _refuse_overlap(rt: Any, schedule: dict[str, Any], exclude: str | None = Non
         )
 
 
+def _asset_selector(selector: dict[str, Any] | None) -> dict[str, Any]:
+    """An asset schedule's targets: ``{"mode": "all"}`` (the algorithm's assets and every asset
+    of its equipment types, A20) or the list of assets it names."""
+
+    if (selector or {}).get("mode") == "all":
+        return {"mode": "all"}
+    if not (selector or {}).get("ids"):
+        raise HTTPException(status_code=422, detail=t("Choose the assets it runs on."))
+    return {"mode": "list", "ids": list(dict.fromkeys(selector["ids"]))}
+
+
 def _label(rt: Any, schedule: dict[str, Any]) -> str:
     if schedule.get("schedule_id") == SIGNAL_ROUND_ID:
         return t("Every signal")
     if schedule.get("kind") == "round":
         return t("Every enabled loop")
     if schedule.get("subject_kind") == "asset":
+        if (schedule.get("selector") or {}).get("mode") == "all":
+            return t("Every asset of the algorithm")
         ids = (schedule.get("selector") or {}).get("ids") or []
         return ids[0] if len(ids) == 1 else t("{count} assets", count=len(ids))
     if schedule.get("selector") is not None:
@@ -524,10 +537,9 @@ def create_schedule(payload: SchedulePayload, user: EditorUser, rt: RuntimeDep) 
         raise HTTPException(status_code=422, detail=t("Choose when it runs."))
     on_assets = _on_assets(rt, payload.profile_id)
     if on_assets:
-        # An algorithm on assets runs on the assets the schedule names.
-        if not (payload.selector or {}).get("ids"):
-            raise HTTPException(status_code=422, detail=t("Choose the assets it runs on."))
-        payload.selector = {"mode": "list", "ids": list(dict.fromkeys(payload.selector["ids"]))}
+        # An algorithm on assets runs on the assets the schedule names, or on every asset the
+        # algorithm names and of its equipment types, as they are at each run (A20).
+        payload.selector = _asset_selector(payload.selector)
     elif payload.selector is None:
         if not payload.loop_id:
             raise HTTPException(status_code=422, detail=t("Choose a loop or a selection rule."))
@@ -607,9 +619,7 @@ def update_schedule(
     ):
         raise HTTPException(status_code=422, detail=t("Choose when it runs."))
     if schedule.get("subject_kind") == "asset" and payload.selector is not None:
-        if not payload.selector.get("ids"):
-            raise HTTPException(status_code=422, detail=t("Choose the assets it runs on."))
-        fields["selector"] = {"mode": "list", "ids": list(dict.fromkeys(payload.selector["ids"]))}
+        fields["selector"] = _asset_selector(payload.selector)
     if payload.profile_id is not None and payload.profile_id != schedule.get("profile_id"):
         if schedule.get("kind") == "round":
             raise HTTPException(
