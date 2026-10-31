@@ -268,6 +268,25 @@ def test_the_monitoring_round_is_a_schedule_that_queues_one_execution(tmp_path, 
         rt.shutdown()
 
 
+def test_a_round_the_data_did_not_answer_is_tried_again(tmp_path, fake, monkeypatch):
+    rt = make_runtime(tmp_path, fake)
+    try:
+        job_id = rt.queue_round("round-signal_quality", user="ana")
+        refused = "PlantCraft answered 502: The Historian could not be reached: Connection refused"
+        monkeypatch.setattr(
+            rt, "run_scheduled_round", lambda *_args: {"status": "error", "error": refused}
+        )
+        rt.engine.dispatcher.drain()
+        for _ in range(50):  # the engine's own thread may have taken it
+            job = rt.jobs.get_job(job_id)
+            if job["status"] != "running":
+                break
+            time.sleep(0.1)
+        assert job["status"] == "queued" and job["error_message"] == refused
+    finally:
+        rt.shutdown()
+
+
 def test_run_now_queues_a_round_once(tmp_path, fake):
     rt = make_runtime(tmp_path, fake)
     try:

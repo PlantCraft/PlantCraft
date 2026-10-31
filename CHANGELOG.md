@@ -44,9 +44,35 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - The public demo's visitors no longer see the server logs.
 - SDK: `GET /api/ops/logs` on every server (`plantcraft_sdk.server.logread`), read with the `ops`
   scope.
+- **Configuration decided before installing, outside the platform** (`docs/installation-file.md`).
+  `/etc/plantcraft/installation.conf`, owned by root and never mounted in a container, holds
+  which apps exist, whether apps may be installed from Settings › Apps, the demo, the machine
+  size and its CPU/memory ceilings, load ceilings (`MAX_SIGNALS`, `MAX_PARALLEL_RUNS`), the
+  network, and the security switches (language models, assistants through MCP, Notebooks, a locked
+  time zone). `install.sh` reads it on every run (`--config FILE`), refuses it when others may
+  write it, and its values win over options and `.env`. Settings › Installation shows these as
+  **Set by the installation**, read-only, with the file's fingerprint.
+- **Requirements check before installing**: `install.sh --check` (or `preflight.sh`, `--json`,
+  `--ignore ID`): system, processor, Docker and Compose, Docker Desktop's licence, control groups,
+  CPUs and memory as Docker sees them (memory sized by the chosen apps), swap, disk, the HTTPS
+  port, the internal networks, the clock and the installation file. Every install runs it first
+  and stops on a failure before changing anything. `install.sh --show-config` compares the file
+  with `.env`.
+- **Docker Engine in the bundle**: on a Linux server with no Docker, `install.sh --install-docker`
+  installs the Docker Engine 29.9.2 and Compose 5.6.1 the bundle carries (`docker-engine/`, pinned
+  hashes), offline, with its systemd units. `docs/install.md` adds Windows without Docker Desktop.
+- **Setup wizard** (`deploy/wizard/`, first version): the installer's screens in a browser on the
+  server (127.0.0.1, a random key per start): apps, requirements for those apps, machine and
+  load, network and security, review of the file, install log. Tried on Windows 11 (WSL): it
+  checks first that it runs from a complete release bundle, and a failed install can go back.
 
 ### Changed
 
+- **The Historian's database has its own CPU limit, `HISTCRAFT_DB_CPUS` (default 2).** It
+  shared `HISTCRAFT_CPUS` with the Historian, so lowering the Historian's limit also slowed the
+  database it reads from (0.6.0 load tests, 2026-10-31). An installation that set
+  `HISTCRAFT_CPUS` keeps it for the Historian; the database gets its own default.
+- **Requirements: a 4 GB machine needs 2 GB of swap** for the demo with every app on.
 - **The Historian answers from several processes (0.6.0 load tests, 2026-10-31).** Heavy reads
   ran in one Python process on one core. `histcraft serve` now starts as many processes as the
   CPUs its container may use (`HISTCRAFT_WORKERS`, `auto` by default: the container's CPU limit,
@@ -71,8 +97,33 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **`install.sh` fits every CPU limit to small hosts**, also the ones left at their default in
   `compose.yaml` (a 2-CPU machine stopped on `LINKCRAFT_EXECUTOR_CPUS`, default 4).
 
+### Security
+
+- **Signing out ends the browser's token in every app too.** The 12-minute token carries the
+  SHA-256 of its session (`sid` claim). After sign-out PlantCraft refuses it at once, and
+  `GET /api/v1/auth/revoked` lists the session (`sessions`), so the apps refuse it within 10 s
+  (`plantcraft-sdk` 0.84.0). The person's other sessions keep working.
+- **`./install.sh --security-check`: 36 checks with stable ids, a score and machine-readable
+  output.** Each check (`PC-CTR-01` and so on) has a severity, the evidence it saw, how to fix it
+  and its IEC 62443-4-2 and NIST SP 800-53 references; `--format json|junit|sarif`, `--skip`, and
+  exit code 1 on a failure (docs/security-guide.md, "Security check").
+- **Fresher proxy and installer images.** The proxy moves to Caddy 2.11.6 and upgrades its Alpine
+  packages at build, and the installer's Docker CLI and Compose to 29.9.2. Trivy counted 3
+  critical and 84 high fixable findings in the proxy, and 3 and 87 in the installer, all in the old
+  Go binaries and curl.
+
 ### Fixed
 
+- **Installer, from the first tries on Windows 11 (WSL) and a clean Linux VM.** The setup
+  wizard asks the apps before the requirements (it stopped on a memory FAIL for apps you would
+  have left out), starts from an installation file already there, says on its first screens when
+  it does not run from a complete release bundle (install.sh refused it only at the end), and a
+  failed install can go back. `install.sh --check` checks the apps that run would install (it
+  checked all six: 10 GB instead of 7) and takes `--json`. `--install-docker` adds the person
+  who ran sudo to the docker group.
+- **`PLANTCRAFT_MCP=off` and `PLANTCRAFT_NOTEBOOKS=off` in `.env` now take effect.** Compose never
+  passed them to PlantCraft, so turning assistants through MCP or Notebooks off for a whole
+  installation did nothing.
 - **Trends keep their spikes.** When a trend had more points than a chart takes (1,500 by
   default), PlantCraft kept every n-th point, so any event shorter than the gap vanished: a day at
   1 s with twenty 5 s spikes showed none of them. Each stretch of the series now keeps its lowest

@@ -24,6 +24,7 @@ know that the code and `CHANGELOG.md` do not say. One short entry per change wor
   indexed query per request), so every check that reads `can_operate` follows it and it ends
   without a job. Operations is not a framed app: it is left out of the frame prefixes, or `/health`
   would load the platform again inside a frame.
+- Storage test (2026-10-31): JSON kept in each app's SQLite beats loose files (3-4x faster writes, indexable, 0/100 broken after kill -9 against 71/100 for an in-place `write_text`); one shared SQLite halves throughput and makes one app's batch stall the others' writes (p99 4 -> 54 ms, 130 ms with a heavy writer); PostgreSQL with a schema per app costs ~60 us a query against ~4 us. Kept one SQLite per app; Models writes its JSON files atomically. Benchmarks in `ci/bench/storage/`.
 
 ## 0.5.1
 

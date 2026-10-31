@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
+from modelcraft.atomic import write_json
 from modelcraft.i18n import t
 from modelcraft.modelica.source import find, flatten, outline, policy
 from modelcraft.omc import results
@@ -345,7 +346,7 @@ class Workbench:
             answer.close()
         if library:
             try:
-                cached_file.write_text(json.dumps(found), encoding="utf-8")
+                write_json(cached_file, found)
             except OSError:
                 pass
         return self._remember(key, found)
@@ -453,11 +454,11 @@ class Workbench:
         )
         folder = self.run_dir(run["id"])
         folder.mkdir(parents=True, exist_ok=True)
-        (folder / "files.json").write_text(json.dumps(files), encoding="utf-8")
+        write_json(folder / "files.json", files)
         for name, content in (extra or {}).items():
             (folder / name).write_bytes(content)
         if compare:
-            (folder / "compare.json").write_text(json.dumps(compare), encoding="utf-8")
+            write_json(folder / "compare.json", compare)
         self.queue.wake()
         # Off the request: a slow PlantCraft never holds the person's Run button.
         threading.Thread(target=self._announce, args=(run,), daemon=True).start()
@@ -503,11 +504,11 @@ class Workbench:
         )
         folder = self.study_dir(study["id"])
         folder.mkdir(parents=True, exist_ok=True)
-        (folder / "files.json").write_text(json.dumps(files), encoding="utf-8")
+        write_json(folder / "files.json", files)
         for file_name, content in (extra or {}).items():
             (folder / file_name).write_bytes(content)
         if compare:
-            (folder / "compare.json").write_text(json.dumps(compare), encoding="utf-8")
+            write_json(folder / "compare.json", compare)
         self.runs.create_many(
             project=project,
             model=model,
@@ -561,7 +562,7 @@ class Workbench:
         )
         folder = self.study_dir(study["id"])
         folder.mkdir(parents=True, exist_ok=True)
-        (folder / "files.json").write_text(json.dumps(files), encoding="utf-8")
+        write_json(folder / "files.json", files)
         self._save_optimization(study["id"], {"status": "running", "evaluations": []})
         self._start_optimizer(study)
         return study
@@ -606,9 +607,7 @@ class Workbench:
     def _save_optimization(self, study_id: str, state: dict[str, Any]) -> None:
         path = self.study_dir(study_id) / "optimization.json"
         path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_suffix(".tmp")
-        temporary.write_text(json.dumps(state), encoding="utf-8")
-        temporary.replace(path)
+        write_json(path, state)
 
     def _optimize(self, study: dict[str, Any]) -> None:
         """The optimizer's thread: it asks for one simulation at a time and waits for it."""

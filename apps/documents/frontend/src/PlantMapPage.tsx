@@ -83,10 +83,11 @@ export function PlantMapPage({ me }: { me: Me }) {
         </li>)}</ul>
       </div>}
       <div className="panel">
-        <div className="panel-header"><div><h2>{t("Lists")}</h2><p>{t("The map as tables for a spreadsheet.")}</p></div></div>
+        <div className="panel-header"><div><h2>{t("Lists")}</h2><p>{t("The map as tables for a spreadsheet, or as DEXPI for a P&ID tool.")}</p></div></div>
         <div className="map-lists">
           {(["equipment", "instruments", "lines", "loops"] as const).map((kind) =>
             <a key={kind} className="button" href={api.listUrl(kind)} download><Download size={16} /> {t(LIST_NAMES[kind])}</a>)}
+          <a className="button" href={api.dexpiUrl()} download><Download size={16} /> {t("DEXPI (XML)")}</a>
         </div>
       </div>
       <TagListCheck plant={plant} />
@@ -120,7 +121,10 @@ function ItemCard({ item, relations, onPick, onReview }: { item: MapItem; relati
     <p><ConfidencePill value={item.confidence} /> <span className="muted">{item.why}</span></p>
     {onReview && <p><ReviewButtons value={item.review} onChange={(v) => onReview(item.tag, "item", v)} /></p>}
     <p>{item.in_plantcraft === null ? t("PlantCraft's assets could not be read.")
-      : item.in_plantcraft ? <a href={`/assets/${encodeURIComponent(item.tag)}`}>{t("In PlantCraft: open the asset")}</a>
+      : item.in_plantcraft ? <span className="map-links">{t("In PlantCraft:")}{" "}
+        <a href={`/assets/${encodeURIComponent(item.tag)}`}>{t("the asset")}</a>{" · "}
+        <a href={`/assets/${encodeURIComponent(item.tag)}?tab=signals`}>{t("its signals")}</a>{" · "}
+        <a href={`/assets/${encodeURIComponent(item.tag)}?tab=situation`}>{t("what the apps say")}</a></span>
         : t("Not in PlantCraft yet: the asset file creates it.")}</p>
     <h3>{t("Lines")}</h3>
     {mine.length === 0 ? <p className="muted">{t("None found.")}</p> : <ul>{mine.map((r) => <li key={`${r.from}-${r.type}-${r.to}`}>

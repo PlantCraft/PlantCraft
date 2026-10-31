@@ -135,7 +135,12 @@ def recognise(page: Page) -> Result:
     _sheet_info(page, result)
 
     nets = _nets(page, items)
-    arrows += _chevrons(page)
+    # An actuator's open arrowhead is part of its valve, not a flow arrow.
+    arrows += [
+        a
+        for a in _chevrons(page)
+        if not any(i.cls == "valve" and i.region and inside(*a.tip, i.region[1:]) for i in items)
+    ]
     _relations(items, nets, arrows, result)
     result.items = items
     result.stats = {
@@ -272,6 +277,7 @@ def _valves(page: Page) -> tuple[list[Item], set[int]]:
             )
             used.update({ka, kb})
             break
+    out += _stroked_valves(page, out)
     # The actuator's dome and any small outline on the stem belong to the valve.
     for k, s in enumerate(page.shapes):
         if k in used or s.size > 20:
@@ -281,6 +287,88 @@ def _valves(page: Page) -> tuple[list[Item], set[int]]:
                 used.add(k)
                 break
     return out, used
+
+
+def _stroked_valves(page: Page, found: list[Item]) -> list[Item]:
+    """Bow ties drawn as four loose strokes (CAD exports): two diagonals crossing at their
+    middles, closed by two caps."""
+
+    near = 1.0
+    diagonals = [
+        s
+        for s in page.segs
+        if 4 < s.length < 40
+        and min(abs(s.x2 - s.x1), abs(s.y2 - s.y1)) > 0.3 * s.length
+        and not s.dashed
+    ]
+    by_middle: dict[tuple[int, int], list[Seg]] = defaultdict(list)
+    for s in diagonals:
+        by_middle[(round((s.x1 + s.x2) / 2), round((s.y1 + s.y2) / 2))].append(s)
+    ends: dict[tuple[int, int], list[Seg]] = defaultdict(list)
+    for s in page.segs:
+        if s.length < 40:
+            for x, y in ((s.x1, s.y1), (s.x2, s.y2)):
+                ends[(round(x), round(y))].append(s)
+
+    def joined(p, q) -> bool:
+        return any(
+            math.hypot(o.x1 - q[0], o.y1 - q[1]) <= near
+            or math.hypot(o.x2 - q[0], o.y2 - q[1]) <= near
+            for dx in (-1, 0, 1)
+            for dy in (-1, 0, 1)
+            for o in ends.get((round(p[0]) + dx, round(p[1]) + dy), [])
+            if math.hypot(o.x1 - p[0], o.y1 - p[1]) <= near
+            or math.hypot(o.x2 - p[0], o.y2 - p[1]) <= near
+        )
+
+    out: list[Item] = []
+    seen: set[tuple[int, int]] = set()
+    for (mx, my), group in by_middle.items():
+        pool = [
+            o
+            for dx in (-1, 0, 1)
+            for dy in (-1, 0, 1)
+            for o in by_middle.get((mx + dx, my + dy), [])
+        ]
+        for a in group:
+            for b in pool:
+                if b is a or abs(a.length - b.length) > 0.1 * a.length:
+                    continue
+                cx, cy = (a.x1 + a.x2) / 2, (a.y1 + a.y2) / 2
+                if math.hypot((b.x1 + b.x2) / 2 - cx, (b.y1 + b.y2) / 2 - cy) > near:
+                    continue
+                # Crossing, not the same stroke twice: the slopes differ in sign.
+                if (a.x2 - a.x1) * (a.y2 - a.y1) * (b.x2 - b.x1) * (b.y2 - b.y1) >= 0:
+                    continue
+                pa, qa, pb, qb = (a.x1, a.y1), (a.x2, a.y2), (b.x1, b.y1), (b.x2, b.y2)
+                caps = (joined(pa, pb) and joined(qa, qb)) or (joined(pa, qb) and joined(qa, pb))
+                key = (round(cx), round(cy))
+                if not caps or key in seen:
+                    continue
+                if any(inside(cx, cy, v.box) for v in found):
+                    continue
+                seen.add(key)
+                x0, x1 = min(a.box[0], b.box[0]), max(a.box[2], b.box[2])
+                y0, y1 = min(a.box[1], b.box[1]), max(a.box[3], b.box[3])
+                # The pipe runs along the valve; its actuator may sit on either side.
+                horizontal = abs(a.x2 - a.x1) >= abs(a.y2 - a.y1)
+                reach = 2.4 * max(x1 - x0, y1 - y0) / 2
+                region = (
+                    (x0, cy - reach, x1, cy + reach)
+                    if horizontal
+                    else (cx - reach, y0, cx + reach, y1)
+                )
+                out.append(
+                    Item(
+                        id=f"valve@{cx:.0f},{cy:.0f}",
+                        family="instrument",
+                        cls="valve",
+                        box=(x0, y0, x1, y1),
+                        why="valve symbol (two crossed strokes)",
+                        region=("box", *region),
+                    )
+                )
+    return out
 
 
 def _arrows(page: Page, skip: set[int]) -> tuple[list[Arrow], set[int]]:
@@ -307,6 +395,17 @@ def _chevrons(page: Page) -> list[Arrow]:
             by_end[(round(here[0]), round(here[1]))].append((x, there))
     out = []
     for (px, py), pair in by_end.items():
+        if len(pair) == 3:
+            # A CAD export may add a short piece of the line itself at the tip: it runs
+            # between the two wings.
+            pair = next(
+                (
+                    [w for w in pair if w is not shaft]
+                    for shaft in pair
+                    if _between(shaft, [w for w in pair if w is not shaft], (px, py))
+                ),
+                pair,
+            )
         if len(pair) != 2:
             continue
         (a, ea), (b, eb) = pair
@@ -330,6 +429,20 @@ def _chevrons(page: Page) -> list[Arrow]:
             )
         )
     return out
+
+
+def _between(shaft, wings, tip) -> bool:
+    """Whether a stroke from the tip runs along the middle of two others from it."""
+
+    def unit(end):
+        x, y = end[0] - tip[0], end[1] - tip[1]
+        n = math.hypot(x, y) or 1.0
+        return x / n, y / n
+
+    (ax, ay), (bx, by), (sx, sy) = unit(wings[0][1]), unit(wings[1][1]), unit(shaft[1])
+    mx, my = ax + bx, ay + by
+    n = math.hypot(mx, my)
+    return n > 1e-6 and abs(sx * my / n - sy * mx / n) < 0.1 and sx * mx + sy * my > 0
 
 
 def _tip(s: Shape) -> tuple[float, float]:
@@ -528,6 +641,8 @@ def _label_valves(valves: list[Item], words, bubbles, items: list[Item]) -> None
 
 
 def _equipment(page: Page, words, skip: set[int], connectors, bubbles, items) -> None:
+    heights = sorted(t.height for t in page.texts) or [8.0]
+    text_h = heights[len(heights) // 2]
     taken_regions = [i.box for i in items]
     bodies: list[tuple[Box, Any]] = []
     for k, s in enumerate(page.shapes):
@@ -550,8 +665,8 @@ def _equipment(page: Page, words, skip: set[int], connectors, bubbles, items) ->
             if b.region[0] == "circle"
         ):
             continue
-        if c.r < 12:
-            continue
+        if c.r < min(12.0, 2 * text_h):
+            continue  # a dot or a small mark, not a pump or a vessel (a drawing to scale)
         bodies.append((c.box, ("circle", c.cx, c.cy, c.r)))
     groups = _group(bodies)
     tags = [
@@ -599,8 +714,6 @@ def _equipment(page: Page, words, skip: set[int], connectors, bubbles, items) ->
         done_t.add(ti)
     # A tag with no closed symbol near it: an outline drawn as separate strokes (a tank's two
     # walls and two heads) around it, or beside it.
-    heights = sorted(t.height for t in page.texts) or [8.0]
-    text_h = heights[len(heights) // 2]
     left = [(ti, t, tag) for ti, (t, tag) in enumerate(tags) if ti not in done_t]
     found = {ti: _enclosure(page, t, text_h) for ti, t, _ in left}
     for ti, t, tag in sorted(left, key=lambda x: found[x[0]] is None):
@@ -762,8 +875,21 @@ def _enclosure(page: Page, t: Text, text_h: float) -> Box | None:
         if any(not h for h in hits):
             continue
         box = (x - hits[0][0][0], y - hits[2][0][0], x + hits[1][0][0], y + hits[3][0][0])
+        # The walls are the symbol's own strokes: grow the box to where they end (a rectangle
+        # crossed inside by an X), then judge its size.
+        for _, s in (hits[0][0], hits[1][0], hits[2][0], hits[3][0]):
+            box = (
+                min(box[0], s.box[0]),
+                min(box[1], s.box[1]),
+                max(box[2], s.box[2]),
+                max(box[3], s.box[3]),
+            )
         w, h = box[2] - box[0], box[3] - box[1]
         if w < 2.5 * text_h or h < 2.5 * text_h or w > 0.3 * page.width or h > 0.4 * page.height:
+            continue
+        # A symbol holds its own tag and little else; a gap between pipes holds other labels.
+        own = grow(t.box, 1.0)
+        if sum(inside(o.cx, o.cy, box) and not inside(o.cx, o.cy, own) for o in page.texts) > 2:
             continue
         if box_distance(box, t.box) > 6 * text_h:
             continue
@@ -847,6 +973,59 @@ def _point_on(s: Seg, x: float, y: float, tol: float) -> bool:
 # ---------------------------------------------------------------- 5-6: flow and relations
 
 
+def _split_at(net: Net, arrow: Arrow, flow: list[Item]) -> tuple[set[str], set[str]]:
+    """The members behind an arrow on a line and the members ahead of it, cutting the line
+    where the arrow sits. Both empty when the arrow is not on this line."""
+
+    tx, ty = arrow.tip
+    cut = next((s for s in net.segs if _point_on(s, tx, ty, TOL)), None)
+    if cut is None:
+        return set(), set()
+    dx, dy = arrow.direction
+    rest = [s for s in net.segs if s is not cut]
+    parent = list(range(len(rest)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i, a in enumerate(rest):
+        for j in range(i + 1, len(rest)):
+            b = rest[j]
+            if any(_point_on(b, x, y, TOL) for x, y in ((a.x1, a.y1), (a.x2, a.y2))) or any(
+                _point_on(a, x, y, TOL) for x, y in ((b.x1, b.y1), (b.x2, b.y2))
+            ):
+                parent[find(i)] = find(j)
+
+    def side(x: float, y: float) -> int:
+        return 1 if (x - tx) * dx + (y - ty) * dy > 0 else -1
+
+    # Each piece of the line joins the cut stroke on one side of the arrow.
+    sides: dict[int, set[int]] = defaultdict(set)
+    for i, s in enumerate(rest):
+        for x, y in ((s.x1, s.y1), (s.x2, s.y2)):
+            if _point_on(cut, x, y, TOL):
+                sides[find(i)].add(side(x, y))
+        for x, y in ((cut.x1, cut.y1), (cut.x2, cut.y2)):
+            if _point_on(s, x, y, TOL):
+                sides[find(i)].add(side(x, y))
+    behind: set[str] = set()
+    ahead: set[str] = set()
+    for m in flow:
+        for x, y in net.touches[m.id]:
+            if _point_on(cut, x, y, TOL):
+                (ahead if side(x, y) > 0 else behind).add(m.id)
+                continue
+            for i, s in enumerate(rest):
+                if (x, y) in ((s.x1, s.y1), (s.x2, s.y2)):
+                    for v in sides.get(find(i), ()):
+                        (ahead if v > 0 else behind).add(m.id)
+    both = ahead & behind
+    return behind - both, ahead - both
+
+
 def _relations(items: list[Item], nets: list[Net], arrows: list[Arrow], result: Result) -> None:
     by_id = {i.id: i for i in items}
     process = {"equipment", "connector", "terminal"}
@@ -904,6 +1083,16 @@ def _relations(items: list[Item], nets: list[Net], arrows: list[Arrow], result: 
                 for b in flow:
                     if a.id not in downstream and b.id in downstream:
                         edges.append((a.id, b.id, "high"))
+            continue
+        # Arrows drawn along the line, away from any symbol: what lies ahead of them is
+        # downstream.
+        pairs: set[tuple[str, str]] = set()
+        for arrow in arrows:
+            behind, ahead = _split_at(net, arrow, flow)
+            pairs |= {(a, b) for a in behind for b in ahead}
+        pairs = {(a, b) for a, b in pairs if (b, a) not in pairs}
+        if pairs:
+            edges += [(a, b, "high") for a, b in sorted(pairs)]
         else:
             unsure.append((net, flow))
 

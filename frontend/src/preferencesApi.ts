@@ -3,7 +3,9 @@ import { setTimeZoneMode, timeZoneMode, TIME_ZONE_MODE_KEY, type TimeZoneMode } 
 import { requestJson } from "./api";
 
 export interface Preferences { time_zone: TimeZoneMode; language: string | null; installation_time_zone?: string }
-export interface InstallationSettings { time_zone: string; installed_time_zone: string; chosen: boolean; updated_by?: string | null; updated_at?: string | null; now: string }
+export interface InstallationFileEntry { key: string; label: string; value: string }
+export interface InstallationFile { present: boolean; path: string; sha256: string | null; entries: InstallationFileEntry[] }
+export interface InstallationSettings { time_zone: string; installed_time_zone: string; chosen: boolean; locked?: boolean; installation_file?: InstallationFile; updated_by?: string | null; updated_at?: string | null; now: string }
 
 export const preferencesApi = {
   get: () => requestJson<Preferences>("/api/me/preferences"),

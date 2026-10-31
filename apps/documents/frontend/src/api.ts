@@ -42,6 +42,7 @@ export const api = {
   diagramImage: (revId: string, page: number) => href(`/api/diagrams/${id(revId)}/${page}/image`),
   plantMap: () => request<PlantMap>("/api/plant-map"),
   assetFileUrl: () => href("/api/plant-map/asset-file"),
+  dexpiUrl: () => href("/api/plant-map/dexpi.xml"),
   /** Approve, reject or uncheck an item (its tag) or a relation (`from|type|to`) of the map. */
   review: (key: string, kind: "item" | "relation", verdict: Verdict) =>
     request<{ key: string; verdict: Verdict }>("/api/plant-map/reviews", jsonBody("PUT", { key, kind, verdict })),
