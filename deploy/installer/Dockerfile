@@ -68,7 +68,7 @@ COPY plantcraft/__init__.py /app/plantcraft/__init__.py
 # The package's name until 0.5.0: `python -m processcraft.apps.<module>` still runs on this image
 # (plantcraft/legacy.py), so an older install.sh or Backups page can drive it.
 COPY plantcraft/legacy.py /app/processcraft/__init__.py
-COPY plantcraft/apps/__init__.py plantcraft/apps/package.py plantcraft/apps/installer.py plantcraft/apps/operations.py plantcraft/apps/historian_backup.py plantcraft/apps/release.py /app/plantcraft/apps/
+COPY plantcraft/apps/__init__.py plantcraft/apps/package.py plantcraft/apps/installer.py plantcraft/apps/operations.py plantcraft/apps/historian_backup.py plantcraft/apps/release.py plantcraft/apps/host_usage.py /app/plantcraft/apps/
 # Backup, restore and updates (docs/operations.md), run by the operations driver: this image as root.
 COPY plantcraft/ops/__init__.py plantcraft/ops/snapshot.py /app/plantcraft/ops/
 RUN python -m compileall -q /app/plantcraft /app/processcraft \

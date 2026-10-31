@@ -213,7 +213,11 @@ history; uploading a bundle there to update is the next step, through the same d
 **Metrics.** The installer writes Docker's view every 30 s to `data/installer/status/metrics.json`
 (`plantcraft.apps.installer.Installer.metrics`): for each container its state, health, exit
 code, restarts, start time, CPU and memory (`docker compose ps`, `inspect`, `stats`), and the
-free disk of the install folder. Docker runs every service's health check, which calls its
+free disk of the install folder. Docker's CPU is a percentage of one core (`cpu_pct`, 344 for
+3.4 cores), so each service also carries `cpus` (its limit, `HostConfig.NanoCpus`, else the
+machine's) and `cpu_load_pct`, the share of that limit (0 to 100). `host` is the machine itself,
+read from `/proc` (`plantcraft.apps.host_usage`): `cpus`, `cpu_pct` (between two reads),
+`mem_pct`, `mem_total_bytes`, `mem_used_bytes`, `load_1m`. Docker runs every service's health check, which calls its
 `/healthz`, so `health` is each server's own answer seen from outside it. Every server also
 answers `GET /api/ops/metrics` (SDK, `plantcraft_sdk.server.ops`) to an admin or a token with the
 `ops` scope: version, uptime, warnings and errors logged, requests, server errors, p95 latency.
@@ -222,7 +226,8 @@ answers `GET /api/ops/metrics` (SDK, `plantcraft_sdk.server.ops`) to an admin or
 writes the suite's health to the Historian's reserved source `system`, shown as "System"
 ("Sistema"), which only PlantCraft writes (`POST /api/v1/data/system`; the Historian's
 `docs/data-layer.md`), kept 90 days. Signals: `system:<service>.up` (1 running and healthy),
-`.cpu_pct`, `.mem_mb`, `.mem_pct`, `.restarts` for every container in `metrics.json`;
+`.cpu_pct` (share of its CPU limit when the installer gives it), `.mem_mb`, `.mem_pct`,
+`.restarts` for every container in `metrics.json`; `system:host.cpu_pct`, `.mem_pct`;
 `.latency_ms` (p95), `.errors`, `.warnings` (logged per minute) for every server that answers
 `GET /api/ops/metrics` (PlantCraft's own in-process; the others at their Compose service with a
 two-minute token of the `ops` scope: `histcraft`, `linkcraft`, `dashcraft`, `alarmcraft`,
@@ -268,13 +273,47 @@ reaches the administrators.
 | `drill` | the last restore drill failed | 1 tick |
 | `queue:<service>` | items waiting and the oldest has waited over 30 minutes: the queue does not drain | 2 ticks |
 | `cert:<id>` | a certificate expires in under 30 days or has expired (one reminder under 7 days) | 1 tick |
+| `load:<service>`, `load:host` | CPU (of its limit) or memory over the warning level (80 %) | 5 minutes |
+| `load_critical:<service>`, `load_critical:host` | the same over the critical level (95 %) | 5 minutes |
+| `errors:<service>`, `errors_critical:<service>` | errors logged a minute over 2 (critical 5) | 5 minutes |
+
+**Load alerts** (`plantcraft.watch.load`). The levels above are stored in `watch_state`
+(`load_limits`) and changed on Operations › Load alerts (`GET`/`PUT /api/operations/limits`,
+changes by admins only, audited `operations.limits`): on or off, warning and critical for CPU,
+memory and errors a minute, and the minutes a level must hold (1 to 120; a short peak, a report
+or a backup, says nothing). An incident ends once the value is 5 points under its level (errors:
+a fifth of it), so a value on the line does not flap. Warnings are posted with 🟠, critical ones
+with 🔴, and are events `processcraft.load.high`, `load.critical`, `errors.high`,
+`errors.critical`. Errors a minute come from each server's `GET /api/ops/metrics`, read by the
+recorder. Load checks hold still like the services' during an operation.
 
 While the driver runs an operation (at most 6 h) or the installer is silent, the services'
 and queues' checks hold still: neither opened nor closed. A service or queue that leaves the
 suite (an app removed) ends its incident without a message. An update (done, returned, rolled back) is announced once,
-when less than 24 h old. `PLANTCRAFT_WATCH=false` turns the watch off. The Health page (`/health`) shows
-the last check, the open and recent incidents and every service's state, CPU, memory and
-restarts (`GET /api/operations/health`, admins only).
+when less than 24 h old. `PLANTCRAFT_WATCH=false` turns the watch off.
+
+**Operations, the built-in app** (2026-10-31). Like Desk, Operations is part of PlantCraft and
+sits in the app switcher, for administrators and for people given the **Operations** role
+(Users, a checkbox beside the apps; stored as the app role `operations`, `Access.can_operate`;
+IT or an integrator's team that keeps the suite running without being an administrator). Pages:
+**Status** (`/health`: the last check, open and recent incidents, the machine's CPU, memory, load
+and free disk, every service's state, CPU and memory against its limit with the levels' colours,
+restarts; `GET /api/operations/health`, which carries the `limits`), **Logs** (`/ops/logs`, below),
+**Load alerts** (`/ops/alerts`); Backups and Updates stay for administrators. The Operations
+role reads; installing, updating, restoring and changing levels stay with administrators.
+
+**Reading the logs** (`GET /api/operations/logs`, audited `operations.logs.read`). One list of
+every server's records, newest first: PlantCraft reads its own file, and asks every running
+server's `GET /api/ops/logs` (SDK, `plantcraft_sdk.server.logread`, with a two-minute token of
+the `ops` scope, in parallel, 8 s each). Filters, applied by each server on its own file:
+`services`, a period (`hours`, default 6, at most 31 days, or `since`/`until`), the lowest
+`level`, `text` (in the message, the logger or the error), `request_id`, `logger`, `limit` (at most
+1000). Each server reads its rotated files newest first and stops at the first record older than
+the period, at most 64 MB scanned. The answer has `records` (each with its `service`),
+`truncated`, `services` (the running ones), `missing` (a server down or older than this endpoint:
+its logs stay on its disk and in the diagnostic bundle), and `top`, the most frequent warnings and
+errors with numbers and ids folded (`#`). The page shows it as a table, opens a record whole,
+follows one request through every app ("Same request in every app") and exports CSV.
 
 **Certificates** (`plantcraft.certificates`, B17, 2026-10-25). A certificate that expires stops
 a connection without a word on any screen, so Health lists every one the suite uses, read once an

@@ -38,6 +38,11 @@
 .ops-top-message { all: unset; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--pc-font-mono); font-size: var(--pc-fs-xs); }
 .ops-top-message:hover, .ops-top-message:focus-visible { text-decoration: underline; }
 @media (max-width: 640px) {
+  /* A phone: the message wraps instead of widening the table, the time takes two lines. */
+  .ops-message { white-space: normal; overflow-wrap: anywhere; max-width: none; }
+  .ops-time { white-space: normal; }
+  .ops-log-filters > label { flex: 1 1 140px; }
+  .ops-log-filters > label > select, .ops-log-filters > label > input { min-width: 0; width: 100%; }
   .ops-top li { grid-template-columns: 3em minmax(0, 1fr); }
   .ops-top li .ops-level, .ops-top li .ops-top-app { display: none; }
 }
@@ -49,9 +54,9 @@
 .ops-record-error { color: var(--pc-problem-text); }
 
 /* Load alerts */
-.ops-limits { padding: var(--pc-space-4); display: grid; gap: var(--pc-space-3); max-width: 760px; }
+.ops-limits { padding: var(--pc-space-4); display: grid; gap: var(--pc-space-3); max-width: 1040px; }
 .ops-limits-grid { display: grid; gap: var(--pc-space-2); margin: var(--pc-space-3) 0; }
-.ops-limits-head, .ops-limits-row { display: grid; grid-template-columns: minmax(0, 1fr) 9.5em 9.5em; gap: var(--pc-space-3); align-items: center; }
+.ops-limits-head, .ops-limits-row { display: grid; grid-template-columns: minmax(12em, 1fr) 9em 9em; gap: var(--pc-space-3); align-items: center; }
 .ops-limits-head span { font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 700; }
 .ops-limits-row > span strong { display: block; }
 .ops-limits-row > span small { color: var(--pc-text-3); }

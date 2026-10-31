@@ -47,7 +47,7 @@ from pathlib import Path
 from typing import Any
 
 from plantcraft.apps import package as pkg
-from plantcraft.apps.host_usage import HostSampler, load_pct, nano_cpus
+from plantcraft.apps import host_usage
 
 REQUEST_LIMIT = 64 * 1024
 ACTIONS = {"install", "uninstall", "rollback", "set_key"}
@@ -212,7 +212,7 @@ class Installer:
         self.max_image_bytes = max_image_bytes
         self.wait_seconds = wait_seconds
         # The machine's CPU is a difference between two reads: one sampler for the process.
-        self.host = HostSampler()
+        self.host = host_usage.HostSampler()
         for folder in ("status/requests", "apps", "routes", "secrets", "work"):
             (self.state / folder).mkdir(parents=True, exist_ok=True)
         for folder in ("secrets", "work"):
@@ -325,7 +325,7 @@ class Installer:
             memory = str(used.get("MemUsage") or "").split("/")
             restarts = extra[0] if extra else ""
             cpu_pct = percent(used["CPUPerc"]) if used.get("CPUPerc") else None
-            cpus = nano_cpus(extra[3]) if extra and len(extra) > 3 else None
+            cpus = host_usage.nano_cpus(extra[3]) if extra and len(extra) > 3 else None
             value["services"].append(
                 {
                     "service": container.get("Service"),
@@ -342,7 +342,7 @@ class Installer:
                     "cpu_pct": cpu_pct,
                     "cpus": cpus,
                     # The share of the CPUs it may use, 0 to 100 (host_usage.load_pct).
-                    "cpu_load_pct": load_pct(cpu_pct, cpus, host.get("cpus")),
+                    "cpu_load_pct": host_usage.load_pct(cpu_pct, cpus, host.get("cpus")),
                     "mem_bytes": size_bytes(memory[0]) if used else None,
                     "mem_limit_bytes": size_bytes(memory[1]) if len(memory) == 2 else None,
                     "mem_pct": percent(used["MemPerc"]) if used.get("MemPerc") else None,

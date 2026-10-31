@@ -2,10 +2,11 @@
  * servers apply themselves (period, lowest level, text, request) and the messages that come back
  * most often. A row opens the whole record; "Same request" follows one request through every app. */
 import { AlertTriangle, Download, LoaderCircle, RefreshCw, Search, X } from "lucide-react";
-import { type DataColumn, DataTable, Dialog, formatDate, Heading, saveFile } from "@plantcraft/ui";
+import { type DataColumn, DataTable, Dialog, fileStamp, formatDate, Heading, saveFile } from "@plantcraft/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { t } from "./i18n";
 import { LOG_LEVELS, operationsApi, type LogRecord, type LogsAnswer, type LogsQuery } from "./operationsApi";
+import "./access.css";
 import "./apps.css";
 import "./operations.css";
 
@@ -100,7 +101,7 @@ export function LogsPage() {
   const records = answer?.records ?? [];
   return <div className="apps-page ops-logs">
     <Heading title={t("Logs")} actions={<>
-      <button type="button" className="button button-secondary" disabled={!records.length} onClick={() => saveFile(`plantcraft-logs-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "")}.csv`, logsCsv(records), "text/csv")}><Download size={15} /> {t("Export CSV")}</button>
+      <button type="button" className="button button-secondary" disabled={!records.length} onClick={() => saveFile(`plantcraft-logs-${fileStamp(new Date().toISOString())}.csv`, logsCsv(records), "text/csv")}><Download size={15} /> {t("Export CSV")}</button>
       <button type="button" className="button button-secondary button-icon" title={t("Refresh")} aria-label={t("Refresh")} onClick={() => load(query)}><RefreshCw /></button>
     </>} />
     <form className="panel ops-log-filters" onSubmit={(event) => apply(event)} aria-label={t("Filters")}>
@@ -126,7 +127,7 @@ export function LogsPage() {
       <button className="button button-primary" disabled={busy}>{busy ? <LoaderCircle className="spin" size={15} /> : <Search size={15} />} {t("Search")}</button>
     </form>
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
-    {answer && answer.missing.length > 0 && <div className="module-state ops-missing"><AlertTriangle size={15} /><span>{t("Not read: {apps}. A server that is down or older than this page does not answer; its logs are on its disk and in the diagnostic bundle.", { apps: answer.missing.map(serviceName).join(", ") })}</span></div>}
+    {answer && answer.missing.length > 0 && <div className="ac-notice ac-notice-warn ops-missing" role="status"><AlertTriangle size={15} /><span>{t("Not read: {apps}. A server that is down or older than this page does not answer; its logs are on its disk and in the diagnostic bundle.", { apps: answer.missing.map(serviceName).join(", ") })}</span></div>}
     {answer && answer.top.length > 0 && <section className="panel ops-top" aria-labelledby="ops-top-title">
       <h2 id="ops-top-title">{t("Most frequent warnings and errors")}</h2>
       <ul>{answer.top.slice(0, 6).map((item) => <li key={`${item.service}-${item.level}-${item.message}`}>
@@ -146,7 +147,7 @@ export function LogsPage() {
 function RecordDialog({ record, onClose, onSameRequest }: { record: LogRecord; onClose: () => void; onSameRequest: (record: LogRecord) => void }) {
   const extra = Object.entries(record).filter(([key]) => !SHOWN_FIELDS.has(key));
   return <Dialog title={`${serviceName(record.service)} · ${record.level}`} onClose={onClose} wide
-    footer={<>{record.request_id && <button type="button" className="button button-secondary" onClick={() => onSameRequest(record)}>{t("Same request in every app")}</button>}<button type="button" className="button button-primary" onClick={onClose}>{t("Close")}</button></>}>
+    footer={record.request_id ? <button type="button" className="button button-secondary" onClick={() => onSameRequest(record)}>{t("Same request in every app")}</button> : undefined}>
     <dl className="ops-record">
       <dt>{t("Time")}</dt><dd>{formatDate(record.time, SECONDS)} <small className="muted">({record.time})</small></dd>
       <dt>{t("Logger")}</dt><dd><code>{record.logger ?? "—"}</code></dd>

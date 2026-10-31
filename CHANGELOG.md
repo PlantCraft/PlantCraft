@@ -7,6 +7,21 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Added
+
+- **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
+  app switcher, for administrators and for a new **Operations** role (Users: IT, or an
+  integrator's team, without making them administrators). **Status** shows every app's CPU and
+  memory against its own limit (Docker's "344 %" is now "86 %, 3.4 of 4 CPUs"), the machine's
+  CPU, memory and load, the free disk and the incidents. **Logs** reads every server's log in one
+  list, with period, level, text, request and app filters, the most frequent warnings and errors,
+  the whole record, "Same request in every app" and CSV export. **Load alerts** tells the
+  administrators (Suite health, and an event for Alarms) when an app or the machine stays above a
+  level: CPU or memory 80 % (warning) and 95 % (critical), or errors logged a minute, held 5
+  minutes; levels changed on the page (`docs/operations.md`, section 4).
+- SDK: `GET /api/ops/logs` on every server (`plantcraft_sdk.server.logread`), read with the `ops`
+  scope.
+
 ### Fixed
 
 - **Installing again, or a release after its candidates, works without a manual step.**

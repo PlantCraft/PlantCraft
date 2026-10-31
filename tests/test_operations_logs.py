@@ -102,7 +102,11 @@ def test_shape_folds_what_varies():
 
 
 def _give_operations(client, username):
-    payload = {"display_name": "Eng", "access_level": "editor", "app_roles": {"operations": "viewer"}}
+    payload = {
+        "display_name": "Eng",
+        "access_level": "editor",
+        "app_roles": {"operations": "viewer"},
+    }
     answer = client.put(f"/api/users/{username}", json=payload)
     assert answer.status_code == 200, answer.text
 

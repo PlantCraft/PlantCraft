@@ -16,7 +16,7 @@ type NumberKey = Exclude<keyof LoadLimits, "enabled">;
 const ROWS: Array<{ label: string; hint: string; warning: NumberKey; critical: NumberKey; unit: string; step: number }> = [
   { label: t("CPU"), hint: t("Of the CPUs each app may use (its limit), and of the whole machine."), warning: "cpu_warning", critical: "cpu_critical", unit: "%", step: 1 },
   { label: t("Memory"), hint: t("Of each app's memory limit, and the machine's memory in use."), warning: "memory_warning", critical: "memory_critical", unit: "%", step: 1 },
-  { label: t("Errors logged"), hint: t("Errors a minute each server writes to its log."), warning: "errors_warning", critical: "errors_critical", unit: t("a minute"), step: 0.5 },
+  { label: t("Errors logged"), hint: t("Errors a minute each server writes to its log."), warning: "errors_warning", critical: "errors_critical", unit: t("/ min"), step: 0.5 },
 ];
 
 /** The sentence the page shows under the form, the way the watch applies the levels. */
