@@ -4,6 +4,17 @@ Every release of PlantCraft Alarms, newest first, in the
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) form. PlantCraft's `deploy/bundle.sh`
 joins it into the bundle's release notes.
 
+## [Unreleased]
+
+### Added
+
+- **Performance: the EEMUA 191 level, floods with hysteresis and what the journal tells.**
+  - **EEMUA 191 level.** The period shows as one point, average against peak alarms per 10 minutes, on the four EEMUA 191 bands: robust, stable, reactive and overloaded.
+  - **Floods.** A flood starts above the flood limit (10 in 10 minutes) and ends below half of it, so a short lull does not split it. Each flood is listed with its length, its alarms and its peak.
+  - **New figures.** The share of hours above 30 alarms, and fleeting alarms (back to normal within 10 seconds with nobody acting).
+  - **Time to acknowledge.** Shown by priority, as the median and the 90th percentile.
+  - **Most frequent alarms.** The list now shows 20.
+
 ## [0.5.1] - 2026-10-30
 
 - Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).
