@@ -93,8 +93,24 @@ STALL_CHECK_SECONDS = 300
 # schedules at start (``migrate_asset_schedules``), at least this far apart.
 ASSET_SCHEDULE_KIND = "cycle"
 MIN_MIGRATED_MINUTES = 15.0
-# Health points older than this (measured from the newest data) are pruned hourly.
-HISTORY_DAYS = 90
+
+
+def _days(name: str, default: float, low: float, high: float) -> float:
+    try:
+        value = float(os.environ.get(name) or default)
+    except ValueError:
+        return default
+    return min(high, max(low, value))
+
+
+# Health points and signal verdicts older than this (measured from the newest data) are pruned
+# hourly (``LINKCRAFT_HISTORY_DAYS``).
+HISTORY_DAYS = _days("LINKCRAFT_HISTORY_DAYS", 90, 7, 3650)
+# Past this many days they keep one point an hour per loop and signal, the hour's last (a
+# signal's verdicts other than good stay; the plant widgets read 14 days in full)
+# (``LINKCRAFT_HISTORY_FULL_DAYS``): months of rounds every 10 minutes took 16 GB at 2,050
+# loops (0.6.0 aging test F9).
+HISTORY_FULL_DAYS = _days("LINKCRAFT_HISTORY_FULL_DAYS", 14, 1, HISTORY_DAYS)
 # How a run started, in the suite's words (app standard, section 6).
 RUN_TRIGGERS = ("manual", "schedule", "api")
 
@@ -814,6 +830,8 @@ class Runtime(PlatformRuntime):
             self._last_prune = time.monotonic()
             self.latest.prune_history(days=HISTORY_DAYS)
             self.quality_results.prune(HISTORY_DAYS)
+            self.latest.thin_history(full_days=HISTORY_FULL_DAYS)
+            self.quality_results.thin_history(full_days=HISTORY_FULL_DAYS)
             self.jobs.prune_jobs(days=HISTORY_DAYS)
             self.jobs.prune_detail(keep=DETAIL_KEPT)
         if time.monotonic() - self._last_stall_check >= STALL_CHECK_SECONDS:
