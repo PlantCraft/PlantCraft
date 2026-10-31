@@ -16,6 +16,12 @@ joins it into the bundle's release notes.
   - **Time to acknowledge.** Shown by priority, as the median and the 90th percentile.
   - **Most frequent alarms.** The list now shows 20.
 
+### Security
+
+- **Rule code runs in a container of its own** (`alarmcraft-sandbox`: the same image, no network,
+  no secret, no app data), reached through a Unix socket, and can no longer leave the sandbox
+  through a `match` class pattern or pandas' helpers (security test D8).
+
 ## [0.5.1] - 2026-10-30
 
 - Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).

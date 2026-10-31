@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from linkcraft.api.app import create_app, ui_folder
+from linkcraft.catalog.signal_checks import CHECKS as SIGNAL_CHECKS
 from tests.conftest import client_for
 from tests.plant import sid
 
@@ -198,10 +199,11 @@ def test_schedules_are_created_listed_and_removed(client, analysed, fake):
 def test_method_catalog_lists_signal_checks_then_the_gate(client):
     groups = client.get("/link/api/method-groups").json()
     assert [item["group_id"] for item in groups] == ["signal_quality", "data_quality", "cpm"]
-    assert groups[0]["role"] == "signal" and groups[0]["method_count"] == 11
+    # Counted from the catalog, so a new check does not break this test.
+    assert groups[0]["role"] == "signal" and groups[0]["method_count"] == len(SIGNAL_CHECKS)
     assert groups[1]["role"] == "gate"
     methods = client.get("/link/api/methods").json()
-    assert len(methods) == 18 + 11
+    assert len(methods) == sum(group["method_count"] for group in groups)
     signal = [item for item in methods if item["application"] == "signal_quality"]
     assert {item["applies_to"] for item in signal} == {"signal"}
     assert all(item["method_id"].startswith("sq_") for item in signal)

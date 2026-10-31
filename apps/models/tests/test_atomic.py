@@ -1,4 +1,4 @@
-"""Files Models reads back after a restart are written whole or not at all (modelcraft.atomic).
+"""Files Models reads back after a restart are written whole or not at all (plantcraft_sdk.files).
 
 Storage test of 2026-10-31: a process killed while ``Path.write_text`` writes leaves half a JSON
 file (71 of 100 kills). The write that fails half way here stands in for the kill.
@@ -9,8 +9,7 @@ from __future__ import annotations
 import json
 
 import pytest
-
-from modelcraft.atomic import write_atomic, write_json
+from plantcraft_sdk.files import write_atomic, write_json
 
 
 class Boom(RuntimeError):
