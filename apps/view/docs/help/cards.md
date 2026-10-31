@@ -9,6 +9,12 @@
 | Table | Last, mean, min and max per signal, cells coloured by the thresholds | up to 24 |
 | Scatter (X-Y) | One signal against another, on the same time grid: the first is x, the second y (PV against OP shows a sticky valve) | 2 |
 | Text | A note: what the dashboard is for, what to watch, who to call | none |
+| Multivariable controller | A third-party APC, read only: each manipulated (MV) and controlled (CV) variable with its value, low and high limits, steady-state target, status and shadow price now, a bar of its range (value as a pointer, target as a hollow mark) and its value and target over the time span (the horizon). A variable whose target (else its value) is within its band of a limit is marked **At high limit** or **At low limit** | none: the controller |
+
+The controller is an asset of kind `apc` (roles `on`, `mode`; attributes `vendor`, `cost_unit`)
+with assets of kind `apc_mv` and `apc_cv` under it (roles `value`, `lo`, `hi`, `target`, `status`,
+`shadow_price`; attribute `limit_band`, 1 % of high minus low when empty). Analytics reads the same
+names. View never writes to the controller.
 
 Panels saved before round 7 open as before: a KPI or a "value and line" panel is now a Stat (the
 second with its line on), and its limits are now thresholds.

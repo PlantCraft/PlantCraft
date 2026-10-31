@@ -1,7 +1,7 @@
 import { confirmAction, errorMessage as message, useAssistantPage } from "@plantcraft/ui";
 /** The list of dashboards, by folder: open, create (empty, from a template or a file), copy, delete;
  * folders and who sees and edits them. */
-import { BarChart3, ChevronRight, Copy, FolderPlus, Gauge, Globe2, Hash, LineChart, Lock, Monitor, Plus, ScatterChart, Search, Table2, Trash2, Type, Workflow } from "lucide-react";
+import { BarChart3, ChevronRight, Copy, FolderPlus, Gauge, Globe2, Hash, LineChart, Lock, Monitor, Plus, ScatterChart, Search, Table2, Trash2, SlidersHorizontal, Type, Workflow } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "./api";
 import { t } from "./i18n";
@@ -13,7 +13,7 @@ import { navigate } from "./nav";
 import type { Dashboard, DashboardDraft, Folder, Kind, Me } from "./types";
 import { ErrorBox, Heading, Link, Loading } from "./ui";
 
-const ICONS: Record<Kind, typeof Gauge> = { stat: Hash, gauge: Gauge, trend: LineChart, bar: BarChart3, table: Table2, scatter: ScatterChart, text: Type, diagram: Workflow };
+const ICONS: Record<Kind, typeof Gauge> = { stat: Hash, gauge: Gauge, trend: LineChart, bar: BarChart3, table: Table2, scatter: ScatterChart, text: Type, diagram: Workflow, apc: SlidersHorizontal };
 
 function DashboardCard({ item, me, onCopy, onRemove }: { item: Dashboard; me: Me; onCopy: (item: Dashboard) => void; onRemove: (item: Dashboard) => void }) {
   return <article className="panel tc-list-card">

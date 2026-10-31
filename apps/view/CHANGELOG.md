@@ -8,6 +8,12 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **A multivariable controller panel (V10).** A dashboard panel of kind **Multivariable
+  controller** shows a third-party APC read only: whether it is on and its mode, then each MV and
+  CV with its value, limits, steady-state target, status and shadow price, a bar of its range,
+  its value and target over the time span, and **At high limit** / **At low limit** where the
+  controller is constrained. It reads assets of kind `apc`, `apc_mv` and `apc_cv` (the names
+  Analytics' APC health reads too). Not offered in reports.
 - **The plant's process display opens on a generated overview (Level 1).** From assets › **The
   whole plant** draws a first page with a block per unit (its equipment and loop count and up
   to eight loop-health bubbles, linked to the unit's page) and a page per unit, each with

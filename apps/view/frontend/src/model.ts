@@ -12,10 +12,10 @@ export const ALL_ROLES = "*";
 /** "All" values of a variable. */
 export const ALL_VALUES = "$__all";
 
-export const KINDS: Kind[] = ["stat", "trend", "gauge", "bar", "table", "scatter", "text", "diagram"];
-/** Kinds without signals of their own: a note, a saved diagram. */
-export const NO_ITEM_KINDS: Kind[] = ["text", "diagram"];
-export const KIND_LABELS: Record<Kind, string> = { stat: "Stat", gauge: "Gauge", trend: "Time series", bar: "Bar chart", table: "Table", scatter: "Scatter (X-Y)", text: "Text", diagram: "Process display" };
+export const KINDS: Kind[] = ["stat", "trend", "gauge", "bar", "table", "scatter", "text", "diagram", "apc"];
+/** Kinds without signals of their own: a note, a saved diagram, a multivariable controller. */
+export const NO_ITEM_KINDS: Kind[] = ["text", "diagram", "apc"];
+export const KIND_LABELS: Record<Kind, string> = { stat: "Stat", gauge: "Gauge", trend: "Time series", bar: "Bar chart", table: "Table", scatter: "Scatter (X-Y)", text: "Text", diagram: "Process display", apc: "Multivariable controller" };
 export const KIND_HINTS: Record<Kind, string> = {
   stat: "Big numbers, one per signal, coloured by their thresholds, with or without their line.",
   gauge: "Each value on a dial, with its threshold bands.",
@@ -25,6 +25,7 @@ export const KIND_HINTS: Record<Kind, string> = {
   scatter: "One signal against another: x, then y.",
   text: "A note: what the dashboard is for, who to call.",
   diagram: "A saved diagram, live and scaled to the panel; a click opens it.",
+  apc: "An APC's MVs and CVs: value, limits, target and status, read only.",
 };
 /** The most signals each kind takes. */
 export function maxItemsOf(kind: Kind): number {
@@ -81,14 +82,15 @@ export function defaultCard(kind: Kind, existing: Card[], item?: CardItem): Card
     kind,
     items: item ? [item] : [],
     agg: "last",
-    window: kind === "trend" || kind === "scatter" ? "8h" : kind === "table" ? "24h" : "1h",
+    window: kind === "trend" || kind === "scatter" || kind === "apc" ? "8h" : kind === "table" ? "24h" : "1h",
     field: {},
     overrides: [],
     options: {},
-    width: kind === "stat" || kind === "gauge" ? 3 : kind === "trend" || kind === "diagram" ? 8 : 6,
-    height: kind === "trend" || kind === "table" || kind === "scatter" || kind === "bar" || kind === "diagram" ? 4 : kind === "text" ? 2 : 2,
+    width: kind === "stat" || kind === "gauge" ? 3 : kind === "trend" || kind === "diagram" || kind === "apc" ? 8 : 6,
+    height: kind === "trend" || kind === "table" || kind === "scatter" || kind === "bar" || kind === "diagram" || kind === "apc" ? 4 : kind === "text" ? 2 : 2,
     ...(kind === "text" ? { text: "" } : {}),
     ...(kind === "diagram" ? { diagram_id: "" } : {}),
+    ...(kind === "apc" ? { apc_id: "" } : {}),
   };
 }
 
