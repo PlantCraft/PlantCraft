@@ -43,7 +43,7 @@ function Route({ path, me }: { path: string; me: Me }) {
   if (section === "rules" && id) return <RulePage key={id} ruleId={id} me={me} />;
   if (section === "rules") return <RulesPage me={me} />;
   if (section === "silences") return <SilencesPage me={me} />;
-  if (section === "performance" || (section === "history" && id === "performance")) return <PerformancePage />;
+  if (section === "performance" || (section === "history" && id === "performance")) return <PerformancePage me={me} console={search.get("console") ?? undefined} />;
   if (section === "targets" || (section === "history" && id === "targets")) return <PhilosophyPage me={me} />;
   // History was folded into Alarms (owner's review, 2026-10-26): each alarm keeps its history.
   if (section === "history") return <SummaryPage me={me} />;

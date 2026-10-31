@@ -80,6 +80,8 @@ export interface Figure { id: string; label: string; help?: string; value: numbe
 
 export interface Performance {
   start: string; end: string; window: string; total: number; figures: Figure[];
+  /** The console measured (null: every alarm the person sees). */
+  console: { id: string; name: string; per_hour: number } | null;
   per_slot: Array<{ at: string; count: number }>;
   /** Raised per whole hour, by priority (the Overview's rate). */
   hourly: Array<{ at: string; counts: Record<string, number> }>;
@@ -192,7 +194,17 @@ export interface Philosophy {
   chatter_minute: number; chatter_hour: number; stale_hours: number;
   target_high: number; target_medium: number; target_low: number;
   shelve_hours_critical: number; shelve_hours_high: number; shelve_hours_medium: number; shelve_hours_low: number;
+  consoles: Console[];
 }
+/** One operator position: the areas whose alarms its operator answers, and its own target. */
+export interface Console { id: string; name: string; areas: string[]; operators: string[]; per_hour: number | null }
+/** One console's load over a period (Performance › Consoles). */
+export interface ConsoleLoad {
+  id: string; name: string; operators: string[]; areas: string[]; target_per_hour: number; alarms: number;
+  total: number; per_hour: number; per_hour_status: string; peak_10min: number; peak_status: string;
+  flood_share: number; eemua: string; mean_ack_seconds: number | null;
+}
+export interface ConsoleLoads { window: string; consoles: ConsoleLoad[]; defined: number }
 export interface PhilosophyRecord extends Philosophy { defaults: Philosophy; updated_at: string | null; updated_by: string | null; next_summary: string }
 export interface IncomingCount { app: string; kind: string; count: number; last: string; counted: number }
 export interface Incoming { events: IncomingEvent[]; counts: IncomingCount[]; window: string; error: string; read: number; service_key: boolean }

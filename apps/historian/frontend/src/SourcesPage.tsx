@@ -7,7 +7,7 @@ import { navigate } from "./nav";
 import { MODE_LABELS } from "./PointsPage";
 import { ago } from "./format";
 import { formatNumber, t } from "./i18n";
-import { override } from "./levels";
+import { override, ownerList } from "./levels";
 import { isWritten, type Me, type Settings, type Source, type SourceSettings, type Variable } from "./types";
 import { ErrorBox, Heading, Link, Loading, Pill } from "./ui";
 
@@ -56,6 +56,7 @@ const EMPTY: Source = {
   id: "", name: "", kind: "opcua", ...START.opcua, namespace_uri: "", username: "", password_env: "", has_password: false,
   mode: "archive", default_mode: "archive", enabled: true, points: 0, state: null,
   retention_days: null, default_scan_seconds: null, default_deviation_percent: null, default_max_seconds: null,
+  owners: [], contact: "", heartbeat_seconds: 0,
 };
 
 // What a source may override of the general settings for its points (empty: the general value).
@@ -283,7 +284,11 @@ function SourceForm({ initial, create, onClose, onSaved }: { initial: Source; cr
     mode: initial.mode === initial.default_mode ? "" : initial.mode, password: null,
     retention_days: initial.retention_days, default_scan_seconds: initial.default_scan_seconds,
     default_deviation_percent: initial.default_deviation_percent, default_max_seconds: initial.default_max_seconds,
+    owners: initial.owners ?? [], contact: initial.contact ?? "", heartbeat_seconds: initial.heartbeat_seconds ?? 0,
   });
+  // The integration as typed: owners separated by commas, the expected interval in minutes (empty: not watched).
+  const [owners, setOwners] = useState((initial.owners ?? []).join(", "));
+  const [expected, setExpected] = useState(initial.heartbeat_seconds ? String(initial.heartbeat_seconds / 60) : "");
   // Typed text of the overrides; empty takes the general setting.
   const [levels, setLevels] = useState<Record<string, string>>(() => Object.fromEntries(SOURCE_SETTINGS.map(({ key }) => [key, initial[key] === null || initial[key] === undefined ? "" : String(initial[key])])));
   const [general, setGeneral] = useState<Settings | null>(null);
@@ -302,6 +307,7 @@ function SourceForm({ initial, create, onClose, onSaved }: { initial: Source; cr
       ...draft, mode: csv ? "" : draft.mode, password: password || null,
       options: csv ? { ...draft.options, check_minutes: Number(draft.options.check_minutes ?? 5) } : draft.options,
       ...Object.fromEntries(SOURCE_SETTINGS.map(({ key }) => [key, override(levels[key])])) as SourceSettings,
+      owners: ownerList(owners), heartbeat_seconds: expected.trim() ? Math.round(Number(expected) * 60) : 0,
     };
     try {
       if (create) await api.addSource(payload); else await api.updateSource(payload);
@@ -363,6 +369,15 @@ function SourceForm({ initial, create, onClose, onSaved }: { initial: Source; cr
           <input type="number" min="0" step={step} value={levels[key] ?? ""} placeholder={general ? String(general[key]) : ""} onChange={(event) => setLevels({ ...levels, [key]: event.target.value })} />
           <small>{(levels[key] ?? "").trim() !== "" ? t("Set on this source") : general ? t("{value} {unit}, from general settings", { value: general[key], unit: t(unit) }) : t("From general settings")}</small>
         </label>)}</div>
+      </section>
+      <section className="source-levels" aria-label={t("Integration")}>
+        <h3>{t("Integration")}</h3>
+        <p className="muted">{t("Who answers for this source. When it disconnects or sends nothing for longer than expected, PlantCraft tells the owners, with an email, and closes the message when it is back.")}</p>
+        <div className="form-grid">
+          <label>{t("Owners")}<input value={owners} onChange={(event) => setOwners(event.target.value)} placeholder="user:ana, group:automation" /><small>{t("People or groups of PlantCraft, separated by commas.")}</small></label>
+          <label>{t("Contact")}<input value={draft.contact} onChange={(event) => setDraft({ ...draft, contact: event.target.value })} placeholder={t("Automation team, extension 4321")} /><small>{t("How to reach the team that runs the connection, shown with each failure.")}</small></label>
+          <label>{t("Expected interval (minutes)")}<input type="number" min="1" step="1" value={expected} onChange={(event) => setExpected(event.target.value)} placeholder={t("Not watched")} /><small>{t("A new value at least this often. Empty: not watched.")}</small></label>
+        </div>
       </section>
       <footer><button className="button button-secondary" onClick={onClose}>{t("Cancel")}</button><button className="button button-primary" onClick={() => void save()}>{t("Save")}</button></footer>
   </Dialog>;

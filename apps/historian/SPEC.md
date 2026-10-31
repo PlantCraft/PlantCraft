@@ -45,6 +45,7 @@ SCADA and IIoT platforms. Sources are public only (clean room, see AGENTS.md).
 | Admin | Settings in three levels (general, per source, per point; the most specific wins), with the origin of each value shown | | done | `tests/test_settings_levels.py` |
 | Archive | Notes on a signal at an instant or over an interval, told to PlantCraft as events | | done (`/api/v1/annotations`, the signal's page; the page posts `histcraft.annotation.added`) | `tests/test_annotations.py` |
 | Archive | The OPC UA status code kept with each change of quality: sub-code (`UncertainLastUsableValue`...) and LimitBits (low, high, constant) | Part 4 §7.39 | done (`status` and `limit` beside `quality` in reads) | `tests/test_quality.py` |
+| Archive | Audited edits of values: insert, edit, delete by editors, with a reason; the mark read with the value, the original kept with who and when, each edit in the audit log | 21 CFR Part 11 practice | done (`/api/v1/edits`, the signal's page) | `tests/test_edits.py` |
 | Archive | Quality flags stored with values (good, uncertain, substituted, bad) | Part 11 | done (changes of quality kept per point; sources without quality count as good) | `tests/test_quality.py` |
 | Archive | Backfill from the source's own history (OPC UA HistoryRead), up to where archiving began | Part 11 | done | `tests/test_backfill.py` |
 | Archive | Edits of archived values with an audit trail | Part 11 | missing | |
