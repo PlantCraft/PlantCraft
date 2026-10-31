@@ -21,6 +21,7 @@ const METHOD_NAMES: Record<string, string> = {
   dq_value_integrity: "Value integrity",
   dq_statistics: "Descriptive statistics",
   sq_availability: "Availability and gaps",
+  sq_source_quality: "Source quality",
   sq_freshness: "Freshness",
   sq_frozen: "Frozen value",
   sq_spikes: "Spikes",

@@ -6,6 +6,18 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+### Added
+
+- **Source quality, a signal check (`sq_source_quality`).** It shows how much of the window the
+  source itself marked bad, substituted or uncertain, per signal, from the per-sample quality
+  PlantCraft returns (OPC UA, PI and Canary keep one with every value). Bad or substituted time
+  over 1% of the window is a warning and over 5% makes the data unusable. Uncertain time is a
+  warning at most. On a source without quality the check does not apply. Signal quality runs it
+  on number and text signals.
+- **The loop page shows where the controller output spent the window**, as the share of the
+  window in each 5% band. A loop that lives near 0 or 100% is saturated, and one squeezed into a
+  few percent has little room left.
+
 ### Changed
 
 - A round hands each loop only its own signals' samples. It read 50 loops at once into one

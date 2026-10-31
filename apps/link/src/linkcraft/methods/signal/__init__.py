@@ -8,9 +8,20 @@ from linkcraft.methods.signal.frozen import frozen
 from linkcraft.methods.signal.noise import noise
 from linkcraft.methods.signal.range import out_of_range
 from linkcraft.methods.signal.resolution import resolution
+from linkcraft.methods.signal.source_quality import source_quality
 from linkcraft.methods.signal.spikes import spikes
 
 # The order they run in and are listed.
-METHOD_BLOCKS = [availability, freshness, frozen, spikes, out_of_range, noise, resolution, drift]
+METHOD_BLOCKS = [
+    availability,
+    source_quality,
+    freshness,
+    frozen,
+    spikes,
+    out_of_range,
+    noise,
+    resolution,
+    drift,
+]
 
 __all__ = ["METHOD_BLOCKS"]

@@ -1,6 +1,6 @@
 import { configureTimeZone } from "@plantcraft/ui";
 import { afterEach, describe, expect, it } from "vitest";
-import { eventShapes, plotTime } from "./chart";
+import { eventShapes, opBins, plotTime } from "./chart";
 import type { CheckResult } from "./types";
 
 const results: CheckResult[] = [
@@ -30,5 +30,22 @@ describe("chart", () => {
     expect(spike.x1).toBe("2026-10-18 13:02:52.800");
     expect(frozen.x0).toBe("2026-10-18 20:00:00.000");
     expect(frozen.x1).toBe("2026-10-19 02:00:00.000");
+  });
+});
+
+describe("opBins", () => {
+  it("gives each 5% band of the controller output its share of the window", () => {
+    const bins = opBins([0, 2, 99, 100, 101, -3, null, undefined, Number.NaN, 50]);
+    expect(bins.x).toHaveLength(20);
+    expect(bins.x[0]).toBe(2.5);
+    // 7 finite values: 0, 2 and -3 in the first band; 99, 100 and 101 in the last; 50 alone.
+    expect(bins.y[0]).toBeCloseTo((100 * 3) / 7);
+    expect(bins.y[19]).toBeCloseTo((100 * 3) / 7);
+    expect(bins.y[10]).toBeCloseTo(100 / 7);
+    expect(bins.y.reduce((a, b) => a + b, 0)).toBeCloseTo(100);
+  });
+
+  it("is all zero without values", () => {
+    expect(opBins([null, undefined]).y.every((share) => share === 0)).toBe(true);
   });
 });

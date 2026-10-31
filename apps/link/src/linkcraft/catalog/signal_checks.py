@@ -26,7 +26,7 @@ GROUP = {
     "role": "signal",
 }
 CHECKS: dict[str, MethodBlock] = {block.metadata.method_id: block for block in METHOD_BLOCKS}
-TEXT_CHECKS = ("sq_availability", "sq_freshness")
+TEXT_CHECKS = ("sq_availability", "sq_source_quality", "sq_freshness")
 # A check's verdicts that judge the data (the others say it could not).
 JUDGED = ("ok", "warning", "bad")
 # Checks that need samples as recorded: on a signal read as means they do not judge.
@@ -34,6 +34,8 @@ RAW_ONLY = ("sq_frozen", "sq_spikes", "sq_resolution")
 # What each check tells a person to look at (shown in the catalog and on findings).
 ACTIONS = {
     "sq_availability": "Check the source connection and the historian's collection for this tag.",
+    "sq_source_quality": "Check the device and its connection where the source marks the "
+    "values bad, and who or what substituted values (manual entry, a held last value).",
     "sq_freshness": "Check that the source still updates this tag (scan class, interface, device).",
     "sq_frozen": "Check the transmitter: a stuck sensor, a frozen value in the DCS or a "
     "substituted value.",
