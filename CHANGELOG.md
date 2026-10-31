@@ -107,7 +107,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- **Plotly and the fonts download once for the whole suite, not once per app (ui 0.95.0).**
+- **Plotly and the fonts download once for the whole suite, not once per app (ui 0.96.0).**
   The platform serves them at `/static/vendor/` under names that carry a hash of their bytes
   (kept a year by the proxy), and every app asks there first: `@plantcraft/ui/plot` loads
   Plotly from the platform and `fonts.css` lists the platform's copy before the app's own. An
