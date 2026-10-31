@@ -45,7 +45,7 @@ export interface LogsAnswer {
 }
 export interface LogsQuery { services?: string[]; hours?: number; level?: string; text?: string; request_id?: string; limit?: number }
 /** The machine as Docker sees it and the profile install.sh applied (--machine). */
-export interface MachineInfo { cpus: number | null; memory_bytes: number | null; profile: string | null; size: string | null; max_cpus: string | null; max_memory: string | null }
+export interface MachineInfo { cpus: number | null; memory_bytes: number | null; profile: string | null; size: string | null; max_cpus: string | null; max_memory: string | null; recommended?: string | null }
 export interface Incident { incident_id: number; check_key: string; subject: string; detail: string; opened_at: string; closed_at: string | null; notified: number }
 export interface SuiteHealth {
   at: string | null;

@@ -46,8 +46,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from plantcraft.apps import package as pkg
 from plantcraft.apps import host_usage
+from plantcraft.apps import package as pkg
 
 REQUEST_LIMIT = 64 * 1024
 ACTIONS = {"install", "uninstall", "rollback", "set_key"}
@@ -145,6 +145,40 @@ def settings_text(environ: dict[str, str]) -> str:
         shown = "***" if _SECRET_NAME.search(name) and value else redact(value)
         lines.append(f"{name}={shown}")
     return "\n".join(lines) + "\n"
+
+
+def _megabytes(text: str | None) -> int | None:
+    """``12g`` or ``12288m`` (PLANTCRAFT_MAX_MEMORY) in MB; anything else is no ceiling."""
+
+    value = (text or "").strip().lower()
+    if len(value) > 1 and value[:-1].isdigit() and value[-1] in "gm":
+        number = int(value[:-1])
+        return number * 1024 if value[-1] == "g" else number
+    return None
+
+
+def recommended_size(
+    cpus: int | None, memory_bytes: int | None, max_cpus: str | None, max_memory: str | None
+) -> str | None:
+    """The machine profile install.sh's ``--machine auto`` picks for this machine within the
+    installation's ceilings (``machine_size`` and ``apply_machine_profile`` in install.sh)."""
+
+    if not cpus or not memory_bytes:
+        return None
+    mem = memory_bytes // 1048576
+    ceiling_cpus = (max_cpus or "").strip()
+    if ceiling_cpus.isdigit() and 0 < int(ceiling_cpus) < cpus:
+        cpus = int(ceiling_cpus)
+    ceiling = _megabytes(max_memory)
+    if ceiling and ceiling < mem:
+        mem = ceiling
+    if cpus <= 2 or mem < 6000:
+        return "small"
+    if cpus <= 4 or mem < 14000:
+        return "medium"
+    if cpus <= 8 or mem < 48000:
+        return "large"
+    return "xlarge"
 
 
 class InstallError(Exception):
@@ -386,6 +420,9 @@ class Installer:
         found["size"] = settings.get("PLANTCRAFT_MACHINE_SIZE") or None
         found["max_cpus"] = settings.get("PLANTCRAFT_MAX_CPUS") or None
         found["max_memory"] = settings.get("PLANTCRAFT_MAX_MEMORY") or None
+        found["recommended"] = recommended_size(
+            found["cpus"], found["memory_bytes"], found["max_cpus"], found["max_memory"]
+        )
         return found
 
     def publish_metrics(self) -> None:
