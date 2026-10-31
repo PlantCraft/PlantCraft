@@ -39,7 +39,7 @@ aggressive tuning or a disturbance from outside keeps the cycles round, like a s
 - `shape_index_high` (default 0.65): the curve-fitting index at which the shape part of the score
   is full (0.5 is undecided, 1 a pure triangle).
 - `min_half_cycles` (default 4): the regular half cycles needed before the shape is judged; half
-  cycles whose lengths spread more than 35% of their mean are no regular oscillation.
+  cycles whose lengths spread more than half their mean are no regular oscillation.
 
 ## How to read the finding
 

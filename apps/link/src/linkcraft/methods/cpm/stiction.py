@@ -280,7 +280,7 @@ def _half_cycle_errors(segment: np.ndarray) -> tuple[float, float]:
 
 
 def shape_index(
-    values: np.ndarray, period: int, min_half_cycles: int = 4, max_spread: float = 0.35
+    values: np.ndarray, period: int, min_half_cycles: int = 4, max_spread: float = 0.5
 ) -> float | None:
     """He et al. (2007): sine error / (sine + triangle error) summed over the half cycles of
     ``values`` (a signal oscillating with ``period`` samples). Near 1 triangular (stiction), near 0
@@ -304,7 +304,8 @@ def shape_index(
     signs = np.sign(centred)
     crossings = np.flatnonzero(signs[1:] * signs[:-1] < 0) + 1
     lengths = np.diff(crossings)
-    # A limit cycle repeats: half cycles of about one length. A wandering signal (a healthy
+    # A limit cycle repeats: half cycles of about one length (SACAC's stiction runs spread up to
+    # 0.45 of their mean, sampled at an uneven rate; a healthy level riding disturbances 0.73). A wandering signal (a healthy
     # loop riding disturbances) crosses at random, and its half cycles look triangular too.
     if lengths.size < min_half_cycles or float(np.std(lengths)) > max_spread * float(
         np.mean(lengths)
