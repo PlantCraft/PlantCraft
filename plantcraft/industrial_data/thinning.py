@@ -9,14 +9,23 @@ order, so every excursion is still drawn at its full height with the same number
 from __future__ import annotations
 
 from collections.abc import Sequence
-from numbers import Real
 from typing import Any, TypeVar
+
+import numpy as np
 
 T = TypeVar("T")
 
 
-def _number(value: Any) -> bool:
-    return isinstance(value, Real) and not isinstance(value, bool) and value == value
+def _numbers(values: list[Any]) -> np.ndarray | None:
+    """The values as floats, or None when one is not a number (a state, a text, a flag, a gap)."""
+
+    if any(type(item) is bool or isinstance(item, str) for item in values):
+        return None
+    try:
+        array = np.asarray(values, dtype=float)
+    except (TypeError, ValueError):
+        return None
+    return None if np.isnan(array).any() else array
 
 
 def thin_extremes(points: Sequence[T], max_points: int, value: Any = None) -> list[T]:
@@ -32,21 +41,19 @@ def thin_extremes(points: Sequence[T], max_points: int, value: Any = None) -> li
         return list(points)
     read = value or (lambda point: point[1])
     values = [read(point) for point in points]
-    if not all(_number(item) for item in values):
+    array = _numbers(values)
+    if array is None:
         kept = list(points[:: count // max_points + 1])
         if kept[-1] is not points[-1]:
             kept.append(points[-1])
         return kept
     buckets = max_points // 2
     size = -(-count // buckets)
-    keep: list[int] = []
-    for begin in range(0, count, size):
-        end = min(begin + size, count)
-        low = min(range(begin, end), key=values.__getitem__)
-        high = max(range(begin, end), key=values.__getitem__)
-        keep.extend(sorted({low, high}))
-    if keep[0] != 0:
-        keep.insert(0, 0)
-    if keep[-1] != count - 1:
-        keep.append(count - 1)
-    return [points[index] for index in keep]
+    # Vectorised: pad the series to whole buckets (with the bucket's own edge values, which never
+    # win a min or max they would not win anyway), then one argmin and one argmax per bucket.
+    padded = np.pad(array, (0, buckets * size - count), mode="edge").reshape(buckets, size)
+    base = np.arange(buckets) * size
+    low = np.minimum(base + padded.argmin(axis=1), count - 1)
+    high = np.minimum(base + padded.argmax(axis=1), count - 1)
+    keep = np.unique(np.concatenate(([0, count - 1], low, high)))
+    return [points[int(index)] for index in keep]
