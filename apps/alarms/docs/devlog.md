@@ -5,6 +5,12 @@ know that the code and `CHANGELOG.md` do not say. One short entry per change wor
 
 ## Unreleased
 
+- Consoles (L2):
+  - The consoles live in the philosophy, the one place the targets already are, so they need no new table.
+  - Membership is computed when the figures are read, from the alarm's area chain. It is never stored on the alarm, so moving an asset or editing a console regroups history at once.
+  - The deepest named asset wins, so a board for one critical equipment can sit inside a unit board.
+  - The Targets page sends the whole philosophy, so the frontend type carries `consoles`. Without it, a save would drop them.
+
 - DCS alarm list import (L1): an imported rule carries `external_id` (`<tag>/<type>`) so the next
   export matches it alarm by alarm; the editors do not send it, so `PUT /rules` keeps the stored
   one. The .xlsx reader is the standard library's (zipfile and ElementTree, size-capped) to avoid
