@@ -9,6 +9,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- The Historian's gateway writes its buffer to `data/histcraft/gateway-buffer` (made by
+  `install.sh`; mounted read-write in `histcraft-gateway`, its only writable folder), so values
+  read while the collector is away survive a gateway restart.
+
 - **The owners of a failing source hear of it** (gap H13): a condition the Historian reports
   with `owners` in its payload (`source.disconnected`, `source.late`) is told to them as a
   Historian notification, in Messages and by email, with the team's contact and a link to the

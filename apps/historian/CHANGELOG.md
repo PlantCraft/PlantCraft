@@ -8,6 +8,13 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Store and forward at the gateway** (gap H3, G7): MQTT, Modbus and SQL values read while the
+  collector is away wait in Telegraf's disk buffer (`data/histcraft/gateway-buffer`) and arrive in
+  order when it is back, also after a gateway restart (before, a restart lost them). A batch sent
+  twice is taken once: the first value at a time wins. New condition `histcraft.gateway.backlog`
+  past 64 MB waiting. `HISTCRAFT_GATEWAY_BUFFER=memory` keeps the old memory buffer for gateways
+  reading more than about 2,000 values a second.
+
 - **Sources as integrations** (gap H13): each source has **owners** (`user:`/`group:` of
   PlantCraft), a **contact** for the team that runs it and an **expected interval** (at least a
   minute; empty: not watched), in the source's form, its page and `GET/POST/PUT /api/sources`

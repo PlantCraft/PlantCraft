@@ -1049,7 +1049,7 @@ prepare_data() {
         # HistCraft's gateway reads its configuration from here (written by the collector),
         # made as root: once data/histcraft is the app's (0700), a second run cannot reach it.
         if [ "$app" = histcraft ]; then owners="$owners
-        mkdir -p data/$app/gateway"; fi
+        mkdir -p data/$app/gateway data/$app/gateway-buffer"; fi
         owners="$owners
         chown -R $uid:$uid data/$app
         chmod 0700 data/$app"
