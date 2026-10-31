@@ -49,6 +49,10 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ### Changed
 
+- **Scans are read three times faster.** The search for instrument bubbles counts each ring of
+  points as whole shifted copies of the page instead of letting every dark pixel vote: the same
+  bubbles, found in 0.46 s instead of 5.2 s on a demo sheet. A scanned demo P&ID is now read in
+  2.3 s instead of 6.8 s, with the same tags on all 14 sheets.
 - **The library's table on one line (fine pass 2026-10-28).** Number, unit and when it was sent
   no longer wrap; Assets names the first asset and how many more (all on hover); the description
   never widens the title; the Rev. column left the list (the document's page has its revisions).
