@@ -14,6 +14,12 @@ joins it into the bundle's release notes.
   **‹ Plant overview** back to it. `POST /api/diagrams/draw-plant`.
 - **Back between diagrams.** A diagram opened from another one's link shows **Back** with that
   diagram's name and returns to the page it was opened from (`?from=`).
+- **Trends compare earlier periods (V11).** "Compare with" draws up to three earlier periods over
+  the trend's own: the previous period, 1 day, 1 week or 4 weeks earlier. Each line of an
+  earlier period is dotted and lighter, in its own line's colour, moved onto the trend's time
+  axis and named after its period (`FIC-101 · 1 day earlier`). Saved with the trend
+  (`compare` in `/api/trends`); `POST /api/trends/data` answers the earlier lines with
+  `compare` and `source`.
 - **The ISA-101 analog indicator, on a gauge card and under a diagram's value.** A grey bar over the
   signal's range draws the normal range as a darker band, the LL, L, H and HH limits as ticks (a
   card takes them from its thresholds, a diagram value from its limits), the setpoint as a hollow

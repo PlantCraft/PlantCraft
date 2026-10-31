@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compression, effective, override, forecastLine, profileOf, rangeNote } from "./levels";
+import { compression, effective, override, ownerList, forecastLine, profileOf, rangeNote } from "./levels";
 
 describe("settings levels", () => {
   it("says the value in effect and where it comes from", () => {
@@ -46,5 +46,12 @@ describe("forecastLine", () => {
     expect(soon.warn).toBe(true);
     expect(forecastLine({ ...base, days_to_full: null }).text).toContain("stops before");
     expect(forecastLine({ ...base, free_bytes: null, days_to_full: null }).text).toContain("not known");
+  });
+});
+
+describe("source owners", () => {
+  it("reads typed owners as user and group references", () => {
+    expect(ownerList("Ana, group:automation;  user:bruno")).toEqual(["user:ana", "group:automation", "user:bruno"]);
+    expect(ownerList("  ")).toEqual([]);
   });
 });

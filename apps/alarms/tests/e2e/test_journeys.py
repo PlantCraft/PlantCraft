@@ -248,3 +248,25 @@ def test_consoles_split_the_load_by_operator(signed_in, app_url, screenshots):
         page.get_by_text("Console Unit board: at most 4 alarms an hour for its operator.")
     ).to_be_visible()
     _shot(page, screenshots, "11-performance-by-console")
+
+
+def test_limits_by_product_grade(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/alarm/rules/new")
+    page.get_by_label("Limit", exact=True).fill("60")
+    page.get_by_role("button", name="Limits by grade…").click()
+    expect(page.get_by_role("group", name="Limits by grade")).to_be_visible()
+    page.get_by_role("group", name="The grade comes from").get_by_role(
+        "button", name="An event"
+    ).click()
+    expect(page.get_by_label("Field with the grade")).to_have_value("grade")
+    page.get_by_label("Grade 1", exact=True).fill("HD-5")
+    page.get_by_label("Limit for grade 1").fill("50")
+    page.get_by_role("button", name="Add a grade").click()
+    page.get_by_label("Grade 2", exact=True).fill("LD-2")
+    page.get_by_label("Limit for grade 2").fill("90")
+    _shot(page, screenshots, "12-limits-by-grade")
+    page.get_by_role("button", name="Remove grade 2").click()
+    expect(page.get_by_label("Grade 2", exact=True)).to_have_count(0)
+    page.get_by_role("button", name="Remove the limits by grade").click()
+    expect(page.get_by_role("button", name="Limits by grade…")).to_be_visible()
