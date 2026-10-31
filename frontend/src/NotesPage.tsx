@@ -289,8 +289,8 @@ export function NotesPage() {
         <label className="dk-notes-search"><Search size={14} aria-hidden="true" /><input id="dk-notes-search" type="search" value={q} onChange={(event) => setQ(event.target.value)} placeholder={t("Search notes")} aria-label={t("Search notes")} /></label>
         {!items && !error && <p className="muted small">{t("Loading…")}</p>}
         {items && !items.length && <p className="muted small dk-todo-empty">{q ? t("No note has that.") : t("No notes yet.")}</p>}
-        {pinned.length > 0 && <><h3>{t("Pinned")}</h3><ul>{pinned.map(row)}</ul></>}
-        {rest.length > 0 && <>{pinned.length > 0 && <h3>{t("Notes")}</h3>}<ul>{rest.map(row)}</ul></>}
+        {pinned.length > 0 && <><h2>{t("Pinned")}</h2><ul>{pinned.map(row)}</ul></>}
+        {rest.length > 0 && <>{pinned.length > 0 && <h2>{t("Notes")}</h2>}<ul>{rest.map(row)}</ul></>}
       </nav>
       {note
         ? <NoteEditor key={note.note_id} note={note} contacts={contacts} onSaved={saved} onGone={() => { setSelected(null); load(); }} />

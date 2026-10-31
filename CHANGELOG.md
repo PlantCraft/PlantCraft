@@ -141,6 +141,27 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **`ci/e2e-upgrade.sh` stops at once when it cannot read the admin password.** On Linux the
+  installation's password file is readable by root only, and the test found out after an 11-minute
+  build; it now asks for root before anything starts. `docs/install.md` names the release key id
+  (`af2643fa16867976`) that `install.sh` prints next to the fingerprint.
+- **A backup restores on a machine with fewer CPUs (2026-10-31 VM test).** A backup carries the
+  `.env` of the server it was made on, so restoring a 4-CPU server's backup on a 2-CPU one failed
+  to start ("range of CPUs is from 0.01 to 2.00") and returned to the state before it. The restore
+  now caps every CPU limit of `compose.yaml` at the host's CPU count before the suite starts, as
+  `install.sh` already did on install and update.
+- **Accessibility: no WCAG AA finding left in the suite's frame.** An axe-core sweep of 35 pages
+  (desktop and phone, every app, 2026-10-31) found no critical issue and five small ones, all in
+  shared parts: the count badges on the sidebar had white on red or light blue (3.5:1 and 2.5:1;
+  now 5.4:1 and 6.7:1, `--pc-chrome-problem`), the tour card's head counted as a second page
+  banner, the frame's `main` around an app had no name of its own, To-do, Notes and Messages
+  jumped from `h1` to `h3`, a table column with only buttons had an empty header (now "Actions"
+  for screen readers, in `DataTable` and Historian's sources), and the block editor's status
+  lights had a label but no role (`role="img"`).
+- **The demo journeys (`tests/e2e_suite`) follow the current sign-in page and tour.** They still
+  looked for "Public demo" / "A visit lasts" (the visit clock went away on 2026-10-28), for the
+  older "read-only" refusal and for the tour's last step "Your apps"; 13 of 15 failed on a VM
+  after the update from 0.5.1, all from the first. 15 of 15 pass on main.
 - **Installer, from the first tries on Windows 11 (WSL) and a clean Linux VM.** The setup
   wizard asks the apps before the requirements (it stopped on a memory FAIL for apps you would
   have left out), starts from an installation file already there, says on its first screens when

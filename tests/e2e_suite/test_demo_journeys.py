@@ -18,23 +18,24 @@ from tests.e2e_suite.conftest import URL, app, go
 
 def test_01_the_sign_in_page_offers_the_demo_and_the_tour_walks_the_platform(visitor):
     go(visitor, "/login")
-    # A visit needs no password since the demo visits (#357): a timed, read-only seat.
-    note = visitor.get_by_role("note").filter(has_text="Public demo")
-    expect(note).to_contain_text("A visit lasts")
+    # A visit needs no password since the demo visits (#357): a read-only seat, given back
+    # after 30 idle minutes (no clock on the page since 2026-10-28).
+    note = visitor.get_by_role("note").filter(has_text="A live demo of PlantCraft")
+    expect(note).to_contain_text("nothing you change is saved")
     visitor.get_by_role("button", name="Enter the demo").click()
     tour = visitor.get_by_role("dialog")
     expect(tour.get_by_role("heading", name="Welcome to PlantCraft")).to_be_visible()
     expect(tour.get_by_text("nothing you change is saved", exact=False)).to_be_visible()
     tour.get_by_role("button", name="Start the tour").click()
     titles = []
-    for _ in range(12):
+    for _ in range(30):  # the platform tour has 18 steps with the demo (PlatformTour.tsx)
         titles.append(tour.locator("#pct-title").inner_text())
         if tour.get_by_role("button", name="Finish").count():
             break
         tour.get_by_role("button", name="Next").click()
         visitor.wait_for_load_state("networkidle")
     assert "One asset, one page" in titles, titles
-    assert titles[-1] == "Your apps", titles
+    assert titles[-1] == "Now the apps", titles
     for name in ("Analytics", "View", "Historian", "Models", "Alarms"):
         expect(tour.get_by_text(name, exact=True).first).to_be_visible()
     tour.get_by_role("button", name="Finish").click()
@@ -173,7 +174,7 @@ def test_09_the_team_and_the_visitor_talk_about_the_valve(visitor):
 
 def test_10_the_visitor_cannot_change_anything(visitor):
     answer = visitor.request.post(URL + "/api/actions", data={"title": "spam"})
-    assert answer.status == 403 and "read-only" in answer.text()
+    assert answer.status == 403 and "nothing is saved" in answer.text()
     answer = visitor.request.post(
         URL + "/api/messages/conversations",
         data={"members": ["admin"], "title": "spam", "text": "spam"},

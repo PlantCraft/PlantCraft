@@ -81,12 +81,12 @@ sha256sum -c $B.sha256               # macOS: shasum -a 256 -c $B.sha256
 ```
 
 Compare the key on the first line with the one on the release page (OpenSSH fingerprint
-`SHA256:9l/yDgR8/Pzel1pncxrXz2IGCIhFirKpDT78tO49fG8`). If either check fails, do not use the
+`SHA256:9l/yDgR8/Pzel1pncxrXz2IGCIhFirKpDT78tO49fG8`, key id `af2643fa16867976`). If either check fails, do not use the
 bundle.
 
 On a first install, `install.sh` checks the signature again and then warns "the key above came
 with this bundle: compare its key id…". That is expected: it is the same key you just compared
-above.
+above, and the id it prints is `af2643fa16867976`.
 
 ## Linux
 

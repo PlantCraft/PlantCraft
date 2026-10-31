@@ -243,7 +243,7 @@ a.dk-agenda-event:hover b { color: var(--pc-primary-text); }
 /* Notes (round 7) */
 .dk-notes { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 14px; align-items: start; }
 .dk-notes-list { display: flex; flex-direction: column; gap: 4px; padding: 8px; position: sticky; top: 12px; max-height: calc(100vh - 140px); overflow: auto; }
-.dk-notes-list h3 { margin: 8px 6px 2px; font-size: var(--pc-fs-xs, 12px); color: var(--pc-text-3); text-transform: uppercase; letter-spacing: .04em; }
+.dk-notes-list h2, .dk-notes-list h3 { margin: 8px 6px 2px; font-size: var(--pc-fs-xs, 12px); color: var(--pc-text-3); text-transform: uppercase; letter-spacing: .04em; }
 .dk-notes-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .dk-notes-search { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); color: var(--pc-text-3); }
 .dk-notes-search input { flex: 1; min-width: 0; border: 0; background: transparent; box-shadow: none; padding: 4px 0; }

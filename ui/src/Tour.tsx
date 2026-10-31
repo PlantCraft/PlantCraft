@@ -208,7 +208,7 @@ export function GuidedTour({ app, steps, path, navigate, onClose }: GuidedTourPr
       <div className={`pct-blocker${box ? "" : " pct-dim"}`} onClick={(event) => event.stopPropagation()} />
       {box && <div className="pct-spot" style={{ top: box.top, left: box.left, width: box.width, height: box.height }} aria-hidden="true" />}
       <div ref={cardRef} className={`pct-card${centred ? " pct-centred" : ""}`} style={place} role="dialog" aria-modal="true" aria-labelledby="pct-title" aria-describedby="pct-body">
-        <header>
+        <div className="pct-head">
           <AppMark app={app} size={26} />
           <span className="pct-count">{tt("Step {n} of {total}", { n: index + 1, total: steps.length })}</span>
           {translationsOn() && <label className="pct-language" title={tt("Tour language")}>
@@ -218,7 +218,7 @@ export function GuidedTour({ app, steps, path, navigate, onClose }: GuidedTourPr
             </select>
           </label>}
           <button type="button" className="pct-close" onClick={() => onClose(false)} aria-label={tt("Close the tour")} title={tt("Close the tour")}><X size={16} /></button>
-        </header>
+        </div>
         <div className="pct-progress" aria-hidden="true"><span style={{ width: `${((index + 1) / steps.length) * 100}%` }} /></div>
         <h2 id="pct-title">{step.title}</h2>
         <div id="pct-body" className="pct-body">{step.body}</div>

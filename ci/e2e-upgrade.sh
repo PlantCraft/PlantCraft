@@ -64,6 +64,11 @@ done
 command -v docker >/dev/null || die "Docker is needed"
 docker info >/dev/null 2>&1 || die "the Docker daemon does not answer"
 [ -n "${FROM_BUNDLE:-}" ] || die "set FROM_BUNDLE to the released bundle (.tar.gz or its folder)"
+# On Linux the installation's files belong to the containers' users (initial-admin-password:
+# uid 10001, 0600): only root reads them. Say so now, not after the build (2026-10-31 VM test).
+if [ "$(uname -s)" = Linux ] && [ "$(id -u)" != 0 ]; then
+    die "on Linux, run as root (sudo -E ci/e2e-upgrade.sh): the test reads the installation's admin password, which only its container user and root can read"
+fi
 mkdir -p "$LOGS"
 
 env_of() { sed -n "s/^$1=//p" "$2" | head -n 1; }

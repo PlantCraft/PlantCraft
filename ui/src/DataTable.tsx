@@ -168,6 +168,8 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
     setTicked(new Set(shown.map(rowKey)));
   }
   function header(column: DataColumn<Row>) {
+    // A column without a title (a row's buttons) still has a header cell a screen reader can name.
+    if (!column.label) return <span className="sr-only">{t("Actions")}</span>;
     if (!column.sort) return column.label;
     const on = sort?.key === column.key;
     const next = () => setSort(on ? (sort?.descending ? null : { key: column.key, descending: true }) : { key: column.key, descending: false });
