@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlantCraft setup</title>
+<style>
+:root { --bg:#f4f6f9; --panel:#fff; --text:#1d2733; --muted:#5b6878; --line:#d9e0e8;
+  --primary:#2e5a88; --primary-soft:#e8eef5; --ok:#1f7a4d; --ok-soft:#e4f3ea; --warn:#9a6200;
+  --warn-soft:#fbf1dc; --fail:#b3261e; --fail-soft:#fbe6e4; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0f141a; --panel:#17202a; --text:#e3e8ee;
+  --muted:#9aa7b5; --line:#2a3644; --primary:#3d78b6; --primary-soft:#1c2a3b; --ok:#5cc28d;
+  --ok-soft:#163024; --warn:#e3b04b; --warn-soft:#33280f; --fail:#f07a70; --fail-soft:#3a1a18; } }
+* { box-sizing:border-box; }
+body { margin:0; font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--text); }
+.shell { max-width:980px; margin:32px auto; display:grid; grid-template-columns:230px 1fr; background:var(--panel);
+  border:1px solid var(--line); border-radius:10px; overflow:hidden; min-height:600px; }
+nav { background:var(--primary-soft); padding:24px 0; border-right:1px solid var(--line); }
+nav .brand { font-weight:700; font-size:18px; padding:0 22px 18px; color:var(--primary); }
+nav ol { list-style:none; margin:0; padding:0; counter-reset:s; }
+nav li { counter-increment:s; padding:9px 22px; color:var(--muted); font-size:14px; }
+nav li::before { content:counter(s); display:inline-grid; place-items:center; width:22px; height:22px; margin-right:10px;
+  border-radius:50%; border:1px solid var(--line); font-size:12px; background:var(--panel); }
+nav li.on { color:var(--text); font-weight:600; } nav li.on::before { background:var(--primary); color:#fff; border-color:var(--primary); }
+nav li.fail { color:var(--fail); } nav li.fail::before { content:"!"; background:var(--fail-soft); color:var(--fail); border-color:var(--fail); }
+nav li.done::before { content:"✓"; background:var(--ok-soft); color:var(--ok); border-color:var(--ok); }
+main { padding:28px 34px; display:flex; flex-direction:column; }
+h1 { font-size:22px; margin:0 0 6px; } p.lead { color:var(--muted); margin:0 0 20px; }
+section { display:none; flex:1; } section.on { display:block; }
+.foot { display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:16px; margin-top:20px; }
+button { font:inherit; padding:8px 18px; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; }
+button.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+button:disabled { opacity:.45; cursor:not-allowed; }
+table { width:100%; border-collapse:collapse; font-size:14px; } td, th { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { color:var(--muted); font-weight:500; font-size:13px; }
+.tag { display:inline-block; min-width:44px; text-align:center; font-size:12px; font-weight:700; padding:1px 6px; border-radius:4px; }
+.PASS { background:var(--ok-soft); color:var(--ok); } .WARN { background:var(--warn-soft); color:var(--warn); } .FAIL { background:var(--fail-soft); color:var(--fail); }
+.fix { color:var(--muted); font-size:13px; }
+.grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
+label.card { display:flex; gap:12px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; cursor:pointer; }
+label.card:has(input:checked) { border-color:var(--primary); background:var(--primary-soft); }
+label.card b { display:block; } label.card span { color:var(--muted); font-size:13px; }
+.field { margin:0 0 16px; } .field > label { display:block; font-weight:600; margin-bottom:4px; }
+.field small { display:block; color:var(--muted); font-size:13px; margin-top:3px; }
+input[type=text], input[type=number], select { font:inherit; padding:7px 10px; border:1px solid var(--line); border-radius:6px; width:100%; background:var(--panel); color:var(--text); }
+.row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.sizes { display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; }
+.sizes label.card { flex-direction:column; gap:2px; text-align:center; padding:10px 6px; }
+.sizes input { display:none; }
+pre { background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:12px; font-size:13px; max-height:330px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; }
+.note.bad { background:var(--fail-soft); color:var(--fail); }
+.note { background:var(--primary-soft); border-radius:6px; padding:10px 12px; font-size:13px; margin:12px 0; }
+.summary-bar { display:flex; gap:10px; margin:0 0 14px; }
+@media (max-width:760px) { .shell { grid-template-columns:1fr; margin:0; border-radius:0; } nav { display:none; } .grid, .row { grid-template-columns:1fr; } .sizes { grid-template-columns:repeat(3,1fr); } main { padding:20px 16px; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav><div class="brand">PlantCraft setup</div>
+    <ol id="steps"><li>Welcome</li><li>Apps</li><li>Requirements</li><li>Machine and load</li><li>Network and security</li><li>Review</li><li>Install</li></ol>
+  </nav>
+  <main>
+    <section data-step="0">
+      <h1>Install PlantCraft on this server</h1>
+      <p class="lead">This wizard decides what is fixed before the suite runs: which apps exist, how much of this machine they may use, the network and the security ceilings.</p>
+      <div class="note">What you choose here is written to <b id="confpath">/etc/plantcraft/installation.conf</b>, a file only root can change. Administrators inside PlantCraft see these choices as <i>Set by the installation</i> and cannot widen them.</div>
+      <p>Nothing is downloaded: every image comes from the release bundle this wizard runs from. You can stop at any screen; nothing is changed until the last one.</p>
+      <div class="note bad" id="bundlenote" hidden></div>
+      <div class="note" id="currentnote" hidden></div>
+      <p class="fix">Bundle: PlantCraft (this folder) · Licence: Apache 2.0</p>
+    </section>
+
+    <section data-step="1">
+      <h1>Apps</h1>
+      <p class="lead">Apps left out are not installed and cannot be turned on from inside PlantCraft.</p>
+      <div class="grid" id="apps"></div>
+      <div class="field" style="margin-top:18px"><label><input type="checkbox" id="webinstall"> Administrators may add, upgrade and remove apps from Settings › Apps</label>
+        <small>Off: only this file and <code>install.sh --add</code> change the apps. Recommended off in a plant.</small></div>
+      <div class="field"><label for="demo">Demo plant</label>
+        <select id="demo"><option value="off">None (a real plant)</option><option value="on">Simulated plant and demo story</option><option value="public">Public demo, open to visitors</option></select></div>
+    </section>
+
+    <section data-step="2">
+      <h1>Requirements</h1>
+      <p class="lead">This server, checked for the apps you picked.</p>
+      <div class="summary-bar" id="checksum"></div>
+      <table><thead><tr><th></th><th>Check</th><th>Found</th><th>Needed</th></tr></thead><tbody id="checks"><tr><td colspan="4">Checking…</td></tr></tbody></table>
+    </section>
+
+    <section data-step="3">
+      <h1>Machine and load</h1>
+      <p class="lead">One size fills every CPU, memory, worker and database setting (same table as <code>install.sh --machine</code>).</p>
+      <div class="sizes" id="sizes"></div>
+      <p class="fix" id="detected"></p>
+      <div class="row">
+        <div class="field"><label for="maxcpus">Most CPUs for the suite</label><input type="number" id="maxcpus" min="1" placeholder="all"><small>Leave room for other programs on a shared server.</small></div>
+        <div class="field"><label for="maxmem">Most memory for the suite</label><input type="text" id="maxmem" placeholder="all (e.g. 24g)"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="maxsignals">Signals the Historian may record</label><input type="number" id="maxsignals" placeholder="no limit"></div>
+        <div class="field"><label for="maxruns">Analysis runs at once</label><input type="number" id="maxruns" placeholder="from the size"></div>
+      </div>
+      <div class="field"><label for="maxsessions">People signed in at once</label><input type="number" id="maxsessions" placeholder="no limit" style="max-width:50%"><small>Administrators may set lower values inside PlantCraft, never higher.</small></div>
+    </section>
+
+    <section data-step="4">
+      <h1>Network and security</h1>
+      <p class="lead">How people reach the suite, and what it may never do.</p>
+      <div class="row">
+        <div class="field"><label for="hostname">Server names</label><input type="text" id="hostname" placeholder="this server's name and address"><small>What people type in the browser; space separated.</small></div>
+        <div class="field"><label for="port">HTTPS port</label><input type="number" id="port" value="443"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="bind">Listen on</label><input type="text" id="bind" value="0.0.0.0"><small>One address of this server to keep the suite off other networks.</small></div>
+        <div class="field"><label for="netbase">Internal networks</label><input type="text" id="netbase" value="172.30"><small>Seven /24 networks from .10 to .16. Change only on a clash.</small></div>
+      </div>
+      <div class="field"><label for="llm">Language models</label>
+        <select id="llm"><option value="off">Never, in the whole installation</option><option value="on">Allowed: an administrator may add one (off until then)</option></select></div>
+      <div class="row">
+        <div class="field"><label for="mcp">Assistants from outside (MCP)</label><select id="mcp"><option value="off">Never</option><option value="on">Allowed: an administrator may turn them on</option></select></div>
+        <div class="field"><label for="nb">Notebooks (people's own Python)</label><select id="nb"><option value="on">Allowed</option><option value="off">Never</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="tz">Plant time zone</label><input type="text" id="tz" placeholder="the server's (e.g. America/Sao_Paulo)"></div>
+        <div class="field"><label>&nbsp;</label><label><input type="checkbox" id="locktz"> Administrators cannot change it</label></div>
+      </div>
+    </section>
+
+    <section data-step="5">
+      <h1>Review</h1>
+      <p class="lead">This is the installation file the wizard writes. Keep a copy with the server's documentation.</p>
+      <pre id="preview">…</pre>
+      <p class="fix" id="previewpath"></p>
+    </section>
+
+    <section data-step="6">
+      <h1>Install</h1>
+      <p class="lead" id="installlead">Writing the installation file…</p>
+      <pre id="log"></pre>
+    </section>
+
+    <div class="foot"><button id="back">Back</button><button class="primary" id="next">Next</button></div>
+  </main>
+</div>
+<script>
+const key = new URLSearchParams(location.search).get("key") || "";
+const H = { "X-Wizard-Key": key, "Content-Type": "application/json" };
+const APPS = [
+  ["analytics", "Analytics", "Loop performance, signal quality, rounds"],
+  ["historian", "Historian", "Records the plant's signals"],
+  ["view", "View", "Dashboards, process displays, reports"],
+  ["alarms", "Alarms", "Rules, alarm journal, ISA-18.2 performance"],
+  ["models", "Models", "Models, simulations, optimization"],
+  ["documents", "Documents", "Plant documents, search, assistant"],
+];
+const SIZES = [["auto","Auto","from this machine"],["small","Small","2 CPU · 4 GB"],["medium","Medium","4 CPU · 8 GB"],["large","Large","8 CPU · 32 GB"],["xlarge","Extra large","16+ CPU · 64 GB"]];
+let step = 0, check = null, installState = "";
+const REQ = 2, APPSTEP = 1;
+const $ = (id) => document.getElementById(id);
+$("apps").innerHTML = APPS.map(([id, n, d]) => `<label class="card"><input type="checkbox" value="${id}" ${["analytics","historian","view","alarms"].includes(id) ? "checked" : ""}><div><b>${n}</b><span>${d}</span></div></label>`).join("");
+$("sizes").innerHTML = SIZES.map(([id, n, d], i) => `<label class="card"><input type="radio" name="size" value="${id}" ${i ? "" : "checked"}><b>${n}</b><span>${d}</span></label>`).join("");
+const apps = () => [...document.querySelectorAll("#apps input:checked")].map((i) => i.value);
+function values() {
+  const list = apps();
+  return { APPS: list.length === APPS.length ? "all" : list.join(","), WEB_APP_INSTALL: $("webinstall").checked ? "on" : "off",
+    DEMO: $("demo").value, MACHINE: document.querySelector("input[name=size]:checked").value, MAX_CPUS: $("maxcpus").value,
+    MAX_MEMORY: $("maxmem").value, MAX_SIGNALS: $("maxsignals").value, MAX_PARALLEL_RUNS: $("maxruns").value,
+    MAX_SESSIONS: $("maxsessions").value, HOSTNAME: $("hostname").value, HTTPS_PORT: $("port").value || "443",
+    BIND_ADDRESS: $("bind").value || "0.0.0.0", NETWORK_BASE: $("netbase").value || "172.30", LLM: $("llm").value, ASSISTANT_ACCESS: $("mcp").value, NOTEBOOKS: $("nb").value,
+    TIMEZONE: $("tz").value, LOCK_TIMEZONE: $("locktz").checked ? "yes" : "no" };
+}
+async function runCheck() {
+  $("checks").innerHTML = '<tr><td colspan="4">Checking…</td></tr>';
+  check = await (await fetch("api/check?apps=" + encodeURIComponent(apps().join(",") || "all"), { headers: H })).json();
+  $("checks").innerHTML = check.checks.map((c) => `<tr><td><span class="tag ${c.state}">${c.state}</span></td><td>${c.name}</td><td>${c.found}${c.fix && c.state !== "PASS" ? `<div class="fix">${c.fix}</div>` : ""}</td><td>${c.needed}</td></tr>`).join("");
+  const ok = check.checks.length - check.fails - check.warnings;
+  $("checksum").innerHTML = `<span class="tag PASS">${ok} passed</span><span class="tag WARN">${check.warnings} warnings</span><span class="tag FAIL">${check.fails} failed</span>`;
+  const cpu = check.checks.find((c) => c.name === "CPUs"), mem = check.checks.find((c) => c.name === "Memory");
+  $("detected").textContent = cpu && mem ? `Detected: ${cpu.found}, ${mem.found}. Auto picks the size from these.` : "";
+  show();
+}
+async function preview() {
+  const r = await fetch("api/preview", { method: "POST", headers: H, body: JSON.stringify(values()) });
+  const d = await r.json();
+  $("preview").textContent = d.text || ("Error: " + d.error);
+  $("previewpath").textContent = d.path ? "Written to " + d.path + " (owner root, mode 644)." : "";
+}
+function finish(state, lead) { installState = state; $("installlead").textContent = lead; show(); }
+async function install() {
+  installState = "running"; show();
+  const r = await (await fetch("api/install", { method: "POST", headers: H, body: JSON.stringify(values()) })).json();
+  if (r.error) return finish("failed", "Error: " + r.error);
+  if (!r.installing) {
+    $("log").textContent = (r.bundle_problem ? r.bundle_problem + "\n\nFrom the release bundle, as root:\n" : "") + `sudo ./install.sh --config ${r.written}`;
+    return finish("written", `Written to ${r.written}. To install now, run as root:`);
+  }
+  $("installlead").textContent = "Installing. The log below is install.sh's own.";
+  const poll = async () => { const s = await (await fetch("api/status", { headers: H })).json(); $("log").textContent = s.log.join("\n");
+    $("log").scrollTop = 1e9; if (s.state === "running") return setTimeout(poll, 1500);
+    if (s.state === "done") finish("done", "Installed. The address and the first administrator's password are at the end of the log.");
+    else finish("failed", "The installation stopped. Nothing was left half done: read the last lines, fix the cause, then go back and install again."); };
+  poll();
+}
+function show() {
+  document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", +s.dataset.step === step));
+  document.querySelectorAll("#steps li").forEach((li, i) => { li.className = i === step ? (i === 6 && installState === "failed" ? "fail" : "on") : i < step || (i === 6 && installState === "done") ? "done" : ""; });
+  const busy = step === 6 && installState === "running";
+  $("back").disabled = step === 0 || busy || (step === 6 && installState === "done");
+  $("next").textContent = step === 5 ? "Install" : step === 6 ? "Close" : "Next";
+  $("next").hidden = step === 6 && installState !== "done" && installState !== "written";
+  $("next").disabled = (step === REQ && (!check || check.fails > 0)) || (step === APPSTEP && apps().length === 0) || busy;
+}
+$("next").onclick = () => {
+  if (step === 6) { $("installlead").textContent = "Done. You can close this tab and stop the wizard (Ctrl+C)."; $("next").disabled = true; return; }
+  step++; if (step === REQ) runCheck(); if (step === 5) preview(); if (step === 6) install(); show(); };
+$("back").onclick = () => { if (step === 6) { installState = ""; $("log").textContent = ""; } step--; if (step === REQ) runCheck(); if (step === 5) preview(); show(); };
+document.querySelectorAll("#apps input").forEach((i) => i.addEventListener("change", show));
+fetch("api/status", { headers: H }).then((r) => r.json()).then((s) => { $("confpath").textContent = s.conf;
+  if (s.bundle_problem) { $("bundlenote").hidden = false; $("bundlenote").textContent = s.bundle_problem; } }).catch(() => {});
+function load(v) {
+  if (v.APPS) { const on = v.APPS === "all" ? APPS.map((a) => a[0]) : v.APPS.split(",");
+    document.querySelectorAll("#apps input").forEach((i) => { i.checked = on.includes(i.value); }); }
+  const radio = v.MACHINE && document.querySelector(`input[name=size][value="${v.MACHINE}"]`); if (radio) radio.checked = true;
+  const set = { WEB_APP_INSTALL: ["webinstall", "on"], LOCK_TIMEZONE: ["locktz", "yes"] };
+  for (const [k, [id, yes]] of Object.entries(set)) if (k in v) $(id).checked = v[k] === yes;
+  const fields = { DEMO: "demo", MAX_CPUS: "maxcpus", MAX_MEMORY: "maxmem", MAX_SIGNALS: "maxsignals", MAX_PARALLEL_RUNS: "maxruns",
+    MAX_SESSIONS: "maxsessions", HOSTNAME: "hostname", HTTPS_PORT: "port", BIND_ADDRESS: "bind", NETWORK_BASE: "netbase",
+    LLM: "llm", ASSISTANT_ACCESS: "mcp", NOTEBOOKS: "nb", TIMEZONE: "tz" };
+  for (const [k, id] of Object.entries(fields)) if (v[k]) $(id).value = v[k];
+}
+fetch("api/current", { headers: H }).then((r) => r.json()).then((c) => { if (!Object.keys(c.values).length) return;
+  load(c.values); $("currentnote").hidden = false;
+  $("currentnote").textContent = `${c.path} is already there: the screens start from its values. Nothing changes until Install.`; show(); }).catch(() => {});
+const s0 = new URLSearchParams(location.search).get("step"); if (s0) { step = +s0; if (step >= REQ) runCheck(); if (step === 5) preview(); }
+show();
+</script>
+</body>
+</html>

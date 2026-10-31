@@ -55,6 +55,14 @@ def save_installation(
     before = rt.workspace.installation.settings()["time_zone"]
     try:
         rt.workspace.installation.save_time_zone(payload.time_zone, actor=admin)
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=t(
+                "The installation file fixed the time zone. Change it on the server: edit "
+                "/etc/plantcraft/installation.conf and run install.sh again."
+            ),
+        ) from exc
     except ValueError as exc:
         raise HTTPException(
             status_code=422, detail=t("Unknown time zone: {zone}.", zone=payload.time_zone)

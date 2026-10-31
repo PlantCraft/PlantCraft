@@ -199,7 +199,7 @@ settings and certificates.
 | `PLANTCRAFT_ADMIN_USERNAME` | `admin` | Emergency administrator |
 | `PLANTCRAFT_MACHINE` | `auto` | The machine profile (below): `small`, `medium`, `large`, `xlarge`, `auto` or `off`; `--machine` sets it |
 | `PLANTCRAFT_MAX_CPUS`, `PLANTCRAFT_MAX_MEMORY` | empty | On a shared server, the most the profile sizes for (`6`, `12g`) |
-| `PLANTCRAFT_CPUS`, `PLANTCRAFT_MEMORY` | `4`, `4g` | Container limits (also `LINKCRAFT_*` `4`/`4g`; `DASHCRAFT_*`, `HISTCRAFT_*` `2`/`2g`; `HISTCRAFT_DB_MEMORY` `2g`, with `HISTCRAFT_DB_SHARED_BUFFERS` `512MB` and `HISTCRAFT_DB_CACHE_SIZE` `1GB`: about 1/4 and 1/2 of it); `install.sh` lowers a CPU limit above the host's CPU count, which Docker would refuse |
+| `PLANTCRAFT_CPUS`, `PLANTCRAFT_MEMORY` | `4`, `4g` | Container limits (also `LINKCRAFT_*` `4`/`4g`; `DASHCRAFT_*`, `HISTCRAFT_*` `2`/`2g`; `HISTCRAFT_DB_CPUS` `2` and `HISTCRAFT_DB_MEMORY` `2g`, with `HISTCRAFT_DB_SHARED_BUFFERS` `512MB` and `HISTCRAFT_DB_CACHE_SIZE` `1GB`: about 1/4 and 1/2 of it); `install.sh` lowers a CPU limit above the host's CPU count, which Docker would refuse |
 | `PLANTCRAFT_PLANT_SUBNET`, `_APPS_SUBNET`, `_EDGE_SUBNET`, `_DEMO_SUBNET`, `_HISTDB_SUBNET` | `172.30.10-14.0/24` | Change only if they clash with a plant or office network |
 | `PLANTCRAFT_PROXY_ADDRESS` | `172.30.11.250` | The proxy's address in the apps subnet (change it with `_APPS_SUBNET`): PlantCraft trusts the client address forwarded by this address only |
 | `PLANTCRAFT_DNS` | empty | DNS server PlantCraft asks for names outside the suite. Empty: none, so PI and OPC UA servers are given by IP address; set the plant's DNS server to give them by name |

@@ -7,6 +7,7 @@ use the suite (0.6.0 scenarios, never in GitHub CI).
     python3 ci/bench/extreme.py --prefix ~/PlantCraft --scenario C1         # today's demo load
     python3 ci/bench/extreme.py --prefix ~/PlantCraft --scenario C2         # 10x the methods
     python3 ci/bench/extreme.py --prefix ~/PlantCraft --scenario C2 --step 60   # read means
+    python3 ci/bench/extreme.py --prefix ~/PlantCraft --scenario C5         # an import meanwhile
     python3 ci/bench/extreme.py --compare                                   # reports side by side
 
 What one run does, against the installation in ``--prefix`` (as ``suite_bench.py``):
@@ -18,14 +19,22 @@ What one run does, against the installation in ``--prefix`` (as ``suite_bench.py
    ``--step`` seconds, in four requests at once straight from the Historian, as Analytics does;
 3. meanwhile ``--people`` people open screens every few seconds (a trend, the newest values,
    Analytics' overview), each with its own session;
-4. samples CPU and memory of every container every 2 s.
+4. with ``--backfill VALUES``, imports a file of that many values (100 tags, one a minute,
+   from before the archive's history) into the Historian at that moment and waits until the
+   collector wrote it, then deletes the import;
+5. with ``--restart-after S``, restarts the Historian S seconds into the work and measures how
+   long it stayed away;
+6. samples CPU and memory of every container every 2 s.
 
 The report says, per caller, how long the reads took and how many failed (503: the Historian's
 read budget was full; 504: PlantCraft gave up), how long the Historian stayed at one full core
 or more, and whether the rounds finished. It is written to
 ``docs/bench/results/<host>-<UTC time>-extreme-<scenario>.json`` (and ``.md``).
 
-Scenarios (docs/bench/README.md): C1 today's load, C2 ten times the methods, C4 C1 with 20 people.
+Scenarios (docs/bench/README.md): C1 today's load, C2 ten times the methods, C3 C2 with ten
+times the values per read (240 h: the demo plant has 167 signals, so ten times the values stands
+for ten times the signals), C4 C1 with 20 people, C5 C1 with a 2 million value import, C6 C2 with
+the Historian restarted mid-round.
 Only the Python standard library is used.
 """
 
@@ -48,8 +57,13 @@ SCENARIOS = {
     # methods besides the rounds, people, rounds on
     "C1": {"methods": 0, "people": 3, "rounds": True},
     "C2": {"methods": 9, "people": 3, "rounds": True},
+    "C3": {"methods": 9, "people": 3, "rounds": True, "hours": 240},
     "C4": {"methods": 0, "people": 20, "rounds": True},
+    "C5": {"methods": 0, "people": 3, "rounds": True, "backfill": 2_000_000},
+    "C6": {"methods": 9, "people": 3, "rounds": True, "restart_after": 5},
 }
+# A backfill file: this many tags, one value a minute.
+BACKFILL_TAGS = 100
 # Analytics' PlantData: four requests at once, each at least 40 signals.
 READ_THREADS = 4
 # A core's worth of CPU in docker stats.
@@ -82,11 +96,13 @@ class Recorder:
         self.calls: dict[str, list[dict]] = {}
         self._lock = threading.Lock()
 
-    def call(self, suite: Suite, caller: str, method: str, path: str, body=None, timeout=180):
+    def call(
+        self, suite: Suite, caller: str, method: str, path: str, body=None, timeout=180, raw=None
+    ):
         began = time.perf_counter()
         status, answer = 200, None
         try:
-            answer, _, _ = suite.call(method, path, body, timeout=timeout, retry=False)
+            answer, _, _ = suite.call(method, path, body, raw=raw, timeout=timeout, retry=False)
         except RuntimeError as exc:
             words = str(exc).split(": ", 1)[-1].split(" ", 1)
             status = int(words[0]) if words[0].isdigit() else 0
@@ -284,11 +300,99 @@ def rounds(suite: Suite, rec: Recorder, timeout: float) -> dict:
     return found
 
 
+def backfill_csv(values: int) -> bytes:
+    """A wide file of ``values`` values: 100 tags, one a minute, ending 400 days ago (before
+    the archive's own history), different on each run (an import refuses the same file)."""
+
+    rows = max(1, values // BACKFILL_TAGS)
+    end = datetime.now(timezone.utc).replace(second=0, microsecond=0) - timedelta(days=400)
+    start = end - timedelta(minutes=rows)
+    seed = int(time.time()) % 997
+    tags = [f"BENCH-BACKFILL-{n:03d}.PV" for n in range(BACKFILL_TAGS)]
+    lines = ["time," + ",".join(tags)]
+    for row in range(rows):
+        at = (start + timedelta(minutes=row)).strftime("%Y-%m-%d %H:%M:%S")
+        lines.append(
+            at
+            + ","
+            + ",".join(f"{(row * 7 + n + seed) % 1000 / 10:g}" for n in range(BACKFILL_TAGS))
+        )
+    return ("\n".join(lines) + "\n").encode()
+
+
+def backfill(suite: Suite, rec: Recorder, values: int, timeout: float) -> dict:
+    """Import ``values`` values, wait until the collector wrote them, delete the import."""
+
+    data = backfill_csv(values)
+    began = time.perf_counter()
+    checked = (
+        rec.call(
+            suite,
+            "start",
+            "POST",
+            f"/hist/api/imports/check?name=bench-{int(time.time())}.csv",
+            raw=data,
+            timeout=600,
+        )
+        or {}
+    )
+    token = checked.get("token")
+    if not token:
+        return {"status": "check failed", "answer": str(checked)[:300]}
+    made = rec.call(suite, "start", "POST", "/hist/api/imports", {"token": token}, timeout=600)
+    import_id = (made or {}).get("id")
+    if not import_id:
+        return {"status": "confirm failed"}
+    accepted = time.perf_counter() - began
+    item: dict = {}
+    while time.perf_counter() - began < timeout:
+        time.sleep(3)
+        try:
+            found = suite.call("GET", "/hist/api/imports", timeout=60)[0] or []
+        except (RuntimeError, OSError):
+            continue  # the Historian is away (C6) or busy: ask again
+        item = next((one for one in found if one.get("id") == import_id), {})
+        if item.get("status") not in ("writing", None):
+            break
+    seconds = round(time.perf_counter() - began, 1)
+    try:
+        suite.call("DELETE", f"/hist/api/imports/{import_id}", timeout=600)
+    except (RuntimeError, OSError) as exc:
+        log(f"backfill: could not delete {import_id}: {exc}")
+    return {
+        "bytes": len(data),
+        "accepted_s": round(accepted, 1),
+        "seconds": seconds,
+        "status": item.get("status"),
+        "written": item.get("written"),
+    }
+
+
+def restart(suite: Suite, after: float) -> dict:
+    """Restart the Historian ``after`` seconds in; how long until it answered again."""
+
+    time.sleep(after)
+    began = time.perf_counter()
+    suite.compose("restart", "histcraft")
+    while time.perf_counter() - began < 300:
+        try:
+            suite.call("GET", "/hist/api/imports", timeout=10, retry=False)
+            break
+        except (RuntimeError, OSError):
+            time.sleep(1)
+    return {"after_s": after, "away_s": round(time.perf_counter() - began, 1)}
+
+
 def run(args: argparse.Namespace) -> dict:
     preset = SCENARIOS.get(args.scenario, {})
     methods = preset.get("methods", 0) if args.methods is None else args.methods
     people = preset.get("people", 3) if args.people is None else args.people
     with_rounds = preset.get("rounds", True) and not args.no_rounds
+    hours = preset.get("hours", 24) if args.hours is None else args.hours
+    backfill_values = preset.get("backfill", 0) if args.backfill is None else args.backfill
+    restart_after = (
+        preset.get("restart_after") if args.restart_after is None else args.restart_after
+    )
     prefix = Path(args.prefix).expanduser().resolve()
     suite = Suite(prefix, args.url)
     suite.login()
@@ -296,7 +400,9 @@ def run(args: argparse.Namespace) -> dict:
     signals = plant_signals(suite, args.signals)
     log(
         f"{args.scenario}: {len(signals)} signals, {methods} methods, {people} people, "
-        f"rounds {'on' if with_rounds else 'off'}, step {args.step or 'raw'}"
+        f"rounds {'on' if with_rounds else 'off'}, {hours:g} h, step {args.step or 'raw'}"
+        + (f", import of {backfill_values} values" if backfill_values else "")
+        + (f", Historian restart at {restart_after:g} s" if restart_after else "")
     )
     rec, sampler, stop = Recorder(), Stats(project), threading.Event()
     sampler.start()
@@ -311,13 +417,23 @@ def run(args: argparse.Namespace) -> dict:
         )
         thread.start()
         crowd.append(thread)
-    with ThreadPoolExecutor(max(1, methods + 1)) as pool:
+    with ThreadPoolExecutor(max(1, methods + 3)) as pool:
         work = [
-            pool.submit(method, suite, rec, f"method_{n + 1:02d}", signals, args.hours, args.step)
+            pool.submit(method, suite, rec, f"method_{n + 1:02d}", signals, hours, args.step)
             for n in range(methods)
         ]
+        side = Suite(prefix, args.url)
+        side.login()
+        importing = (
+            pool.submit(backfill, side, rec, backfill_values, args.timeout)
+            if backfill_values
+            else None
+        )
+        restarting = pool.submit(restart, suite, restart_after) if restart_after else None
         found_rounds = rounds(suite, rec, args.timeout) if with_rounds else {}
         method_times = [item.result() for item in work]
+        found_backfill = importing.result() if importing else None
+        found_restart = restarting.result() if restarting else None
     time.sleep(args.tail)
     stop.set()
     for thread in crowd:
@@ -338,7 +454,7 @@ def run(args: argparse.Namespace) -> dict:
         "versions": versions(suite),
         "settings": {
             "signals": len(signals),
-            "hours": args.hours,
+            "hours": hours,
             "step": args.step,
             "methods": methods,
             "people": people,
@@ -347,6 +463,8 @@ def run(args: argparse.Namespace) -> dict:
         },
         "seconds": round(ended - began),
         "rounds": found_rounds,
+        **({"backfill": found_backfill} if found_backfill else {}),
+        **({"restart": found_restart} if found_restart else {}),
         "methods": {
             "each_s": [item["seconds"] for item in method_times],
             **(summary(callers.pop("methods")) if "methods" in callers else {}),
@@ -372,6 +490,15 @@ def markdown(report: dict) -> str:
     ]
     for key, item in report["rounds"].items():
         lines.append(f"| Analytics {key} | {item.get('seconds')} | {item.get('status')} |")
+    if report.get("backfill"):
+        item = report["backfill"]
+        lines.append(
+            f"| Import of {item.get('written')} values | {item.get('seconds')} "
+            f"(accepted in {item.get('accepted_s')}) | {item.get('status')} |"
+        )
+    if report.get("restart"):
+        item = report["restart"]
+        lines.append(f"| Historian restart at {item['after_s']:g} s | away {item['away_s']} | |")
     methods = report["methods"]
     if methods.get("each_s"):
         lines.append(
@@ -424,12 +551,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--prefix", default="dist/e2e-bundle/install")
     parser.add_argument("--url", help="the suite's address (default: from its .env)")
-    parser.add_argument("--scenario", default="C1", help="C1, C2, C4 or a name of yours")
+    parser.add_argument("--scenario", default="C1", help="C1 to C6 or a name of yours")
     parser.add_argument("--label", default="", help="a word for the report (before, after...)")
     parser.add_argument("--methods", type=int, help="methods besides the rounds")
     parser.add_argument("--people", type=int, help="people opening screens meanwhile")
     parser.add_argument("--signals", type=int, default=214, help="signals each method reads")
-    parser.add_argument("--hours", type=float, default=24, help="the window each method reads")
+    parser.add_argument("--hours", type=float, help="the window each method reads (24 h)")
+    parser.add_argument("--backfill", type=int, help="values to import meanwhile (C5)")
+    parser.add_argument("--restart-after", type=float, help="restart the Historian S s in (C6)")
     parser.add_argument("--step", type=float, default=None, help="means of STEP s (default raw)")
     parser.add_argument("--no-rounds", action="store_true", help="leave Analytics' rounds out")
     parser.add_argument("--pause", type=float, default=5, help="seconds between a person's screens")
