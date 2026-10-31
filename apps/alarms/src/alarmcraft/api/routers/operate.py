@@ -222,7 +222,7 @@ def alarm_performance(
     for item in found:
         names.setdefault(item["alarm_id"], item["name"])
     result = performance(found, start, end, names=names, targets=rt.philosophy.get())
-    for group in ("top", "chattering", "stale"):
+    for group in ("top", "chattering", "stale", "fleeting"):
         for item in result.get(group) or []:
             item["owner"] = owners.get(item["alarm_id"])
     return {**result, "window": window}

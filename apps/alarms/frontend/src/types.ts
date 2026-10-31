@@ -85,6 +85,13 @@ export interface Performance {
   chattering: Array<{ alarm_id: string; name: string }>; stale: Array<{ alarm_id: string; name: string }>;
   priorities: Array<{ priority: string; share: number; target: number }>;
   mean_ack_seconds: number | null; unacked: number;
+  /** EEMUA 191 band from the average and the peak per 10 minutes. */
+  eemua: { level: string; average_per_10min: number; peak_per_10min: number; bands: Array<{ level: string; average: number | null; peak: number | null }> };
+  /** Floods with hysteresis: start above the flood limit, end below half of it. */
+  floods: Array<{ start: string; end: string; minutes: number; alarms: number; peak: number }>;
+  flood_minutes: number;
+  acknowledge: Array<{ priority: string; count: number; median_seconds: number | null; p90_seconds: number | null }>;
+  fleeting: Array<{ alarm_id: string; name: string; count: number; owner?: string | null }>;
 }
 
 export interface AssetOption { id: string; name: string; kind: string | null; parent: string | null; signals: Record<string, string> }
