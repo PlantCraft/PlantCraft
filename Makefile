@@ -138,7 +138,7 @@ e2e-bundle:
 e2e-upgrade:
 	FROM_BUNDLE="$(FROM_BUNDLE)" ci/e2e-upgrade.sh
 
-# The suite at plant scale on an installed stack: seeds HistCraft, the plant map, reads, Link
+# The suite at plant scale on an installed stack: seeds Historian, the plant map, reads, Link
 # rounds, a dashboard and twins, then writes docs/bench/results/<host>-<time>-<scale>.json
 # (ci/bench/suite_bench.py, docs/bench/README.md; never in GitHub CI). Asks before adding data.
 BENCH_PREFIX ?= dist/e2e-bundle/install

@@ -1,4 +1,4 @@
-"""The loops LinkCraft monitors, in its own table.
+"""The loops Analytics monitors, in its own table.
 
 A loop comes from one of two places (``origin``):
 
@@ -8,7 +8,7 @@ A loop comes from one of two places (``origin``):
   PlantCraft. Algorithm and criticality start from the record's loop type and
   criticality (``catalog/loop_types.py``); once a person changes one here it is
   listed in ``set_here`` and a sync never touches it again (until it is reset).
-- ``user``: a loop defined in LinkCraft that names PlantCraft signal ids.
+- ``user``: a loop defined in Analytics that names PlantCraft signal ids.
 
 Signal ids are opaque, as API v1 gives them (``<source id>:<tag>`` since D2). A ``user`` loop
 saved before that names bare tags; ``signals_checked_at`` (NULL on those rows) marks the loops

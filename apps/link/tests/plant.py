@@ -210,7 +210,7 @@ CATALOG = {
 }
 
 
-# The fake's people and app key, for LinkCraft (the SDK's defaults name an older app id).
+# The fake's people and app key, for Analytics (the SDK's defaults name an older app id).
 APP_ID = "linkcraft"
 APPS = [{"id": APP_ID, "name": "PlantCraft Analytics", "url": "/link/", "version": "0.1.0"}]
 USERS = {

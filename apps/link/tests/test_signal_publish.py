@@ -36,7 +36,7 @@ def without_publishing_routes(fake, routes=ROUTES):
 
 @pytest.fixture
 def published(tmp_path):
-    """A runtime and the fake's record of what LinkCraft published (``fake.links``)."""
+    """A runtime and the fake's record of what Analytics published (``fake.links``)."""
 
     fake = make_fake()
     runtime = make_runtime(tmp_path, fake)
@@ -186,7 +186,7 @@ def test_a_signal_result_lists_only_the_checks_that_flagged_it():
 
 
 def test_references():
-    # A signal's reference is signal: plus its API v1 id, which LinkCraft never builds.
+    # A signal's reference is signal: plus its API v1 id, which Analytics never builds.
     assert signal_ref("pi:FIC1001.PV") == "signal:pi:FIC1001.PV"
     assert parse_ref("signal:pi:FIC1001.PV").signal_id == "pi:FIC1001.PV"
     assert parse_ref(signal_ref("historian:AREA 1/TI-1:A")).signal_id == "historian:AREA 1/TI-1:A"

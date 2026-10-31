@@ -61,7 +61,7 @@ deploy/         requirements.in/.lock: hashed dependencies of the Docker image (
 | 5 | `api`, `cli`, `bench`, `notebook` | FastAPI app under `/link`, command line, benchmark, blocks and algorithms run in a notebook |
 
 - **Where loops come from** (SPEC.md, "Loop source"): PlantCraft assets of kind `loop` with
-  signal roles, synced into PlantCraft Analytics's own loop table every round (`origin = processcraft`: name
+  signal roles, synced into PlantCraft Analytics' own loop table every round (`origin = processcraft`: name
   and signals are owned by PlantCraft, CPM settings by PlantCraft Analytics), plus loops defined here from
   v1 signal ids (`origin = user`).
 - **Signal quality first.** The system algorithm Signal quality (`signals/`, schedule
@@ -100,7 +100,7 @@ The layer table is enforced by `tests/test_suite_rules.py` (`plantcraft_sdk.appt
 
 ## Oracles and floors
 
-PlantCraft Analytics's oracles: the International Stiction Database (Jelali and Huang), simulator
+PlantCraft Analytics' oracles: the International Stiction Database (Jelali and Huang), simulator
 loops with known faults, and synthetic signals with injected freezes, spikes, gaps and drifts
 (`tests/oracles/`); their pass count is the `[oracles]` floor in `tests/floors.toml`. The fetch
 script for pinned public data is not written yet (`docs/gaps.md`).

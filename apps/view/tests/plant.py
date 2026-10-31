@@ -1,9 +1,9 @@
-"""The plant tests read: ``FakePlantCraft`` with loops, a pump, a text mode and DashCraft users.
+"""The plant tests read: ``FakePlantCraft`` with loops, a pump, a text mode and View users.
 
 Signals are the fake's deterministic synthetic waves, live (not a recorded file), at a
 fixed ``NOW``. Users cover every way in:
 
-| User | Level | DashCraft |
+| User | Level | View |
 |---|---|---|
 | ``admin``, ``engineer`` | admin, editor | editor |
 | ``operator`` | viewer | viewer |
@@ -19,7 +19,7 @@ from plantcraft_sdk.testing import DEFAULT_ASSETS, DEFAULT_SIGNALS, FakePlantCra
 
 NOW = datetime(2026, 10, 1, 12, 0, tzinfo=timezone.utc)
 APP_KEY = "test-app-key"
-# Another app of the suite, publishing results DashCraft cards can show.
+# Another app of the suite, publishing results View cards can show.
 LINK_KEY = "test-linkcraft-key"
 
 USERS = {
@@ -53,7 +53,7 @@ EXTRA_SIGNALS = [
         "kind": "text",
     },
 ]
-# What LinkCraft archives in HistCraft about FIC-101: its loop health over time (derived signals).
+# What Analytics archives in Historian about FIC-101: its loop health over time (derived signals).
 DERIVED_SIGNALS = [
     {
         "id": "app-linkcraft:FIC-101.health",
@@ -114,7 +114,7 @@ def make_fake(**options) -> FakePlantCraft:
 
 
 def publish_loop_health(fake: FakePlantCraft) -> None:
-    """LinkCraft's loop health as it publishes it: FIC-101 needs attention, LIC-102's expired."""
+    """Analytics' loop health as it publishes it: FIC-101 needs attention, LIC-102's expired."""
 
     linkcraft = fake.client(None, app="linkcraft", key=LINK_KEY)
     receipt = linkcraft.put_results(

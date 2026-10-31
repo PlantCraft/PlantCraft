@@ -1,10 +1,10 @@
-"""The HistCraft data layer: every read, derived write and source change goes to HistCraft.
+"""The Historian data layer: every read, derived write and source change goes to Historian.
 
-HistCraft is the suite's data layer and the only component that reaches plant data sources.
+Historian is the suite's data layer and the only component that reaches plant data sources.
 PlantCraft keeps people, tokens, assets and the plant map, checks the caller of each request,
 and forwards to ``{HISTCRAFT_URL}/api/v1/data/...``:
 
-| PlantCraft | HistCraft |
+| PlantCraft | Historian |
 |---|---|
 | ``GET /api/v1/signals?q&app&subject&result`` | ``GET /api/v1/data/signals`` (same query) |
 | ``GET /api/v1/signals/{id}`` | ``GET /api/v1/data/signals/{id}`` |
@@ -19,19 +19,19 @@ and forwards to ``{HISTCRAFT_URL}/api/v1/data/...``:
 | Sources page: status, a source's variables | ``POST .../sources/{id}/test``, ``POST .../sources/{id}/browse`` |
 | Sources page: test settings before saving | ``POST .../sources/test`` (the body of ``PUT /sources/{id}``) |
 
-HistCraft tests saved sources (``POST /sources/{id}/test``) and settings not saved yet (``POST
+Historian tests saved sources (``POST /sources/{id}/test``) and settings not saved yet (``POST
 /sources/test``: without a password it uses ``password_env`` or the stored password of that
 id); its 502 with the source's own words is an ``ok: false`` test. It browses saved sources
 (``POST /sources/{id}/browse`` ``{"root", "limit"}``). Stopping a signal keeps its history;
-HistCraft refuses derived signals (422, passed on). ``/signals/{id}`` also takes a bare tag
+Historian refuses derived signals (422, passed on). ``/signals/{id}`` also takes a bare tag
 that exactly one source has, and answers with the signal's canonical id.
 Shapes are API v1's; signals carry ``mode`` (``source``, ``archive`` or ``both``) and ``app``,
 ``subject``, ``result`` (null for plant signals), passed through. PlantCraft authenticates with a token it issues to itself (``sub: app:processcraft``,
 ``aud: histcraft``, ``apps: {histcraft: editor}``, 5 minutes, renewed a minute before expiry).
-HistCraft's 400, 404, 409, 413, 422 and 504 (a read past its time limit) answers reach the
+Historian's 400, 404, 409, 413, 422 and 504 (a read past its time limit) answers reach the
 caller as they are; any other failure is a 502, and no answer in time a 504.
 
-HistCraft's sources (``docs/data-layer.md`` in the histcraft repository) have their own shape:
+Historian's sources (``docs/data-layer.md`` in the histcraft repository) have their own shape:
 ``{id, name, kind, endpoint, namespace_uri, username, password, password_env, options{}}``.
 ``source_body`` and ``source_item`` below map PlantCraft's source settings to and from it;
 they are the one place to adapt when that shape changes.
@@ -57,14 +57,14 @@ DATA = "/api/v1/data"
 TOKEN_SECONDS = 300
 # Ask for a new token this long before the current one expires.
 RENEW_MARGIN = 60
-# HistCraft answers that are the caller's own mistake reach the caller unchanged; 504 is a read
+# Historian answers that are the caller's own mistake reach the caller unchanged; 504 is a read
 # longer than its time limit (HISTCRAFT_QUERY_TIMEOUT): "ask for a shorter period or a larger step".
 PASS_THROUGH = {400, 404, 409, 413, 422, 504}
 # How long PlantCraft waits for the Historian: longer than a read may take there (its turn in the
 # read budget, up to 30 s, then its own read limit, 30 s), so a read past it ends with the
 # Historian's advice (503, 504), not with "did not answer in time".
 WAIT_SECONDS = 75.0
-# PlantCraft settings HistCraft keeps in a source's ``options``.
+# PlantCraft settings Historian keeps in a source's ``options``.
 OPTIONS = (
     "server",
     "auth_type",
@@ -78,7 +78,7 @@ OPTIONS = (
     "timezone",
     "history_boundary_minutes",
 )
-# The options HistCraft accepts per source kind (its SOURCE_OPTIONS): any other is refused with
+# The options Historian accepts per source kind (its SOURCE_OPTIONS): any other is refused with
 # "Unknown option", so an OPC UA source never sends PI's settings nor its own auth_type (the
 # username and password say it).
 KIND_OPTIONS = {
@@ -86,11 +86,11 @@ KIND_OPTIONS = {
     "opcua": {"timeout_seconds", "timezone", "history_boundary_minutes"},
     "csv": {"timezone"},
 }
-# The id a source not saved yet is tested under (HistCraft's test body needs one).
+# The id a source not saved yet is tested under (Historian's test body needs one).
 UNSAVED_ID = "unsaved"
-# Variables one browse asks HistCraft for, at most.
+# Variables one browse asks Historian for, at most.
 BROWSE_MAX = 20000
-# Where each source type keeps the address HistCraft calls ``endpoint``.
+# Where each source type keeps the address Historian calls ``endpoint``.
 ENDPOINT_FIELD = {"opcua": "endpoint_url", "pi_web_api": "base_url", "csv": "path"}
 SOURCE_TYPE_LABELS = {"opcua": "OPC UA", "pi_web_api": "PI Web API", "csv": "CSV file"}
 
@@ -134,7 +134,7 @@ class HistCraftDataLayer(DataLayer):
     # Transport ------------------------------------------------------------------
 
     def token(self) -> str:
-        """PlantCraft's own token for HistCraft, cached until a minute before it expires."""
+        """PlantCraft's own token for the Historian, cached until a minute before it expires."""
 
         with self._lock:
             if self._token is None or time.time() > self._token[1] - RENEW_MARGIN:
@@ -158,7 +158,7 @@ class HistCraftDataLayer(DataLayer):
         raw: bool = False,
         accept: str = "application/json",
     ) -> Any:
-        """One request to HistCraft's data API; raises ``DataLayerError`` (status to answer).
+        """One request to Historian's data API; raises ``DataLayerError`` (status to answer).
 
         ``raw``: the answer's JSON as bytes, passed on unparsed (long series)."""
 
@@ -263,7 +263,7 @@ class HistCraftDataLayer(DataLayer):
             body["extremes"] = True
         return self.call("POST", "/series", json=body)
 
-    # The same reads as JSON bytes: API v1 passes HistCraft's answer on without parsing it and
+    # The same reads as JSON bytes: API v1 passes Historian's answer on without parsing it and
     # writing it again (a batch of 500 signals over a day is megabytes of JSON).
 
     def series_raw(
@@ -466,7 +466,7 @@ class HistCraftDataLayer(DataLayer):
         result["checked_at"] = pd.Timestamp.now(tz=self.timezone).isoformat(timespec="seconds")
         return result
 
-    # Sources (kept in HistCraft) ----------------------------------------------------
+    # Sources (kept in Historian) ----------------------------------------------------
 
     def sources(self) -> list[dict[str, Any]]:
         return [source_item(item) for item in _list(self.call("GET", "/sources"))]
@@ -493,13 +493,13 @@ class HistCraftDataLayer(DataLayer):
         return source_item(answer if isinstance(answer, dict) else body)
 
     def remove_source(self, source_id: str) -> dict[str, Any]:
-        """HistCraft keeps a source that still has signals (409, passed on)."""
+        """Historian keeps a source that still has signals (409, passed on)."""
 
         self.call("DELETE", f"/sources/{_quoted(source_id)}")
         return {"removed": source_id, "signals": 0}
 
     def add_signals(self, source_id: str, tags: list[str]) -> dict[str, Any]:
-        """Signals of a source HistCraft starts collecting: ``{added: [ids], skipped}``."""
+        """Signals of a source Historian starts collecting: ``{added: [ids], skipped}``."""
 
         answer = self.call(
             "POST", f"/sources/{_quoted(source_id)}/signals", json={"signals": list(tags)}
@@ -507,9 +507,9 @@ class HistCraftDataLayer(DataLayer):
         return answer if isinstance(answer, dict) else {"added": [], "skipped": []}
 
     def stop_signals(self, source_id: str, tags: list[str]) -> dict[str, Any]:
-        """HistCraft stops using the source's signals and keeps their history: ``{updated}``.
+        """Historian stops using the source's signals and keeps their history: ``{updated}``.
 
-        A tag HistCraft does not have was never used and is skipped; a derived signal is
+        A tag the Historian does not have was never used and is skipped; a derived signal is
         refused (422, passed on)."""
 
         updated = 0
@@ -525,7 +525,7 @@ class HistCraftDataLayer(DataLayer):
         return {"updated": updated}
 
     def _test(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
-        """A connection test: HistCraft's 502 (the source's own words) is ``ok: false``."""
+        """A connection test: Historian's 502 (the source's own words) is ``ok: false``."""
 
         started = time.perf_counter()
         try:
@@ -540,7 +540,7 @@ class HistCraftDataLayer(DataLayer):
         return result
 
     def source_status(self, source_id: str) -> dict[str, Any]:
-        """HistCraft tests the saved source's connection (``POST /sources/{id}/test``)."""
+        """Historian tests the saved source's connection (``POST /sources/{id}/test``)."""
 
         return self._test(f"/sources/{_quoted(source_id)}/test", {})
 
@@ -552,7 +552,7 @@ class HistCraftDataLayer(DataLayer):
         settings: dict[str, Any],
         password: str | None,
     ) -> dict[str, Any]:
-        """HistCraft tries settings not saved yet (``POST /sources/test``). Without a password
+        """Historian tries settings not saved yet (``POST /sources/test``). Without a password
         it uses ``password_env`` or, for a saved ``source_id``, the stored one."""
 
         if not source_id and password is None and not settings.get("password_env"):
@@ -570,7 +570,7 @@ class HistCraftDataLayer(DataLayer):
     def browse_source(
         self, source_id: str, *, q: str = "", offset: int = 0, limit: int = 100
     ) -> dict[str, Any]:
-        """A page of the variables HistCraft finds on the source (``q`` is the browse root)."""
+        """A page of the variables Historian finds on the source (``q`` is the browse root)."""
 
         wanted = min(BROWSE_MAX, offset + limit)
         body: dict[str, Any] = {"limit": max(1, wanted)}
@@ -592,13 +592,13 @@ class HistCraftDataLayer(DataLayer):
         }
 
 
-# Shapes (adapt here when HistCraft settles them) ------------------------------------
+# Shapes (adapt here when Historian settles them) ------------------------------------
 
 
 def source_body(
     source_id: str, *, name: str, type: str, settings: dict[str, Any], password: str | None
 ) -> dict[str, Any]:
-    """PlantCraft's source settings (``DataSourceConfig`` fields) as HistCraft's source:
+    """PlantCraft's source settings (``DataSourceConfig`` fields) as Historian's source:
     ``{id, name, kind, endpoint, namespace_uri, username, password, password_env, options,
     signals}``. ``password`` None keeps the stored one."""
 
@@ -625,7 +625,7 @@ def source_body(
 
 
 def source_item(raw: dict[str, Any]) -> dict[str, Any]:
-    """A HistCraft source as the Sources page lists one (``SourceRegistry.list`` shape)."""
+    """A Historian source as the Sources page lists one (``SourceRegistry.list`` shape)."""
 
     raw = raw if isinstance(raw, dict) else {}
     source_id = str(raw.get("id") or raw.get("source_id") or "")
@@ -665,7 +665,7 @@ def source_item(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def source_state(raw: dict[str, Any]) -> dict[str, Any] | None:
-    """The collector's view of a source. HistCraft's admin API names it ``state``, its data API
+    """The collector's view of a source. Historian's admin API names it ``state``, its data API
     (the one PlantCraft reads) ``status``; an ``{ok, message}`` answer is read the same way."""
 
     state = raw.get("state") if isinstance(raw.get("state"), dict) else raw.get("status")
@@ -681,7 +681,7 @@ def source_state(raw: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def signal_row(raw: dict[str, Any], source_id: str) -> dict[str, Any]:
-    """A variable HistCraft browsed (``{address, tag, name, path, kind, step, unit, description,
+    """A variable Historian browsed (``{address, tag, name, path, kind, step, unit, description,
     low, high}``) as the Sources page lists one."""
 
     tag = str(raw.get("tag") or raw.get("address") or "")
@@ -726,7 +726,7 @@ def _detail(response: httpx.Response) -> str:
 
 
 def _local_text(stamp: str, timezone: str) -> str:
-    """A UTC time from HistCraft as the naive local time the interface's charts use."""
+    """A UTC time from Historian as the naive local time the interface's charts use."""
 
     value = pd.Timestamp(stamp)
     if value.tzinfo is None:
@@ -735,7 +735,7 @@ def _local_text(stamp: str, timezone: str) -> str:
 
 
 def _receipt(answer: Any, items: list[Any]) -> dict[str, Any]:
-    """HistCraft's ``{written, errors}``; API v1 also gives each error its index in the request."""
+    """Historian's ``{written, errors}``; API v1 also gives each error its index in the request."""
 
     if not isinstance(answer, dict):
         answer = {}

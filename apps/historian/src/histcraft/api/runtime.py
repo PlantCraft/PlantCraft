@@ -1,4 +1,4 @@
-"""Everything one HistCraft server holds: settings, stores, the reader and the token verifier.
+"""Everything one Historian server holds: settings, stores, the reader and the token verifier.
 
 With ``HISTCRAFT_COLLECTOR=embedded`` (the default outside Docker) the server
 also runs the collector in a background thread; in the suite's compose file a

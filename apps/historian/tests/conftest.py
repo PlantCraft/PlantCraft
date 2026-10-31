@@ -1,4 +1,4 @@
-"""Shared fixtures: a FakePlantCraft whose people may open HistCraft, and a HistCraft on it.
+"""Shared fixtures: a FakePlantCraft whose people may open Historian, and a Historian on it.
 
 The suite runs on SQLite files by default. With ``HISTCRAFT_TEST_DATABASE_URL`` set to a
 PostgreSQL database (``make test-postgres``, the CI ``postgres`` job), every test runs on

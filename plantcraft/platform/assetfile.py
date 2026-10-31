@@ -826,7 +826,7 @@ def _known_sources(platform: Any) -> set[str]:
     if layer is not None and getattr(layer, "manages_sources", False):
         try:
             found |= {item["source_id"] for item in layer.sources()}
-        except Exception:  # noqa: BLE001 - HistCraft down: the local sources count
+        except Exception:  # noqa: BLE001 - Historian down: the local sources count
             pass
     return found
 

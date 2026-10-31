@@ -12,7 +12,7 @@ export function initialDoc(path: string, search: string): string | undefined {
   return new URLSearchParams(search).get("doc") ?? undefined;
 }
 
-/** LinkCraft's guides and method pages (served by /api/help/docs) in the suite's help browser. */
+/** Analytics' guides and method pages (served by /api/help/docs) in the suite's help browser. */
 export function HelpPage({ path }: { path: string }) {
   const [docs, setDocs] = useState<HelpDoc[] | null>(null);
   const [error, setError] = useState("");

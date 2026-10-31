@@ -1,6 +1,6 @@
-"""Registry of the methods LinkCraft runs, grouped by role.
+"""Registry of the methods Analytics runs, grouped by role.
 
-Two groups ship with LinkCraft:
+Two groups ship with Analytics:
 
 - ``data_quality`` (``ROLE = "gate"``): availability, value integrity and
   statistics. They run first on every loop and report ``metrics["apt"]``; the

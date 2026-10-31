@@ -1,12 +1,12 @@
 """Settings, all from the environment, each with a safe default.
 
-Secrets (the app key) are never logged or stored by DashCraft.
+Secrets (the app key) are never logged or stored by View.
 
 | Variable | Default | Meaning |
 |---|---|---|
 | ``PLANTCRAFT_URL`` | ``http://127.0.0.1:8060`` | PlantCraft API v1, as this server reaches it |
 | ``PLANTCRAFT_PUBLIC_URL`` | empty (same origin) | PlantCraft as the browser reaches it (sign-in page) |
-| ``PLANTCRAFT_APP_KEY`` | empty | App key: dashboards read plant data with DashCraft's service token |
+| ``PLANTCRAFT_APP_KEY`` | empty | App key: dashboards read plant data with View's service token |
 | ``PLANTCRAFT_APP_KEY_FILE`` | empty | File holding the app key (a Docker secret) |
 | ``DASHCRAFT_DATA_DIR`` | ``var`` | Folder of the SQLite database |
 | ``DASHCRAFT_ROOT_PATH`` | ``/dash`` | Path prefix of the interface and API |

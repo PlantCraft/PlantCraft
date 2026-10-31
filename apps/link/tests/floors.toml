@@ -19,7 +19,7 @@ hostile_series = 15
 operations = 73
 
 [oracles]
-# Simulator oracle (tests/oracles/test_simulator_oracle.py): cases whose verdict LinkCraft gets
+# Simulator oracle (tests/oracles/test_simulator_oracle.py): cases whose verdict Analytics gets
 # right, and the number of cases (a case is never removed to raise the pass rate).
 simulator_cases = 10
 simulator_case_count = 10

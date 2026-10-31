@@ -1,6 +1,6 @@
-"""What LinkCraft explains to the suite's assistants (PlantCraft API v1 ``/knowledge``).
+"""What Analytics explains to the suite's assistants (PlantCraft API v1 ``/knowledge``).
 
-A specialist of PlantCraft answers about LinkCraft's objects from these texts:
+A specialist of PlantCraft answers about Analytics' objects from these texts:
 
 - **Algorithms** (``algorithm:linkcraft/<id>``): what the algorithm is for, the assets and
   signals it reads, when to use it, how to read its verdict and what an assistant must check

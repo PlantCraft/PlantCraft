@@ -70,7 +70,7 @@ class HistoryServer:
         server = Server()
         await server.init()
         server.set_endpoint(self.endpoint)
-        server.set_server_name("HistCraft test history")
+        server.set_server_name("Historian test history")
         server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
         ns = await server.register_namespace(NAMESPACE)
         objects = server.nodes.objects

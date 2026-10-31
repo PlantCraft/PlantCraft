@@ -49,7 +49,7 @@ SOURCE = "historian"
 
 
 def _signal(tag: str, name: str, unit: str = "%", low=0.0, high=100.0) -> dict:
-    # API v1 ids are <source id>:<tag> (D2); LinkCraft never builds them from a tag.
+    # API v1 ids are <source id>:<tag> (D2); Analytics never builds them from a tag.
     return {
         "id": f"{SOURCE}:{tag}",
         "name": name,

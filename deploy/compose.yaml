@@ -6,12 +6,12 @@
 # Networks (IEC 62443 conduits, docs/security-guide.md):
 #   edge   proxy only; the one published port. No outbound NAT: the proxy cannot reach out.
 #   apps   internal: true. Proxy, PlantCraft and the apps; no route outside the host.
-#   plant  PlantCraft and HistCraft (the historian, which reads OPC UA, PI Web API and CSV
+#   plant  PlantCraft and Historian (the historian, which reads OPC UA, PI Web API and CSV
 #          sources itself): the conduit to the plant. Restrict it further with deploy/firewall.sh.
-#   demo   internal: true. PlantCraft, the Simulator (the simulator, `demo` profile) and HistCraft
+#   demo   internal: true. PlantCraft, the Simulator (the simulator, `demo` profile) and Historian
 #          only, so the Simulator has no route out of the host.
-#   histdb internal: true. HistCraft and its database `histcraft-db` only: no other container
-#          (PlantCraft, the proxy, LinkCraft, DashCraft) can open a connection to PostgreSQL.
+#   histdb internal: true. Historian and its database `histcraft-db` only: no other container
+#          (PlantCraft, the proxy, Analytics, View) can open a connection to PostgreSQL.
 #   llm    internal: true. PlantCraft and `llm-egress` only: PlantCraft's calls to a language model
 #          in the cloud go to llm-egress, never straight out.
 #   egress `llm-egress` only: its route out, used only for the hosts of the language model
@@ -26,7 +26,7 @@
 # DNS: Docker's embedded resolver (127.0.0.11) answers the service names and forwards every
 # other name to the servers in `dns`. The loopback address 127.0.0.1 is asked from inside the
 # container, where nothing listens, so the proxy and the Simulator resolve service names only and
-# never send a lookup out through the host. PlantCraft and HistCraft do the same unless
+# never send a lookup out through the host. PlantCraft and Historian do the same unless
 # PLANTCRAFT_DNS names the plant's DNS server (for PI or OPC UA servers given by name). Containers only on
 # internal networks (the apps) get no forwarded lookups from Docker at all.
 #
@@ -35,9 +35,9 @@
 # data/installer/apps/ (install.sh and the installer pass them all to docker compose).
 #
 # Profiles, one per app of the suite table (docs/app-standard.md, section 7): `linkcraft`
-# (LinkCraft at /link/), `dashcraft` (DashCraft at /dash/), `alarmcraft` (PlantCraft Alarms at /alarm/), `modelcraft` (PlantCraft Models at /model/
+# (Analytics at /link/), `dashcraft` (View at /dash/), `alarmcraft` (PlantCraft Alarms at /alarm/), `modelcraft` (PlantCraft Models at /model/
 # and its Modelica runner `modelcraft-executor`),
-# `histcraft` (HistCraft at /hist/, its collector `histcraft-collector` and its PostgreSQL
+# `histcraft` (Historian at /hist/, its collector `histcraft-collector` and its PostgreSQL
 # database `histcraft-db`); `demo` adds
 # The Simulator, the OPC UA simulator. install.sh sets them from --with-<app>, --all-apps and --demo.
 # Every image is loaded from the bundle (`pull_policy: never`): nothing is downloaded.
@@ -134,10 +134,10 @@ services:
       # The apps of the suite run by this file (the launcher, access and API v1 list them);
       # install.sh sets it from COMPOSE_PROFILES: "<id>=<prefix>@<version>" for each app on.
       PLANTCRAFT_APPS: "${PLANTCRAFT_APPS:-}"
-      # The data layer: empty, PlantCraft reads its own sources (local); with HistCraft on,
-      # http://histcraft:8100/hist makes HistCraft the data layer (sources, signals, series).
+      # The data layer: empty, PlantCraft reads its own sources (local); with Historian on,
+      # http://histcraft:8100/hist makes Historian the data layer (sources, signals, series).
       HISTCRAFT_URL: "${HISTCRAFT_URL:-}"
-      # Server processes (docs/operations.md): auto is 2 to 4 with HistCraft as the data layer,
+      # Server processes (docs/operations.md): auto is 2 to 4 with Historian as the data layer,
       # 1 while PlantCraft reads its own sources (its history cache lives in the process).
       PLANTCRAFT_WORKERS: "${PLANTCRAFT_WORKERS:-auto}"
       PLANTCRAFT_TIMEZONE: "${PLANTCRAFT_TIMEZONE:-UTC}"
@@ -357,7 +357,7 @@ services:
   linkcraft:
     <<: *hardening
     profiles: ["linkcraft"]
-    # LinkCraft: loop performance, signal quality and process models (PlantCraft Twin's twins
+    # Analytics: loop performance, signal quality and process models (PlantCraft Twin's twins
     # merged, 2026-10-22).
     image: linkcraft:${LINKCRAFT_VERSION:-0.5.1}
     user: "10012:10012"
@@ -377,7 +377,7 @@ services:
       LINKCRAFT_HISTORY_DAYS: "${LINKCRAFT_HISTORY_DAYS:-90}"
       LINKCRAFT_HISTORY_FULL_DAYS: "${LINKCRAFT_HISTORY_FULL_DAYS:-14}"
       # Set by install.sh on an upgrade from PlantCraft Twin: its data, copied to
-      # data/linkcraft/migrate/, is copied into LinkCraft once at start (then nothing happens).
+      # data/linkcraft/migrate/, is copied into Analytics once at start (then nothing happens).
       # Twin's models join Link's and its twins become algorithms on assets.
       LINKCRAFT_MIGRATE_FROM_TWINCRAFT: "${LINKCRAFT_MIGRATE_FROM_TWINCRAFT:-}"
       LINKCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
@@ -507,7 +507,7 @@ services:
   alarmcraft:
     <<: *hardening
     profiles: ["alarmcraft"]
-    # PlantCraft Alarms (AlarmCraft): alarms on plant signals, the alarm summary and alarm
+    # PlantCraft Alarms: alarms on plant signals, the alarm summary and alarm
     # performance; it reads signals and series through PlantCraft's API v1 only and publishes
     # results and events. Read only: it never writes to a plant system.
     image: alarmcraft:${ALARMCRAFT_VERSION:-0.5.1}
@@ -600,7 +600,7 @@ services:
   modelcraft:
     <<: *hardening
     profiles: ["modelcraft"]
-    # PlantCraft Models (ModelCraft): a Modelica workbench (projects, editor, diagrams,
+    # PlantCraft Models: a Modelica workbench (projects, editor, diagrams,
     # simulations, FMU export). It reads signals and series through PlantCraft's API v1 only
     # (with the person's token) and reports its runs. It never runs a model itself: every job is
     # a task of the suite's compute workers (`modelcraft-executor` here, more in Settings ›
@@ -735,7 +735,7 @@ services:
   histcraft:
     <<: *hardening
     profiles: ["histcraft"]
-    # HistCraft, the suite's historian and data layer: it reads its own sources (OPC UA, PI Web
+    # Historian, the suite's historian and data layer: it reads its own sources (OPC UA, PI Web
     # API, CSV; Read and Browse only, never a write), created on its Sources page; the collector
     # runs in `histcraft-collector` (below), so an update or restart of this one never stops the
     # recording. Networks: `plant` for real plant servers (read-only, restricted by
@@ -803,10 +803,10 @@ services:
   histcraft-collector:
     <<: *hardening
     profiles: ["histcraft"]
-    # HistCraft's collector alone (`histcraft collect`, the same image): reads the plant sources
+    # Historian's collector alone (`histcraft collect`, the same image): reads the plant sources
     # (read-only), archives, answers the browse and test requests the server files, and runs the
     # hourly housekeeping. No port; healthy while its heartbeat is fresh. One collector per
-    # archive: a second one would wait as a standby (HistCraft docs/boundary.md). Networks:
+    # archive: a second one would wait as a standby (Historian docs/boundary.md). Networks:
     # `plant` and `demo` for the sources, `histdb` for its database; not on `apps`.
     image: histcraft:${HISTCRAFT_VERSION:-0.5.1}
     user: "10008:10008"
@@ -855,11 +855,11 @@ services:
   histcraft-gateway:
     <<: *hardening
     profiles: ["histcraft"]
-    # HistCraft's gateway: Telegraf, unchanged (MIT, pinned by digest), reads the MQTT, Modbus
+    # Historian's gateway: Telegraf, unchanged (MIT, pinned by digest), reads the MQTT, Modbus
     # TCP and SQL sources and pushes their values to histcraft-collector (line protocol, a
     # token). Its whole configuration is data/histcraft/gateway/telegraf.conf, written by the
     # collector from the sources (only reading inputs, one output to the collector), read-only
-    # here and reloaded when it changes. No port, no secret but that file (0600, HistCraft's
+    # here and reloaded when it changes. No port, no secret but that file (0600, Historian's
     # uid). Networks: `plant` and `demo` for the sources and the collector.
     # The bundle sets HISTCRAFT_GATEWAY_IMAGE to the one-platform digest it saved (bundle.env).
     image: ${HISTCRAFT_GATEWAY_IMAGE:-telegraf:1.40.2@sha256:074419740e5b702f2f358262c1e3036ec1e9c09e0d0eef388dff7ed838dea202}
@@ -891,9 +891,9 @@ services:
   histcraft-db:
     <<: *hardening
     profiles: ["histcraft"]
-    # HistCraft's own database: PostgreSQL 17 (PostgreSQL License), pinned by digest and shipped
+    # Historian's own database: PostgreSQL 17 (PostgreSQL License), pinned by digest and shipped
     # in the bundle. On `histdb` only (shared with `histcraft` alone), no published port,
-    # HistCraft's uid, data in data/histcraft-db. Only `histcraft` holds its password (data/histcraft-db-password, 0600).
+    # Historian's uid, data in data/histcraft-db. Only `histcraft` holds its password (data/histcraft-db-password, 0600).
     # Backed up by blocks while it runs (docs/operations.md): the WAL summaries make each daily
     # backup incremental; a restored copy ends its recovery on a new timeline (restore_command
     # finds nothing to fetch: every WAL file it needs is in the backup).

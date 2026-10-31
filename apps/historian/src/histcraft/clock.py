@@ -1,4 +1,4 @@
-"""The time HistCraft stores: milliseconds since the epoch, UTC."""
+"""The time Historian stores: milliseconds since the epoch, UTC."""
 
 from __future__ import annotations
 

@@ -1,1 +1,1 @@
-"""The collector: the only part of HistCraft that reads plant servers."""
+"""The collector: the only part of Historian that reads plant servers."""

@@ -126,7 +126,7 @@ class Reader:
     def derived(self, subject: str, result: str) -> dict[str, Any] | None:
         """The series an app archives for ``result`` (``<app>.<name>``) about ``subject``.
 
-        Apps write what they compute (a loop's health over time) to HistCraft as derived
+        Apps write what they compute (a loop's health over time) to Historian as derived
         signals, listed by API v1 like any signal with ``app``, ``subject`` and ``result``.
         The id is PlantCraft's, never built here; numbers win over a text (status) series.
         """
@@ -454,7 +454,7 @@ def resolve(
 def _resolve_derived(
     reader: Reader, item: Any, context: str | None, short: bool | None
 ) -> Resolved:
-    """A result item on a trend: the history its app archives in HistCraft."""
+    """A result item on a trend: the history its app archives in Historian."""
 
     app, _, name = item.result.partition(".")
     what = name.replace("_", " ")
@@ -511,7 +511,7 @@ def read_result(
     """A row for an app result item: its score (or value), the producer's status and summary.
 
     The status is the producing app's own verdict (ok, warning, alarm, unknown; an expired result
-    reads unknown): DashCraft shows it as it is and never recomputes it from limits.
+    reads unknown): View shows it as it is and never recomputes it from limits.
     """
 
     app, _, name = item.result.partition(".")

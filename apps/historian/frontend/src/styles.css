@@ -1,10 +1,10 @@
-/* HistCraft styles on the suite's tokens, fonts and frame (@plantcraft/ui). */
+/* Historian styles on the suite's tokens, fonts and frame (@plantcraft/ui). */
 @import "@plantcraft/ui/fonts.css";
 @import "@plantcraft/ui/tokens.css";
 @import "@plantcraft/ui/shell.css";
 @import "@plantcraft/ui/base.css";
 
-/* HistCraft -------------------------------------------------------------------- */
+/* Historian -------------------------------------------------------------------- */
 .kpis.compact { margin: 0; gap: 6px; }
 
 .table-scroll { max-height: 52vh; overflow: auto; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); }

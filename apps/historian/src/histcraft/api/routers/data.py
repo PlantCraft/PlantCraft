@@ -1,6 +1,6 @@
 """The data API PlantCraft serves to every app (docs/data-layer.md).
 
-HistCraft is the suite's data layer: PlantCraft's API v1 routes for signals,
+Historian is the suite's data layer: PlantCraft's API v1 routes for signals,
 series and values forward here, and its ``POST /api/v1/series/write`` sends the
 series apps compute. Only PlantCraft calls these routes, with a token it signs
 for itself (``sub: app:processcraft``); people use the pages' routes. Shapes,

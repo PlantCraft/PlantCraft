@@ -38,10 +38,10 @@ DEPLOY = ROOT / "deploy"
 COMPOSE_FILE = DEPLOY / "compose.yaml"
 
 PROXY = "proxy"
-# The services on the plant network: PlantCraft and HistCraft, the historian, which reads its
+# The services on the plant network: PlantCraft and Historian, the historian, which reads its
 # own sources (OPC UA, PI Web API, CSV), with its collector. Every other service except the proxy is an app.
 PLANT_SERVICES = {"processcraft", "histcraft", "histcraft-collector", "histcraft-gateway"}
-# The Simulator, the demo's simulator, shares an internal network with PlantCraft and HistCraft
+# The Simulator, the demo's simulator, shares an internal network with PlantCraft and Historian
 # only.
 DEMO_SERVICES = {
     "processcraft",
@@ -64,7 +64,7 @@ EXPECTED_NETWORKS = {
     "histcraft-gateway": {"plant", "demo"},
     "histcraft-db": {"histdb"},
 }
-# HistCraft's database network: HistCraft, its collector and its database only.
+# Historian's database network: Historian, its collector and its database only.
 HISTDB_SERVICES = {"histcraft", "histcraft-collector", "histcraft-db"}
 # llm-egress (plantcraft/egress): the only service that resolves internet names, and opens a
 # tunnel only to the hosts of the language model providers PlantCraft lists.
@@ -96,7 +96,7 @@ CODE_SANDBOXES = {"alarmcraft-sandbox": "alarmcraft"}
 NO_NETWORK = {"installer", *EXECUTORS, *CODE_SANDBOXES}
 HISTCRAFT_DB = "histcraft-db"
 HISTCRAFT_GATEWAY = "histcraft-gateway"
-# Apps that need no app key (HistCraft reads its own sources).
+# Apps that need no app key (Historian reads its own sources).
 KEYLESS_APPS = {"histcraft"}
 OUTSIDE = ("1.1.1.1", 443)
 # Names a container must not resolve: with Docker's default upstream servers one of them would.
@@ -403,7 +403,7 @@ def test_a_worker_on_another_machine_is_as_closed() -> None:
 
 
 def test_histcraft_collects_simcraft_and_keeps_its_own_database() -> None:
-    """HistCraft reads its own sources (the Simulator over the demo network in a trial); its
+    """Historian reads its own sources (the Simulator over the demo network in a trial); its
     PostgreSQL database stays on the apps network, unpublished."""
 
     services = _services()
@@ -499,7 +499,7 @@ def test_proxy_routes_and_stays_offline() -> None:
     )
     # Installed apps' routes are imported before the suite's own, from the installer's folder.
     assert code.index("import /etc/caddy/apps/*.caddy") < code.index("handle /link/*")
-    # PlantCraft Twin's addresses open LinkCraft's algorithms.
+    # PlantCraft Twin's addresses open Analytics' algorithms.
     assert "redir /twin/* /link/algorithms 308" in code
     for directive in ("admin off", "skip_install_trust", "ocsp_stapling off"):
         assert directive in code
@@ -769,7 +769,7 @@ STAND_IN_APP = """
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:{port}/', timeout=4)"]
 """
 
-# HistCraft's database without its PostgreSQL image: a TCP listener at histcraft-db:5432.
+# Historian's database without its PostgreSQL image: a TCP listener at histcraft-db:5432.
 STAND_IN_HISTCRAFT_DB = """
   histcraft-db:
     image: processcraft:{version}
@@ -912,7 +912,7 @@ def stack(tmp_path_factory: pytest.TempPathFactory):
     settings = {
         "COMPOSE_PROJECT_NAME": "pc-isolation",
         "COMPOSE_PROFILES": "demo",
-        # The LinkCraft image checked below, not the version .env.example names.
+        # The Analytics image checked below, not the version .env.example names.
         "LINKCRAFT_VERSION": os.environ.get("LINKCRAFT_VERSION") or version,
         "SIMCRAFT_VERSION": _simcraft_version(),
         "PLANTCRAFT_HOSTNAME": "localhost",
@@ -1065,7 +1065,7 @@ def test_live_only_processcraft_and_histcraft_reach_the_plant(stack: Stack) -> N
     assert stack.probe("processcraft", "simcraft", 4840)["reached"] is True
     # The simulator is on an internal network: no route out, even without firewall.sh.
     assert stack.probe("simcraft", *OUTSIDE) == {"default_route": False, "reached": False}
-    # HistCraft collects the Simulator's values itself, over the demo network.
+    # Historian collects the Simulator's values itself, over the demo network.
     assert stack.probe("histcraft", "simcraft", 4840)["reached"] is True
     for app in sorted(set(APPS) - PLANT_SERVICES):
         result = _docker(

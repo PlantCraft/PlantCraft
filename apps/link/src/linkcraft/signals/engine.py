@@ -2,7 +2,7 @@
 samples, judge every signal with the data quality checks.
 
 Signals are read and judged in batches (``BATCH`` at a time) so memory stays flat on a large
-plant; the checks run in LinkCraft's compute pool (worker processes, ``LINKCRAFT_PROCESSES``).
+plant; the checks run in Analytics' compute pool (worker processes, ``LINKCRAFT_PROCESSES``).
 One execution (a run) at a time.
 """
 

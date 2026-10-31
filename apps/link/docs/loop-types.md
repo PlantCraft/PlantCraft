@@ -5,7 +5,7 @@
 
 PlantCraft's asset record says what each control loop controls (attribute `loop_type`) and how
 much it matters (`criticality`). PlantCraft Analytics starts every loop from those two values; a person can
-change the result on the loop page, and that choice is kept in PlantCraft Analytics's own database and wins
+change the result on the loop page, and that choice is kept in PlantCraft Analytics' own database and wins
 over the record from then on (the page says "from the asset record" or "set here" next to each
 setting, and "Use the asset record" gives a setting back).
 

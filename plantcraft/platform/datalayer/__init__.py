@@ -4,13 +4,13 @@ Two implementations behind one interface (``DataLayer``):
 
 - ``local`` (``local.py``): PlantCraft's own sources, signal catalog and history cache, as
   before; derived series in the ``derived_series`` table. Used when ``HISTCRAFT_URL`` is unset
-  (tests, installs without HistCraft).
-- ``histcraft`` (``histcraft.py``): HistCraft is the suite's data layer and the only component
+  (tests, installs without Historian).
+- ``histcraft`` (``histcraft.py``): Historian is the suite's data layer and the only component
   that reaches plant data sources; PlantCraft forwards every read, derived write and source
   change to ``{HISTCRAFT_URL}/api/v1/data/...`` with a token it issues to itself.
 
 API v1 checks the caller, then asks the data layer; the interface's own pages (asset values,
-history, sources) do the same, so with HistCraft configured nothing here reads the plant.
+history, sources) do the same, so with Historian configured nothing here reads the plant.
 Failures are ``DataLayerError`` with the HTTP status to answer (404, 422, 502, 504...).
 """
 
@@ -37,7 +37,7 @@ class DataLayer:
     """What every implementation offers; shapes are API v1's (``docs/api-v1.md``)."""
 
     kind = "base"
-    # True when sources are configured in the data layer (HistCraft), not in PlantCraft.
+    # True when sources are configured in the data layer, not in PlantCraft.
     manages_sources = False
 
     # API v1 reads ---------------------------------------------------------------
@@ -166,7 +166,7 @@ class DataLayer:
 
 
 def build_datalayer(platform: Any, issuer: Any = None) -> DataLayer:
-    """HistCraft when ``HISTCRAFT_URL`` is set (and a token issuer is given), else local."""
+    """Historian when ``HISTCRAFT_URL`` is set (and a token issuer is given), else local."""
 
     url = os.environ.get(HISTCRAFT_URL_ENV, "").strip()
     if url and issuer is not None:

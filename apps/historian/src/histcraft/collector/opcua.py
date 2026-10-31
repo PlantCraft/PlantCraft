@@ -1,6 +1,6 @@
 """Reading an OPC UA server: values, browsing and a connection test. Nothing else.
 
-This is the only module of HistCraft that talks to a plant server. It uses the
+This is the only module of Historian that talks to a plant server. It uses the
 OPC UA services Read, Browse and the namespace array lookup only;
 ``tests/test_read_only.py`` fails if any write service (Write, Call,
 HistoryUpdate, AddNodes, DeleteNodes...) appears in the code.

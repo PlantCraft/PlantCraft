@@ -1,8 +1,8 @@
 """Weekly PDF for management: where the portfolio stands and what changed.
 
-One A4 document built from what LinkCraft already knows: the current snapshot
+One A4 document built from what Analytics already knows: the current snapshot
 (score and its explanation per loop), the runs of the last seven days (score
-trend) and, when given, the engineering actions (none are kept in LinkCraft yet).
+trend) and, when given, the engineering actions (none are kept in Analytics yet).
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""The bench plant's past in HistCraft; run inside its container by ci/bench/age.py.
+"""The bench plant's past in Historian; run inside its container by ci/bench/age.py.
 
     docker compose exec -T -e DAYS=91 histcraft python - < hist_age.py      # age to 91 days
     docker compose exec -T -e MEASURE=1 histcraft python - < hist_age.py    # housekeeping only

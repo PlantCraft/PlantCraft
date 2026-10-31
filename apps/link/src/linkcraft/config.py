@@ -1,7 +1,7 @@
 """Settings (from the environment) and the loop and analysis contracts.
 
 Every setting has a safe default and comes from an environment variable;
-secrets (the app key) are never logged or stored by LinkCraft.
+secrets (the app key) are never logged or stored by Analytics.
 
 | Variable | Default | Meaning |
 |---|---|---|
@@ -78,7 +78,7 @@ class AssetRecord(BaseModel):
     """What PlantCraft's asset record says about a loop, as of the last sync.
 
     Owned by PlantCraft (refreshed by every sync, never edited here). ``loop_type`` and
-    ``criticality`` are kept as PlantCraft gave them, even when LinkCraft does not know the
+    ``criticality`` are kept as PlantCraft gave them, even when Analytics does not know the
     value; ``missing_roles`` lists the required signal roles the asset has no signal for.
     """
 
@@ -96,7 +96,7 @@ class AssetRecord(BaseModel):
 
 
 class LoopConfig(BaseModel):
-    """One control loop as LinkCraft analyses it."""
+    """One control loop as Analytics analyses it."""
 
     loop_id: str = Field(min_length=1, max_length=120)
     name: str = Field(min_length=1, max_length=200)
@@ -112,7 +112,7 @@ class LoopConfig(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
     # Loops from PlantCraft: the asset record (None on rows synced before the asset catalog).
     asset_record: AssetRecord | None = None
-    # Settings a person chose in LinkCraft ("profile_id", "criticality"); they win over the
+    # Settings a person chose in Analytics ("profile_id", "criticality"); they win over the
     # defaults derived from the asset record.
     set_here: list[str] = Field(default_factory=list)
 
@@ -261,7 +261,7 @@ def manifest_path() -> Path | None:
 
 @cache
 def app_manifest() -> dict[str, Any]:
-    """LinkCraft's ``app.toml`` (the PlantCraft app standard, section 4), read once."""
+    """Analytics' ``app.toml`` (the PlantCraft app standard, section 4), read once."""
 
     path = manifest_path()
     if path is None:

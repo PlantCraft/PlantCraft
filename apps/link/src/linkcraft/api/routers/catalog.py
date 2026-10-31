@@ -217,7 +217,7 @@ def delete_method_defaults_version(
 
 @router.get("/api/methods/{method_id}/source")
 def method_source(method_id: str, _user: CurrentUser) -> dict[str, Any]:
-    """The method's code, as shipped (read-only: LinkCraft has no method studio yet)."""
+    """The method's code, as shipped (read-only: Analytics has no method studio yet)."""
 
     try:
         module = (

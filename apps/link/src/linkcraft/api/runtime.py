@@ -1,4 +1,4 @@
-"""Everything one LinkCraft server holds: settings, stores, PlantCraft clients and workers.
+"""Everything one Analytics server holds: settings, stores, PlantCraft clients and workers.
 
 Two ways to reach PlantCraft:
 
@@ -671,7 +671,7 @@ class Runtime(PlatformRuntime):
             LOGGER.exception("Publishing to PlantCraft (%s) failed", name)
             return None
 
-    # What LinkCraft explains to the suite's assistants (linkcraft.knowledge) ----------
+    # What Analytics explains to the suite's assistants (linkcraft.knowledge) ----------
 
     @property
     def root_path(self) -> str:
@@ -695,7 +695,7 @@ class Runtime(PlatformRuntime):
         return self.publisher_call("publish_knowledge", items)
 
     def explain(self, ref: str) -> dict[str, Any] | None:
-        """The text about one of LinkCraft's objects, freshly written; None for others."""
+        """The text about one of Analytics' objects, freshly written; None for others."""
 
         kind, _, rest = ref.partition(":")
         if kind == "app" and rest == APP_ID:
@@ -761,7 +761,7 @@ class Runtime(PlatformRuntime):
         return recording(schedule, profile)
 
     def publish_schedules(self) -> Any:
-        """LinkCraft's whole schedule list, as PlantCraft's Executions page shows it."""
+        """Analytics' whole schedule list, as PlantCraft's Executions page shows it."""
 
         schedules = [
             {**item, "subjects": self.schedule_assets(item)} for item in self.jobs.list_schedules()

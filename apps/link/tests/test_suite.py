@@ -1,10 +1,10 @@
-"""How LinkCraft links to the suite through PlantCraft (app standard, sections 2 and 6).
+"""How Analytics links to the suite through PlantCraft (app standard, sections 2 and 6).
 
 Results on assets, health and status as derived series, finding events, rounds as runs, the
 schedule list, and the Signal quality protocol's verdicts read before a loop is judged; every
 endpoint optional (a 404 is logged once). The SDK's
 ``FakePlantCraft`` serves the suite endpoints with PlantCraft's rules and keeps what
-LinkCraft published in ``fake.links``.
+Analytics published in ``fake.links``.
 """
 
 from __future__ import annotations
@@ -60,7 +60,7 @@ def _verdict(signal_id: str, *, status="good", message="Good data.", age_minutes
 
 
 def test_references_keep_ids_whole():
-    """What LinkCraft relies on in ``plantcraft_sdk.refs``: an API v1 id goes in and out whole."""
+    """What Analytics relies on in ``plantcraft_sdk.refs``: an API v1 id goes in and out whole."""
 
     for signal_id in ("pi:FIC1001.PV", "pi:Unit 2\\FIC 101:PV/x", "fake:FIC-101.PV"):
         ref = signal_ref(signal_id)

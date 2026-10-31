@@ -1,6 +1,6 @@
 """Raw samples of signals for the signal quality checks, read only through PlantCraft API v1.
 
-LinkCraft never opens a historian or an OPC UA connection. (The loop methods read a regular
+Analytics never opens a historian or an OPC UA connection. (The loop methods read a regular
 grid instead, ``data.plant``.) Samples come from
 ``POST /api/v1/series`` without ``step``: the values as the source recorded
 them, because resampling hides exactly what the checks look for (gaps, frozen
@@ -90,7 +90,7 @@ class SignalReader:
         self.cache: RawCache | None = cache or None
 
     def signals(self) -> list[dict[str, Any]]:
-        """The plant's measured signals: derived ones (series apps computed, such as LinkCraft's
+        """The plant's measured signals: derived ones (series apps computed, such as Analytics'
         own quality scores), the suite's health and one-time imports are not live plant data and
         are never checked."""
 

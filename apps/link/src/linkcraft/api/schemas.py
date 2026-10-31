@@ -73,7 +73,7 @@ class SignalsPayload(BaseModel):
 
 
 class LoopPayload(BaseModel):
-    """A loop defined in LinkCraft, by PlantCraft signal ids."""
+    """A loop defined in Analytics, by PlantCraft signal ids."""
 
     loop_id: str = Field(min_length=1, max_length=120, pattern=r"^[A-Za-z0-9_.:\-]+$")
     name: str = Field(min_length=1, max_length=200)

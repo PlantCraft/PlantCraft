@@ -11,7 +11,7 @@ stage. When a gap closes, delete its row in the same change and note it in `CHAN
 | G12 | The 30-seed scenario study and the 600-run isolation matrix were not regenerated for benchmark 0.4.0 (their digests embed `benchmark_version`); `docs/validation.md` still lists the 0.3.0 identities | medium | B |
 | G3 | Endpoints are anonymous `NoSecurity` only: no signed/encrypted policies, certificates or user authentication | medium | |
 | G2 | Conformance is checked with the asyncua client only; no run of an independent reference client or the OPC Foundation's Compliance Test Tool | medium | |
-| G4 | No writable nodes (setpoints, modes, outputs), so ModelCraft/MPC cannot close a loop on the simulator. Any write path is a maintainer decision | medium | |
+| G4 | No writable nodes (setpoints, modes, outputs), so Models/MPC cannot close a loop on the simulator. Any write path is a maintainer decision | medium | |
 | G14 | No pip-audit, image vulnerability scan or CycloneDX SBOM in CI | medium | |
 | G15 | The loop portfolio publishes only `Good` values and has no data-quality faults (the benchmark has them); subscriptions are not covered by a test | low | |
 | G5 | Engineering units are string properties, not OPC UA Part 8 `EUInformation` and `EURange` | low | |

@@ -1,9 +1,9 @@
 """Analysis defaults per loop type: the algorithm and method parameters a loop starts with.
 
 PlantCraft's asset record says what a loop controls (attribute ``loop_type``: flow, level,
-pressure, temperature, composition). LinkCraft turns that into the loop's starting algorithm and a
+pressure, temperature, composition). Analytics turns that into the loop's starting algorithm and a
 few method parameters that depend on how fast the process is and how the loop is meant to work.
-A person can change any of them on the loop page; that choice is LinkCraft's and wins over these
+A person can change any of them on the loop page; that choice is Analytics' and wins over these
 defaults (``loops/store.py``). The table and its reasons are in ``docs/loop-types.md``.
 
 Parameters here sit *under* the algorithm's own parameters: defaults of the method, then the loop
@@ -116,13 +116,13 @@ GENERIC_WHY = (
     "The record does not say what the loop controls: Flow loop runs with the method defaults."
 )
 
-# Criticality values of the asset record -> LinkCraft's weights (``loops/analysis.py``).
+# Criticality values of the asset record -> Analytics' weights (``loops/analysis.py``).
 CRITICALITIES = ("critical", "high", "medium", "low")
 DEFAULT_CRITICALITY = "medium"
 
 
 def known_loop_type(value: Any) -> str | None:
-    """The loop type in LinkCraft's table, or ``None`` (missing, not text or not known)."""
+    """The loop type in Analytics' table, or ``None`` (missing, not text or not known)."""
 
     if not isinstance(value, str):
         return None
