@@ -4664,6 +4664,17 @@ def _apps_from_env(default_host: bool) -> dict[str, str]:
     return apps
 
 
+def _visitor_password() -> str:
+    """The visitor's password as PlantCraft reads it (``plantcraft.auth.public_demo``): the
+    environment variable, else the secret file ``install.sh`` writes (``data/public-demo-password``)."""
+
+    password = os.environ.get("PLANTCRAFT_PUBLIC_DEMO_PASSWORD", "").strip()
+    file = os.environ.get("PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE", "").strip()
+    if not password and file and Path(file).is_file():
+        password = Path(file).read_text(encoding="utf-8").strip()
+    return password
+
+
 def _password(args: argparse.Namespace) -> str:
     if args.password_file:
         return Path(args.password_file).read_text(encoding="utf-8").strip()
@@ -4702,7 +4713,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--password-file")
     parser.add_argument(
         "--visitor-password",
-        default=os.environ.get("PLANTCRAFT_PUBLIC_DEMO_PASSWORD") or "plantcraft-demo",
+        default=_visitor_password() or "plantcraft-demo",
         help="Password of the read-only visitor account 'demo'.",
     )
     parser.add_argument("--map", type=Path)
