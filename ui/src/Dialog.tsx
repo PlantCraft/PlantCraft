@@ -144,6 +144,8 @@ export type AskTextOptions = {
   cancel?: string;
   /** "number" for a count or a duration: the answer must then be a number above zero. */
   type?: "text" | "number";
+  /** An empty answer is allowed (it resolves ""), for "empty takes it out". */
+  optional?: boolean;
 };
 
 /** The question askText() draws. Exported for its tests and for a page that wants it inline. */
@@ -152,7 +154,7 @@ export function AskTextDialog({ message, options, answer }: { message: string; o
   const fieldId = useId();
   const number = options.type === "number";
   const trimmed = value.trim();
-  const valid = number ? Number.isFinite(Number(trimmed)) && Number(trimmed) > 0 : trimmed.length > 0;
+  const valid = number ? Number.isFinite(Number(trimmed)) && Number(trimmed) > 0 : options.optional || trimmed.length > 0;
   return (
     <Dialog
       title={options.title ?? message}
@@ -180,7 +182,7 @@ export function AskTextDialog({ message, options, answer }: { message: string; o
  * Ask the person for one short text in the suite's dialog: resolves the trimmed text when they go
  * ahead, null when they cancel, press Escape or click outside. `await askText(...)` takes the place
  * of `window.prompt(...)`; the button that goes ahead stays off while the field is empty (or, with
- * `type: "number"`, is not a number above zero).
+ * `type: "number"`, is not a number above zero), unless `optional` allows an empty answer.
  */
 export function askText(message: string, options: AskTextOptions = {}): Promise<string | null> {
   return new Promise((resolve) => {

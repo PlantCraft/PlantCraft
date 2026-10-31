@@ -12,7 +12,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - `@plantcraft/ui`: **`askText(question, { value, confirm, type })`**, the suite's dialog for one
   short text (a name, a number of hours), resolving the trimmed text or null; its button stays off
   while the answer is empty or, with `type: "number"`, not above zero. It replaces `window.prompt`
-  in Models (name of a project copy), Historian (hours to backfill) and View (name of a new trend);
+  in Models (name of a project copy), Historian (hours to backfill), View (name of a new trend), the
+  assistant (group of a chat; `optional: true` lets an empty answer take it out) and Desk (rename a
+  to-do list);
   `tests/test_visual_rules.py` keeps `window.prompt` out.
 - `@plantcraft/ui`: **`showToast(text, { tone })`**, a short message in the page's corner that
   closes on its own (6 s, errors 10 s), with its × or Escape; screen readers read it. It replaces

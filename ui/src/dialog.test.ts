@@ -116,6 +116,13 @@ describe("dialog", () => {
     act(() => [...document.querySelectorAll<HTMLButtonElement>(".pc-confirm-host button")].find((item) => item.textContent === "Cancel")!.click());
     expect(await hours).toBeNull();
 
+    const group = askText("Group (empty takes it out)", { value: "Pumps", optional: true });
+    await flush();
+    act(() => setValue(document.querySelector<HTMLInputElement>(".pc-ask-field")!, ""));
+    act(() => document.querySelector<HTMLButtonElement>(".pc-ask-yes")!.click());
+    expect(await group).toBe("");
+    await flush();
+
     const escape = askText("Name of the trend");
     await flush();
     act(() => { key(document.querySelector('[role="dialog"]')!, "Escape"); });
