@@ -81,3 +81,15 @@ def test_the_fake_takes_its_own_types():
     assert client.assets(type="loop")[0]["type_path"] == ["loop", "cascade"]
     cascade = next(item for item in client.asset_types() if item["id"] == "cascade")
     assert [entry["key"] for entry in cascade["roles"]] == ["pv", "pv2"]
+
+
+def test_a_multivariable_controller_holds_mvs_and_cvs_with_the_same_roles():
+    types = {item["id"]: item for item in resolve_types(STARTER_TYPES)}
+    assert types["apc"]["children"] == ["apc_mv", "apc_cv"]
+    assert [entry["key"] for entry in types["apc"]["roles"] if entry["required"]] == ["on"]
+    roles = ["value", "lo", "hi", "target", "status", "shadow_price"]
+    for kind in ("apc_mv", "apc_cv"):
+        assert types[kind]["path"] == ["apc_variable", kind]
+        assert [entry["key"] for entry in types[kind]["roles"]] == roles
+        assert [entry["key"] for entry in types[kind]["attributes"]] == ["limit_band"]
+    assert "apc" in types["unit"]["children"] and "apc" in types["area"]["children"]

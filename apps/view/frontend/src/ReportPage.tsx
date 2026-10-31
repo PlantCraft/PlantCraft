@@ -13,7 +13,7 @@ import { FolderSelect } from "./FolderDialogs";
 import { formatDate, t } from "./i18n";
 import { accessLabel, cardPixels, stateStatus, when, windowLabel } from "./model";
 import { cadenceLabel, CLOSED_LABELS, deliveredLabel, insertSection, MAX_SECTIONS, MAX_TEXT, moveSection, outlineOf, newSection, PERIOD_FOR, PERIODS, pdfSize, periodLabel, periodRange, replaceSection, reportDraftOf, runState, runStatusLabel, sectionName, SECTION_LABELS, TRIGGER_LABELS, WEEKDAY_NAMES, WEEKDAYS } from "./reportModel";
-import type { Card, CardData, Directory, EventKind, EventsData, Folder, Me, Report, ReportDraft, ReportRun, Section, SectionData, SectionKind } from "./types";
+import type { Card, CardData, Directory, EventKind, EventsData, EventTrigger, Folder, Me, Report, ReportDraft, ReportRun, Section, SectionData, SectionKind } from "./types";
 import type { OutlineEntry } from "./reportModel";
 import { ErrorBox, Link, Loading } from "./ui";
 
@@ -199,6 +199,14 @@ function ReportSettingsDialog({ draft, folders, zone, onApply, onClose }: { draf
   useEffect(() => { api.directory().then(setDirectory).catch(() => setDirectory({ people: [], groups: [] })); }, []);
   const schedule = value.schedule;
   const closed = schedule.every !== "off" && Boolean(schedule.closed);
+  const [eventKinds, setEventKinds] = useState<EventKind[]>([]);
+  useEffect(() => { api.eventKinds().then(setEventKinds).catch(() => setEventKinds([])); }, []);
+  const trigger = schedule.on_event ?? null;
+  const setTrigger = (next: EventTrigger | null) => setValue({ ...value, schedule: { ...schedule, on_event: next } });
+  const kindOptions = (selected: string) => <>
+    {selected && !eventKinds.some((kind) => kind.kind === selected) && <option value={selected}>{selected}</option>}
+    {eventKinds.map((kind) => <option key={kind.kind} value={kind.kind}>{kind.title} · {kind.app}</option>)}
+  </>;
   const setEvery = (every: ReportDraft["schedule"]["every"]) => setValue({ ...value, schedule: { ...schedule, every }, period: every === schedule.every ? value.period : PERIOD_FOR[every] });
   function submit(event: FormEvent) { event.preventDefault(); onApply({ ...value, name: value.name.trim() }); }
   return <Dialog title={t("Report settings")} onClose={onClose} onSubmit={submit}>
@@ -220,7 +228,13 @@ function ReportSettingsDialog({ draft, folders, zone, onApply, onClose }: { draf
               {PERIODS.map((period) => <option key={period} value={period}>{periodLabel(period)}</option>)}
             </select></label>}
           {schedule.every !== "off" && <label className="check tc-wide"><input type="checkbox" checked={closed} onChange={() => setValue({ ...value, schedule: { ...schedule, closed: !closed } })} /> {t("Whole calendar periods (last week, last month), not the time up to the send")}</label>}
-          <small className="muted tc-wide">{schedule.every === "off" ? t("Made only with Download PDF or Send now.") : closed ? t("{cadence}, in the installation's time zone ({zone}), over {period}.", { cadence: cadenceLabel(schedule), zone, period: t(CLOSED_LABELS[schedule.every]).toLowerCase() }) : t("{cadence}, in the installation's time zone ({zone}), over {period} up to then.", { cadence: cadenceLabel(schedule), zone, period: periodLabel(value.period).toLowerCase() })}</small>
+          <label className="check tc-wide"><input type="checkbox" checked={Boolean(trigger)} onChange={() => setTrigger(trigger ? null : { end_kind: eventKinds[0]?.kind ?? "", start_kind: "", subject: "" })} /> {t("Also when an event ends a batch or a start-up, over that batch")}</label>
+          {trigger && <>
+            <label>{t("Made when")}<select required value={trigger.end_kind} onChange={(event) => setTrigger({ ...trigger, end_kind: event.target.value })}><option value="">{t("Choose the event that ends it")}</option>{kindOptions(trigger.end_kind)}</select></label>
+            <label>{t("From")}<select value={trigger.start_kind ?? ""} onChange={(event) => setTrigger({ ...trigger, start_kind: event.target.value })}><option value="">{t("The start in the event, else the period above")}</option>{kindOptions(trigger.start_kind ?? "")}</select></label>
+            <label className="tc-wide">{t("Only about")}<input maxLength={300} placeholder={t("Any asset (or asset:<id>)")} value={trigger.subject ?? ""} onChange={(event) => setTrigger({ ...trigger, subject: event.target.value })} /></label>
+          </>}
+          <small className="muted tc-wide">{schedule.every === "off" ? (trigger ? t("Made each time the event happens, over the batch it ends.") : t("Made only with Download PDF or Send now.")) : closed ? t("{cadence}, in the installation's time zone ({zone}), over {period}.", { cadence: cadenceLabel(schedule), zone, period: t(CLOSED_LABELS[schedule.every]).toLowerCase() }) : t("{cadence}, in the installation's time zone ({zone}), over {period} up to then.", { cadence: cadenceLabel(schedule), zone, period: periodLabel(value.period).toLowerCase() })}</small>
         </fieldset>
         <div className="tc-wide tc-field"><span>{t("Sent to")}</span>
           <RecipientPicker label={t("Sent to")} value={value.recipients} onChange={(recipients) => setValue({ ...value, recipients })} people={directory?.people ?? []} groups={directory?.groups ?? []} placeholder={t("A person or a group of the platform…")} />

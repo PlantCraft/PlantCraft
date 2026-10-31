@@ -8,6 +8,14 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **Third-party multivariable controllers (APC), read only: health and the cost of each active
+  limit** (gaps A16, A17). Results has a *Multivariable controllers* tab: per controller, over the
+  last day, week or month, the time it was on, its MVs in service and its CVs at a limit; one
+  controller's page ranks its active limits by the worth of 1% more range (its shadow price times
+  1% of the variable's range) and lists each MV and CV with its value, target, limits and state.
+  The weekly report has the same tables, and the widget "Analytics: multivariable controllers"
+  shows each controller on the Overview and on Desk. It reads the assets of types `apc`, `apc_mv`
+  and `apc_cv` (`GET /api/apc`, `GET /api/apc/<id>`) and writes nothing.
 - **A plant map on the Overview: every loop coloured by the KPI you pick.** The KPIs are health,
   effective control, time in normal mode, time inside the band, and time with the output off its
   limits. All of them are percentages where higher is better, so one scale colours them: good

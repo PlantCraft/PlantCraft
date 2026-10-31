@@ -31,6 +31,10 @@ made: a monthly report sent on day 3 still covers the first to the last day of t
 - **Covers**: the period, from 1 hour to a year. Changing the repeat suggests a matching period
   (a day, 7, 14, 30 or 90 days). **Whole calendar periods** covers the last closed day, week, two
   weeks, month or quarter instead.
+- **Also when an event ends a batch or a start-up**: each new event of the kind in **Made when**
+  (about the asset in **Only about**, or any) makes one report over the batch it ends: from the
+  latest event of the kind in **From** about the same asset, else from the start the event carries,
+  else the period above before it; at most 31 days. Each batch is reported once.
 - **Sent to**: people and groups of the platform. They get one notification per send; only
   those who may see the report's folder open it. **Also by email** adds an email where PlantCraft
   sends email and the person allows it.

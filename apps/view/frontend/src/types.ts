@@ -199,7 +199,10 @@ export interface Section {
   title: string; text: string; card: Card | null; events: EventsSpec | null; assistant?: AssistantSpec | null; width: "full" | "half";
 }
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
-export interface Schedule { every: "off" | "day" | "week" | "fortnight" | "month" | "quarter"; at: string; weekday: Weekday; day: number; /** Cover the last whole calendar period (last week, last month), not the period up to the send. */ closed?: boolean }
+export interface Schedule { every: "off" | "day" | "week" | "fortnight" | "month" | "quarter"; at: string; weekday: Weekday; day: number; /** Cover the last whole calendar period (last week, last month), not the period up to the send. */ closed?: boolean;
+  /** Also when an event ends a batch or a start-up: a report over that period (V5). */
+  on_event?: EventTrigger | null }
+export interface EventTrigger { end_kind: string; start_kind?: string; subject?: string }
 export interface ReportDraft {
   name: string; description: string; folder_id: string; period: string; schedule: Schedule;
   recipients: string[]; email: boolean; sections: Section[];

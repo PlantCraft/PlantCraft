@@ -31,7 +31,7 @@ image = "starter"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.92.0"
+sdk = "0.93.0"
 asset_types = []
 roles = {}
 

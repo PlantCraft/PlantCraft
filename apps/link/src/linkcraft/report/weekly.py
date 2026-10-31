@@ -233,6 +233,7 @@ def weekly_report_pdf(
     actions: list[dict[str, Any]],
     now: datetime | None = None,
     top: int = 10,
+    apc: list[dict[str, Any]] | None = None,
 ) -> bytes:
     now = local(now or datetime.now(UTC))
     since = now - timedelta(days=7)
@@ -445,6 +446,9 @@ def weekly_report_pdf(
             suspect_table,
         ]
 
+    if apc:
+        story += _apc_section(apc, width, style)
+
     order = {"blocked": 0, "open": 1, "in_progress": 2}
     open_rows = [
         [
@@ -505,6 +509,140 @@ def weekly_report_pdf(
     )
     document.build(story, onFirstPage=_footer, onLaterPages=_footer)
     return buffer.getvalue()
+
+
+def _number(value: Any) -> str:
+    return "—" if value is None else f"{value:.3g}"
+
+
+def _apc_section(
+    controllers: list[dict[str, Any]], width: float, style: dict[str, ParagraphStyle]
+) -> list[Any]:
+    """The multivariable controllers' week (A16) and their costliest active limits (A17)."""
+
+    rows = [
+        [
+            Paragraph(t(text), style["cell_bold"])
+            for text in ("Controller", "On", "MVs in service", "CVs at a limit", "Active limits")
+        ]
+    ]
+    limits: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    for item in controllers:
+        summary = item["summary"]
+        rows.append(
+            [
+                Paragraph(
+                    f"<b>{escape(item['name'])}</b><br/><font color='#6b7e85'>{escape(item.get('vendor') or '')}</font>",
+                    style["cell"],
+                ),
+                Paragraph(_pct(summary.get("on_pct")), style["cell"]),
+                Paragraph(
+                    t(
+                        "{share} of the time ({now} now)",
+                        share=_pct(summary.get("mv_in_service_pct")),
+                        now=f"{summary['mvs_in_service']}/{summary['mvs']}",
+                    ),
+                    style["cell"],
+                ),
+                Paragraph(
+                    t(
+                        "{share} of the time ({now} now)",
+                        share=_pct(summary.get("cv_at_limit_pct")),
+                        now=f"{summary['cvs_at_limit']}/{summary['cvs']}",
+                    ),
+                    style["cell"],
+                ),
+                Paragraph(str(len(item.get("constraints") or [])), style["cell"]),
+            ]
+        )
+        limits += [(item, constraint) for constraint in item.get("constraints") or []]
+    table = Table(
+        rows,
+        colWidths=[width - 128 * mm, 18 * mm, 40 * mm, 40 * mm, 30 * mm],
+        repeatRows=1,
+    )
+    table.setStyle(_table_style())
+    story: list[Any] = [
+        Paragraph(t("Multivariable controllers"), style["h2"]),
+        Paragraph(
+            t(
+                "Read from each controller's own signals, never written. On: the time the "
+                "controller was on. MVs in service: the mean time its manipulated variables were "
+                "in service while it was on. CVs at a limit: the mean time its controlled "
+                "variables' targets sat at a limit."
+            ),
+            style["small"],
+        ),
+        Spacer(1, 4),
+        table,
+    ]
+    limits.sort(
+        key=lambda pair: (
+            pair[1].get("worth_1pct") is None,
+            -(pair[1].get("worth_1pct") or 0.0),
+            -pair[1]["hours"],
+        )
+    )
+    if limits:
+        cost_rows = [
+            [
+                Paragraph(t(text), style["cell_bold"])
+                for text in ("Limit", "Active", "Constraint cost", "Worth of 1% more range")
+            ]
+        ]
+        for item, constraint in limits[:10]:
+            unit = escape(item.get("cost_unit") or "")
+            side = t("low limit") if constraint["side"] == "lo" else t("high limit")
+            cost_rows.append(
+                [
+                    Paragraph(
+                        f"<b>{escape(constraint['name'])}</b> · {side}<br/><font color='#6b7e85'>{escape(item['name'])} · {constraint['kind'].upper()}</font>",
+                        style["cell"],
+                    ),
+                    Paragraph(
+                        t(
+                            "{hours} h ({share})",
+                            hours=f"{constraint['hours']:.1f}",
+                            share=_pct(constraint.get("share_pct")),
+                        ),
+                        style["cell"],
+                    ),
+                    Paragraph(
+                        t(
+                            "{cost} {unit} per unit",
+                            cost=_number(constraint.get("shadow_price")),
+                            unit=unit,
+                        )
+                        if constraint.get("shadow_price") is not None
+                        else "—",
+                        style["cell"],
+                    ),
+                    Paragraph(
+                        f"<b>{_number(constraint['worth_1pct'])} {unit}</b>"
+                        if constraint.get("worth_1pct") is not None
+                        else t("No cost from the controller"),
+                        style["cell"],
+                    ),
+                ]
+            )
+        cost_table = Table(
+            cost_rows, colWidths=[width - 116 * mm, 30 * mm, 40 * mm, 46 * mm], repeatRows=1
+        )
+        cost_table.setStyle(_table_style())
+        story += [
+            Paragraph(t("The active limits that cost the most"), style["h2"]),
+            Paragraph(
+                t(
+                    "Constraint cost: the controller's own shadow price, the mean while the limit "
+                    "was active. Worth of 1% more range: what moving that limit by 1% of the "
+                    "variable's range would be worth, the order to review the limits in."
+                ),
+                style["small"],
+            ),
+            Spacer(1, 4),
+            cost_table,
+        ]
+    return story
 
 
 def _label(labels: dict[str, str], key: Any) -> str:
