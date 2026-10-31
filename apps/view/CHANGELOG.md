@@ -8,6 +8,15 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **The ISA-101 analog indicator, on a gauge card and under a diagram's value.** A grey bar over the
+  signal's range draws the normal range as a darker band, the LL, L, H and HH limits as ticks (a
+  card takes them from its thresholds, a diagram value from its limits), the setpoint as a hollow
+  mark (a signal of role SP of the same asset) and the value as a pointer that takes the warning
+  or alarm colour only out of normal. Gauge style **Analog indicator (ISA-101)**; a diagram
+  value's **Analog indicator** box, with its scale, normal range and setpoint.
+- **A stat's line shades the normal range.** The new standard options **Normal range from** and
+  **to** (empty: between the thresholds' normal step and the next) draw a grey band under the
+  line, so a value leaving its normal range stands out.
 - **Laboratory results in Trends.** A `laboratory:<analysis>` signal is drawn as markers at its
   sampling times, never averaged over the interval, whenever the result arrived. The tooltip
   gives its status (approved, not yet approved, rejected) and when it was received and approved.

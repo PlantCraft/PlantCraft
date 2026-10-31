@@ -142,13 +142,25 @@ class FieldConfig(BaseModel):
     dash: Literal["solid", "dash", "dot", "dashdot"] | None = None
     fill: int | None = Field(default=None, ge=0, le=100)
     axis: Literal["auto", "left", "right", "hidden"] | None = None
+    # The normal (desired) operating range (ISA-101): a darker band on the analog indicator and
+    # under a stat's line. None: between the thresholds' normal step and the next one.
+    normal_low: float | None = None
+    normal_high: float | None = None
 
-    _ends = field_validator("min", "max")(lambda cls, value: _finite(value))
+    _ends = field_validator("min", "max", "normal_low", "normal_high")(
+        lambda cls, value: _finite(value)
+    )
 
     @model_validator(mode="after")
     def _range(self) -> FieldConfig:
         if self.min is not None and self.max is not None and self.min >= self.max:
             raise ValueError(t("The minimum must be below the maximum."))
+        if (
+            self.normal_low is not None
+            and self.normal_high is not None
+            and self.normal_low >= self.normal_high
+        ):
+            raise ValueError(t("The normal range's low end must be below its high end."))
         return self
 
     def merged(self, other: FieldConfig) -> FieldConfig:

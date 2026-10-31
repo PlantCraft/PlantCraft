@@ -222,6 +222,37 @@ class SymbolElement(_Element):
     running: OnBinding | None = None
 
 
+class Indicator(BaseModel):
+    """The ISA-101 analog indicator under a value: a grey bar from ``min`` to ``max`` (none: the
+    signal's range, else the limits around the value), the normal range as a darker band, the
+    element's limits as LL/L/H/HH ticks and the ``setpoint`` signal as a hollow mark."""
+
+    min: float | None = None
+    max: float | None = None
+    normal_low: float | None = None
+    normal_high: float | None = None
+    setpoint: CardItem | None = None
+    width: float = Field(default=120, ge=40, le=600)
+
+    _check = field_validator("min", "max", "normal_low", "normal_high")(
+        classmethod(lambda cls, value: _finite(value))
+    )
+
+    @model_validator(mode="after")
+    def _ranges(self) -> Indicator:
+        if self.min is not None and self.max is not None and self.min >= self.max:
+            raise ValueError(t("The indicator's minimum must be below its maximum."))
+        if (
+            self.normal_low is not None
+            and self.normal_high is not None
+            and self.normal_low >= self.normal_high
+        ):
+            raise ValueError(t("The normal range's low end must be below its high end."))
+        if self.setpoint is not None and self.setpoint.result is not None:
+            raise ValueError(t("A setpoint reads a signal, not an app's result."))
+        return self
+
+
 class ValueElement(_Element):
     type: Literal["value"] = "value"
     x: Coordinate = 0
@@ -234,6 +265,7 @@ class ValueElement(_Element):
     decimals: int | None = Field(default=None, ge=0, le=6)
     size: int = Field(default=14, ge=8, le=72)
     limits: Limits = Field(default_factory=Limits)
+    indicator: Indicator | None = None
 
 
 class Endpoint(BaseModel):
@@ -423,8 +455,8 @@ def on_page(diagram: dict[str, Any], page: str | None) -> dict[str, Any]:
 def bindings(diagram: dict[str, Any]) -> list[tuple[str, str, dict[str, Any]]]:
     """Every binding of a stored diagram: (element id, slot, binding), in drawing order.
 
-    Slots: ``state``, ``level`` and ``running`` of a symbol, ``value`` of a value element and
-    ``flow`` of a line. A value element's binding is ``{"item": ..., "limits": ...}`` like the
+    Slots: ``state``, ``level`` and ``running`` of a symbol, ``value`` (and ``setpoint``, the
+    indicator's) of a value element and ``flow`` of a line. A value element's binding is ``{"item": ..., "limits": ...}`` like the
     others.
     """
 
@@ -439,6 +471,9 @@ def bindings(diagram: dict[str, Any]) -> list[tuple[str, str, dict[str, Any]]]:
             found.append(
                 (element["id"], "value", {"item": element["item"], "limits": element.get("limits")})
             )
+            setpoint = (element.get("indicator") or {}).get("setpoint")
+            if setpoint:
+                found.append((element["id"], "setpoint", {"item": setpoint}))
         elif kind == "line" and element.get("flow"):
             found.append((element["id"], "flow", element["flow"]))
     return found

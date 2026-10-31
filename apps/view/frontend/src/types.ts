@@ -28,6 +28,8 @@ export interface FieldConfig {
   draw?: "lines" | "points" | "lines+points" | "bars" | null; interpolation?: "linear" | "smooth" | "step" | null;
   line_width?: number | null; dash?: "solid" | "dash" | "dot" | "dashdot" | null; fill?: number | null;
   axis?: "auto" | "left" | "right" | "hidden" | null;
+  /** The normal (desired) operating range (ISA-101); none: the thresholds' normal step. */
+  normal_low?: number | null; normal_high?: number | null;
 }
 export interface Matcher { by: "role" | "signal" | "name"; value: string }
 export interface Override { match: Matcher; field: FieldConfig }
@@ -40,7 +42,7 @@ export interface CardOptions {
   legend: "list" | "table" | "hidden"; legend_place: "bottom" | "right"; legend_values: Array<"last" | "mean" | "min" | "max">;
   tooltip: "all" | "single" | "hidden"; stack: "none" | "normal" | "percent"; connect_gaps: boolean;
   y_scale: "linear" | "log"; y_label: string; soft_min: number | null; soft_max: number | null;
-  threshold_markers: boolean; threshold_labels: boolean;
+  gauge_style: "dial" | "analog"; threshold_markers: boolean; threshold_labels: boolean;
   columns: TableColumn[]; cell: "text" | "color_text" | "color_background" | "bar"; row_color: boolean;
   point_size: number;
 }

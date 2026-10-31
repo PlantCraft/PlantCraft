@@ -16,7 +16,7 @@ import { StartDialog, type StartMode } from "./StartDialog";
 import { VersionsDialog } from "./VersionsDialog";
 import {
   knownPage, LABEL_POSITIONS, linePath, MAX_PAGES, movableSegment, movedPage, nextId, onPage, pagesOf, placedOnPage, resized, withoutPage, withPage, segmentMoved, seriesTimes, shownAt, snap, symbolBox,
-  type Corner, type Diagram, type Page, type Part, type DiagramData, type DiagramDraft, type Element, type Item, type LevelBinding, type Limits, type LineElement, type OnBinding, type Point, type StateBinding, type SymbolDef, type SymbolElement, type TextElement, type ValueElement,
+  type Corner, type Diagram, type Page, type Part, type DiagramData, type DiagramDraft, type Element, type Indicator, type Item, type LevelBinding, type Limits, type LineElement, type OnBinding, type Point, type StateBinding, type SymbolDef, type SymbolElement, type TextElement, type ValueElement,
 } from "./model";
 
 const HISTORY = 100;
@@ -286,6 +286,8 @@ function LinkFields({ element, diagrams, onChange }: { element: Element; diagram
 
 function ValuePanel({ element, assets, onChange }: { element: ValueElement; assets: AssetOption[]; onChange: (element: ValueElement) => void }) {
   const set = (patch: Partial<ValueElement>) => onChange({ ...element, ...patch });
+  const indicator = element.indicator;
+  const setIndicator = (patch: Partial<Indicator>) => indicator && set({ indicator: { ...indicator, ...patch } });
   return <>
     <h3>{t("Value")}</h3>
     <SignalField label={t("Signal")} item={element.item} assets={assets} onChange={(item) => set({ item: item ?? { signal_id: "" } })} />
@@ -298,6 +300,20 @@ function ValuePanel({ element, assets, onChange }: { element: ValueElement; asse
     <label className="dg-check"><input type="checkbox" checked={element.show_unit} onChange={(event) => set({ show_unit: event.target.checked })} /> {t("Show the unit")}</label>
     <h4>{t("Colour by limits")}</h4>
     <LimitsFields value={element.limits} onChange={(limits) => set({ limits })} />
+    <h4>{t("Analog indicator (ISA-101)")}</h4>
+    <label className="dg-check"><input type="checkbox" checked={Boolean(element.indicator)} onChange={(event) => set({ indicator: event.target.checked ? { width: 120, setpoint: element.item.asset_id ? { asset_id: element.item.asset_id, role: "sp" } : null } : null })} /> {t("Show a bar with the normal range, the limits as LL, L, H, HH and the setpoint")}</label>
+    {indicator && <>
+      <div className="dg-row">
+        <Field label={t("Scale from")}><input type="number" value={indicator.min ?? ""} placeholder={t("Signal's range")} onChange={(event) => setIndicator({ min: optionalNumber(event.target.value) })} /></Field>
+        <Field label={t("Scale to")}><input type="number" value={indicator.max ?? ""} placeholder={t("Signal's range")} onChange={(event) => setIndicator({ max: optionalNumber(event.target.value) })} /></Field>
+      </div>
+      <div className="dg-row">
+        <Field label={t("Normal from")}><input type="number" value={indicator.normal_low ?? ""} placeholder={t("Low warning")} onChange={(event) => setIndicator({ normal_low: optionalNumber(event.target.value) })} /></Field>
+        <Field label={t("Normal to")}><input type="number" value={indicator.normal_high ?? ""} placeholder={t("High warning")} onChange={(event) => setIndicator({ normal_high: optionalNumber(event.target.value) })} /></Field>
+      </div>
+      <SignalField label={t("Setpoint")} item={indicator.setpoint} assets={assets} onChange={(setpoint) => setIndicator({ setpoint })} />
+      <Field label={t("Width")}><input type="number" min={40} max={600} value={indicator.width} onChange={(event) => setIndicator({ width: Math.min(600, Math.max(40, num(event.target.value, 120))) })} /></Field>
+    </>}
   </>;
 }
 
@@ -473,7 +489,7 @@ export function DiagramEditor({ diagramId, initial, baseUpdatedAt, symbols, libr
   useEffect(() => { if (zoom === 0) fit(); }, [zoom, fit]);
 
   // The values of what is bound, read as the editor, a moment after the bindings change.
-  const bindingKey = useMemo(() => JSON.stringify(draft.elements.map((element) => element.type === "symbol" ? [element.id, element.state, element.level, element.running] : element.type === "value" ? [element.id, element.item, element.limits] : element.type === "line" ? [element.id, element.flow] : null)), [draft.elements]);
+  const bindingKey = useMemo(() => JSON.stringify(draft.elements.map((element) => element.type === "symbol" ? [element.id, element.state, element.level, element.running] : element.type === "value" ? [element.id, element.item, element.limits, element.indicator?.setpoint] : element.type === "line" ? [element.id, element.flow] : null)), [draft.elements]);
   useEffect(() => {
     const timer = window.setTimeout(() => {
       diagramsApi.preview({ ...draft, elements: finishedAll(draft.elements) }, "15m").then(setPreview).catch(() => setPreview(null));
