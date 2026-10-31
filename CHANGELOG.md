@@ -80,6 +80,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **The platform's pages load a quarter less script.** The Desk's widget grid
+  (react-grid-layout) and the asset pages were in the script every page of the platform loads.
+  They now load with their own page: 758 KB to 509 KB for the sign-in and for every page but the
+  Desk and the assets (Notes 1,267 to 1,026 KB, To-do 851 to 610 KB).
+
 - **State files are written whole or not at all, everywhere (storage tests, 2026-10-31).**
   `plantcraft-sdk` 0.91.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
   unique temporary file created with its final mode, `fsync`, then a rename, so a process killed
