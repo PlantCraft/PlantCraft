@@ -1,5 +1,5 @@
 import { DataTable, MultiSelect, PageTabs, Dialog, type DataColumn, useAssistantPage } from "@plantcraft/ui";
-import { BellOff, Plus } from "lucide-react";
+import { BellOff, Plus, Upload } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "./api";
 import { formatDate, t } from "./i18n";
@@ -51,7 +51,10 @@ function RulesHeading({ me, adding }: { me: Me; adding?: () => void }) {
   return <>
     <Heading title={t("Rules")} actions={me.can_edit && (adding
       ? <button type="button" className="button button-primary" onClick={adding}><BellOff size={16} />{t("New silence")}</button>
-      : <Link to="/rules/new" className="button button-primary"><Plus size={16} />{t("New rule")}</Link>)} />
+      : <>
+        <Link to="/rules/import" className="button button-secondary"><Upload size={16} />{t("Import alarm list")}</Link>
+        <Link to="/rules/new" className="button button-primary"><Plus size={16} />{t("New rule")}</Link>
+      </>)} />
     <RulesTabs />
   </>;
 }

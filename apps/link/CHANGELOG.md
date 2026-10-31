@@ -8,11 +8,30 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
-- **A new action from a loop's verdict, with its charts.** "New action" on every analysed loop's
-  page (not only loops from PlantCraft's assets) opens PlantCraft's action form with the verdict
+- **A new action from a loop's result, with its charts.** "New action" on every analysed loop's
+  page (not only loops from PlantCraft's assets) opens PlantCraft's action form with the result
   written out (status, health, window, limiting finding, likely cause and what to do first), the
   reference `#loop_result:<loop>@<window end>` (declared in `app.toml`, it opens the loop again) and
   the PV/SP and OP charts attached as one PNG (`frontend/src/loopResult.ts`).
+- **Horch's cross-correlation in the stiction screen.** When the loop cycles, the screen reports
+  `horch_index`: the cross-correlation of OP and PV at lag 0 over its largest value within half
+  a period. Near 0 means a quarter-cycle shift (stiction behind a controller output), and near 1
+  means in or against phase (tuning or a disturbance). The new parameter `op_is` says what the
+  OP records. With `controller_output`, an index of `horch_even` (0.8) or more leaves the shape
+  evidence out. The default `valve_command` keeps the screen as it was (docs/gaps.md G28).
+- **SKAB regression test.** The Deviation (T²) block is now scored against the 34 labelled
+  experiments of the Skoltech Anomaly Benchmark, a real pump and water circuit. The data is
+  GPL-3.0, so `tests/oracles/fetch_skab.py` downloads it at a pinned commit and checks the
+  sha256 of every file, and nothing of it is committed. The tests on main download it before
+  `make ci`. Per sample, F1 is 75 (SKAB's leaderboard gives T² 66). The false alarms are high,
+  docs/gaps.md G44. The four scores are floors that only rise.
+- **A loop compared with a recorded reference.** "Record as reference" on the loop page keeps the
+  loop's last run (health, and each method's status, score and numeric indicators) as the run to
+  compare against, after commissioning or a retune. The page then shows health then and now, and
+  for each method judged in both runs its status, score change and the indicator that moved most
+  (now / reference). It also warns when the algorithm changed since. One reference per loop:
+  recording again replaces it (`POST` and `DELETE /api/loops/{loop_id}/reference`, editors;
+  `reference` in `GET /api/loops/{loop_id}`).
 - **Days to the limit.** For loops whose health is falling, a line fitted to the last 14 days
   (6-hour means) says how many days are left until the health reaches the alarm limit (50). The
   forecast is shown only when the line fits (R² of at least 0.5) and the limit is less than a year
@@ -66,7 +85,8 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   pass (about 2 s for 205 loops and 821 signals), so a large existing file is worked down over
   days without holding the database. With 2050 loops and 8214
   signals the file grew without bound (F9, 2.5 to 18.5 GB in about an hour of replay); it now
-  levels off. Freed space is reused, and the file only shrinks after `VACUUM`.
+  levels off. Freed space is reused; `linkcraft compact` gives
+  the disk back from a file that grew before (`docs/operations.md`, section 4).
 - The Overview keeps its answer 3 s per asset scope: with 50 people on it during a round its p95
   went from 2.0 to 0.15 s (0.6.0 load test C4 with an account per person).
 - **The stiction screen finds stiction behind a smooth controller.** Beside the stick-slip

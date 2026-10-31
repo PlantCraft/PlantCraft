@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { api } from "./api";
 import { t } from "./i18n";
 import {
-  canBeRelative, eventCondition, inputLabel, MAX_CONDITIONS, overAssets, pythonDiagram, pythonForm, pythonFromSimple, pythonTemplate,
+  canBeRelative, eventCondition, inputLabel, MAX_CONDITIONS, NEW_PERMISSIVE, overAssets, pythonDiagram, pythonForm, pythonFromSimple, pythonTemplate,
   simpleComplete, valueCondition, valueOfPick, valueWords, type PythonForm,
 } from "./rules";
 import type { Editor, Op, RuleDraft, Severity, SimpleCondition, SimpleLogic, SimpleValue, Where } from "./types";
@@ -120,6 +120,32 @@ function ConditionRow({ condition, where, onChange, onRemove, index }: { conditi
   </fieldset>;
 }
 
+/** Only while: a permissive that enables the alarm (state-based alarming, ISA-18.2 designed
+ * suppression): a low flow alarm judged only while its pump runs, from a delay after it starts. */
+function PermissiveRow({ simple, where, onChange }: { simple: SimpleLogic; where: Where; onChange: (simple: SimpleLogic) => void }) {
+  const permissive = simple.enable_when;
+  if (!permissive) return null;
+  const set = (patch: Partial<SimpleCondition>) => onChange({ ...simple, enable_when: { ...permissive, ...patch } });
+  const range = permissive.op === "between" || permissive.op === "outside";
+  const moving = permissive.op === "changed" || permissive.op === "unchanged";
+  return <fieldset className="al-condition">
+    <legend>{t("Only while")}</legend>
+    <div className="al-inline al-condition-head">
+      <small className="muted">{t("While this does not hold, the alarm is suppressed by design: not raised, and cleared if it was.")}</small>
+      <button type="button" className="icon-button" aria-label={t("Remove the permissive")} title={t("Remove the permissive")} onClick={() => onChange({ ...simple, enable_when: null, enable_delay_seconds: 0 })}><Trash2 size={16} /></button>
+    </div>
+    <div className="form-grid">
+      <div className="field-span"><ValueField label={t("Permissive")} value={permissive.value} where={where} onChange={(value) => set({ value })} /></div>
+      <label>{t("Is")}<select aria-label={t("Permissive is")} value={permissive.op} onChange={(item) => set({ op: item.target.value as Op })}>
+        {OPS.map(([id, words]) => <option key={id} value={id}>{t(words)}</option>)}
+      </select></label>
+      {!moving && <NumberField label={range ? t("Low") : t("Permissive limit")} value={permissive.limit} onChange={(limit) => set({ limit })} />}
+      {range && <NumberField label={t("High")} value={permissive.high} onChange={(high) => set({ high })} />}
+      <NumberField label={t("Enabled after (s)")} value={simple.enable_delay_seconds || null} min={0} onChange={(seconds) => onChange({ ...simple, enable_delay_seconds: Math.max(0, Math.round(seconds ?? 0)) })} hint={t("How long it must hold first: lets the process settle after a start.")} />
+    </div>
+  </fieldset>;
+}
+
 function SimpleForm({ simple, where, onChange }: { simple: SimpleLogic; where: Where; onChange: (simple: SimpleLogic) => void }) {
   const [sentence, setSentence] = useState("");
   useEffect(() => {
@@ -137,8 +163,10 @@ function SimpleForm({ simple, where, onChange }: { simple: SimpleLogic; where: W
       <ConditionRow index={index} condition={condition} where={where} onChange={(item) => setCondition(index, item)}
         onRemove={simple.conditions.length > 1 ? () => onChange({ ...simple, conditions: simple.conditions.filter((_, at) => at !== index) }) : undefined} />
     </div>)}
+    <PermissiveRow simple={simple} where={where} onChange={onChange} />
     <div className="al-inline al-simple-foot">
       {simple.conditions.length < MAX_CONDITIONS && <button type="button" className="button button-small button-secondary" onClick={() => onChange({ ...simple, conditions: [...simple.conditions, valueCondition()] })}><Plus size={14} />{t("Add a condition")}</button>}
+      {!simple.enable_when && <button type="button" className="button button-small button-secondary" onClick={() => onChange({ ...simple, enable_when: NEW_PERMISSIVE(), enable_delay_seconds: 0 })}><Plus size={14} />{t("Only while…")}</button>}
       <div className="al-narrow"><NumberField label={t("Clears after back to normal for (min)")} value={simple.clear_after_seconds ? simple.clear_after_seconds / 60 : null} min={0} onChange={(minutes) => onChange({ ...simple, clear_after_seconds: Math.max(0, Math.round((minutes ?? 0) * 60)) })} /></div>
     </div>
     {sentence && <p className="notice notice-ok al-sentence"><b>{t("When")}</b> {sentence}{t(", it raises.")}</p>}

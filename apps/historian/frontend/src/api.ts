@@ -50,7 +50,15 @@ export type NewPoint = Partial<Point> & { tag: string; source_id: string; addres
 /** A point an admin removed, kept with its archive until ``purge_ms`` (``/api/points/retired``). */
 export type RetiredPoint = { id: number; signal: string; source_id: string; tag: string; name: string; unit: string; kind: string; retired_ms: number; retired_by: string; purge_ms: number };
 
+/** A note on a signal (``/api/v1/annotations``): an instant, or an interval when ``end`` is set. */
+export interface Note { id: number; signal: string; at: string; end: string | null; text: string; author: string; created_at: string }
+/** The PlantCraft event a new note answers, for the page to post (``POST /api/v1/events``). */
+export interface NoteEvent { app: string; kind: string; subject: string; summary: string; payload: Record<string, unknown> }
+
 export const api = {
+  notes: (signal: string, start: string, end: string) => request<{ notes: Note[]; truncated: boolean }>(`/api/v1/annotations?${new URLSearchParams({ signal, start, end }).toString()}`),
+  addNote: (note: { signal: string; at: string; end: string | null; text: string }) => request<Note & { event: NoteEvent }>("/api/v1/annotations", body("POST", note)),
+  removeNote: (noteId: number) => request<void>(`/api/v1/annotations/${noteId}`, { method: "DELETE" }),
   me: () => request<Me>("/api/me"),
   meta: () => request<AppMeta>("/api/meta"),
   help: () => request<HelpEntry[]>("/api/help"),
@@ -85,7 +93,7 @@ export const api = {
   answer: <T,>(requestId: number) => request<RequestAnswer<T>>(`/api/requests/${requestId}`),
   points: (q = "", source = "") => request<Point[]>(`/api/points?${new URLSearchParams({ q, ...(source ? { source } : {}) })}`),
   addPoints: (points: NewPoint[]) => request<{ added: string[]; skipped: { signal: string; tag: string; reason: string }[] }>("/api/points", body("POST", { points })),
-  updatePoint: (signal: string, patch: Partial<Omit<Point, "mode" | "own_mode" | "scan_seconds" | "deviation" | "max_seconds" | "retention_days" | "exception">> & { mode?: Point["own_mode"]; scan_seconds?: number | null; deviation?: number | null; exception?: number | null; max_seconds?: number | null; retention_days?: number | null }) => request<Point>(`/api/points/${id(signal)}`, body("PATCH", patch)),
+  updatePoint: (signal: string, patch: Partial<Omit<Point, "mode" | "own_mode" | "scan_seconds" | "deviation" | "max_seconds" | "retention_days" | "exception">> & { mode?: Point["own_mode"]; scan_seconds?: number | null; deviation?: number | null; exception?: number | null; min_seconds?: number | null; max_seconds?: number | null; retention_days?: number | null }) => request<Point>(`/api/points/${id(signal)}`, body("PATCH", patch)),
   deletePoints: (signals: string[]) => request<{ removed: number; retired: number; days: number }>("/api/points/delete", body("POST", { signals })),
   retiredPoints: () => request<{ points: RetiredPoint[]; days: number }>("/api/points/retired"),
   restorePoints: (ids: number[]) => request<{ restored: string[]; refused: { id: number; signal?: string; reason: string }[] }>("/api/points/restore", body("POST", { ids })),

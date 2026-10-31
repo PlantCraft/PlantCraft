@@ -372,3 +372,75 @@ def test_the_hourly_counts_fall_on_whole_hours():
     assert len(hours) == 25 and hours[0]["at"] == (T0 + timedelta(hours=10)).isoformat()
     assert hours[0]["counts"] == {"critical": 1} and hours[-1]["counts"] == {"low": 1}
     assert sum(sum(hour["counts"].values()) for hour in hours) == result["total"] == 2
+
+
+# L3: state-based alarming, a permissive that enables the alarm (designed suppression).
+PUMP = "plantcraft:P-101.RUN"
+
+
+def permissive_rule(delay: float = 0.0) -> dict:
+    """Flow low (PV < 10), only while the pump runs (RUN >= 1), and ``delay`` s after it starts."""
+
+    logic = SimpleLogic.model_validate(
+        {
+            "conditions": [{"input": "value", "value": {"role": "pv"}, "op": "<", "limit": 10.0}],
+            "enable_when": {"input": "value", "value": {"signal": PUMP}, "op": ">=", "limit": 1},
+            "enable_delay_seconds": delay,
+        }
+    )
+    return to_diagram(logic)
+
+
+def judge_pump(diagram, flow, running, state=None):
+    stop = T0 + timedelta(seconds=len(flow) - 1)
+    return engine.run(diagram, ASSET, state or {},
+                      series={SIGNAL: series(flow), PUMP: series(running)}, events=[], end=stop)  # fmt: skip
+
+
+def test_a_permissive_suppresses_the_alarm_while_it_does_not_hold():
+    diagram = permissive_rule()
+    assert check(diagram).valid
+    # Pump off for 3 s (flow 0: no alarm, suppressed), then on with no flow (raised), then
+    # stopped again while still low: the alarm clears and stays suppressed.
+    found = judge_pump(diagram, [0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 1, 0])
+    assert kinds(found) == ["raised", "cleared"]
+    assert found.state["suppressed"] is True and found.state["active"] is False
+    assert "Suppressed by design" in found.message
+
+
+def test_a_permissive_delay_lets_the_flow_settle_after_a_start():
+    diagram = permissive_rule(delay=3)
+    found = judge_pump(diagram, [0, 0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1])
+    assert [moment.second for kind, moment in found.transitions] == [3]
+    # The flow came up within the delay: never raised.
+    settled = judge_pump(diagram, [0, 0, 20, 20, 20], [1, 1, 1, 1, 1])
+    assert kinds(settled) == [] and settled.state["suppressed"] is False
+
+
+def test_an_unknown_permissive_leaves_the_alarm_enabled():
+    diagram = permissive_rule()
+    stop = T0 + timedelta(seconds=3)
+    found = engine.run(
+        diagram, ASSET, {}, series={SIGNAL: series([0, 0, 0, 0])}, events=[], end=stop
+    )
+    assert kinds(found) == ["raised"]
+    assert "stays enabled" in found.message
+
+
+def test_the_permissive_reads_in_the_sentence():
+    logic = SimpleLogic.model_validate(
+        {
+            "conditions": [{"input": "value", "value": {"role": "pv", "name": "Flow"}, "op": "<", "limit": 10}],
+            "enable_when": {"input": "value", "value": {"signal": PUMP, "name": "P-101 running"}, "op": ">=", "limit": 1},
+            "enable_delay_seconds": 30,
+        }
+    )  # fmt: skip
+    assert (
+        logic.sentence()
+        == "Flow < 10; only while P-101 running ≥ 1 (from 30 s after it starts holding)"
+    )
+    with pytest.raises(ValueError):
+        SimpleLogic.model_validate(
+            {"conditions": logic.model_dump()["conditions"],
+             "enable_when": {"input": "event", "event": {"kinds": ["a.b"]}}}
+        )  # fmt: skip

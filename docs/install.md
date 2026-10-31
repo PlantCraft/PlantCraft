@@ -217,9 +217,20 @@ of revenue or more. Two free ways give the suite the same Linux containers:
   Desktop's, which stayed untouched): Docker installed in 10 s, and came back by itself after
   `wsl --terminate`. WSL may stop a distribution nobody uses; to keep the suite running, start
   it with Windows (a Task Scheduler entry `wsl -d Ubuntu --exec /bin/true` at sign-in).
-- **Rancher Desktop** (SUSE, Apache 2.0) with **Container engine: dockerd (moby)** in its
-  Preferences, instead of Docker Desktop in step 1; then the steps above as written (not
-  tested yet).
+- **Rancher Desktop** (SUSE, Apache 2.0), **not tested with PlantCraft yet**. Use it instead of
+  Docker Desktop in step 1, set up like this:
+  1. Preferences › Container Engine: **dockerd (moby)**. The suite needs the Docker API and
+     `docker compose`; containerd with nerdctl will not work.
+  2. Preferences › Kubernetes: turn it **off**. The suite does not use it, and it takes memory.
+  3. Preferences › WSL › Integrations: turn on **Ubuntu**. Rancher Desktop then gives Ubuntu
+     its Docker socket, and its Linux `docker` comes in through Windows' PATH.
+     `./install.sh --check` accepts that `docker`. It refuses only Docker Desktop's.
+  4. The memory limit is the same `%UserProfile%\.wslconfig` as in step 3 above (Rancher
+     Desktop runs in WSL 2 too).
+  5. Run steps 4 to 6 above as written, without `--install-docker`.
+
+  If `./install.sh --check` says "Docker Compose missing", install the compose plugin inside
+  Ubuntu (`sudo apt-get install docker-compose-plugin` from Docker's apt repository).
 
 `./install.sh --check` names the Docker it found and warns when it is Docker Desktop.
 

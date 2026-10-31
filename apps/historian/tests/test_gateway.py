@@ -275,3 +275,60 @@ def test_integer_registers_with_a_fractional_scale_keep_their_decimals(tmp_path)
     with pytest.raises(ValueError, match="whole-number scale"):
         one_byte = [{"name": "B", "address": 0, "data_type": "INT8L", "scale": 0.5}]
         SourceIn(**{**MODBUS.model_dump(), "options": {"registers": one_byte}})
+
+
+def test_a_lims_source_writes_laboratory_results_at_their_sampling_times(tmp_path):
+    settings = make_settings(tmp_path, ingest_port=8186)
+    catalog = CatalogStore(database(tmp_path, "config"))
+    lims = SQL.model_copy(
+        update={
+            "options": {
+                **SQL.options,
+                "query": "SELECT sampled, analysis, value, status, received_at FROM results",
+                "time_column": "sampled",
+                "tag_columns": ["analysis"],
+                "laboratory": True,
+            }
+        }
+    )
+    catalog.save_source(SourceIn.model_validate(lims.model_dump()), create=True)
+    archive = ArchiveStore(database(tmp_path))
+    collector = Collector(settings, catalog, archive)
+    collector.reload()
+    client = TestClient(ingest_app(collector, gateway_token(tmp_path)))
+    headers = {"Authorization": f"Token {gateway_token(tmp_path)}"}
+    sampled = 1_700_000_000
+    body = "\n".join(
+        [
+            f'sql,histcraft_source=lims,analysis=VISC-101 value=412,status="approved",'
+            f'received_at="2023-11-14T23:13:20Z" {sampled * 10**9}',
+            f'sql,histcraft_source=lims,analysis=VISC-101 value=415,status="entered" '
+            f"{(sampled + 3600) * 10**9}",
+            f'sql,histcraft_source=lims,analysis=VISC-101 value=1,status="lost" {sampled * 10**9}',
+        ]
+    )
+    assert client.post("/api/v2/write", content=body, headers=headers).status_code == 204
+    point = catalog.point("laboratory:VISC-101")
+    point_id = int(point["id"])
+    found = archive.lab_samples(point_id, 0, 2**62)
+    assert [(row["t"], row["status"], row["writes"]) for row in found] == [
+        (sampled * 1000, "approved", 1),
+        ((sampled + 3600) * 1000, "entered", 1),
+    ]
+    assert found[0]["received"] == (sampled + 3600) * 1000 and found[0]["author"] == "source:lims"
+    times, values = archive.read(point_id, 0, 2**62)
+    assert list(values) == [412.0, 415.0]
+    # The LIMS read again with nothing new: nothing is written again; an approval is.
+    client.post("/api/v2/write", content=body, headers=headers)
+    assert [row["writes"] for row in archive.lab_samples(point_id, 0, 2**62)] == [1, 1]
+    approved = body.splitlines()[1].replace('"entered"', '"approved"')
+    client.post("/api/v2/write", content=approved, headers=headers)
+    rows = archive.lab_samples(point_id, 0, 2**62)
+    assert [(row["status"], row["writes"]) for row in rows] == [("approved", 1), ("approved", 2)]
+
+
+def test_a_lims_source_names_its_sampling_time_and_analysis():
+    with pytest.raises(ValueError, match="laboratory source"):
+        SourceIn.model_validate(
+            {**SQL.model_dump(), "options": {**SQL.options, "time_column": "", "laboratory": True}}
+        )

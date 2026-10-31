@@ -17,7 +17,7 @@ const MethodPage = lazy(() => import("./MethodsPage").then((m) => ({ default: m.
 const OverviewPage = lazy(() => import("./OverviewPage").then((m) => ({ default: m.OverviewPage })));
 const EditorWindow = lazy(() => import("./AlgorithmEditor").then((m) => ({ default: m.EditorWindow })));
 const NewAlgorithmPage = lazy(() => import("./AlgorithmNew").then((m) => ({ default: m.NewAlgorithmPage })));
-const AlgorithmsPage = lazy(() => import("./AlgorithmsPage").then((m) => ({ default: m.AlgorithmsPage })));
+const AlgorithmsPage = lazy(() => import("./AlgorithmList").then((m) => ({ default: m.AlgorithmsPage })));
 // /algorithms/<id>[/<tab>] and /blocks/<id>[/<tab>]: the page module reads its own route.
 const AlgorithmRoute = lazy(() => import("./AlgorithmsPage").then((m) => ({
   default: ({ id, me }: { id: string; me: Me }) => { const { algorithmId, tab } = m.algorithmRoute(id); return <m.AlgorithmPage key={algorithmId} algorithmId={algorithmId} tab={tab} me={me} />; },

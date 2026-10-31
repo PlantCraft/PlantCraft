@@ -41,6 +41,28 @@ Browse lists every series the gateway sent (up to 20,000 per source) with a sugg
 the topic with dots for MQTT, the register name for Modbus, the tag columns and the column for
 SQL. Values older than the point's newest are dropped (the archive only moves forward).
 
+## A LIMS as a SQL source
+
+A SQL source with **Laboratory results (LIMS)** checked (option `laboratory`) reads laboratory
+results, not plant values. Each row is one result at `laboratory:<analysis>`: the time column is
+the sampling time, the one tag column names the analysis, and the query gives `value` and, when
+the LIMS has them, `status` (`entered`, `approved` or `rejected`) and `received_at` and
+`approved_at` as ISO 8601 text with an offset. For example:
+
+```sql
+SELECT sampled_at, analysis, result AS value, state AS status,
+       to_char(received_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS received_at,
+       to_char(approved_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS approved_at
+FROM results WHERE updated_at > now() - interval '2 days'
+```
+
+The collector writes them as `POST /api/v1/lab` does (`histcraft.lab`): the value at its sampling
+time however late it arrives, `uncertain` until approved and `bad` when rejected, and the times
+beside it. A row read again unchanged is not written again, so a scan every few minutes over the
+last days counts a write only when the LIMS changed the result (a retest, an approval). Late
+results are the point here: unlike plant values, they are not dropped for being older than the
+newest.
+
 ## Liveness
 
 A gateway source is connected while values arrive; after 60 s (or three of its scan periods)

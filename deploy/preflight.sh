@@ -118,7 +118,11 @@ fi
 
 # 2. Docker --------------------------------------------------------------------------------------
 docker_ok=0
-if [ "$wsl" = 1 ] && [[ "$(command -v docker 2>/dev/null)" == /mnt/* ]]; then
+# In WSL, Windows' PATH can bring Docker Desktop's docker into this Linux. Rancher Desktop's
+# Linux docker also comes that way (.../Rancher Desktop/resources/resources/linux/bin), and
+# works with its WSL integration on: only Docker Desktop's is refused here.
+if [ "$wsl" = 1 ] && [[ "$(command -v docker 2>/dev/null)" == /mnt/* ]] &&
+    [[ "$(command -v docker 2>/dev/null)" == */Docker/Docker/* || "$(command -v docker 2>/dev/null)" == *.exe ]]; then
     add FAIL "Docker Engine" "Windows' docker.exe ($(command -v docker))" "a Docker Engine inside this Linux" "Windows' PATH reaches Docker Desktop here: add [interop] appendWindowsPath=false to /etc/wsl.conf, run wsl --terminate, then install.sh --install-docker."
 elif ! command -v docker >/dev/null 2>&1; then
     add FAIL "Docker Engine" "not installed" ">= $MIN_DOCKER" "Install Docker Engine (the bundle's docker/ folder, or docs/install-offline.md section 1)."

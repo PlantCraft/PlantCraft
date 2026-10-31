@@ -1,4 +1,4 @@
-"""Command line: ``linkcraft serve``, ``engine``, ``round``, ``signals`` and ``sync``.
+"""Command line: ``linkcraft serve``, ``engine``, ``round``, ``signals``, ``sync`` and ``compact``.
 
 Settings come from the environment (``linkcraft.config``). ``linkcraft engine`` runs the
 schedules and the queue's workers (``engine.process``): ``serve`` starts it as its child unless
@@ -23,6 +23,13 @@ def main(argv: list[str] | None = None) -> int:
     commands.add_parser("round", help="Sync loops from PlantCraft and run one round now.")
     commands.add_parser("signals", help="Run the Signal quality algorithm once now.")
     commands.add_parser("sync", help="Read the loop assets from PlantCraft.")
+    compact = commands.add_parser(
+        "compact", help="Give the disk back after old history was thinned (SQLite VACUUM)."
+    )
+    compact.add_argument(
+        "--min-free", type=float, default=0.2, help="Only when this share of the file is free."
+    )
+    compact.add_argument("--dry-run", action="store_true", help="Say what it would do.")
     args = parser.parse_args(argv)
     from plantcraft_sdk.server.logs import configure_logging
 
@@ -47,6 +54,17 @@ def main(argv: list[str] | None = None) -> int:
             log_config=None,
             access_log=False,
         )
+        return 0
+
+    if args.command == "compact":
+        from linkcraft.compact import compact as run_compact
+
+        found = run_compact(
+            Settings.from_environment().database_path,
+            min_free=args.min_free,
+            dry_run=args.dry_run,
+        )
+        print(json.dumps(found, indent=2))
         return 0
 
     if args.command == "engine":

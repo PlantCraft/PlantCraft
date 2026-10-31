@@ -174,6 +174,8 @@ class CatalogStore(Store):
         # profile's), round 8 D1.
         ("points", "profile", "TEXT NOT NULL DEFAULT ''"),
         ("points", "exception", "REAL"),
+        # Lines only: the least time between archived values (NULL or 0: none; PI's CompMin).
+        ("points", "min_seconds", "REAL"),
         # Where its range comes from: source, edited, suggested, or '' (none yet), D2.
         ("points", "range_origin", "TEXT NOT NULL DEFAULT ''"),
     )
@@ -582,8 +584,8 @@ class CatalogStore(Store):
                     INSERT INTO points (source_id, tag, address, name, description, unit,
                         kind, step, low, high, scan_seconds, deviation, max_seconds,
                         retention_days, mode, enabled, created, updated, inherits, profile,
-                        exception, range_origin)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        exception, range_origin, min_seconds)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT DO NOTHING
                     """,
                     (
@@ -609,6 +611,7 @@ class CatalogStore(Store):
                         item.profile or "",
                         item.exception,
                         range_origin if _has_span(item.low, item.high) else "",
+                        item.min_seconds,
                     ),
                 )
                 if inserted.rowcount:

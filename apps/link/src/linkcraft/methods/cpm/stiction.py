@@ -25,12 +25,23 @@ tuning or an outside disturbance keeps both sinusoidal. The shape index is the s
 sum of both errors (above ``shape_index_high`` reads as stiction, 0.5 is undecided); the higher of
 the OP and PV indices counts. The score is the larger of the stick-slip and the shape evidence.
 
+Horch's cross-correlation test (1999) reads the phase between OP and PV in a cycling loop: the
+ratio of the cross-correlation at lag 0 to its largest value within half a period is reported as
+``horch_index`` (near 0 odd, the 90 degree shift of stiction; near 1 even, in or against phase as
+tuning or a disturbance make it). It holds only when the OP is the controller's own output, so it
+counts only when ``op_is`` says so: then an index of ``horch_even`` or more leaves the shape
+evidence out (the stick-slip evidence stays). The default ``op_is="valve_command"`` keeps the
+screen as before, because a recorded valve movement cycles in phase with the PV in a sticky loop
+too (the simulator's FIC-105).
+
 An OP that is not on the 0-100 scale of ``lower_limit``/``upper_limit`` (a normalised record) is
-not checked for saturation. Horch's cross-correlation and the bicoherence test of Choudhury et al.
-(2006) are not implemented; see ``docs/gaps.md`` (G28).
+not checked for saturation. The bicoherence test of Choudhury et al. (2006) is not implemented;
+see ``docs/gaps.md`` (G28).
 """
 
 from __future__ import annotations
+
+from typing import Literal
 
 import numpy as np
 from plantcraft_sdk.methods import (
@@ -58,6 +69,7 @@ from linkcraft.methods.references import (
     CHOUDHURY_2006_STICTION,
     CHOUDHURY_THORNHILL_SHAH_2005_STICTION_MODEL,
     HE_2007_CURVE_FITTING_STICTION,
+    HORCH_1999_CROSS_CORRELATION_STICTION,
     JELALI_HUANG_2010_STICTION_BOOK,
     THORNHILL_HAGGLUND_1997_OSCILLATION,
 )
@@ -79,6 +91,9 @@ class StictionParameters(BaseModel):
     # Curve-fitting shape test (He et al. 2007): index where a half cycle reads fully triangular.
     shape_index_high: float = Field(default=0.65, gt=0.5, le=1.0)
     min_half_cycles: int = Field(default=4, ge=2)
+    # Horch (1999): what the OP records, and the lag-0 cross-correlation ratio that reads as even.
+    op_is: Literal["valve_command", "controller_output"] = "valve_command"
+    horch_even: float = Field(default=0.8, gt=0.0, le=1.0)
 
 
 METHOD_METADATA = MethodMetadata(
@@ -89,6 +104,7 @@ METHOD_METADATA = MethodMetadata(
     references=[
         CHOUDHURY_THORNHILL_SHAH_2005_STICTION_MODEL,
         HE_2007_CURVE_FITTING_STICTION,
+        HORCH_1999_CROSS_CORRELATION_STICTION,
         CHOUDHURY_2006_STICTION,
         JELALI_HUANG_2010_STICTION_BOOK,
         THORNHILL_HAGGLUND_1997_OSCILLATION,
@@ -100,7 +116,9 @@ METHOD_METADATA = MethodMetadata(
         "after a flat move; score = 100*min(1, pv_peak/min_autocorrelation)"
         "*max(0.5*flat + 0.5*min(1, slip/jump_fraction_reference), shape), where shape = "
         "clip((index-0.5)/(shape_index_high-0.5), 0, 1) and index = max over OP and PV of "
-        "sine SSE / (sine SSE + triangle SSE) fitted per half cycle (He et al. 2007)."
+        "sine SSE / (sine SSE + triangle SSE) fitted per half cycle (He et al. 2007). "
+        "horch = |r(0)| / max |r(tau)| of the OP-PV cross-correlation for |tau| <= period/2 "
+        "(Horch 1999); with op_is = controller_output, horch >= horch_even sets shape to 0."
     ),
     assumptions=["The OP represents the valve command and routine data are representative."],
     limitations=[
@@ -219,6 +237,15 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
         if index is not None
         else 0.0
     )
+    horch = horch_index(op, pv, lag) if cycling else None
+    # An even cross-correlation of the controller's output and the PV: tuning or a disturbance.
+    in_phase = (
+        parameters.op_is == "controller_output"
+        and horch is not None
+        and horch >= parameters.horch_even
+    )
+    if in_phase:
+        shape_factor = 0.0
     # Too few moves off the limits to read a pattern: stiction cannot be judged here.
     screenable = screened >= 3
     evidence = max(op_pattern_factor, shape_factor)
@@ -247,6 +274,8 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
             "op_shape_index": op_shape,
             "pv_shape_index": pv_shape,
             "shape_factor": shape_factor,
+            "horch_index": horch,
+            "horch_in_phase": in_phase,
             "stiction_screening_score": float(score),
             "valid_samples": int(len(frame)),
         },
@@ -257,6 +286,29 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
             )
         ],
     )
+
+
+def horch_index(op: np.ndarray, pv: np.ndarray, period: int) -> float | None:
+    """Horch (1999): |r(0)| / max |r(tau)| of the OP-PV cross-correlation over lags within half
+    a ``period``. Near 0 the cross-correlation is odd (stiction behind a controller output), near
+    1 even (tuning or a disturbance). None without a period or a moving OP and PV."""
+
+    keep = np.isfinite(op) & np.isfinite(pv)
+    x, y = op[keep], pv[keep]
+    half = max(1, int(period) // 2)
+    if period < 4 or x.size < 2 * period:
+        return None
+    x, y = x - x.mean(), y - y.mean()
+    scale = float(np.sqrt(np.sum(x * x) * np.sum(y * y)))
+    if scale <= 0:
+        return None
+    n = x.size
+    values = [
+        float(np.sum(x[max(0, -lag) : n - max(0, lag)] * y[max(0, lag) : n - max(0, -lag)]))
+        for lag in range(-half, half + 1)
+    ]
+    largest = max(abs(value) for value in values)
+    return abs(values[half]) / largest if largest > 0 else None
 
 
 def _half_cycle_errors(segment: np.ndarray) -> tuple[float, float]:

@@ -86,7 +86,9 @@ class PointState:
     texts: int = 0
     # The quality of the values archived now, and its changes not written yet ``(ms, quality)``.
     quality: str = "good"
-    changes: list[tuple[int, str]] = field(default_factory=list)
+    # The source's whole status code with it (OPC UA sub-code and LimitBits), None when Good.
+    code: int | None = None
+    changes: list[tuple] = field(default_factory=list)
 
     @property
     def id(self) -> int:
@@ -99,6 +101,7 @@ class PointState:
         self.compressor.exception = float(point.get("exception") or 0.0)
         self.compressor.exception_percent = point.get("exception_percent")
         self.compressor.max_seconds = float(point["max_seconds"])
+        self.compressor.min_seconds = float(point.get("min_seconds") or 0.0)
 
     @property
     def reads_text(self) -> bool:
@@ -111,7 +114,8 @@ class PointState:
         if self.point["kind"] == "number":
             self.texts = self.texts + 1 if reading.good and _text(reading.value) else 0
         quality = reading.quality if reading.good else "bad"
-        changed = quality != self.quality
+        # A new sub-code or limit is a change too (H6): kept where the archive has a value.
+        changed = quality != self.quality or reading.status != self.code
         if reading.good:
             self.status = "ok" if quality == "good" else quality
             self.detail = reading.detail if quality != "good" else ""
@@ -122,8 +126,10 @@ class PointState:
             out = self.compressor.gap(reading.at_ms)
         if changed and (out or not reading.good):
             # Kept only where the archive has a value (or the gap marker) at that time.
-            self.quality = quality
-            self.changes.append((reading.at_ms, quality))
+            self.quality, self.code = quality, reading.status
+            self.changes.append(
+                (reading.at_ms, quality, reading.status, reading.status_name or None)
+            )
         self.pending.extend(out)
         self.archived += len(out)
 
@@ -138,6 +144,7 @@ def _compressor(point: dict[str, Any]) -> Compressor:
     return Compressor(
         deviation=float(point["deviation"]),
         max_seconds=float(point["max_seconds"]),
+        min_seconds=float(point.get("min_seconds") or 0.0),
         percent=point.get("deviation_percent"),
         exception=float(point.get("exception") or 0.0),
         exception_percent=point.get("exception_percent"),
@@ -346,11 +353,11 @@ class Collector:
         """
 
         batch = {}
-        changes: list[tuple[int, int, str]] = []
+        changes: list[tuple] = []
         for point_id, state in states.items():
             if state.pending:
                 batch[point_id] = (state.point["kind"], state.pending)
-            changes += [(point_id, at, quality) for at, quality in state.changes]
+            changes += [(point_id, *change) for change in state.changes]
         try:
             written = self.archive.hold(batch) if batch else 0
         except Exception:
@@ -892,6 +899,7 @@ class Collector:
 
         now = now_ms()
         taken = 0
+        results: dict[str, list[Any]] = {}
         with self._lock:
             for metric in metrics:
                 source_id, values = split(metric)
@@ -905,6 +913,10 @@ class Collector:
                 if at > now + FUTURE_MS:
                     at = now
                 self._gateway_last[source_id] = now
+                if (source.get("options") or {}).get("laboratory"):
+                    # A LIMS: each row is a laboratory result (histcraft.lab), not a value.
+                    results.setdefault(source_id, []).append(metric)
+                    continue
                 seen = self.seen.setdefault(source_id, {})
                 for address, (value, series) in values.items():
                     if address in seen or len(seen) < SEEN_LIMIT:
@@ -914,7 +926,49 @@ class Collector:
                             continue  # the archive only moves forward
                         state.take(Reading(at, _pushed_value(value, state.point["kind"]), True))
                         taken += 1
+        for source_id, rows in results.items():
+            taken += self._laboratory(self.sources[source_id], rows, now)
         return taken
+
+    def _laboratory(self, source: dict[str, Any], metrics: list[Any], now: int) -> int:
+        """A LIMS source's rows as laboratory results: ``laboratory:<analysis>`` at the
+        sampling time, with status and times; a row read again unchanged is not rewritten."""
+
+        from histcraft import lab
+
+        column = ((source.get("options") or {}).get("tag_columns") or [""])[0]
+        samples, refused = [], 0
+        for metric in metrics:
+            fields, analysis = metric.fields, str(metric.tags.get(column) or "").strip()
+            try:
+                samples.append(
+                    lab.checked(
+                        f"laboratory:{analysis}",
+                        metric.at_ms if metric.at_ms is not None else now,
+                        fields.get("value"),
+                        now,
+                        received=lab.stamp_ms(fields.get("received_at"), "received_at"),
+                        approved=lab.stamp_ms(fields.get("approved_at"), "approved_at"),
+                        status=str(fields.get("status") or "").strip().lower() or None,
+                    )
+                )
+            except ValueError:
+                refused += 1
+        if refused:
+            LOGGER.warning("Laboratory source %s: %d rows refused", source["id"], refused)
+        if not samples:
+            return 0
+        try:
+            written, errors = lab.write(
+                self.catalog, self.archive, samples, f"source:{source['id']}", now,
+                only_changed=True,
+            )  # fmt: skip
+        except Exception:
+            LOGGER.exception("Laboratory source %s: the results were not written", source["id"])
+            return 0
+        if errors:
+            LOGGER.warning("Laboratory source %s: %s", source["id"], errors[0]["detail"])
+        return written
 
     def check_gateway(self) -> None:
         """Each gateway source connected while values arrive; a silence is a gap."""

@@ -85,7 +85,7 @@ in the app's process instead (development only).
 | `MODELCRAFT_RUN_WORKERS` | `2` | Jobs given to the runner at the same time (about half the cores) |
 | `MODELCRAFT_STUDY_MAX_RUNS` | `500` | The most simulations one study may hold |
 | `MODELCRAFT_EXAMPLES` | `true` | Create the example projects at the first start |
-| `MODELCRAFT_EXAMPLE_STUDY` | `true` | Queue the example study (three controller gains on the tank) once, so it is ready to read |
+| `MODELCRAFT_EXAMPLE_STUDY` | `true` | Queue the example study (three controller gains on the tank) and the example optimization (the dead-time loop's PI tuned for the least IAE) once, so they are ready to read |
 | `MODELCRAFT_HOST`, `MODELCRAFT_PORT` | `127.0.0.1`, `8130` (`0.0.0.0` in the image) | Bind address and port |
 
 In the suite, PlantCraft Models runs as the `modelcraft` service of PlantCraft's compose file

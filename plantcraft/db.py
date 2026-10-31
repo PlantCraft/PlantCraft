@@ -7,6 +7,7 @@ file and an existing installation converge on the same structure.
 
 from __future__ import annotations
 
+import re
 import sqlite3
 import threading
 from collections.abc import Iterator
@@ -162,3 +163,61 @@ class Store(_AppStore):
     @classmethod
     def _now(cls) -> str:
         return utc_text()
+
+
+def list_index(table: str, keys: tuple[str, str], column: str, side: str) -> tuple[str, Migration]:
+    """A side table that indexes the strings of a JSON list column, kept by triggers.
+
+    ``WHERE EXISTS (SELECT 1 FROM json_each(subjects_json) WHERE value = ?)`` reads every row
+    and parses its list: an expression index cannot hold the items of a list. ``side`` holds
+    one row per item, ``(key1, key2, subject)``, so ``(key1, key2) IN (SELECT key1, key2 FROM
+    side WHERE subject = ?)`` is one index search (storage test 2026-10-31: an asset's runs among
+    200,000 went from 234 ms to under a millisecond). Triggers on ``table`` keep it as rows are
+    inserted, updated (an upsert too) or deleted, by any code path. Returns the SQL for the
+    store's ``SCHEMA`` and the ``Migration`` that fills it once from the rows already there.
+    """
+
+    one, two = keys
+    for name in (table, one, two, column, side):
+        if not re.fullmatch(r"[a-z_][a-z0-9_]*", name):
+            raise ValueError(f"not a name: {name!r}")
+
+    def listed(row: str) -> str:
+        return (
+            f"json_each(CASE WHEN json_valid({row}.{column}) AND json_type({row}.{column}) = "
+            f"'array' THEN {row}.{column} ELSE '[]' END)"
+        )
+
+    items = f"SELECT NEW.{one}, NEW.{two}, value FROM {listed('NEW')} WHERE json_each.type = 'text'"
+    # The old row's items, found by the side table's own key: no second index to keep (the
+    # side table mirrors the column, so the old list names every row it has for that row).
+    gone = (
+        f"DELETE FROM {side} WHERE {one} = OLD.{one} AND {two} = OLD.{two} AND subject IN "
+        f"(SELECT value FROM {listed('OLD')} WHERE json_each.type = 'text')"
+    )
+    schema = f"""
+    CREATE TABLE IF NOT EXISTS {side} (
+        subject TEXT NOT NULL,
+        {one} TEXT NOT NULL,
+        {two} TEXT NOT NULL,
+        PRIMARY KEY (subject, {one}, {two})
+    ) WITHOUT ROWID;
+    CREATE TRIGGER IF NOT EXISTS {side}_insert AFTER INSERT ON {table} BEGIN
+        INSERT OR IGNORE INTO {side} ({one}, {two}, subject) {items};
+    END;
+    CREATE TRIGGER IF NOT EXISTS {side}_update AFTER UPDATE OF {column} ON {table} BEGIN
+        {gone};
+        INSERT OR IGNORE INTO {side} ({one}, {two}, subject) {items};
+    END;
+    CREATE TRIGGER IF NOT EXISTS {side}_delete AFTER DELETE ON {table} BEGIN
+        {gone};
+    END;
+    """
+    fill = Migration(
+        f"{side}-fill",
+        f"INSERT OR IGNORE INTO {side} ({one}, {two}, subject) "
+        f"SELECT {table}.{one}, {table}.{two}, value FROM {table}, json_each("
+        f"CASE WHEN json_valid({table}.{column}) AND json_type({table}.{column}) = 'array' "
+        f"THEN {table}.{column} ELSE '[]' END) WHERE json_each.type = 'text'",
+    )
+    return schema, fill

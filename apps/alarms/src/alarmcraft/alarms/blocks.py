@@ -548,6 +548,12 @@ class RaiseParams(BaseModel):
         le=24 * 3600,
         description="The condition must stay false this many seconds before the alarm clears.",
     )
+    enable_delay_seconds: float = Field(
+        default=0.0,
+        ge=0,
+        le=24 * 3600,
+        description="With an Enabled when input: the alarm is judged only once it held this long.",
+    )
 
 
 def run_raise(inputs: dict[str, Any], params: RaiseParams, context: Context) -> dict[str, Any]:
@@ -561,7 +567,29 @@ def run_raise(inputs: dict[str, Any], params: RaiseParams, context: Context) -> 
     active = bool(state.get("active"))
     clearing = _time(state.get("clear_since"))
     transitions = context.extra.setdefault("transitions", [])
+    # State-based alarming (ISA-18.2 designed suppression): with a permissive wired to Enabled
+    # when, the alarm is judged only while it holds (and, with a delay, once it held that long).
+    # A permissive that cannot be judged leaves the alarm enabled: a bad signal never hides one.
+    enabled = inputs.get("enabled")
+    allowed = None
+    if enabled is not None and not isinstance(enabled, NoData) and len(condition):
+        allowed = enabled.reindex(condition.index, method="ffill").fillna(True).astype(bool)
+    since = _time(state.get("enabled_since"))
+    suppressed = False
     for moment, value in condition.items():
+        if allowed is not None:
+            if not bool(allowed.get(moment, True)):
+                since = None
+            else:
+                since = since or moment
+            suppressed = since is None or (
+                (moment - since).total_seconds() < params.enable_delay_seconds
+            )
+            if suppressed:
+                if active:
+                    active, clearing = False, None
+                    transitions.append(("cleared", moment))
+                continue
         if bool(value):
             clearing = None
             if not active:
@@ -573,6 +601,17 @@ def run_raise(inputs: dict[str, Any], params: RaiseParams, context: Context) -> 
                 active, clearing = False, None
                 transitions.append(("cleared", moment))
     state["active"], state["clear_since"] = active, _iso(clearing)
+    state["enabled_since"] = _iso(since) if allowed is not None else None
+    state["suppressed"] = suppressed
+    if suppressed:
+        context.extra.setdefault("messages", {})[context.node_id] = t(
+            "Suppressed by design: its permissive does not hold."
+        )
+    elif isinstance(enabled, NoData):
+        context.extra.setdefault("messages", {})[context.node_id] = t(
+            "Its permissive cannot be judged ({reason}): the alarm stays enabled.",
+            reason=enabled.reason,
+        )
     return {}
 
 
@@ -887,7 +926,17 @@ SPECS: list[tuple[BlockSpec, Callable]] = [
                 "be judged (no data yet), the alarm keeps its state and says why.",
                 "Raised while true; cleared after the condition stays false long enough.",
             ),
-            inputs=(inport("condition", CONDITION, "Condition", "When the alarm is raised."),),
+            inputs=(
+                inport("condition", CONDITION, "Condition", "When the alarm is raised."),
+                inport(
+                    "enabled",
+                    CONDITION,
+                    "Enabled when",
+                    "A permissive: while it is false the alarm is suppressed by design (a low "
+                    "flow alarm only while the pump runs). Unknown leaves the alarm enabled.",
+                    required=False,
+                ),
+            ),
             parameters=RaiseParams,
             runs_on_missing=True,
             group="Output",
