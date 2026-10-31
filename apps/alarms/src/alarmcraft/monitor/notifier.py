@@ -37,8 +37,8 @@ alarm philosophy (``alarms.philosophy``):
   send nothing: their cause is the failure, already announced. While the data does not flow (the
   suite watch reports the Historian or its collector down, the installer silent or Docker down;
   the Historian reports its collector stalled), "no data" alarms and failed runs send nothing
-  either; while one source is disconnected (``histcraft.source.disconnected``), the "no data"
-  alarms of its signals.
+  either; while one source is disconnected or late (``histcraft.source.disconnected``,
+  ``histcraft.source.late``), the "no data" alarms of its signals.
 
 A notification that PlantCraft refuses stays in the outbox and is tried again next cycle; after
 a day it is dropped. An alarm with ``notify`` off, a shelved alarm or a silenced one sends nothing.
@@ -82,7 +82,7 @@ DATA_DOWN_KINDS = (
 )
 DATA_SERVICES = ("service:histcraft",)
 # A source the Historian cannot read (key source:<id>): only its own signals' alarms wait.
-SOURCE_DOWN_KIND = "histcraft.source.disconnected"
+SOURCE_DOWN_KINDS = ("histcraft.source.disconnected", "histcraft.source.late")
 NO_DATA_KIND = "histcraft.point.no_data"
 MAX_SUMMARY_LINES = 30
 SUMMARY_MARK = "summary_at"
@@ -204,7 +204,7 @@ class Notifier:
             if (
                 kind in DATA_DOWN_KINDS
                 or (kind == "processcraft.service.down" and key.startswith(DATA_SERVICES))
-                or (kind == SOURCE_DOWN_KIND and source and key == source)
+                or (kind in SOURCE_DOWN_KINDS and source and key == source)
             ):
                 return str(item.get("summary") or key or kind)
         return ""

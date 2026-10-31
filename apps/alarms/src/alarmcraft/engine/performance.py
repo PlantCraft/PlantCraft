@@ -1,7 +1,8 @@
 """Alarm performance over a period, against the installation's alarm philosophy (its defaults are
 the public ISA-18.2 and EEMUA 191 targets below; ``alarms.philosophy``).
 
-Figures are for one operator position (every alarm of this installation). Shelved and
+Figures are for one operator position: every alarm the person sees, or one console's
+(``alarms.philosophy.Console``). Shelved and
 out-of-service alarms raise no occurrence, so they never count.
 
 | Figure | Target (acceptable / manageable) |
@@ -235,7 +236,7 @@ def performance(
             "label": "Average alarms per 10 minutes",
             "help": "The same load counted in 10-minute periods, the time an operator has to react to each one.",
             "value": round(per_ten, 2),
-            "target": f"≤ {per_person / 6:g} (≤ {per_person / 3:g} manageable)",
+            "target": f"≤ {round(per_person / 6, 2):g} (≤ {round(per_person / 3, 2):g} manageable)",
             "status": _status(per_ten, per_person / 6, per_person / 3),
         },
         {

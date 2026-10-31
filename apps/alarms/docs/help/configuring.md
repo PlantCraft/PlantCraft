@@ -44,6 +44,24 @@ it clears if it was raised, and its page says so. A permissive that cannot be ju
 leaves the alarm enabled, so a bad signal never hides an alarm. In Blocks it is the **Enabled
 when** input of Raise an alarm.
 
+### Limits by grade: a limit for each product
+
+A line that makes several grades often needs a different limit for each one. A melt index alarm,
+for example, may sit at 50 for grade HD-5 and at 90 for LD-2.
+
+1. In the Simple form, choose **Limits by grade…**.
+2. Say where the grade being made comes from:
+   - **A signal** that holds the grade's code. Code 3 is grade "3".
+   - **An event**: the latest event of the kinds you pick names the grade, in a payload field
+     (`grade` by default). An MES's `mes.grade.changed` is an example.
+3. In each condition compared with one limit, list the grades with their limits.
+
+The limit above still holds in two cases: before any grade is known, and for a grade the list
+does not name. The alarm's page says which grade and which limit apply. Alarms keeps the last
+grade between checks, so a grade change event is needed only once.
+
+In Blocks this is a **Grade limit** block wired to the **Limit** input of a Compare.
+
 ## What it makes
 
 - **An alarm**: needs an acknowledgement, shows in Alarms and counts in Performance (ISA-18.2).

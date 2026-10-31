@@ -1,7 +1,7 @@
 import { createApiClient, jsonBody, query, type ExploreAnswer, type ExploreHit, type HelpEntry, type HelpPage } from "@plantcraft/ui";
 import type { Diagram, DiagramCheck } from "@plantcraft/ui/blockEditor";
 import { href } from "./nav";
-import type { Alarm, AlarmListImport, AlarmHistory, AssetAlarms, AssetOption, Catalog, Condition, Directory, EventDetail, Incoming, JournalEntry, Me, Performance, Philosophy, PhilosophyRecord, Rule, RuleDraft, Sent, SignalOption, Silence, SilenceDraft, SimpleLogic, Summary, TryResult, Execution } from "./types";
+import type { Alarm, AlarmListImport, AlarmHistory, AssetAlarms, AssetOption, Catalog, Condition, ConsoleLoads, Directory, EventDetail, Incoming, JournalEntry, Me, Performance, Philosophy, PhilosophyRecord, Rule, RuleDraft, Sent, SignalOption, Silence, SilenceDraft, SimpleLogic, Summary, TryResult, Execution } from "./types";
 
 const client = createApiClient({ app: "alarmcraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -40,7 +40,8 @@ export const api = {
   condition: (app: string, key: string) => request<EventDetail>(`/api/incoming/condition${query({ app, key })}`),
   incoming: (filters: { window: string; app?: string; kind?: string; severity?: string; subject?: string }) => request<Incoming>(`/api/incoming${query({ ...filters, limit: "1000" })}`),
   journal: (window: string, alarm?: string) => request<JournalEntry[]>(`/api/journal${query({ window, alarm, limit: "2000" })}`),
-  performance: (window: string) => request<Performance>(`/api/performance${query({ window })}`),
+  performance: (window: string, console?: string) => request<Performance>(`/api/performance${query({ window, console })}`),
+  consoleLoads: (window: string) => request<ConsoleLoads>(`/api/performance/consoles${query({ window })}`),
   run: () => request<Record<string, number>>("/api/run", { method: "POST" }),
   assets: (q?: string) => request<AssetOption[]>(`/api/assets${query({ q })}`),
   signals: (q: string) => request<SignalOption[]>(`/api/signals${query({ q, limit: "30" })}`),

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
-from typing import Any
+from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Query
 from plantcraft_sdk.auth import User
@@ -207,20 +207,26 @@ def journal(
     return of_seen(rt.asset_scope(user), rt.alarms.list(), rows)
 
 
-@router.get("/performance")
-def alarm_performance(
-    rt: RuntimeDep, user: CurrentUser, window: str = Query(default="24h", max_length=10)
-) -> dict[str, Any]:
-    """Alarm performance over the last ``window`` against ISA-18.2 and EEMUA 191 targets (of
-    the alarms on the part of the plant the person sees)."""
+NO_CONSOLE = "none"
+
+
+def _console_of(rt: Runtime, philosophy: Any, alarm: dict[str, Any] | None) -> str | None:
+    if alarm is None or not philosophy.consoles:
+        return None
+    found = philosophy.console_of(rt.tree.area_of(alarm)[0])
+    return found.id if found else None
+
+
+def _performance_input(rt: Runtime, user: User, window: str) -> dict[str, Any]:
+    """What the performance figures are made of: the alarms the person sees, the occurrences
+    raised in the window, each alarm's console."""
 
     end = rt.clock()
     start = end - window_of(window)
     every = rt.alarms.list()
     scope = rt.asset_scope(user)
     stored = seen(scope, every)
-    names = {alarm["alarm_id"]: alarm["name"] for alarm in stored}
-    owners = {alarm["alarm_id"]: owner_of(alarm) for alarm in stored}
+    philosophy = rt.philosophy.get()
     # Notices are messages, not alarms: they stay out of the ISA-18.2 figures.
     found = of_seen(
         scope,
@@ -229,13 +235,118 @@ def alarm_performance(
             start=start.isoformat(), end=end.isoformat(), limit=100000, creates="alarm"
         ),
     )
+    names = {alarm["alarm_id"]: alarm["name"] for alarm in stored}
     for item in found:
         names.setdefault(item["alarm_id"], item["name"])
-    result = performance(found, start, end, names=names, targets=rt.philosophy.get())
+    by_id = {alarm["alarm_id"]: alarm for alarm in stored}
+    consoles = {alarm_id: _console_of(rt, philosophy, by_id.get(alarm_id)) for alarm_id in names}
+    return {
+        "start": start,
+        "end": end,
+        "stored": stored,
+        "found": found,
+        "names": names,
+        "consoles": consoles,
+        "philosophy": philosophy,
+    }
+
+
+def _console_or_404(philosophy: Any, console: str) -> Any:
+    if console == NO_CONSOLE:
+        return None
+    found = philosophy.console(console)
+    if found is None:
+        raise HTTPException(404, t("No such console."))
+    return found
+
+
+@router.get("/performance")
+def alarm_performance(
+    rt: RuntimeDep,
+    user: CurrentUser,
+    window: str = Query(default="24h", max_length=10),
+    console: Annotated[str | None, Query(max_length=40)] = None,
+) -> dict[str, Any]:
+    """Alarm performance over the last ``window`` against ISA-18.2 and EEMUA 191 targets (of
+    the alarms on the part of the plant the person sees). With ``console``: only the alarms of
+    that operator position, against its own target (``none``: the alarms of no console)."""
+
+    made = _performance_input(rt, user, window)
+    philosophy = made["philosophy"]
+    found, names = made["found"], made["names"]
+    targets, chosen = philosophy, None
+    if console:
+        chosen = _console_or_404(philosophy, console)
+        wanted = chosen.id if chosen else None
+        found = [item for item in found if made["consoles"].get(item["alarm_id"]) == wanted]
+        targets = philosophy.for_console(chosen)
+    owners = {alarm["alarm_id"]: owner_of(alarm) for alarm in made["stored"]}
+    result = performance(found, made["start"], made["end"], names=names, targets=targets)
     for group in ("top", "chattering", "stale", "fleeting"):
         for item in result.get(group) or []:
             item["owner"] = owners.get(item["alarm_id"])
-    return {**result, "window": window}
+    shown = None
+    if console:
+        shown = (
+            {"id": chosen.id, "name": chosen.name, "per_hour": targets.per_person_hour}
+            if chosen
+            else {"id": NO_CONSOLE, "name": t("No console"), "per_hour": targets.per_person_hour}
+        )
+    return {**result, "window": window, "console": shown}
+
+
+def _brief(result: dict[str, Any]) -> dict[str, Any]:
+    figures = {item["id"]: item for item in result["figures"]}
+    return {
+        "total": result["total"],
+        "per_hour": figures["per_hour"]["value"],
+        "per_hour_status": figures["per_hour"]["status"],
+        "peak_10min": result["eemua"]["peak_per_10min"],
+        "peak_status": figures["peak"]["status"],
+        "flood_share": figures["flood"]["value"],
+        "eemua": result["eemua"]["level"],
+        "mean_ack_seconds": result["mean_ack_seconds"],
+    }
+
+
+@router.get("/performance/consoles")
+def console_performance(
+    rt: RuntimeDep, user: CurrentUser, window: str = Query(default="24h", max_length=10)
+) -> dict[str, Any]:
+    """The load of each operator position in the last ``window`` against its own target: the
+    alarms an hour, the peak in 10 minutes, the time in flood and the EEMUA 191 level."""
+
+    made = _performance_input(rt, user, window)
+    philosophy = made["philosophy"]
+    groups: dict[str | None, list[dict[str, Any]]] = {}
+    for item in made["found"]:
+        groups.setdefault(made["consoles"].get(item["alarm_id"]), []).append(item)
+    alarms: dict[str | None, int] = {}
+    for alarm in made["stored"]:
+        if (alarm.get("creates") or "alarm") != "alarm":
+            continue
+        key = made["consoles"].get(alarm["alarm_id"])
+        alarms[key] = alarms.get(key, 0) + 1
+    rows = []
+    for console in [*philosophy.consoles, None]:
+        key = console.id if console else None
+        if console is None and not groups.get(None) and not alarms.get(None):
+            continue
+        targets = philosophy.for_console(console)
+        result = performance(groups.get(key, []), made["start"], made["end"],
+                             names=made["names"], targets=targets)  # fmt: skip
+        rows.append(
+            {
+                "id": key or NO_CONSOLE,
+                "name": console.name if console else t("No console"),
+                "operators": console.operators if console else [],
+                "areas": console.areas if console else [],
+                "target_per_hour": targets.per_person_hour,
+                "alarms": alarms.get(key, 0),
+                **_brief(result),
+            }
+        )
+    return {"window": window, "consoles": rows, "defined": len(philosophy.consoles)}
 
 
 @router.post("/run")

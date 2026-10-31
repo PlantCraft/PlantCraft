@@ -7,7 +7,7 @@ import type { Diagram, DiagramNode } from "@plantcraft/ui/blockEditor";
 import { t } from "./i18n";
 import { NEW_NOTIFY } from "./notify";
 import type { ExplorePick } from "@plantcraft/ui";
-import type { Rule, RuleDraft, SimpleCondition, SimpleLogic, SimpleValue, Where } from "./types";
+import type { Rule, RuleDraft, SimpleCondition, SimpleGrade, SimpleLogic, SimpleValue, Where } from "./types";
 
 export const MAX_CONDITIONS = 3;
 export const ASSET = "{asset}";
@@ -28,7 +28,21 @@ export function simpleComplete(simple: SimpleLogic): boolean {
     if (item.op === "between" || item.op === "outside") return item.limit !== null && item.high !== null && item.high >= item.limit;
     return item.op === "changed" || item.op === "unchanged" || item.limit !== null;
   };
+  const grade = simple.grade;
+  if (grade) {
+    const source = grade.source === "value" ? Boolean(grade.value && (grade.value.signal || grade.value.role)) : grade.kinds.length > 0 && Boolean(grade.field.trim());
+    const limits = simple.conditions.flatMap((item) => item.grade_limits ?? []);
+    if (!source || !limits.length || limits.some((item) => !item.grade.trim() || !Number.isFinite(item.limit))) return false;
+  }
   return simple.conditions.every(complete) && (!simple.enable_when || complete(simple.enable_when));
+}
+
+/** A new grade source: the signal that holds the grade's code (picked next). */
+export const NEW_GRADE = (): SimpleGrade => ({ source: "value", value: { signal: "", role: "", name: "", unit: "" }, kinds: [], about: "any", field: "grade", name: "" });
+
+/** Whether a condition can take limits by grade: a value compared with one limit. */
+export function takesGrades(condition: SimpleCondition): boolean {
+  return condition.input === "value" && !["between", "outside", "changed", "unchanged"].includes(condition.op);
 }
 
 /** A new permissive: a running signal at or above 1 (a pump's run feedback). */
@@ -37,7 +51,7 @@ export const NEW_PERMISSIVE = (): SimpleCondition => ({ ...valueCondition({ sign
 export function valueCondition(value: SimpleValue = NO_VALUE()): SimpleCondition {
   return {
     input: "value", value, op: ">", limit: null, high: null, deadband: 0,
-    event: null, test: "open", count: 1, window_minutes: 60, for_seconds: 0, for_points: 0,
+    event: null, test: "open", count: 1, window_minutes: 60, for_seconds: 0, for_points: 0, grade_limits: [],
   };
 }
 
@@ -48,7 +62,7 @@ export function eventCondition(kinds: string[] = [], about = "subject"): SimpleC
   };
 }
 
-export const EMPTY_SIMPLE = (): SimpleLogic => ({ conditions: [valueCondition()], combine: "and", clear_after_seconds: 0, enable_when: null, enable_delay_seconds: 0 });
+export const EMPTY_SIMPLE = (): SimpleLogic => ({ conditions: [valueCondition()], combine: "and", clear_after_seconds: 0, enable_when: null, enable_delay_seconds: 0, grade: null });
 
 export const EMPTY_RULE = (): RuleDraft => ({
   name: "", enabled: true, creates: "alarm", priority: "medium", where: NO_WHERE(),
@@ -73,6 +87,7 @@ function fillSimple(simple: SimpleLogic | null): SimpleLogic {
       : { ...valueCondition(), ...item, value: { ...NO_VALUE(), ...(item.value ?? {}) } }),
     enable_when: simple.enable_when ? { ...valueCondition(), ...simple.enable_when, value: { ...NO_VALUE(), ...(simple.enable_when.value ?? {}) } } : null,
     enable_delay_seconds: simple.enable_delay_seconds ?? 0,
+    grade: simple.grade ? { ...NEW_GRADE(), ...simple.grade, value: simple.grade.value ? { ...NO_VALUE(), ...simple.grade.value } : null } : null,
   };
 }
 

@@ -222,7 +222,12 @@ class ApiRuntime:
             ServerMetrics(self.tokens, self._own_metrics, running=self._running_services),
             # The conditions an app without an app key reports (the Historian), as its events.
             conditions=ConditionRelay(
-                self.workspace.db, self.workspace.events, self.contributions
+                self.workspace.db,
+                self.workspace.events,
+                self.contributions,
+                # The owners of a failing source hear of it (H13); built a few lines below.
+                notifications=lambda: self.notifications,
+                app_names=self.app_names,
             ).apply,
         )
         # Operations › Logs: every server's own log, read back with filters.

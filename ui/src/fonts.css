@@ -1,13 +1,16 @@
 /* Self-hosted fonts (SIL Open Font License, see fonts/LICENSE.md). Plants run without internet,
    so the font files travel inside this package and no font is ever fetched from a CDN.
    Latin covers English, Portuguese, Spanish, French and German; other scripts fall back to
-   the system font. Inter is variable in weight (100-900) and optical size (14-32). */
+   the system font. Inter is variable in weight (100-900) and optical size (14-32).
+   Each face is first asked of the platform (/static/vendor/fonts/, one copy for every app,
+   see sharedVendor.ts); where that answers 404 (an app run on its own) the browser takes the
+   next source, the app's own copy. */
 @font-face {
   font-family: "Inter";
   font-style: normal;
   font-display: swap;
   font-weight: 100 900;
-  src: url("./fonts/inter-latin-opsz-normal.woff2") format("woff2-variations"), url("./fonts/inter-latin-opsz-normal.woff2") format("woff2");
+  src: url("/static/vendor/fonts/inter-latin-opsz-normal-2c295d99e2.woff2") format("woff2-variations"), url("/static/vendor/fonts/inter-latin-opsz-normal-2c295d99e2.woff2") format("woff2"), url("./fonts/inter-latin-opsz-normal.woff2") format("woff2-variations"), url("./fonts/inter-latin-opsz-normal.woff2") format("woff2");
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 @font-face {
@@ -15,7 +18,7 @@
   font-style: italic;
   font-display: swap;
   font-weight: 100 900;
-  src: url("./fonts/inter-latin-opsz-italic.woff2") format("woff2-variations"), url("./fonts/inter-latin-opsz-italic.woff2") format("woff2");
+  src: url("/static/vendor/fonts/inter-latin-opsz-italic-c58f9d530b.woff2") format("woff2-variations"), url("/static/vendor/fonts/inter-latin-opsz-italic-c58f9d530b.woff2") format("woff2"), url("./fonts/inter-latin-opsz-italic.woff2") format("woff2-variations"), url("./fonts/inter-latin-opsz-italic.woff2") format("woff2");
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 @font-face {
@@ -23,7 +26,7 @@
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url("./fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+  src: url("/static/vendor/fonts/jetbrains-mono-latin-400-normal-14425ba9c6.woff2") format("woff2"), url("./fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 @font-face {
@@ -31,6 +34,6 @@
   font-style: normal;
   font-display: swap;
   font-weight: 500 700;
-  src: url("./fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2");
+  src: url("/static/vendor/fonts/jetbrains-mono-latin-500-normal-cb182feeed.woff2") format("woff2"), url("./fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2");
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }

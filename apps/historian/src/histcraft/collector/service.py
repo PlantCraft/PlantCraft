@@ -186,6 +186,9 @@ class Collector:
         self.points: dict[int, PointState] = {}
         self.sources: dict[str, dict[str, Any]] = {}
         self.source_status: dict[str, dict[str, Any]] = {}
+        # The state last written to each source's history (``catalog.source_events``, H13);
+        # read from the catalog at the first flush.
+        self._noted: dict[str, str] | None = None
         self._tasks: dict[str, asyncio.Task] = {}
         self._signatures: dict[str, tuple] = {}
         self._version = -1
@@ -454,6 +457,7 @@ class Collector:
         elapsed = max(self.settings.flush_seconds, 1e-3)
         self._rate = max(reads - self._last_flush_reads, 0) / elapsed
         self._last_flush_reads = reads
+        self._note_changes()
         self.archive.set_state(
             "collector",
             {
@@ -466,6 +470,24 @@ class Collector:
             },
         )
         return written
+
+    def _note_changes(self) -> None:
+        """Write each source whose state changed since the last flush to its history."""
+
+        try:
+            if self._noted is None:
+                self._noted = self.catalog.last_source_statuses()
+            changed = []
+            for source_id, current in list(self.source_status.items()):
+                status = str(current.get("status") or "")
+                if status and self._noted.get(source_id) != status:
+                    at = int(current.get("since") or now_ms())
+                    changed.append((source_id, at, status, str(current.get("detail") or "")))
+            self.catalog.add_source_events(changed)
+            for source_id, _at, status, _detail in changed:
+                self._noted[source_id] = status
+        except Exception:  # noqa: BLE001 - the history never stops the values
+            LOGGER.exception("Source history not written")
 
     def housekeeping(self, *, force: bool = False) -> dict[str, int]:
         """Merge small chunks and delete values past retention (hourly)."""

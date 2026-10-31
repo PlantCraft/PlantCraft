@@ -9,6 +9,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **The owners of a failing source hear of it** (gap H13): a condition the Historian reports
+  with `owners` in its payload (`source.disconnected`, `source.late`) is told to them as a
+  Historian notification, in Messages and by email, with the team's contact and a link to the
+  source; when the condition ends the notification is settled ("Back to normal at …"). No alarm
+  rule is needed for it.
+
 - **Windows without Docker Desktop: Rancher Desktop.** `./install.sh --check` in WSL now accepts
   Rancher Desktop's Linux `docker`, which reaches Ubuntu through Windows' PATH. It refused that
   path before, as if it were Docker Desktop's. `docs/install.md` gives the Rancher Desktop
@@ -116,6 +122,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **Customizing an overview shows that it is on.** A tinted bar that stays in view says
   "Customizing this page", explains the moves and keeps **Done** at hand; each widget gets a
   stronger outline (ui 0.96.0, interface pass of 2026-10-31).
+- **Plotly and the fonts download once for the whole suite, not once per app (ui 0.96.0).**
+  The platform serves them at `/static/vendor/` under names that carry a hash of their bytes
+  (kept a year by the proxy), and every app asks there first: `@plantcraft/ui/plot` loads
+  Plotly from the platform and `fonts.css` lists the platform's copy before the app's own. An
+  app run on its own, or a platform with another Plotly build, answers 404 and the app uses its
+  own copy as before. `node ui/scripts/shared-vendor-names.mjs` prints the names after an upgrade.
 - **Analytics › Algorithms opens without the diagram editor.** The list moved to its own module
   (`AlgorithmList.tsx`), so opening it no longer loads React Flow and the test tools: 724 KB to
   443 KB of script. The algorithm's page still loads them.

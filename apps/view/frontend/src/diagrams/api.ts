@@ -23,6 +23,7 @@ export const diagramsApi = {
   data: (diagramId: string, window: string | null, end: string | null, page?: string | null) => request<DiagramData>(`/api/diagrams/${id(diagramId)}/data${query({ window, end, page: page || null })}`),
   preview: (diagram: DiagramDraft, window: string | null) => request<DiagramData>("/api/diagrams/preview", jsonBody("POST", { diagram, window })),
   drawFromAssets: (unitId: string) => request<DiagramStart>("/api/diagrams/draw-from-assets", jsonBody("POST", { unit_id: unitId })),
+  drawPlant: () => request<DiagramStart>("/api/diagrams/draw-plant", { method: "POST" }),
   draft: (description: string, unitId: string | null) => request<DiagramStart>("/api/diagrams/draft", jsonBody("POST", { description, unit_id: unitId })),
   assetSignals: (assetId: string) => request<Array<{ role: string; signal: string }>>(`/api/diagram-assets/${id(assetId)}/signals`),
 };

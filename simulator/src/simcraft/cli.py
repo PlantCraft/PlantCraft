@@ -160,6 +160,9 @@ def _loops_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="loops_command", required=True)
     commands.add_parser("serve", help="serve the loops through OPC UA (see `serve --help`)")
     commands.add_parser("catalog", help="print every loop and its tags as JSON")
+    from .loops.control import add_commands
+
+    add_commands(commands)
     return parser
 
 
@@ -174,6 +177,10 @@ def _loops(argv: list[str]) -> int:
 
         print(json.dumps(loop_catalog(), indent=2, ensure_ascii=False))
         return 0
+    from .loops.control import COMMANDS, run
+
+    if args.loops_command in COMMANDS:
+        return run(args)
     raise AssertionError(args.loops_command)
 
 

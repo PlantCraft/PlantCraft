@@ -36,6 +36,7 @@ from histcraft.api.runtime import Runtime, point_ref
 from histcraft.archive.edit_marks import edit_marks
 from histcraft.archive.query import Reader, SourceUnavailable, iso_ms, to_ms
 from histcraft.catalog.models import (
+    INTEGRATION_FIELDS,
     PLANT_KINDS,
     SOURCE_SETTINGS,
     SYSTEM_SOURCE,
@@ -148,6 +149,8 @@ def sources(runtime: RuntimeDep, _caller: PlantCraft) -> list[dict[str, Any]]:
             "options": item["options"],
             # Overrides of the general settings for the source's signals (null: general).
             **{key: item[key] for key in SOURCE_SETTINGS},
+            # The integration: who answers for it, the team's contact, the expected interval.
+            **{key: item[key] for key in INTEGRATION_FIELDS},
             "status": state.get(item["id"]),
             "signals": item["points"],
         }
@@ -234,6 +237,19 @@ def update_source(
         raise HTTPException(exc.status, str(exc)) from exc
     runtime.audit(caller, "source.update", source_id, {"endpoint": body.endpoint})
     return _source_answer(runtime, source_id)
+
+
+@router.get("/sources/{source_id}/history")
+def source_history(
+    source_id: str, runtime: RuntimeDep, _caller: PlantCraft, limit: int = 100
+) -> list[dict[str, Any]]:
+    """When the collector found the source connected and disconnected, the newest first."""
+
+    try:
+        runtime.catalog.source(source_id)
+    except CatalogError as exc:
+        raise HTTPException(exc.status, str(exc)) from exc
+    return runtime.catalog.source_events(source_id, limit)
 
 
 @router.delete("/sources/{source_id}", status_code=204)
