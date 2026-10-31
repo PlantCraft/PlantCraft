@@ -8,6 +8,14 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **A PI tuning suggestion on the loop page, read only.** "Suggest tuning" fits a first order
+  plus dead time from the OP to the PV on the loop's last window and gives PI settings by Lambda
+  (IMC) rules for three closed-loop speeds: tight (lambda = dead time), moderate (lambda = time
+  constant) and robust (lambda = 3 time constants). It also gives the controller action.
+  Closed-loop data is a weak experiment, so the page calls it a starting point for a step test,
+  and says why it is not reliable when the fit explains under half of the PV, the OP barely
+  moved, or the time constant is shorter than a sample. Nothing is sent to the controller
+  (`GET /api/loops/{loop_id}/tuning`).
 - **A loop compared with a recorded reference.** "Record as reference" on the loop page keeps the
   loop's last run (health, and each method's status, score and numeric indicators) as the run to
   compare against, after commissioning or a retune. The page then shows health then and now, and

@@ -65,6 +65,35 @@ def test_run_now_queues_a_run(signed_in, app_url):
     expect(page.get_by_text(re.compile(r"Run queued \(\w+\)"))).to_be_visible()
 
 
+def test_a_loop_is_recorded_as_its_reference_and_compared(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/link/loops/lic-102")
+    panel = page.get_by_test_id("loop-reference")
+    expect(panel).to_contain_text("Record a run you call good")
+    panel.get_by_role("button", name="Record as reference").click()
+    expect(panel).to_contain_text("The last run against the run recorded on")
+    expect(panel.get_by_text("Health then")).to_be_visible()
+    expect(panel.locator("table.table")).to_contain_text("Oscillation")
+    if screenshots:
+        panel.screenshot(path=str(screenshots / "loop-reference.png"))
+    panel.get_by_role("button", name="Remove").click()
+    page.get_by_role("alertdialog").get_by_role("button", name="Remove").click()
+    expect(panel).to_contain_text("Record a run you call good")
+
+
+def test_a_loop_gets_a_tuning_suggestion_on_demand(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/link/loops/fic-101")
+    panel = page.get_by_test_id("tuning-suggestion")
+    panel.get_by_role("button", name="Suggest tuning").click()
+    expect(panel.get_by_text("Process gain")).to_be_visible()
+    table = panel.locator("table.table")
+    for choice in ("Tight", "Moderate", "Robust"):
+        expect(table).to_contain_text(choice)
+    if screenshots:
+        panel.screenshot(path=str(screenshots / "loop-tuning.png"))
+
+
 def test_an_algorithm_page_and_its_editor_window(signed_in, app_url, screenshots):
     page = signed_in
     page.goto(f"{app_url}/link/algorithms")
