@@ -28,7 +28,8 @@ simulator_case_count = 10
 isdb_loops = 0
 # SACAC loops (Stiction and Tuning categories) whose category stiction_screening matches
 # (tests/oracles/test_sacac_oracle.py; data pinned 2026-10-31, fetched only where reachable).
-sacac_loops = 0
+# First score, 2026-10-31 on the Mac mini: 7 of 27 (stiction 0/13, tuning 7/14), docs/gaps.md G3.
+sacac_loops = 7
 # Synthetic signal oracle (tests/oracles/test_signal_synthetic_oracle.py): cases whose verdict
 # the signal checks get right, and the number of cases.
 signal_synthetic_cases = 90
