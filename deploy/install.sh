@@ -386,6 +386,15 @@ env_set() { # env_set KEY VALUE FILE
     mv "$tmp" "$3"
 }
 
+env_drop() { # env_drop KEY FILE: a setting that no longer belongs in .env, removed
+    local tmp
+    [ -f "$2" ] && grep -q "^$1=" "$2" || return 0
+    tmp="$(mktemp "$2.XXXXXX")"
+    grep -v "^$1=" "$2" >"$tmp" || true
+    chmod 0640 "$tmp"
+    mv "$tmp" "$2"
+}
+
 env_rename() { # env_rename OLD NEW FILE: a setting renamed in a release keeps its value
     local tmp
     [ -f "$3" ] && grep -q "^$1=" "$3" || return 0
@@ -746,9 +755,6 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
     fi
     if [ "$PUBLIC_DEMO" = 1 ]; then
         env_set PLANTCRAFT_PUBLIC_DEMO true "$env"
-        if [ -z "$(env_get PLANTCRAFT_PUBLIC_DEMO_PASSWORD "$env")" ]; then
-            env_set PLANTCRAFT_PUBLIC_DEMO_PASSWORD plantcraft-demo "$env"
-        fi
     fi
     env_set PLANTCRAFT_APPS "$(suite_apps_setting "$profiles" "$(env_get PLANTCRAFT_APPS "$env")" "$env")" "$env"
     # The installer service mounts the install folder at its own path and joins the group of
@@ -1013,6 +1019,22 @@ docker_gid() {
 
 random_secret() { head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | cut -c 1-24; }
 
+# The public demo visitor's password, a secret file like the others in data/ and never in .env
+# (security check PC-SEC-02). A value an older installation kept in .env moves to the file, so the
+# visitor's password does not change; otherwise it is random (visitors enter with the sign-in
+# page's button, never with the password). Written for every installation: Compose needs the file.
+keep_demo_password() { # keep_demo_password DATA_DIR ENV_FILE
+    local file="$1/public-demo-password" old
+    old="$(env_get PLANTCRAFT_PUBLIC_DEMO_PASSWORD "$2")"
+    if [ -n "$old" ]; then
+        (umask 077 && printf '%s\n' "$old" >"$file")
+    elif [ ! -s "$file" ]; then
+        (umask 077 && random_secret >"$file")
+        [ "$(wc -c <"$file")" -ge 20 ] || die "could not generate a password"
+    fi
+    env_drop PLANTCRAFT_PUBLIC_DEMO_PASSWORD "$2"
+}
+
 NEW_PASSWORD=""
 prepare_data() {
     local data="$PREFIX/data"
@@ -1040,6 +1062,7 @@ prepare_data() {
     if [ ! -e "$data/compute-local-key" ]; then
         (umask 077 && printf 'pcw_%s%s\n' "$(random_secret)" "$(random_secret)" >"$data/compute-local-key")
     fi
+    keep_demo_password "$data" "$PREFIX/.env"
     # Every app owns data/<id>/ and, when it needs one, its app key file, filled in on its first
     # start (provision_app_keys) or by the administrator.
     local app uid owners=""
@@ -1063,7 +1086,7 @@ prepare_data() {
     as_root "$(helper_image)" "
         set -e
         cd /install
-        chown -R $PLANTCRAFT_UID:$PLANTCRAFT_UID data/processcraft data/initial-admin-password
+        chown -R $PLANTCRAFT_UID:$PLANTCRAFT_UID data/processcraft data/initial-admin-password data/public-demo-password
         chown -R $PROXY_UID:$PROXY_UID data/proxy
         chown -R $SIMCRAFT_UID:$SIMCRAFT_UID data/simcraft
         chown $PLANTCRAFT_UID:$PLANTCRAFT_UID data/app-requests
@@ -1086,7 +1109,7 @@ prepare_data() {
         chmod 0755 data/installer data/installer/routes data/installer/status
         chmod 0711 data/apps
         chmod 0755 data/histcraft-csv
-        chmod 0600 data/initial-admin-password data/histcraft-db-password
+        chmod 0600 data/initial-admin-password data/histcraft-db-password data/public-demo-password
         if [ -f certs/key.pem ]; then chown $PROXY_UID:$PROXY_UID certs/key.pem; chmod 0400 certs/key.pem; fi
         if [ -f certs/cert.pem ]; then chmod 0444 certs/cert.pem; fi
     "
@@ -1168,9 +1191,8 @@ provision_app_keys() {
 seed_demo() {
     [[ ",$(env_get COMPOSE_PROFILES "$PREFIX/.env")," == *",demo,"* ]] || return 0
     log "Writing the demo story (plant map, loops, algorithms, model examples, dashboards, messages)"
-    if ! compose exec -T \
-        -e PLANTCRAFT_PUBLIC_DEMO_PASSWORD="$(env_get PLANTCRAFT_PUBLIC_DEMO_PASSWORD "$PREFIX/.env")" \
-        processcraft processcraft demo seed; then
+    # The visitor's password comes from the secret file (PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE).
+    if ! compose exec -T processcraft processcraft demo seed; then
         warn "the demo story is incomplete (see above); run it again with: docker compose --project-directory $PREFIX exec processcraft processcraft demo seed"
     fi
 }

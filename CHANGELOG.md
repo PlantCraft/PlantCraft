@@ -387,6 +387,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **The public demo's visitor password is no longer in `.env`** (security check `PC-SEC-02`).
+  `install.sh` keeps it in `data/public-demo-password` (mode 600, owned by PlantCraft), handed to
+  PlantCraft as a Compose secret (`PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE`). An older installation's
+  value moves there unchanged; a new installation gets a random one instead of `plantcraft-demo`,
+  since visitors enter with the sign-in page's button. `PC-SEC-01` checks the file's mode.
 - **The security check includes Lynis and OpenSCAP when the host has them** (`PC-HOST-05`,
   `PC-HOST-06`). As root it runs `lynis audit system --quick` and the SCAP Security Guide's CIS
   level 1 (or standard) profile. Otherwise it reads their last report. A host without them reports

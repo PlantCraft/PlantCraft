@@ -123,7 +123,10 @@ services:
       # account, viewers are read-only (conversations too) and never reach a language model, and each
       # address gets PLANTCRAFT_PUBLIC_DEMO_RATE requests per minute.
       PLANTCRAFT_PUBLIC_DEMO: "${PLANTCRAFT_PUBLIC_DEMO:-false}"
+      # The visitor's password: data/public-demo-password (install.sh writes it once, mode 600),
+      # never .env. The variable stays for an installation that still sets it by hand.
       PLANTCRAFT_PUBLIC_DEMO_PASSWORD: "${PLANTCRAFT_PUBLIC_DEMO_PASSWORD:-}"
+      PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE: /run/secrets/public_demo_password
       PLANTCRAFT_PUBLIC_DEMO_RATE: "${PLANTCRAFT_PUBLIC_DEMO_RATE:-600}"
       # The key the site's private stats page reads the demo's visits with (empty: nobody).
       PLANTCRAFT_PUBLIC_DEMO_STATS_KEY: "${PLANTCRAFT_PUBLIC_DEMO_STATS_KEY:-}"
@@ -185,6 +188,7 @@ services:
     secrets:
       - admin_password
       - compute_local_key
+      - public_demo_password
     volumes:
       - ./data/processcraft:/data
       - ./data/egress:/egress
@@ -1028,6 +1032,8 @@ secrets:
     file: ./data/histcraft-db-password
   compute_local_key:
     file: ./data/compute-local-key
+  public_demo_password:
+    file: ./data/public-demo-password
 
 networks:
   edge:
