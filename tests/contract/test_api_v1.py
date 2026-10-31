@@ -955,6 +955,8 @@ def test_no_v1_route_writes_to_a_data_source(central):
         ("GET", "/api/v1/signals/{signal_id}"): {"path": "/api/v1/signals/pv"},
         ("GET", "/api/v1/signals/{signal_id}/series"): {"path": "/api/v1/signals/pv/series"},
         ("GET", "/api/v1/signals/{signal_id}/value"): {"path": "/api/v1/signals/pv/value"},
+        # A summary only reads (422 here: the local data layer has none).
+        ("GET", "/api/v1/signals/{signal_id}/summary"): {"path": "/api/v1/signals/pv/summary"},
         ("GET", "/api/v1/signals/{signal_id}/runs"): {"path": "/api/v1/signals/pv/runs"},
         ("POST", "/api/v1/series"): {"json": {"signals": ["pv", "mode", "nope"]}},
         # Derived series go to the data layer's own table, never to a plant source.
