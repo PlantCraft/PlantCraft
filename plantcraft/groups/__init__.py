@@ -6,6 +6,12 @@ never keep a copy: they read it through API v1 (``group:<id>``). A group has a k
 department, an area of the plant, an engineering discipline or a team), may point at the asset it
 covers, and may have a coordinator, who manages its members without being an administrator.
 
+A ``company`` is an outside firm working at the plant (an integrator, a maintenance contractor):
+its coordinator is on the firm's side, its teams are groups under it, and it carries the date its
+access ends (``access_until``) and its sponsor at the plant (``sponsor``). From the day after that
+date nobody in it or in a group under it signs in (``access_ended``); Operations › Partners lists
+the companies (docs/operations.md, section 4).
+
 Groups form a tree: each may sit under a parent group ("Operations" >
 "U-100 operations" > "Shift A"). The coordinator leads the group, and a leader sees the work of
 their group and of every group below it (``scope``: actions use it). A person may be in several
@@ -18,14 +24,17 @@ import json
 import re
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from datetime import date
 from functools import wraps
 from typing import Any, TypeVar
 
+from plantcraft.config import plant_today
 from plantcraft.db import Database, Migration, Store, add_columns
 from plantcraft.i18n import t
 
 GROUP_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,59}$")
-KINDS = ("department", "area", "discipline", "team")
+KINDS = ("department", "area", "discipline", "team", "company")
+COMPANY = "company"
 MAX_DEPTH = 8
 MAX_MEMBERS = 500
 MAX_DESCRIPTION = 500
@@ -37,6 +46,7 @@ def kind_labels() -> dict[str, str]:
         "area": t("Area"),
         "discipline": t("Discipline"),
         "team": t("Team"),
+        "company": t("Company"),
     }
 
 
@@ -110,6 +120,11 @@ class GroupStore(Store):
         ),
         # The roots of the asset tree the members see (docs/asset-scope.md); NULL: no limit.
         Migration("asset-scope", add_columns("user_groups", {"asset_scope_json": "TEXT"})),
+        # A company's last day of access (YYYY-MM-DD, NULL: no end) and its sponsor at the plant.
+        Migration(
+            "company-access",
+            add_columns("user_groups", {"access_until": "TEXT", "sponsor": "TEXT"}),
+        ),
     )
 
     def __init__(self, db: Database, users: Any):
@@ -405,7 +420,7 @@ class GroupStore(Store):
         if not name or len(name) > 120:
             raise ValueError(t("A group needs a name of 1 to 120 characters."))
         if kind not in KINDS:
-            raise ValueError(t("A group's kind is department, area, discipline or team."))
+            raise ValueError(t("A group's kind is department, area, discipline, team or company."))
         description = (description or "").strip()
         if len(description) > MAX_DESCRIPTION:
             raise ValueError(
@@ -510,6 +525,86 @@ class GroupStore(Store):
             )
         self._set_members(group_id, names)
         return self.get(group_id) or {}
+
+    def set_company(
+        self, group_id: str, *, access_until: str | None, sponsor: str | None
+    ) -> dict[str, Any]:
+        """A company's last day of access and its sponsor at the plant (both cleared for any other
+        kind of group)."""
+
+        group = self.get(group_id)
+        if group is None:
+            raise LookupError(group_id)
+        if group["kind"] != COMPANY:
+            access_until, sponsor = None, None
+        until = None
+        if access_until:
+            try:
+                until = date.fromisoformat(str(access_until)[:10]).isoformat()
+            except ValueError as exc:
+                raise ValueError(t("The access end must be a date (YYYY-MM-DD).")) from exc
+        sponsor = (sponsor or "").strip().lower() or None
+        if sponsor and not self.users.is_person(sponsor):
+            raise ValueError(t("User not found: {username}.", username=sponsor))
+        if sponsor and sponsor in {member["username"] for member in group["members"]}:
+            raise ValueError(t("The sponsor is someone of the plant, not of the company."))
+        with self._lock, self._write() as connection:
+            connection.execute(
+                "UPDATE user_groups SET access_until = ?, sponsor = ?, updated_at = ? "
+                "WHERE group_id = ?",
+                (until, sponsor, self._now(), group_id),
+            )
+        return self.get(group_id) or {}
+
+    def company_of(
+        self, group_id: str | None, groups: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any] | None:
+        """The company ``group_id`` is or sits under (its nearest one), None for none."""
+
+        found = {item["group_id"]: item for item in (groups or self.list())}
+        seen: set[str] = set()
+        current = found.get(group_id or "")
+        while current is not None and current["group_id"] not in seen:
+            if current["kind"] == COMPANY:
+                return current
+            seen.add(current["group_id"])
+            current = found.get(current["parent_id"] or "")
+        return None
+
+    def companies_of(self, username: str) -> list[dict[str, Any]]:
+        """The companies ``username`` works for: a company they are in, or one above a group
+        they are in."""
+
+        groups = self.list()
+        found: dict[str, dict[str, Any]] = {}
+        for group in groups:
+            if any(member["username"] == username for member in group["members"]):
+                company = self.company_of(group["group_id"], groups)
+                if company is not None:
+                    found[company["group_id"]] = company
+        return list(found.values())
+
+    def access_ended(self, username: str | None, today: str | None = None) -> str | None:
+        """The last day of access of a company ``username`` works for, when it has passed (they
+        no longer sign in); None while every one of their companies is current."""
+
+        if not username:
+            return None
+        day = today or plant_today()
+        # Every request asks: one cheap query first, the tree only when a company has ended.
+        with self._lock, self._connect() as connection:
+            if not connection.execute(
+                "SELECT 1 FROM user_groups WHERE kind = ? AND access_until IS NOT NULL "
+                "AND access_until < ? LIMIT 1",
+                (COMPANY, day),
+            ).fetchone():
+                return None
+        ended = [
+            company["access_until"]
+            for company in self.companies_of(username)
+            if company.get("access_until") and company["access_until"] < day
+        ]
+        return max(ended) if ended else None
 
     def set_members(self, group_id: str, members: list[str]) -> dict[str, Any]:
         """The members a coordinator chose; the coordinator stays one of them."""

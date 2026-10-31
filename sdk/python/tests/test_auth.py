@@ -208,3 +208,29 @@ def test_a_signed_out_session_ends_its_token_in_every_app(fake):
     assert error.value.status_code == 401
     # The same person's other session (another browser) keeps working.
     assert verifier.user(other).username == "engineer"
+
+
+def test_a_verified_token_is_not_checked_again_but_still_expires_and_follows_its_key(fake):
+    import time
+
+    from plantcraft_sdk import auth as auth_module
+
+    verifier = fake.verifier("linkcraft", leeway=0)
+    token = fake.token("engineer", ttl=1)
+    assert verifier.user(token).username == "engineer"
+    assert token in verifier._verified
+    # The cached token stops working when it expires.
+    time.sleep(2.1)
+    with pytest.raises(AuthError) as error:
+        verifier.user(token)
+    assert error.value.status_code == 401
+    assert token not in verifier._verified
+    # A token whose key PlantCraft no longer publishes is refused, cached or not.
+    other = fake.token("engineer")
+    assert verifier.user(other).username == "engineer"
+    fake.rotate_key()
+    fake._public[:] = fake._public[-1:]
+    verifier._fetched = -float("inf")
+    with pytest.raises(AuthError):
+        verifier.user(other)
+    assert len(verifier._verified) <= auth_module.VERIFIED_CACHE_SIZE

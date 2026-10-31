@@ -43,6 +43,11 @@ WATCH_EVENTS: dict[str, str] = {
     "installer": "installer.silent",
     "docker": "docker.down",
     "cert": "certificate.expiring",
+    # plantcraft.watch.load: two levels each.
+    "load": "load.high",
+    "load_critical": "load.critical",
+    "errors": "errors.high",
+    "errors_critical": "errors.critical",
 }
 
 
@@ -104,6 +109,33 @@ SYSTEM: list[dict[str, Any]] = [
         "has expired; ends when it is renewed.",
         "warning",
         1,
+    ),
+    _watch(
+        "load.high",
+        "Load high",
+        "A service or the machine held its CPU (of the CPUs it may use) or its memory above "
+        "the warning level (80 % by default) for 5 minutes; ends 5 points under it.",
+        "warning",
+    ),
+    _watch(
+        "load.critical",
+        "Load critical",
+        "A service or the machine held its CPU or its memory above the critical level "
+        "(95 % by default) for 5 minutes; ends 5 points under it.",
+        "critical",
+    ),
+    _watch(
+        "errors.high",
+        "Many errors logged",
+        "A server logged more errors a minute than the warning level (2 by default) for 5 minutes.",
+        "warning",
+    ),
+    _watch(
+        "errors.critical",
+        "Errors logged in a burst",
+        "A server logged more errors a minute than the critical level (5 by default) for "
+        "5 minutes.",
+        "critical",
     ),
     {
         "name": "events.flood",

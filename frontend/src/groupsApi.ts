@@ -2,12 +2,14 @@
 import { requestJson } from "./api";
 import { t } from "./i18n";
 
-export type GroupKind = "department" | "area" | "discipline" | "team";
+export type GroupKind = "department" | "area" | "discipline" | "team" | "company";
 export interface GroupMember { username: string; display_name: string; active: boolean }
-export interface Group { group_id: string; name: string; kind: GroupKind; kind_label: string; description: string; asset_id: string | null; coordinator: string | null; coordinator_name: string | null; members: GroupMember[]; parent_id: string | null; parent_name: string | null; children: string[]; asset_scope?: string[] | null; path?: GroupLink[]; subgroups?: GroupLink[]; can_manage?: boolean; can_edit_members?: boolean; is_member?: boolean }
+export interface Group { group_id: string; name: string; kind: GroupKind; kind_label: string; description: string; asset_id: string | null; coordinator: string | null; coordinator_name: string | null; members: GroupMember[]; parent_id: string | null; parent_name: string | null; children: string[]; asset_scope?: string[] | null; path?: GroupLink[]; subgroups?: GroupLink[]; can_manage?: boolean; can_edit_members?: boolean; is_member?: boolean;
+  /** A company: the last day its people sign in, and its sponsor at the plant. */
+  access_until?: string | null; sponsor?: string | null }
 export interface GroupLink { group_id: string; name: string }
 export interface GroupList { groups: Group[]; kinds: Array<{ id: GroupKind; label: string }> }
-export interface GroupDraft { name: string; group_id?: string; kind: GroupKind; description: string; asset_id: string | null; coordinator: string | null; members: string[]; parent_id: string | null; asset_scope?: string[] | null }
+export interface GroupDraft { name: string; group_id?: string; kind: GroupKind; description: string; asset_id: string | null; coordinator: string | null; members: string[]; parent_id: string | null; asset_scope?: string[] | null; access_until?: string | null; sponsor?: string | null }
 export interface PersonGroup { group_id: string; name: string; kind: GroupKind; kind_label: string; coordinator: boolean; parent_id?: string | null }
 
 /** Groups in tree order (each after its parent), with their depth: the list reads as the hierarchy. */

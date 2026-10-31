@@ -1,14 +1,16 @@
 /** Administration › Health, Backups and Updates (administrators): the suite's health, backups and
  * their checks, restore, the restore drill, the schedule, and updates. */
-import { Activity, AlertTriangle, ArchiveRestore, CalendarClock, CheckCircle2, DatabaseBackup, Download, FlaskConical, History, LoaderCircle, RefreshCw, ShieldCheck, ShieldQuestion, Sparkles, X } from "lucide-react";
+import { Activity, AlertTriangle, ArchiveRestore, CalendarClock, CheckCircle2, DatabaseBackup, Download, FlaskConical, History, KeyRound, LoaderCircle, RefreshCw, ShieldCheck, ShieldQuestion, Sparkles, X } from "lucide-react";
 import { type DataColumn, DataTable, displayTimeZone, FormSection, formatDate, Heading, timeZoneLabel, saveFile, TimeZoneSelect } from "@plantcraft/ui";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { locale, t } from "./i18n";
 import { navigate } from "./nav";
+import { askUrl } from "./OperationsRequests";
 import { forecastText, operationsApi, type Backup, type Certificate, type MachineInfo, type Operation, type OperationsOverview, type ServiceMetrics, type Schedule, type SuiteHealth, type SuiteStatus } from "./operationsApi";
-import { useAdminView, useIsAdmin } from "./session";
+import { useAccess, useAdminView, useCanOperate, useIsAdmin } from "./session";
 import "./access.css";
 import "./apps.css";
+import "./operations.css";
 
 const STATES: Record<string, string> = {
   ok: t("Checked"),
@@ -62,12 +64,20 @@ function useOperations(withHealth = false) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState("");
-  const load = useCallback(() => Promise.all([
-    operationsApi.overview().then((value) => { setData(value); setError(""); }),
-    withHealth ? operationsApi.health().then(setHealth) : Promise.resolve(),
-  ]).catch((err) => setError(message(err))), [withHealth]);
   const isAdmin = useAdminView();
-  useEffect(() => { if (isAdmin) void load(); }, [isAdmin, load]);
+  // The Operations role reads the health, never the backups (the overview is the admins').
+  const operate = useCanOperate();
+  const load = useCallback(() => Promise.all([
+    isAdmin ? operationsApi.overview().then((value) => { setData(value); setError(""); }) : Promise.resolve(),
+    withHealth ? operationsApi.health().then((value) => { setHealth(value); setError(""); }) : Promise.resolve(),
+  ]).catch((err) => setError(message(err))), [withHealth, isAdmin]);
+  useEffect(() => { if (isAdmin || (withHealth && operate)) void load(); }, [isAdmin, operate, withHealth, load]);
+  // The load moves: the status page reads it again every 30 s, like the watch.
+  useEffect(() => {
+    if (!withHealth || !(isAdmin || operate)) return;
+    const timer = window.setInterval(() => void load(), 30000);
+    return () => window.clearInterval(timer);
+  }, [withHealth, isAdmin, operate, load]);
   const running = Boolean(data?.running);
   useEffect(() => {
     if (!running && !busy) return;
@@ -85,7 +95,7 @@ function useOperations(withHealth = false) {
     } catch (err) { setError(message(err)); }
     setBusy("");
   }
-  return { isAdmin, data, health, error, notice, setNotice, setError, busy, running, load, act };
+  return { isAdmin, operate, data, health, error, notice, setNotice, setError, busy, running, load, act };
 }
 
 type Operations = ReturnType<typeof useOperations>;
@@ -107,19 +117,21 @@ function RunningChip({ data }: { data: OperationsOverview }) {
 }
 
 const ADMIN_ONLY_TEXT = () => <div className="module-state module-error"><AlertTriangle /><span>{t("Only admins manage health, backups and updates.")}</span></div>;
-const EYEBROW = () => <><Activity size={14} /> {t("Administration")}</>;
+const EYEBROW = () => <><Activity size={14} /> {t("Operations")}</>;
 
 /** Administration › Health: is every part of the suite running, and the bundle support asks for.
  * Health, Backups and Updates were one Operations page until 2026-10-24 (owner: separate them). */
 export function HealthPage() {
   const ops = useOperations(true);
   const canAct = useIsAdmin();
-  if (!ops.isAdmin) return <HealthStatusPage />;
+  const supportUntil = useAccess().support_until;
+  if (!ops.isAdmin && !ops.operate) return <HealthStatusPage />;
   const { data, health } = ops;
   return <div className="apps-page">
-    <Heading eyebrow={<EYEBROW />} title={t("System health")} detail={t("The suite watches itself every 30 seconds and tells the administrators in Messages when a part of it stops.")}
+    <Heading eyebrow={<EYEBROW />} title={t("Status")} detail={t("The suite watches itself every 30 seconds and tells the administrators in Messages when a part of it stops or is loaded.")}
       actions={<>{canAct && <DiagnosticsButton />}<RefreshButton onClick={() => void ops.load()} /></>} />
-    <Notices ops={ops} />
+    {supportUntil && <div className="ops-support-note" role="status"><KeyRound size={15} /> {t("You have support access to Operations until {when}.", { when: formatDate(supportUntil) })}</div>}
+    {ops.isAdmin ? <Notices ops={ops} /> : ops.error ? <div className="form-error" role="alert"><AlertTriangle size={15} /> {ops.error}</div> : null}
     {data && <section className="apps-status" aria-label={t("State")}>
       <span className={`apps-chip ${data.installer.online ? "apps-chip-on" : "apps-chip-warn"}`}>{data.installer.online ? t("Installer running") : t("Installer not running: requests wait until it starts")}</span>
       <RunningChip data={data} />
@@ -151,7 +163,7 @@ function HealthStatusPage() {
         <p className="muted">{t("Whether each part of the suite is running, checked every 30 s. Last check: {date}.", { date: when(status.at) })}{status.held ? ` ${t("Service checks are on hold while an operation runs or the installer is silent.")}` : ""}</p>
         {status.open.length ? <ul className="ops-incidents">{status.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small></li>)}</ul>
           : <p className="ops-all-good"><CheckCircle2 size={15} /> {t("Everything is running.")}</p>}
-        {status.services.length > 0 && <DataTable rows={status.services} columns={SERVICE_COLUMNS.slice(0, 2)} rowKey={(item) => item.service} searchText={(item) => item.service} searchPlaceholder={t("Filter by name")} initialSort={{ key: "service", descending: false }} label={t("Services")} />}
+        {status.services.length > 0 && <DataTable rows={status.services} columns={serviceColumns().slice(0, 2)} rowKey={(item) => item.service} searchText={(item) => item.service} searchPlaceholder={t("Filter by name")} initialSort={{ key: "service", descending: false }} label={t("Services")} />}
       </section>)}
   </div>;
 }
@@ -351,16 +363,60 @@ function UpdateCard({ data }: { data: OperationsOverview }) {
 }
 
 const serviceGood = (item: ServiceMetrics) => item.state === "running" && item.health !== "unhealthy";
-const SERVICE_COLUMNS: DataColumn<ServiceMetrics>[] = [
+type Levels = { warning: number; critical: number };
+const DEFAULT_LEVELS: Levels = { warning: 80, critical: 95 };
+
+const serviceColumns = (cpu: Levels = DEFAULT_LEVELS, memory: Levels = DEFAULT_LEVELS): DataColumn<ServiceMetrics>[] => [
   { key: "service", label: t("Service"), sort: (item) => item.service, render: (item) => <><strong>{item.service}</strong>{item.started_at && <small className="apps-sub">{t("since {date}", { date: when(item.started_at) })}</small>}</> },
   { key: "state", label: t("State"), sort: (item) => (serviceGood(item) ? 1 : 0), filter: { value: (item) => item.health ? `${item.state} · ${item.health}` : item.state }, render: (item) => <span className={`apps-state apps-state-${serviceGood(item) ? "running" : "failed"}`}>{item.health ? `${item.state} · ${item.health}` : item.state}</span> },
-  { key: "cpu_pct", label: t("CPU"), numeric: true, sort: (item) => item.cpu_pct, render: (item) => <>{item.cpu_pct != null ? `${item.cpu_pct} %` : "—"}{item.cpu_limit != null && <small className="apps-sub">{t("limit {count} CPUs", { count: item.cpu_limit })}</small>}</> },
-  { key: "mem_bytes", label: t("Memory"), numeric: true, sort: (item) => item.mem_bytes, render: (item) => <>{size(item.mem_bytes)}{item.mem_pct != null && <small className="apps-sub">{t("{pct} % of its limit", { pct: item.mem_pct })}</small>}</> },
+  { key: "cpu_pct", label: t("CPU"), numeric: true, sort: (item) => item.cpu_load_pct ?? item.cpu_pct, render: (item) => <LoadCell pct={item.cpu_load_pct ?? null} levels={cpu} detail={cpuDetail(item)} /> },
+  { key: "mem_bytes", label: t("Memory"), numeric: true, sort: (item) => item.mem_pct ?? item.mem_bytes, render: (item) => <LoadCell pct={item.mem_pct ?? null} levels={memory} detail={item.mem_bytes != null ? t("{size} of its limit", { size: size(item.mem_bytes) }) : ""} /> },
   { key: "restarts", label: t("Restarts"), numeric: true, phone: "hide", sort: (item) => item.restarts, render: (item) => item.restarts ?? "—" },
 ];
 
-/** The machine the suite runs on and the profile that sized it (install.sh --machine): CPU 100 %
- * in the table is one core, so a container at its limit shows 100 % times its CPUs. */
+/** "1.2 of 4 CPUs": what Docker's percentage of one core means for this service. */
+function cpuDetail(item: ServiceMetrics): string {
+  if (item.cpu_pct == null) return "";
+  const used = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(item.cpu_pct / 100);
+  return item.cpus ? t("{used} of {cpus} CPUs", { used, cpus: item.cpus }) : t("{used} CPUs, no limit", { used });
+}
+
+/** A load against the watch's levels (Operations › Load alerts). */
+export function loadLevel(pct: number | null | undefined, levels: Levels = DEFAULT_LEVELS): "" | "warning" | "critical" {
+  if (pct == null) return "";
+  if (pct >= levels.critical) return "critical";
+  return pct >= levels.warning ? "warning" : "";
+}
+
+function LoadCell({ pct, levels, detail }: { pct: number | null; levels: Levels; detail: string }) {
+  if (pct == null) return <span className="muted">—{detail && <small className="apps-sub">{detail}</small>}</span>;
+  const level = loadLevel(pct, levels);
+  return <span className="ops-load">
+    <span className={level ? `ops-load-${level}` : undefined}>{Math.round(pct)} %</span>
+    <span className="ops-meter" aria-hidden="true"><i className={level ? `ops-meter-${level}` : undefined} style={{ width: `${Math.max(2, Math.min(100, pct))}%` }} /></span>
+    {detail && <small className="apps-sub">{detail}</small>}
+  </span>;
+}
+
+/** The machine the suite runs on: its CPU, memory and CPU count, beside the free disk. */
+function HostLine({ health }: { health: SuiteHealth }) {
+  const host = health.metrics?.host;
+  const disk = health.metrics?.disk;
+  if (!host && !disk) return null;
+  const limits = health.limits;
+  const chip = (label: string, pct: number | null | undefined, levels: Levels, extra = "") => {
+    const level = loadLevel(pct, levels);
+    return <span className={`apps-chip${level ? " apps-chip-warn" : ""}`}>{label}: {pct == null ? "—" : `${Math.round(pct)} %`}{extra}</span>;
+  };
+  return <div className="ops-host" aria-label={t("The machine")}>
+    {host && chip(t("Machine CPU"), host.cpu_pct, limits ? { warning: limits.cpu_warning, critical: limits.cpu_critical } : DEFAULT_LEVELS, host.cpus ? ` · ${t("{count} CPUs", { count: host.cpus })}` : "")}
+    {host && chip(t("Memory in use"), host.mem_pct, limits ? { warning: limits.memory_warning, critical: limits.memory_critical } : DEFAULT_LEVELS, host.mem_total_bytes ? ` · ${t("{size} in all", { size: size(host.mem_total_bytes) })}` : "")}
+    {host?.load_1m != null && <span className="apps-chip">{t("Load average {value}", { value: host.load_1m })}</span>}
+    {disk && <span className="apps-chip">{t("Free disk: {size}", { size: size(disk.free_bytes) })}{disk.free_pct != null ? ` (${disk.free_pct} %)` : ""}</span>}
+  </div>;
+}
+
+/** The machine the suite runs on and the profile that sized it (install.sh --machine). */
 function MachineLine({ machine }: { machine?: MachineInfo | null }) {
   if (!machine || machine.cpus == null) return null;
   const sizes: Record<string, string> = { small: t("small"), medium: t("medium"), large: t("large"), xlarge: t("extra large") };
@@ -372,6 +428,8 @@ function MachineLine({ machine }: { machine?: MachineInfo | null }) {
 }
 
 function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean }) {
+  const limits = health.limits;
+  const columns = limits ? serviceColumns({ warning: limits.cpu_warning, critical: limits.cpu_critical }, { warning: limits.memory_warning, critical: limits.memory_critical }) : serviceColumns();
   if (!health.watching) return <section className="panel apps-installed"><h2><Activity size={17} /> {t("Suite health")}</h2><p className="muted">{t("Nothing to watch: this PlantCraft runs without the suite's installer.")}</p></section>;
   const services = health.metrics?.services ?? [];
   const disk = health.metrics?.disk;
@@ -383,12 +441,13 @@ function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean 
         {canAct && health.conversation_id != null && <button className="button button-secondary" onClick={() => navigate(`/messages/${health.conversation_id}`)}>{t("Open the conversation")}</button>}
       </div>
     </div>
-    <p className="muted">{t("Checked every 30 s from Docker's health checks of each service, the free disk, the backups and the last restore drill. Last check: {date}.", { date: when(health.at) })}{health.held ? ` ${t("Service checks are on hold while an operation runs or the installer is silent.")}` : ""}</p>
-    {health.open.length ? <ul className="ops-incidents">{health.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small></li>)}</ul>
+    <p className="muted">{t("Checked every 30 s from Docker's health checks of each service, each one's load against its limits, the free disk, the backups and the last restore drill. Last check: {date}.", { date: when(health.at) })}{health.held ? ` ${t("Service checks are on hold while an operation runs or the installer is silent.")}` : ""}</p>
+    <HostLine health={health} />
+    {health.open.length ? <ul className="ops-incidents">{health.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small> <a className="ops-incident-ask" href={askUrl({ title: `${item.subject}: ${item.detail}`, text: t("Incident since {date}", { date: item.opened_at }), category: "error" })} onClick={(event) => { if (event.metaKey || event.ctrlKey) return; event.preventDefault(); navigate(askUrl({ title: `${item.subject}: ${item.detail}`, text: t("Incident since {date}", { date: item.opened_at }), category: "error" })); }}>{t("Open a request")}</a></li>)}</ul>
       : <p className="ops-all-good"><CheckCircle2 size={15} /> {t("Everything is running.")}</p>}
     <MachineLine machine={health.metrics?.machine} />
-    {services.length > 0 && <DataTable rows={services} columns={SERVICE_COLUMNS} rowKey={(item) => item.service} searchText={(item) => item.service} searchPlaceholder={t("Filter by name")} initialSort={{ key: "service", descending: false }} label={t("Services")} />}
-    {disk && <p className="muted">{t("Free disk: {size}", { size: size(disk.free_bytes) })}{disk.free_pct != null ? ` (${disk.free_pct} %)` : ""}{forecastText(health.disk_forecast, size) ? ` · ${forecastText(health.disk_forecast, size)}` : ""}</p>}
+    {services.length > 0 && <DataTable rows={services} columns={columns} rowKey={(item) => item.service} searchText={(item) => item.service} searchPlaceholder={t("Filter by name")} initialSort={{ key: "service", descending: false }} label={t("Services")} />}
+    {disk && forecastText(health.disk_forecast, size) && <p className="muted">{t("Disk: {forecast}", { forecast: forecastText(health.disk_forecast, size) })}</p>}
     {recent.length > 0 && <details className="ops-recent"><summary>{t("Recent incidents")}</summary>
       <ul className="ops-incidents">{recent.map((item) => <li key={item.incident_id}><strong>{item.subject}</strong>: {item.detail} <small>{when(item.opened_at)} → {when(item.closed_at)}</small></li>)}</ul>
     </details>}

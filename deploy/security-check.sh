@@ -57,6 +57,16 @@ mapfile -t CONTAINERS < <(docker ps --filter "label=com.docker.compose.project=$
 [ "${#CONTAINERS[@]}" -gt 0 ] || { echo "no running container of project $PROJECT: run it from the install folder" >&2; exit 2; }
 short() { local n="${1#"$PROJECT"-}"; echo "${n%-[0-9]*}"; }
 
+# Listing the last backup's archive takes a second: it runs while the other checks do.
+latest="$(ls -1t "$HERE/backups" 2>/dev/null | grep -v '^LATEST$' | head -n 1 || true)"
+LISTING="$(mktemp)"
+trap 'rm -f "$LISTING"' EXIT
+LISTER=""
+if [ -n "$latest" ] && [ -f "$HERE/backups/$latest/data.tar.gz" ]; then
+    tar -tzf "$HERE/backups/$latest/data.tar.gz" >"$LISTING" 2>/dev/null &
+    LISTER=$!
+fi
+
 # --- Integrity -------------------------------------------------------------------------------
 if docker info --format '{{json .DriverStatus}}' 2>/dev/null | grep -q containerd.snapshotter; then
     # The containerd image store names an image by its manifest, release.json by its config.
@@ -82,20 +92,24 @@ check PC-INT-03 high "$(verdict "$unsigned" fail)" "Installed apps are signed by
 
 # --- Containers ------------------------------------------------------------------------------
 root="" rw="" caps="" nnp="" limits="" priv="" sock="" unhealthy=""
-for c in "${CONTAINERS[@]}"; do
-    n="$(short "$c")"
-    IFS='|' read -r user ro privileged secopt capadd capdrop pids mem nano netmode pidmode health < <(docker inspect "$c" --format \
-        '{{if .Config.User}}{{.Config.User}}{{else}}root{{end}}|{{.HostConfig.ReadonlyRootfs}}|{{.HostConfig.Privileged}}|{{range .HostConfig.SecurityOpt}}{{.}} {{end}}|{{join .HostConfig.CapAdd ","}}|{{join .HostConfig.CapDrop ","}}|{{.HostConfig.PidsLimit}}|{{.HostConfig.Memory}}|{{.HostConfig.NanoCpus}}|{{.HostConfig.NetworkMode}}|{{.HostConfig.PidMode}}|{{with index .State "Health"}}{{index . "Status"}}{{else}}none{{end}}')
+# One docker inspect for every container (a call each took most of the check's time).
+FIELDS='{{.Name}}|{{if .Config.User}}{{.Config.User}}{{else}}root{{end}}|{{.HostConfig.ReadonlyRootfs}}|{{.HostConfig.Privileged}}|{{range .HostConfig.SecurityOpt}}{{.}} {{end}}|{{join .HostConfig.CapAdd ","}}|{{join .HostConfig.CapDrop ","}}|{{.HostConfig.PidsLimit}}|{{.HostConfig.Memory}}|{{.HostConfig.NetworkMode}}|{{.HostConfig.PidMode}}|{{with index .State "Health"}}{{index . "Status"}}{{else}}none{{end}}|{{range .Mounts}}{{if eq .Destination "/var/run/docker.sock"}}yes{{end}}{{end}}|{{range $p, $b := .NetworkSettings.Ports}}{{if $b}}{{$p}} {{end}}{{end}}'
+mapfile -t INSPECTED < <(docker inspect "${CONTAINERS[@]}" --format "$FIELDS")
+published=""
+for line in "${INSPECTED[@]}"; do
+    IFS='|' read -r c user ro privileged secopt capadd capdrop pids mem netmode pidmode health hassock ports <<<"$line"
+    n="$(short "${c#/}")"
     case "$user" in root | 0 | 0:*) root="$root $n" ;; esac
     [ "$ro" = true ] || rw="$rw $n"
     [ "$capdrop" = ALL ] && [ -z "$capadd" ] || caps="$caps $n(${capadd:+add $capadd }drop ${capdrop:-none})"
     case "$secopt" in *no-new-privileges*) ;; *) nnp="$nnp $n" ;; esac
     { [ "${pids:-0}" -gt 0 ] && [ "${mem:-0}" -gt 0 ]; } 2>/dev/null || limits="$limits $n"
     [ "$privileged" = false ] && [ "$netmode" != host ] && [ "$pidmode" != host ] || priv="$priv $n"
-    if [ "$(docker inspect "$c" --format '{{range .Mounts}}{{if eq .Destination "/var/run/docker.sock"}}yes{{end}}{{end}}')" = yes ]; then
+    if [ "$hassock" = yes ]; then
         [ "$n" = installer ] && [ "$netmode" = none ] || sock="$sock $n($netmode)"
     fi
     [ "$health" = healthy ] || [ "$health" = none ] || unhealthy="$unhealthy $n($health)"
+    [ -z "$ports" ] || [ "$n" = proxy ] || published="$published $n(${ports% })"
 done
 check PC-CTR-01 high "$(verdict "$root" fail)" "Every container runs as a user other than root" \
     "$(ev "${root:-}" "as root:" "${#CONTAINERS[@]} containers, none as root")" "Use the compose.yaml of the bundle; do not set user: root." "CR 7.7 / CM-7"
@@ -114,20 +128,16 @@ check PC-CTR-07 low "$(verdict "$unhealthy" warn)" "Every container reports heal
     "$(ev "${unhealthy:-}" "not healthy:" "all healthy")" "See ./install.sh --status and the app's log." "CR 7.6 / SI-4"
 
 # --- Network ---------------------------------------------------------------------------------
-published=""
-for c in "${CONTAINERS[@]}"; do
-    ports="$(docker inspect "$c" --format '{{range $p, $b := .NetworkSettings.Ports}}{{if $b}}{{$p}} {{end}}{{end}}')"
-    [ -z "$ports" ] || [ "$(short "$c")" = proxy ] || published="$published $(short "$c")($ports)"
-done
 check PC-NET-01 critical "$(verdict "$published" fail)" "Only the proxy publishes a port on the host" \
     "$(ev "${published:-}" "also published:" "proxy only, on $(b="$(env_get PLANTCRAFT_BIND_ADDRESS)"; echo "${b:-every address}")")" \
     "Remove ports: from every service but the proxy." "CR 5.1 / SC-7"
 open_nets=""
-while read -r net; do
+mapfile -t NETS < <(docker network ls --filter "label=com.docker.compose.project=$PROJECT" --format '{{.Name}}')
+while read -r net internal; do
     s="${net#"$PROJECT"_}"
     case "$s" in edge | plant | egress | default) continue ;; esac
-    [ "$(docker network inspect "$net" --format '{{.Internal}}')" = true ] || open_nets="$open_nets $s"
-done < <(docker network ls --filter "label=com.docker.compose.project=$PROJECT" --format '{{.Name}}')
+    [ "$internal" = true ] || open_nets="$open_nets $s"
+done < <([ "${#NETS[@]}" -eq 0 ] || docker network inspect "${NETS[@]}" --format '{{.Name}} {{.Internal}}')
 check PC-NET-02 high "$(verdict "$open_nets" fail)" "The apps' networks have no way out (only edge, plant and egress reach outside)" \
     "$(ev "${open_nets:-}" "not internal:" "every app network is internal")" "Keep internal: true on the bundle's networks." "CR 5.1 / SC-7"
 if command -v iptables >/dev/null && iptables -S DOCKER-USER >/dev/null 2>&1; then
@@ -211,9 +221,9 @@ secret_lines="$(grep -E '^[A-Z_]*(PASSWORD|SECRET|TOKEN|KEY)=.+' "$ENV_FILE" 2>/
 r=pass; case "$envmode" in 600 | 640 | 400 | 440) ;; *) r=warn ;; esac; [ -z "$secret_lines" ] || r=warn
 check PC-SEC-02 medium "$r" ".env holds no secret and only its owner and group read it" \
     "mode $envmode${secret_lines:+; secrets in .env: $secret_lines}" "Keep secrets in data/ files (install.sh does); chmod 640 .env." "IA-5"
-latest="$(ls -1t "$HERE/backups" 2>/dev/null | head -n 1 || true)"
-if [ -n "$latest" ] && [ -f "$HERE/backups/$latest/data.tar.gz" ]; then
-    keys="$(tar -tzf "$HERE/backups/$latest/data.tar.gz" 2>/dev/null | grep -c -E 'processcraft/(tokens\.key|session\.secret)$' || true)"
+if [ -n "$LISTER" ]; then
+    wait "$LISTER" 2>/dev/null || true
+    keys="$(grep -c -E 'processcraft/(tokens\.key|session\.secret)$' "$LISTING" || true)"
     check PC-SEC-03 high "$([ "${keys:-0}" -ge 2 ] && echo pass || echo fail)" "The last backup holds the signing key and the session secret" \
         "backup $latest: ${keys:-0} of 2" "Run ./install.sh --backup; a restore without them signs everyone out and ends every app token." "CR 7.3 / CP-9"
 else

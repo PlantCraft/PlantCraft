@@ -345,6 +345,38 @@ def prefetched_turns(done: list[tuple[Any, dict[str, Any], Any]]) -> list[dict[s
     return [{"role": "assistant", "content": calls}, {"role": "user", "content": answers}]
 
 
+# "I created an action" after a proposal: the card only prepared it (D11, 2026-10-31). The
+# person creates it with the card's button, so the answer says it was prepared.
+CREATED_CLAIM = re.compile(
+    r"\b(I|We)( have|'ve)? (created|added|registered)\b"
+    r"|\b(criei|adicionei|registrei)\b",
+    re.IGNORECASE,
+)
+PREPARED = {
+    "created": "prepared",
+    "added": "prepared",
+    "registered": "prepared",
+    "criei": "preparei",
+    "adicionei": "preparei",
+    "registrei": "preparei",
+}
+
+
+def prepared_not_created(text: str) -> str:
+    """An answer that proposed objects never claims it made them: "I created" becomes "I
+    prepared" (the person still has to press the card's button)."""
+
+    def swap(match: re.Match[str]) -> str:
+        word = match.group(0)
+        last = word.rsplit(" ", 1)[-1]
+        new = PREPARED[last.lower()]
+        if last[:1].isupper():
+            new = new.capitalize()
+        return word[: len(word) - len(last)] + new
+
+    return CREATED_CLAIM.sub(swap, text)
+
+
 def without_tool_text(text: str) -> str:
     """The answer without lines that are a tool call written as text."""
 
@@ -788,6 +820,8 @@ class ChatEngine:
                 offered,
             )
             text = linked_citations(without_tool_text(text), cited)
+            if proposals:
+                text = prepared_not_created(text)
             # What was read before the model answered is a source when the answer used it.
             for _item, _arguments, value in prefetched:
                 for ref in refs_named(value, text):
@@ -1134,7 +1168,11 @@ class ChatEngine:
         button = f"Continue in the {work.spec.object} form" if public.get("form") else "Create"
         return {
             "ok": True,
-            "shown": f"The person sees the card with a {button} button: name that button.",
+            "created": False,
+            "shown": (
+                f"Nothing is created yet. The person sees the card with a {button} button: say "
+                "it is prepared and waits for that button; never say you created it."
+            ),
         }
 
     @staticmethod
@@ -1281,7 +1319,8 @@ class ChatEngine:
             "When the person asks to create something (a block, an algorithm, an action, a "
             "rule, a note...), prepare it with its propose_create_... tool (or propose) when you "
             "have one: they get a card that creates it, or opens its own form filled in. A list "
-            "field is a JSON array of strings. Never write the object for them to copy.",
+            "field is a JSON array of strings. Never write the object for them to copy. You never "
+            "create anything yourself: say it is prepared and waits for the card's button.",
             mcp.INSTRUCTIONS,
             *(
                 [

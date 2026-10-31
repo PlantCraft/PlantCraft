@@ -261,7 +261,7 @@ def test_the_apps_open_from_the_name_and_the_menu_folds_from_the_corner(page):
     # One Help for the suite, in the person's menu (ui 0.32.0), open at this app's guides.
     expect(sidebar.locator(".pcs-nav").get_by_role("link", name="Help")).to_have_count(0)
     sidebar.locator(".pcs-profile").click()
-    help_link = page.get_by_role("menuitem", name="Help")
+    help_link = page.get_by_role("menuitem", name="Help", exact=True)
     expect(help_link).to_have_attribute("href", "/help?app=processcraft")
     sidebar.locator(".pcs-profile").click()
     # Round 8 (owner, 2026-10-24/25): above the person the quick buttons, all alike, each opening
