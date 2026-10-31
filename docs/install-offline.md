@@ -227,6 +227,11 @@ only replaces a value that is still its own (or the shipped default). `PLANTCRAF
 leaves every value as it is. The measurements behind the table are in `docs/bench/README.md`
 ("CPU, processes and the machine profile").
 
+Operations › Suite health shows the machine, the profile applied and its ceilings. When the
+machine fits another profile (memory added, a size pinned with `--machine`), it names that profile
+and the command that applies it, `sudo ./install.sh --machine auto`, run in the install folder.
+Nothing is written from the web: the installation stays root's.
+
 ## 6. Certificates
 
 HTTPS is always on; the proxy is the only published port.

@@ -73,6 +73,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Operations suggests the machine profile that fits.** When the machine, within the installation's
+  `MAX_CPUS`/`MAX_MEMORY`, fits another profile than the one applied (more memory added, a
+  profile pinned by hand), suite health names it and the command that applies it
+  (`sudo ./install.sh --machine auto`), with a copy button. The installation stays root's:
+  nothing is written from the web (plan B, 2026-10-31).
 - **State files are written whole or not at all, everywhere (storage tests, 2026-10-31).**
   `plantcraft-sdk` 0.91.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
   unique temporary file created with its final mode, `fsync`, then a rename, so a process killed
