@@ -103,6 +103,8 @@ export function SchedulesPage({ me }: { me: Me }) {
 
 type Form = {
   name: string; profile_id: string; owner: string; mode: "all" | "list" | "filter"; ids: string; assets: string[]; q: string;
+  /** An algorithm on assets: every asset it names and of its equipment types, at each run (A20). */
+  allAssets: boolean;
   when: When; timezone: string; lookback_minutes: number; priority: number; spread_minutes: number; enabled: boolean; retry: RetryPolicy;
   outputs: Record<string, OutputChoice>; node_parameters: NodeParameters;
 };
@@ -111,7 +113,7 @@ type Form = {
 export const DEFAULT_RETRY: RetryPolicy = { enabled: true, count: 2, wait_minutes: 5, abort_on_next: true };
 
 const BLANK: Form = {
-  name: "", profile_id: "", owner: "", mode: "all", ids: "", assets: [], q: "", when: BLANK_WHEN,
+  name: "", profile_id: "", owner: "", mode: "all", ids: "", assets: [], q: "", allAssets: false, when: BLANK_WHEN,
   timezone: "", lookback_minutes: 1440, priority: 50, spread_minutes: 0, enabled: true, retry: DEFAULT_RETRY, outputs: {}, node_parameters: {},
 };
 /** Below this a schedule runs more often than a first look needs; the form asks before saving it. */
@@ -130,7 +132,7 @@ function formOf(schedule: Schedule): Form {
   return {
     name: schedule.name, profile_id: schedule.profile_id ?? "", owner: ownerRef(schedule.owner ?? schedule.created_by),
     mode: selector ? (selector.mode as Form["mode"]) ?? "all" : "list", ids: !onAssets ? (selector ? (selector.ids ?? []).join("\n") : schedule.loop_id) : "",
-    assets: onAssets ? selector?.ids ?? [] : [], q: selector?.q ?? "",
+    assets: onAssets ? selector?.ids ?? [] : [], q: selector?.q ?? "", allAssets: onAssets && selector?.mode === "all",
     when: whenOf(schedule), timezone: schedule.timezone || LOCAL_ZONE, lookback_minutes: schedule.lookback_minutes, priority: schedule.priority ?? 50,
     spread_minutes: Number(schedule.spread_minutes ?? 0), enabled: Boolean(schedule.enabled), retry: { ...DEFAULT_RETRY, ...schedule.retry },
     outputs: schedule.outputs ?? {}, node_parameters: schedule.method_config?.node_parameters ?? {},
@@ -177,7 +179,7 @@ function MonitorParameters({ algorithm, value, onChange, disabled }: { algorithm
 /** The request body of a form: only what its frequency uses; an algorithm on assets runs on the assets chosen. */
 export function payloadOf(form: Form, onAssets = false): Record<string, unknown> {
   const ids = form.ids.split(/[\s,;]+/).map((item) => item.trim()).filter(Boolean);
-  const selector = onAssets ? { mode: "list", ids: form.assets }
+  const selector = onAssets ? (form.allAssets ? { mode: "all" } : { mode: "list", ids: form.assets })
     : form.mode === "list" ? { mode: "list", ids } : form.mode === "filter" ? { mode: "filter", q: form.q.trim() } : { mode: "all" };
   return {
     name: form.name.trim() || t("Monitor"), profile_id: form.profile_id || null, owner: form.owner || null,
@@ -473,7 +475,7 @@ export function SchedulePage({ scheduleId, me }: { scheduleId: string | null; me
   const body = useMemo(() => (form ? payloadOf(form, onAssets) : null), [form, onAssets]);
   const problem = form ? whenProblem(form.when) : "";
   useEffect(() => {
-    if (!body || !me.can_edit || problem || (onAssets && !(form?.assets.length))) { setPreview(null); return; }
+    if (!body || !me.can_edit || problem || (onAssets && !form?.allAssets && !(form?.assets.length))) { setPreview(null); return; }
     const timer = window.setTimeout(() => {
       api.previewSchedule(body, scheduleId ?? undefined).then(setPreview).catch(() => setPreview(null));
     }, 400);
@@ -549,7 +551,10 @@ export function SchedulePage({ scheduleId, me }: { scheduleId: string | null; me
         <div className="schedule-subsection">
           <h3>{onAssets ? t("On which assets") : t("On which loops")}</h3>
           {!editable.subjects ? <p className="muted">{schedule?.subject_label}</p>
-            : onAssets ? <AssetList value={form.assets} choices={choices} onChange={(ids) => set("assets", ids)} disabled={readOnly} />
+            : onAssets ? <>
+              <label className="schedule-all-assets"><input type="checkbox" checked={form.allAssets} disabled={readOnly} onChange={(event) => set("allAssets", event.target.checked)} />{t("Every asset of the algorithm: those it names and every asset of its equipment types, as PlantCraft lists them at each run")}</label>
+              {!form.allAssets && <AssetList value={form.assets} choices={choices} onChange={(ids) => set("assets", ids)} disabled={readOnly} />}
+            </>
             : <>
               <Field label={t("Loops")}>
                 <select value={form.mode} onChange={(event) => set("mode", event.target.value as Form["mode"])}>
@@ -569,7 +574,7 @@ export function SchedulePage({ scheduleId, me }: { scheduleId: string | null; me
         <WhenFields when={form.when} onChange={(when) => set("when", when)} />
         {frequent && !readOnly && <label className="schedule-frequent"><input type="checkbox" checked={frequentOk} onChange={(event) => setFrequentOk(event.target.checked)} />{t("Run it more often than every {n} minutes: each run reads the plant and fills the queue.", { n: FREQUENT_MINUTES })}</label>}
         <Field label={t("Time zone")} hint={t("Local time follows the installation's zone (Settings). Times keep the zone's clock across daylight saving changes.")}><TimeZoneSelect value={form.timezone} onChange={(zone) => set("timezone", zone)} ariaLabel={t("Time zone")} /></Field>
-        <SchedulePreviewBox preview={preview} problem={problem} timezone={form.timezone} waiting={onAssets && !form.assets.length} />
+        <SchedulePreviewBox preview={preview} problem={problem} timezone={form.timezone} waiting={onAssets && !form.allAssets && !form.assets.length} />
       </Part>
       {onAssets && algorithm && <Part number={3} title={t("Parameters")} detail={t("Each value comes from the block's default, then the algorithm, then this monitor: set one here to change it for this monitor only.")} disabled={readOnly}>
         <MonitorParameters algorithm={algorithm} value={form.node_parameters} onChange={(value) => set("node_parameters", value)} disabled={readOnly} />
