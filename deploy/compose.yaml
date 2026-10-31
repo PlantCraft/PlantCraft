@@ -931,7 +931,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "${HISTCRAFT_CPUS:-2}"
+          cpus: "${HISTCRAFT_DB_CPUS:-2}"
           memory: "${HISTCRAFT_DB_MEMORY:-2g}"
           pids: 256
 

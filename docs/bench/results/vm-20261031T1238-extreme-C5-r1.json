@@ -1,0 +1,209 @@
+{
+ "scenario": "C5",
+ "at": "2026-10-31T12:38Z",
+ "label": "r1",
+ "machine": {
+  "host": "vm",
+  "system": "Linux 6.18.44-fc-v185 x86_64",
+  "cpus": 4,
+  "memory_gib": 15.7,
+  "docker": "4 CPUs 16872808448 x86_64"
+ },
+ "versions": {
+  "linkcraft": {
+   "revision": "2aff6a9"
+  },
+  "dashcraft": {
+   "revision": "26cbc16"
+  },
+  "histcraft": {
+   "revision": "26cbc16"
+  }
+ },
+ "settings": {
+  "signals": 167,
+  "hours": 24,
+  "step": null,
+  "methods": 0,
+  "people": 3,
+  "rounds": true,
+  "limits": {
+   "PLANTCRAFT_CPUS": "4",
+   "PLANTCRAFT_MEMORY": "4g",
+   "LINKCRAFT_CPUS": "4",
+   "LINKCRAFT_MEMORY": "4g",
+   "DASHCRAFT_CPUS": "2",
+   "DASHCRAFT_MEMORY": "2g",
+   "HISTCRAFT_CPUS": "2",
+   "HISTCRAFT_MEMORY": "2g",
+   "HISTCRAFT_DB_MEMORY": "1g",
+   "HISTCRAFT_GATEWAY_CPUS": "1",
+   "HISTCRAFT_GATEWAY_MEMORY": "512m",
+   "ALARMCRAFT_CPUS": "1",
+   "ALARMCRAFT_MEMORY": "1g",
+   "MODELCRAFT_CPUS": "1",
+   "MODELCRAFT_MEMORY": "1g",
+   "MODELCRAFT_EXECUTOR_CPUS": "2",
+   "MODELCRAFT_EXECUTOR_MEMORY": "4g"
+  }
+ },
+ "seconds": 51,
+ "rounds": {
+  "round": {
+   "seconds": 16.008,
+   "status": "ok",
+   "loops": 50,
+   "failed_tags": 0
+  },
+  "checks": {
+   "seconds": 10.58,
+   "status": "ok",
+   "signals": 214,
+   "error": null
+  }
+ },
+ "backfill": {
+  "bytes": 9802205,
+  "accepted_s": 13.9,
+  "seconds": 29.0,
+  "status": "done",
+  "written": 2000000
+ },
+ "methods": {
+  "each_s": []
+ },
+ "people": {
+  "person_analytics_overview": {
+   "n": 29,
+   "p50_s": 0.08,
+   "p95_s": 0.17,
+   "max_s": 0.2,
+   "statuses": {
+    "200": 29
+   }
+  },
+  "person_display_values": {
+   "n": 29,
+   "p50_s": 0.09,
+   "p95_s": 0.23,
+   "max_s": 0.37,
+   "statuses": {
+    "429": 1,
+    "200": 28
+   }
+  },
+  "person_trend_8h": {
+   "n": 29,
+   "p50_s": 0.03,
+   "p95_s": 0.3,
+   "max_s": 3.88,
+   "statuses": {
+    "200": 29
+   }
+  }
+ },
+ "containers": {
+  "alarmcraft": {
+   "cpu_peak": 99.7,
+   "cpu_mean": 18.7,
+   "seconds_at_full_core": 4,
+   "mem_peak_mib": 198
+  },
+  "compute-gateway": {
+   "cpu_peak": 12.3,
+   "cpu_mean": 1.9,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 48
+  },
+  "dashcraft": {
+   "cpu_peak": 48.3,
+   "cpu_mean": 4.3,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 105
+  },
+  "doccraft": {
+   "cpu_peak": 58.4,
+   "cpu_mean": 5.4,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 98
+  },
+  "histcraft": {
+   "cpu_peak": 164.6,
+   "cpu_mean": 45.4,
+   "seconds_at_full_core": 9,
+   "mem_peak_mib": 679
+  },
+  "histcraft-collector": {
+   "cpu_peak": 98.0,
+   "cpu_mean": 24.3,
+   "seconds_at_full_core": 4,
+   "mem_peak_mib": 255
+  },
+  "histcraft-db": {
+   "cpu_peak": 58.2,
+   "cpu_mean": 11.8,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 188
+  },
+  "histcraft-gateway": {
+   "cpu_peak": 3.5,
+   "cpu_mean": 0.7,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 33
+  },
+  "installer": {
+   "cpu_peak": 56.2,
+   "cpu_mean": 9.8,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 97
+  },
+  "linkcraft": {
+   "cpu_peak": 62.2,
+   "cpu_mean": 19.2,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 590
+  },
+  "linkcraft-executor": {
+   "cpu_peak": 134.2,
+   "cpu_mean": 23.1,
+   "seconds_at_full_core": 9,
+   "mem_peak_mib": 385
+  },
+  "llm-egress": {
+   "cpu_peak": 0.0,
+   "cpu_mean": 0.0,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 19
+  },
+  "modelcraft": {
+   "cpu_peak": 49.3,
+   "cpu_mean": 4.4,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 129
+  },
+  "modelcraft-executor": {
+   "cpu_peak": 0.6,
+   "cpu_mean": 0.5,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 20
+  },
+  "processcraft": {
+   "cpu_peak": 28.9,
+   "cpu_mean": 9.7,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 551
+  },
+  "proxy": {
+   "cpu_peak": 3.1,
+   "cpu_mean": 0.7,
+   "seconds_at_full_core": 0,
+   "mem_peak_mib": 18
+  },
+  "simcraft": {
+   "cpu_peak": 103.1,
+   "cpu_mean": 43.2,
+   "seconds_at_full_core": 13,
+   "mem_peak_mib": 350
+  }
+ }
+}

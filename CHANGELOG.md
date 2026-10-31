@@ -9,6 +9,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **The Historian's database has its own CPU limit, `HISTCRAFT_DB_CPUS` (default 2).** It
+  shared `HISTCRAFT_CPUS` with the Historian, so lowering the Historian's limit also slowed the
+  database it reads from (0.6.0 load tests, 2026-10-31). An installation that set
+  `HISTCRAFT_CPUS` keeps it for the Historian; the database gets its own default.
+- **Requirements: a 4 GB machine needs 2 GB of swap** for the demo with every app on.
 - **The Historian answers from several processes (0.6.0 load tests, 2026-10-31).** Heavy reads
   ran in one Python process on one core. `histcraft serve` now starts as many processes as the
   CPUs its container may use (`HISTCRAFT_WORKERS`, `auto` by default: the container's CPU limit,
