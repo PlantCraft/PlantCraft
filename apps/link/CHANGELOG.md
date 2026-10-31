@@ -8,6 +8,11 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **Lab fusion block** (`estimator.lab_fusion`, Estimators, group Soft sensors). It corrects an
+  analyzer or a soft sensor with the lab results. Each result counts at its sampling time, from
+  the approval delay you give. The block outputs the corrected value, the bias and the
+  uncertainty.
+
 - **A plant map on the Overview: every loop coloured by the KPI you pick.** The KPIs are health,
   effective control, time in normal mode, time inside the band, and time with the output off its
   limits. All of them are percentages where higher is better, so one scale colours them: good

@@ -66,3 +66,40 @@ def test_too_few_samples_is_no_data():
     index = pd.date_range("2026-10-31", periods=10, freq="5s", tz="UTC")
     out = _run("estimator.kalman", {"x": pd.Series(np.ones(10), index)})
     assert isinstance(out["value"], NoData)
+
+
+def _drifting_analyzer(n: int = 3000, seed: int = 3):
+    rng = np.random.default_rng(seed)
+    index = pd.date_range("2026-10-31", periods=n, freq="5s", tz="UTC")
+    true = 50 + 2 * np.sin(np.arange(n) / 150.0)
+    bias = np.cumsum(0.02 * rng.standard_normal(n)) + np.linspace(0, 3, n)
+    online = true + bias + 0.1 * rng.standard_normal(n)
+    sampled = index[::60]  # a result every 5 minutes, at its sampling time
+    lab = pd.Series(true[::60] + 0.05 * rng.standard_normal(len(sampled)), sampled)
+    return index, true, online, lab
+
+
+def test_lab_fusion_corrects_a_drifting_analyzer_with_late_results():
+    index, true, online, lab = _drifting_analyzer()
+    out = _run(
+        "estimator.lab_fusion",
+        {"x": pd.Series(online, index), "lab": lab},
+        approval_minutes=100 / 60,
+        lab_repeatability=0.05,
+    )
+    late = slice(300, None)
+    fused = out["value"].to_numpy()
+    assert np.sqrt(np.mean((fused - true)[late] ** 2)) < (
+        np.sqrt(np.mean((online - true)[late] ** 2)) / 4
+    )
+    # The first result (sampled at the start) is known only 100 s later: nothing moves before.
+    assert (out["bias"].iloc[:20] == 0).all() and out["bias"].iloc[20] != 0
+    assert (out["uncertainty"].iloc[20:] > 0).all()
+
+
+def test_lab_fusion_without_results_in_the_window_is_no_data():
+    index, _true, online, lab = _drifting_analyzer()
+    later = lab.copy()
+    later.index = later.index + pd.Timedelta(days=30)
+    out = _run("estimator.lab_fusion", {"x": pd.Series(online, index), "lab": later})
+    assert isinstance(out["value"], NoData)

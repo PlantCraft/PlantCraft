@@ -9,6 +9,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- `plantcraft-sdk`: **lab fusion** (`plantcraft_sdk.estimators.fuse_lab`). It corrects an online
+  value (an analyzer or a soft sensor) with the lab results. Each result counts at its sampling
+  time and only from its approval: a Kalman filter with a delayed measurement. The fusion returns
+  the corrected value, the bias and the uncertainty. `sensor_health` grades a virtual sensor
+  from 0 to 100 against the lab. Analytics runs it as the block `estimator.lab_fusion` (library
+  Estimators, group Soft sensors).
+
 - The Historian's gateway writes its buffer to `data/histcraft/gateway-buffer` (made by
   `install.sh`; mounted read-write in `histcraft-gateway`, its only writable folder), so values
   read while the collector is away survive a gateway restart.
