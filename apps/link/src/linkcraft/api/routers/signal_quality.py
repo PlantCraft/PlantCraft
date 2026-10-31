@@ -8,6 +8,8 @@ or on and override parameters for itself (Signals).
 
 from __future__ import annotations
 
+import threading
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -29,6 +31,11 @@ router = APIRouter(prefix="/api")
 WEEK_DAYS = 7
 # The suite's dashboards app: the Overview links to it (it never draws dashboards itself).
 DASHBOARD_URL = "/dash/"
+# The Overview is the page everyone opens: one answer per asset scope is kept this long. With 50
+# people on it during a round it took 2 s at p95, each answer ~70 ms of one process (0.6.0 load
+# test C4); a few seconds behind is nothing on a page of rounds every 10 minutes.
+OVERVIEW_SECONDS = 3.0
+_OVERVIEW_LOCK = threading.Lock()
 
 
 def algorithm(rt: Any) -> dict[str, Any]:
@@ -238,8 +245,22 @@ def _stored(rt: Any, moment: datetime, stamp: str) -> str:
 
 @router.get("/overview")
 def overview(scope: Scope, rt: RuntimeDep) -> dict[str, Any]:
-    """Now and the week, for signals and loops, and where the app's dashboard lives."""
+    """Now and the week, for signals and loops, and where the app's dashboard lives (kept
+    ``OVERVIEW_SECONDS`` per asset scope)."""
 
+    key = scope.roots
+    with _OVERVIEW_LOCK:
+        kept = rt.__dict__.setdefault("_overview_answers", {})
+        found = kept.get(key)
+        if found and time.monotonic() - found[0] < OVERVIEW_SECONDS:
+            return found[1]
+    answer = _overview(scope, rt)
+    with _OVERVIEW_LOCK:
+        kept[key] = (time.monotonic(), answer)
+    return answer
+
+
+def _overview(scope: Any, rt: Any) -> dict[str, Any]:
     loops = [row for row in rt.monitor.overview_rows() if sees_loop(scope, rt, row["loop_id"])]
     counts: dict[str, int] = {}
     for row in loops:

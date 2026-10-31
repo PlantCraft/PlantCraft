@@ -6,6 +6,11 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+### Changed
+
+- The Overview keeps its answer 3 s per asset scope: with 50 people on it during a round its p95
+  went from 2.0 to 0.15 s (0.6.0 load test C4 with an account per person).
+
 ### Fixed
 
 - A round or the signal checks that could not reach the plant's data (the Historian restarting,

@@ -606,3 +606,21 @@ def test_a_new_plants_first_step_collects_the_signals_it_bound(client, loaded, r
     with client_for(runtime, fake, "operator") as viewer:
         refused = viewer.post("/hist/api/start/collect-signals", json={"signals": signals})
         assert refused.status_code == 403
+
+
+def test_a_batch_read_gives_each_cells_lowest_and_highest_value(client, loaded):
+    from tests.test_reads import V1
+
+    window = {"start": T0.isoformat(), "end": (T0 + timedelta(hours=1)).isoformat(), "step": 600}
+    body = {"signals": ["plant:TI-100.PV", "plant:FIC-101.MODE"], **window}
+    plain = client.post(f"{V1}/series", json=body).json()["series"]
+    assert "low" not in plain[0]
+    banded = client.post(f"{V1}/series", json={**body, "extremes": True}).json()["series"]
+    assert banded[0]["low"][:2] == [0.0, 60.0] and banded[0]["high"][:2] == [59.0, 119.0]
+    assert banded[0]["v"] == plain[0]["v"] and len(banded[0]["low"]) == len(banded[0]["t"])
+    # No band for text, nor without a step.
+    assert "low" not in banded[1]
+    raw = {k: v for k, v in body.items() if k != "step"}
+    assert (
+        "low" not in client.post(f"{V1}/series", json={**raw, "extremes": True}).json()["series"][0]
+    )

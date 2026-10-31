@@ -612,7 +612,7 @@ class Collector:
             return await asyncio.to_thread(self._answer_csv, source, request)
         if source["kind"] == "pi_web_api":
             return await asyncio.to_thread(self._answer_history, source, request)
-        if source["kind"] in ("derived", "system"):
+        if source["kind"] in ("derived", "system", "lab"):
             return "error", {"detail": t("A derived source is written by its app.")}
         if source["kind"] in GATEWAY_KINDS:
             return self._answer_gateway(source, request)

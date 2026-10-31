@@ -44,6 +44,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - The public demo's visitors no longer see the server logs.
 - SDK: `GET /api/ops/logs` on every server (`plantcraft_sdk.server.logread`), read with the `ops`
   scope.
+- **Images in an app's language model calls** (SDK 0.86.0). `POST /api/v1/llm/{use}` takes
+  images in a user's turn (PNG, JPEG, WebP or GIF, at most 4 a call, 5 MB each), and
+  `client.llm(use, question, images=[png])` sends them. They reach Anthropic as image blocks and
+  OpenAI (chat completions or the Responses API) as data URLs. The audit log counts the images
+  sent. It is for a model that reads drawings: a scanned P&ID, a photo of a gauge, a chart.
 - **Configuration decided before installing, outside the platform** (`docs/installation-file.md`).
   `/etc/plantcraft/installation.conf`, owned by root and never mounted in a container, holds
   which apps exist, whether apps may be installed from Settings › Apps, the demo, the machine
@@ -67,6 +72,31 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   checks first that it runs from a complete release bundle, and a failed install can go back.
 
 ### Changed
+
+- **The Historian's means on a grid take one pass (2026-10-31).** A grid read built each
+  signal's segments four times to get its covered time and area; now once, with the same
+  arithmetic and the same values to the bit. 200 dense signals x 24 h at 60 s: the Historian's
+  CPU 0.89 to 0.67 s per read (`ci/bench/reads`).
+- **Notebooks read raw series 7 to 9 times faster (2026-10-31).** `plantcraft-notebook` 0.3.0
+  on a computer asks `POST /api/v1/series` for the binary answer, and PlantCraft passes the
+  Historian's binary answer on as it came, without parsing it (`Accept:
+  application/x-plantcraft-series`; other callers and a local data layer still get JSON). 10
+  dense signals x 24 h raw: 1.46 to 0.17 s; 50: 5.1 to 0.7 s; the same frames. In the browser
+  (JupyterLite) the package keeps JSON; `PLANTCRAFT_BINARY_READS=0` keeps it on a computer too.
+- **Min and max trend lines come from the Historian, 10× faster (2026-10-31).** A View trend's
+  min or max line read every raw sample of its period and summarised them in Python (50 dense
+  signals x 24 h: 1.8 million values, 7.5 s). `POST /api/v1/series` with a `step` now takes
+  `"extremes": true` and gives each cell's lowest and highest value beside the means (`low`,
+  `high`; from the hourly rollups where whole hours allow); `plantcraft-sdk` 0.87.0
+  `series_many(..., extremes=True)`, also in `FakePlantCraft`. The View asks for it for min and
+  max lines: one grid read, 7.5 to 0.7 s and the Historian's CPU 3.2 to 0.6 s, the same values
+  (`ci/bench/reads/trendbench.py`). First and last lines still summarise the samples.
+- **Pages open without Plotly until they draw a chart (`@plantcraft/ui`).** `Plot` fetched
+  Plotly (1.4 MB) with any page that could show a chart, even when the chart sat behind a tab or
+  a click. It now arrives the first time a chart is drawn, with an empty box of the chart's size
+  in the meantime. In Analytics, opening Blocks loads 1.15 MB of script instead of 2.5 MB and
+  Algorithms 0.7 MB instead of 2.1 MB; a page whose chart shows at once (Signal, Loop) is drawn
+  first and gets Plotly right after.
 
 - **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
   went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
@@ -155,6 +185,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   and highest value, in time order, so every spike, trip and step is drawn at its full height
   with the same number of points (`plantcraft/industrial_data/thinning.py`; Historian and direct
   sources alike). Values that are not numbers (states) still keep every n-th point.
+
+- **Long tables sort by a text column in a fraction of a second (`@plantcraft/ui`).** The
+  suite's table compared texts with `localeCompare` and its options, which builds a collator
+  for every comparison: 100,000 rows sorted by tag took 13.4 s in the browser. One collator for all
+  comparisons gives the same order (numbers in names in order, case and accents aside) in 0.4 s.
 
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the

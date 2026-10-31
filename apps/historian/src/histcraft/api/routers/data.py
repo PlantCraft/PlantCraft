@@ -530,6 +530,9 @@ class BatchIn(BaseModel):
     # Each series also says where its quality was not good: ``quality: [{t, quality}]`` (the
     # quality from ``t`` to the next change: uncertain, substituted, bad, or good again).
     quality: bool = False
+    # With ``step``: each number series also holds every cell's lowest and highest value
+    # (``low``, ``high``, beside the means), from the hourly rollups where whole hours allow.
+    extremes: bool = False
 
 
 @router.post("/series")
@@ -658,6 +661,10 @@ def read_batch(
                     for at, (_, code) in zip(stamps_q, changes, strict=True)
                 ]
             }
+        if body.extremes and step:
+            bounds = runtime.reader.extremes(ref, begin, finish, step)
+            if bounds is not None and len(bounds[0]) == len(stamps):
+                extra = {**(extra or {}), "low": bounds[0], "high": bounds[1]}
         builder.add(signal_id, point["kind"], stamps, values, extra)
     return builder
 

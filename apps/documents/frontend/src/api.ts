@@ -38,6 +38,8 @@ export const api = {
     request<{ query: string; passages: Hit[] }>("/api/search", jsonBody("POST", body)),
   diagrams: () => request<DiagramRow[]>("/api/diagrams"),
   diagram: (revId: string, page: number) => request<Diagram>(`/api/diagrams/${id(revId)}/${page}`),
+  /** The page read again by the language model of "diagram-read" (an editor; 409 with no model). */
+  readWithModel: (revId: string, page: number) => request<Diagram>(`/api/diagrams/${id(revId)}/${page}/read-with-model`, { method: "POST" }),
   /** The page drawn as a picture by the server (never the file itself in the page). */
   diagramImage: (revId: string, page: number) => href(`/api/diagrams/${id(revId)}/${page}/image`),
   plantMap: () => request<PlantMap>("/api/plant-map"),

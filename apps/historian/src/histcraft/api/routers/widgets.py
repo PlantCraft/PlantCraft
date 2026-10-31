@@ -42,7 +42,7 @@ STATUS = {
     "written": ("Written by its app", "ok"),
 }
 # A point that is fine but not collected by Historian: its words by its source's kind.
-OK_AS = {"import": "imported", "derived": "written", "system": "written"}
+OK_AS = {"import": "imported", "derived": "written", "system": "written", "lab": "written"}
 TREND_MINUTES = 60
 TREND_STEP_S = 60.0
 # Past this many years a disk forecast is no forecast: "Not in sight" (not 623046 days).
