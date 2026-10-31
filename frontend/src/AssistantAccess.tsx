@@ -26,8 +26,8 @@ export const assistantApi = {
 /** The command and the JSON an assistant needs to connect with ``token``. */
 export function connectSnippets(endpoint: string, token: string): { label: string; text: string }[] {
   return [
-    { label: t("Claude Code"), text: `claude mcp add --transport http processcraft ${endpoint} --header "Authorization: Bearer ${token}"` },
-    { label: t("Other MCP clients (JSON)"), text: JSON.stringify({ mcpServers: { processcraft: { type: "http", url: endpoint, headers: { Authorization: `Bearer ${token}` } } } }, null, 2) },
+    { label: t("Claude Code"), text: `claude mcp add --transport http plantcraft ${endpoint} --header "Authorization: Bearer ${token}"` },
+    { label: t("Other MCP clients (JSON)"), text: JSON.stringify({ mcpServers: { plantcraft: { type: "http", url: endpoint, headers: { Authorization: `Bearer ${token}` } } } }, null, 2) },
   ];
 }
 

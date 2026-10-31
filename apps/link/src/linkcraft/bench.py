@@ -7,14 +7,14 @@
 Builds a ``FakePlantCraft`` (from ``plantcraft_sdk.testing``) with
 ``--loops`` loop assets of three signals each, serves it over HTTP on a local
 port (uvicorn, as the real PlantCraft is served), adds ``--latency-ms`` to
-every HTTP request LinkCraft sends, then times a cold round (loop sync, every
+every HTTP request Analytics sends, then times a cold round (loop sync, every
 series read and analysed) and a warm one. Nothing leaves the host; the
 database lives in a temporary folder.
 
 Real HTTP is the default because it is the honest number: the series travel
 as JSON through sockets and a separate server, as they do from PlantCraft.
 ``--transport mock`` runs the fake in process (``httpx.MockTransport``) to
-time LinkCraft alone.
+time Analytics alone.
 """
 
 from __future__ import annotations
@@ -78,7 +78,7 @@ def plant(loop_count: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     return assets, signals
 
 
-# What LinkCraft publishes to the suite (results, events, runs, schedules and, with PUT, derived
+# What Analytics publishes to the suite (results, events, runs, schedules and, with PUT, derived
 # series), counted apart.
 SUITE_PATHS = ("/api/v1/results", "/api/v1/events", "/api/v1/runs", "/api/v1/schedules")
 SERIES_PATH = "/api/v1/series"

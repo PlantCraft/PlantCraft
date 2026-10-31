@@ -247,7 +247,7 @@ def test_bad_result_items_are_refused(item):
 
 
 def test_a_trend_draws_the_history_an_app_archives(reader):
-    """LinkCraft archives FIC-101's loop health in HistCraft (a derived signal): a trend draws it
+    """Analytics archives FIC-101's loop health in Historian (a derived signal): a trend draws it
     from the number series, never the text (status) one, and says when there is none."""
 
     items = [

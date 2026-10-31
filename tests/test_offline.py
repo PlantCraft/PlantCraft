@@ -22,7 +22,7 @@ NETWORK_MODULES = {
     # The online app catalog (only when PLANTCRAFT_APP_CATALOG_URL is set; off by default) and
     # the health check of an external app's address an administrator registers.
     "plantcraft/apps/remote.py",
-    # HistCraft, the data layer, only when HISTCRAFT_URL is set (off by default).
+    # Historian, the data layer, only when HISTCRAFT_URL is set (off by default).
     "plantcraft/platform/datalayer/histcraft.py",
     # A specialist's language model, only when an admin turns it on with a key (off by default;
     # PLANTCRAFT_LLM=off forbids it in the installation, docs/collaboration.md).

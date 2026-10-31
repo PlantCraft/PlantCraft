@@ -1,9 +1,9 @@
 """What the Signal quality algorithm keeps: the signals, their verdicts and its runs.
 
-The signals are PlantCraft's signals plus LinkCraft's own settings.
+The signals are PlantCraft's signals plus Analytics' own settings.
 
 PlantCraft owns a signal's name, unit, source, kind and limits; every sync
-overwrites them. LinkCraft owns ``enabled`` and ``settings`` (limit overrides,
+overwrites them. Analytics owns ``enabled`` and ``settings`` (limit overrides,
 a reference signal, checks switched off or on, parameters per check); a sync
 keeps them. A signal that disappears from PlantCraft is marked ``missing``
 and skipped, never deleted, so its history stays.
@@ -176,7 +176,7 @@ class SignalStore(Store):
     def update(
         self, signal_id: str, *, enabled: bool | None = None, settings: dict[str, Any] | None = None
     ) -> dict[str, Any] | None:
-        """Change LinkCraft's own fields; ``settings`` keys given replace the stored ones."""
+        """Change Analytics' own fields; ``settings`` keys given replace the stored ones."""
 
         current = self.get(signal_id)
         if current is None:

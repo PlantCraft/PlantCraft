@@ -1,7 +1,7 @@
-"""The settings a source adapter reads, built from a HistCraft source row.
+"""The settings a source adapter reads, built from a Historian source row.
 
 ``SourceConfig`` carries the fields of PlantCraft's ``DataSourceConfig`` the adapters
-use, so their code stays as it was ported; ``from_source`` maps a row of HistCraft's
+use, so their code stays as it was ported; ``from_source`` maps a row of Historian's
 catalogue (``{"id", "name", "kind", "endpoint", "namespace_uri", "username",
 "options"}``) and the source's decrypted password onto it.
 """
@@ -54,7 +54,7 @@ class SourceConfig:
     mapping: dict[str, str] = field(default_factory=dict)
 
     def secret(self) -> str:
-        """The password (stored encrypted in HistCraft's catalogue, given here in clear)."""
+        """The password (stored encrypted in Historian's catalogue, given here in clear)."""
 
         return self.password or ""
 
@@ -76,7 +76,7 @@ def _float(value: Any, default: float) -> float:
 
 
 def from_source(source: dict[str, Any], password: str) -> SourceConfig:
-    """The adapter settings of a HistCraft source row; ``ValueError`` for an unknown kind."""
+    """The adapter settings of a Historian source row; ``ValueError`` for an unknown kind."""
 
     kind = str(source.get("kind") or "")
     if kind not in SOURCE_KINDS:

@@ -4,7 +4,7 @@
 #
 #   sudo ./firewall.sh --allow 10.20.0.15:443 --allow 10.20.0.40:4840 --apply
 #
-# Effect: new connections from the `plant` network (PlantCraft and HistCraft) go only to the listed
+# Effect: new connections from the `plant` network (PlantCraft and Historian) go only to the listed
 # host:port pairs (the PI Web API and OPC UA servers); new connections from the `edge` network
 # (the proxy) are refused. The `apps` network is internal to Docker and has no route out anyway.
 # The rules are not persistent: save them with your distribution's tool (iptables-save,

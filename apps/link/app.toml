@@ -1,4 +1,4 @@
-# PlantCraft Analytics's manifest: the single source of its metadata (PlantCraft app standard, section 4).
+# PlantCraft Analytics' manifest: the single source of its metadata (PlantCraft app standard, section 4).
 # The launcher card, the Apps page, the package, the image labels and /api/meta read it;
 # tests/test_app_standard.py checks that nothing else disagrees with it.
 

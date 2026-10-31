@@ -7,7 +7,7 @@ through each data quality check (``dq.*``) into the Signal verdict block, which 
 - ``status``: ``bad`` when any check is bad, ``suspect`` when any warns,
   ``good`` when every check that could judge passed, ``unknown`` when none could;
 - ``quality``: 100 minus the worst check score (100 is clean data), ``None`` when unknown;
-- ``apt``: the data can be used for analysis (``good`` or ``suspect``). LinkCraft's
+- ``apt``: the data can be used for analysis (``good`` or ``suspect``). Analytics'
   loop methods (and other apps, through the published result) read this flag before a loop
   is judged;
 - ``limiting``: the check with the worst score, whose message heads the verdict.

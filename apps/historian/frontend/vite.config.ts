@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
-// HistCraft is served under /hist/ behind the suite's proxy (PlantCraft owns /).
+// Historian is served under /hist/ behind the suite's proxy (PlantCraft owns /).
 export default defineConfig({
   base: "/hist/",
   plugins: [react()],

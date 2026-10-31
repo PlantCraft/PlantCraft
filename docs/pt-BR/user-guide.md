@@ -204,7 +204,7 @@ derivando no Analytics, alarmes, dashboards, gêmeos, modelos, ações e convers
 gravar a história de novo (nunca duplica nada), rode na pasta da instalação:
 
 ```bash
-docker compose exec processcraft processcraft demo seed
+docker compose exec processcraft plantcraft demo seed
 ```
 
 A partir do código-fonte, `python run_opcua_demo.py` inicia a mesma

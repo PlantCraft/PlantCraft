@@ -3,7 +3,7 @@
 ``Platform`` holds what the central app serves to people and, through API v1,
 to the apps of the suite: the scenario, the workspace (users, assets, events,
 audit, app keys), the data sources with their history cache and the root of
-the asset tree. Apps (LinkCraft, ...) run in their own containers and never
+the asset tree. Apps (Analytics, ...) run in their own containers and never
 reach this object; they read it through ``/api/v1``.
 """
 
@@ -39,9 +39,9 @@ class Platform:
     root_asset_id: str
     sources: SourceRegistry
     refs: RefResolvers = field(default_factory=RefResolvers)
-    # Derived series apps publish, when there is no HistCraft (``platform.datalayer``).
+    # Derived series apps publish, when there is no Historian (``platform.datalayer``).
     derived: DerivedSeriesStore | None = None
-    # Where signals and series are read: local, or HistCraft (``platform/datalayer``).
+    # Where signals and series are read: local, or Historian (``platform/datalayer``).
     datalayer: Any = None
     # The last signal catalog built: (what it was built from, when, the catalog).
     _catalog: tuple[tuple[Any, ...], float, Any] | None = field(default=None, repr=False)
@@ -50,7 +50,7 @@ class Platform:
     @classmethod
     def open(cls, scenario: DashboardScenario, *, issuer: Any = None) -> Platform:
         """``issuer`` signs PlantCraft's own tokens; with ``HISTCRAFT_URL`` set, reads go to
-        HistCraft with them."""
+        Historian with them."""
 
         workspace = Workspace(scenario.storage.sqlite_path)
         # Reads go through the registry's router: each tag from the source that owns it.

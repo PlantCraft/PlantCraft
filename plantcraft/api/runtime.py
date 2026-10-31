@@ -561,7 +561,7 @@ class ApiRuntime:
         # With several server processes (PLANTCRAFT_WORKERS) one of them runs the
         # installation's once-only duties; the others stand by to take over.
         threading.Thread(target=self._lead, name="leader", daemon=True).start()
-        # With HistCraft as the data layer, PlantCraft reads no plant source itself.
+        # With Historian as the data layer, PlantCraft reads no plant source itself.
         if env_flag("PLANTCRAFT_PREWARM_HISTORY", True) and not self.datalayer.manages_sources:
             hours = min(PREWARM_HOURS, self.scenario.source.history_cache_hours)
             self._prewarm = threading.Thread(

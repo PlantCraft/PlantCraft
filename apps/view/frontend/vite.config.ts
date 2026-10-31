@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
-// DashCraft is served under /dash/ behind the suite's proxy (PlantCraft owns /).
+// View is served under /dash/ behind the suite's proxy (PlantCraft owns /).
 export default defineConfig({
   base: "/dash/",
   plugins: [react()],

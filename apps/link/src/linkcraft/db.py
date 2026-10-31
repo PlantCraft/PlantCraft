@@ -1,5 +1,5 @@
-"""LinkCraft's own SQLite database: the suite's store (``plantcraft_sdk.server.store``), with
-row times to the second, as LinkCraft has always written them."""
+"""Analytics' own SQLite database: the suite's store (``plantcraft_sdk.server.store``), with
+row times to the second, as Analytics has always written them."""
 
 from __future__ import annotations
 

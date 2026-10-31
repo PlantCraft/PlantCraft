@@ -5,7 +5,7 @@ synthetic signals (random walks with noise, one value per second) through the
 compressors and writes them as the collector does (one flush every 5 s, one row of recent
 values; every minute they move into chunks: ``ArchiveStore.hold``, ``settle``), then reads a
 day-long grid back. It reports the values handled per second (a plant of 2,000 points at 1 s
-needs 2,000), the compression ratio, the bytes per value on disk and the read times. No OPC UA here: this measures HistCraft, not a
+needs 2,000), the compression ratio, the bytes per value on disk and the read times. No OPC UA here: this measures Historian, not a
 server.
 
 ``--database-url postgresql://...`` runs it on PostgreSQL (in a schema of its own, dropped

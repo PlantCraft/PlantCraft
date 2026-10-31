@@ -1,6 +1,6 @@
 """Reading an OPC UA server: values, browsing and a connection test. Nothing else.
 
-This is the only module of HistCraft that talks to a plant server. It uses the
+This is the only module of Historian that talks to a plant server. It uses the
 OPC UA services Read, Browse and the namespace array lookup, and, for a source that opts in
 (option ``subscribe``, the maintainer's decision of 2026-11-01, H4), a subscription with
 monitored items on the Value attribute: the server then reports changes instead of being read

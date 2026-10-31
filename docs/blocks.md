@@ -59,4 +59,4 @@ has a value. `runs_on_missing` blocks (a "worst of", an output) get every value 
 
 No graph library is used: the engine is the standard library's `graphlib` plus Pydantic
 (evaluated on 2026-10-22 against pipefunc, Hamilton, Kedro, pydra, PathSim and TensorFlow; see
-PlantCraft Analytics's `docs/blocks-and-algorithms.md`).
+PlantCraft Analytics' `docs/blocks-and-algorithms.md`).

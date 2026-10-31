@@ -1,6 +1,6 @@
 """Settings, from the environment.
 
-Every setting has a safe default. HistCraft keeps two sets of tables, each with
+Every setting has a safe default. Historian keeps two sets of tables, each with
 one writer (docs/boundary.md): the configuration (sources, points, settings,
 requests; written by the server) and the archive (archived values, snapshots,
 collector state; written by the collector). In a plant both live in one

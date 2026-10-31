@@ -5,7 +5,7 @@ loop when its ``type_path`` (type ids from the root type to its own) contains th
 (``"loop"``, ``LINKCRAFT_LOOP_ASSET_KIND``), so a ``cascade_loop`` that derives from ``loop`` is
 one too; a PlantCraft without ``type_path`` is read by ``kind`` as before.
 
-From each loop asset LinkCraft takes:
+From each loop asset Analytics takes:
 
 - ``signals`` by role (``pv``, ``sp``, ``op``, ``mode``, ``secondary``);
 - ``attributes``: ``description`` (service), ``loop_type``, ``criticality``, ``action`` and
@@ -40,7 +40,7 @@ from linkcraft.config import ROLES, AssetRecord, LoopConfig, LoopSignals
 
 logger = logging.getLogger(__name__)
 
-# Roles LinkCraft needs on a control loop when PlantCraft does not say which are required.
+# Roles Analytics needs on a control loop when PlantCraft does not say which are required.
 FALLBACK_REQUIRED_ROLES = ("pv", "op")
 MAX_ID = 120
 MAX_NAME = 200
@@ -141,7 +141,7 @@ def _required_roles(path: list[str], by_type: dict[str, set[str]] | None) -> tup
     known = [type_id for type_id in path if by_type and type_id in by_type]
     if not known:
         return list(FALLBACK_REQUIRED_ROLES), "fallback"
-    roles = {"pv"}  # LinkCraft never analyses a loop without a PV
+    roles = {"pv"}  # Analytics never analyses a loop without a PV
     for type_id in known:
         roles |= by_type[type_id]  # type: ignore[index]
     ordered = [role for role in ROLES if role in roles]
@@ -247,7 +247,7 @@ def asset_types(client: Any) -> Any:
 
 
 def loops_from_processcraft(client: PlantCraftClient, kind: str = "loop") -> list[LoopConfig]:
-    """Every loop asset PlantCraft knows, as LinkCraft loops (incomplete ones included)."""
+    """Every loop asset PlantCraft knows, as Analytics loops (incomplete ones included)."""
 
     everything = client.assets()
     if not isinstance(everything, list):

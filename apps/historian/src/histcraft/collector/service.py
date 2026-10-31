@@ -1361,7 +1361,7 @@ class Collector:
 
     async def _collect(self) -> bool:
         assert self._stop is not None
-        LOGGER.info("HistCraft collector started")
+        LOGGER.info("Historian collector started")
         lost = False
         last_flush = time.monotonic()
         last_config = -math.inf
@@ -1419,7 +1419,7 @@ class Collector:
             except Exception:  # noqa: BLE001 - the database that dropped the lease may be gone
                 LOGGER.exception("Last flush failed")
                 self.save_held()
-            LOGGER.info("HistCraft collector stopped")
+            LOGGER.info("Historian collector stopped")
         return not lost
 
 

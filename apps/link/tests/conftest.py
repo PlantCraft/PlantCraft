@@ -1,4 +1,4 @@
-"""Shared fixtures: a FakePlantCraft with known-fault loops and a LinkCraft wired to it."""
+"""Shared fixtures: a FakePlantCraft with known-fault loops and a Analytics wired to it."""
 
 from __future__ import annotations
 
@@ -90,7 +90,7 @@ def analysed(runtime):
 
 
 def make_signal_runtime(tmp_path, fake, *, app_key: bool = True, processes: int = 0) -> Runtime:
-    """LinkCraft on the signal plant (``tests/signal_plant.py``), its window the plant's."""
+    """Analytics on the signal plant (``tests/signal_plant.py``), its window the plant's."""
 
     from tests.signal_plant import APP_KEY
     from tests.signal_plant import HOURS as SIGNAL_HOURS

@@ -242,7 +242,7 @@ def test_an_item_switched_to_signal_picks_a_signal_by_search(signed_in, app_url)
 
 
 def test_the_suite_frame_and_a_frameless_full_screen(signed_in, app_url, screenshots):
-    """The sidebar of every app (@plantcraft/ui): DashCraft's pages, Apps, Help and the user
+    """The sidebar of every app (@plantcraft/ui): View's pages, Apps, Help and the user
     menu with the theme and About; full screen leaves only the dashboard for a wall screen."""
 
     page = signed_in

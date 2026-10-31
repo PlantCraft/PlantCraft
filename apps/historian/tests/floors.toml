@@ -2,7 +2,7 @@
 # lower one (AGENTS.md, "Tests are the gate"). Checked by tests/test_floors.py.
 
 [api]
-# Operations in HistCraft's OpenAPI schema (pages and admin API under /hist/api).
+# Operations in Historian's OpenAPI schema (pages and admin API under /hist/api).
 operations = 37
 # Of those, the data layer PlantCraft calls (/api/v1/data: API v1 reads, derived writes,
 # sources).

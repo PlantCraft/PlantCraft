@@ -1,4 +1,4 @@
-"""PlantCraft Analytics's blocks and algorithms (``plantcraft_sdk.blocks`` contract).
+"""PlantCraft Analytics' blocks and algorithms (``plantcraft_sdk.blocks`` contract).
 
 Every calculation Link makes is a block with typed, described inputs, outputs and parameters;
 an algorithm is a diagram of them, checked before it runs. The libraries:

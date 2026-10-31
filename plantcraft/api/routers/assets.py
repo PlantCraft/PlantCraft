@@ -448,7 +448,7 @@ def _tag(rt: Any, given: str) -> str:
 
     source_id, tag = split_signal_id(given)
     if rt.datalayer.manages_sources:
-        return given  # HistCraft reads the id as given
+        return given  # Historian reads the id as given
     if source_id is not None and rt.platform.sources.source_of(tag) == source_id:
         return tag
     return given
@@ -474,7 +474,7 @@ def _read(
             sample_seconds=rt.scenario.analysis.resample_seconds,
             max_points=max_points,
         )
-    except DataLayerError as exc:  # HistCraft: 502, or 504 when it did not answer in time
+    except DataLayerError as exc:  # Historian: 502, or 504 when it did not answer in time
         raise HTTPException(
             status_code=exc.status if exc.status >= 500 else 502,
             detail=t("Failed to read the signal: {error}", error=exc.detail),

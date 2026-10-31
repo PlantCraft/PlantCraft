@@ -1,10 +1,10 @@
-"""What LinkCraft shares with the suite, and what it reads from it (app standard, section 6).
+"""What Analytics shares with the suite, and what it reads from it (app standard, section 6).
 
 - **Results**: after each round, each loop that is a PlantCraft asset gets one
   ``loop_health`` result on ``asset:<id>`` (status ok/warning/alarm/unknown, score = health,
   summary = the limiting finding, worded by the method's ``describe()``), expiring after about
-  two round periods so a stopped LinkCraft never leaves a green light behind.
-- **Derived series**: the same loops get one point per round in one signal of LinkCraft's own
+  two round periods so a stopped Analytics never leaves a green light behind.
+- **Derived series**: the same loops get one point per round in one signal of Analytics' own
   source, ``app-linkcraft:<loop id>.<algorithm>.health`` (number, unit ``/100``), with the
   loop's asset as subject and ``loop_health`` as result, so any app reads a loop's health over
   time through API v1 like any other signal (its status band is in the result). Each output an
@@ -15,7 +15,7 @@
   Open findings are kept in ``suite_findings`` and change only once PlantCraft took the event.
 - **Runs and schedules**: each round is a run; the schedule list is replaced after changes.
 - **Signal quality**: before a loop is judged, the latest verdicts of the Signal quality
-  algorithm on its signals (in LinkCraft, ``signals/``) decide whether its data may be used
+  algorithm on its signals (in Analytics, ``signals/``) decide whether its data may be used
   (``quality_verdicts``); stale or missing verdicts leave the decision to the built-in gate.
 
 Signal and asset ids are opaque, exactly as API v1 gives them: ``plantcraft_sdk.refs``
@@ -234,7 +234,7 @@ class SeriesVersionStore(Store):
 
 
 class FindingStore(Store):
-    """Findings LinkCraft told PlantCraft are open, per loop and method."""
+    """Findings Analytics told PlantCraft are open, per loop and method."""
 
     SCHEMA = """
     CREATE TABLE IF NOT EXISTS suite_findings (
@@ -312,7 +312,7 @@ def schedule_when(schedule: dict[str, Any]) -> str:
 
 
 class SuitePublisher:
-    """Writes LinkCraft's results, events, runs and schedules to PlantCraft."""
+    """Writes Analytics' results, events, runs and schedules to PlantCraft."""
 
     def __init__(self, db: Database, suite: SuiteClient, *, root_path: str = "/link"):
         self.suite = suite

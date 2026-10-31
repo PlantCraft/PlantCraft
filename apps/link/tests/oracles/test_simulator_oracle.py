@@ -1,6 +1,6 @@
 """Simulator oracle: a monitoring round over loops with known faults (``simulator_cases.py``).
 
-The data reaches LinkCraft through ``FakePlantCraft`` and the API v1 path production uses.
+The data reaches Analytics through ``FakePlantCraft`` and the API v1 path production uses.
 Each case is a test; a case the methods get wrong today is an expected failure tied to its gap
 in ``docs/gaps.md`` (strict, so a fix makes it fail until the floor is raised). The pass count
 never drops below ``[oracles] simulator_cases`` in ``tests/floors.toml``.

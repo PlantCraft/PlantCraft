@@ -1,6 +1,6 @@
 # Oracles
 
-Cases with a known answer, run against PlantCraft Analytics's methods through `FakePlantCraft`, so they
+Cases with a known answer, run against PlantCraft Analytics' methods through `FakePlantCraft`, so they
 take the same PlantCraft API v1 path as production. Pass counts are floors in
 `tests/floors.toml` (`[oracles]`) that only rise; a case the methods get wrong is recorded as a
 strict expected failure tied to its gap in `docs/gaps.md`, never tuned away.

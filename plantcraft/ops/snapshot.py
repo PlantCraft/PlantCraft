@@ -12,7 +12,7 @@ writes every app's files with their owners kept. Standard library only.
   rows counted per table;
 - every other file of ``data/``, ``certs/``, ``trusted-publishers/`` and the settings (``.env``,
   ``compose.yaml``, ``bundle.env``, ``release.json``) as it is;
-- the ``extra`` files the caller prepared, under ``extra/`` (in older backups, HistCraft's ``pg_dump``).
+- the ``extra`` files the caller prepared, under ``extra/`` (in older backups, Historian's ``pg_dump``).
 
 Left out: PostgreSQL's own files (``data/histcraft-db``: its base backup is beside the archive,
 ``plantcraft.apps.historian_backup``), logs, the installer's

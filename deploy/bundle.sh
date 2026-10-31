@@ -29,9 +29,9 @@
 # on another machine that holds the key (an offline one), see docs/operations.md, section 3.
 #
 # The processcraft, processcraft-proxy and processcraft-installer images must already be built
-# (make image). Each app of the suite (LinkCraft, DashCraft, HistCraft, PlantCraft Alarms, PlantCraft Models) is added when its image <id>:$<ID>_VERSION exists on this machine (built in its own
+# (make image). Each app of the suite (Analytics, View, Historian, PlantCraft Alarms, PlantCraft Models) is added when its image <id>:$<ID>_VERSION exists on this machine (built in its own
 # repository), PlantCraft Models with its runner (modelcraft-runner:$MODELCRAFT_VERSION, make
-# runner-image in modelcraft), HistCraft with its PostgreSQL image (pinned by digest, pulled once: docker pull <HISTCRAFT_DB_IMAGE>)
+# runner-image in modelcraft), Historian with its PostgreSQL image (pinned by digest, pulled once: docker pull <HISTCRAFT_DB_IMAGE>)
 # and its gateway, Telegraf (pinned by digest too: docker pull <HISTCRAFT_GATEWAY_IMAGE>),
 # and the Simulator (the `demo` profile) when simcraft:$SIMCRAFT_VERSION does (make
 # simcraft-image builds it from simulator/).
@@ -80,10 +80,10 @@ images=("processcraft:$VERSION" "processcraft-proxy:$VERSION" "processcraft-inst
 for image in "${images[@]}"; do
     docker image inspect "$image" >/dev/null 2>&1 || die "image $image not found: run make image"
 done
-# HistCraft's database, the image compose.yaml names (service histcraft-db).
+# Historian's database, the image compose.yaml names (service histcraft-db).
 HISTCRAFT_DB_IMAGE="$(sed -n 's/^ *image: \${HISTCRAFT_DB_IMAGE:-\(postgres:[^ ]*@sha256:[0-9a-f]\{64\}\)}$/\1/p' "$ROOT/deploy/compose.yaml")"
 [ -n "$HISTCRAFT_DB_IMAGE" ] || die "compose.yaml names no histcraft-db image pinned by digest"
-# HistCraft's gateway (service histcraft-gateway): Telegraf, pinned the same way.
+# Historian's gateway (service histcraft-gateway): Telegraf, pinned the same way.
 HISTCRAFT_GATEWAY_IMAGE="$(sed -n 's/^ *image: \${HISTCRAFT_GATEWAY_IMAGE:-\(telegraf:[^ ]*@sha256:[0-9a-f]\{64\}\)}$/\1/p' "$ROOT/deploy/compose.yaml")"
 [ -n "$HISTCRAFT_GATEWAY_IMAGE" ] || die "compose.yaml names no histcraft-gateway image pinned by digest"
 declare -A bundled=()
@@ -95,11 +95,11 @@ for app in "${APPS[@]}"; do
         continue
     fi
     if [ "$app" = histcraft ] && ! docker image inspect "$HISTCRAFT_DB_IMAGE" >/dev/null 2>&1; then
-        # The app image is here, so HistCraft was meant to ship: a bundle without it is not a release.
-        die "$HISTCRAFT_DB_IMAGE not found (docker pull it): HistCraft cannot ship without its database"
+        # The app image is here, so the Historian was meant to ship: a bundle without it is not a release.
+        die "$HISTCRAFT_DB_IMAGE not found (docker pull it): Historian cannot ship without its database"
     fi
     if [ "$app" = histcraft ] && ! docker image inspect "$HISTCRAFT_GATEWAY_IMAGE" >/dev/null 2>&1; then
-        die "$HISTCRAFT_GATEWAY_IMAGE not found (docker pull it): HistCraft cannot ship without its gateway"
+        die "$HISTCRAFT_GATEWAY_IMAGE not found (docker pull it): Historian cannot ship without its gateway"
     fi
     if [ "$app" = modelcraft ] && ! docker image inspect "modelcraft-runner:$version" >/dev/null 2>&1; then
         die "modelcraft-runner:$version not found (make runner-image in modelcraft): PlantCraft Models cannot ship without it"
@@ -207,8 +207,8 @@ for entry in json.load(sys.stdin).get("manifests", []):
     fi
 }
 if [ -n "${bundled[histcraft]:-}" ]; then
-    saved_digest HISTCRAFT_DB_IMAGE "$HISTCRAFT_DB_IMAGE" "HistCraft database"
-    saved_digest HISTCRAFT_GATEWAY_IMAGE "$HISTCRAFT_GATEWAY_IMAGE" "HistCraft gateway"
+    saved_digest HISTCRAFT_DB_IMAGE "$HISTCRAFT_DB_IMAGE" "Historian database"
+    saved_digest HISTCRAFT_GATEWAY_IMAGE "$HISTCRAFT_GATEWAY_IMAGE" "Historian gateway"
 fi
 
 # CycloneDX SBOMs. Missing tools are reported, not fatal: CI generates the SBOMs with pinned

@@ -177,7 +177,7 @@ def signal_catalog(platform: Any) -> SignalCatalog:
     for tag, fields in by_tag.items():
         owner = foreign.get(tag, PRIMARY)
         catalog.add(_signal(owner, tag, **fields, source_kind=types.get(owner)), tag)
-    # Derived series apps published here (no HistCraft): ``app-<app id>:<name>``.
+    # Derived series apps published here (no Historian): ``app-<app id>:<name>``.
     derived = getattr(platform, "derived", None)
     for row in derived.signals() if derived is not None else []:
         name = (split_derived(row["signal_id"]) or ("", row["signal_id"]))[1]
@@ -201,7 +201,7 @@ def sync_binding_sources(platform: Any) -> int:
     """Each asset signal binding records the source its tag is read from; returns rows changed."""
 
     if getattr(getattr(platform, "datalayer", None), "manages_sources", False):
-        # With HistCraft, each binding keeps the source it was bound from.
+        # With the Historian, each binding keeps the source it was bound from.
         return 0
     store = platform.workspace.assets
     tags = store.bound_tags()
