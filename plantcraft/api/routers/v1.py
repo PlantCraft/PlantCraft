@@ -71,6 +71,9 @@ class SeriesBatchRequest(BaseModel):
     start: str | None = Field(default=None, max_length=64)
     end: str | None = Field(default=None, max_length=64)
     step: float | None = None
+    # Each series also lists where its samples were not good (``quality``: [{t, quality}]),
+    # so a check can tell bad, uncertain and substituted values from good ones.
+    quality: bool = False
 
 
 def _unprocessable(error: ContractError) -> HTTPException:
@@ -510,6 +513,8 @@ def series_batch(
     """Many signals' series in one request and one source read; each failure is listed
     in ``errors`` (404, 422, 502, or 413 when the request ran out of points)."""
 
+    # Only a source that keeps quality is asked for it (a local source has none).
+    quality = {"quality": True} if payload.quality else {}
     hidden = [item for item in payload.signals if not scope.signal(item)]
     if hidden:
         # Signals out of the caller's asset scope answer 404, as unknown ones do.
@@ -517,7 +522,12 @@ def series_batch(
         answer: dict[str, Any] = {"series": [], "errors": []}
         if allowed:
             answer = _answer(
-                rt.datalayer.series_batch, allowed, payload.start, payload.end, payload.step
+                rt.datalayer.series_batch,
+                allowed,
+                payload.start,
+                payload.end,
+                payload.step,
+                **quality,
             )
         missing = [
             {"signal": item, "status": 404, "detail": t("Signal not found.")}
@@ -527,8 +537,8 @@ def series_batch(
     args = (payload.signals, payload.start, payload.end, payload.step)
     raw = getattr(rt.datalayer, "series_batch_raw", None)
     if raw is not None:
-        return Response(_answer(raw, *args), media_type=JSON)
-    return JSONResponse(_answer(rt.datalayer.series_batch, *args))
+        return Response(_answer(raw, *args, **quality), media_type=JSON)
+    return JSONResponse(_answer(rt.datalayer.series_batch, *args, **quality))
 
 
 @router.put("/series")

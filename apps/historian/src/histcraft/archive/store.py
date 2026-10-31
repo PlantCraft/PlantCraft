@@ -964,6 +964,34 @@ class ArchiveStore(Store):
             out.insert(0, (int(before["t"]), str(before["quality"])))
         return out
 
+    def qualities_many(
+        self, points: Iterable[int], start_ms: int, end_ms: int
+    ) -> dict[int, list[tuple[int, str]]]:
+        """``qualities`` of many points: one round trip on PostgreSQL (one query per point on
+        SQLite); a point whose quality stayed good has an empty list."""
+
+        ids = sorted({int(point) for point in points})
+        if not ids:
+            return {}
+        if not self.db.postgres:
+            return {point: self.qualities(point, start_ms, end_ms) for point in ids}
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT point, t, quality FROM qualities WHERE point = ANY(?) AND t > ? AND t <= ?"
+                " UNION ALL SELECT q.point, q.t, q.quality FROM unnest(?::bigint[]) AS p(point)"
+                " CROSS JOIN LATERAL (SELECT point, t, quality FROM qualities WHERE point = p.point"
+                " AND t <= ? ORDER BY t DESC LIMIT 1) q ORDER BY 1, 2",
+                (ids, start_ms, end_ms, ids, start_ms),
+            ).fetchall()
+        found: dict[int, list[tuple[int, str]]] = {point: [] for point in ids}
+        for row in rows:
+            point, at, code = int(row["point"]), int(row["t"]), str(row["quality"])
+            changes = found[point]
+            if at <= start_ms and code == "good":
+                continue  # good at the start: nothing to say
+            changes.append((at, code))
+        return found
+
     def point_ids(self) -> set[int]:
         with self._connect() as connection:
             rows = connection.execute(

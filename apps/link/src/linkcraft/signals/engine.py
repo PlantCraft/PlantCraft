@@ -184,6 +184,7 @@ class QualityEngine:
                         "end": end,
                         "checks": plan(row, settings, samples.series.get(row["id"])),
                         "resampled": row["id"] in samples.resampled,
+                        "quality": samples.quality.get(row["id"]),
                     }
                 )
             waiting.append((self._submit(tasks), failed))
