@@ -38,6 +38,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Tokens are verified once, not on every request.** PlantCraft and every app keep the tokens they
+  already verified until they expire (at most 4096), so a request no longer checks the Ed25519
+  signature again: 0.25 ms down to 0.008 ms in an app (`plantcraft-sdk` 0.89.0) and 0.25 ms down to
+  0.015 ms in PlantCraft. Revocation, the expiry and the signing key are still checked every time.
+- **`./install.sh --security-check` runs in 1.5 s instead of 3.9 s:** one `docker inspect` for all
+  containers and networks, and the backup's listing read while the other checks run.
 - **The machine profile gives the Historian 1 GB on `small` and 1.5 GB on `medium`.** With 2
   processes its peak under the 0.6.0 load test C2 reached 780 to 910 MiB, above the 768m `small`
   gave it (plan B, 2026-10-31). The Historian also keeps the archive chunks it decoded, so reads

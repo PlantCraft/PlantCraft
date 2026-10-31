@@ -47,6 +47,9 @@ MIN_REFRESH_SECONDS = 10
 # How often the list of tokens PlantCraft ended early is read again: a person disabled (or
 # given a new password or access) is shut out of every app within this many seconds.
 REVOKED_TTL_SECONDS = 10
+# Tokens already verified, kept until they expire: checking the Ed25519 signature again on every
+# request of a page cost about 0.2 ms each. Revocation is still checked on every request.
+VERIFIED_CACHE_SIZE = 4096
 
 
 class AuthError(Exception):
@@ -120,6 +123,8 @@ class TokenVerifier:
         self._revoked: tuple[dict[str, int], set[str], set[str]] = ({}, set(), set())
         self._revoked_at = -float("inf")
         self._revoked_lock = threading.Lock()
+        # token -> (claims, exp, kid); insertion order is the eviction order.
+        self._verified: dict[str, tuple[dict[str, Any], float, str]] = {}
 
     # Keys -------------------------------------------------------------------
 
@@ -204,17 +209,33 @@ class TokenVerifier:
 
         if not token:
             raise AuthError(401, "Sign in to continue: no PlantCraft token was sent.")
+        hit = self._verified.get(token)
+        if hit is not None:
+            claims, expires, kid = hit
+            # Still before its expiry, and its key still published (a key PlantCraft dropped
+            # ends its tokens as before).
+            if time.time() <= expires + self.leeway and kid in jwt.key_ids(self.keys()):
+                return dict(claims)
+            self._verified.pop(token, None)
         try:
             try:
-                return jwt.decode(token, self.keys(), self.audiences, leeway=self.leeway)
+                claims = jwt.decode(token, self.keys(), self.audiences, leeway=self.leeway)
             except jwt.UnknownKey:
-                return jwt.decode(
+                claims = jwt.decode(
                     token, self.keys(refresh=True), self.audiences, leeway=self.leeway
                 )
         except jwt.ExpiredToken as exc:
             raise AuthError(401, "Your session expired. Sign in again.") from exc
         except jwt.TokenError as exc:
             raise AuthError(401, f"The PlantCraft token was not accepted: {exc}") from exc
+        if len(self._verified) >= VERIFIED_CACHE_SIZE:
+            try:
+                self._verified.pop(next(iter(self._verified)))
+            except (StopIteration, KeyError, RuntimeError):
+                pass
+        kid = str(jwt.unverified_header(token).get("kid") or "")
+        self._verified[token] = (dict(claims), float(claims.get("exp") or 0), kid)
+        return claims
 
     def user(self, token: str) -> User:
         """The verified user, who must have access to this app (else ``AuthError(403)``)."""
