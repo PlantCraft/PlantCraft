@@ -419,7 +419,12 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 .pc-wg-h1 .pc-wg-number { font-size: 24px; display: inline; }
 .pc-wg-h1 .pc-wg-label { display: inline; margin: 0 0 0 8px; }
 .pc-wg-h1 .pc-wg-body { overflow: hidden; }
-.pc-wg-editing .pc-cards .pc-wg-card { outline: 1px dashed var(--pc-border-strong); outline-offset: -1px; }
+/* While customizing, the page says so: a tinted bar that stays in view with Done, and every
+   widget outlined as a movable tile. */
+.pc-wg-head-editing { position: sticky; top: 0; z-index: 5; padding: 8px 10px; border: 1px solid var(--pc-info-border, var(--pc-border)); border-radius: var(--pc-radius-md); background: var(--pc-info-soft); }
+.pc-wg-head-editing .pc-wg-hint { color: var(--pc-text-2); }
+.pc-wg-head-editing .pc-wg-hint strong { display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; color: var(--pc-info-text, var(--pc-text)); }
+.pc-wg-editing .pc-cards .pc-wg-card { outline: 2px dashed var(--pc-info-border, var(--pc-border-strong)); outline-offset: -2px; }
 .pc-wg-editing .pc-cards-handle { cursor: grab; }
 .pc-wg-grip { color: var(--pc-text-4); flex: none; }
 .pc-wg-settings { width: min(920px, 100%); }
