@@ -691,6 +691,13 @@ sizes = [{ w = 4, h = 2 }, { w = 4, h = 3 }, { w = 6, h = 3 }]
 # What notebooks read and run (PlantCraft docs/en/notebooks.md, "The apps' objects"):
 # pc.app("link").blocks(), .get("block", id).run(...). Blocks and algorithms run on the person's
 # computer or in their browser with Link's own code (src/linkcraft/notebook.py), never here.
+# #loop_result:<loop id>@<window end> in an action opened from a loop's verdict (src/loopResult.ts in the
+# frontend): opens the loop's page.
+[[contributes.refs]]
+kind = "loop_result"
+title = "Loop result"
+url = "/link/loop-results/{id}"
+
 [[contributes.objects]]
 kind = "block"
 title = "Block"

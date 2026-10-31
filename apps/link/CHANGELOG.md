@@ -8,6 +8,11 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **A new action from a loop's result, with its charts.** "New action" on every analysed loop's
+  page (not only loops from PlantCraft's assets) opens PlantCraft's action form with the result
+  written out (status, health, window, limiting finding, likely cause and what to do first), the
+  reference `#loop_result:<loop>@<window end>` (declared in `app.toml`, it opens the loop again) and
+  the PV/SP and OP charts attached as one PNG (`frontend/src/loopResult.ts`).
 - **Mass balance reconciliation and redundant pair drift** (gaps M5, A23), two blocks in the
   Estimators library. *Mass balance reconciliation* takes up to eight flows (ports s1 to s8) and
   their balances as text (`s1 + s2 = s3; s3 = s4 + 0.5*s5`), with each meter's uncertainty in % of

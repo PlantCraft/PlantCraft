@@ -9,6 +9,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **An action keeps the chart it was opened from.** An app's link to the action form can carry the
+  description (`text=`) and an image left in the tab (`attach=`); the new action keeps the image
+  (PNG, JPEG or WebP, up to 2 MB) and its page shows it. Analytics uses it to open an action from a
+  loop's result with the loop's chart (docs/collaboration.md).
 - `plantcraft-sdk`: **lab fusion** (`plantcraft_sdk.estimators.fuse_lab`). It corrects an online
   value (an analyzer or a soft sensor) with the lab results. Each result counts at its sampling
   time and only from its approval: a Kalman filter with a delayed measurement. The fusion returns
@@ -1807,7 +1811,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - The soak (`ci/bench/soak.py`, `make soak`): days on one build with the Mac mini's automatic
   deploys held (`data/deploy-hold`, read by `ci/macmini/suite-deploy`), a person's probes every
-  minute and the suite's own `system` signals read back into a verdict: no restart, up 99.5 %,
+  minute and the suite's own `system` signals read back into a loop_result: no restart, up 99.5 %,
   memory flat, queues that drain, disk, probes and fresh live values (docs/bench/README.md).
   `suite_bench.py --cleanup` removes what a `--keep` run left.
 
