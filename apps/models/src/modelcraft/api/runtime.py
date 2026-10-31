@@ -25,12 +25,15 @@ from plantcraft_sdk.server.store import Database
 
 from modelcraft import APP_ID
 from modelcraft.config import Settings
+from modelcraft.omc import results
 from modelcraft.omc.jobs import Executor, LocalExecutor, QueueExecutor, SuiteExecutor
 from modelcraft.projects.models import SYSTEM
 from modelcraft.projects.store import ProjectStore
+from modelcraft.runs.plant import read_plant
 from modelcraft.runs.service import Workbench
 from modelcraft.runs.store import RunStore
-from modelcraft.suite import Suite
+from modelcraft.runs.tracking import Tracker, TrackingStore
+from modelcraft.suite import Suite, events
 
 LOGGER = logging.getLogger(__name__)
 # The example models every install shows, kept as Models ships them (a person duplicates one
@@ -199,10 +202,24 @@ class Runtime(PlatformRuntime):
             check_timeout=settings.check_seconds,
             run_timeout=settings.run_seconds,
             workers=settings.run_workers,
-            publish=self.suite.run_finished,
+            publish=self._run_changed,
             publish_study=self.suite.study_finished,
             batch=settings.run_batch,
             blocks=self.projects.library_files,
+        )
+        # Models run against the plant on a schedule, their error kept as signals (M3).
+        self.trackings = TrackingStore(self.db)
+        self.tracker = Tracker(
+            self.trackings,
+            self.runs,
+            start=self.start_tracking,
+            series=lambda run_id, names: results.series(
+                self.workbench.run_dir(run_id), names, max_points=20_000
+            ),
+            compare=self.workbench.compare,
+            client=lambda: self.service_client,
+            events=events.tracking_mismatch,
+            delete_run=self.workbench.delete_run,
         )
         self.queue_metrics = QueueMetrics(self.db)
         self.queue_sampler = QueueSampler(self.queue_metrics, self.queue_now)
@@ -315,6 +332,62 @@ class Runtime(PlatformRuntime):
             LOGGER.exception("The example %r could not be queued", example["name"])
             return None
 
+    def _run_changed(self, run: dict[str, Any]) -> None:
+        """A run queued, started or ended: the suite hears of it; a tracking's writes its error."""
+
+        self.suite.run_finished(run)
+        tracker = getattr(self, "tracker", None)
+        if tracker is None:
+            return
+        try:
+            tracker.finished(run)
+        except Exception:  # noqa: BLE001 - the run itself is kept; the tracking says nothing new
+            LOGGER.exception("Tracking result of run %s not written", run.get("id"))
+
+    def start_tracking(
+        self, tracking: dict[str, Any], start: datetime, end: datetime
+    ) -> dict[str, Any]:
+        """Queue one simulation of a tracking over ``start``..``end``, the plant read with the
+        app's service token; the run."""
+
+        client = self.service_client
+        if client is None:
+            raise RuntimeError("Models has no app key: it cannot read the plant on its own.")
+        config = tracking["config"]
+        extra, compare, duration = read_plant(
+            lambda *args: client.series_many(*args),
+            start,
+            end,
+            config.get("step_seconds"),
+            config.get("inputs") or {},
+            config.get("compare") or {},
+        )
+        options = {
+            "start": 0.0,
+            "stop": duration,
+            "intervals": int(config.get("intervals") or 500),
+            "tolerance": 1e-6,
+            "method": "dassl",
+            "overrides": config.get("overrides") or {},
+            "plant": {
+                "start": start.astimezone(UTC).isoformat(),
+                "end": end.astimezone(UTC).isoformat(),
+                "inputs": config.get("inputs") or {},
+                "compare": config.get("compare") or {},
+            },
+            "tracking": tracking["id"],
+        }
+        return self.workbench.start(
+            tracking["project_id"],
+            tracking["model"],
+            "simulate",
+            options,
+            by=tracking.get("created_by") or "",
+            label=f"Tracking: {tracking['name']}"[:120],
+            extra=extra,
+            compare=compare,
+        )
+
     def start(self) -> None:
         interrupted = self.runs.interrupted()
         if interrupted:
@@ -330,8 +403,10 @@ class Runtime(PlatformRuntime):
             self.seed_example_study()
         self.workbench.queue.wake()
         self.queue_sampler.start()
+        self.tracker.begin()
 
     def shutdown(self) -> None:
+        self.tracker.end()
         self.queue_sampler.stop()
         self.workbench.shutdown()
         self.close_platform()

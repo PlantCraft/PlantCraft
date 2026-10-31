@@ -36,7 +36,7 @@ roles = {}
 
 [permissions]
 read = ["assets", "signals", "series"]
-write = ["audit", "runs", "events", "compute"]
+write = ["audit", "runs", "events", "compute", "series"]
 plant_write = false
 outbound = []
 
@@ -53,6 +53,16 @@ severity = "warning"
 category = "run"
 payload = { run_id = "Simulation id", model = "Model", kind = "simulate or export", by = "Who started it", url = "Simulation page" }
 rule = { when = "event", priority = "low", creates = "notice", notify = "owner" }
+
+[[publishes.events]]
+name = "tracking.mismatch"
+title = "Model off the plant"
+description = "A tracking's variable is off the plant past its limit: the mean absolute error of the model against its signal over the last window. Key: tracking:<id>:<variable>; it ends when the error is back under the limit. The error itself is the signal app-modelcraft:tracking-<id>.<variable>.error."
+severity = "warning"
+category = "process"
+phase = "interval"
+payload = { tracking_id = "Tracking id", variable = "Model variable", mae = "Mean absolute error over the window", limit = "The limit set on the tracking", signal = "The error signal" }
+rule = { when = "open", minutes = 30, priority = "medium", notify = "owner" }
 
 [[publishes.events]]
 name = "study.finished"

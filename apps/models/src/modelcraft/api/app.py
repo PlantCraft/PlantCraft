@@ -27,6 +27,7 @@ from modelcraft.api.routers import (
     runs,
     search,
     studies,
+    trackings,
     widgets,
 )
 from modelcraft.api.runtime import Runtime
@@ -59,6 +60,7 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
             models.router,
             runs.router,
             studies.router,
+            trackings.router,
             blocks.router,
             folders.router,
             plant.router,
