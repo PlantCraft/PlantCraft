@@ -112,6 +112,7 @@ def test_a_message_after_an_action_is_the_suites_toast():
     ]
     assert not offenders, "window.alert in place of showToast: " + ", ".join(offenders)
 
+
 def _styles(*roots: str) -> list[Path]:
     found: list[Path] = []
     for root in roots:
