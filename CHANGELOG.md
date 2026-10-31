@@ -33,6 +33,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **`install.sh` fits every CPU limit to small hosts**, also the ones left at their default in
   `compose.yaml` (a 2-CPU machine stopped on `LINKCRAFT_EXECUTOR_CPUS`, default 4).
 
+### Security
+
+- **Signing out ends the browser's token in every app too.** The 12-minute token carries the
+  SHA-256 of its session (`sid` claim). After sign-out PlantCraft refuses it at once, and
+  `GET /api/v1/auth/revoked` lists the session (`sessions`), so the apps refuse it within 10 s
+  (`plantcraft-sdk` 0.83.0). The person's other sessions keep working.
+
 ### Fixed
 
 - **Trends keep their spikes.** When a trend had more points than a chart takes (1,500 by

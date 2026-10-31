@@ -169,3 +169,14 @@ def test_a_file_is_read_in_a_worker_process():
 
     found = extract.extract_isolated(b"Pump P-101 trips on low flow.", "note.txt")
     assert "P-101" in found.sections[0].text
+
+
+def test_a_drawing_is_read_in_the_worker_process_too():
+    from doccraft.library import extract
+    from doccraft.plantmap.sample.draw import draw_all
+
+    _, canvas, _ = draw_all()[0]
+    data = canvas.svg().encode()
+    extracted, diagrams = extract.read_isolated(data, "PID-U-100-01.svg")
+    assert diagrams and diagrams[0]["items"]
+    assert extracted.format == "drawing"

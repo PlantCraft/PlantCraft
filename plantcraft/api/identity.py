@@ -15,6 +15,7 @@ from fastapi import Depends, HTTPException, Request, Response, status
 
 from plantcraft.api.deps import Runtime, demo_visit, session_user, user_access
 from plantcraft.auth.public_demo import public_demo
+from plantcraft.auth.sessions import session_digest
 from plantcraft.auth.suite import FORMER_IDS, app_access
 from plantcraft.config import env_flag
 from plantcraft.i18n import t
@@ -136,7 +137,10 @@ def refresh_browser_token(request: Request, response: Response, rt: Any) -> dict
         claim = demo.token_claim(visit.visit, visit.ends) if demo else {}
         grant = issue_user_token(rt, username, ttl=ttl, demo=claim)
     else:
-        grant = issue_user_token(rt, username)
+        sid = request.session.get("cpm_sid")
+        # The session's digest: signing out ends this token in every app too.
+        extra = {"sid": session_digest(sid)} if isinstance(sid, str) and sid else {}
+        grant = issue_user_token(rt, username, **extra)
     if grant is not None:
         set_token_cookie(response, request, grant["token"])
     return grant
@@ -239,6 +243,9 @@ def v1_caller(request: Request, rt: Runtime) -> Caller:
         # Disabled, a new password or new access: tokens issued before that are ended.
         if int(claims.get("iat") or 0) < rt.workspace.users.tokens_valid_after(username):
             raise _unauthorized(t("Your access changed. Sign in again."))
+        sid = claims.get("sid")
+        if isinstance(sid, str) and sid and rt.workspace.ended_sessions.digest_ended(sid):
+            raise _unauthorized(t("You signed out. Sign in again."))
     apps = claims.get("apps") if isinstance(claims.get("apps"), dict) else {}
     return Caller(
         username=username,
