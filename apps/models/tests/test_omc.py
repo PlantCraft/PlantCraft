@@ -153,55 +153,6 @@ def test_the_runner_writes_the_script_itself(tmp_path):
     assert 'method="cvode"' in script and "-override=tank.A=3.0,on=true" in script
 
 
-def test_the_runner_loads_omchemsim_only_for_a_project_that_names_it(tmp_path):
-    """M1: OMChemSim (package ``Simulator``) is loaded when a project file uses it, after the
-    Modelica Standard Library and before the project's own files; any other job loads only the
-    standard library, and a job may not ask for a library the image does not hold."""
-
-    plain = job(tmp_path)
-    assert "loadModel(Modelica)" in plain and "loadModel(Simulator)" not in plain
-    (tmp_path / "files" / "A.mo").write_text(
-        "model A\n  // Not a use: the Simulator package\n  Real x = time;\nend A;"
-    )
-    assert "loadModel(Simulator)" not in job(tmp_path)
-    package = tmp_path / "files" / "P"
-    package.mkdir()
-    (package / "package.mo").write_text("package P annotation(uses(Simulator)); end P;")
-    (package / "S.mo").write_text(
-        "within P; model S extends Simulator.Streams.MaterialStream; end S;"
-    )
-    script = job(tmp_path)
-    assert script.index("loadModel(Modelica)") < script.index("loadModel(Simulator)")
-    assert script.index("loadModel(Simulator)") < script.index("loadFile(")
-    assert runner.named_libraries(tmp_path) == ["Simulator"]
-    assert "loadModel(Simulator)" in job(tmp_path, libraries=["Modelica", "Simulator"])
-    with pytest.raises(runner.JobError):
-        job(tmp_path, libraries=["ThermoSysPro"])
-
-
-def test_the_process_example_names_omchemsim_and_only_its_public_classes():
-    """The shipped OMChemSim example is PlantCraft's own model: it extends and instantiates
-    OMChemSim's classes by name and copies none of its files."""
-
-    from modelcraft.api.runtime import EXAMPLES, example_files
-
-    name, folder, _ = EXAMPLES["PlantCraftProcess"]
-    files = example_files("PlantCraftProcess", folder)
-    assert set(files) == {
-        "PlantCraftProcess/package.mo",
-        "PlantCraftProcess/package.order",
-        "PlantCraftProcess/MethanolWaterFlash.mo",
-        "PlantCraftProcess/Stream.mo",
-        "PlantCraftProcess/FlashDrum.mo",
-    }
-    text = "\n".join(files.values())
-    assert "uses(Simulator" in text and "within Simulator" not in text
-    assert (
-        "experiment(StartTime = 0, StopTime = 900"
-        in files["PlantCraftProcess/MethanolWaterFlash.mo"]
-    )
-
-
 def test_a_sweep_varies_the_simulation_settings_and_each_variant_its_inputs(tmp_path):
     """Round 9 M6/M7: ``@method``, ``@tolerance``, ``@stop`` and ``@intervals`` become the
     variant's own integrator and experiment overrides; each variant reads its own inputs."""

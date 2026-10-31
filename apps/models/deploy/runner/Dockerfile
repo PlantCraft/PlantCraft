@@ -11,9 +11,8 @@
 # Build from the repository root: make runner-image. Behind a TLS-inspecting proxy pass its CA
 # as a build secret (make runner-image BUILD_CA=/path/ca.pem).
 #
-# OpenModelica (OSMC-PL / GPL 3, used as a separate program, never linked into the app), the
-# Modelica Standard Library and OMChemSim (both BSD-3-Clause) are pinned by version and
-# digest/commit.
+# OpenModelica (OSMC-PL / GPL 3, used as a separate program, never linked into the app) and
+# the Modelica Standard Library (BSD-3-Clause) are pinned by version and digest/commit.
 
 ARG OPENMODELICA_IMAGE=openmodelica/openmodelica:v1.24.4-minimal@sha256:96c5d09d5d4701c2e667ccc6bf14e54ae58018e127d2f1761782ef9ecb0df379
 
@@ -24,12 +23,9 @@ ARG REVISION=unknown
 ARG CREATED=unknown
 # The Modelica Standard Library v4.0.0 tag, by commit.
 ARG MSL_COMMIT=6626538a236a34a390655b55d5e8c906bfe31772
-# OMChemSim, the open chemical process library (FOSSEE, IIT Bombay, BSD-3-Clause; its package is
-# Simulator), by commit (2026-07-15). Loaded only by a job whose files name it.
-ARG OMCHEMSIM_COMMIT=264512978659af5120530be307d371735224743b
 
 LABEL org.opencontainers.image.title="modelcraft-runner" \
-      org.opencontainers.image.description="The Modelica runner of PlantCraft Models: OpenModelica, the Modelica Standard Library and OMChemSim, without network." \
+      org.opencontainers.image.description="The Modelica runner of PlantCraft Models: OpenModelica and the Modelica Standard Library, without network." \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${REVISION}" \
       org.opencontainers.image.created="${CREATED}" \
@@ -58,13 +54,6 @@ RUN --mount=type=secret,id=build_ca,required=false,mode=0444 \
     mkdir -p /opt/modelica; \
     cp -r /tmp/msl/Modelica /tmp/msl/ModelicaServices /tmp/msl/Complex.mo /tmp/msl/LICENSE /opt/modelica/; \
     rm -rf /tmp/msl; \
-    git init -q /tmp/omchemsim; \
-    git -C /tmp/omchemsim fetch -q --depth 1 https://github.com/FOSSEE/OMChemSim.git "${OMCHEMSIM_COMMIT}"; \
-    git -C /tmp/omchemsim checkout -q FETCH_HEAD; \
-    test "$(git -C /tmp/omchemsim rev-parse HEAD)" = "${OMCHEMSIM_COMMIT}"; \
-    cp -r /tmp/omchemsim/Simulator /opt/modelica/; \
-    cp /tmp/omchemsim/LICENSE /opt/modelica/Simulator/LICENSE; \
-    rm -rf /tmp/omchemsim; \
     apt-get purge -y git; apt-get autoremove -y; rm -rf /var/lib/apt/lists/*; \
     groupadd --gid 10020 compute; \
     useradd --no-create-home --uid 10020 --gid 10020 --home-dir /tmp --shell /usr/sbin/nologin compute; \

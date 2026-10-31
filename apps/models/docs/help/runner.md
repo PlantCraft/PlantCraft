@@ -1,9 +1,8 @@
 # The Modelica runner (administrators)
 
 Models does not compile or run models in its own container. It hands every check, diagram,
-simulation and export to the **Modelica runner**, a separate container with OpenModelica 1.24,
-the Modelica Standard Library 4.0.0 and OMChemSim, the open chemical process library (loaded only
-for a project that uses it):
+simulation and export to the **Modelica runner**, a separate container with OpenModelica 1.24
+and the Modelica Standard Library 4.0.0:
 
 - **No network at all** (`network_mode: none`): it cannot reach the plant, PlantCraft or the
   internet.

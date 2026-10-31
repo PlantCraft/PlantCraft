@@ -7,7 +7,7 @@ When a gap closes, delete its row in the same change and note it in `CHANGELOG.m
 
 | Id | Gap | Impact | B |
 |---|---|---|---|
-| G4 | Only the Modelica Standard Library: process plants need fluid and thermal libraries (Buildings, ThermoSysPro, ExternalMedia...) and uploading a library | high | Partly: OMChemSim ships in the runner, loaded when a project uses it, with a flash drum example (M1, 2026-10-31). ThermoSysPro is documented, not shipped (Modelica License 2, `docs/process-libraries.md`). Uploading a library is still open. |
+| G4 | Only the Modelica Standard Library: process plants need fluid and thermal libraries (Buildings, ThermoSysPro, ExternalMedia...) and uploading a library | high | |
 | G5 | Optimization studies are there (2026-10-26: decision values with bounds, objective and constraints on indicators, SciPy's Nelder-Mead, COBYLA, SLSQP); still missing: fitting parameters to plant data (an objective on the error to a plant signal) | medium | |
 | G11 | Studies run in Models' own queue: the suite's queue panel and metrics (plantcraft-sdk 0.17.0, @plantcraft/ui 0.22.0, from Link) not adopted yet | low | |
 | G12 | Projects are not listed in the left menu (needs `children` in the suite frame's menu) | low | |

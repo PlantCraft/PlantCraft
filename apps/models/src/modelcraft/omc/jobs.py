@@ -254,7 +254,7 @@ class LocalExecutor:
             "available": bool(self.version),
             "reason": "" if self.version else "omc is not installed on this machine.",
             "omc": self.version,
-            "libraries": dict(runner.LIBRARY_VERSIONS),
+            "libraries": {lib: "4.0.0" for lib in runner.LIBRARIES},
             "workers": 2,
             "queued": 0,
             "running": 0,
