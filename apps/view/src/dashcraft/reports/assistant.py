@@ -25,6 +25,7 @@ import re
 from datetime import datetime
 from typing import Any
 
+from plantcraft_sdk.utc import local_text
 from pydantic import BaseModel, Field, field_validator
 
 from dashcraft.i18n import t
@@ -545,8 +546,10 @@ MAX_EVIDENCE = 60
 
 
 def _when(value: Any) -> str:
+    """An instant on the plant's wall clock (the installation's time zone), as people read it."""
+
     at = _instant(value)
-    return at.strftime("%Y-%m-%d %H:%M UTC") if at else str(value or "")
+    return local_text(at) if at else str(value or "")
 
 
 def _number(value: Any) -> str:

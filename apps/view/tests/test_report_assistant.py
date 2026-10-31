@@ -349,14 +349,14 @@ def test_citations_become_numbered_evidence_footnotes():
     assert unknown == ["E9"]
     assert notes[0] == (
         "Result · FIC-101 · Control loop performance: warning, score 42, Oscillation, "
-        "as of 2026-10-31 08:00 UTC"
+        "as of 2026-10-31 08:00"
     )
     assert notes[1].startswith("Counted · FIC-101 · rank 1 over the period: 4 alarms (1 critical)")
-    assert notes[2] == "Event 2026-10-30 07:12 UTC · FIC-101 · alarm raised (critical): High flow"
+    assert notes[2] == "Event 2026-10-30 07:12 · FIC-101 · alarm raised (critical): High flow"
 
     cell = helper.section_text("Week", body, facts)
     assert "**Evidence**\n\n1. Result · FIC-101" in cell
-    assert "3. Event 2026-10-30 07:12 UTC" in cell
+    assert "3. Event 2026-10-30 07:12" in cell
     assert "cites E9, which the facts it was given do not have" in cell
 
 
