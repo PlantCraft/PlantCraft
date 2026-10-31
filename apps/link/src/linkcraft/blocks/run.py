@@ -97,21 +97,39 @@ def recorded_ports(plan: Plan, values: Values) -> list[dict[str, Any]]:
 
 
 def trace_value(value: Any, points: int = TRACE_POINTS) -> dict[str, Any]:
+    """A port's value as the editor and a run's page draw it: a series thinned to about
+    ``points`` samples (``points=1``: its last sample only, as a scheduled run keeps it)."""
+
     if isinstance(value, NoData):
         return {"type": "missing", "reason": value.reason}
     if isinstance(value, Result):
         return {"type": "result", **value.as_dict()}
     if isinstance(value, pd.Series):
-        numbers = pd.to_numeric(value, errors="coerce")
-        text = numbers.isna().all() and value.notna().any()
         clean = value.dropna()
-        step = max(1, len(clean) // points)
-        sample = clean.iloc[::step]
+        numeric = pd.api.types.is_numeric_dtype(clean.dtype)
+        numbers = (
+            clean
+            if numeric and not pd.api.types.is_bool_dtype(clean.dtype)
+            else pd.to_numeric(clean, errors="coerce")
+        )
+        text = bool(len(clean)) and bool(numbers.isna().all())
+        if points == 1:
+            sample = clean.iloc[-1:]
+        else:
+            sample = clean.iloc[:: max(1, len(clean) // points)]
+        values = (
+            [str(item) for item in sample.to_numpy()]
+            if text
+            else sample.to_numpy(dtype=float).tolist()
+        )
         return {
             "type": "state" if text else "series",
             "count": int(len(clean)),
-            "t": [str(stamp) for stamp in sample.index],
-            "v": [str(item) if text else float(item) for item in sample.to_numpy()],
+            # As str(Timestamp) writes each one, without iterating the index in Python.
+            "t": sample.index.astype(str).tolist()
+            if isinstance(sample.index, pd.DatetimeIndex)
+            else [str(stamp) for stamp in sample.index],
+            "v": values,
             "last": (str(clean.iloc[-1]) if text else float(clean.iloc[-1]))
             if len(clean)
             else None,
@@ -137,10 +155,7 @@ def wires(plan: Plan, values: Values) -> dict[str, dict[str, Any]]:
 
     found: dict[str, dict[str, Any]] = {}
     for (node_id, port_id), value in values.values.items():
-        item = trace_value(value)
-        if item["type"] in {"series", "state"}:
-            item = {**item, "t": item["t"][-1:], "v": item["v"][-1:]}
-        found.setdefault(node_id, {})[port_id] = item
+        found.setdefault(node_id, {})[port_id] = trace_value(value, 1)
     return found
 
 
