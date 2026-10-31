@@ -282,6 +282,7 @@ def test_the_overview_shows_what_is_bad_and_where(signed_in, app_url, screenshot
             "Loop-hours lost, 7 days",
             "Effective control",
             "Oscillations shared by several loops",
+            "Plant map",
         ]
     )
     # Every loop and signal a square, each opening its page.
@@ -741,8 +742,10 @@ def test_a_unit_twin_is_calibrated_in_the_editor_and_saved(signed_in, app_url, s
     expect(page).to_have_url(re.compile(r"/link/editor/unit_twin_copy$"))
     # Its assets on its page, Used by: saving them is a new version.
     page.goto(f"{app_url}/link/algorithms/unit_twin_copy/used-by")
-    page.locator(".asset-picker select").select_option("fic-101")
-    page.locator(".asset-picker").get_by_role("button", name="Add").click()
+    page.get_by_label("Asset to add").select_option("fic-101")
+    page.locator(".asset-picker").filter(has=page.get_by_label("Asset to add")).get_by_role(
+        "button", name="Add"
+    ).click()
     page.get_by_role("button", name="Save as new version").click()
     page.get_by_role("link", name="Versions", exact=True).click()
     expect(
