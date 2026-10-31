@@ -9,12 +9,6 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
-- **Working hours for a request queue.** An administrator sets the days and hours a queue works
-  (and a default); its requests' first answer and resolution clocks run only inside them, and
-  due times land on the next working minute.
-- **Partners for a company's sponsor.** A sponsor at the plant without the Operations role opens
-  Operations with Requests and Partners only, sees the companies they sponsor and approves their
-  months' hours.
 - **Security check: signed catalogue, exceptions that expire, an evidence report.** The checks'
   severities, titles and references move to `security-checks.tsv`, which the bundle signs with the
   rest; the installer keeps the signed hashes beside it, and the new check `PC-INT-01` fails when
@@ -24,6 +18,25 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   the evidence report for an audit (IEC 62443-4-2 CR 7.6 RE 1): scope, settings in force without
   secrets, results by requirement, exceptions and the hashes of the checks that ran
   (`docs/security-guide.md`).
+
+- **Uptime by app and maintenance windows.** Operations › Status shows each app's uptime over
+  24 hours, 7 and 30 days, from the watch's incidents and without planned maintenance. An
+  administrator plans a maintenance window (now or later, every app or some, up to 72 hours):
+  while it lasts the watch keeps quiet about those apps.
+- **An official Zabbix template.** `monitoring/plantcraft_zabbix_agent.yaml` in the bundle
+  (Zabbix 7.0 and later): a Zabbix agent on the PlantCraft machine reads the installer's
+  `metrics.json` and watches the machine, the free disk and every service (state, health,
+  restarts, CPU and memory against its own limit), with the same 80 % and 95 % levels as
+  Operations' load alerts (`docs/operations.md`, section 4).
+- **`./install.sh --rotate-admin-password`.** A new password for the emergency administrator,
+  shown once and written to `data/initial-admin-password` (0600); PlantCraft restarts to read it.
+  The security check (PC-ACC-01) now gives the password's age, and fails after 90 days.
+- **Working hours for a request queue.** An administrator sets the days and hours a queue works
+  (and a default); its requests' first answer and resolution clocks run only inside them, and
+  due times land on the next working minute.
+- **Partners for a company's sponsor.** A sponsor at the plant without the Operations role opens
+  Operations with Requests and Partners only, sees the companies they sponsor and approves their
+  months' hours.
 
 - **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
   app switcher, for administrators and for a new **Operations** role (Users: IT, or an
@@ -89,6 +102,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Operations suggests the machine profile that fits.** When the machine, within the installation's
+  `MAX_CPUS`/`MAX_MEMORY`, fits another profile than the one applied (more memory added, a
+  profile pinned by hand), suite health names it and the command that applies it
+  (`sudo ./install.sh --machine auto`), with a copy button. The installation stays root's:
+  nothing is written from the web (plan B, 2026-10-31).
 - **State files are written whole or not at all, everywhere (storage tests, 2026-10-31).**
   `plantcraft-sdk` 0.91.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
   unique temporary file created with its final mode, `fsync`, then a rename, so a process killed
@@ -221,6 +239,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   Go binaries and curl.
 
 ### Fixed
+
+- **Long trends come from the Historian already reduced.** PlantCraft's charts read every raw
+  sample of the window and kept each stretch's lowest and highest value themselves: a day at 1 s
+  moved 4 MB and took 0.2 s, and a week was refused (over 200,000 values). The platform now asks
+  the Historian for about 750 cells with each cell's low and high (hourly rollups past a week):
+  a day in 0.02 s and 67 KB, a week in 0.13 s, the same spikes. Text signals, and signals the
+  Historian gives no extremes for, are still read raw and cut as before.
 
 - **`install.sh --uninstall --purge` no longer deletes another installation's images.** With
   two installations on one Docker (test and production), purging one removed the image tags the

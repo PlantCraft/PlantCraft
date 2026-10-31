@@ -64,6 +64,13 @@ class ConversationStore(Store):
 
     CREATE INDEX IF NOT EXISTS idx_conversation_messages
     ON conversation_messages(conversation_id, message_id);
+
+    -- The notifications apps sent (notices_for, Desk's feed): only those rows, by conversation
+    -- and time. Without it the feed read every message of the person's conversations, a year of
+    -- them on each load (storage test 2026-10-31, 620k messages: 9.7 ms -> 0.27 ms a feed).
+    CREATE INDEX IF NOT EXISTS idx_conversation_notices
+    ON conversation_messages(conversation_id, created_at)
+    WHERE json_extract(meta_json, '$.kind') = 'notification';
     """
 
     MIGRATIONS = (

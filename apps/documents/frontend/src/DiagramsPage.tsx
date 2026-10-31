@@ -28,7 +28,7 @@ export function DiagramsPage(_props: { me: Me }) {
   if (!rows) return <Loading />;
   return <>
     <Heading title={t("Diagrams")} />
-    <p className="muted">{t("The pages of the documents that are diagrams (P&IDs), read into equipment, instruments and the lines between them. Send P&IDs as PDF, SVG or images in Documents; they appear here once read.")}</p>
+    <p className="muted">{t("The pages of the documents that are diagrams (P&IDs), read into equipment, instruments and the lines between them. Send P&IDs as PDF, SVG, DEXPI (XML) or images in Documents; they appear here once read.")}</p>
     {rows.length === 0
       ? <div className="panel empty">{t("No diagram found in the documents yet.")} <Link to="/documents">{t("Send P&IDs in Documents")}</Link></div>
       : <DataTable rows={rows} rowKey={(row) => `${row.rev_id}:${row.page}`} label={t("Diagrams")}
@@ -43,14 +43,15 @@ export function DiagramsPage(_props: { me: Me }) {
           { key: "document", label: t("Document"), phone: "hide", sort: (row) => row.doc_number, render: (row) => <Link to={`/documents/${row.doc_id}`}>{row.doc_number || row.doc_title}</Link> },
           { key: "items", label: t("Items"), className: "num", sort: (row) => row.items, render: (row) => row.items },
           { key: "relations", label: t("Lines"), className: "num", phone: "hide", sort: (row) => row.relations, render: (row) => row.relations },
-          { key: "source", label: t("Read from"), phone: "hide", sort: (row) => row.source, render: (row) => row.source === "raster" ? t("Scan (OCR)") : t("Drawing") },
+          { key: "source", label: t("Read from"), phone: "hide", sort: (row) => row.source, render: (row) => row.source === "raster" ? t("Scan (OCR)") : row.source === "dexpi" ? t("DEXPI file") : t("Drawing") },
         ]} />}
   </>;
 }
 
 /** One diagram: the page drawn by the server with a box on each thing the reader found, and the
  * list of what it found, the doubtful first. */
-export function DiagramView({ revId, page, me }: { revId: string; page: number; me?: Me }) {
+/** ``pick``: a tag to show at once (a link from the plant map or from search lands on it). */
+export function DiagramView({ revId, page, me, pick }: { revId: string; page: number; me?: Me; pick?: string }) {
   const [diagram, setDiagram] = useState<Diagram | null>(null);
   const [error, setError] = useState("");
   const [reading, setReading] = useState(false);
@@ -61,7 +62,7 @@ export function DiagramView({ revId, page, me }: { revId: string; page: number; 
     setReadError("");
     api.readWithModel(revId, page).then(setDiagram).catch((err) => setReadError(message(err))).finally(() => setReading(false));
   };
-  const [picked, setPicked] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string | null>(pick ?? null);
   useEffect(() => { api.diagram(revId, page).then(setDiagram).catch((err) => setError(message(err))); }, [revId, page]);
   const items = useMemo(() => {
     const order = { low: 0, medium: 1, high: 2 };
@@ -104,6 +105,10 @@ export function DiagramView({ revId, page, me }: { revId: string; page: number; 
           <p>{t("{items} items, {lines} lines. The ones to check come first.", { items: result.items.length, lines: result.relations.length })}</p></div></div>
         {picked && <div className="diagram-picked">
           <strong>{name(picked)}</strong>
+          {diagram.in_plantcraft?.includes(picked) && <p className="map-links">{t("In PlantCraft:")}{" "}
+            <a href={`/assets/${encodeURIComponent(picked)}`}>{t("the asset")}</a>{" · "}
+            <a href={`/assets/${encodeURIComponent(picked)}?tab=signals`}>{t("its signals")}</a>{" · "}
+            <a href={`/assets/${encodeURIComponent(picked)}?tab=situation`}>{t("what the apps say")}</a></p>}
           {related.length === 0 ? <p className="muted">{t("No line joins it to anything here.")}</p>
             : <ul>{related.map((r) => <li key={`${r.from}-${r.type}-${r.to}`}>{name(r.from)} <b>{t(r.type)}</b> {name(r.to)} <ConfidencePill value={r.confidence} /></li>)}</ul>}
         </div>}

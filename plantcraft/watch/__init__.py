@@ -31,6 +31,7 @@ from plantcraft.config import plant_clock
 from plantcraft.db import Database, Store, utc_text
 from plantcraft.events.catalog import PLATFORM_APP, SYSTEM, WATCH_EVENTS
 from plantcraft.i18n import t
+from plantcraft.watch import uptime
 from plantcraft.watch.load import PREFIXES as LOAD_PREFIXES
 from plantcraft.watch.load import LoadLimits, load_checks
 from plantcraft_sdk.utc import parse_instant
@@ -121,7 +122,8 @@ class Check:
 
 
 class WatchStore(Store):
-    SCHEMA = """
+    SCHEMA = (
+        """
     CREATE TABLE IF NOT EXISTS watch_incidents (
         incident_id INTEGER PRIMARY KEY AUTOINCREMENT,
         check_key TEXT NOT NULL,
@@ -141,6 +143,8 @@ class WatchStore(Store):
         value TEXT NOT NULL
     );
     """
+        + uptime.SCHEMA
+    )
 
     def open_incidents(self) -> dict[str, dict[str, Any]]:
         with self._lock, self._connect() as connection:
@@ -179,6 +183,90 @@ class WatchStore(Store):
                 "UPDATE watch_incidents SET closed_at = ? WHERE incident_id = ?",
                 (utc_text(at), incident_id),
             )
+
+    def incidents_since(self, since: datetime) -> list[dict[str, Any]]:
+        """Every incident open at some point after ``since``."""
+
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM watch_incidents WHERE closed_at IS NULL OR closed_at > ?",
+                (utc_text(since),),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    # Maintenance windows (plantcraft.watch.uptime) -------------------------------------------
+
+    def add_window(
+        self, starts: datetime, ends: datetime, services: list[str] | None, reason: str, actor: str
+    ) -> dict[str, Any]:
+        with self._lock, self._write() as connection:
+            cursor = connection.execute(
+                """
+                INSERT INTO watch_maintenance
+                (starts_at, ends_at, services, reason, created_by, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    utc_text(starts),
+                    utc_text(ends),
+                    self._json(sorted(set(services))) if services else None,
+                    reason,
+                    actor,
+                    utc_text(),
+                ),
+            )
+            window_id = int(cursor.lastrowid)
+        return self.window(window_id) or {}
+
+    def end_window(self, window_id: int, actor: str, at: datetime) -> dict[str, Any]:
+        found = self.window(window_id)
+        if found is None:
+            raise KeyError(window_id)
+        if found["ended_at"] or found["ends_at"] <= utc_text(at):
+            raise ValueError(t("This window already ended."))
+        with self._lock, self._write() as connection:
+            if found["starts_at"] > utc_text(at):
+                # Not started yet: it never happens.
+                connection.execute(
+                    "DELETE FROM watch_maintenance WHERE window_id = ?", (window_id,)
+                )
+                return {**found, "cancelled": True}
+            connection.execute(
+                "UPDATE watch_maintenance SET ended_by = ?, ended_at = ? WHERE window_id = ?",
+                (actor, utc_text(at), window_id),
+            )
+        return self.window(window_id) or {}
+
+    def window(self, window_id: int) -> dict[str, Any] | None:
+        with self._lock, self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM watch_maintenance WHERE window_id = ?", (window_id,)
+            ).fetchone()
+        return self._window(row) if row else None
+
+    def windows(self, since: datetime) -> list[dict[str, Any]]:
+        """The windows that end after ``since`` (planned, in force, or recent), soonest first."""
+
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM watch_maintenance WHERE COALESCE(ended_at, ends_at) > ? "
+                "ORDER BY starts_at",
+                (utc_text(since),),
+            ).fetchall()
+        return [self._window(row) for row in rows]
+
+    def active_windows(self, now: datetime) -> list[dict[str, Any]]:
+        stamp = utc_text(now)
+        return [
+            item
+            for item in self.windows(now)
+            if item["starts_at"] <= stamp and not item["ended_at"]
+        ]
+
+    def _window(self, row: Any) -> dict[str, Any]:
+        item = dict(row)
+        item["services"] = self._loads(item["services"], None) if item["services"] else None
+        return item
 
     def get(self, name: str, default: Any = None) -> Any:
         with self._lock, self._connect() as connection:
@@ -541,14 +629,20 @@ class SuiteWatch:
             posted: list[str] = []
             incidents = self.store.open_incidents()
             seen = set()
+            # Maintenance windows in force: the apps they cover keep quiet.
+            planned = self.store.active_windows(now)
             for check in found:
                 seen.add(check.key)
                 if held and check.key.startswith(APP_CHECKS):
                     continue
+                if check.key.startswith(APP_CHECKS) and any(
+                    uptime.covers(window, check.key) for window in planned
+                ):
+                    continue
                 posted += self._apply(check, incidents.get(check.key), now)
             for key, incident in incidents.items():
                 # A service removed (an app uninstalled): its incident ends without a word.
-                if key not in seen and key.startswith(APP_CHECKS) and not held:
+                if key not in seen and key.startswith(APP_CHECKS) and not held and not planned:
                     self.store.close(incident["incident_id"], now)
                     self._event(key, "end", incident["subject"], t("removed"))
                     self._bad.pop(key, None)
@@ -559,6 +653,7 @@ class SuiteWatch:
                 "at": utc_text(now),
                 "watching": True,
                 "held": held,
+                "maintenance": planned,
                 "checks": [
                     {"key": c.key, "subject": c.subject, "bad": c.bad, "detail": c.detail}
                     for c in found
@@ -719,6 +814,35 @@ class SuiteWatch:
             "metrics": self.desk.read("metrics.json"),
             "conversation_id": self.store.get("conversation_id"),
             "certificates": self.certificate_list(),
+        }
+
+    def uptime(self) -> dict[str, Any]:
+        """Each service's uptime over 24 h, 7 and 30 days, and the maintenance windows."""
+
+        now = self.clock()
+        since = now - max(uptime.WINDOWS.values())
+        metrics = self.desk.read("metrics.json") or {}
+        services = [
+            str(item.get("service"))
+            for item in metrics.get("services") or []
+            if item.get("service")
+        ]
+        windows = self.store.windows(since)
+        return {
+            "at": utc_text(now),
+            "since": self.store.get("first_seen"),
+            "services": uptime.uptime(
+                services,
+                self.store.incidents_since(since),
+                windows,
+                now=now,
+                first_seen=parse_instant(self.store.get("first_seen")),
+            ),
+            "windows": [
+                item
+                for item in windows
+                if not item.get("ended_at") or item["ended_at"] > utc_text(now - timedelta(days=7))
+            ],
         }
 
     def run(self, stop: threading.Event, seconds: float = TICK_SECONDS) -> None:

@@ -19,6 +19,7 @@ from doccraft.library.models import (
     DocumentAssets,
     DocumentFields,
     FolderPayload,
+    LinkReview,
     SearchRequest,
 )
 from doccraft.library.preview import docx_html
@@ -205,6 +206,45 @@ def set_assets(
     rt.store.set_assets(doc_id, payload.assets)
     rt.audit(user, "document.assets", doc_id, {"assets": payload.assets})
     return rt.store.document(doc_id) or {}
+
+
+def _editable_docs(rt, user) -> dict[str, dict[str, Any]]:
+    perms = rt.permissions(user)
+    docs = perms.docs(rt.store.documents(perms.visible_folders()))
+    return {d["doc_id"]: d for d in docs if perms.edits_folder(d.get("folder_id"))}
+
+
+@router.get("/asset-links")
+def asset_link_queue(rt: RuntimeDep, user: EditorUser) -> dict[str, Any]:
+    """The links between documents and assets found in their text that wait for a person (in
+    the folders they change). A link found at least ``threshold`` times is taken at once and is
+    not here (0: every link waits)."""
+
+    docs = _editable_docs(rt, user)
+    return {
+        "threshold": rt.store.auto_mentions,
+        "links": rt.store.link_queue(set(docs)),
+    }
+
+
+@router.post("/asset-links/review")
+def review_asset_links(payload: LinkReview, rt: RuntimeDep, user: EditorUser) -> dict[str, Any]:
+    """Approve (the link becomes a person's) or reject (it is not suggested again) in a batch."""
+
+    docs = _editable_docs(rt, user)
+    links = [(link.doc_id, link.asset_id) for link in payload.links if link.doc_id in docs]
+    if len(links) < len(payload.links):
+        raise HTTPException(
+            status_code=403, detail=t("Some of these documents are in a folder you do not change.")
+        )
+    done = rt.store.review_links(links, payload.verdict)
+    rt.audit(
+        user,
+        "document.assets_review",
+        "asset-links",
+        {"verdict": payload.verdict, "links": len(links), "changed": done},
+    )
+    return {"changed": done}
 
 
 @router.post("/documents/{doc_id}/reindex", status_code=202)

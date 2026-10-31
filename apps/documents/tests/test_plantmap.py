@@ -3,6 +3,7 @@ joined into one plant (``doccraft.plantmap``)."""
 
 from __future__ import annotations
 
+import gzip
 import json
 import sys
 from pathlib import Path
@@ -273,6 +274,52 @@ def test_a_real_pid_from_another_tool_is_read():
     assert read_diagrams(data, "C01V01-HEX.EX02.pdf")  # kept as a diagram
 
 
+def test_a_dexpi_file_is_read_exactly_into_the_map(client, runtime, tmp_path):
+    # The same C01 saved as DEXPI (Proteus XML) by the P&ID tool: every tag and feed, all sure.
+    data = gzip.decompress(
+        (Path(__file__).parent / "files" / "dexpi-C01V01-HEX.EX02.xml.gz").read_bytes()
+    )
+    page = read_drawing(data, "C01V01-HEX.EX02.xml")[0]
+    assert page["source"] == "dexpi"
+    assert {i["tag"] for i in page["items"]} == DEXPI_TAGS
+    assert {(r["from"], r["to"]) for r in page["relations"] if r["type"] == "feeds"} == DEXPI_FEEDS
+    assert {r["confidence"] for r in page["relations"]} == {"high"}
+    kinds = {(r["from"], r["type"], r["to"]) for r in page["relations"]}
+    assert ("PICSA-4712.02", "controls", "PV-4712.02") in kinds
+    assert ("PV-4712.02", "on", "H-1007") in kinds
+    assert ("TICSA-4750.03", "measures", "T-4750") in kinds
+    w, h = page["width"], page["height"]
+    assert all(
+        0 <= i["box"][0] <= i["box"][2] <= w and 0 <= i["box"][1] <= i["box"][3] <= h
+        for i in page["items"]
+    )
+
+    # Sent to the library like any file: a diagram, its picture drawn here, and on the map.
+    doc = send(client, "C01V01-HEX.EX02.xml", data, number="C01-DEXPI", kind="P&ID")
+    index(runtime)
+    one = next(d for d in client.get("/api/diagrams").json() if d["doc_id"] == doc["doc_id"])
+    assert one["source"] == "dexpi"
+    image = client.get(f"/api/diagrams/{one['rev_id']}/1/image")
+    assert image.status_code == 200 and image.headers["content-type"].startswith("image/svg+xml")
+    assert image.content.startswith(b"<svg") and b"<script" not in image.content
+    plant = client.get("/api/plant-map").json()
+    assert DEXPI_FEEDS <= {(r["from"], r["to"]) for r in plant["relations"] if r["type"] == "feeds"}
+
+    # Our own DEXPI export reads back the same equipment and feeds.
+    back = read_drawing(client.get("/api/plant-map/dexpi.xml").content, "plant.xml")[0]
+    assert DEXPI_FEEDS <= {(r["from"], r["to"]) for r in back["relations"] if r["type"] == "feeds"}
+
+
+def test_a_dexpi_file_with_entities_is_refused():
+    bomb = b'<?xml version="1.0"?><!DOCTYPE a [<!ENTITY x "xx">]><PlantModel>&x;</PlantModel>'
+    with pytest.raises(DrawingError):
+        read_drawing(bomb, "bomb.xml")
+    assert read_diagrams(bomb, "bomb.xml") == []
+    assert (
+        read_diagrams(b"<?xml version='1.0'?><PlantModel><Equipment/></PlantModel>", "x.xml") == []
+    )
+
+
 def test_an_editor_has_a_page_read_again_by_the_language_model(
     client, runtime, fake, tmp_path, sheets
 ):
@@ -309,3 +356,51 @@ def test_an_editor_has_a_page_read_again_by_the_language_model(
     assert any(i["tag"] == "HV-9001" for i in plant["items"])
     with client_for(runtime, fake, "operator") as operator:
         assert operator.post(url).status_code == 403
+
+
+def test_the_plant_map_is_kept_as_a_document_the_assistant_cites(
+    client, runtime, fake, tmp_path, sheets
+):
+    """D6: an editor writes the map out as a document of the same folder; it is indexed like
+    any other, so a search (and the assistant) finds what feeds what, with its sheet."""
+
+    for n in (0, 1):
+        _, canvas, key = sheets[n]
+        pdf = tmp_path / f"{key['sheet']}.pdf"
+        canvas.pdf(pdf)
+        send(client, pdf.name, pdf.read_bytes(), number=key["sheet"], kind="P&ID")
+    index(runtime)
+    # D4: a diagram names the tags on it that PlantCraft has, so their boxes open the asset.
+    one = client.get("/api/diagrams").json()[0]
+    page = client.get(f"/api/diagrams/{one['rev_id']}/{one['page']}").json()
+    tags = {i["tag"] for i in page["result"]["items"] if i.get("tag")}
+    known = {a["id"] for a in fake.assets}
+    assert page["in_plantcraft"] == sorted(tags & known) and page["in_plantcraft"]
+    with client_for(runtime, fake, "operator") as operator:
+        assert operator.post("/api/plant-map/summary-document").status_code == 403
+    made = client.post("/api/plant-map/summary-document")
+    assert made.status_code == 201, made.text
+    doc = made.json()
+    assert doc["number"] == "PLANT-MAP-SUMMARY" and doc["folder_id"] == ""
+    index(runtime)
+    plant = client.get("/api/plant-map").json()
+    feed = next(r for r in plant["relations"] if r["type"] == "feeds")
+    passages = client.get(f"/api/documents/{doc['doc_id']}/passages").json()
+    text = "\n".join(
+        p["text"] for p in (passages.get("passages") if isinstance(passages, dict) else passages)
+    )
+    rows = passages.get("passages") if isinstance(passages, dict) else passages
+    own = [p for p in rows if feed["from"] in (p.get("section") or "")]
+    assert own and any(f"Feeds: {feed['to']}" in p["text"] for p in own)
+    assert "no language model" in text
+    found = client.post("/api/search", json={"query": f"what does {feed['from']} feed"}).json()
+    assert any(p["doc_id"] == doc["doc_id"] for p in found["passages"])
+    # Made again: a new revision of the same document, not a second document.
+    again = client.post("/api/plant-map/summary-document").json()
+    assert again["doc_id"] == doc["doc_id"]
+    # A folder with no diagrams has nothing to sum up.
+    other = client.post("/api/folders", json={"name": "Empty"}).json()
+    assert (
+        client.post(f"/api/plant-map/summary-document?folder={other['folder_id']}").status_code
+        == 409
+    )
