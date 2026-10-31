@@ -101,7 +101,7 @@ def test_collector_housekeeping_uses_the_source_retention(tmp_path, monkeypatch)
         ]
     )
     seen: dict[int, int] = {}
-    monkeypatch.setattr(archive, "prune", lambda cutoffs: seen.update(cutoffs) or 0)
+    monkeypatch.setattr(archive, "prune", lambda cutoffs, levels=None: seen.update(cutoffs) or 0)
     before = now_ms()
     Collector(settings, catalog, archive).housekeeping(force=True)
     days = {

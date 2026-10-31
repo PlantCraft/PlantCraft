@@ -21,6 +21,17 @@ joins it into the bundle's release notes.
     - `good_pct`, the time with good quality, from the archive's quality changes;
     - `total`, the time integral per `s`, `min`, `h` or `d`;
     - the time-weighted `mean`, `min`, `max` and `std`.
+- **Daily and monthly rollups, each with its own retention** (gap H9). Housekeeping sums each
+  closed UTC day's hourly rollups into a daily row and each closed month's days into a monthly
+  one (`rollups_coarse`). A trend on a grid of whole days reads them (a year: 365 rows instead of
+  8,760), and so does a window's mean, min and max. Raw values, hourly, daily and monthly
+  rollups are kept for separate retentions (Settings, Retention and collection: hourly 5 years,
+  daily and monthly forever by default; a level never goes before the raw values or a finer
+  level). The rollups now outlive the raw values, so a signal kept 90 days still trends over
+  years. The same page shows the disk each retention takes now and at full retention
+  (`GET /api/retention`). A write into the past drops the days and months from there and
+  housekeeping sums them again.
+
 - **Store and forward at the gateway** (gap H3, G7): MQTT, Modbus and SQL values read while the
   collector is away wait in Telegraf's disk buffer (`data/histcraft/gateway-buffer`) and arrive in
   order when it is back, also after a gateway restart (before, a restart lost them). A batch sent

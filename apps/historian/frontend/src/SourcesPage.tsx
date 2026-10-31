@@ -1,4 +1,4 @@
-import { appLabel, DataTable, TimeZoneSelect, useAssistantPage, confirmAction, Dialog } from "@plantcraft/ui";
+import { appLabel, DataTable, TimeZoneSelect, useAssistantPage, askText, confirmAction, Dialog } from "@plantcraft/ui";
 import { Activity, AppWindow, Calculator, ChevronRight, Cpu, Database, Radio, ArrowRight, Download, FileSpreadsheet, FolderSearch, History, Network, Pencil, PlugZap, Plus, Search, Server, ShieldCheck, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api, askCollector, type BrowseResult, type SourceIn } from "./api";
@@ -110,7 +110,7 @@ export function useSourceActions(reload: () => unknown, afterRemove?: () => void
   }
 
   async function backfill(source: Source) {
-    const answer = window.prompt(t("Copy {name}'s own history into the archive, up to where archiving began. How many hours back?", { name: source.name }), "48");
+    const answer = await askText(t("Copy {name}'s own history into the archive, up to where archiving began. How many hours back?", { name: source.name }), { title: t("Backfill {name}", { name: source.name }), value: "48", type: "number", confirm: t("Backfill") });
     const hours = Number(answer);
     if (answer === null || !Number.isFinite(hours) || hours <= 0) return;
     setTesting(source.id); setError("");

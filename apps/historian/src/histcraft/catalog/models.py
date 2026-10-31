@@ -89,6 +89,11 @@ ONLY_ARCHIVED = (
 DEFAULT_SETTINGS: dict[str, Any] = {
     # Archived values older than this are deleted (per point, unless it sets its own).
     "retention_days": 400,
+    # The rollups of each level outlive the raw values (H9): hourly 5 years, daily and monthly
+    # forever (0). A level is kept at least as long as the finer ones and the raw values.
+    "hourly_retention_days": 1825,
+    "daily_retention_days": 0,
+    "monthly_retention_days": 0,
     # New points: scan period, compression deviation as % of span (of the value when no range
     # is known), max interval. A steady signal is still archived every 10 min: the apps' data
     # checks (Link's availability: an interval above 10 min is a gap) see a constant setpoint as
@@ -118,7 +123,13 @@ _OWNER = re.compile(r"^(user|group):[a-z0-9][a-z0-9._@-]{0,99}$")
 PROFILES: dict[str, tuple[float, float]] = {"fine": (0.05, 0.1), "none": (0.0, 0.0)}
 PROFILE_NAMES = ("", *PROFILES)
 # Settings that may be 0 (0 % keeps every change); the others must be positive.
-ZERO_SETTINGS = ("default_deviation_percent", "default_exception_percent")
+ZERO_SETTINGS = (
+    "default_deviation_percent",
+    "default_exception_percent",
+    "hourly_retention_days",
+    "daily_retention_days",
+    "monthly_retention_days",
+)
 # A point's own setting -> the source and general setting it falls back to.
 POINT_SETTINGS = {
     "retention_days": "retention_days",

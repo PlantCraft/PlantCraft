@@ -233,7 +233,7 @@ class CatalogStore(Store):
                 raise CatalogError(t("{name} must be a number.", name=key), 422) from exc
             if number < 0 or (number == 0 and key not in ZERO_SETTINGS) or number > 36500 * 86400:
                 raise CatalogError(t("{name} must be a positive number.", name=key), 422)
-            checked[key] = int(number) if key == "retention_days" else number
+            checked[key] = int(number) if key.endswith("retention_days") else number
         with self._lock, self._connect() as connection:
             for key, value in checked.items():
                 connection.execute(

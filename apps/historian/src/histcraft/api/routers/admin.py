@@ -32,7 +32,7 @@ from histcraft.api.deps import (
 from histcraft.api.routers.data import run_reads
 from histcraft.api.runtime import Runtime, point_ref
 from histcraft.archive.edit_marks import edit_marks
-from histcraft.archive.forecast import forecast, free_bytes
+from histcraft.archive.forecast import forecast, free_bytes, raw_days, retention_disk
 from histcraft.archive.query import SourceUnavailable, iso_ms
 from histcraft.catalog import points_csv
 from histcraft.catalog.models import (
@@ -603,6 +603,21 @@ def purge_points(body: PurgeIn, runtime: RuntimeDep, user: AdminUser) -> dict[st
 @router.get("/settings")
 def settings(runtime: RuntimeDep, _user: CurrentUser) -> dict[str, Any]:
     return runtime.catalog.settings()
+
+
+@router.get("/retention")
+def retention(runtime: RuntimeDep, _user: CurrentUser) -> list[dict[str, Any]]:
+    """The disk each retention takes (H9): raw values and the hourly, daily and monthly
+    rollups, now and once every signal keeps its full retention."""
+
+    points = runtime.catalog.points()
+    return retention_disk(
+        points,
+        runtime.archive.point_stats(),
+        runtime.archive.rollup_rows(),
+        runtime.catalog.settings(),
+        raw_days(points),
+    )
 
 
 @router.put("/settings")

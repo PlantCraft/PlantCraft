@@ -19,6 +19,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   - The SDK has `client.series(..., sampling=, max_gap=)`, the same options on `series_many`,
     and `client.summary()`. The contract has `SAMPLINGS`, `TOTAL_PER`, `sampling_options` and
     `total_per`.
+- `@plantcraft/ui`: **`askText(question, { value, confirm, type })`**, the suite's dialog for one
+  short text (a name, a number of hours), resolving the trimmed text or null; its button stays off
+  while the answer is empty or, with `type: "number"`, not above zero. It replaces `window.prompt`
+  in Models (name of a project copy), Historian (hours to backfill), View (name of a new trend), the
+  assistant (group of a chat; `optional: true` lets an empty answer take it out) and Desk (rename a
+  to-do list);
+  `tests/test_visual_rules.py` keeps `window.prompt` out.
 - `@plantcraft/ui`: **`showToast(text, { tone })`**, a short message in the page's corner that
   closes on its own (6 s, errors 10 s), with its × or Escape; screen readers read it. It replaces
   `window.alert`: Models shows a run that would not cancel or delete with it, and asks before

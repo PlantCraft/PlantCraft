@@ -3,7 +3,7 @@
  * over the last hours or a fixed period, as means of an interval or as recorded; save the trend
  * to open it again, or download what it shows as CSV.
  */
-import { Dialog, MultiSelect, confirmAction, BRAND_COLORS, type BrandTheme, useAssistantPage, timeChartLayout, timePlotConfig, fileStamp, isoOf, localOf, plotTheme, errorMessage as message, saveFile, useBrandTheme } from "@plantcraft/ui";
+import { Dialog, MultiSelect, askText, confirmAction, BRAND_COLORS, type BrandTheme, useAssistantPage, timeChartLayout, timePlotConfig, fileStamp, isoOf, localOf, plotTheme, errorMessage as message, saveFile, useBrandTheme } from "@plantcraft/ui";
 import { Plot } from "@plantcraft/ui/plot";
 import { Download, ExternalLink, LoaderCircle, Maximize2, Minimize2, Plus, RefreshCw, Save, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -165,7 +165,7 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
   const mine = !current || me.can_edit || current.created_by === me.username;
 
   async function save(asNew: boolean) {
-    const label = name.trim() || window.prompt(t("Name of the trend"), "")?.trim();
+    const label = name.trim() || await askText(t("Name of the trend"), { confirm: t("Save") });
     if (!label) return;
     try {
       const payload = { ...asked, name: label, description: current?.description ?? "" };

@@ -10,7 +10,7 @@
  * continue in a copy of their own. Its reference (`chat:<id>`) goes in an action or a message.
  */
 import { AlertTriangle, Archive, ArchiveRestore, Bot, Check, ChevronRight, Copy, CopyPlus, FolderInput, Hash, Link2, LoaderCircle, Mail, MailOpen, MessageSquarePlus, MoreHorizontal, Pencil, RotateCcw, SendHorizontal, Share2, Sparkles, Trash2, X } from "lucide-react";
-import { AnswerProgress, AssistantChart, Dialog, formatAgo, ProposalCard, renderMarkdown, confirmAction } from "@plantcraft/ui";
+import { AnswerProgress, AssistantChart, Dialog, formatAgo, ProposalCard, renderMarkdown, askText, confirmAction } from "@plantcraft/ui";
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { errorText, Go, StarButton } from "./collab";
 import { assistantApi, chatMention, chatSections, mergeMessages, settledUpTo, type AssistantStatus, type Chat, type ChatMessage, type ChatRef } from "./assistantApi";
@@ -164,7 +164,7 @@ function ChatMenu({ chat, folders, onChanged, onRename, onDelete }: { chat: Chat
     try { await run(); onChanged(); } catch (err) { setNote(errorText(err)); }
   }
   async function move() {
-    const answer = window.prompt(folders.length ? t("Group (one of: {groups}; empty takes it out)", { groups: folders.join(", ") }) : t("Group name (empty takes it out)"), chat.folder ?? "");
+    const answer = await askText(folders.length ? t("Group (one of: {groups}; empty takes it out)", { groups: folders.join(", ") }) : t("Group name (empty takes it out)"), { title: t("Move to a group"), value: chat.folder ?? "", optional: true, confirm: t("Move") });
     if (answer === null) return;
     await act(() => assistantApi.change(chat.chat_id, { folder: answer.trim() }));
   }
