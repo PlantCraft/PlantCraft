@@ -8,6 +8,17 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **A regression trained once, with the range it is valid in (OLS, Ridge, PLS).** The new block
+  "Regression (OLS, Ridge, PLS)" (`model.regression`, Soft sensors) predicts a value the plant
+  only samples, such as a lab analysis, at every step. Calibrate in the editor fits it on a
+  period: the target's samples against the inputs at those times. PLS is for inputs that move
+  together. It keeps the coefficients, the fit (R², RMSE) and each input's range in the
+  training. Each run gives two outputs:
+  - "Valid": false where an input left that range, optionally widened by a margin, because
+    there the estimate extrapolates;
+  - the verdict: a warning when that happens for more than the share you set, naming the input
+    and the side. With the target wired, it also gives the error now against the training
+    RMSE.
 - **A new action from a loop's result, with its charts.** "New action" on every analysed loop's
   page (not only loops from PlantCraft's assets) opens PlantCraft's action form with the result
   written out (status, health, window, limiting finding, likely cause and what to do first), the
