@@ -8,6 +8,8 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **State-based alarms: Only while.** A rule can name a permissive (a pump's run signal ≥ 1) and a delay after it starts holding; while it does not hold, the alarm is suppressed by design (not raised, cleared if it was, shown as such), per ISA-18.2. A permissive without data leaves the alarm enabled. In Blocks it is Raise an alarm's new Enabled when input.
+- **Import the DCS alarm list.** Rules › Import alarm list reads the master alarm database exported from the DCS (CSV or Excel .xlsx: tag, type HH/HI/LO/LL, limit, priority, deadband, on-delay, cause, consequence, action) as a draft. The review shows the new, changed (field by field) and removed alarms against what earlier imports made, and the rows it could not read. Nothing changes until someone who edits rules applies it, alarm by alarm if they want; a removed alarm's rule is turned off, never deleted, and each rule written is audited.
 - **Shelving has a time limit by priority.** The alarm philosophy sets the longest an alarm may be shelved: 1 hour for critical, 4 for high, 12 for medium and 24 for low by default (ISA-18.2). The shelve dialog offers only durations up to that limit, and the server refuses anything longer.
 - **Performance: the EEMUA 191 level, floods with hysteresis and what the journal tells.**
   - **EEMUA 191 level.** The period shows as one point, average against peak alarms per 10 minutes, on the four EEMUA 191 bands: robust, stable, reactive and overloaded.
@@ -24,6 +26,7 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- The flood count reads only the last minutes of the outbox (index on its time): 0.08 ms a person instead of 4 to 15 ms with 30 days and 300,000 notices, on every notifier cycle during a flood.
 - A new rule no longer asks the server for its sentence before its first condition is complete
   (it answered 422 in the browser's console); an alarm's Acknowledge and Shelve are as tall as the
   other buttons beside its title.

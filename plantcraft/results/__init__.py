@@ -17,15 +17,22 @@ from __future__ import annotations
 from collections.abc import Collection, Iterable
 from typing import Any
 
-from plantcraft.db import Database, Migration, Store, add_columns
+from plantcraft.db import Database, Migration, Store, add_columns, list_index
 
 
 def _bool(value: Any) -> bool | None:
     return None if value is None else bool(value)
 
 
+# Runs by subject (an asset's runs): app_run_subjects, kept by triggers (plantcraft.db.list_index).
+_RUN_SUBJECTS, _FILL_RUN_SUBJECTS = list_index(
+    "app_runs", ("app_id", "run_id"), "subjects_json", "app_run_subjects"
+)
+
+
 class ResultStore(Store):
-    SCHEMA = """
+    SCHEMA = (
+        """
     CREATE TABLE IF NOT EXISTS app_results (
         app_id TEXT NOT NULL,
         subject TEXT NOT NULL,
@@ -93,6 +100,8 @@ class ResultStore(Store):
         PRIMARY KEY (app_id, schedule_id)
     );
     """
+        + _RUN_SUBJECTS
+    )
 
     # What each schedule runs on (API v1 ``subjects``, 2026-10-26).
     MIGRATIONS = (
@@ -114,6 +123,8 @@ class ResultStore(Store):
                 },
             ),
         ),
+        # The side table of runs by subject, filled once from the runs already kept (2026-10-31).
+        _FILL_RUN_SUBJECTS,
     )
 
     def __init__(self, db: Database):
@@ -418,7 +429,9 @@ class ResultStore(Store):
             clauses.append("by_user = ?")
             values.append(by)
         if subject is not None:
-            clauses.append("EXISTS (SELECT 1 FROM json_each(subjects_json) WHERE value = ?)")
+            clauses.append(
+                "(app_id, run_id) IN (SELECT app_id, run_id FROM app_run_subjects WHERE subject = ?)"
+            )
             values.append(subject)
         where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
         with self._lock, self._connect() as connection:

@@ -22,13 +22,17 @@ export const NO_VALUE = (): SimpleValue => ({ signal: "", role: "pv", name: "", 
 /** Whether every condition is filled in as the server wants it (``SimpleCondition._complete``):
  * until then there is no sentence to ask for, and asking would only answer 422. */
 export function simpleComplete(simple: SimpleLogic): boolean {
-  return simple.conditions.every((item) => {
+  const complete = (item: SimpleCondition) => {
     if (item.input === "event") return item.event !== null;
-    if (item.value === null) return false;
+    if (item.value === null || !(item.value.signal || item.value.role)) return false;
     if (item.op === "between" || item.op === "outside") return item.limit !== null && item.high !== null && item.high >= item.limit;
     return item.op === "changed" || item.op === "unchanged" || item.limit !== null;
-  });
+  };
+  return simple.conditions.every(complete) && (!simple.enable_when || complete(simple.enable_when));
 }
+
+/** A new permissive: a running signal at or above 1 (a pump's run feedback). */
+export const NEW_PERMISSIVE = (): SimpleCondition => ({ ...valueCondition({ signal: "", role: "", name: "", unit: "" }), op: ">=", limit: 1 });
 
 export function valueCondition(value: SimpleValue = NO_VALUE()): SimpleCondition {
   return {
@@ -44,7 +48,7 @@ export function eventCondition(kinds: string[] = [], about = "subject"): SimpleC
   };
 }
 
-export const EMPTY_SIMPLE = (): SimpleLogic => ({ conditions: [valueCondition()], combine: "and", clear_after_seconds: 0 });
+export const EMPTY_SIMPLE = (): SimpleLogic => ({ conditions: [valueCondition()], combine: "and", clear_after_seconds: 0, enable_when: null, enable_delay_seconds: 0 });
 
 export const EMPTY_RULE = (): RuleDraft => ({
   name: "", enabled: true, creates: "alarm", priority: "medium", where: NO_WHERE(),
@@ -67,6 +71,8 @@ function fillSimple(simple: SimpleLogic | null): SimpleLogic {
     conditions: simple.conditions.map((item) => item.input === "event"
       ? { ...eventCondition(), ...item, event: { ...eventCondition().event!, ...(item.event ?? {}) } }
       : { ...valueCondition(), ...item, value: { ...NO_VALUE(), ...(item.value ?? {}) } }),
+    enable_when: simple.enable_when ? { ...valueCondition(), ...simple.enable_when, value: { ...NO_VALUE(), ...(simple.enable_when.value ?? {}) } } : null,
+    enable_delay_seconds: simple.enable_delay_seconds ?? 0,
   };
 }
 

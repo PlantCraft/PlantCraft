@@ -16,6 +16,7 @@ from plantcraft_sdk.server import web
 
 from alarmcraft import APP_ID, __version__
 from alarmcraft.api.routers import (
+    alarmlist,
     alarms,
     catalog,
     history,
@@ -55,6 +56,7 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
         routers=(
             catalog.router,  # before rules: /rules/from-catalog is not a rule id
             rules.router,
+            alarmlist.router,
             alarms.router,
             incoming.router,
             history.router,

@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field, ValidationError
 from histcraft.api.deps import RuntimeDep, current_user, time_limited
 from histcraft.api.read_budget import BinaryBatch, EncodedBatch, Ticket, json_bytes
 from histcraft.api.runtime import Runtime, point_ref
+from histcraft.archive.edit_marks import edit_marks
 from histcraft.archive.query import Reader, SourceUnavailable, iso_ms, to_ms
 from histcraft.catalog.models import (
     PLANT_KINDS,
@@ -50,6 +51,7 @@ from histcraft.catalog.models import (
 from histcraft.clock import now_ms
 from histcraft.i18n import t
 from histcraft.kinds import KINDS, RUNS, coerce
+from histcraft.opc_status import described
 from histcraft.sources.history import open_source
 
 router = APIRouter(prefix="/api/v1/data", tags=["data"])
@@ -613,9 +615,16 @@ def read_batch(
         )
         + (len(refs) - len(stored)) * _values_of(None, begin, finish, step)
     )
-    quality: dict[int, list[tuple[int, str]]] = {}
+    quality: dict[int, list[tuple]] = {}
+    edited: dict[int, list[dict[str, Any]]] = {}
     if body.quality:
         quality = runtime.archive.qualities_many(
+            [int(p["id"]) for p in points.values() if p is not None and p["mode"] != "source"],
+            begin_ms,
+            finish_ms,
+            with_status=True,
+        )
+        edited = runtime.archive.edits(
             [int(p["id"]) for p in points.values() if p is not None and p["mode"] != "source"],
             begin_ms,
             finish_ms,
@@ -663,13 +672,16 @@ def read_batch(
         extra = None
         if body.quality:
             changes = quality.get(int(point["id"]), [])
-            stamps_q = iso_ms(np.asarray([at for at, _ in changes], dtype=np.int64))
+            stamps_q = iso_ms(np.asarray([change[0] for change in changes], dtype=np.int64))
             extra = {
                 "quality": [
-                    {"t": at, "quality": code}
-                    for at, (_, code) in zip(stamps_q, changes, strict=True)
+                    {"t": at, "quality": code, **described(status, name)}
+                    for at, (_, code, status, name) in zip(stamps_q, changes, strict=True)
                 ]
             }
+            marks = edit_marks(edited.get(int(point["id"]), []))
+            if marks:
+                extra["edits"] = marks
         if body.extremes and step:
             bounds = runtime.reader.extremes(ref, begin, finish, step)
             if bounds is not None and len(bounds[0]) == len(stamps):

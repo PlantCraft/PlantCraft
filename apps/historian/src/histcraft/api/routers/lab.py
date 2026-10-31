@@ -15,25 +15,21 @@ times.
 
 from __future__ import annotations
 
-import math
-from datetime import datetime, timezone
 from typing import Any, Literal
 
 import numpy as np
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from histcraft import lab
 from histcraft.api.deps import EditorUser, RuntimeDep, Scope, in_scope
 from histcraft.archive.query import iso_ms
-from histcraft.catalog.models import LAB_SOURCE, CatalogError, split_signal
+from histcraft.catalog.models import LAB_SOURCE, CatalogError
 from histcraft.clock import now_ms
 from histcraft.i18n import t
 
 router = APIRouter(prefix="/api/v1/lab", tags=["lab"])
 MAX_RESULTS = 5000
-# The quality a sample reads with, by its status.
-QUALITY = {"entered": "uncertain", "approved": "good", "rejected": "bad"}
-DAY_MS = 86_400_000
 
 
 class LabResult(BaseModel):
@@ -53,38 +49,21 @@ class LabIn(BaseModel):
     results: list[LabResult] = Field(min_length=1, max_length=MAX_RESULTS)
 
 
-def _ms(stamp: str | None, field: str) -> int | None:
-    if stamp is None:
-        return None
-    try:
-        moment = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise ValueError(
-            t("{field}: {value} is not an ISO 8601 time.", field=field, value=stamp[:40])
-        ) from exc
-    if moment.tzinfo is None:
-        raise ValueError(t("{field}: times need an offset (Z or +hh:mm).", field=field))
-    return int(moment.astimezone(timezone.utc).timestamp() * 1000)
+def _sample(item: LabResult, now: int) -> lab.Sample:
+    """The result as a sample; raises ``ValueError`` with the reason."""
 
-
-def _checked(item: LabResult, now: int) -> tuple[int, int | None, int | None, str]:
-    """The sample's times and status; raises ``ValueError`` with the reason."""
-
-    source, tag = split_signal(item.signal)
-    if source != LAB_SOURCE or not tag:
-        raise ValueError(t("Laboratory signals are laboratory:<analysis>."))
-    if not math.isfinite(item.value):
-        raise ValueError(t("The value must be a number."))
-    sampled = _ms(item.sampled_at, "sampled_at") or 0
-    received = _ms(item.received_at, "received_at")
-    approved = _ms(item.approved_at, "approved_at")
-    if sampled > now + DAY_MS:
-        raise ValueError(t("Values more than a day in the future are refused."))
-    for later, field in ((received, "received_at"), (approved, "approved_at")):
-        if later is not None and later < sampled:
-            raise ValueError(t("{field} comes before sampled_at.", field=field))
-    status = item.status or ("approved" if approved is not None else "entered")
-    return sampled, received, approved, status
+    return lab.checked(
+        item.signal,
+        lab.stamp_ms(item.sampled_at, "sampled_at") or 0,
+        item.value,
+        now,
+        received=lab.stamp_ms(item.received_at, "received_at"),
+        approved=lab.stamp_ms(item.approved_at, "approved_at"),
+        status=item.status,
+        name=item.name,
+        unit=item.unit,
+        description=item.description,
+    )
 
 
 @router.post("")
@@ -93,88 +72,22 @@ def write_results(body: LabIn, runtime: RuntimeDep, user: EditorUser) -> dict[st
 
     now = now_ms()
     errors: list[dict[str, Any]] = []
-    ready: dict[str, list[tuple[LabResult, int, int | None, int | None, str]]] = {}
+    samples = []
     for item in body.results:
         try:
-            checked = _checked(item, now)
+            samples.append(_sample(item, now))
         except ValueError as exc:
             errors.append({"signal": item.signal, "status": 422, "detail": str(exc)})
-            continue
-        ready.setdefault(item.signal, []).append((item, *checked))
-    if not ready:
+    if not samples:
         return {"written": 0, "errors": errors}
-    described = []
-    for signal, items in ready.items():
-        last = items[-1][0]
-        described.append(
-            {
-                "signal": signal,
-                "kind": "number",
-                **{
-                    key: getattr(last, key)
-                    for key in ("name", "unit", "description")
-                    if getattr(last, key) is not None
-                },
-            }
-        )
     try:
-        points = runtime.catalog.lab(described)
+        written, failed = lab.write(runtime.catalog, runtime.archive, samples, user.username, now)
     except CatalogError as exc:
         raise HTTPException(exc.status, str(exc)) from exc
-    written = 0
-    snapshots, qualities, samples = [], [], []
-    for signal, items in ready.items():
-        point = points[signal]
-        if point["kind"] != "number":
-            errors.append(
-                {
-                    "signal": signal,
-                    "status": 409,
-                    "detail": t("{id} is not a number signal.", id=signal),
-                }
-            )
-            continue
-        point_id = int(point["id"])
-        # One value per sampling time: the last given wins.
-        by_time = {
-            sampled: (item, received, approved, status)
-            for item, sampled, received, approved, status in items
-        }
-        order = sorted(by_time)
-        written += runtime.archive.replace(
-            point_id, "number", [(at, float(by_time[at][0].value)) for at in order]
-        )
-        for at in order:
-            item, received, approved, status = by_time[at]
-            qualities.append((point_id, at, QUALITY[status]))
-            samples.append((point_id, at, received, approved, status, now, user.username))
-        newest = order[-1]
-        snapshots.append(
-            {
-                "point": point_id,
-                "ts": newest,
-                "value": float(by_time[newest][0].value),
-                "status": "ok",
-            }
-        )
-    if samples:
-        runtime.archive.put_qualities(qualities)
-        runtime.archive.put_lab_samples(samples)
-        runtime.archive.put_snapshots(_newer(runtime, snapshots))
-        runtime.audit(user, "lab.write", LAB_SOURCE, {"signals": sorted(ready), "values": written})
+    errors += failed
+    signals = sorted({sample.signal for sample in samples})
+    runtime.audit(user, "lab.write", LAB_SOURCE, {"signals": signals, "values": written})
     return {"written": written, "errors": errors}
-
-
-def _newer(runtime: Any, snapshots: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """The snapshots newer than the stored ones (a late result does not hide a newer one)."""
-
-    stored = runtime.archive.snapshots([item["point"] for item in snapshots])
-    return [
-        item
-        for item in snapshots
-        if (stored.get(item["point"]) or {}).get("ts") is None
-        or int(stored[item["point"]]["ts"]) <= item["ts"]
-    ]
 
 
 @router.get("/{signal_id:path}")
@@ -196,8 +109,8 @@ def samples(
     if point.get("source_kind") != "lab":
         raise HTTPException(404, t("{id} is not a laboratory signal.", id=signal_id))
     try:
-        end_ms = _ms(end, "end") or now_ms()
-        start_ms = _ms(start, "start") or end_ms - 30 * DAY_MS
+        end_ms = lab.stamp_ms(end, "end") or now_ms()
+        start_ms = lab.stamp_ms(start, "start") or end_ms - 30 * lab.DAY_MS
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     found = runtime.archive.lab_samples(int(point["id"]), start_ms, end_ms)

@@ -473,3 +473,45 @@ def test_stick_slip_off_the_limits_is_still_flagged():
     )
     assert found.metrics["op_slip_fraction"] == pytest.approx(1 / 6, abs=0.01)
     assert found.status == MethodStatus.BAD
+
+
+def test_horch_index_reads_the_phase_between_op_and_pv():
+    k = np.arange(2000)
+    op = np.sin(2 * np.pi * k / 50)
+    assert stiction.horch_index(op, -np.sin(2 * np.pi * k / 50), 50) == pytest.approx(1.0, abs=0.01)
+    quarter = np.sin(2 * np.pi * (k - 12.5) / 50)
+    assert stiction.horch_index(op, quarter, 50) < 0.1
+    assert stiction.horch_index(op, np.zeros(k.size), 50) is None
+    assert stiction.horch_index(op, quarter, 2) is None
+
+
+def _triangle_cycle(phase_samples: float) -> tuple[np.ndarray, np.ndarray]:
+    """An OP cycling in triangles (stiction's controller output) and a PV, shifted."""
+
+    n, period = 2160, 60
+    k = np.arange(n)
+    rng = np.random.default_rng(9)
+    op = 50 + 10 * (2 * np.abs(2 * ((k / period) % 1) - 1) - 1) + 0.05 * rng.normal(size=n)
+    pv = 50 + 2 * np.sin(2 * np.pi * (k - phase_samples) / period) + 0.02 * rng.normal(size=n)
+    return op, pv
+
+
+def test_horch_counts_only_when_the_op_is_the_controller_output():
+    """G28: an in-phase cycle is tuning or a disturbance by Horch's test, but only when the OP is
+    the controller's own output; a recorded valve movement keeps the shape evidence."""
+
+    op, pv = _triangle_cycle(phase_samples=-15)  # PV in phase with the OP's triangle
+    window = stiction.StictionInput(dataset=_window(op.size, pv=pv, op=op))
+    default = stiction.run(window, stiction.StictionParameters())
+    assert default.metrics["horch_index"] > 0.9 and not default.metrics["horch_in_phase"]
+    assert default.status == MethodStatus.BAD
+    controller = stiction.run(window, stiction.StictionParameters(op_is="controller_output"))
+    assert controller.metrics["horch_in_phase"] and controller.metrics["shape_factor"] == 0.0
+    assert controller.status == MethodStatus.OK
+    # A quarter cycle apart (the odd cross-correlation of stiction): still flagged.
+    op, pv = _triangle_cycle(phase_samples=0)
+    shifted = stiction.run(
+        stiction.StictionInput(dataset=_window(op.size, pv=pv, op=op)),
+        stiction.StictionParameters(op_is="controller_output"),
+    )
+    assert shifted.metrics["horch_index"] < 0.5 and shifted.status == MethodStatus.BAD

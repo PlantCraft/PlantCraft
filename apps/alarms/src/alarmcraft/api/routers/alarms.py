@@ -61,6 +61,7 @@ def summary(rt: Runtime, alarm: dict[str, Any]) -> dict[str, Any]:
         "condition": draft.condition() if draft else "",
         "priority_label": PRIORITIES.get(alarm.get("priority") or "", ""),
         "active": bool(state.get("active")),
+        "suppressed": bool(state.get("suppressed")),
         "acked": bool(alarm.get("acked", True)),
         "acked_at": alarm.get("acked_at"),
         "acked_by": alarm.get("acked_by"),

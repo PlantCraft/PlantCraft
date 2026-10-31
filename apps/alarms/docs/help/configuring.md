@@ -34,6 +34,16 @@ Values and events are picked in the **Explorer**: the plant map with each asset'
 series the apps computed about it and the events that named it. A value picked for **each
 asset** is read on every asset of the rule.
 
+### Only while: alarms that depend on the plant's state
+
+**Only while…** in the Simple form adds a permissive: a value condition that must hold for the
+alarm to be judged at all (state-based alarming, ISA-18.2 designed suppression). A low flow alarm
+**only while P-101 running ≥ 1**, with **Enabled after** 30 s so the flow can settle after a
+start. While the permissive does not hold, the alarm is suppressed by design: it is not raised,
+it clears if it was raised, and its page says so. A permissive that cannot be judged (no data)
+leaves the alarm enabled, so a bad signal never hides an alarm. In Blocks it is the **Enabled
+when** input of Raise an alarm.
+
 ## What it makes
 
 - **An alarm**: needs an acknowledgement, shows in Alarms and counts in Performance (ISA-18.2).
@@ -67,3 +77,23 @@ deadband, delay or count needs work.
 **Turn off** on the rule's page stops it: its alarms are out of service until it is turned on.
 Deleting a rule ends its alarms; their journal stays. Changing a rule's logic ends its active
 alarms and judges again from then on.
+
+## Import the DCS alarm list
+
+**Import alarm list** on Rules reads the alarm list exported from the DCS (the master alarm
+database): a CSV file, or Excel saved as .xlsx. **Template** gives a file with the columns Alarms
+reads. Each row is one alarm on one signal:
+
+- **tag** (the signal, by its id or its name in the DCS, like `FIC-1001.PV`) and **type**: HH,
+  HI, LO or LL (PVHI, HIHI, LOLO and the like are read too);
+- **limit**, and optionally unit, **priority** (critical, high, medium, low, or 1 the most
+  urgent to 4), deadband, on-delay (seconds, `2 min` or `00:00:10`), description, cause,
+  consequence, action and enabled.
+
+Reading the file changes nothing. The review lists what an apply would do: **new** rules,
+**changed** ones (field by field, before and after), **removed** ones (alarms an earlier import
+made that the list no longer has) and rows that could not be read, with their line. Untick what
+should not change and **Apply**. A removed alarm's rule is turned off, never deleted. What
+people set in Alarms itself (where, who is notified, owner, area) stays. A rule someone changed
+after the file was read is left as it is and listed: read the file again to see it. Rules
+written by hand are never touched. Each import is matched alarm by alarm by its tag and type.
