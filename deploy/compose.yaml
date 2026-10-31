@@ -699,6 +699,8 @@ services:
       # The collector runs in histcraft-collector; this one answers pages and API only.
       HISTCRAFT_COLLECTOR: "off"
       HISTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
+      # MAX_SIGNALS of the installation file: the most points it may record (empty: no limit).
+      PLANTCRAFT_MAX_SIGNALS: "${PLANTCRAFT_MAX_SIGNALS:-}"
     secrets:
       - histcraft_db_password
     volumes:
