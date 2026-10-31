@@ -9,6 +9,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Security check: signed catalogue, exceptions that expire, an evidence report.** The checks'
+  severities, titles and references move to `security-checks.tsv`, which the bundle signs with the
+  rest; the installer keeps the signed hashes beside it, and the new check `PC-INT-01` fails when
+  the check or its catalogue was changed (a severity lowered by hand, for one). Accepted risks go in
+  `security-exceptions.conf` as `ID YYYY-MM-DD reason`: until that day the check reports
+  `excepted`, then its own result again with "the exception expired". `--format evidence` writes
+  the evidence report for an audit (IEC 62443-4-2 CR 7.6 RE 1): scope, settings in force without
+  secrets, results by requirement, exceptions and the hashes of the checks that ran
+  (`docs/security-guide.md`).
+
 - **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
   app switcher, for administrators and for a new **Operations** role (Users: IT, or an
   integrator's team, without making them administrators). **Status** shows every app's CPU and
