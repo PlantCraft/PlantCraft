@@ -156,6 +156,12 @@ class _JsonEncoder(json.JSONEncoder):
         return str(o)
 
 
+def key_ids(jwks: Any) -> set[str]:
+    """The ``kid`` of every key in a key set (any form ``decode`` takes)."""
+
+    return set(_key_set(jwks))
+
+
 def encode(claims: Mapping[str, Any], private_key: Ed25519PrivateKey, kid: str) -> str:
     """A compact JWT signed with ``private_key``; ``kid`` goes in the header."""
 
@@ -266,6 +272,7 @@ __all__ = [
     "UnknownKey",
     "decode",
     "encode",
+    "key_ids",
     "generate_private_key",
     "key_id",
     "private_key_from_pem",
