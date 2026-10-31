@@ -1,5 +1,5 @@
 /** Operations › Partners: the companies working at the plant (integrators, contractors). Each
- * is a group of kind "company" (Users › Groups): its teams, people, coordinator on its side,
+ * is a group of kind "company" (People › Groups): its teams, people, coordinator on its side,
  * sponsor at the plant, the last day of its access, its open requests and the hours its people
  * logged this month; below, the month's time report, exported as CSV for the month's review.
  * See docs/operations.md, section 4. */
@@ -61,7 +61,7 @@ export function PartnersPage() {
     <p className="muted ops-intro">{t("The companies working at the plant: who they are, until when they have access, who sponsors them here, and the time they logged on requests.")}</p>
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
     {!partners && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
-    {partners && !companies.length && <section className="panel ops-empty"><Building2 size={22} /><div><strong>{t("No company yet")}</strong><p className="muted">{t("A company is a group of kind Company in Users › Groups: its coordinator on its side, its teams as groups under it, the last day of its access and its sponsor at the plant.")}</p>{admin && <Go to="/users/groups">{t("Open Groups")}</Go>}</div></section>}
+    {partners && !companies.length && <section className="panel ops-empty"><Building2 size={22} /><div><strong>{t("No company yet")}</strong><p className="muted">{t("A company is a group of kind Company in People › Groups: its coordinator on its side, its teams as groups under it, the last day of its access and its sponsor at the plant.")}</p>{admin && <Go to="/users/groups">{t("Open Groups")}</Go>}</div></section>}
     {companies.length > 0 && <div className="ops-companies">{companies.map((company) => <CompanyCard key={company.group_id} company={company} />)}</div>}
     {report && <section className="panel ops-hours" aria-labelledby="ops-hours-title">
       <h2 id="ops-hours-title">{t("Time logged")} <small className="muted">{monthRange(report.first, report.last)} · {hoursText(report.hours)} · {t("{hours} billable", { hours: hoursText(report.billable_hours) })}</small></h2>

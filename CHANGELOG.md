@@ -22,7 +22,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **Requests: anyone asks IT or an integrator for help, from any app.** "Ask for help" in the
   person's menu of every app opens a short form (what, which kind of problem, who should answer)
   with the app and page filled in; a log record and an open incident have "Open a request".
-  A request is an action of kind `request` with a category, a queue and its first answer timed;
+  A request is an action of kind `request` with a category, a queue (told at once in Messages,
+  and by email to those who want it) and its first answer timed;
   Operations › Requests lists them (waiting for a first answer in amber), and the Operations role
   answers them whatever its access level. Time is logged on any request or action (hours on a
   day, note, billable or not).

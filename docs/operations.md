@@ -307,7 +307,9 @@ role reads; installing, updating, restoring and changing levels stay with admini
 an integrator: an action of kind `request` (`plantcraft.actions`), with a category (something
 not working, slow, access, data, a change, other), a queue (the group that answers it: IT, a
 company) and `first_response_at`, set the first time someone other than who asked comments,
-changes it or logs time. Anyone who signs in asks, a viewer too (`POST /api/requests`): "Ask for
+changes it or logs time. A new request reaches who answers it: its queue's members (the
+administrators when it has none) get a notification from "Operations" in Messages, and an email
+when they asked for email. Anyone who signs in asks, a viewer too (`POST /api/requests`): "Ask for
 help" in the person's menu of every app (`@plantcraft/ui` SuiteShell) opens the form with the app
 and page filled in; a log record and an open incident have "Open a request". Who asked follows
 theirs; the Operations role sees and answers every request (status and edit too, whatever its

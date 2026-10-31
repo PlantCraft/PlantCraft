@@ -1,4 +1,4 @@
-/** Groups of people (Users › Groups for administrators, /groups/<id> for everyone): a name for
+/** Groups of people (People › Groups for administrators, /groups/<id> for everyone): a name for
  * several people that every app can notify, filter by or make the owner of something. Each group
  * has a kind (a department, an area of the plant, a discipline or a team) and may have a
  * coordinator, who changes its members. Groups form a tree, and a coordinator

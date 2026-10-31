@@ -8,6 +8,7 @@ timeline of every asset it is about. Each person reaches only the actions they s
 
 from __future__ import annotations
 
+import logging
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -29,6 +30,7 @@ from plantcraft.i18n import t
 from plantcraft.refs import find_refs
 
 router = APIRouter()
+LOGGER = logging.getLogger(__name__)
 
 VIEW_LABELS = {
     "visible": "All I can see",
@@ -246,6 +248,45 @@ def _created(rt: Any, action: dict[str, Any], user: str) -> None:
         else t("Action created: {title}", title=action["title"])
     )
     _publish(rt, "action.created", action, user, summary)
+    if action["kind"] == "request":
+        _tell_queue(rt, action, user)
+
+
+def _tell_queue(rt: Any, action: dict[str, Any], user: str) -> None:
+    """A new request reaches who answers it: its queue's members (the administrators when it has
+    none), in Messages from "Operations", and by email to those who asked for email; never the
+    person who asked. A failure here never loses the request."""
+
+    if action["group_id"]:
+        recipients = [f"group:{action['group_id']}"]
+    else:
+        recipients = [
+            f"user:{item['username']}"
+            for item in rt.workspace.users.list_users(kind="person")
+            if (access := user_access(rt, item["username"])) is not None and access.is_admin
+        ]
+    asker = rt.workspace.users.get_user(user) or {}
+    try:
+        people, _unknown = rt.notifications.expand(recipients)
+        rt.notifications.notify(
+            "operations",
+            "Operations",
+            recipients=[f"user:{name}" for name in people if name != user],
+            title=t("Request #{id}: {title}", id=action["action_id"], title=action["title"]),
+            text=t(
+                "{person} asked ({category}).",
+                person=asker.get("display_name") or user,
+                category=action.get("category_label") or "",
+            ),
+            priority=action["priority"],
+            url=f"/actions/{action['action_id']}",
+            email=True,
+            refs=[f"action:{action['action_id']}"],
+            key=f"request:{action['action_id']}",
+            category="request",
+        )
+    except (PermissionError, ValueError):
+        LOGGER.warning("request %s: the queue was not told", action["action_id"], exc_info=True)
 
 
 @router.post("/api/requests", status_code=201)

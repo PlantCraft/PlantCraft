@@ -44,6 +44,9 @@ def test_a_viewer_asks_for_help_and_the_first_answer_is_timed(world):
     assert request["kind"] == "request" and request["category"] == "error"
     assert request["category_label"] == "Something is not working"
     assert request["first_response_at"] is None
+    # Who answers is told: with no queue, the administrators, in Messages from "Operations".
+    told = admin.get("/api/notifications").json()
+    assert any("Trend of FIC-101 does not load" in str(item) for item in told.get("items", told))
     # Who asked commenting is not an answer; someone else's comment is.
     op.post(f"/api/actions/{request['action_id']}/comments", json={"text": "Still failing"})
     assert admin.get(f"/api/actions/{request['action_id']}").json()["first_response_at"] is None
