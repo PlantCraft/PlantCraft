@@ -37,7 +37,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   min or max line read every raw sample of its period and summarised them in Python (50 dense
   signals x 24 h: 1.8 million values, 7.5 s). `POST /api/v1/series` with a `step` now takes
   `"extremes": true` and gives each cell's lowest and highest value beside the means (`low`,
-  `high`; from the hourly rollups where whole hours allow); `plantcraft-sdk` 0.85.0
+  `high`; from the hourly rollups where whole hours allow); `plantcraft-sdk` 0.86.0
   `series_many(..., extremes=True)`, also in `FakePlantCraft`. The View asks for it for min and
   max lines: one grid read, 7.5 to 0.7 s and the Historian's CPU 3.2 to 0.6 s, the same values
   (`ci/bench/reads/trendbench.py`). First and last lines still summarise the samples.
