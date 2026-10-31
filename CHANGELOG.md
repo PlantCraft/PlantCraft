@@ -9,6 +9,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
+  went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
+  the chunks 0.6 s). `plantcraft-sdk` 0.81.0 adds `plantcraft_sdk.wire`, a binary answer for
+  `POST /api/v1/series` (int64 ms times and float64 values, asked with `Accept:
+  application/x-plantcraft-series` when the Historian lists `pcs1` in `GET /api/v1/reads`;
+  JSON stays the default, `PLANTCRAFT_BINARY_READS=0` keeps it). Analytics builds its raw frame
+  as one block instead of `pd.concat`, and its loop rounds and Signal quality ask only for what
+  is new since their last read (`LINKCRAFT_READ_CACHE`, 15 min overlap, whole read every 6 h).
+  The Historian's CPU per round: 0.85 to 0.07 s on the demo's 200 signals, 59 to 0.8 s on
+  2,000 dense signals (`ci/bench/reads`).
 - **The Historian answers from several processes (0.6.0 load tests, 2026-10-31).** Heavy reads
   ran in one Python process on one core. `histcraft serve` now starts as many processes as the
   CPUs its container may use (`HISTCRAFT_WORKERS`, `auto` by default: the container's CPU limit,
