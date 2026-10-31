@@ -226,6 +226,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **`APPS=all` in the installation file, and `--all-apps`, installed Analytics alone.** A second
+  `check_apps` function in `install.sh` (the requirements check's) replaced the one that turns on
+  every app of the bundle and checks each `--with-<app>` image. It is now `requirement_apps`, and a
+  test fails when a deploy script defines a function twice.
 - **Long trends come from the Historian already reduced.** PlantCraft's charts read every raw
   sample of the window and kept each stretch's lowest and highest value themselves: a day at 1 s
   moved 4 MB and took 0.2 s, and a week was refused (over 200,000 values). The platform now asks
