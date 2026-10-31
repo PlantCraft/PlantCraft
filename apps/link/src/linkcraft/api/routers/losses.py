@@ -10,9 +10,9 @@ from fastapi import APIRouter, HTTPException, Query
 
 from linkcraft.api.deps import RuntimeDep
 from linkcraft.api.scope import Scope, sees_loop
+from linkcraft.engine.losses import CAUSE_LABELS, CAUSES, effective_control, losses_by
 from linkcraft.i18n import t
 from linkcraft.loops.monitor import APPLICATION_ID, SUBJECT_KIND
-from linkcraft.engine.losses import CAUSE_LABELS, CAUSES, effective_control, losses_by
 
 router = APIRouter(prefix="/api")
 

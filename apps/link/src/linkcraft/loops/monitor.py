@@ -35,12 +35,12 @@ from linkcraft.engine.compute import ComputePool, task_timeout
 from linkcraft.engine.dispatcher import RetryLater, unreachable
 from linkcraft.engine.jobs import JobStore
 from linkcraft.engine.latest import LatestStore
+from linkcraft.engine.losses import LossStore
 from linkcraft.engine.samples import ROUND_SCOPE, loop_run_key
 from linkcraft.i18n import t
 from linkcraft.loops.analysis import analyze_loop, analyze_loop_task, loop_priority, loop_summary
 from linkcraft.loops.store import LoopStore
 from linkcraft.loops.suite import SuitePublisher
-from linkcraft.engine.losses import LossStore
 
 logger = logging.getLogger(__name__)
 
