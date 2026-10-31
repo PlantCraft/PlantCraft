@@ -1,6 +1,6 @@
 import { assistantTourStep, tt, type ShellNavItem, type TourStep } from "@plantcraft/ui";
 import { api } from "./api";
-import { FileText, LayoutDashboard, Search } from "lucide-react";
+import { FileText, LayoutDashboard, Network, PenTool, Search } from "lucide-react";
 
 /** The app's own pages in the suite frame (app standard, section 10); Help is the frame's own entry.
  * Overview first (`AppOverview`, the widgets each person arranges), then the library (`/documents`,
@@ -16,6 +16,8 @@ export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
     icon: <FileText />,
     match: (path) => path === "/documents" || path.startsWith("/documents/") || path.startsWith("/assets/") || path.startsWith("/folders/"),
   },
+  { to: "/diagrams", label: "Diagrams", icon: <PenTool />, match: (path) => path === "/diagrams" || path.startsWith("/diagrams/") },
+  { to: "/plant-map", label: "Plant map", icon: <Network />, match: (path) => path === "/plant-map" },
   { to: "/search", label: "Search", icon: <Search />, match: (path) => path === "/search" },
 ];
 
