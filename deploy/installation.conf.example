@@ -34,7 +34,10 @@ MAX_CPUS=
 MAX_MEMORY=
 
 # --- Load ceilings (an administrator may set lower values inside PlantCraft, never higher) ----
-# Signals the Historian may record, analysis runs at once, people signed in at once.
+# MAX_SIGNALS: points the Historian may record (more are refused with the reason).
+# MAX_PARALLEL_RUNS: tasks each executor (Analytics, Models) runs at once.
+# MAX_SESSIONS: people signed in at once. Reserved: not enforced yet (sign-ins are cookies with
+# no server-side list; it comes with server-side sessions, which also end a session at sign-out).
 MAX_SIGNALS=
 MAX_PARALLEL_RUNS=
 MAX_SESSIONS=
