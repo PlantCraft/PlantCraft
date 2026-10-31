@@ -5,7 +5,7 @@
  * themselves; the settings; the statistics; and the export for Jupyter.
  */
 import type * as Plotly from "plotly.js";
-import { chosenFolder, DataTable, Pill, FolderColumn, FolderField, folderName, FolderPlaceLine, inFolder, newInFolder, putInFolder, rememberFolder, useAssistantPage, useFolders, confirmAction, currentTheme, magnitudeScale, plotTheme, seriesVar, type DataColumn } from "@plantcraft/ui";
+import { chosenFolder, DataTable, Pill, FolderColumn, FolderField, folderName, FolderPlaceLine, inFolder, newInFolder, putInFolder, rememberFolder, useAssistantPage, useFolders, confirmAction, showToast, currentTheme, magnitudeScale, plotTheme, seriesVar, type DataColumn } from "@plantcraft/ui";
 import { Plot } from "@plantcraft/ui/plot";
 import { CopyPlus, Download, FlaskConical, Plus, Square, Trash2, Trophy } from "lucide-react";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
@@ -418,7 +418,7 @@ function StatisticsTable({ studyId, doneCount }: { studyId: string; doneCount: n
 export function SimulationsTable({ study, runs, me, onCompare, runLink = runPath }: { study: Study; runs: Run[]; me: Me; onCompare?: (ids: string[]) => void; runLink?: (run: Run) => string }) {
   const swept = sweptNames(study);
   const indicators = study.spec && "indicators" in study.spec ? study.spec.indicators : [];
-  const cancel = async (run: Run) => { try { await api.cancelRun(run.id); } catch (err) { window.alert(message(err)); } };
+  const cancel = async (run: Run) => { try { await api.cancelRun(run.id); } catch (err) { showToast(message(err), { tone: "error" }); } };
   const columns: DataColumn<Run>[] = [
     { key: "label", label: t("Simulation"), sort: (run) => run.created_at, render: (run) => <strong>{run.label || variantText(run.variant) || run.id}</strong> },
     ...swept.map((name) => ({ key: `p:${name}`, label: <span className="pc-mono">{sweptLabel(name).split(".").pop()}</span>, numeric: true, sort: (run: Run) => Number(run.variant?.[name]), render: (run: Run) => <span className="pc-mono">{String(run.variant?.[name] ?? "–")}</span> })),

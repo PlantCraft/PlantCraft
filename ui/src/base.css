@@ -894,3 +894,14 @@ button.pc-version:hover { border-color: color-mix(in srgb, var(--pc-primary) 35%
 .pc-job-cancel:hover { border-color: var(--pc-problem-text); color: var(--pc-problem-text); }
 .pc-job-cancel:disabled { opacity: .6; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .pc-job-bar i { transition: none; } }
+
+/* showToast (toast.ts): short messages in the bottom corner that close on their own. */
+.pc-toasts { position: fixed; z-index: var(--pc-z-toast); right: 16px; bottom: 16px; left: auto; display: grid; gap: 8px; width: min(420px, calc(100vw - 32px)); pointer-events: none; }
+.pc-toast { pointer-events: auto; display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--pc-border); border-left-width: 4px; border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text); font-size: var(--pc-fs-sm); line-height: 1.45; box-shadow: var(--pc-shadow-3, var(--pc-shadow-1)); }
+.pc-toast-ok { border-left-color: var(--pc-good-fill); }
+.pc-toast-error { border-left-color: var(--pc-problem-fill); }
+.pc-toast-info { border-left-color: var(--pc-primary); }
+.pc-toast-text { flex: 1; white-space: pre-line; overflow-wrap: anywhere; }
+.pc-toast-close { flex: none; padding: 0 4px; border: 0; background: none; color: var(--pc-text-3); font-size: 18px; line-height: 1; cursor: pointer; }
+.pc-toast-close:hover, .pc-toast-close:focus-visible { color: var(--pc-text); }
+@media (max-width: 520px) { .pc-toasts { right: 16px; left: 16px; width: auto; } }

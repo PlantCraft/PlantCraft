@@ -42,6 +42,16 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   The weekly report has the same tables, and the widget "Analytics: multivariable controllers"
   shows each controller on the Overview and on Desk. It reads the assets of types `apc`, `apc_mv`
   and `apc_cv` (`GET /api/apc`, `GET /api/apc/<id>`) and writes nothing.
+- **An empirical model for a unit with no physical model (PCA).** The new block "Empirical model
+  (PCA)" (`model.empirical`) takes the unit's signals. Calibrate in the editor learns on a period
+  of normal operation how they move together: the principal components that explain 90% of
+  their variance. Each run then measures every sample two ways:
+  - T² (Hotelling): the plant moved along its normal directions, but farther than normal;
+  - SPE (Q): the signals no longer move together as they did.
+
+  The sentence names the signal that explains most of the excess. Constant signals are left out
+  of the calibration with a warning. Measured on three years of the Tennessee Eastman process
+  (`ci/bench/tep/tep.py`).
 - **A plant map on the Overview: every loop coloured by the KPI you pick.** The KPIs are health,
   effective control, time in normal mode, time inside the band, and time with the output off its
   limits. All of them are percentages where higher is better, so one scale colours them: good
@@ -125,6 +135,11 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Changed
 
+- **Runs with many signals keep their wires faster.** A run kept each wire's thinned series
+  and then cut it to its last point; it now keeps the last point directly, and it formats the
+  times without a Python loop. On 52 signals that was about three quarters of a run's time.
+  The wires now show the series' true last point, where before they showed the last thinned
+  one.
 - **A loop's page opens lighter**: its algorithm diagram (React Flow and the editor) comes
   once it is drawn, not with the page: 781 → 552 KiB of script to open a loop.
 - A round hands each loop only its own signals' samples. It read 50 loops at once into one
