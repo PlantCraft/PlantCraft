@@ -332,6 +332,15 @@ export interface SignalDetail extends SignalRow {
 
 export interface Points { t: string[]; v: Array<number | string | null> }
 export interface SignalData { signal: string; start: string; end: string; resampled: boolean; series: Points; reference: Points | null }
+/** A signal against the lab results of its reference (GET /api/signals/{id}/lab). */
+export interface LabSample { t: string; lab: number; online: number | null; corrected: number | null; status: "approved" | "entered" | "rejected" | string; approved_at: string | null }
+export interface SignalLab {
+  signal: string; reference: string; start: string; end: string;
+  /** False: the reference has no laboratory times, each value counts as known when taken. */
+  timed: boolean;
+  samples: LabSample[]; used: number; health: number | null; health_corrected: number | null; bias: number | null;
+  bias_series: { t: string[]; v: number[] }; corrected: { t: string[]; v: number[] };
+}
 export interface HistoryPoint { checked_at: string; status: SignalStatus; quality: number | null }
 
 /** One run of the Signal quality algorithm. */

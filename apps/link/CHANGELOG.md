@@ -8,6 +8,15 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **Lab fusion block** (`estimator.lab_fusion`, Estimators, group Soft sensors). It corrects an
+  analyzer or a soft sensor with the lab results. Each result counts at its sampling time, from
+  the approval delay you give. The block outputs the corrected value, the bias and the
+  uncertainty.
+- **A signal against the lab** (signal page, panel "Against the lab"). Set a signal's reference to
+  its lab analysis (`laboratory:<analysis>`), and its page shows three things over the last 7
+  days. First, the health from 0 to 100 at the sampling times, raw and corrected by the lab.
+  Second, the bias over time. Third, actual × predicted. Each result counts from its approval in
+  the Historian; a rejected one is left out. `GET /api/signals/{id}/lab`.
 - **Third-party multivariable controllers (APC), read only: health and the cost of each active
   limit** (gaps A16, A17). Results has a *Multivariable controllers* tab: per controller, over the
   last day, week or month, the time it was on, its MVs in service and its CVs at a limit; one
