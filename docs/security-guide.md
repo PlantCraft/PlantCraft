@@ -246,9 +246,20 @@ beside the script and covered by its signed `SHA256SUMS`. The installer keeps th
 the script and the catalogue against it, the signature checked with the server's own OpenSSL
 against `trusted-publishers/`. A severity lowered by hand, or a check edited, fails `PC-INT-01`.
 
-The host itself (operating system, SSH, AppArmor or SELinux) is the plant's. Run a host benchmark
-such as Lynis or OpenSCAP for it; the check only reports whether the host firewall and disk
-encryption are on.
+The host itself (operating system, SSH, AppArmor or SELinux) is the plant's. The check reports
+whether the host firewall and disk encryption are on. It also includes a host benchmark when the
+host has one, and asks for neither:
+
+- `PC-HOST-05` Lynis. As root the check runs `lynis audit system --quick`; otherwise it reads the
+  last report (`LYNIS_REPORT`, default `/var/log/lynis-report.dat`). It passes with a hardening
+  index of 70 or more and no warnings.
+- `PC-HOST-06` OpenSCAP. As root, with the SCAP Security Guide content for the host's system, the
+  check evaluates its CIS level 1 server profile, or the standard one (`OSCAP_PROFILE` names
+  another). Otherwise it reads an XCCDF results file given as `OSCAP_RESULTS`. It passes when no
+  rule failed.
+
+Without the tool the check reports `na`. A run takes at most `SECURITY_CHECK_SCAN_TIMEOUT` seconds
+(900), and `--skip PC-HOST-05,PC-HOST-06` leaves the benchmarks out.
 
 ## 9. Contact
 

@@ -414,6 +414,66 @@ check PC-HOST-03 medium "$([ -n "$hostfw" ] && echo pass || echo info)" "The hos
 crypt="$(lsblk -o TYPE 2>/dev/null | grep -c crypt || true)"
 check PC-HOST-04 info info "The data disk is encrypted" "${crypt:-0} encrypted volumes (lsblk)" "Use full-disk encryption (LUKS, BitLocker) on the server." "CR 4.1 / SC-28"
 
+# Host benchmarks, only when the host has them: Lynis and OpenSCAP look at the whole operating
+# system, which the checks above do not. As root the check runs them (Lynis --quick, OpenSCAP with
+# the SCAP Security Guide's CIS level 1 or standard profile); otherwise it reads their last report
+# (LYNIS_REPORT, default /var/log/lynis-report.dat; OSCAP_RESULTS, an XCCDF results file). A
+# host without either reports "na": nothing is installed for this check.
+skipped() { case "$SKIP" in *",$1,"*) return 0 ;; esac; return 1; }
+SCAN_TIMEOUT="${SECURITY_CHECK_SCAN_TIMEOUT:-900}"
+if ! skipped PC-HOST-05; then
+    report="${LYNIS_REPORT:-/var/log/lynis-report.dat}" how="its last report"
+    if command -v lynis >/dev/null && [ "$(id -u)" -eq 0 ]; then
+        report="$(mktemp)" how="lynis audit system --quick"
+        timeout "$SCAN_TIMEOUT" lynis audit system --quick --no-colors --quiet --report-file "$report" --logfile /dev/null >/dev/null 2>&1 || true
+    fi
+    if [ -r "$report" ] && grep -q '^hardening_index=' "$report" 2>/dev/null; then
+        hi="$(grep -m1 '^hardening_index=' "$report" | cut -d= -f2)"
+        lw="$(grep -c '^warning\[\]=' "$report" || true)"
+        ls_="$(grep -c '^suggestion\[\]=' "$report" || true)"
+        r=pass; { [ "${hi:-0}" -lt 70 ] 2>/dev/null || [ "${lw:-0}" -gt 0 ]; } && r=warn
+        check PC-HOST-05 medium "$r" "The host passes a Lynis audit (hardening index 70 or more, no warnings)" \
+            "Lynis hardening index ${hi:-?}, ${lw:-0} warnings, ${ls_:-0} suggestions ($how)" \
+            "Read the warnings in the Lynis report (lynis show details <id>) and apply them to the host." "CM-6 / CIS Benchmark"
+    elif command -v lynis >/dev/null; then
+        check PC-HOST-05 medium info "The host passes a Lynis audit (hardening index 70 or more, no warnings)" \
+            "Lynis is installed; no readable report (run the check as root, or sudo lynis audit system)" \
+            "Run the security check as root to include Lynis." "CM-6 / CIS Benchmark"
+    else
+        check PC-HOST-05 medium na "The host passes a Lynis audit (hardening index 70 or more, no warnings)" \
+            "Lynis is not installed" "Install Lynis (apt install lynis) for a host audit." "CM-6 / CIS Benchmark"
+    fi
+fi
+if ! skipped PC-HOST-06; then
+    results="${OSCAP_RESULTS:-}" how="its results file"
+    if command -v oscap >/dev/null && [ "$(id -u)" -eq 0 ] && [ -z "$results" ]; then
+        os_id="$(. /etc/os-release 2>/dev/null; echo "${ID:-}${VERSION_ID//./}")"
+        ds="$(ls /usr/share/xml/scap/ssg/content/ssg-"$os_id"-ds.xml 2>/dev/null || ls /usr/share/xml/scap/ssg/content/ssg-"${os_id%%[0-9]*}"*-ds.xml 2>/dev/null | tail -n 1 || true)"
+        if [ -n "$ds" ]; then
+            profiles="$(oscap info --profiles "$ds" 2>/dev/null | cut -d: -f1)"
+            profile="${OSCAP_PROFILE:-$(printf '%s\n' "$profiles" | grep -m1 'cis_level1_server' || printf '%s\n' "$profiles" | grep -m1 'standard' || true)}"
+            if [ -n "$profile" ]; then
+                results="$(mktemp)" how="oscap xccdf eval, profile ${profile##*profile_}"
+                timeout "$SCAN_TIMEOUT" oscap xccdf eval --profile "$profile" --results "$results" "$ds" >/dev/null 2>&1 || true
+            fi
+        fi
+    fi
+    if [ -n "$results" ] && [ -r "$results" ] && grep -q '<result>' "$results" 2>/dev/null; then
+        of="$(grep -o '<result>fail</result>' "$results" | wc -l | tr -d ' ')"
+        op="$(grep -o '<result>pass</result>' "$results" | wc -l | tr -d ' ')"
+        check PC-HOST-06 medium "$([ "$of" -eq 0 ] && echo pass || echo warn)" "The host passes its OpenSCAP benchmark" \
+            "$op rules passed, $of failed ($how)" \
+            "Read the failed rules (oscap xccdf generate report) and fix them on the host." "CM-6 / CIS Benchmark"
+    elif command -v oscap >/dev/null; then
+        check PC-HOST-06 medium info "The host passes its OpenSCAP benchmark" \
+            "OpenSCAP is installed; no results (run the check as root with the SCAP Security Guide content, or give OSCAP_RESULTS)" \
+            "Run the security check as root to include OpenSCAP." "CM-6 / CIS Benchmark"
+    else
+        check PC-HOST-06 medium na "The host passes its OpenSCAP benchmark" "OpenSCAP is not installed" \
+            "Install OpenSCAP and the SCAP Security Guide for a host benchmark (optional)." "CM-6 / CIS Benchmark"
+    fi
+fi
+
 # --- Report ----------------------------------------------------------------------------------
 weight() { case "$1" in critical) echo 10 ;; high) echo 5 ;; medium) echo 3 ;; low) echo 1 ;; *) echo 0 ;; esac; }
 PASS=0 WARN=0 FAIL=0 INFO=0 NA=0 EXCEPTED=0 got=0 total=0

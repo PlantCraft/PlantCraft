@@ -18,6 +18,8 @@ PC-HOST-01	medium	Docker Engine is a supported version (24 or later)	SI-2
 PC-HOST-02	high	The Docker daemon has no open TCP socket and keeps containers up on restart	CIS Docker 2.x
 PC-HOST-03	medium	The host firewall is on	CM-6
 PC-HOST-04	info	The data disk is encrypted	CR 4.1 / SC-28
+PC-HOST-05	medium	The host passes a Lynis audit (hardening index 70 or more, no warnings)	CM-6 / CIS Benchmark
+PC-HOST-06	medium	The host passes its OpenSCAP benchmark	CM-6 / CIS Benchmark
 PC-INT-01	high	The security check and its catalogue are the ones the signed release ships	CR 3.4 / SI-7
 PC-INT-02	high	The images in use are the ones the signed release lists	CR 3.4 / CM-14
 PC-INT-03	high	Installed apps are signed by a trusted publisher	SAR 3.2 / CM-14

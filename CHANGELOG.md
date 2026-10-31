@@ -193,6 +193,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **The security check includes Lynis and OpenSCAP when the host has them** (`PC-HOST-05`,
+  `PC-HOST-06`). As root it runs `lynis audit system --quick` and the SCAP Security Guide's CIS
+  level 1 (or standard) profile. Otherwise it reads their last report. A host without them reports
+  `na`; nothing is required.
 - **A daily limit on what the assistant reads for each person, and extraction flags in the audit
   log** (backlog B13). Each tool call counts the signals it reads. Past
   `PLANTCRAFT_ASSISTANT_DAILY_READS` (2000 a day) the assistant reads nothing more for that person

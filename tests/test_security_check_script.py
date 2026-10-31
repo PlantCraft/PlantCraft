@@ -279,3 +279,44 @@ def test_the_check_verifies_itself_against_the_signed_release(tmp_path):
     assert checks["PC-INT-01"]["result"] == "fail"
     assert "security-checks.tsv" in checks["PC-INT-01"]["evidence"]
     assert _run(folder).returncode == 1
+
+
+LYNIS_REPORT = "hardening_index=64\nwarning[]=SSH-7408|PermitRootLogin|\nsuggestion[]=AUTH-9230|\n"
+FAKE_LYNIS = """#!/usr/bin/env bash
+while [ $# -gt 0 ]; do [ "$1" = --report-file ] && { printf '%s' "$REPORT_TEXT" > "$2"; shift; }; shift; done
+"""
+OSCAP_RESULTS = (
+    "<rule-result><result>pass</result></rule-result>" * 3
+    + "<rule-result><result>fail</result></rule-result>"
+)
+
+
+def test_lynis_and_openscap_are_read_when_the_host_has_them(tmp_path, monkeypatch):
+    """LACUNAS P6 (2026-10-31): a host audit joins the check when Lynis or OpenSCAP is there,
+    and nothing is asked of a host without them."""
+
+    folder = _install(tmp_path)
+    _, checks = _checks(folder)
+    assert checks["PC-HOST-05"]["result"] == "na"
+    assert checks["PC-HOST-06"]["result"] == "na"
+    # Installed: as root the check runs Lynis, otherwise it reads the last report; OpenSCAP's
+    # results come from the file given.
+    bin_dir = tmp_path / "bin"
+    for name, text in (("lynis", FAKE_LYNIS), ("oscap", "#!/usr/bin/env bash\nexit 0\n")):
+        (bin_dir / name).write_text(text)
+        (bin_dir / name).chmod(0o755)
+    report = tmp_path / "lynis-report.dat"
+    report.write_text(LYNIS_REPORT)
+    results = tmp_path / "oscap-results.xml"
+    results.write_text(OSCAP_RESULTS)
+    monkeypatch.setenv("REPORT_TEXT", LYNIS_REPORT)
+    monkeypatch.setenv("LYNIS_REPORT", str(report))
+    monkeypatch.setenv("OSCAP_RESULTS", str(results))
+    _, checks = _checks(folder)
+    lynis, oscap = checks["PC-HOST-05"], checks["PC-HOST-06"]
+    assert lynis["result"] == "warn"
+    assert "hardening index 64, 1 warnings, 1 suggestions" in lynis["evidence"]
+    assert oscap["result"] == "warn" and "3 rules passed, 1 failed" in oscap["evidence"]
+    # A skipped benchmark does not run at all.
+    _, checks = _checks(folder, "--skip", "PC-HOST-05,PC-HOST-06")
+    assert "PC-HOST-05" not in checks and "PC-HOST-06" not in checks
