@@ -61,10 +61,12 @@ export function legacyResultsPath(kind: "signal" | "loop", search: string): stri
 const limitingName = (id: string | null) => (id ? methodLabel(id) : "");
 
 /** Latest results | Run history, under the Results heading. */
-function ResultTabs({ runs }: { runs: boolean }) {
+/** Results' tabs; the third-party APCs (A16/A17) are read from the plant, not run, so they sit last. */
+export function ResultTabs({ tab }: { tab: "latest" | "runs" | "apc" }) {
   return <PageTabs label={t("Results")} href={href} navigate={navigate} tabs={[
-    { to: "/results", label: t("Latest results"), active: !runs },
-    { to: "/results/runs", label: t("Run history"), active: runs },
+    { to: "/results", label: t("Latest results"), active: tab === "latest" },
+    { to: "/results/runs", label: t("Run history"), active: tab === "runs" },
+    { to: "/apc", label: t("Multivariable controllers"), active: tab === "apc" },
   ]} />;
 }
 
@@ -116,7 +118,7 @@ export function ResultsPage({ me: _me }: { me: Me }) {
         <a className="button button-secondary" href={api.resultsReportUrl(params)}><FileDown size={16} />{t("Report")}</a>
       </>}
     />
-    <ResultTabs runs={false} />
+    <ResultTabs tab="latest" />
     {error && <ErrorBox text={error} />}
     {!data ? (error ? null : <Loading text={t("Loading results…")} />)
       : data.total === 0 && !filtered
@@ -172,7 +174,7 @@ export function RunHistoryPage({ me }: { me: Me }) {
   return <>
     <Heading eyebrow={t("Signals, loops and algorithm outputs")} title={t("Results")}
       detail={t("Every run of every algorithm, newest first. Monitors live on each algorithm's page.")} />
-    <ResultTabs runs />
+    <ResultTabs tab="runs" />
     {error && <ErrorBox text={error} />}
     {!rows ? (error ? null : <Loading />)
       : <DataTable

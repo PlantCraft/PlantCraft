@@ -11,7 +11,7 @@ export const NAV = [
   { to: "/algorithms", label: "Algorithms", icon: createElement(Workflow, { size: 16 }), match: (path: string) => path.startsWith("/algorithms") },
   { to: "/schedules", label: "Monitors", icon: createElement(CalendarClock, { size: 16 }), match: (path: string) => path.startsWith("/schedules") },
   // Executions and Results are one page: schedule, then asset, then its history.
-  { to: "/executions", label: "Results", icon: createElement(ListOrdered, { size: 16 }), match: (path: string) => ["/executions", "/results", "/runs", "/signals", "/loops", "/assets"].some((prefix) => path.startsWith(prefix)) },
+  { to: "/executions", label: "Results", icon: createElement(ListOrdered, { size: 16 }), match: (path: string) => ["/executions", "/results", "/runs", "/signals", "/loops", "/assets", "/apc"].some((prefix) => path.startsWith(prefix)) },
 ];
 
 /** Help is the frame's own entry (helpTo), after the pages. */

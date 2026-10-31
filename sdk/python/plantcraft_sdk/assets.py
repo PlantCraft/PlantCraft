@@ -36,6 +36,12 @@ RELATION_TYPES: dict[str, tuple[str, str]] = {
 # The kinds the platform code relies on (the root, the tree levels, loops).
 CORE_TYPES = ("site", "unit", "area", "equipment", "loop")
 LOOP_TYPE = "loop"
+# A third-party multivariable controller (APC/MPC) and the variables it moves and holds: apps
+# read them, never write (Analytics' APC health and constraint costs, View's MV/CV widget).
+APC_TYPE = "apc"
+APC_VARIABLE_TYPE = "apc_variable"
+APC_MV_TYPE = "apc_mv"
+APC_CV_TYPE = "apc_cv"
 # What an app records about an asset (a schedule's outputs); only apps make them.
 RESULT_TYPE = "result"
 RESULT_STATES = ["active", "ended"]
@@ -108,7 +114,7 @@ STARTER_TYPES: list[dict[str, Any]] = [
             attribute("unit_code", "Unit code"),
             attribute("capacity", "Capacity", "number", unit="m³/d"),
         ],
-        children=["area", "equipment"],
+        children=["area", "equipment", APC_TYPE],
     ),
     _type(
         "area",
@@ -116,7 +122,7 @@ STARTER_TYPES: list[dict[str, Any]] = [
         description="An area of a unit.",
         icon="map-pin",
         attributes=[attribute("owner", "Owner")],
-        children=["equipment", "loop"],
+        children=["equipment", "loop", APC_TYPE],
     ),
     _type(
         "equipment",
@@ -347,6 +353,52 @@ STARTER_TYPES: list[dict[str, Any]] = [
         ],
     ),
     _type(
+        APC_TYPE,
+        "Multivariable controller",
+        description=(
+            "An advanced (multivariable, model predictive) controller from any vendor: whether it"
+            " is on, and the variables it moves and holds. Read only."
+        ),
+        icon="cpu",
+        attributes=[
+            attribute("vendor", "Vendor"),
+            attribute("cost_unit", "Cost unit", default="$/h"),
+        ],
+        roles=[role("on", "On (1 = on and in control)", required=True), role("mode", "Mode")],
+        children=[APC_MV_TYPE, APC_CV_TYPE],
+    ),
+    _type(
+        APC_VARIABLE_TYPE,
+        "Controller variable",
+        description="A variable of a multivariable controller: its value, limits and target.",
+        icon="sliders-horizontal",
+        attributes=[
+            attribute("limit_band", "At-limit band", "number"),
+        ],
+        roles=[
+            role("value", "Value", required=True),
+            role("lo", "Low limit"),
+            role("hi", "High limit"),
+            role("target", "Steady-state target"),
+            role("status", "In service (1 = yes)"),
+            role("shadow_price", "Constraint cost (per unit of the limit)"),
+        ],
+    ),
+    _type(
+        APC_MV_TYPE,
+        "Manipulated variable",
+        description="What the controller moves: usually a loop's setpoint.",
+        icon="sliders-horizontal",
+        parent=APC_VARIABLE_TYPE,
+    ),
+    _type(
+        APC_CV_TYPE,
+        "Controlled variable",
+        description="What the controller holds at a target or inside its limits.",
+        icon="target",
+        parent=APC_VARIABLE_TYPE,
+    ),
+    _type(
         RESULT_TYPE,
         "Result",
         description=(
@@ -564,6 +616,10 @@ def parse_result_assets(app: str, body: Any) -> list[dict[str, Any]]:
 
 
 __all__ = [
+    "APC_CV_TYPE",
+    "APC_MV_TYPE",
+    "APC_TYPE",
+    "APC_VARIABLE_TYPE",
     "CORE_TYPES",
     "DATA_TYPES",
     "LOOP_TYPE",

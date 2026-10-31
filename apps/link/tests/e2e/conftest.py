@@ -22,12 +22,15 @@ from linkcraft.api.app import create_app, ui_folder
 from linkcraft.api.runtime import Runtime
 from linkcraft.config import AnalysisConfig, Settings
 from linkcraft.engine.compute import ComputePool
+from tests.apc_plant import add_apc
 from tests.plant import HOURS, SAMPLE_SECONDS, make_fake
 
 
 @pytest.fixture(scope="session")
 def fake():
-    return make_fake(catalog=True)
+    plant = make_fake(catalog=True)
+    add_apc(plant)
+    return plant
 
 
 @pytest.fixture(scope="session")
