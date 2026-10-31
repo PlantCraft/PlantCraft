@@ -502,6 +502,22 @@ class DocumentStore(Store):
                     ),
                 )
 
+    def update_diagram(self, rev_id: str, page: int, result: dict[str, Any]) -> None:
+        """One page's result read again (by the language model)."""
+
+        with self._lock, self._connect() as connection:
+            connection.execute(
+                "UPDATE diagrams SET items = ?, relations = ?, result = ? "
+                "WHERE rev_id = ? AND page = ?",
+                (
+                    len(result.get("items") or []),
+                    len(result.get("relations") or []),
+                    json.dumps(result),
+                    rev_id,
+                    page,
+                ),
+            )
+
     def diagrams(
         self, doc_ids: set[str] | None = None, *, full: bool = False
     ) -> list[dict[str, Any]]:

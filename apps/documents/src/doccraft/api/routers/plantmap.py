@@ -15,12 +15,14 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Path
 from fastapi.responses import Response
 from plantcraft_sdk.auth import User
+from plantcraft_sdk.client import PlantCraftError
 from pydantic import BaseModel, ConfigDict, Field
 
 from doccraft.api.deps import CurrentUser, EditorUser, RuntimeDep
 from doccraft.api.runtime import Runtime
 from doccraft.i18n import t
 from doccraft.plantmap.build import LIST_COLUMNS, asset_file, build_map, lists
+from doccraft.plantmap import llm as diagram_llm
 from doccraft.plantmap.dexpi import dexpi_xml
 
 router = APIRouter(prefix="/api", tags=["plant map"])
@@ -90,6 +92,54 @@ def diagram_image(
         # An SVG is sent as an image: an <img> never runs its scripts.
         return Response(data, media_type="image/svg+xml", headers=headers)
     return Response(png, media_type="image/png", headers=headers)
+
+
+@router.post("/diagrams/{rev_id}/{page}/read-with-model")
+def read_with_model(
+    rt: RuntimeDep,
+    user: EditorUser,
+    rev_id: str = Path(max_length=40),
+    page: int = Path(ge=1, le=100000),
+) -> dict[str, Any]:
+    """The page read again by the language model of ``diagram-read`` (Setup › Language
+    models), with what the drawing reader found: what it adds is kept, of medium certainty."""
+
+    found = _diagram_or_404(rt, user, rev_id, page)
+    path = rt.store.file_path(found["sha256"])
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail=t("File not found."))
+    try:
+        png = _render(path.read_bytes(), found["format"], page)
+    except Exception as error:  # noqa: BLE001 - an unreadable page cannot be sent
+        raise HTTPException(status_code=422, detail=t("This page cannot be drawn.")) from error
+    if png is None:
+        raise HTTPException(
+            status_code=422, detail=t("An SVG is read exactly already; the model reads scans.")
+        )
+    try:
+        answer = diagram_llm.ask(rt.service_client, png, found["result"])
+    except diagram_llm.NoModel as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except PlantCraftError as exc:
+        raise HTTPException(status_code=502, detail=str(exc.detail)[:300]) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=502, detail=t("The model's answer could not be read.")
+        ) from exc
+    result = diagram_llm.merge(found["result"], answer)
+    rt.store.update_diagram(rev_id, page, result)
+    rt.audit(
+        user,
+        "plantmap.read_with_model",
+        f"{rev_id}:{page}",
+        {
+            "items": len(result["items"]) - len(found["result"]["items"]),
+            "relations": len(result["relations"]) - len(found["result"]["relations"]),
+        },
+    )
+    out = rt.store.diagram(rev_id, page) or {}
+    out.pop("sha256", None)
+    return out
 
 
 def _render(data: bytes, fmt: str, page: int) -> bytes | None:
