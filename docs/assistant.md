@@ -397,6 +397,8 @@ to an administrator, PlantCraft's and the installed apps':
 |---|---|---|
 | `PLANTCRAFT_ASSISTANT_WORKERS` | 4 | Answers written at once in a server process; more wait in a queue ("Waiting for a free slot") |
 | `PLANTCRAFT_ASSISTANT_DAILY` | 300 | Answers a person gets per day |
+| `PLANTCRAFT_ASSISTANT_DAILY_READS` | 2000 | Signal reads the assistant makes for a person per day (each tool call counts its signals, at least one). Past it the tools refuse until the plant's next day, and the audit log records `assistant.read_limit` once that day |
+| `PLANTCRAFT_ASSISTANT_BULK_SIGNALS` | 60 | Distinct signals one answer may read before the audit log records `assistant.bulk_read` (a possible extraction); the answer goes on |
 | One at a time | | A person has one answer being written at a time |
 | Tool rounds | 8 | Rounds of tool calls before the model answers with what it read |
 
