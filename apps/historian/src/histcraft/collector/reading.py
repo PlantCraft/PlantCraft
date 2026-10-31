@@ -21,6 +21,11 @@ class Reading:
     good: bool  # a value to archive (good, uncertain or substituted)
     detail: str = ""
     quality: str = "good"
+    # The source's whole status code when it says more than plain Good (OPC UA: its sub-code
+    # and LimitBits, ``histcraft.opc_status``); None otherwise.
+    status: int | None = None
+    # Its sub-code's name, as the reader named it ('' when none).
+    status_name: str = ""
 
 
 def to_ms(stamp: datetime | None) -> int | None:

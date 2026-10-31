@@ -29,6 +29,7 @@ LAYERS = {
     "meta": 0,
     "notebook_examples": 0,
     "kinds": 0,
+    "opc_status": 0,
     "vault": 0,
     "archive": 1,
     "catalog": 1,

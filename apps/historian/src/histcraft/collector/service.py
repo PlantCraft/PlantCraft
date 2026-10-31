@@ -86,7 +86,9 @@ class PointState:
     texts: int = 0
     # The quality of the values archived now, and its changes not written yet ``(ms, quality)``.
     quality: str = "good"
-    changes: list[tuple[int, str]] = field(default_factory=list)
+    # The source's whole status code with it (OPC UA sub-code and LimitBits), None when Good.
+    code: int | None = None
+    changes: list[tuple] = field(default_factory=list)
 
     @property
     def id(self) -> int:
@@ -112,7 +114,8 @@ class PointState:
         if self.point["kind"] == "number":
             self.texts = self.texts + 1 if reading.good and _text(reading.value) else 0
         quality = reading.quality if reading.good else "bad"
-        changed = quality != self.quality
+        # A new sub-code or limit is a change too (H6): kept where the archive has a value.
+        changed = quality != self.quality or reading.status != self.code
         if reading.good:
             self.status = "ok" if quality == "good" else quality
             self.detail = reading.detail if quality != "good" else ""
@@ -123,8 +126,10 @@ class PointState:
             out = self.compressor.gap(reading.at_ms)
         if changed and (out or not reading.good):
             # Kept only where the archive has a value (or the gap marker) at that time.
-            self.quality = quality
-            self.changes.append((reading.at_ms, quality))
+            self.quality, self.code = quality, reading.status
+            self.changes.append(
+                (reading.at_ms, quality, reading.status, reading.status_name or None)
+            )
         self.pending.extend(out)
         self.archived += len(out)
 
@@ -348,11 +353,11 @@ class Collector:
         """
 
         batch = {}
-        changes: list[tuple[int, int, str]] = []
+        changes: list[tuple] = []
         for point_id, state in states.items():
             if state.pending:
                 batch[point_id] = (state.point["kind"], state.pending)
-            changes += [(point_id, at, quality) for at, quality in state.changes]
+            changes += [(point_id, *change) for change in state.changes]
         try:
             written = self.archive.hold(batch) if batch else 0
         except Exception:

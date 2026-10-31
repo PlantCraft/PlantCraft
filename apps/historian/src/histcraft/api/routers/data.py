@@ -50,6 +50,7 @@ from histcraft.catalog.models import (
 from histcraft.clock import now_ms
 from histcraft.i18n import t
 from histcraft.kinds import KINDS, RUNS, coerce
+from histcraft.opc_status import described
 from histcraft.sources.history import open_source
 
 router = APIRouter(prefix="/api/v1/data", tags=["data"])
@@ -619,6 +620,7 @@ def read_batch(
             [int(p["id"]) for p in points.values() if p is not None and p["mode"] != "source"],
             begin_ms,
             finish_ms,
+            with_status=True,
         )
     builder: EncodedBatch | BinaryBatch = BinaryBatch() if binary else EncodedBatch()
     read = runtime.reader.series_arrays if binary else runtime.reader.series
@@ -663,11 +665,11 @@ def read_batch(
         extra = None
         if body.quality:
             changes = quality.get(int(point["id"]), [])
-            stamps_q = iso_ms(np.asarray([at for at, _ in changes], dtype=np.int64))
+            stamps_q = iso_ms(np.asarray([change[0] for change in changes], dtype=np.int64))
             extra = {
                 "quality": [
-                    {"t": at, "quality": code}
-                    for at, (_, code) in zip(stamps_q, changes, strict=True)
+                    {"t": at, "quality": code, **described(status, name)}
+                    for at, (_, code, status, name) in zip(stamps_q, changes, strict=True)
                 ]
             }
         if body.extremes and step:
