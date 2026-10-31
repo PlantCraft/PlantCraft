@@ -88,6 +88,14 @@ def to_pandas(got: dict) -> dict:
     }
 
 
+def fleet(eng, ids, t0, t1, batch=2000):
+    """Every signal, read 2,000 at a time and dropped after counting (10k x 24 h is ~2.5 GB)."""
+    total = 0
+    for i in range(0, len(ids), batch):
+        total += sum(len(t) for t, _ in eng.raw_many(ids[i : i + batch], t0, t1).values())
+    return {0: (range(total),)}
+
+
 def round_ids(n=200, seed=5, total=dataset.POINTS):
     return sorted(
         int(x)
@@ -178,7 +186,7 @@ def queries(key: str, repeat: int = 7):
             0: (np.zeros(int(eng.scan(ids, t1 - DAY, t1))),)
         },
         "Q2p rodada 200 pontos 24 h + pandas": lambda: to_pandas(eng.raw_many(ids, t1 - DAY, t1)),
-        f"Q3 frota {npts} pontos 24 h bruto": lambda: eng.raw_many(all_ids, t1 - DAY, t1),
+        f"Q3 frota {npts} pontos 24 h bruto": lambda: fleet(eng, all_ids, t1 - DAY, t1),
         "Q4 grade 200 pontos 24 h 60 s": lambda: eng.grid(ids, t1 - DAY, t1, 60_000),
         "Q5 tendência longa 1 ponto 1 h": lambda: eng.grid([int(rng.choice(pv))], t0, t1, HOUR),
         "Q6 incremental 200 pontos 15 min": lambda: eng.raw_many(ids, t1 - 15 * 60_000, t1),
