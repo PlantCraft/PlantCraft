@@ -5,6 +5,7 @@ know that the code and `CHANGELOG.md` do not say. One short entry per change wor
 
 ## Unreleased
 
+- Notification feed index (2026-10-31): `idx_conversation_notices`, a partial index on `conversation_messages(conversation_id, created_at)` where `meta_json` says `kind = notification`. With 300 people and a year of notifications (620k messages) `notices_for` went from 9.7 ms to 0.27 ms (p95 16.7 -> 0.47 ms); the file grows 23 MB (83 -> 106 MB) and an existing database builds it in 0.8 s at start. The other JSON filters (`json_each` over results' subjects, knowledge, Alarms' recipients) look inside arrays, which an expression index cannot hold: they need a side table if those lists grow (`ci/bench/storage/json_index_bench.py`).
 - Operations (built-in, like Desk): Docker's CPU is a percentage of one core, so an "80 %" alert
   on it meant nothing for an app limited to 4 CPUs; the installer now gives each service its limit
   and the share of it, and samples the machine from `/proc`. Logs live in each app's own volume,
