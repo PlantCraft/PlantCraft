@@ -18,6 +18,7 @@ from plantcraft_sdk import widgets as w
 from linkcraft.api.deps import CurrentUser, RuntimeDep
 from linkcraft.api.plant_widgets import STATUS_WORDS, alarm_history, health_map
 from linkcraft.api.routers.groups import _algorithms, _group, _outputs, _rows
+from linkcraft.api.routers.losses import loop_effective_control, loop_losses
 from linkcraft.api.routers.results import BUILDERS, KIND_LABELS, KINDS, _key, scoped_rows
 from linkcraft.api.routers.runs import run_rows
 from linkcraft.api.scope import Scope
@@ -102,6 +103,10 @@ def widget_options(widget_id: str, rt: RuntimeDep, scope: Scope) -> dict[str, An
     raise HTTPException(status_code=404, detail=t("Widget not found."))
 
 
+def _share(value: float | None) -> str:
+    return "—" if value is None else f"{value:.0f}%"
+
+
 @router.get("/widgets/{widget_id}")
 def widget(
     widget_id: str,
@@ -166,6 +171,57 @@ def widget(
             ],
             href=f"{root}/results?status=alarm,warning",
             empty=t("Nothing in alarm or warning."),
+        )
+    if widget_id == "loop-losses":
+        answer = loop_losses(scope, rt, days=7, until=None, group_by="area")
+        labels = {cause["key"]: cause["label"] for cause in answer["causes"]}
+        return w.items(
+            [
+                w.item(
+                    row["key"],
+                    detail=" · ".join(
+                        f"{labels[key]} {row[key]:.0f} h"
+                        for key in sorted(labels, key=lambda key: -row[key])
+                        if row[key] >= 0.5
+                    )
+                    or t("No loop-hours lost"),
+                    value=f"{row['lost_h']:.0f} h",
+                    state="alarm"
+                    if (row["effective_control"] or 100) < 50
+                    else "warning"
+                    if (row["effective_control"] or 100) < 80
+                    else None,
+                    href=f"{root}/results?kind=loop",
+                )
+                for row in answer["rows"]
+            ],
+            href=f"{root}/results?kind=loop",
+            empty=t("No loop monitored in the last 7 days."),
+        )
+    if widget_id == "effective-control":
+        rows = [row for row in loop_effective_control(scope, rt) if row["score"] is not None][:8]
+        return w.items(
+            [
+                w.item(
+                    row["name"],
+                    detail=t(
+                        "Normal mode {mode} · in band {band} · output free {free}",
+                        mode=_share(row["normal_mode"]),
+                        band=_share(row["in_band"]),
+                        free=_share(row["not_saturated"]),
+                    ),
+                    value=f"{row['score']:.0f}%",
+                    state="alarm"
+                    if row["score"] < 50
+                    else "warning"
+                    if row["score"] < 80
+                    else None,
+                    href=f"{root}/loops/{quote(row['loop_id'], safe='')}",
+                )
+                for row in rows
+            ],
+            href=f"{root}/results?kind=loop",
+            empty=t("No loop measured yet."),
         )
     if widget_id == "runs":
         return w.items(
