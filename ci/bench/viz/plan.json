@@ -1,0 +1,23 @@
+[
+ {"case":"c1-uplot","q":"n=50000"},{"case":"c1-uplot","q":"n=100000"},{"case":"c1-uplot","q":"n=200000"},
+ {"case":"c1-echarts","q":"n=50000"},{"case":"c1-echarts","q":"n=100000"},{"case":"c1-echarts","q":"n=200000"},
+ {"case":"c1-chartjs","q":"n=50000"},{"case":"c1-chartjs","q":"n=100000"},{"case":"c1-chartjs","q":"n=200000"},
+ {"case":"c1-plotly-svg","q":"n=50000"},{"case":"c1-plotly-svg","q":"n=100000"},{"case":"c1-plotly-svg","q":"n=200000"},
+ {"case":"c1-plotly-gl","q":"n=50000"},{"case":"c1-plotly-gl","q":"n=100000"},
+ {"case":"c2-svg"},{"case":"c2-uplot"},{"case":"c2-echarts"},{"case":"c2-plotly"},
+ {"case":"c3-plotly-gl","q":"n=100000"},{"case":"c3-deckgl","q":"n=100000"},{"case":"c3-regl-scatterplot","q":"n=100000"},
+ {"case":"c3-plotly-gl","q":"n=1000000"},{"case":"c3-deckgl","q":"n=1000000"},{"case":"c3-regl-scatterplot","q":"n=1000000"},
+ {"case":"c4-canvas","q":"cols=2000&rows=500"},{"case":"c4-echarts","q":"cols=2000&rows=500"},{"case":"c4-plotly","q":"cols=2000&rows=500"},
+ {"case":"c4-canvas","q":"cols=4000&rows=500"},{"case":"c4-echarts","q":"cols=4000&rows=500"},{"case":"c4-plotly","q":"cols=4000&rows=500"},
+ {"case":"c5-svg-react"},{"case":"c5-svg-dom"},{"case":"c5-konva"},{"case":"c5-pixi"},{"case":"c5-jointjs"},
+ {"case":"c6-xyflow","q":"n=200"},{"case":"c6-rete","q":"n=200"},{"case":"c6-litegraph","q":"n=200"},{"case":"c6-drawflow","q":"n=200"},
+ {"case":"c6-xyflow","q":"n=400"},{"case":"c6-rete","q":"n=400"},{"case":"c6-litegraph","q":"n=400"},{"case":"c6-drawflow","q":"n=400"},
+ {"case":"c7-cytoscape-dagre","q":"n=1000"},{"case":"c7-cytoscape-elk","q":"n=1000"},{"case":"c7-sigma","q":"n=1000"},{"case":"c7-vis-network","q":"n=1000"},
+ {"case":"c7-cytoscape-dagre","q":"n=2000"},{"case":"c7-cytoscape-elk","q":"n=2000"},{"case":"c7-sigma","q":"n=2000"},{"case":"c7-vis-network","q":"n=2000"},
+ {"case":"c8-datatable","q":"n=100000"},{"case":"c8-tanstack","q":"n=100000"},{"case":"c8-aggrid","q":"n=100000"},{"case":"c8-glide","q":"n=100000"},
+ {"case":"c8-datatable","q":"n=200000"},{"case":"c8-tanstack","q":"n=200000"},{"case":"c8-aggrid","q":"n=200000"},{"case":"c8-glide","q":"n=200000"},
+ {"case":"c9-react-grid-layout"},{"case":"c9-gridstack"},{"case":"c9-css-grid"},
+ {"case":"c9-react-grid-layout","q":"phone=1","w":390,"h":844,"mobile":true},{"case":"c9-gridstack","q":"phone=1","w":390,"h":844,"mobile":true},
+ {"case":"c10-codemirror"},{"case":"c10-monaco"},
+ {"case":"c10-codemirror","q":"phone=1","w":390,"h":844,"mobile":true},{"case":"c10-monaco","q":"phone=1","w":390,"h":844,"mobile":true}
+]

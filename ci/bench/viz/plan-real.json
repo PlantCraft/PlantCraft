@@ -1,0 +1,5 @@
+[
+ {"case":"c1-uplot","q":"n=600"},{"case":"c1-echarts","q":"n=600"},{"case":"c1-chartjs","q":"n=600"},{"case":"c1-plotly-svg","q":"n=600"},
+ {"case":"c1-uplot","q":"n=5000"},{"case":"c1-echarts","q":"n=5000"},{"case":"c1-chartjs","q":"n=5000"},{"case":"c1-plotly-svg","q":"n=5000"},
+ {"case":"c0-react"}
+]
