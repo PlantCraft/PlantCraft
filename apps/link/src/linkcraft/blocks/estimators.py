@@ -148,6 +148,20 @@ class LabFusionParameters(BaseModel):
         description="One standard deviation of the lab method, in the signal's unit. 0: the "
         "lab is taken as exact next to the online value's noise.",
     )
+    deadband: float = Field(
+        default=0.0,
+        ge=0,
+        title="Dead zone",
+        description="A result closer than this to the estimate leaves the bias as it is (the "
+        "lab's own scatter), in the signal's unit. 0: every result corrects.",
+    )
+    max_step: float = Field(
+        default=0.0,
+        ge=0,
+        title="Largest correction",
+        description="The most one result moves the bias, in the signal's unit, so one bad "
+        "sample cannot jump it. 0: no limit.",
+    )
 
 
 def _lab_fusion(
@@ -170,6 +184,8 @@ def _lab_fusion(
         lab,
         delay_steps=round(parameters.approval_minutes * 60 / _step(index)),
         lab_noise=parameters.lab_repeatability**2,
+        deadband=parameters.deadband,
+        max_step=parameters.max_step or None,
     )
     return {
         "value": clean(pd.Series(out.estimate, index=index)),

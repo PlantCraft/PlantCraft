@@ -50,7 +50,13 @@ def _arrivals(lab: np.ndarray, arrival: np.ndarray | None, delay_steps: int) -> 
 
 
 def _run(
-    online: np.ndarray, lab: np.ndarray, arrivals: dict[int, list[int]], q: float, r: float
+    online: np.ndarray,
+    lab: np.ndarray,
+    arrivals: dict[int, list[int]],
+    q: float,
+    r: float,
+    deadband: float = 0.0,
+    max_step: float | None = None,
 ) -> LabFusion:
     steps = len(online)
     # No bias is known before the first result: it sets the bias, the next ones correct it.
@@ -72,7 +78,10 @@ def _run(
             e = z - b
             spread = p + delayed
             gain = p / spread
-            b += gain * e
+            step = gain * e if abs(e) >= deadband else 0.0
+            if max_step is not None:
+                step = max(-max_step, min(max_step, step))
+            b += step
             p -= gain * p
             innovations[k] = -e
             loglik -= 0.5 * (math.log(2 * math.pi * spread) + e * e / spread)
@@ -90,6 +99,8 @@ def fuse_lab(
     q: float | None = None,
     lab_noise: float = 0.0,
     online_noise: float | None = None,
+    deadband: float = 0.0,
+    max_step: float | None = None,
 ) -> LabFusion:
     """Correct ``online`` with the laboratory results in ``lab`` (the same grid, a value at each
     sample's sampling step, NaN elsewhere).
@@ -100,7 +111,10 @@ def fuse_lab(
     repeatability), added to the online value's noise; ``online_noise``: that noise's variance,
     None estimates it from the whole series (like ``q``, a setting fitted once, so give it to
     replay history exactly as it ran). Before the first result the bias is unknown: the
-    estimate is the online value and its uncertainty infinite. ``q``: the bias' walk a step; None tunes
+    estimate is the online value and its uncertainty infinite. ``deadband``: a result that
+    differs from the estimate by less leaves the bias as it is (the lab's own scatter);
+    ``max_step``: the most one result moves the bias (a bad sample cannot jump it), as the
+    bias updates of commercial inferentials do. ``q``: the bias' walk a step; None tunes
     it by maximum likelihood.
     """
 
@@ -115,16 +129,17 @@ def fuse_lab(
     arrivals = _arrivals(lab, arrival, delay_steps)
     noise = noise_variance(online) if online_noise is None else max(0.0, float(online_noise))
     r = noise + max(0.0, float(lab_noise))
+    limits = {"deadband": max(0.0, float(deadband)), "max_step": max_step}
     if q is not None:
-        return _run(online, lab, arrivals, float(q), r)
+        return _run(online, lab, arrivals, float(q), r, **limits)
     if sum(len(items) for items in arrivals.values()) < 3:
-        return _run(online, lab, arrivals, 1e-8 * max(r, 1e-12), r)
+        return _run(online, lab, arrivals, 1e-8 * max(r, 1e-12), r, **limits)
     scale = max(r, 1e-12)
 
     def cost(log_q: float) -> float:
         return -_run(online, lab, arrivals, scale * 10.0**log_q, r).loglik
 
-    return _run(online, lab, arrivals, scale * 10.0 ** _golden(cost, -8.0, 1.0, 0.05), r)
+    return _run(online, lab, arrivals, scale * 10.0 ** _golden(cost, -8.0, 1.0, 0.05), r, **limits)
 
 
 def sensor_health(actual: np.ndarray, predicted: np.ndarray, spread: float | None = None) -> float:

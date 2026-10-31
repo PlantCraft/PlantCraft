@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
+from plantcraft_sdk.client import PlantCraftError
 from pydantic import BaseModel, Field
 
 from linkcraft.api.deps import CurrentUser, EditorUser, RuntimeDep
@@ -15,6 +16,7 @@ from linkcraft.catalog.signal_checks import CHECKS, effective_limits, validate_p
 from linkcraft.data.samples import iso_utc, naive_utc, thin
 from linkcraft.i18n import t
 from linkcraft.signals.assess import is_sampled
+from linkcraft.signals.lab import against_lab, results_from_series
 from linkcraft.signals.models import SETTING_KEYS
 
 router = APIRouter(prefix="/api")
@@ -200,6 +202,56 @@ def signal_history(
 ) -> list[dict[str, Any]]:
     _signal_or_404(rt, signal_id, scope)
     return rt.quality_results.history(signal_id, days)
+
+
+@router.get("/signals/{signal_id:path}/lab")
+def signal_against_lab(
+    signal_id: str,
+    rt: RuntimeDep,
+    scope: Scope,
+    user: CurrentUser,
+    days: float = Query(7, gt=0, le=90),
+    end: str | None = None,
+) -> dict[str, Any]:
+    """The signal against the lab results of its reference (an analyzer or a soft sensor and
+    ``laboratory:<analysis>``) over the ``days`` before ``end`` (now): each result at its
+    sampling time, the health 0 to 100, and the signal corrected by the results as they were
+    approved (``signals.lab``). A reference with no laboratory times counts each value as
+    known when taken."""
+
+    signal = _signal_or_404(rt, signal_id, scope)
+    reference = str((signal.get("settings") or {}).get("reference") or "")
+    if not reference:
+        raise HTTPException(404, t("Set a reference signal (the lab analysis) first."))
+    try:
+        end_at = naive_utc(end or pd.Timestamp.now(tz="UTC"))
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(422, t("Times must be ISO 8601.")) from exc
+    start_at = end_at - pd.Timedelta(days=days)
+    reader = rt.user_signal_reader(user)
+    step = max(1.0, (end_at - start_at).total_seconds() / 20000)
+    read = reader.read([signal_id], start_at, end_at, fallback_step=step)
+    if signal_id in read.failed:
+        raise HTTPException(502, read.failed[signal_id])
+    try:
+        results = reader.client.lab_samples(reference, iso_utc(start_at), iso_utc(end_at))
+    except PlantCraftError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    timed = bool(results)
+    if not timed:
+        other = reader.read([reference], start_at, end_at, fallback_step=step)
+        if reference in other.failed:
+            raise HTTPException(502, other.failed[reference])
+        results = results_from_series(other.series.get(reference, pd.Series(dtype=float)))
+    online = read.series.get(signal_id, pd.Series(dtype=float))
+    return {
+        "signal": signal_id,
+        "reference": reference,
+        "start": iso_utc(start_at),
+        "end": iso_utc(end_at),
+        "timed": timed,
+        **against_lab(online, results),
+    }
 
 
 class CheckRequest(BaseModel):

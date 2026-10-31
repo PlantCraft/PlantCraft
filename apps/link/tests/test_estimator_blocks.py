@@ -103,3 +103,9 @@ def test_lab_fusion_without_results_in_the_window_is_no_data():
     later.index = later.index + pd.Timedelta(days=30)
     out = _run("estimator.lab_fusion", {"x": pd.Series(online, index), "lab": later})
     assert isinstance(out["value"], NoData)
+
+
+def test_lab_fusion_limits_each_correction():
+    index, _true, online, lab = _drifting_analyzer()
+    out = _run("estimator.lab_fusion", {"x": pd.Series(online, index), "lab": lab}, max_step=0.05)
+    assert out["bias"].diff().iloc[100:].abs().max() <= 0.05 + 1e-9

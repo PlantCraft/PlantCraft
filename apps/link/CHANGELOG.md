@@ -12,6 +12,11 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   analyzer or a soft sensor with the lab results. Each result counts at its sampling time, from
   the approval delay you give. The block outputs the corrected value, the bias and the
   uncertainty.
+- **A signal against the lab** (signal page, panel "Against the lab"). Set a signal's reference to
+  its lab analysis (`laboratory:<analysis>`), and its page shows three things over the last 7
+  days. First, the health from 0 to 100 at the sampling times, raw and corrected by the lab.
+  Second, the bias over time. Third, actual × predicted. Each result counts from its approval in
+  the Historian; a rejected one is left out. `GET /api/signals/{id}/lab`.
 
 - **A plant map on the Overview: every loop coloured by the KPI you pick.** The KPIs are health,
   effective control, time in normal mode, time inside the band, and time with the output off its

@@ -70,3 +70,15 @@ def test_health_from_the_error_against_the_lab():
     middle = sensor_health(actual, actual + 0.5 * np.std(actual))
     assert 0 < middle < 100
     assert np.isnan(sensor_health([1.0, 2.0], [1.0, 2.0]))
+
+
+def test_deadband_and_step_limit_hold_the_bias():
+    _true, online, lab = drifting()
+    free = fuse_lab(online, lab, q=1e-3, online_noise=0.01)
+    held = fuse_lab(online, lab, q=1e-3, online_noise=0.01, deadband=1e6)
+    # The first result sets the bias; with a huge dead zone no later one moves it.
+    first = held.bias[np.flatnonzero(np.isfinite(held.uncertainty))[0]]
+    assert np.all(held.bias[np.isfinite(held.uncertainty)] == first)
+    capped = fuse_lab(online, lab, q=1e-3, online_noise=0.01, max_step=0.01)
+    assert np.max(np.abs(np.diff(capped.bias[60:]))) <= 0.01 + 1e-12
+    assert np.max(np.abs(np.diff(free.bias[60:]))) > 0.01
