@@ -14,6 +14,13 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   away. `GET /api/loop-days-to-limit` lists the soonest first, and so does the widget "Analytics:
   closest to the limit" (`engine/days_to_limit.py`).
 
+- **Two signal checks, rate of change (`sq_rate`) and transmitter fault levels (`sq_ne43`).**
+  Rate of change counts the changes, measured over at least a minute, that are faster than the
+  process can move: an absolute limit per minute, or half of the range per minute by default. NE 43
+  reads a 4-20 mA signal on its range as NAMUR NE 43 does. 3.8 to 20.5 mA is measurement, and
+  3.6 mA or less, 21 mA or more, is the transmitter reporting its own fault: any fault level is a
+  warning, over 1% of the values is bad, and saturation beyond the measuring range is a warning.
+  Both need the signal's limits (or, for the rate, a limit of its own), and otherwise do not apply.
 - **Loop-hours lost by cause.** Every monitoring round adds the part of its window no earlier
   round on the loop covered, split by cause: out of normal mode, output at a limit, oscillating
   and bad signal (missing or frozen PV). `GET /api/loop-losses?days=&until=&group_by=area|loop`

@@ -6,6 +6,14 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Added
+
+- **A process display marks an alarm by its priority (ISA-101).** A symbol bound to Alarms'
+  alarm state gets a mark in its corner while an alarm is active, with a shape and a number for
+  the most urgent priority: a square with 1 for critical, a triangle with 2 for high, a diamond
+  with 3 for medium and a circle with 4 for low. Colour is only the third cue, so the mark still
+  reads without colour.
+
 ### Fixed
 
 - **A process display opens in under a second.** The demo's Riverbend plant has 289 bindings,

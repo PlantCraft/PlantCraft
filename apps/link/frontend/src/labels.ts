@@ -26,6 +26,8 @@ const METHOD_NAMES: Record<string, string> = {
   sq_frozen: "Frozen value",
   sq_spikes: "Spikes",
   sq_range: "Out of range",
+  sq_ne43: "Transmitter fault levels (NE 43)",
+  sq_rate: "Rate of change",
   sq_noise: "Noise",
   sq_resolution: "Resolution and compression",
   sq_drift: "Drift",

@@ -71,6 +71,19 @@ TEXTS: dict[str, tuple[str, str]] = {
         "Ok inside the range, warning with a few values outside, bad when the share outside "
         "reaches the limit. Without limits the check cannot judge.",
     ),
+    "sq_ne43": (
+        "Reads the values as a 4-20 mA transmitter's current (NAMUR NE 43) on the signal's "
+        "range: 3.8 to 20.5 mA is measurement, 3.6 mA or less and 21 mA or more is the "
+        "transmitter signalling a failure.",
+        "Ok inside the measuring range, warning on saturation or any fault level, bad when "
+        "fault levels pass the unusable share. Switch it off for digital or calculated signals.",
+    ),
+    "sq_rate": (
+        "Measures how fast the signal changes between samples against the fastest the process "
+        "can move: an absolute limit, or a share of the range per minute.",
+        "Ok without fast steps, warning or bad as their share grows: a jumping instrument, "
+        "wiring or data, not the process.",
+    ),
     "sq_noise": (
         "Estimates the high-frequency noise from the first differences of the samples (white "
         "noise estimate that ignores slow process moves) and compares it with the signal's "
