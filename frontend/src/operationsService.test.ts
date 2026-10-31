@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { currentTarget, minutesText, slaText, workingHoursText } from "./OperationsRequests";
 import { grantState, readGrantPrefill } from "./OperationsSupport";
+import { uptimeText, uptimeTone, windowState } from "./OperationsUptime";
 import type { SlaClock } from "./collabApi";
 
 const clock = (changes: Partial<SlaClock>): SlaClock => ({ target_minutes: 240, used_minutes: 60, state: "running", due_at: null, ...changes });
@@ -36,8 +37,6 @@ describe("Operations, targets and support access", () => {
     expect(workingHoursText({ days: ["sat", "mon"], start: "06:00", end: "14:00" })).toBe("Mon, Sat 06:00–14:00");
   });
 });
-
-import { uptimeText, uptimeTone, windowState } from "./OperationsUptime";
 
 describe("Operations, uptime", () => {
   it("reads uptime and maintenance windows", () => {

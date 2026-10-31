@@ -367,6 +367,17 @@ the month first), and the request's page shows those entries locked. A sponsor w
 Operations still opens it with Requests and Partners only, and Partners shows only the companies
 they sponsor (the session's `access.sponsor_of`); status, logs and the rest stay closed.
 
+**Uptime and maintenance windows** (`plantcraft.watch.uptime`; `GET /api/operations/uptime`,
+`POST /api/operations/maintenance/windows` `{starts_at, hours, services, reason}` and `DELETE
+.../windows/{id}`, administrators, audited `operations.maintenance.planned` and `.ended`). Status
+shows each app's uptime over 24 hours, 7 and 30 days: the share of the watched time (from the
+watch's first run) it had no `service:` incident open (stopped, unhealthy, restarting; load is
+not downtime), leaving out planned maintenance. A maintenance window (up to 72 hours, now or
+later, every app or a few, with a reason) keeps the watch quiet about the apps it covers while it
+lasts: no incident opens and nobody is told, as during the watch's own backups and updates. A
+window in force is ended with "End now"; a planned one is cancelled. Holidays and partial
+degradation are not counted.
+
 **Support access** (`/ops/support`, `plantcraft.auth.support_access`; `GET
 /api/operations/support-access`, `POST /api/operations/support-access/grants`
 `{username, hours, reason, action_id}`, `DELETE .../grants/{id}`; audited

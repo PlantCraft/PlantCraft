@@ -9,6 +9,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Uptime by app and maintenance windows.** Operations › Status shows each app's uptime over
+  24 hours, 7 and 30 days, from the watch's incidents and without planned maintenance. An
+  administrator plans a maintenance window (now or later, every app or some, up to 72 hours):
+  while it lasts the watch keeps quiet about those apps.
+
 - **Working hours for a request queue.** An administrator sets the days and hours a queue works
   (and a default); its requests' first answer and resolution clocks run only inside them, and
   due times land on the next working minute.
