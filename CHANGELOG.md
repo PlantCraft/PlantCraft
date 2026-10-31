@@ -195,6 +195,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **The Mac mini's deploy starts the proxy again when port 443 is still busy.** Docker Desktop
+  frees a recreated container's published port a moment after the old one stops, so the main
+  deploys of 2026-10-31 left the proxy Created and the suite without HTTPS.
+  `ci/macmini/suite-deploy` now retries `compose up` for up to 30 s on that error only.
 - **`ci/e2e-upgrade.sh` stops at once when it cannot read the admin password.** On Linux the
   installation's password file is readable by root only, and the test found out after an 11-minute
   build; it now asks for root before anything starts. `docs/install.md` names the release key id
