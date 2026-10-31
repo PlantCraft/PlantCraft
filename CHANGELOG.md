@@ -33,6 +33,33 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Pages open without Plotly until they draw a chart (`@plantcraft/ui`).** `Plot` fetched
+  Plotly (1.4 MB) with any page that could show a chart, even when the chart sat behind a tab or
+  a click. It now arrives the first time a chart is drawn, with an empty box of the chart's size
+  in the meantime. In Analytics, opening Blocks loads 1.15 MB of script instead of 2.5 MB and
+  Algorithms 0.7 MB instead of 2.1 MB; a page whose chart shows at once (Signal, Loop) is drawn
+  first and gets Plotly right after.
+
+- **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
+  went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
+  the chunks 0.6 s). `plantcraft-sdk` 0.85.0 adds `plantcraft_sdk.wire`, a binary answer for
+  `POST /api/v1/series` (int64 ms times and float64 values, asked with `Accept:
+  application/x-plantcraft-series` when the Historian lists `pcs1` in `GET /api/v1/reads`;
+  JSON stays the default, `PLANTCRAFT_BINARY_READS=0` keeps it). Analytics builds its raw frame
+  as one block instead of `pd.concat`, and its loop rounds and Signal quality ask only for what
+  is new since their last read (`LINKCRAFT_READ_CACHE`, 15 min overlap, whole read every 6 h).
+  The Historian's CPU per round: 0.85 to 0.07 s on the demo's 200 signals, 59 to 0.8 s on
+  2,000 dense signals (`ci/bench/reads`).
+- **Signal quality sees the source's quality (2026-10-31).** API v1 gave a bad sample as a null
+  value and an uncertain or substituted one as good, so the `sq_*` checks never saw them.
+  `POST /api/v1/series` takes `"quality": true` and then lists, per series, where the source's
+  quality was not good (`"quality": [{t, quality}]`, each change holding until the next; the
+  Historian reads it for all signals in one query). `plantcraft-sdk` 0.85.0:
+  `series_many(..., quality=True)`, and `series_many_pandas` keeps the list in
+  `attrs["quality"]`. Analytics asks for it in Signal quality (the incremental read joins it
+  across rounds), and `sq_availability` 1.1.0 counts substituted time as missing, warns on
+  uncertain time above `1 - warn_coverage` and reports `quality_bad`, `quality_uncertain` and
+  `quality_substituted`. Without the field nothing changes.
 - **Operations shows the machine and its profile.** Suite health names the machine as Docker
   sees it (CPUs, memory), the machine profile that sized the suite (`install.sh --machine`) and
   its ceilings, and each service's CPU limit beside its use. The `small` profile gives Analytics
@@ -121,6 +148,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   and highest value, in time order, so every spike, trip and step is drawn at its full height
   with the same number of points (`plantcraft/industrial_data/thinning.py`; Historian and direct
   sources alike). Values that are not numbers (states) still keep every n-th point.
+
+- **Long tables sort by a text column in a fraction of a second (`@plantcraft/ui`).** The
+  suite's table compared texts with `localeCompare` and its options, which builds a collator
+  for every comparison: 100,000 rows sorted by tag took 13.4 s in the browser. One collator for all
+  comparisons gives the same order (numbers in names in order, case and accents aside) in 0.4 s.
 
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the

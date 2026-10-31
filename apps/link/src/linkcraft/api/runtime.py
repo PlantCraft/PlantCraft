@@ -40,6 +40,8 @@ from linkcraft.blocks.store import BlockStore
 from linkcraft.catalog.folders import FolderStore
 from linkcraft.catalog.presets import SHIPPED_AUTHOR
 from linkcraft.config import Settings
+from linkcraft.data.cache import RawCache
+from linkcraft.data.cache import enabled_by_default as read_cache_enabled
 from linkcraft.data.plant import PlantData
 from linkcraft.data.samples import SignalReader
 from linkcraft.data.suite import SuiteClient
@@ -151,10 +153,13 @@ class Runtime(PlatformRuntime):
         if callable(reader):
             use_installation_zone(reader)
         self.compute = compute or self._compute_pool()
-        self.plant = PlantData(self.service_client)
+        # One cache of raw samples for the loop rounds and Signal quality: a signal both read
+        # in a round is asked for once (``data.cache``; LINKCRAFT_READ_CACHE=0 turns it off).
+        self.read_cache = RawCache() if read_cache_enabled() else None
+        self.plant = PlantData(self.service_client, cache=self.read_cache or False)
         self.suite = SuiteClient(self.service_client)
         # Signal quality: the signals, their verdicts, the algorithm's settings and engine.
-        self.signal_reader = SignalReader(self.service_client)
+        self.signal_reader = SignalReader(self.service_client, cache=self.read_cache or False)
         self.signal_store = SignalStore(self.db)
         self.quality_results = QualityResultStore(self.db)
         self.quality_settings = SettingsStore(

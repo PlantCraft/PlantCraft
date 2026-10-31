@@ -70,12 +70,16 @@ export type DataTableProps<Row> = {
 
 const PAGE_SIZES = [25, 50, 100];
 
+// One collator for every comparison: `localeCompare` with options builds a new one per call,
+// which made sorting 100,000 rows by a text column take seconds (bench of 2026-10-31).
+const TEXT_ORDER = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
 function compare(a: SortValue, b: SortValue): number {
   const blankA = a === null || a === undefined || a === "";
   const blankB = b === null || b === undefined || b === "";
   if (blankA || blankB) return blankA === blankB ? 0 : blankA ? 1 : -1;
   if (typeof a === "number" && typeof b === "number") return a - b;
-  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+  return TEXT_ORDER.compare(String(a), String(b));
 }
 
 /** The value a row is filtered by in a column. */

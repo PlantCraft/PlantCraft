@@ -39,6 +39,31 @@ def is_text(dataset: LoopDataset) -> bool:
     return str(dataset.metadata.get("kind") or "number") == "text"
 
 
+NOT_GOOD = ("uncertain", "substituted", "bad")
+
+
+def quality_spans(
+    dataset: LoopDataset, start: pd.Timestamp, end: pd.Timestamp
+) -> dict[str, list[tuple[pd.Timestamp, pd.Timestamp]]] | None:
+    """Where in ``[start, end]`` the source said the samples were not good, per quality
+    (``uncertain``, ``substituted``, ``bad``); None when the source keeps no quality.
+
+    Each change in ``metadata["quality"]`` (``[{t, quality}]``) holds until the next one.
+    """
+
+    changes = (dataset.metadata or {}).get("quality")
+    if changes is None:
+        return None
+    marks = sorted((_naive(item["t"]), str(item.get("quality") or "good")) for item in changes)
+    spans: dict[str, list[tuple[pd.Timestamp, pd.Timestamp]]] = {code: [] for code in NOT_GOOD}
+    for position, (at, code) in enumerate(marks):
+        until = marks[position + 1][0] if position + 1 < len(marks) else end
+        begin, finish = max(at, start), min(until, end)
+        if code in spans and finish > begin:
+            spans[code].append((begin, finish))
+    return spans
+
+
 def window(dataset: LoopDataset) -> tuple[pd.Timestamp, pd.Timestamp] | None:
     """The checked window ``[start, end]`` (naive UTC), else the samples' own span."""
 
