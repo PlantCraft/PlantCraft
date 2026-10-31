@@ -639,8 +639,17 @@ def pool(prefix: str) -> CodePool | InlinePool:
     with _POOLS_LOCK:
         found = _POOLS.get(prefix)
         if found is None:
+            remote = os.environ.get(f"{prefix}_SOCKET", "").strip()
             if os.environ.get(f"{prefix}_SANDBOX", "").strip().lower() == "inline":
                 found = InlinePool()
+            elif remote:
+                # The workers in a container of their own, no network, no secret
+                # (plantcraft_sdk.sandbox_remote).
+                from plantcraft_sdk.sandbox_remote import RemotePool
+
+                found = RemotePool(  # type: ignore[assignment]
+                    remote, _number(f"{prefix}_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS)
+                )
             else:
                 found = CodePool(
                     workers=int(_number(f"{prefix}_WORKERS", 2)),

@@ -237,6 +237,10 @@ def create_app(runtime: ApiRuntime | None = None) -> FastAPI:
         version="1.0.0",
         docs_url=None,
         redoc_url=None,
+        # The API description is published in docs/api/v1/openapi.json; a running installation
+        # serves it only when asked (PLANTCRAFT_OPENAPI=true, for development), so nobody
+        # outside reads the list of every route, admin ones included.
+        openapi_url="/openapi.json" if env_flag("PLANTCRAFT_OPENAPI") else None,
         lifespan=lifespan,
     )
     app.state.runtime = runtime

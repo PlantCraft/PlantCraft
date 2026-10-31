@@ -35,8 +35,14 @@ from plantcraft_sdk.server.demo import DemoVisitLimit
 from plantcraft_sdk.server.files import AppFiles
 from plantcraft_sdk.server.memory import Releaser
 from plantcraft_sdk.server.ops import RequestLog, can_read_metrics, metrics
+from plantcraft_sdk.server.origin import SameSiteWrites
 from plantcraft_sdk.server.queue import FORMAT as QUEUE_FORMAT
 from plantcraft_sdk.server.search import search_answer
+
+
+def _openapi() -> bool:
+    return os.environ.get("PLANTCRAFT_OPENAPI", "").strip().lower() in {"1", "true", "yes", "on"}
+
 
 LOGGER = logging.getLogger(__name__)
 # A public page: never cached by a shared proxy, never sends its token on as a referrer.
@@ -75,8 +81,9 @@ def suite_api(
     api = FastAPI(
         title=title,
         version=version,
-        docs_url="/api/docs",
-        openapi_url="/api/openapi.json",
+        # The route list only when asked (PLANTCRAFT_OPENAPI=true, for development).
+        docs_url="/api/docs" if _openapi() else None,
+        openapi_url="/api/openapi.json" if _openapi() else None,
         redoc_url=None,
     )
     api.state.runtime = runtime
@@ -256,5 +263,7 @@ def mount(
         app.mount("/", api)
     # A public demo visit's requests, a few at once (plantcraft_sdk.server.demo).
     app.add_middleware(DemoVisitLimit)
+    # A write with the cookie from another site of the domain is refused (server.origin).
+    app.add_middleware(SameSiteWrites)
     app.add_middleware(RequestLog)
     return app
