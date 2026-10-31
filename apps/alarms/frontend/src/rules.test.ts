@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ExplorePick } from "@plantcraft/ui";
-import { EMPTY_RULE, inputLabel, pythonDiagram, pythonForm, pythonFromSimple, relativeSignal, scheduleRule, simpleComplete, valueCondition, valueOfPick } from "./rules";
+import { EMPTY_RULE, NEW_GRADE, inputLabel, pythonDiagram, pythonForm, pythonFromSimple, relativeSignal, scheduleRule, simpleComplete, takesGrades, valueCondition, valueOfPick } from "./rules";
 import { scopeOf } from "./RuleEditor";
 
 const step = (id: string, name = id) => ({ id, name });
@@ -60,5 +60,18 @@ describe("simpleComplete", () => {
     expect(simpleComplete({ conditions: [{ ...condition, limit: 80 }], combine: "and", clear_after_seconds: 0 })).toBe(true);
     expect(simpleComplete({ conditions: [{ ...condition, op: "between", limit: 10, high: 5 }], combine: "and", clear_after_seconds: 0 })).toBe(false);
     expect(simpleComplete({ conditions: [{ ...condition, op: "changed" }], combine: "and", clear_after_seconds: 0 })).toBe(true);
+  });
+  it("waits for the grade source and every grade's limit", () => {
+    const base = { ...valueCondition(), limit: 60 };
+    const graded = (grade_limits: Array<{ grade: string; limit: number }>, grade = NEW_GRADE()) => simpleComplete({ conditions: [{ ...base, grade_limits }], combine: "and", clear_after_seconds: 0, grade });
+    const signal = { ...NEW_GRADE(), value: { signal: "plantcraft:L1.GRADE", role: "", name: "", unit: "" } };
+    expect(graded([{ grade: "HD-5", limit: 50 }])).toBe(false); // no signal picked yet
+    expect(graded([{ grade: "HD-5", limit: 50 }], signal)).toBe(true);
+    expect(graded([{ grade: "HD-5", limit: Number.NaN }], signal)).toBe(false);
+    expect(graded([{ grade: " ", limit: 50 }], signal)).toBe(false);
+    expect(graded([], signal)).toBe(false);
+    expect(graded([{ grade: "HD-5", limit: 50 }], { ...NEW_GRADE(), source: "event", kinds: ["mes.grade.changed"] })).toBe(true);
+    expect(takesGrades(base)).toBe(true);
+    expect(takesGrades({ ...base, op: "between" })).toBe(false);
   });
 });

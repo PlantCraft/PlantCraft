@@ -8,9 +8,9 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Limits by grade.** A Simple condition can take a limit for each product grade, with a fixed limit for any grade the list does not name. The grade being made comes from a signal holding its code, or from the latest event naming it (an MES grade change, payload field `grade`). The alarm's page says which grade and which limit apply. In Blocks, the new Grade limit block feeds the Compare's new optional Limit input.
 - A late source (`histcraft.source.late`, an integration that stopped delivering) holds back the
   *no data* alarms of its signals, as a disconnected source already did.
-
 - **Consoles (operator positions).** Targets › Consoles splits the plant into operator positions. Each console covers areas of the asset tree, may name who sits at it, and may set its own alarms-an-hour target. An alarm goes to the console naming its most specific area. Performance gets a Consoles table, with each console's alarms an hour, peak in 10 minutes and EEMUA 191 level against its own target, and a Console selector that shows every figure for one console. People see their own console first. The API is `GET /api/performance?console=` and `GET /api/performance/consoles`.
 - **State-based alarms: Only while.** A rule can name a permissive (a pump's run signal ≥ 1) and a delay after it starts holding; while it does not hold, the alarm is suppressed by design (not raised, cleared if it was, shown as such), per ISA-18.2. A permissive without data leaves the alarm enabled. In Blocks it is Raise an alarm's new Enabled when input.
 - **Import the DCS alarm list.** Rules › Import alarm list reads the master alarm database exported from the DCS (CSV or Excel .xlsx: tag, type HH/HI/LO/LL, limit, priority, deadband, on-delay, cause, consequence, action) as a draft. The review shows the new, changed (field by field) and removed alarms against what earlier imports made, and the rows it could not read. Nothing changes until someone who edits rules applies it, alarm by alarm if they want; a removed alarm's rule is turned off, never deleted, and each rule written is audited.

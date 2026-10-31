@@ -8,6 +8,30 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **A multivariable controller panel (V10).** A dashboard panel of kind **Multivariable
+  controller** shows a third-party APC read only: whether it is on and its mode, then each MV and
+  CV with its value, limits, steady-state target, status and shadow price, a bar of its range,
+  its value and target over the time span, and **At high limit** / **At low limit** where the
+  controller is constrained. It reads assets of kind `apc`, `apc_mv` and `apc_cv` (the names
+  Analytics' APC health reads too). Not offered in reports.
+- **Evidence footnotes in an assistant section (V4).** Every fact the model gets has an id (A1
+  for an asset's counted row, R1 for a result, E1 for an event) and the model cites it after
+  each number, date or finding it states. The section shows the citations as numbered footnotes
+  and lists under **Evidence** what each one is: the result with its status, score and time,
+  the event with its time and summary, or the period's counts. A citation of a fact the model
+  was not given is dropped and named in a check.
+- **The plant's process display opens on a generated overview (Level 1).** From assets › **The
+  whole plant** draws a first page with a block per unit (its equipment and loop count and up
+  to eight loop-health bubbles, linked to the unit's page) and a page per unit, each with
+  **‹ Plant overview** back to it. `POST /api/diagrams/draw-plant`.
+- **Back between diagrams.** A diagram opened from another one's link shows **Back** with that
+  diagram's name and returns to the page it was opened from (`?from=`).
+- **Trends compare earlier periods (V11).** "Compare with" draws up to three earlier periods over
+  the trend's own: the previous period, 1 day, 1 week or 4 weeks earlier. Each line of an
+  earlier period is dotted and lighter, in its own line's colour, moved onto the trend's time
+  axis and named after its period (`FIC-101 · 1 day earlier`). Saved with the trend
+  (`compare` in `/api/trends`); `POST /api/trends/data` answers the earlier lines with
+  `compare` and `source`.
 - **The ISA-101 analog indicator, on a gauge card and under a diagram's value.** A grey bar over the
   signal's range draws the normal range as a darker band, the LL, L, H and HH limits as ticks (a
   card takes them from its thresholds, a diagram value from its limits), the setpoint as a hollow

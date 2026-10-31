@@ -94,6 +94,24 @@ def test_a_loop_gets_a_tuning_suggestion_on_demand(signed_in, app_url, screensho
         panel.screenshot(path=str(screenshots / "loop-tuning.png"))
 
 
+def test_the_plant_map_colours_loops_by_a_kpi_and_sizes_them_by_criticality(
+    signed_in, app_url, screenshots
+):
+    page = signed_in
+    page.goto(f"{app_url}/link/")
+    plant = page.get_by_test_id("plant-map")
+    expect(plant.locator(".pmap-cell").first).to_be_visible()
+    plant.get_by_label("Colour by").select_option("effective_control")
+    if screenshots:
+        plant.screenshot(path=str(screenshots / "plant-map-heat.png"))
+    plant.get_by_role("button", name="Treemap by criticality").click()
+    expect(plant.locator(".pmap-tree .pmap-cell").first).to_be_visible()
+    if screenshots:
+        plant.screenshot(path=str(screenshots / "plant-map-tree.png"))
+    plant.locator(".pmap-tree .pmap-cell").first.click()
+    expect(page).to_have_url(re.compile(r"/link/loops/[^/]+$"))
+
+
 def test_an_algorithm_page_and_its_editor_window(signed_in, app_url, screenshots):
     page = signed_in
     page.goto(f"{app_url}/link/algorithms")

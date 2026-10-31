@@ -532,8 +532,8 @@ export function WidgetBoard({ catalog, layout, onLayout, loading, apps = [], onR
   const keep = (i: string) => (config: WidgetConfig) => onLayout(board.map((item) => (item.i === i ? { ...item, config } : item)));
   const current = setting ? byPlacement.get(setting) : undefined;
   return <section className={`pc-wg${editing ? " pc-wg-editing" : ""}`} data-tour="widgets">
-    <div className="pc-wg-head">
-      {editing && <p className="pc-wg-hint">{t("Drag a widget by its title to move it; its gear sets its size and what it shows.")}</p>}
+    <div className={`pc-wg-head${editing ? " pc-wg-head-editing" : ""}`} role={editing ? "region" : undefined} aria-label={editing ? t("Customizing this page") : undefined}>
+      {editing && <p className="pc-wg-hint" aria-live="polite"><strong><SlidersHorizontal size={14} aria-hidden="true" /> {t("Customizing this page")}</strong> <span>{t("Drag a widget by its title to move it; its gear sets its size and what it shows. Changes are saved as you make them.")}</span></p>}
       {editing && <button type="button" className="button button-secondary button-small" onClick={() => setAdding(true)}><Plus size={14} /> {t("Add a widget")}</button>}
       {editing && onReset && <button type="button" className="button button-secondary button-small" onClick={() => { onReset(); setAdding(false); }}><RotateCcw size={14} /> {t("Restore the default")}</button>}
       {loading && <LoaderCircle size={14} className="spin" aria-label={t("Loading")} />}

@@ -26,6 +26,10 @@
   .al-phone-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 }
 
+/* Limits by grade: one line per grade, its name and its limit side by side. */
+.al-grades { display: grid; gap: 8px; justify-items: start; }
+.al-grades .al-inline { align-items: flex-end; flex-wrap: wrap; }
+
 /* Performance */
 /* Targets › Consoles: one bordered block per operator position. */
 .al-console { border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); padding: 12px 14px; margin-bottom: 12px; display: grid; gap: 10px; justify-items: start; }

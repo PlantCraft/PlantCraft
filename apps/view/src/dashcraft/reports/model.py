@@ -152,7 +152,7 @@ class Section(BaseModel):
                 raise ValueError(t("A panel section needs its panel."))
             if self.card.kind == "text":
                 raise ValueError(t("Write notes in a text section, not in a panel."))
-            if self.card.kind == "diagram":
+            if self.card.kind in ("diagram", "apc"):
                 raise ValueError(
                     t("A report shows panels of signals; process displays stay on screens.")
                 )

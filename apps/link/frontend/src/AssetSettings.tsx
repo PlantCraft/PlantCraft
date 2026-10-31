@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import { formatAgo, t } from "./i18n";
 import { resultLabel } from "./status";
-import type { AssetChoice, AssetRun, AssetTiming, Me } from "./types";
+import type { AssetChoice, AssetRun, AssetTiming, AssetTypeChoice, Me } from "./types";
 import { ErrorBox, Link, Loading, Pill } from "./ui";
 
 let choicesCache: Promise<AssetChoice[]> | null = null;
@@ -16,6 +16,36 @@ let choicesCache: Promise<AssetChoice[]> | null = null;
 export function assetChoices(): Promise<AssetChoice[]> {
   if (!choicesCache) choicesCache = api.assetChoices().catch((error: unknown) => { choicesCache = null; throw error; });
   return choicesCache;
+}
+
+/** The equipment types an algorithm also runs on every asset of (A20): a pump algorithm on every
+ * pump, an asset of the type added later included at its next run. */
+export function AssetTypePicker({ types, onChange, disabled }: { types: string[]; onChange: (next: string[]) => void; disabled?: boolean }) {
+  const [choices, setChoices] = useState<AssetTypeChoice[] | null>(null);
+  const [error, setError] = useState("");
+  const [adding, setAdding] = useState("");
+  useEffect(() => { api.assetTypeChoices().then(setChoices).catch((err: Error) => setError(err.message)); }, []);
+  const byId = useMemo(() => new Map((choices ?? []).map((item) => [item.id, item])), [choices]);
+  const free = (choices ?? []).filter((item) => !types.includes(item.id));
+  return <div className="asset-picker" data-testid="asset-type-picker">
+    {types.length
+      ? <ul>{types.map((typeId) => {
+        const found = byId.get(typeId);
+        return <li key={typeId}>
+          <span><b>{t("Every {type}", { type: found?.name ?? typeId })}</b><small>{found ? [typeId, found.roles.length ? t("roles {roles}", { roles: found.roles.join(", ") }) : ""].filter(Boolean).join(" · ") : t("Not in PlantCraft now")}</small></span>
+          {!disabled && <button type="button" className="icon-button" aria-label={t("Take {name} out", { name: found?.name ?? typeId })} onClick={() => onChange(types.filter((item) => item !== typeId))}><X size={14} /></button>}
+        </li>;
+      })}</ul>
+      : <p className="muted small">{t("No equipment type: it runs only on the assets above.")}</p>}
+    {error && <p className="muted small">{error}</p>}
+    {!disabled && <span className="asset-picker-add">
+      <select aria-label={t("Equipment type to add")} value={adding} onChange={(event) => setAdding(event.target.value)}>
+        <option value="">{choices ? t("Choose an equipment type…") : t("Reading PlantCraft's asset types…")}</option>
+        {free.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+      </select>
+      <button type="button" className="button button-secondary" disabled={!adding} onClick={() => { onChange([...types, adding]); setAdding(""); }}><Plus size={15} />{t("Add")}</button>
+    </span>}
+  </div>;
 }
 
 /** The cycle, window and step of an algorithm on assets (seconds, the window shown in minutes). */
@@ -69,7 +99,7 @@ const RUN_COLUMNS: DataColumn<AssetRun>[] = [
 ];
 
 /** An algorithm on assets on its page: its latest run on each asset, and Run now. */
-export function AssetRuns({ algorithmId, assets, me }: { algorithmId: string; assets: string[]; me: Me }) {
+export function AssetRuns({ algorithmId, assets, types = [], me }: { algorithmId: string; assets: string[]; types?: string[]; me: Me }) {
   const [rows, setRows] = useState<AssetRun[] | null>(null);
   const [error, setError] = useState("");
   const [running, setRunning] = useState(false);
@@ -84,11 +114,13 @@ export function AssetRuns({ algorithmId, assets, me }: { algorithmId: string; as
     try { setRows(await api.runAlgorithm(algorithmId)); setError(""); } catch (err) { setError(err instanceof Error ? err.message : String(err)); } finally { setRunning(false); }
   }
   return <div className="panel used-by">
-    <p>{assets.length ? t("Runs on {count} assets, each on its own cycle.", { count: assets.length }) : t("No asset yet: choose them below.")}</p>
+    <p>{types.length
+      ? t("Runs on {count} named assets and every asset of {types}, each on its own cycle.", { count: assets.length, types: types.join(", ") })
+      : assets.length ? t("Runs on {count} assets, each on its own cycle.", { count: assets.length }) : t("No asset yet: choose them below.")}</p>
     {error && <ErrorBox text={error} />}
     {!rows ? <Loading /> : rows.length
       ? <DataTable rows={rows} columns={RUN_COLUMNS} rowKey={(item) => item.asset_id} initialSort={{ key: "asset", descending: false }} label={t("Latest run on each asset")} />
-      : assets.length ? <p className="muted small">{t("Not run yet: its first run starts within a cycle.")}</p> : null}
-    {me.can_edit && assets.length > 0 && <div className="row-actions"><button type="button" className="button button-secondary" disabled={running} onClick={() => void runNow()}>{running ? <LoaderCircle size={15} className="spin" /> : <Play size={15} />}{t("Run now")}</button></div>}
+      : assets.length || types.length ? <p className="muted small">{t("Not run yet: its first run starts within a cycle.")}</p> : null}
+    {me.can_edit && (assets.length > 0 || types.length > 0) && <div className="row-actions"><button type="button" className="button button-secondary" disabled={running} onClick={() => void runNow()}>{running ? <LoaderCircle size={15} className="spin" /> : <Play size={15} />}{t("Run now")}</button></div>}
   </div>;
 }
