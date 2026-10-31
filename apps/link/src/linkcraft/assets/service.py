@@ -50,8 +50,11 @@ class AssetService:
         client: Callable[[], Any],
         models: Any = None,
         publish: Callable[[dict[str, Any], datetime, float], Any] | None = None,
+        read_cache: Any = None,
     ):
         self.presets = presets
+        # The loops' read cache: scheduled runs read only what is new since their last run.
+        self.read_cache = read_cache
         self.store = store
         self.client = client
         self.models = models
@@ -69,8 +72,12 @@ class AssetService:
         interval_minutes: float | None = None,
         schedule: dict[str, Any] | None = None,
         node_parameters: dict[str, Any] | None = None,
+        cached: bool = False,
     ) -> dict[str, Any]:
         """Run ``profile`` on ``asset_id`` over the window ending now; keep and publish it.
+
+        ``cached``: a scheduled run, read through the loops' read cache (a person's Run now
+        reads whole).
 
         ``interval_minutes``: how often its schedule runs it (its results expire after two).
         ``schedule``: what the schedule records (``assets.outputs.recording``); without one the
@@ -98,6 +105,7 @@ class AssetService:
                     models=self.models,
                     states=before.get("states") or {},
                     algorithm_id=algorithm_id,
+                    cache=self.read_cache if cached else None,
                 )
         except Exception as exc:  # one asset that cannot run never stops the others
             LOGGER.warning("Algorithm %s on asset %s did not run: %s", algorithm_id, asset_id, exc)

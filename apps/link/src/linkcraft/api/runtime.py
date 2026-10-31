@@ -226,6 +226,7 @@ class Runtime(PlatformRuntime):
             publish=lambda payload, at, minutes: self.publisher_call(
                 "publish_asset_run", payload, at, minutes
             ),
+            read_cache=self.read_cache,
         )
         self.replay = HistoryReplay(
             self.monitor,
