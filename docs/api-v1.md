@@ -280,7 +280,7 @@ Additive to v1; `plantcraft-sdk` 0.3.0 (`plantcraft_sdk.assets`, `client.asset_t
   fits; that signal and every one after it are postponed: ask for them again in another
   request). The SDK's `series_many` does that on its own. It is a POST because the id list can
   be long; it reads only, like every other v1 data route.
-  With `"quality": true` (since 2026-10-31, SDK 0.84.0) each series also lists where the
+  With `"quality": true` (since 2026-10-31, SDK 0.85.0) each series also lists where the
   source's quality was not good: `"quality": [{"t": iso, "quality": "uncertain" | "substituted" |
   "bad" | "good"}]`, oldest first, each change holding until the next one (the first may be the
   state at `start`, then its `t` is at or before `start`; an empty list: good all along). A bad

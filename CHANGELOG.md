@@ -35,7 +35,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
   went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
-  the chunks 0.6 s). `plantcraft-sdk` 0.84.0 adds `plantcraft_sdk.wire`, a binary answer for
+  the chunks 0.6 s). `plantcraft-sdk` 0.85.0 adds `plantcraft_sdk.wire`, a binary answer for
   `POST /api/v1/series` (int64 ms times and float64 values, asked with `Accept:
   application/x-plantcraft-series` when the Historian lists `pcs1` in `GET /api/v1/reads`;
   JSON stays the default, `PLANTCRAFT_BINARY_READS=0` keeps it). Analytics builds its raw frame
@@ -47,7 +47,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   value and an uncertain or substituted one as good, so the `sq_*` checks never saw them.
   `POST /api/v1/series` takes `"quality": true` and then lists, per series, where the source's
   quality was not good (`"quality": [{t, quality}]`, each change holding until the next; the
-  Historian reads it for all signals in one query). `plantcraft-sdk` 0.84.0:
+  Historian reads it for all signals in one query). `plantcraft-sdk` 0.85.0:
   `series_many(..., quality=True)`, and `series_many_pandas` keeps the list in
   `attrs["quality"]`. Analytics asks for it in Signal quality (the incremental read joins it
   across rounds), and `sq_availability` 1.1.0 counts substituted time as missing, warns on
