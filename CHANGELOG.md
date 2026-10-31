@@ -39,6 +39,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   SHA-256 of its session (`sid` claim). After sign-out PlantCraft refuses it at once, and
   `GET /api/v1/auth/revoked` lists the session (`sessions`), so the apps refuse it within 10 s
   (`plantcraft-sdk` 0.83.0). The person's other sessions keep working.
+- **`./install.sh --security-check`: 36 checks with stable ids, a score and machine-readable
+  output.** Each check (`PC-CTR-01` and so on) has a severity, the evidence it saw, how to fix it
+  and its IEC 62443-4-2 and NIST SP 800-53 references; `--format json|junit|sarif`, `--skip`, and
+  exit code 1 on a failure (docs/security-guide.md, "Security check").
 
 ### Fixed
 
