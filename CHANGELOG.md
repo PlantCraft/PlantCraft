@@ -9,6 +9,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Long tables sort by a text column in a fraction of a second (`@plantcraft/ui`).** The
+  suite's table compared texts with `localeCompare` and its options, which builds a collator
+  for every comparison: 100,000 rows sorted by tag took 2.2 s. One collator for all comparisons
+  gives the same order (numbers in names in order, case and accents aside) about 36× faster.
+
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the
   update from a release candidate to its release was refused as going back; versions now order
