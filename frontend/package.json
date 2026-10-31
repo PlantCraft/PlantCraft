@@ -18,7 +18,7 @@
     "@fullcalendar/multimonth": "6.1.21",
     "@fullcalendar/react": "6.1.21",
     "@fullcalendar/timegrid": "6.1.21",
-    "@plantcraft/ui": "file:vendor/plantcraft-ui-0.94.0.tgz",
+    "@plantcraft/ui": "file:vendor/plantcraft-ui-0.95.0.tgz",
     "@tiptap/extension-list": "3.31.4",
     "@tiptap/extension-mention": "3.31.4",
     "@tiptap/extensions": "3.31.4",
