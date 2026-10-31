@@ -14,7 +14,7 @@
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
 #   ./install.sh --check         check this server's requirements (preflight.sh) and change nothing;
-#                                --ignore ID[,ID] lets those checks fail (ids in the report)
+#                                --ignore ID[,ID] lets those checks fail (ids in the report); --json for tools
 #   ./install.sh --show-config   the installation file, each value it sets and what .env holds now
 #   ./install.sh --uninstall     stop and remove the containers; data and backups are kept
 #   ./install.sh --uninstall --purge   also delete data, backups and the suite's images
@@ -98,6 +98,7 @@ PURGE=0
 ASSUME_YES=0
 DEV=0
 WITH_APPS=" "    # " <id> <id> ": apps turned on by --with-<id>
+CHECK_JSON=0     # --check --json: the requirements report as JSON (preflight.sh --json)
 ALL_APPS=0
 MACHINE=""
 WITH_DEMO=0
@@ -144,6 +145,7 @@ while [ $# -gt 0 ]; do
         --drill) ACTION="drill" ;;
         --diagnostics) ACTION="diagnostics" ;;
         --check) ACTION="check" ;;
+        --json) CHECK_JSON=1 ;;
         --show-config) ACTION="show-config" ;;
         --ignore) [ $# -ge 2 ] || die "--ignore needs check ids (see --check)"; export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}$2"; shift ;;
         --ignore=*) export PLANTCRAFT_PREFLIGHT_IGNORE="${PLANTCRAFT_PREFLIGHT_IGNORE:+$PLANTCRAFT_PREFLIGHT_IGNORE,}${1#*=}" ;;
@@ -1722,10 +1724,22 @@ do_worker() {
     log "The compute worker is running. Pause or revoke it in PlantCraft › Settings › Compute."
 }
 
+# The apps this run would install, for the requirements check: the installation file's, or
+# --all-apps, or Analytics (on by default) and the --with-<app> ones.
+check_apps() {
+    local apps
+    if [ "$ALL_APPS" = 1 ]; then echo all; return; fi
+    apps="$(printf '%s' "$WITH_APPS" | xargs)"
+    if [ -z "$CONF_APPS" ] && [[ " $apps " != *" linkcraft "* ]]; then apps="linkcraft $apps"; fi
+    printf '%s' "$apps" | xargs | tr ' ' ','
+}
+
 do_check() {
     [ -x "$BUNDLE_DIR/preflight.sh" ] || die "preflight.sh is missing next to install.sh"
+    local args=(--prefix "$PREFIX" --apps "$(check_apps)")
+    [ "$CHECK_JSON" = 1 ] && args+=(--json)
     PLANTCRAFT_INSTALLATION_CONF="${INSTALLATION_CONF:-/etc/plantcraft/installation.conf}" \
-        "$BUNDLE_DIR/preflight.sh" --prefix "$PREFIX"
+        "$BUNDLE_DIR/preflight.sh" "${args[@]}"
 }
 
 # What the installation file sets against what .env holds: "differs" means .env was edited by
@@ -1761,6 +1775,8 @@ do_show_config() {
     fi
 }
 
+# With --check --json only the report goes to stdout, so tools can read it.
+if [ "$ACTION" = check ] && [ "$CHECK_JSON" = 1 ]; then log() { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*" >&2; }; fi
 case "$ACTION" in install | check | show-config) load_installation_conf ;; esac
 case "$ACTION" in
     check) do_check ;;

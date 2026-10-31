@@ -27,8 +27,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   installs the Docker Engine 29.9.2 and Compose 5.6.1 the bundle carries (`docker-engine/`, pinned
   hashes), offline, with its systemd units. `docs/install.md` adds Windows without Docker Desktop.
 - **Setup wizard** (`deploy/wizard/`, first version): the installer's screens in a browser on the
-  server (127.0.0.1, one-time key): requirements, apps, machine and load, network and security,
-  review of the file, install log.
+  server (127.0.0.1, a random key per start): apps, requirements for those apps, machine and
+  load, network and security, review of the file, install log. Tried on Windows 11 (WSL): it
+  checks first that it runs from a complete release bundle, and a failed install can go back.
 
 ### Changed
 
@@ -58,6 +59,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Installer, from the first tries on Windows 11 (WSL) and a clean Linux VM.** The setup
+  wizard asks the apps before the requirements (it stopped on a memory FAIL for apps you would
+  have left out), starts from an installation file already there, says on its first screens when
+  it does not run from a complete release bundle (install.sh refused it only at the end), and a
+  failed install can go back. `install.sh --check` checks the apps that run would install (it
+  checked all six: 10 GB instead of 7) and takes `--json`. `--install-docker` adds the person
+  who ran sudo to the docker group.
 - **`PLANTCRAFT_MCP=off` and `PLANTCRAFT_NOTEBOOKS=off` in `.env` now take effect.** Compose never
   passed them to PlantCraft, so turning assistants through MCP or Notebooks off for a whole
   installation did nothing.
