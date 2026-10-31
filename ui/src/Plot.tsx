@@ -2,18 +2,28 @@
  * `@plantcraft/ui/plot`: the suite's one Plotly build and its time chart. A subpath, so an
  * app without charts never loads Plotly; an app with charts installs `react-plotly.js` and
  * `plotly.js-cartesian-dist-min` and imports `Plot` from here instead of keeping its own.
+ * Plotly (1.4 MB) itself is fetched the first time a chart is drawn, not when a page that
+ * could draw one opens: a page whose charts sit behind a tab or a click opens without it.
  */
-import { useEffect, useMemo, useRef, type ComponentProps, type ReactNode } from "react";
-import createPlotlyComponent from "react-plotly.js/factory";
-import Plotly from "plotly.js-cartesian-dist-min";
+import { lazy, Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
+import type { PlotParams } from "react-plotly.js";
 import type { BrandTheme } from "./brandTheme.js";
 import { timeFigure, type TimeFigureOptions } from "./timeChart.js";
 import { zonedFigure } from "./timeZone.js";
 import { useBrandTheme } from "./useBrandTheme.js";
 
-const PlotlyPlot = createPlotlyComponent(Plotly);
+let plotly: typeof import("plotly.js-cartesian-dist-min").default | null = null;
 
-export type PlotProps = ComponentProps<typeof PlotlyPlot>;
+const PlotlyPlot = lazy(async () => {
+  const [{ default: createPlotlyComponent }, { default: Plotly }] = await Promise.all([
+    import("react-plotly.js/factory"),
+    import("plotly.js-cartesian-dist-min"),
+  ]);
+  plotly = Plotly;
+  return { default: createPlotlyComponent(Plotly) };
+});
+
+export type PlotProps = PlotParams;
 
 /**
  * The one Plotly build the interface ships: lines, bars, pie, histograms, box and heatmaps.
@@ -31,18 +41,22 @@ export function Plot(props: PlotProps) {
     if (!useResizeHandler || watch.current || !parent || typeof ResizeObserver === "undefined") return;
     const current = { frame: 0, observer: new ResizeObserver(() => {
       cancelAnimationFrame(current.frame);
-      current.frame = requestAnimationFrame(() => { if (node.isConnected) void Plotly.Plots.resize(node); });
+      current.frame = requestAnimationFrame(() => { if (node.isConnected && plotly) void plotly.Plots.resize(node); });
     }) };
     current.observer.observe(parent);
     watch.current = current;
   };
   useEffect(() => () => { watch.current?.observer.disconnect(); if (watch.current) cancelAnimationFrame(watch.current.frame); watch.current = null; }, []);
-  return <PlotlyPlot
-    {...props}
-    data={figure.data as PlotProps["data"]}
-    layout={figure.layout as PlotProps["layout"]}
-    onInitialized={(state, node) => { follow(node); onInitialized?.(state, node); }}
-  />;
+  // Until Plotly arrives, an empty box of the chart's size keeps the page from jumping.
+  const height = props.style?.height ?? (props.layout as { height?: number } | undefined)?.height ?? 450;
+  return <Suspense fallback={<div className={props.className} style={{ ...props.style, height }} aria-busy="true" />}>
+    <PlotlyPlot
+      {...props}
+      data={figure.data as PlotProps["data"]}
+      layout={figure.layout as PlotProps["layout"]}
+      onInitialized={(state, node) => { follow(node); onInitialized?.(state, node); }}
+    />
+  </Suspense>;
 }
 
 export type { TimeLine } from "./timeChart.js";

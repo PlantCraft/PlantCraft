@@ -9,6 +9,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Pages open without Plotly until they draw a chart (`@plantcraft/ui`).** `Plot` fetched
+  Plotly (1.4 MB) with any page that could show a chart, even when the chart sat behind a tab or
+  a click. It now arrives the first time a chart is drawn, with an empty box of the chart's size
+  in the meantime. In Analytics, opening Blocks loads 1.15 MB of script instead of 2.5 MB and
+  Algorithms 0.7 MB instead of 2.1 MB; a page whose chart shows at once (Signal, Loop) is drawn
+  first and gets Plotly right after.
+
 - **The Historian answers from several processes (0.6.0 load tests, 2026-10-31).** Heavy reads
   ran in one Python process on one core. `histcraft serve` now starts as many processes as the
   CPUs its container may use (`HISTCRAFT_WORKERS`, `auto` by default: the container's CPU limit,
