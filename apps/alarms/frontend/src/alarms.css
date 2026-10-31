@@ -129,3 +129,8 @@
   .al-python-full { height: auto; }
   .al-python-full .pc-code { height: 60vh; }
 }
+
+/* Rules › Import alarm list */
+.al-file { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; margin: 4px 0 16px; }
+.al-list { margin: 6px 0 16px; padding-left: 18px; }
+.al-diff { margin: 0; padding-left: 16px; }

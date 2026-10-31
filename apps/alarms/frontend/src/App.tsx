@@ -10,6 +10,7 @@ import "./alarms.css";
 
 // Each page loads when it is first opened: Plotly (1.4 MB) and the editors come only with the
 // pages that draw them, not with every page of the app.
+const AlarmListPage = lazy(() => import("./AlarmListPage").then((m) => ({ default: m.AlarmListPage })));
 const AlarmPage = lazy(() => import("./AlarmPage").then((m) => ({ default: m.AlarmPage })));
 const EventPage = lazy(() => import("./EventPage").then((m) => ({ default: m.EventPage })));
 const EventsPage = lazy(() => import("./EventsPage").then((m) => ({ default: m.EventsPage })));
@@ -36,6 +37,7 @@ function Route({ path, me }: { path: string; me: Me }) {
   if (section === "events") return <EventsPage me={me} />;
   const schedule = search.get("schedule") ? { id: search.get("schedule") ?? "", name: search.get("name") ?? undefined } : undefined;
   const kind = search.get("kind") || undefined;
+  if (section === "rules" && id === "import") return <AlarmListPage key={action ?? ""} me={me} importId={Number(action) || undefined} />;
   if (section === "rules" && id === "new") return <RuleEditor key={`new-${from ?? ""}-${kind ?? ""}-${schedule?.id ?? ""}`} me={me} fromEvent={from} fromCatalog={kind} schedule={schedule} />;
   if (section === "rules" && id && action === "edit") return <RuleEditor key={id} me={me} ruleId={id} />;
   if (section === "rules" && id) return <RulePage key={id} ruleId={id} me={me} />;

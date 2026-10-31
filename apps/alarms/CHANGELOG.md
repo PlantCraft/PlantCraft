@@ -8,6 +8,7 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Import the DCS alarm list.** Rules › Import alarm list reads the master alarm database exported from the DCS (CSV or Excel .xlsx: tag, type HH/HI/LO/LL, limit, priority, deadband, on-delay, cause, consequence, action) as a draft. The review shows the new, changed (field by field) and removed alarms against what earlier imports made, and the rows it could not read. Nothing changes until someone who edits rules applies it, alarm by alarm if they want; a removed alarm's rule is turned off, never deleted, and each rule written is audited.
 - **Shelving has a time limit by priority.** The alarm philosophy sets the longest an alarm may be shelved: 1 hour for critical, 4 for high, 12 for medium and 24 for low by default (ISA-18.2). The shelve dialog offers only durations up to that limit, and the server refuses anything longer.
 - **Performance: the EEMUA 191 level, floods with hysteresis and what the journal tells.**
   - **EEMUA 191 level.** The period shows as one point, average against peak alarms per 10 minutes, on the four EEMUA 191 bands: robust, stable, reactive and overloaded.
