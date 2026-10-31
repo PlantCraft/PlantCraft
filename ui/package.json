@@ -34,13 +34,18 @@
       "types": "./dist/Plot.d.ts",
       "default": "./dist/Plot.js"
     },
+    "./sharedVendor": {
+      "types": "./dist/sharedVendor.d.ts",
+      "default": "./dist/sharedVendor.js"
+    },
     "./tokens.css": "./dist/tokens.css",
     "./fonts.css": "./dist/fonts.css",
     "./shell.css": "./dist/shell.css",
     "./base.css": "./dist/base.css",
     "./blockEditor.css": "./dist/blockEditor.css",
     "./codeEditor.css": "./dist/codeEditor.css",
-    "./fonts/*": "./dist/fonts/*"
+    "./fonts/*": "./dist/fonts/*",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"

@@ -107,6 +107,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Plotly and the fonts download once for the whole suite, not once per app (ui 0.95.0).**
+  The platform serves them at `/static/vendor/` under names that carry a hash of their bytes
+  (kept a year by the proxy), and every app asks there first: `@plantcraft/ui/plot` loads
+  Plotly from the platform and `fonts.css` lists the platform's copy before the app's own. An
+  app run on its own, or a platform with another Plotly build, answers 404 and the app uses its
+  own copy as before. `node ui/scripts/shared-vendor-names.mjs` prints the names after an upgrade.
 - **Schedules and the block pages open without the block editor (`@plantcraft/ui`).**
   `ParameterField` and `typeLabel` have their own subpath, `@plantcraft/ui/blockParameter`
   (still exported from `blockEditor`), so Analytics › Schedules and Models › Blocks no longer
