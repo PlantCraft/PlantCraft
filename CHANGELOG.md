@@ -9,6 +9,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- `@plantcraft/ui`: **`showToast(text, { tone })`**, a short message in the page's corner that
+  closes on its own (6 s, errors 10 s), with its × or Escape; screen readers read it. It replaces
+  `window.alert`: Models shows a run that would not cancel or delete with it, and asks before
+  deleting a tracking with `confirmAction`. `tests/test_visual_rules.py` keeps `window.alert` out.
 - **An action keeps the chart it was opened from.** An app's link to the action form can carry the
   description (`text=`) and an image left in the tab (`attach=`); the new action keeps the image
   (PNG, JPEG or WebP, up to 2 MB) and its page shows it. Analytics uses it to open an action from a
