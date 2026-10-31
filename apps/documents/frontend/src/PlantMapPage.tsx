@@ -1,11 +1,11 @@
 import { DataTable } from "@plantcraft/ui";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent } from "react";
 import { api } from "./api";
 import { ConfidencePill } from "./DiagramsPage";
 import { t } from "./i18n";
 import { Link } from "./nav";
-import type { MapItem, MapRelation, Me, PlantMap, Verdict } from "./types";
+import type { Doc, MapItem, MapRelation, Me, PlantMap, Verdict } from "./types";
 import { ErrorBox, Heading, Loading, message } from "./ui";
 
 
@@ -90,9 +90,30 @@ export function PlantMapPage({ me }: { me: Me }) {
           <a className="button" href={api.dexpiUrl()} download><Download size={16} /> {t("DEXPI (XML)")}</a>
         </div>
       </div>
+      {canReview && <SummaryDocument />}
       <TagListCheck plant={plant} />
     </>}
   </>;
+}
+
+/** D6: the map written out as a document of the library, for search and the assistant. */
+function SummaryDocument() {
+  const [doc, setDoc] = useState<Doc | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const make = () => {
+    setBusy(true);
+    setError("");
+    api.summaryDocument().then(setDoc).catch((err) => setError(message(err))).finally(() => setBusy(false));
+  };
+  return <div className="panel">
+    <div className="panel-header"><div><h2>{t("As a document")}</h2><p>{t("Write the map out as a document of the library, so search and the assistant find and cite it. Made from the drawings with no language model; make it again after a change.")}</p></div></div>
+    <div className="map-lists">
+      <button type="button" className="button" onClick={make} disabled={busy}><FileText size={16} /> {busy ? t("Writing…") : t("Write the plant summary")}</button>
+      {doc && <Link to={`/documents/${doc.doc_id}`}>{t("Open {number}", { number: doc.number })}</Link>}
+    </div>
+    {error && <ErrorBox text={error} />}
+  </div>;
 }
 
 function Kpi({ value, label }: { value: number | string; label: string }) {
@@ -134,7 +155,7 @@ function ItemCard({ item, relations, onPick, onReview }: { item: MapItem; relati
     </li>)}</ul>}
     <h3>{t("Drawn on")}</h3>
     {item.places.length === 0 ? <p className="muted">{t("Only named by a connector: its sheet is not in the documents.")}</p>
-      : <ul>{item.places.map((p) => <li key={`${p.rev_id}-${p.page}`}><Link to={`/diagrams/${p.rev_id}/${p.page}`}>{p.sheet}</Link> <span className="muted">{p.doc_title}</span></li>)}</ul>}
+      : <ul>{item.places.map((p) => <li key={`${p.rev_id}-${p.page}`}><Link to={`/diagrams/${p.rev_id}/${p.page}/${encodeURIComponent(item.tag)}`}>{p.sheet}</Link> <span className="muted">{p.doc_title}</span></li>)}</ul>}
   </div>;
 }
 
