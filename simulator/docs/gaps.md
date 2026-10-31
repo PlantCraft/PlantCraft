@@ -1,6 +1,6 @@
 # Gaps
 
-> **Updated:** 2026-10-20
+> **Updated:** 2026-10-31
 
 Every known shortfall of PlantCraft Simulator, ranked by user impact. `B` marks a blocker for the next
 stage. When a gap closes, delete its row in the same change and note it in `CHANGELOG.md`.
@@ -13,7 +13,7 @@ stage. When a gap closes, delete its row in the same change and note it in `CHAN
 | G2 | Conformance is checked with the asyncua client only; no run of an independent reference client or the OPC Foundation's Compliance Test Tool | medium | |
 | G4 | No writable nodes (setpoints, modes, outputs), so ModelCraft/MPC cannot close a loop on the simulator. Any write path is a maintainer decision | medium | |
 | G14 | No pip-audit, image vulnerability scan or CycloneDX SBOM in CI | medium | |
-| G15 | The loop portfolio publishes only `Good` values and has no data-quality faults (the benchmark has them); subscriptions are not covered by a test | low | |
+| G15 | The loop portfolio publishes `Bad` only for a scheduled fault (`--faults`), never on its own; subscriptions are not covered by a test | low | |
 | G5 | Engineering units are string properties, not OPC UA Part 8 `EUInformation` and `EURange` | low | |
 | G6 | No user-defined tags or signal generators (sine, ramp, random, step); models are fixed in code | low | |
 | G8 | No OPC UA alarms and conditions | low | |

@@ -7,6 +7,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Literal
 
+from .faults import Fault
+
 Behavior = Literal[
     "healthy",
     "oscillation",
@@ -61,6 +63,10 @@ class LoopState:
     mode: str = "AUTO"
     sensor_bias: float = 0.0
     delay_buffer: list[tuple[float, float]] = field(default_factory=list)
+    # Scheduled faults (``loops.faults``): what each active fault holds (a frozen PV, a stuck
+    # valve, an output left in manual), by fault id, and the PV's status code.
+    fault_holds: dict[str, float] = field(default_factory=dict)
+    pv_status: str = "Good"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -71,7 +77,11 @@ class LoopState:
         values["delay_buffer"] = [
             (float(item[0]), float(item[1])) for item in values.get("delay_buffer", [])
         ]
-        return cls(**values)
+        values["fault_holds"] = {
+            str(key): float(value) for key, value in (values.get("fault_holds") or {}).items()
+        }
+        known = set(cls.__dataclass_fields__)
+        return cls(**{key: value for key, value in values.items() if key in known})
 
 
 LOOP_DEFINITIONS: tuple[LoopDefinition, ...] = (
@@ -858,21 +868,34 @@ def _delayed_output(
     return delayed
 
 
+def _hold(state: LoopState, fault: Fault, value: float) -> float:
+    """The value a fault holds from its start (kept in the state across restarts)."""
+
+    return state.fault_holds.setdefault(fault.fault_id, value)
+
+
 def simulate_step(
     definition: LoopDefinition,
     state: LoopState,
     timestamp: datetime,
     step_seconds: float,
+    faults: list[Fault] | tuple[Fault, ...] = (),
 ) -> dict[str, float | str]:
-    """Advance one loop and return the published signal values."""
+    """Advance one loop and return the published signal values. ``faults``: the scheduled
+    faults active on this loop now (``loops.faults``)."""
 
     epoch = timestamp.timestamp()
     dt = max(float(step_seconds), 0.05)
     sp = _setpoint(definition, epoch)
     secondary = _secondary_signal(definition, epoch) if definition.has_secondary else None
+    active = {fault.kind: fault for fault in faults}
+    for fault_id in [key for key in state.fault_holds if key not in {f.fault_id for f in faults}]:
+        del state.fault_holds[fault_id]
 
     manual_phase = int(epoch // 3600) % 24
     mode = "MAN" if definition.behavior == "manual" and 4 <= manual_phase < 10 else "AUTO"
+    if "manual" in active:
+        mode = "MAN"
     state.mode = mode
 
     if mode == "AUTO":
@@ -884,6 +907,8 @@ def simulate_step(
         requested_op = (
             50.0 + definition.controller_gain * error + definition.integral_gain * state.integral
         )
+    elif "manual" in active:
+        requested_op = _hold(state, active["manual"], state.op)
     else:
         requested_op = 43.0 + 2.2 * math.sin(2.0 * math.pi * epoch / 2700.0)
         state.integral *= math.exp(-dt / 900.0)
@@ -898,6 +923,8 @@ def simulate_step(
             )
     else:
         state.valve_position = state.op
+    if "valve_stuck" in active:
+        state.valve_position = _hold(state, active["valve_stuck"], state.valve_position)
 
     delayed_op = _delayed_output(
         state,
@@ -906,6 +933,8 @@ def simulate_step(
         definition.dead_time_seconds,
     )
     disturbance = _disturbance(definition, epoch, secondary)
+    if "load_step" in active:
+        disturbance += active["load_step"].magnitude
     process_target = (
         definition.base_pv + definition.process_gain * (delayed_op - 50.0) + disturbance
     )
@@ -921,6 +950,11 @@ def simulate_step(
         state.sensor_bias = min(9.0, state.sensor_bias + dt * 7.0 / 86400.0)
     measurement_noise = definition.measurement_noise * _fractional_noise(definition.seed, epoch, 2)
     state.measured_pv = state.true_pv + state.sensor_bias + measurement_noise
+    if "sensor_bias" in active:
+        state.measured_pv += active["sensor_bias"].magnitude
+    if "sensor_frozen" in active:
+        state.measured_pv = _hold(state, active["sensor_frozen"], state.measured_pv)
+    state.pv_status = "Bad" if "bad_quality" in active else "Good"
 
     published_op = state.valve_position if definition.behavior == "stiction" else state.op
     values: dict[str, float | str] = {
