@@ -365,10 +365,33 @@
       "title": "Extremes",
       "type": "boolean"
      },
+     "max_gap": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Max Gap"
+     },
      "quality": {
       "default": false,
       "title": "Quality",
       "type": "boolean"
+     },
+     "sampling": {
+      "anyOf": [
+       {
+        "maxLength": 20,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sampling"
      },
      "signals": {
       "items": {
@@ -3919,7 +3942,7 @@
   },
   "/api/v1/signals/{signal_id}/series": {
    "get": {
-    "description": "Recorded values, or one mean (text: the last label) per ``step`` seconds; at most\n200,000 points. ``signal`` in the answer is the id as asked. A runs point answers\n``{\"signal\", \"kind\": \"runs\", \"runs\": [{\"run_at\", \"t\", \"v\"}]}``, newest first: the run at\n``run`` (``latest`` by default, or its ISO time) or the ``runs`` newest.",
+    "description": "Recorded values, or one mean (text: the last label) per ``step`` seconds; at most\n200,000 points. ``signal`` in the answer is the id as asked. A runs point answers\n``{\"signal\", \"kind\": \"runs\", \"runs\": [{\"run_at\", \"t\", \"v\"}]}``, newest first: the run at\n``run`` (``latest`` by default, or its ISO time) or the ``runs`` newest.\n\n``sampling=interpolated`` (with ``step``, numbers only) gives the value at each grid time\nfrom ``start`` to ``end``, on the straight line between the samples around it (steps for\na step signal); ``max_gap`` (seconds) is the longest span between two samples it\ninterpolates across, and past the last sample by more than it the value is null.",
     "operationId": "series_api_v1_signals__signal_id__series_get",
     "parameters": [
      {
@@ -4015,6 +4038,39 @@
        ],
        "title": "Runs"
       }
+     },
+     {
+      "in": "query",
+      "name": "sampling",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 20,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Sampling"
+      }
+     },
+     {
+      "in": "query",
+      "name": "max_gap",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Max Gap"
+      }
      }
     ],
     "responses": {
@@ -4040,6 +4096,99 @@
      }
     },
     "summary": "Series"
+   }
+  },
+  "/api/v1/signals/{signal_id}/summary": {
+   "get": {
+    "description": "What ``[start, end]`` holds: ``count`` (values recorded in it), ``covered_pct`` (time\nthe signal has a value), ``good_pct`` (time its quality was good; null for a signal read\nfrom its source), ``total`` (the time integral per ``per``: ``s``, ``min``, ``h`` or\n``d``, default ``h``, so a flow in t/h totals to tonnes) and the time-weighted ``mean``,\n``min``, ``max`` and ``std``. Needs the Historian (422 otherwise).",
+    "operationId": "summary_api_v1_signals__signal_id__summary_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "signal_id",
+      "required": true,
+      "schema": {
+       "title": "Signal Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "start",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 64,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Start"
+      }
+     },
+     {
+      "in": "query",
+      "name": "end",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 64,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "End"
+      }
+     },
+     {
+      "in": "query",
+      "name": "per",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 5,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Per"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Summary Api V1 Signals  Signal Id  Summary Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Summary"
    }
   },
   "/api/v1/signals/{signal_id}/value": {

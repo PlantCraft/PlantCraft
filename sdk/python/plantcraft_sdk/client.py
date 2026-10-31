@@ -645,13 +645,47 @@ class PlantCraftClient:
         start: str | datetime | None = None,
         end: str | datetime | None = None,
         step: float | None = None,
+        *,
+        sampling: str | None = None,
+        max_gap: float | None = None,
     ) -> Series:
-        """Recorded values (``step`` None) or one mean per ``step`` seconds. Naive datetimes are UTC."""
+        """Recorded values (``step`` None) or one mean per ``step`` seconds. Naive datetimes are UTC.
 
+        ``sampling="interpolated"`` (with ``step``, numbers only): the value at each grid time
+        from ``start`` to ``end`` on the straight line between the samples around it, as PI's
+        and Seeq's interpolated reads; ``max_gap`` (seconds) is the longest span between two
+        samples it interpolates across. Needs the Historian."""
+
+        params: dict[str, Any] = {"start": _time(start), "end": _time(end), "step": step}
+        if sampling:
+            params["sampling"] = sampling
+        if max_gap is not None:
+            params["max_gap"] = max_gap
         return self._read(
             "GET",
             f"/api/v1/signals/{quote(signal_id, safe='')}/series",
-            params={"start": _time(start), "end": _time(end), "step": step},
+            params=params,
+            timeout=SERIES_TIMEOUT,
+        )
+
+    def summary(
+        self,
+        signal_id: str,
+        start: str | datetime | None = None,
+        end: str | datetime | None = None,
+        *,
+        per: str = "h",
+    ) -> dict[str, Any]:
+        """What ``[start, end]`` holds: ``count`` (values recorded), ``covered_pct`` (time
+        with a value), ``good_pct`` (time with good quality; None for a signal read from its
+        source), ``total`` (the time integral per ``per``: ``s``, ``min``, ``h`` or ``d``, so
+        a flow in t/h totals to tonnes) and the time-weighted ``mean``, ``min``, ``max`` and
+        ``std``. Needs the Historian."""
+
+        return self._send(
+            "GET",
+            f"/api/v1/signals/{quote(signal_id, safe='')}/summary",
+            params={"start": _time(start), "end": _time(end), "per": per},
             timeout=SERIES_TIMEOUT,
         )
 
@@ -715,10 +749,15 @@ class PlantCraftClient:
         start: str | datetime | None = None,
         end: str | datetime | None = None,
         step: float | None = None,
+        *,
+        sampling: str | None = None,
+        max_gap: float | None = None,
     ) -> pd.Series:
         """``series`` as a float ``pandas.Series`` with a UTC DatetimeIndex."""
 
-        return series_to_pandas(self.series(signal_id, start, end, step))
+        return series_to_pandas(
+            self.series(signal_id, start, end, step, sampling=sampling, max_gap=max_gap)
+        )
 
     def series_many(
         self,
@@ -730,6 +769,8 @@ class PlantCraftClient:
         binary: bool = False,
         quality: bool = False,
         extremes: bool = False,
+        sampling: str | None = None,
+        max_gap: float | None = None,
     ) -> SeriesBatch:
         """Many signals' series: ``{"series": [...], "errors": [{signal, status, detail}]}``.
 
@@ -748,6 +789,8 @@ class PlantCraftClient:
         step had none), so a min or max trend needs no raw samples. A server that cannot tell
         them (a source read live, a span past what it keeps) leaves them out.
 
+        ``sampling`` and ``max_gap``: as in ``series`` (an interpolated grid).
+
         One ``POST /api/v1/series`` per 500 signals; signals a request had no
         room for (413) are asked for again in the next one, so ``errors`` holds
         only real failures (404 unknown signal, 422 too many points, 502 source
@@ -761,7 +804,15 @@ class PlantCraftClient:
         while pending:
             chunk, pending = pending[:MAX_BATCH_SIGNALS], pending[MAX_BATCH_SIGNALS:]
             answer = self._series_batch(
-                chunk, start, end, step, binary=binary, quality=quality, extremes=extremes
+                chunk,
+                start,
+                end,
+                step,
+                binary=binary,
+                quality=quality,
+                extremes=extremes,
+                sampling=sampling,
+                max_gap=max_gap,
             )
             for item in answer.get("series") or []:
                 item.setdefault("kind", "number")
@@ -798,6 +849,8 @@ class PlantCraftClient:
         binary: bool = False,
         quality: bool = False,
         extremes: bool = False,
+        sampling: str | None = None,
+        max_gap: float | None = None,
     ) -> dict[str, Any]:
         body: dict[str, Any] = {
             "signals": signal_ids,
@@ -809,6 +862,10 @@ class PlantCraftClient:
             body["quality"] = True
         if extremes and step:
             body["extremes"] = True
+        if sampling:
+            body["sampling"] = sampling
+        if max_gap is not None:
+            body["max_gap"] = max_gap
         historian = self._historian
         if historian is not None and self._historian_serves(historian):
             accept = (
@@ -840,7 +897,9 @@ class PlantCraftClient:
         errors: list[SeriesError] = []
         for signal_id in signal_ids:
             try:
-                series.append(self.series(signal_id, start, end, step))
+                series.append(
+                    self.series(signal_id, start, end, step, sampling=sampling, max_gap=max_gap)
+                )
             except (BadRequest, NotFound, Unavailable) as exc:
                 if exc.status_code is None:
                     raise

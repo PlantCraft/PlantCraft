@@ -34,6 +34,13 @@ REVOKED_PATH = "/api/v1/auth/revoked"
 LEVELS = ("dashboards", "viewer", "editor", "admin")
 APP_ACCESS = ("viewer", "editor")
 AGGREGATIONS = ("last", "mean", "min", "max", "std")
+# How a grid (``step``) is read: ``average``, the time-weighted mean of each step (the default),
+# or ``interpolated``, the value at each grid time from the straight line between the samples
+# around it (steps for a step signal), as PI's and Seeq's interpolated reads give it.
+SAMPLINGS = ("average", "interpolated")
+# A summary's ``total`` is the time integral of the value per this unit of time: a flow in t/h
+# totals to tonnes with ``per=h`` (``GET /api/v1/signals/{id}/summary``).
+TOTAL_PER = {"s": 1.0, "min": 60.0, "h": 3600.0, "d": 86400.0}
 # What a signal holds: numbers, or text labels such as controller modes ("AUTO", "MAN").
 KINDS = ("number", "text")
 MAX_POINTS = 200_000
@@ -263,6 +270,38 @@ def series_range(
                 )
             )
     return start_at, end_at, step
+
+
+def sampling_options(
+    sampling: str | None, step: float | None, max_gap: float | None
+) -> tuple[str, float | None]:
+    """The checked ``(sampling, max_gap)`` of a series request.
+
+    ``interpolated`` needs a ``step``. ``max_gap`` (seconds, interpolated reads only) is the
+    longest span between two samples that is interpolated across: a grid time inside a longer
+    gap, or past the last sample by more than it, is null (PI's and Seeq's maximum
+    interpolation interval). None: no limit."""
+
+    chosen = (sampling or "average").strip().lower()
+    if chosen not in SAMPLINGS:
+        raise ContractError(t("sampling is one of {values}.", values=", ".join(SAMPLINGS)))
+    if chosen == "interpolated" and step is None:
+        raise ContractError(t("An interpolated read needs a step."))
+    if max_gap is not None:
+        if chosen != "interpolated":
+            raise ContractError(t("max_gap applies to sampling=interpolated only."))
+        if not math.isfinite(max_gap) or max_gap <= 0:
+            raise ContractError(t("max_gap must be a positive number of seconds."))
+    return chosen, max_gap
+
+
+def total_per(per: str | None) -> tuple[str, float]:
+    """The checked unit of a summary's ``total`` and its seconds (default ``h``)."""
+
+    chosen = (per or "h").strip().lower()
+    if chosen not in TOTAL_PER:
+        raise ContractError(t("per is one of {values}.", values=", ".join(TOTAL_PER)))
+    return chosen, TOTAL_PER[chosen]
 
 
 def iso(stamp: Any) -> str:
@@ -725,11 +764,13 @@ __all__ = [
     "MAX_POINTS",
     "Me",
     "ON_CHANGE_NAMES",
+    "SAMPLINGS",
     "Series",
     "SeriesBatch",
     "SeriesError",
     "Signal",
     "TOKEN_COOKIE",
+    "TOTAL_PER",
     "TokenGrant",
     "Value",
     "aggregate",
@@ -740,6 +781,7 @@ __all__ = [
     "parse_times",
     "parse_window",
     "recorded_on_change",
+    "sampling_options",
     "series_range",
     "series_to_pandas",
     "hold_limit",
@@ -750,5 +792,6 @@ __all__ = [
     "subject_digest",
     "with_quality",
     "text_label",
+    "total_per",
     "unique_signals",
 ]

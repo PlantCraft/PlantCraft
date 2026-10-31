@@ -2,7 +2,7 @@
 .PHONY: ci deps standard lint format test test-fast frontend e2e serve image runner-image runner package lock
 
 PYTHON ?= $(shell command -v python >/dev/null 2>&1 && echo python || echo python3)
-SDK := plantcraft-sdk==0.94.0
+SDK := plantcraft-sdk==0.95.0
 
 ci: deps standard lint frontend test
 

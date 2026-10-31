@@ -8,6 +8,19 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Interpolated reads and a window's summary (gap H5).**
+  - `GET /api/v1/data/signals/{id}/series` and `POST /series` (and the same reads straight to
+    the Historian) take `sampling=interpolated` with a `step`. They answer the value at each
+    grid time from `start` to `end`, on the line between the samples around it, or steps for a
+    step signal.
+  - `max_gap` (seconds) is the maximum interpolation interval: a grid time inside a longer gap
+    between two samples, or past the last sample, is null.
+  - `GET .../signals/{id}/summary?start&end&per` gives:
+    - `count`, the values recorded in the window;
+    - `covered_pct`, the time with a value;
+    - `good_pct`, the time with good quality, from the archive's quality changes;
+    - `total`, the time integral per `s`, `min`, `h` or `d`;
+    - the time-weighted `mean`, `min`, `max` and `std`.
 - **Daily and monthly rollups, each with its own retention** (gap H9). Housekeeping sums each
   closed UTC day's hourly rollups into a daily row and each closed month's days into a monthly
   one (`rollups_coarse`). A trend on a grid of whole days reads them (a year: 365 rows instead of

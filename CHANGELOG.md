@@ -9,6 +9,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **API v1: interpolated reads and summaries (gap H5, `plantcraft-sdk` 0.95.0).**
+  - Series reads (`GET .../series`, `POST /api/v1/series`) take `sampling=interpolated` and
+    `max_gap`. They give the value at each grid time, as PI's and Seeq's interpolated reads
+    do, with a maximum interpolation interval.
+  - `GET /api/v1/signals/{id}/summary?start&end&per` gives a window's count, time covered,
+    % good, total (per `s`, `min`, `h` or `d`) and time-weighted mean, min, max and std.
+  - Both need the Historian; without it, API v1 answers 422.
+  - The SDK has `client.series(..., sampling=, max_gap=)`, the same options on `series_many`,
+    and `client.summary()`. The contract has `SAMPLINGS`, `TOTAL_PER`, `sampling_options` and
+    `total_per`.
 - `@plantcraft/ui`: **`askText(question, { value, confirm, type })`**, the suite's dialog for one
   short text (a name, a number of hours), resolving the trimmed text or null; its button stays off
   while the answer is empty or, with `type: "number"`, not above zero. It replaces `window.prompt`
