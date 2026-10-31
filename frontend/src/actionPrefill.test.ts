@@ -10,7 +10,7 @@ describe("action prefill", () => {
   it("reads the title, references, text and the image an app left", () => {
     const store = memory({ [`${ATTACHMENT_PREFIX}k1`]: JSON.stringify({ name: "FIC-101 chart.png", data: PNG }) });
     const found = readPrefill("?new=1&title=FIC-101%3A+Stiction&ref=asset%3AFIC-101&ref=verdict%3AFIC-101%402026-10-31T12%3A00%3A00Z&text=Health+42&attach=k1", store);
-    expect(found).toEqual({ title: "FIC-101: Stiction", refs: ["asset:FIC-101", "verdict:FIC-101@2026-10-31T12:00:00Z"], text: "Health 42", attachment: { name: "FIC-101 chart.png", data: PNG } });
+    expect(found).toEqual({ title: "FIC-101: Stiction", refs: ["asset:FIC-101", "loop_result:FIC-101@2026-10-31T12:00:00Z"], text: "Health 42", attachment: { name: "FIC-101 chart.png", data: PNG } });
     // Read once: a reload does not attach it again.
     expect(store.items).toEqual({});
   });

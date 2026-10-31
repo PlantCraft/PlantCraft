@@ -1763,7 +1763,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - The soak (`ci/bench/soak.py`, `make soak`): days on one build with the Mac mini's automatic
   deploys held (`data/deploy-hold`, read by `ci/macmini/suite-deploy`), a person's probes every
-  minute and the suite's own `system` signals read back into a verdict: no restart, up 99.5 %,
+  minute and the suite's own `system` signals read back into a loop_result: no restart, up 99.5 %,
   memory flat, queues that drain, disk, probes and fresh live values (docs/bench/README.md).
   `suite_bench.py --cleanup` removes what a `--keep` run left.
 

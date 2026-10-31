@@ -1,7 +1,7 @@
-/** A loop's verdict as an action (LACUNAS A19): PlantCraft's action form opened from the loop page
- * with the verdict written out, its references, and the loop's charts attached as one PNG.
+/** A loop's result as an action (LACUNAS A19): PlantCraft's action form opened from the loop page
+ * with the result written out, its references, and the loop's charts attached as one PNG.
  *
- * The reference `verdict:<loop id>@<window end>` (declared in app.toml, `[[contributes.refs]]`)
+ * The reference `loop_result:<loop id>@<window end>` (declared in app.toml, `[[contributes.refs]]`)
  * opens the loop again from the action. The image travels in this tab's sessionStorage, which
  * PlantCraft's form reads once (PlantCraft `frontend/src/actionPrefill.ts`): every app is served
  * under PlantCraft's host, so the tab's storage is shared and nothing is uploaded until the
@@ -14,22 +14,22 @@ import { statusLabel } from "./status";
 export const ATTACHMENT_PREFIX = "plantcraft.action-attachment.";
 const SEPARATOR = "@";
 
-export function verdictRef(loopId: string, end: string | null | undefined): string {
-  return `verdict:${loopId}${end ? `${SEPARATOR}${end}` : ""}`;
+export function resultRef(loopId: string, end: string | null | undefined): string {
+  return `loop_result:${loopId}${end ? `${SEPARATOR}${end}` : ""}`;
 }
 
 /** `<loop id>@<window end>` back into its parts (the loop id may hold "@" itself). */
-export function parseVerdict(id: string): { loopId: string; end: string | null } {
+export function parseResult(id: string): { loopId: string; end: string | null } {
   const at = id.lastIndexOf(SEPARATOR);
   if (at <= 0 || !/^\d{4}-\d{2}-\d{2}/.test(id.slice(at + 1))) return { loopId: id, end: null };
   return { loopId: id.slice(0, at), end: id.slice(at + 1) };
 }
 
-/** The action's description: the verdict, its window, the likely cause and what to do first. */
-export function verdictText(detail: LoopDetail, ref: string): string {
+/** The action's description: the result, its window, the likely cause and what to do first. */
+export function resultText(detail: LoopDetail, ref: string): string {
   const summary = detail.summary;
   const lines = [
-    t("Analytics verdict on {loop}: {status}, health {health}.", {
+    t("Analytics result on {loop}: {status}, health {health}.", {
       loop: detail.loop.name || detail.loop.loop_id,
       status: statusLabel(summary?.status ?? "pending"),
       health: summary?.health == null ? "—" : summary.health.toFixed(0),
@@ -43,18 +43,18 @@ export function verdictText(detail: LoopDetail, ref: string): string {
   return lines.join("\n").slice(0, 4000);
 }
 
-export function verdictTitle(detail: LoopDetail): string {
+export function resultTitle(detail: LoopDetail): string {
   const limiting = detail.summary?.limiting;
   return (limiting ? `${detail.loop.loop_id}: ${methodLabel(limiting.method_id)}` : detail.loop.loop_id).slice(0, 200);
 }
 
-/** PlantCraft's action form for the verdict; `attach` names the image left in sessionStorage. */
-export function verdictActionUrl(me: Me, detail: LoopDetail, attach: string | null): string {
-  const ref = verdictRef(detail.loop.loop_id, detail.source_end);
-  const query = new URLSearchParams({ new: "1", title: verdictTitle(detail) });
+/** PlantCraft's action form for the result; `attach` names the image left in sessionStorage. */
+export function resultActionUrl(me: Me, detail: LoopDetail, attach: string | null): string {
+  const ref = resultRef(detail.loop.loop_id, detail.source_end);
+  const query = new URLSearchParams({ new: "1", title: resultTitle(detail) });
   if (detail.origin === "processcraft") query.append("ref", `asset:${String(detail.loop.metadata?.asset_id ?? detail.loop.loop_id)}`);
   query.append("ref", ref);
-  query.set("text", verdictText(detail, ref));
+  query.set("text", resultText(detail, ref));
   if (attach) query.set("attach", attach);
   return `${(me.processcraft_url || "/").replace(/\/$/, "")}/actions?${query.toString()}`;
 }
