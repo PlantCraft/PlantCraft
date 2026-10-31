@@ -36,7 +36,7 @@ class Indexed:
 def index_file(
     data: bytes, filename: str, tag_ids: dict[str, str], embedder: Embedder, title: str = ""
 ) -> Indexed:
-    extracted = reader.extract(data, filename)
+    extracted = reader.extract_isolated(data, filename)
     kind = reader.format_of(filename)
     diagrams = read_diagrams(data, filename) if kind in {"pdf", *reader.DRAWING_ONLY} else []
     # Each diagram page gets a passage saying what it shows, in words.

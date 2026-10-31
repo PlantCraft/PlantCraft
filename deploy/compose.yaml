@@ -499,11 +499,15 @@ services:
       ALARMCRAFT_ROOT_PATH: /alarm
       ALARMCRAFT_DATA_DIR: /data
       ALARMCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
+      # The rules' Python runs in alarmcraft-sandbox, not here (plantcraft_sdk.sandbox_remote).
+      ALARMCRAFT_CODE_SOCKET: /sandbox/code.sock
+      ALARMCRAFT_CODE_TIMEOUT_SECONDS: "${ALARMCRAFT_CODE_TIMEOUT_SECONDS:-30}"
     secrets:
       - alarmcraft_app_key
     volumes:
       # Its alarms, occurrences and journal.
       - ./data/alarmcraft:/data
+      - ./data/alarmcraft-sandbox:/sandbox
     networks:
       - apps
     depends_on:
@@ -526,6 +530,49 @@ services:
           cpus: "${ALARMCRAFT_CPUS:-1}"
           memory: "${ALARMCRAFT_MEMORY:-1g}"
           pids: 1024
+
+  alarmcraft-sandbox:
+    <<: *hardening
+    profiles: ["alarmcraft"]
+    # The Python blocks of Alarms' rules (written by administrators) run here: same image as
+    # Alarms, but no network at all, no secret, none of Alarms' data, read-only, no capabilities,
+    # CPU, memory and process limits, and a time and memory limit per run. Alarms reaches it
+    # only through the socket in data/alarmcraft-sandbox (security test 2026-10-31, D8).
+    image: alarmcraft:${ALARMCRAFT_VERSION:-0.5.1}
+    user: "10009:10009"
+    network_mode: none
+    entrypoint: ["python", "-m", "plantcraft_sdk.sandbox_remote", "serve"]
+    command:
+      - --socket
+      - /sandbox/code.sock
+      - --prefix
+      - ALARMCRAFT_CODE
+      - --handler
+      - alarmcraft.engine.python:_evaluate
+    environment:
+      ALARMCRAFT_CODE_TIMEOUT_SECONDS: "${ALARMCRAFT_CODE_TIMEOUT_SECONDS:-30}"
+      ALARMCRAFT_CODE_MEMORY_MB: "${ALARMCRAFT_CODE_MEMORY_MB:-1024}"
+      ALARMCRAFT_CODE_WORKERS: "${ALARMCRAFT_CODE_WORKERS:-2}"
+    volumes:
+      - ./data/alarmcraft-sandbox:/sandbox
+    healthcheck:
+      # Its heartbeat beside the socket, written every 10 seconds.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json, time; s = json.load(open('/sandbox/sandbox.json')); assert time.time() - s['at'] < 60"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    stop_grace_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "${ALARMCRAFT_SANDBOX_CPUS:-1}"
+          memory: "${ALARMCRAFT_SANDBOX_MEMORY:-3g}"
+          pids: 256
 
   modelcraft:
     <<: *hardening

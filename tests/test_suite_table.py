@@ -75,9 +75,10 @@ def test_compose_users_and_ports_match_the_table():
     checked = []
     for name, service in services.items():
         # An app's own database (`histcraft-db`), collector (`histcraft-collector`), gateway
-        # (`histcraft-gateway`) or job runner runs as that app's user,
+        # (`histcraft-gateway`), code sandbox (`alarmcraft-sandbox`) or job runner runs as that
+        # app's user,
         # with no port of the table.
-        owner = re.sub(r"-(db|runner|collector|gateway)$", "", name)
+        owner = re.sub(r"-(db|runner|collector|gateway|sandbox)$", "", name)
         # An app's executor on the local compute worker shares the compute gateway's user.
         owner = "compute" if name.endswith("-executor") else owner
         row = table.get(name) or (table.get(owner) if owner != name else None)
