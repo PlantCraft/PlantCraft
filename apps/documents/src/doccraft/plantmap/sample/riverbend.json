@@ -1,0 +1,751 @@
+{
+ "plant": "Riverbend demo refinery",
+ "sheets": [
+  {
+   "sheet": "PID-U-100-01",
+   "title": "Feed",
+   "unit": "U-100",
+   "unit_name": "Crude distillation unit",
+   "area": "u-100-feed",
+   "equipment": [
+    {
+     "tag": "TK-1001",
+     "kind": "tank",
+     "name": "Crude charge tank"
+    },
+    {
+     "tag": "P-1001",
+     "kind": "pump",
+     "name": "Charge pump"
+    }
+   ],
+   "incoming": [],
+   "outgoing": [
+    {
+     "from": "P-1001",
+     "to": "E-1009",
+     "sheet": "PID-U-100-02"
+    }
+   ],
+   "loops": [
+    {
+     "controller": "FIC-1001",
+     "transmitter": "FT-1001",
+     "valve": "FV-1001",
+     "equipment": "P-1001",
+     "mount": "line",
+     "name": "Feed flow"
+    },
+    {
+     "controller": "FIC-1007",
+     "transmitter": "FT-1007",
+     "valve": "FV-1007",
+     "equipment": "P-1001",
+     "mount": "line",
+     "name": "Charge flow"
+    },
+    {
+     "controller": "FIC-1112",
+     "transmitter": "FT-1112",
+     "valve": "FV-1112",
+     "equipment": "P-1001",
+     "mount": "line",
+     "name": "Production flow"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-100-02",
+   "title": "Heat exchange",
+   "unit": "U-100",
+   "unit_name": "Crude distillation unit",
+   "area": "u-100-heat-exchange",
+   "equipment": [
+    {
+     "tag": "E-1009",
+     "kind": "heat_exchanger",
+     "name": "Feed/product exchanger"
+    }
+   ],
+   "incoming": [
+    {
+     "from": "P-1001",
+     "to": "E-1009",
+     "sheet": "PID-U-100-01"
+    }
+   ],
+   "outgoing": [
+    {
+     "from": "E-1009",
+     "to": "F-1104",
+     "sheet": "PID-U-100-03"
+    }
+   ],
+   "loops": [
+    {
+     "controller": "TIC-1009",
+     "transmitter": "TT-1009",
+     "valve": "TV-1009",
+     "equipment": "E-1009",
+     "mount": "vessel",
+     "name": "Outlet temperature"
+    },
+    {
+     "controller": "TIC-1111",
+     "transmitter": "TT-1111",
+     "valve": "TV-1111",
+     "equipment": "E-1009",
+     "mount": "vessel",
+     "name": "Product temperature"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-100-03",
+   "title": "Furnaces",
+   "unit": "U-100",
+   "unit_name": "Crude distillation unit",
+   "area": "u-100-furnaces",
+   "equipment": [
+    {
+     "tag": "F-1104",
+     "kind": "furnace",
+     "name": "Atmospheric furnace"
+    }
+   ],
+   "incoming": [
+    {
+     "from": "E-1009",
+     "to": "F-1104",
+     "sheet": "PID-U-100-02"
+    }
+   ],
+   "outgoing": [
+    {
+     "from": "F-1104",
+     "to": "C-1101",
+     "sheet": "PID-U-100-04"
+    }
+   ],
+   "loops": [
+    {
+     "controller": "TIC-1104",
+     "transmitter": "TT-1104",
+     "valve": "TV-1104",
+     "equipment": "F-1104",
+     "mount": "vessel",
+     "name": "Furnace temperature"
+    },
+    {
+     "controller": "TIC-1209",
+     "transmitter": "TT-1209",
+     "valve": "TV-1209",
+     "equipment": "F-1104",
+     "mount": "vessel",
+     "name": "Furnace outlet temperature"
+    },
+    {
+     "controller": "FIC-1210",
+     "transmitter": "FT-1210",
+     "valve": "FV-1210",
+     "equipment": "F-1104",
+     "mount": "line",
+     "name": "Fuel gas flow"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-100-04",
+   "title": "Distillation",
+   "unit": "U-100",
+   "unit_name": "Crude distillation unit",
+   "area": "u-100-distillation",
+   "equipment": [
+    {
+     "tag": "C-1101",
+     "kind": "column",
+     "name": "Atmospheric column"
+    },
+    {
+     "tag": "D-1106",
+     "kind": "vessel",
+     "name": "Overhead accumulator"
+    },
+    {
+     "tag": "P-1102",
+     "kind": "pump",
+     "name": "Reflux pump"
+    }
+   ],
+   "incoming": [
+    {
+     "from": "F-1104",
+     "to": "C-1101",
+     "sheet": "PID-U-100-03"
+    }
+   ],
+   "outgoing": [],
+   "loops": [
+    {
+     "controller": "FIC-1101",
+     "transmitter": "FT-1101",
+     "valve": "FV-1101",
+     "equipment": "C-1101",
+     "mount": "line",
+     "name": "Column charge flow"
+    },
+    {
+     "controller": "FIC-1102",
+     "transmitter": "FT-1102",
+     "valve": "FV-1102",
+     "equipment": "P-1102",
+     "mount": "line",
+     "name": "Reflux flow"
+    },
+    {
+     "controller": "LIC-1106",
+     "transmitter": "LT-1106",
+     "valve": "LV-1106",
+     "equipment": "D-1106",
+     "mount": "vessel",
+     "name": "Accumulator level"
+    },
+    {
+     "controller": "LIC-1113",
+     "transmitter": "LT-1113",
+     "valve": "LV-1113",
+     "equipment": "D-1106",
+     "mount": "vessel",
+     "name": "Reflux drum level"
+    },
+    {
+     "controller": "LIC-1211",
+     "transmitter": "LT-1211",
+     "valve": "LV-1211",
+     "equipment": "D-1106",
+     "mount": "vessel",
+     "name": "Flash drum level"
+    },
+    {
+     "controller": "TIC-1213",
+     "transmitter": "TT-1213",
+     "valve": "TV-1213",
+     "equipment": "C-1101",
+     "mount": "vessel",
+     "name": "Column top temperature"
+    },
+    {
+     "controller": "FIC-1214",
+     "transmitter": "FT-1214",
+     "valve": "FV-1214",
+     "equipment": "C-1101",
+     "mount": "line",
+     "name": "Side draw flow"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-200-01",
+   "title": "Reaction",
+   "unit": "U-200",
+   "unit_name": "Hydrotreating unit",
+   "area": "u-200-reaction",
+   "equipment": [
+    {
+     "tag": "R-1005",
+     "kind": "vessel",
+     "name": "Reactor"
+    }
+   ],
+   "incoming": [
+    {
+     "from": "P-1003",
+     "to": "R-1005",
+     "sheet": "PID-U-200-02"
+    }
+   ],
+   "outgoing": [],
+   "loops": [
+    {
+     "controller": "TIC-1005",
+     "transmitter": "TT-1005",
+     "valve": "TV-1005",
+     "equipment": "R-1005",
+     "mount": "vessel",
+     "name": "Reactor temperature"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-200-02",
+   "title": "Recycle",
+   "unit": "U-200",
+   "unit_name": "Hydrotreating unit",
+   "area": "u-200-recycle",
+   "equipment": [
+    {
+     "tag": "P-1003",
+     "kind": "pump",
+     "name": "Recycle pump"
+    }
+   ],
+   "incoming": [],
+   "outgoing": [
+    {
+     "from": "P-1003",
+     "to": "R-1005",
+     "sheet": "PID-U-200-01"
+    }
+   ],
+   "loops": [
+    {
+     "controller": "FIC-1003",
+     "transmitter": "FT-1003",
+     "valve": "FV-1003",
+     "equipment": "P-1003",
+     "mount": "line",
+     "name": "Recycle flow"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-200-03",
+   "title": "Separation",
+   "unit": "U-200",
+   "unit_name": "Hydrotreating unit",
+   "area": "u-200-separation",
+   "equipment": [
+    {
+     "tag": "V-1004",
+     "kind": "vessel",
+     "name": "Product separator"
+    },
+    {
+     "tag": "V-1105",
+     "kind": "vessel",
+     "name": "Surge drum"
+    }
+   ],
+   "incoming": [],
+   "outgoing": [],
+   "loops": [
+    {
+     "controller": "PIC-1002",
+     "transmitter": "PT-1002",
+     "valve": "PV-1002",
+     "equipment": "V-1004",
+     "mount": "vessel",
+     "name": "Vessel pressure"
+    },
+    {
+     "controller": "LIC-1004",
+     "transmitter": "LT-1004",
+     "valve": "LV-1004",
+     "equipment": "V-1004",
+     "mount": "vessel",
+     "name": "Separator level"
+    },
+    {
+     "controller": "LIC-1010",
+     "transmitter": "LT-1010",
+     "valve": "LV-1010",
+     "equipment": "V-1004",
+     "mount": "vessel",
+     "name": "Interface level"
+    },
+    {
+     "controller": "LIC-1105",
+     "transmitter": "LT-1105",
+     "valve": "LV-1105",
+     "equipment": "V-1105",
+     "mount": "vessel",
+     "name": "Surge drum level"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-200-04",
+   "title": "Compression",
+   "unit": "U-200",
+   "unit_name": "Hydrotreating unit",
+   "area": "u-200-compression",
+   "equipment": [
+    {
+     "tag": "K-1103",
+     "kind": "compressor",
+     "name": "Recycle gas compressor"
+    },
+    {
+     "tag": "V-1208",
+     "kind": "vessel",
+     "name": "Compressor suction drum"
+    }
+   ],
+   "incoming": [
+    {
+     "from": "V-1204",
+     "to": "K-1103",
+     "sheet": "PID-U-200-05"
+    }
+   ],
+   "outgoing": [],
+   "loops": [
+    {
+     "controller": "PIC-1103",
+     "transmitter": "PT-1103",
+     "valve": "PV-1103",
+     "equipment": "K-1103",
+     "mount": "vessel",
+     "name": "Suction pressure"
+    },
+    {
+     "controller": "PIC-1207",
+     "transmitter": "PT-1207",
+     "valve": "PV-1207",
+     "equipment": "K-1103",
+     "mount": "vessel",
+     "name": "Compressor discharge pressure"
+    },
+    {
+     "controller": "LIC-1208",
+     "transmitter": "LT-1208",
+     "valve": "LV-1208",
+     "equipment": "V-1208",
+     "mount": "vessel",
+     "name": "Suction drum level"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-200-05",
+   "title": "Hydrotreating",
+   "unit": "U-200",
+   "unit_name": "Hydrotreating unit",
+   "area": "u-200-hydrotreating",
+   "equipment": [
+    {
+     "tag": "R-1203",
+     "kind": "vessel",
+     "name": "Hydrotreating reactor"
+    },
+    {
+     "tag": "V-1204",
+     "kind": "vessel",
+     "name": "High-pressure separator"
+    }
+   ],
+   "incoming": [],
+   "outgoing": [
+    {
+     "from": "V-1204",
+     "to": "K-1103",
+     "sheet": "PID-U-200-04"
+    }
+   ],
+   "loops": [
+    {
+     "controller": "FIC-1201",
+     "transmitter": "FT-1201",
+     "valve": "FV-1201",
+     "equipment": "R-1203",
+     "mount": "line",
+     "name": "Hydrotreater charge flow"
+    },
+    {
+     "controller": "PIC-1202",
+     "transmitter": "PT-1202",
+     "valve": "PV-1202",
+     "equipment": "R-1203",
+     "mount": "vessel",
+     "name": "Reactor inlet pressure"
+    },
+    {
+     "controller": "TIC-1203",
+     "transmitter": "TT-1203",
+     "valve": "TV-1203",
+     "equipment": "R-1203",
+     "mount": "vessel",
+     "name": "Catalyst bed temperature"
+    },
+    {
+     "controller": "LIC-1204",
+     "transmitter": "LT-1204",
+     "valve": "LV-1204",
+     "equipment": "V-1204",
+     "mount": "vessel",
+     "name": "High-pressure separator level"
+    },
+    {
+     "controller": "AIC-1205",
+     "transmitter": "AT-1205",
+     "valve": "AV-1205",
+     "equipment": "V-1204",
+     "mount": "vessel",
+     "name": "Hydrogen purity"
+    },
+    {
+     "controller": "FIC-1206",
+     "transmitter": "FT-1206",
+     "valve": "FV-1206",
+     "equipment": "R-1203",
+     "mount": "line",
+     "name": "Quench flow"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-200-06",
+   "title": "Quality",
+   "unit": "U-200",
+   "unit_name": "Hydrotreating unit",
+   "area": "u-200-quality",
+   "equipment": [],
+   "incoming": [],
+   "outgoing": [],
+   "loops": [
+    {
+     "controller": "AIC-1006",
+     "transmitter": "AT-1006",
+     "valve": "AV-1006",
+     "equipment": null,
+     "mount": "header",
+     "name": "Product composition"
+    },
+    {
+     "controller": "AIC-1108",
+     "transmitter": "AT-1108",
+     "valve": "AV-1108",
+     "equipment": null,
+     "mount": "header",
+     "name": "Stream composition"
+    },
+    {
+     "controller": "AIC-1215",
+     "transmitter": "AT-1215",
+     "valve": "AV-1215",
+     "equipment": null,
+     "mount": "header",
+     "name": "Sulfur content in product"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-300-01",
+   "title": "Treating",
+   "unit": "U-300",
+   "unit_name": "Treating and sulfur recovery",
+   "area": "u-300-treating",
+   "equipment": [
+    {
+     "tag": "C-1216",
+     "kind": "column",
+     "name": "Amine absorber"
+    }
+   ],
+   "incoming": [],
+   "outgoing": [],
+   "loops": [
+    {
+     "controller": "LIC-1107",
+     "transmitter": "LT-1107",
+     "valve": "LV-1107",
+     "equipment": "C-1216",
+     "mount": "vessel",
+     "name": "Interface level (treating)"
+    },
+    {
+     "controller": "TIC-1114",
+     "transmitter": "TT-1114",
+     "valve": "TV-1114",
+     "equipment": "C-1216",
+     "mount": "vessel",
+     "name": "Stabilizer temperature"
+    },
+    {
+     "controller": "LIC-1216",
+     "transmitter": "LT-1216",
+     "valve": "LV-1216",
+     "equipment": "C-1216",
+     "mount": "vessel",
+     "name": "Amine absorber level"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-300-02",
+   "title": "Sulfur recovery",
+   "unit": "U-300",
+   "unit_name": "Treating and sulfur recovery",
+   "area": "u-300-sulfur-recovery",
+   "equipment": [
+    {
+     "tag": "R-1226",
+     "kind": "vessel",
+     "name": "Claus reactor"
+    }
+   ],
+   "incoming": [],
+   "outgoing": [],
+   "loops": [
+    {
+     "controller": "TIC-1226",
+     "transmitter": "TT-1226",
+     "valve": "TV-1226",
+     "equipment": "R-1226",
+     "mount": "vessel",
+     "name": "Sulfur reactor temperature"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-900-01",
+   "title": "Utilities",
+   "unit": "U-900",
+   "unit_name": "Utilities and offsites",
+   "area": "u-900-utilities",
+   "equipment": [
+    {
+     "tag": "P-1219",
+     "kind": "pump",
+     "name": "Cooling water pump"
+    },
+    {
+     "tag": "V-1218",
+     "kind": "vessel",
+     "name": "Condensate drum"
+    }
+   ],
+   "incoming": [],
+   "outgoing": [],
+   "loops": [
+    {
+     "controller": "PIC-1008",
+     "transmitter": "PT-1008",
+     "valve": "PV-1008",
+     "equipment": null,
+     "mount": "header",
+     "name": "Header pressure"
+    },
+    {
+     "controller": "FIC-1109",
+     "transmitter": "FT-1109",
+     "valve": "FV-1109",
+     "equipment": "V-1218",
+     "mount": "line",
+     "name": "Steam flow"
+    },
+    {
+     "controller": "PIC-1110",
+     "transmitter": "PT-1110",
+     "valve": "PV-1110",
+     "equipment": null,
+     "mount": "header",
+     "name": "Network pressure"
+    },
+    {
+     "controller": "PIC-1212",
+     "transmitter": "PT-1212",
+     "valve": "PV-1212",
+     "equipment": null,
+     "mount": "header",
+     "name": "Flare header pressure"
+    },
+    {
+     "controller": "PIC-1217",
+     "transmitter": "PT-1217",
+     "valve": "PV-1217",
+     "equipment": "V-1218",
+     "mount": "vessel",
+     "name": "Medium-pressure steam pressure"
+    },
+    {
+     "controller": "LIC-1218",
+     "transmitter": "LT-1218",
+     "valve": "LV-1218",
+     "equipment": "V-1218",
+     "mount": "vessel",
+     "name": "Condensate drum level"
+    },
+    {
+     "controller": "FIC-1219",
+     "transmitter": "FT-1219",
+     "valve": "FV-1219",
+     "equipment": "P-1219",
+     "mount": "line",
+     "name": "Cooling water flow"
+    },
+    {
+     "controller": "TIC-1220",
+     "transmitter": "TT-1220",
+     "valve": "TV-1220",
+     "equipment": "P-1219",
+     "mount": "line",
+     "name": "Water return temperature"
+    },
+    {
+     "controller": "PIC-1221",
+     "transmitter": "PT-1221",
+     "valve": "PV-1221",
+     "equipment": null,
+     "mount": "header",
+     "name": "Nitrogen network pressure"
+    }
+   ]
+  },
+  {
+   "sheet": "PID-U-900-02",
+   "title": "Water treatment",
+   "unit": "U-900",
+   "unit_name": "Utilities and offsites",
+   "area": "u-900-water-treatment",
+   "equipment": [
+    {
+     "tag": "TK-1223",
+     "kind": "tank",
+     "name": "Equalization tank"
+    },
+    {
+     "tag": "TK-1225",
+     "kind": "tank",
+     "name": "Slop tank"
+    }
+   ],
+   "incoming": [],
+   "outgoing": [],
+   "loops": [
+    {
+     "controller": "FIC-1222",
+     "transmitter": "FT-1222",
+     "valve": "FV-1222",
+     "equipment": "TK-1223",
+     "mount": "line",
+     "name": "Effluent flow to treatment"
+    },
+    {
+     "controller": "LIC-1223",
+     "transmitter": "LT-1223",
+     "valve": "LV-1223",
+     "equipment": "TK-1223",
+     "mount": "vessel",
+     "name": "Equalization tank level"
+    },
+    {
+     "controller": "AIC-1224",
+     "transmitter": "AT-1224",
+     "valve": "AV-1224",
+     "equipment": "TK-1223",
+     "mount": "vessel",
+     "name": "Treated effluent pH"
+    },
+    {
+     "controller": "LIC-1225",
+     "transmitter": "LT-1225",
+     "valve": "LV-1225",
+     "equipment": "TK-1225",
+     "mount": "vessel",
+     "name": "Slop tank level"
+    }
+   ]
+  }
+ ]
+}

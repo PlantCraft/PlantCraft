@@ -13,6 +13,7 @@ from pathlib import Path
 from plantcraft_sdk.compute import folder
 from plantcraft_sdk.compute.executor import Executor
 from plantcraft_sdk.compute.gateway import HEALTH, Gateway, GatewayError
+from plantcraft_sdk.server.workers import available_cpus
 
 
 def _int(name: str, default: int) -> int:
@@ -139,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
     executor.add_argument(
         "--workers",
         type=int,
-        default=_int("PLANTCRAFT_COMPUTE_SLOTS", max(1, (os.cpu_count() or 2) - 1)),
+        default=_int("PLANTCRAFT_COMPUTE_SLOTS", max(1, available_cpus() - 1)),
     )
     executor.add_argument(
         "--memory-mb", type=int, default=_int("PLANTCRAFT_COMPUTE_MEMORY_MB", 2048)
