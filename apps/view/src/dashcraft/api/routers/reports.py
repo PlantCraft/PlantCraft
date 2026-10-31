@@ -13,7 +13,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import JSONResponse
 from plantcraft_sdk.asset_scope import limited
-from pydantic import ValidationError
+from plantcraft_sdk.client import PlantCraftError
+from pydantic import BaseModel, Field, ValidationError
 
 from dashcraft.api.deps import (
     CurrentUser,
@@ -31,8 +32,10 @@ from dashcraft.api.views import report_draft, report_reader
 from dashcraft.dashboards.model import Conflict, check_window
 from dashcraft.delivery.read import read_section
 from dashcraft.i18n import t
+from dashcraft.reports import assistant as helper
 from dashcraft.reports.model import ReportPayload, Section, SectionPreview
 from dashcraft.reports.pdf import Clock
+from dashcraft.suite.llm import NoModel
 
 router = APIRouter(prefix="/api", tags=["reports"])
 MAX_REPORTS = 500
@@ -255,7 +258,15 @@ def get_section(
         ) from exc
     reader, service = report_reader(rt, user)
     window = _period(period, report)
-    return guarded(lambda: read_section(reader, section, window), service=service)
+    out = guarded(lambda: read_section(reader, section, window), service=service)
+    if section.kind == "assistant" and out.get("data") is not None:
+        last = rt.reports.last_draft(report_id, section_id)
+        out["data"]["written"] = (
+            {k: last[k] for k in ("run_id", "version", "text", "written_at", "facts")}
+            if last
+            else None
+        )
+    return out
 
 
 @router.post("/report-preview")
@@ -285,6 +296,135 @@ def event_kinds(rt: RuntimeDep, user: EditorView) -> list[dict[str, Any]]:
                     "severity": spec.get("severity") or "info",
                 }
             )
+    return out
+
+
+# Assistant sections (prototype, E2) -------------------------------------------------
+
+
+class FeedbackIn(BaseModel):
+    feedback: str = Field(min_length=1, max_length=4000)
+    # The run whose text the feedback is about (the latest when not given).
+    run_id: str | None = Field(default=None, max_length=40)
+
+
+class RequirementsIn(BaseModel):
+    requirements: str = Field(min_length=1, max_length=helper.MAX_REQUIREMENTS)
+    # The feedback the requirements answer, when they come from a proposal.
+    feedback: str = Field(default="", max_length=4000)
+    run_id: str | None = Field(default=None, max_length=40)
+
+
+class ScopeIn(BaseModel):
+    description: str = Field(min_length=1, max_length=2000)
+
+
+def _assistant_section(report: dict[str, Any], section_id: str) -> dict[str, Any]:
+    found = next(
+        (s for s in report.get("sections") or [] if s.get("section_id") == section_id), None
+    )
+    if found is None or found.get("kind") != "assistant":
+        raise HTTPException(status_code=404, detail=t("Assistant section not found."))
+    return found
+
+
+def _model_call(call: Any, use: str) -> Any:
+    try:
+        return call()
+    except NoModel as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=t(
+                "No language model for View's use {use}: an administrator gives it one in "
+                "Setup › Language models. ({reason})",
+                use=use,
+                reason=str(exc)[:200],
+            ),
+        ) from exc
+    except PlantCraftError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=t("The language model could not answer: {reason}", reason=str(exc.detail)[:300]),
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get("/report-analyses")
+def report_analyses(user: EditorView) -> list[dict[str, Any]]:
+    """What an assistant section may read (its checkboxes)."""
+
+    return helper.analyses_catalog()
+
+
+@router.post("/report-assistant/scope")
+def propose_scope(body: ScopeIn, rt: RuntimeDep, user: EditorUser) -> dict[str, Any]:
+    """The assets and analyses the model proposes for what a person describes; nothing is
+    saved, the editor ticks the boxes it proposes and the person changes them."""
+
+    reader = rt.user_reader(user)
+    assets = [a for a in guarded(lambda: reader.assets(None), service=False) or [] if a.get("id")]
+    answer = _model_call(
+        lambda: rt.suite.ask_model(
+            helper.TUNE_USE,
+            helper.scope_question(assets, body.description),
+            system=helper.SCOPE_SYSTEM,
+        ),
+        helper.TUNE_USE,
+    )
+    return helper.read_scope(answer, {str(a["id"]) for a in assets})
+
+
+@router.get("/reports/{report_id}/assistant/{section_id}")
+def assistant_history(
+    report_id: str, section_id: str, rt: RuntimeDep, user: CurrentUser
+) -> dict[str, Any]:
+    """What the section wrote run by run and every version of its requirements."""
+
+    report = report_or_404(rt, report_id, user)
+    section = _assistant_section(report, section_id)
+    return {
+        "assistant": section["assistant"],
+        "drafts": rt.reports.drafts(report_id, section_id),
+        "versions": rt.reports.assistant_versions(report_id, section_id),
+    }
+
+
+@router.post("/reports/{report_id}/assistant/{section_id}/feedback")
+def assistant_feedback(
+    report_id: str, section_id: str, body: FeedbackIn, rt: RuntimeDep, user: EditorUser
+) -> dict[str, Any]:
+    """A comment on what the assistant wrote: the model proposes the next requirements (not
+    saved; the editor applies them with PUT .../requirements)."""
+
+    report = _editable(rt, report_id, user)
+    _assistant_section(report, section_id)
+    out = _model_call(
+        lambda: rt.report_service.tune(
+            report, section_id, body.feedback.strip(), user.username, body.run_id
+        ),
+        helper.TUNE_USE,
+    )
+    return out
+
+
+@router.put("/reports/{report_id}/assistant/{section_id}/requirements")
+def assistant_requirements(
+    report_id: str, section_id: str, body: RequirementsIn, rt: RuntimeDep, user: EditorUser
+) -> dict[str, Any]:
+    """New requirements by hand (or an older version brought back), kept as a new version."""
+
+    report = _editable(rt, report_id, user)
+    _assistant_section(report, section_id)
+    out = rt.report_service.set_requirements(
+        report,
+        section_id,
+        body.requirements.strip(),
+        user.username,
+        feedback=body.feedback.strip(),
+        run_id=body.run_id,
+    )
+    rt.audit(user, "report.assistant_tuned", report_id, {"version": out["version"]})
     return out
 
 

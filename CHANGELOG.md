@@ -7,6 +7,29 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Added
+
+- **Configuration decided before installing, outside the platform** (`docs/installation-file.md`).
+  `/etc/plantcraft/installation.conf`, owned by root and never mounted in a container, holds
+  which apps exist, whether apps may be installed from Settings › Apps, the demo, the machine
+  size and its CPU/memory ceilings, load ceilings (`MAX_SIGNALS`, `MAX_PARALLEL_RUNS`), the
+  network, and the security switches (language models, assistants through MCP, Notebooks, a locked
+  time zone). `install.sh` reads it on every run (`--config FILE`), refuses it when others may
+  write it, and its values win over options and `.env`. Settings › Installation shows these as
+  **Set by the installation**, read-only, with the file's fingerprint.
+- **Requirements check before installing**: `install.sh --check` (or `preflight.sh`, `--json`,
+  `--ignore ID`): system, processor, Docker and Compose, Docker Desktop's licence, control groups,
+  CPUs and memory as Docker sees them (memory sized by the chosen apps), swap, disk, the HTTPS
+  port, the internal networks, the clock and the installation file. Every install runs it first
+  and stops on a failure before changing anything. `install.sh --show-config` compares the file
+  with `.env`.
+- **Docker Engine in the bundle**: on a Linux server with no Docker, `install.sh --install-docker`
+  installs the Docker Engine 29.9.2 and Compose 5.6.1 the bundle carries (`docker-engine/`, pinned
+  hashes), offline, with its systemd units. `docs/install.md` adds Windows without Docker Desktop.
+- **Setup wizard** (`deploy/wizard/`, first version): the installer's screens in a browser on the
+  server (127.0.0.1, one-time key): requirements, apps, machine and load, network and security,
+  review of the file, install log.
+
 ### Changed
 
 - **The Historian answers from several processes (0.6.0 load tests, 2026-10-31).** Heavy reads
@@ -52,6 +75,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   looked for "Public demo" / "A visit lasts" (the visit clock went away on 2026-10-28), for the
   older "read-only" refusal and for the tour's last step "Your apps"; 13 of 15 failed on a VM
   after the update from 0.5.1, all from the first. 15 of 15 pass on main.
+- **`PLANTCRAFT_MCP=off` and `PLANTCRAFT_NOTEBOOKS=off` in `.env` now take effect.** Compose never
+  passed them to PlantCraft, so turning assistants through MCP or Notebooks off for a whole
+  installation did nothing.
 - **Trends keep their spikes.** When a trend had more points than a chart takes (1,500 by
   default), PlantCraft kept every n-th point, so any event shorter than the gap vanished: a day at
   1 s with twenty 5 s spikes showed none of them. Each stretch of the series now keeps its lowest

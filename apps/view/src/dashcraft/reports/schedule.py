@@ -26,6 +26,11 @@ WEEKDAY_NAMES = {
 }
 
 
+# Every other week counts weeks from a fixed Monday, so the same weeks are on in every installation
+# and across a change of year (ISO week numbers would skip at a 53-week year).
+FORTNIGHT_ANCHOR = date(2024, 1, 1)
+
+
 def zone(name: str | None) -> ZoneInfo:
     try:
         return ZoneInfo(name or "UTC")
@@ -47,7 +52,15 @@ def _days_from(schedule: Schedule, first: date) -> Iterator[date]:
             yield day
         elif schedule.every == "week" and WEEKDAYS[day.weekday()] == schedule.weekday:
             yield day
+        elif (
+            schedule.every == "fortnight"
+            and WEEKDAYS[day.weekday()] == schedule.weekday
+            and (day - FORTNIGHT_ANCHOR).days // 7 % 2 == 0
+        ):
+            yield day
         elif schedule.every == "month" and day.day == schedule.day:
+            yield day
+        elif schedule.every == "quarter" and day.month in (1, 4, 7, 10) and day.day == schedule.day:
             yield day
         day += timedelta(days=1)
 
@@ -88,6 +101,14 @@ def cadence(schedule: Schedule) -> str:
         return t(
             "Every {weekday} at {at}", weekday=t(WEEKDAY_NAMES[schedule.weekday]), at=schedule.at
         )
+    if schedule.every == "fortnight":
+        return t(
+            "Every other {weekday} at {at}",
+            weekday=t(WEEKDAY_NAMES[schedule.weekday]),
+            at=schedule.at,
+        )
     if schedule.every == "month":
         return t("Every month on day {day} at {at}", day=schedule.day, at=schedule.at)
+    if schedule.every == "quarter":
+        return t("Every quarter on day {day} at {at}", day=schedule.day, at=schedule.at)
     return t("Not scheduled")

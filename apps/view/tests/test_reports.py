@@ -127,6 +127,26 @@ def test_summer_time_keeps_the_wall_clock_hour():
     assert [moment.hour for moment in sends] == [4, 4, 5, 5]
 
 
+def test_every_other_week_and_every_quarter():
+    after = datetime(2026, 10, 1, 12, 0, tzinfo=UTC)
+    fortnight = Schedule(every="fortnight", weekday="mon", at="07:00")
+    runs = runs_between(fortnight, after, after + timedelta(days=60), "UTC")
+    assert [b - a for a, b in zip(runs, runs[1:], strict=False)] == [timedelta(days=14)] * 4
+    assert all(run.weekday() == 0 and run.hour == 7 for run in runs)
+    quarterly = Schedule(every="quarter", day=2, at="06:00")
+    assert runs_between(quarterly, after, after + timedelta(days=200), "UTC") == [
+        datetime(2026, 10, 2, 6, 0, tzinfo=UTC),
+        datetime(2027, 1, 2, 6, 0, tzinfo=UTC),
+        datetime(2027, 4, 2, 6, 0, tzinfo=UTC),
+    ]
+    assert cadence(fortnight) == "Every other Monday at 07:00"
+    assert cadence(quarterly) == "Every quarter on day 2 at 06:00"
+    report = ReportPayload.model_validate(
+        {"name": "Fortnight", "period": "14d", "schedule": fortnight.model_dump()}
+    )
+    assert report.period == "14d"
+
+
 def test_cadence_in_words():
     assert cadence(Schedule(every="week", weekday="fri", at="17:00")) == "Every Friday at 17:00"
     assert cadence(Schedule()) == "Not scheduled"
