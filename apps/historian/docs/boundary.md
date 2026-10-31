@@ -81,5 +81,8 @@ PI signals in `archive` mode are a gap (`docs/gaps.md`).
 
 ## Open points
 
-- MQTT, Modbus TCP and SQL sources are read by the gateway (`docs/gateway.md`). Sparkplug B,
-  OPC DA and store and forward from an edge box are gaps, not designs yet (`docs/gaps.md`).
+- MQTT, Modbus TCP and SQL sources are read by the gateway (`docs/gateway.md`). Sparkplug B is
+  read by the collector itself (`histcraft.sparkplug`, `collector/sparkplug.py`): it subscribes
+  to births, data and deaths and publishes nothing, so it is never a primary host and never asks
+  a node for a rebirth. OPC DA and store and forward from an edge box are gaps, not designs yet
+  (`docs/gaps.md`).

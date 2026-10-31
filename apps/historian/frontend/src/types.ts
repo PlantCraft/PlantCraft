@@ -13,7 +13,7 @@ export type Me = {
 
 export type SourceState = { status: string; detail: string; since: number; checked?: number; files?: number };
 
-export type SourceKind = "pi_web_api" | "opcua" | "csv" | "mqtt" | "modbus" | "sql" | "derived" | "system" | "calc" | "import";
+export type SourceKind = "pi_web_api" | "opcua" | "csv" | "mqtt" | "sparkplug" | "modbus" | "sql" | "derived" | "system" | "calc" | "import";
 /** Sources written through the suite (an app's series, the suite's health), never read from a plant. */
 export const isWritten = (kind: string) => kind === "derived" || kind === "system";
 /** Where a signal's history comes from: read from the source, archived here, or both. */

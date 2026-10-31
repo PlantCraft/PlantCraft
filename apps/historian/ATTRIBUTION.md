@@ -34,6 +34,7 @@ the PlantCraft authors (Apache-2.0).
 | httpx | BSD-3-Clause |
 | cryptography (through plantcraft-sdk) | Apache-2.0 or BSD-3-Clause |
 | FastAPI, Starlette, Uvicorn | MIT / BSD-3-Clause |
+| paho-mqtt (Sparkplug B sources' MQTT client; the collector only, subscribe only) | EPL-2.0 or EDL-1.0 (BSD-3-Clause style); used under EDL-1.0 |
 | asyncua (OPC UA client; the collector only) | LGPL-3.0 (used unmodified as a library, not copied) |
 | psycopg, psycopg-pool (PostgreSQL client; `psycopg-binary` bundles libpq) | LGPL-3.0 (used unmodified as a library, not copied); libpq: PostgreSQL License |
 | zstandard (the archive's chunks; bundles the zstd library) | BSD-3-Clause; zstd: BSD-3-Clause |

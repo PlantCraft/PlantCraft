@@ -6,6 +6,8 @@ import { t } from "./i18n";
 /** Sources the gateway (Telegraf) reads and pushes to the collector (collector/gateway.py). */
 export const GATEWAY_KINDS = ["mqtt", "modbus", "sql"] as const;
 export const isGateway = (kind: string) => (GATEWAY_KINDS as readonly string[]).includes(kind);
+/** Sources whose values arrive pushed, archive only: the gateway's and Sparkplug B (catalog PUSHED_KINDS). */
+export const isPushed = (kind: string) => isGateway(kind) || kind === "sparkplug";
 
 /** A Modbus register or coil to read (catalog/gateway.py checks the same). */
 export type Register = { name: string; type: string; address: number | string; data_type?: string; byte_order?: string; scale?: number | string };
@@ -58,6 +60,20 @@ export function GatewayFields({ draft, setDraft, passwordFields }: { draft: Sour
     <label>{t("Measurement")}<input className="pc-mono" value={String(draft.options.measurement ?? "sql")} onChange={(event) => set("measurement", event.target.value)} /></label>
     <label className="check field-span"><input type="checkbox" checked={Boolean(draft.options.laboratory)} onChange={(event) => set("laboratory", event.target.checked)} />{t("Laboratory results (LIMS)")}
       <small>{t("Each row is a result at laboratory:<analysis>: the time column is the sampling time, the tag column the analysis; columns value, and status, received_at and approved_at (ISO text) when it has them.")}</small></label>
+    {passwordFields}
+  </>;
+}
+
+/** The fields of a Sparkplug B source: the collector subscribes to births, data and deaths. */
+export function SparkplugFields({ draft, setDraft, passwordFields }: { draft: SourceIn; setDraft: (draft: SourceIn) => void; passwordFields: ReactNode }) {
+  const set = (key: string, value: unknown) => setDraft({ ...draft, options: { ...draft.options, [key]: value } });
+  return <>
+    <label>{t("Broker")}<input value={draft.endpoint} onChange={(event) => setDraft({ ...draft, endpoint: event.target.value })} placeholder="tcp://broker:1883" /><small>{t("tcp:// or ssl:// (TLS)")}</small></label>
+    <label>{t("Group id (optional)")}<input className="pc-mono" value={String(draft.options.group_id ?? "")} onChange={(event) => set("group_id", event.target.value)} placeholder="plant" /><small>{t("Empty: every group on the broker.")}</small></label>
+    <label>{t("QoS")}<select value={String(draft.options.qos ?? 1)} onChange={(event) => set("qos", Number(event.target.value))}>
+      {[0, 1].map((qos) => <option key={qos} value={qos}>{qos}</option>)}</select></label>
+    <label className="check field-span"><input type="checkbox" checked={draft.options.add_on_birth !== false} onChange={(event) => set("add_on_birth", event.target.checked)} />{t("Add signals from births")}
+      <small>{t("Each metric an edge node or device announces in its birth becomes a signal, with its kind and unit. Off: Browse lists them to add.")}</small></label>
     {passwordFields}
   </>;
 }

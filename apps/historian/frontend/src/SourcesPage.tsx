@@ -2,7 +2,7 @@ import { appLabel, DataTable, TimeZoneSelect, useAssistantPage, confirmAction, D
 import { Activity, AppWindow, Calculator, ChevronRight, Cpu, Database, Radio, ArrowRight, Download, FileSpreadsheet, FolderSearch, History, Network, Pencil, PlugZap, Plus, Search, Server, ShieldCheck, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api, askCollector, type BrowseResult, type SourceIn } from "./api";
-import { GatewayFields, isGateway } from "./GatewaySource";
+import { GatewayFields, isGateway, isPushed, SparkplugFields } from "./GatewaySource";
 import { navigate } from "./nav";
 import { MODE_LABELS } from "./PointsPage";
 import { ago } from "./format";
@@ -14,7 +14,7 @@ import { ErrorBox, Heading, Link, Loading, Pill } from "./ui";
 // The plant types an admin adds; derived sources appear when an app first writes, the system
 // source when PlantCraft first writes the suite's health.
 export const KINDS: Record<string, string> = {
-  opcua: "OPC UA server", pi_web_api: "PI Web API", csv: "CSV files", mqtt: "MQTT broker", modbus: "Modbus TCP device", sql: "SQL database", derived: "Written by an app", system: "The suite's health", calc: "Calculated signals", import: "CSV import",
+  opcua: "OPC UA server", pi_web_api: "PI Web API", csv: "CSV files", mqtt: "MQTT broker", sparkplug: "Sparkplug B broker", modbus: "Modbus TCP device", sql: "SQL database", derived: "Written by an app", system: "The suite's health", calc: "Calculated signals", import: "CSV import",
 };
 
 /** What each type of source is, in a sentence, and its icon (the type picker and a source's page). */
@@ -24,13 +24,14 @@ export const KIND_ABOUT: Record<string, { icon: ReactNode; about: string }> = {
   csv: { icon: <FileSpreadsheet />, about: "CSV files another application keeps writing: one file, or every file matching a pattern in one folder. Checked every few minutes; new rows are archived. For a file loaded once, use Imports." },
   import: { icon: <FileSpreadsheet />, about: "CSV files loaded from Imports, once or repeated from a folder. Its values are kept until the import is deleted." },
   mqtt: { icon: <Radio />, about: "Values published on an MQTT broker (IIoT sensors, edge gateways, Sparkplug-free topics). The gateway subscribes and Historian archives each topic." },
+  sparkplug: { icon: <Radio />, about: "Edge nodes that publish Sparkplug B on an MQTT broker. Historian subscribes as a host that only listens: each metric a birth describes becomes a signal, with its kind and unit; it never publishes or asks for a rebirth." },
   modbus: { icon: <Cpu />, about: "A PLC, meter or drive that speaks Modbus TCP. The gateway reads the registers and coils you list every scan period; it never writes them." },
   sql: { icon: <Database />, about: "A database table: LIMS results, MES or ERP figures, another system's values. The gateway runs one SELECT every scan period, with a user that can only read." },
   derived: { icon: <AppWindow />, about: "The series an app of the suite calculates (health of a loop, a model's prediction, an alarm count) and writes here, so every other app and every trend can read them." },
   calc: { icon: <Calculator />, about: "Signals Historian calculates from others with a formula: a conversion, a sum, a condition, a totalizer. Added from the Signals page; the collector evaluates them on every scan." },
   system: { icon: <Activity />, about: "The suite watching itself: every service up or down, its response time, CPU, memory and errors; the free disk; the age of the last backup. PlantCraft writes them every minute and they are kept 90 days." },
 };
-const PLANT_KINDS = ["opcua", "pi_web_api", "csv", "mqtt", "modbus", "sql"] as const;
+const PLANT_KINDS = ["opcua", "pi_web_api", "csv", "mqtt", "sparkplug", "modbus", "sql"] as const;
 /** The page of a source. */
 export const sourcePath = (sourceId: string) => `/sources/${encodeURIComponent(sourceId)}`;
 /** The app that writes a derived source (`app-cpmcraft` -> `cpmcraft`). */
@@ -49,6 +50,7 @@ const START: Record<string, Pick<Source, "endpoint" | "options">> = {
   pi_web_api: { endpoint: "https://", options: { server: "", auth_type: "kerberos", verify_ssl: true } },
   csv: { endpoint: "", options: { timezone: "UTC", check_minutes: 5 } },
   mqtt: { endpoint: "tcp://", options: { topics: [], qos: 0, data_format: "value" } },
+  sparkplug: { endpoint: "tcp://", options: { group_id: "", qos: 1, add_on_birth: true } },
   modbus: { endpoint: "tcp://", options: { slave_id: 1, timeout_seconds: 5, registers: [{ name: "", type: "holding_register", address: 0, data_type: "INT16", byte_order: "AB", scale: 1 }] } },
   sql: { endpoint: "", options: { driver: "postgres", query: "", measurement: "sql", time_column: "", tag_columns: [] } },
 };
@@ -69,6 +71,7 @@ const SOURCE_SETTINGS: { key: keyof SourceSettings; label: string; unit: string;
 /** What a successful connection test found, in a sentence. */
 function tested(source: Source, result: Record<string, unknown> | undefined): string {
   if (source.kind === "pi_web_api") return t("{name} answered: PI server {server}.", { name: source.name, server: String(result?.server ?? "—") });
+  if (source.kind === "sparkplug") return t("{name}: {nodes} edge nodes, {devices} devices, {metrics} metrics born.", { name: source.name, nodes: Number(result?.nodes ?? 0), devices: Number(result?.devices ?? 0), metrics: Number(result?.metrics ?? 0) });
   if (isGateway(source.kind)) return t("{name}: the gateway sent {count} series.", { name: source.name, count: Number(result?.series ?? 0) });
   if (source.kind === "csv") return result?.files ? t("{name}: {files} files, {tags} tags in the newest.", { name: source.name, files: Number(result.files), tags: Number(result?.tags ?? 0) }) : String(result?.detail ?? t("{name}: no file yet.", { name: source.name }));
   const namespaces = result?.namespaces;
@@ -202,6 +205,7 @@ const KIND_HINT: Record<typeof PLANT_KINDS[number], string> = {
   pi_web_api: "AVEVA PI System",
   csv: "Files another application keeps writing",
   mqtt: "IIoT sensors, edge gateways",
+  sparkplug: "Edge nodes, Ignition, IIoT platforms",
   modbus: "PLC, meter or drive",
   sql: "LIMS, MES or ERP table",
 };
@@ -322,8 +326,8 @@ function SourceForm({ initial, create, onClose, onSaved }: { initial: Source; cr
         <label>{t("Name")}<input {...field("name")} placeholder={t("Unit 100 controller")} /></label>
         <label>{t("Mode")}<select value={draft.mode} onChange={(event) => setDraft({ ...draft, mode: event.target.value as SourceIn["mode"] })}>
           <option value="">{t("Source default")}</option>
-          {Object.keys(MODE_LABELS).filter((mode) => (csv || isGateway(draft.kind) ? mode === "archive" : true)).map((mode) => <option key={mode} value={mode}>{t(MODE_LABELS[mode])}</option>)}
-        </select><small>{csv ? t("New rows are archived as the files change.") : isGateway(draft.kind) ? t("The gateway sends values as they are read; they exist only in the archive.") : t("Where the history of its signals comes from, unless a signal sets its own.")}</small></label>
+          {Object.keys(MODE_LABELS).filter((mode) => (csv || isPushed(draft.kind) ? mode === "archive" : true)).map((mode) => <option key={mode} value={mode}>{t(MODE_LABELS[mode])}</option>)}
+        </select><small>{csv ? t("New rows are archived as the files change.") : draft.kind === "sparkplug" ? t("Values arrive as the edge nodes publish them; they exist only in the archive.") : isGateway(draft.kind) ? t("The gateway sends values as they are read; they exist only in the archive.") : t("Where the history of its signals comes from, unless a signal sets its own.")}</small></label>
         {draft.kind === "opcua" && <>
           <label>{t("Endpoint")}<input {...field("endpoint")} /><small>{t("opc.tcp://host:port/path")}</small></label>
           <label>{t("Namespace URI (optional)")}<input {...field("namespace_uri")} /><small>{t("Browse only this namespace.")}</small></label>
@@ -348,6 +352,7 @@ function SourceForm({ initial, create, onClose, onSaved }: { initial: Source; cr
           <label className="check"><input type="checkbox" checked={draft.options.verify_ssl !== false} onChange={(event) => setDraft({ ...draft, options: { ...draft.options, verify_ssl: event.target.checked } })} />{t("Verify the server certificate")}</label>
         </>}
         {isGateway(draft.kind) && <GatewayFields draft={draft} setDraft={setDraft} passwordFields={passwordFields} />}
+        {draft.kind === "sparkplug" && <SparkplugFields draft={draft} setDraft={setDraft} passwordFields={passwordFields} />}
         {csv && <>
           <label>{t("File or pattern")}<input {...field("endpoint")} placeholder="/csv/lims/*.csv" className="pc-mono" />
             <small>{t("One file, or a pattern in one folder (* and ? in the file name). Files are only read, never moved or changed. For a file loaded once, use Imports.")}</small></label>

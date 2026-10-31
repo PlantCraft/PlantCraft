@@ -8,6 +8,7 @@ libraries are not in the image, so it cannot run there, and nothing in the produ
 - :mod:`.piwebapi` answers as PI Web API does (Basic auth, paging, recorded, interpolated,
   digital states, 503 bursts, slow answers);
 - :mod:`.mqtt` runs a broker and publishes values, flat JSON and nested JSON;
+- :mod:`.sparkplug` runs a broker (Mosquitto when installed) and a Sparkplug B edge node;
 - :mod:`.modbus` serves registers in every data type and byte order Historian lists;
 - :mod:`.sql` writes wide, long and naive-time tables into a PostgreSQL database.
 

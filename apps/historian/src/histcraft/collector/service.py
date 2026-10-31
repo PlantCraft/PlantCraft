@@ -35,7 +35,14 @@ from histcraft.archive import forecast, rollup
 from histcraft.archive.compression import Compressor
 from histcraft.archive.store import ArchiveStore, compaction_start, now_ms
 from histcraft.catalog import ranges
-from histcraft.catalog.models import GATEWAY_KINDS, IMPORT_KIND, LIVE_KINDS, RETIRED_DAYS
+from histcraft.catalog.models import (
+    GATEWAY_KINDS,
+    IMPORT_KIND,
+    LIVE_KINDS,
+    PUSHED_KINDS,
+    RETIRED_DAYS,
+    PointIn,
+)
 from histcraft.catalog.store import CatalogStore
 from histcraft.collector import held, imports
 from histcraft.collector.backfill import MAX_HOURS, backfill
@@ -44,6 +51,7 @@ from histcraft.collector.reading import FUTURE_MS, Reading
 from histcraft.config import Settings
 from histcraft.i18n import t
 from histcraft.sources.csv_watch import CsvWatcher
+from histcraft.sparkplug import Births
 from histcraft.vault import Vault
 
 LOGGER = logging.getLogger(__name__)
@@ -65,6 +73,8 @@ TEXT_BACKFILL_HOURS = 48
 LEASE_RETRY_SECONDS = 5.0
 # A gateway source with no value for this long (or three of its intervals) is disconnected.
 GATEWAY_STALE_SECONDS = 60.0
+# How often a Sparkplug B source's messages are taken (seconds).
+SPARKPLUG_TICK = 0.2
 # Series the gateway sent that no point archives, kept per source for Browse.
 SEEN_LIMIT = 20_000
 # Values a point keeps in memory while the archive cannot be written (a day at one per second);
@@ -220,6 +230,9 @@ class Collector:
         self._gateway_last: dict[str, int] = {}
         self.gateway_heartbeat: int | None = None
         self._gateway_config = ""
+        # Sparkplug B sources (``collector.sparkplug``): what each learnt from the births, kept
+        # across reconnects (aliases hold until the node is born again).
+        self.births: dict[str, Births] = {}
 
     def _reader_for(self, source: dict[str, Any]) -> Any:
         if source["kind"] == "csv":
@@ -238,6 +251,12 @@ class Collector:
         return source_password(source, self.catalog, self.vault)
 
     def _reader(self, source: dict[str, Any]) -> Any:
+        if source["kind"] == "sparkplug":
+            from histcraft.collector.sparkplug import SparkplugListener
+
+            return SparkplugListener(
+                source, password=self.password(source), timeout=self.settings.opcua_timeout
+            )
         if source["kind"] != "opcua":
             raise RuntimeError(t("The collector reads OPC UA sources only."))
         from histcraft.collector.opcua import OpcUaReader
@@ -289,7 +308,7 @@ class Collector:
         pushed: dict[tuple[str, str], list[PointState]] = defaultdict(list)
         with self._lock:
             for state in self.points.values():
-                if state.point["source_kind"] in GATEWAY_KINDS:
+                if state.point["source_kind"] in PUSHED_KINDS:
                     pushed[(state.point["source_id"], state.point["address"])].append(state)
             self._pushed = dict(pushed)
         self._write_gateway_config()
@@ -336,11 +355,14 @@ class Collector:
 
     def _signature(self, source_id: str) -> tuple:
         source = self.sources.get(source_id) or {}
+        keys = ("endpoint", "username", "password_env", "has_password", "namespace_uri", "updated")
+        if source.get("kind") in PUSHED_KINDS:
+            # Values find their points as they arrive: a point added keeps the subscription.
+            return (tuple(source.get(key) for key in keys),)
         groups = sorted(
             (state.id, state.point["address"], float(state.point["scan_seconds"]))
             for state in self._source_points(source_id)
         )
-        keys = ("endpoint", "username", "password_env", "has_password", "namespace_uri", "updated")
         return (tuple(source.get(key) for key in keys), tuple(groups))
 
     # Writing ----------------------------------------------------------------------------
@@ -623,6 +645,8 @@ class Collector:
             return "error", {"detail": t("A derived source is written by its app.")}
         if source["kind"] in GATEWAY_KINDS:
             return self._answer_gateway(source, request)
+        if source["kind"] == "sparkplug":
+            return self._answer_sparkplug(source, request)
         try:
             reader = self._reader_for(source)
         except Exception as exc:  # noqa: BLE001 - e.g. direct OPC UA turned off
@@ -746,6 +770,8 @@ class Collector:
                 backoff = 2.0
                 if isinstance(reader, CsvWatcher):
                     await self._watch_csv(source_id, reader)
+                elif source["kind"] == "sparkplug":
+                    await self._listen(source_id, reader)
                 else:
                     await self._poll(source_id, reader)
             except asyncio.CancelledError:
@@ -866,6 +892,127 @@ class Collector:
             if source_id not in self._tasks:
                 self._signatures[source_id] = self._signature(source_id)
                 self._tasks[source_id] = asyncio.create_task(self._source_task(source_id))
+
+    # Sparkplug B ---------------------------------------------------------------------------
+
+    async def _listen(self, source_id: str, listener: Any) -> None:
+        """Take what a Sparkplug B source receives until its connection drops (it raises)."""
+
+        births = self.births.setdefault(source_id, Births(SEEN_LIMIT))
+        seeded = learnt = -1
+        while True:
+            messages = listener.messages()
+            for topic, payload, at in messages:
+                self.take_sparkplug(source_id, births.take(topic, payload, at))
+            options = (self.sources.get(source_id) or {}).get("options") or {}
+            # New metrics (a birth, or data before one) become points once, not on every tick.
+            if options.get("add_on_birth") and births.known != learnt:
+                try:
+                    await asyncio.to_thread(self._add_born, source_id, births)
+                except Exception:  # noqa: BLE001 - collection goes on; tried at the next metric
+                    LOGGER.exception("Sparkplug source %s: points not added", source_id)
+                learnt = births.known
+            if seeded != self._version:
+                seeded = self._version
+                self._seed(source_id, births)
+            self.source_status[source_id] = {
+                "status": "connected",
+                "detail": _births_detail(births, listener.dropped),
+                "since": (self.source_status.get(source_id) or {}).get("since") or now_ms(),
+                **births.summary(),
+            }
+            if not listener.connected:
+                raise ConnectionError(listener.failure or t("The broker closed the connection."))
+            await asyncio.sleep(SPARKPLUG_TICK)
+
+    def take_sparkplug(self, source_id: str, values: list[Any]) -> int:
+        """Values of a Sparkplug B source at their points; the archive only moves forward."""
+
+        taken = 0
+        now = now_ms()
+        with self._lock:
+            for item in values:
+                at = item.at_ms if item.at_ms <= now + FUTURE_MS else now
+                for state in self._pushed.get((source_id, item.address), []):
+                    if state.last is not None and at <= state.last[0]:
+                        continue
+                    if not item.good:
+                        state.take(Reading(at, None, False, item.detail, "bad"))
+                        continue
+                    value = _pushed_value(item.value, state.point["kind"])
+                    state.take(Reading(at, value, True, item.detail, item.quality))
+                    taken += 1
+        return taken
+
+    def _seed(self, source_id: str, births: Births) -> None:
+        """A point added after its birth starts from the value the birth (or data) gave."""
+
+        from histcraft.sparkplug import Value
+
+        with self._lock:
+            waiting = {
+                address
+                for (source, address), states in self._pushed.items()
+                if source == source_id and any(state.last is None for state in states)
+            }
+        values = [
+            Value(item["address"], int(item["at"] or now_ms()), item["value"])
+            for item in births.variables()
+            if item["address"] in waiting and item["value"] is not None
+        ]
+        self.take_sparkplug(source_id, values)
+
+    def _add_born(self, source_id: str, births: Births) -> int:
+        """Add a point for each metric a birth described that the source has none for."""
+
+        with self._lock:
+            have = {address for source, address in self._pushed if source == source_id}
+        fresh = [
+            item for item in births.variables() if item["kind"] and item["address"] not in have
+        ]
+        known = {p["address"] for p in self.catalog.points() if p["source_id"] == source_id}
+        fresh = [item for item in fresh if item["address"] not in known]
+        if not fresh:
+            return 0
+        result = self.catalog.add_points(
+            [
+                PointIn(
+                    tag=item["tag"][:300],
+                    source_id=source_id,
+                    address=item["address"],
+                    name=item["name"][:200],
+                    description=item["description"],
+                    unit=item["unit"],
+                    kind=item["kind"],
+                    step=item["step"],
+                )
+                for item in fresh
+            ]
+        )
+        added = len(result.get("added") or [])
+        if added:
+            LOGGER.info("Sparkplug source %s: %d metrics added from births", source_id, added)
+        return added
+
+    def _answer_sparkplug(self, source: dict[str, Any], request: dict[str, Any]) -> tuple[str, Any]:
+        """Browse or test a Sparkplug B source: what its births described so far."""
+
+        births = self.births.get(source["id"])
+        status = self.source_status.get(source["id"]) or {}
+        if births is None or status.get("status") != "connected":
+            detail = status.get("detail") or t("Not connected to the broker yet.")
+            return "error", {"detail": detail}
+        if request["kind"] == "test":
+            return "ok", births.summary()
+        variables = births.variables()
+        if not variables:
+            return "error", {
+                "detail": t(
+                    "Connected, no birth yet. Metrics appear when an edge node is born (it"
+                    " connects or restarts); Historian never asks for a rebirth."
+                )
+            }
+        return "ok", {"variables": variables, "truncated": False, "limit": SEEN_LIMIT}
 
     # The gateway --------------------------------------------------------------------------
 
@@ -1193,6 +1340,25 @@ class CollectorThread:
         self._loop.call_soon_threadsafe(self._stop.set)
         self._thread.join(timeout)
         self._thread = None
+
+
+def _births_detail(births: Births, dropped: int) -> str:
+    notes = []
+    if births.unknown_aliases:
+        notes.append(
+            t(
+                "{count} values by an alias no birth named: they are read from the node's next"
+                " birth.",
+                count=births.unknown_aliases,
+            )
+        )
+    if births.sequence_gaps:
+        notes.append(t("{count} gaps in the nodes' sequence.", count=births.sequence_gaps))
+    if births.unreadable:
+        notes.append(t("{count} messages that are not Sparkplug B.", count=births.unreadable))
+    if dropped:
+        notes.append(t("{count} messages dropped (the collector fell behind).", count=dropped))
+    return " ".join(notes)
 
 
 def _pushed_value(value: Any, kind: str) -> Any:

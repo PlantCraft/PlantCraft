@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Sparkplug B in the source test kit** (`simcraft.testkit.sparkplug`): an edge node with a
+  device publishes NBIRTH, DBIRTH with aliases and units, DDATA by alias and NDEATH on Eclipse
+  Mosquitto when installed (else amqtt's broker), and a spy lists every topic published, so
+  Historian's check shows it only listened.
+
 ## [0.5.1] - 2026-10-30
 
 - Suite 0.5.1: same Simulator, version aligned with the suite; its image now carries this

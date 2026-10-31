@@ -31,6 +31,8 @@ LAYERS: dict[str, int] = {
     "testkit.csv_files": 5,
     "testkit.piwebapi": 5,
     "testkit.mqtt": 5,
+    "testkit.sparkplug_payload": 4,
+    "testkit.sparkplug": 5,
     "testkit.modbus": 5,
     "testkit.sql": 5,
     "testkit.cli": 5,
