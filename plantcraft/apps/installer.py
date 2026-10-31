@@ -47,7 +47,6 @@ from pathlib import Path
 from typing import Any
 
 from plantcraft.apps import package as pkg
-from plantcraft.files import write_atomic
 
 REQUEST_LIMIT = 64 * 1024
 ACTIONS = {"install", "uninstall", "rollback", "set_key"}
@@ -246,7 +245,10 @@ class Installer:
     @staticmethod
     def _write(path: Path, data: bytes | str, mode: int = 0o644) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        write_atomic(path, data, mode=mode)
+        partial = path.with_name(f".{path.name}.{uuid.uuid4().hex[:8]}")
+        partial.write_bytes(data.encode() if isinstance(data, str) else data)
+        partial.chmod(mode)
+        partial.replace(path)
 
     def _json(self, path: Path, value: Any, mode: int = 0o644) -> None:
         self._write(path, json.dumps(value, indent=2, sort_keys=True) + "\n", mode)

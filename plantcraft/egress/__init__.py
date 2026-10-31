@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-from plantcraft.files import write_atomic
+from plantcraft_sdk.files import write_atomic
 
 LOGGER = logging.getLogger("plantcraft.egress")
 
