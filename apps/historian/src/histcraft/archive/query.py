@@ -639,13 +639,32 @@ def _integral_at(times, values, step, power, knots, x):
 
 
 def _averages(times: np.ndarray, values: np.ndarray, step: bool, edges: np.ndarray) -> np.ndarray:
-    """Time-weighted average of the rebuilt signal over each ``[edges[i], edges[i+1])``."""
+    """Time-weighted average of the rebuilt signal over each ``[edges[i], edges[i+1])``.
+
+    The covered time and the area of ``_integral_at`` (powers 0 and 1), from one pass over the
+    segments: the same arithmetic, without building the segments four times.
+    """
 
     if len(times) < 2:
         return np.full(len(edges) - 1, np.nan)
     times_f = times.astype(float)
-    cover = _integral_at(times_f, values, step, 0, _cumulative(times, values, step, 0), edges)
-    area = _integral_at(times_f, values, step, 1, _cumulative(times, values, step, 1), edges)
+    t0, t1, v0, v1, valid = _segments(times, values, step)
+    width = np.where(valid, t1 - t0, 0.0)
+    cover_knots = np.concatenate([[0.0], np.cumsum(width)])
+    area_knots = np.concatenate([[0.0], np.cumsum(width * (v0 + v1) / 2.0)])
+    index = np.clip(np.searchsorted(times_f, edges, side="right") - 1, 0, len(times) - 2)
+    before = edges <= times_f[0]
+    after = edges >= times_f[-1]
+    dx = np.clip(edges - t0[index], 0.0, None)
+    span = t1[index] - t0[index]
+    fraction = np.divide(dx, span, out=np.zeros_like(dx), where=span > 0)
+    a = v0[index]
+    b = a + (v1[index] - a) * fraction  # value at the edge
+    known = valid[index]
+    cover = cover_knots[index] + np.where(known, dx, 0.0)
+    area = area_knots[index] + np.where(known, dx * (a + b) / 2.0, 0.0)
+    cover = np.where(after, cover_knots[-1], np.where(before, 0.0, cover))
+    area = np.where(after, area_knots[-1], np.where(before, 0.0, area))
     covered = np.diff(cover)
     with np.errstate(invalid="ignore", divide="ignore"):
         return np.where(covered > 0, np.diff(area) / np.where(covered > 0, covered, 1.0), np.nan)
