@@ -40,6 +40,7 @@ from plantcraft_sdk.blocks import (
 from pydantic import BaseModel, Field, create_model, model_validator
 
 from linkcraft.i18n import t
+from linkcraft.models.pca import PcaModel, judge_pca
 from linkcraft.models.simulate import Simulation, SimulationError
 from linkcraft.models.stats import Calibration, judge
 
@@ -762,7 +763,229 @@ OPERATING = Block(
     _operating,
 )
 
-BLOCKS = (DEVIATION, OPERATING)
+# Empirical model (PCA, M4) -------------------------------------------------------------------
+
+
+class Empirical(BaseModel):
+    variance: float = Field(
+        default=0.9,
+        ge=0.5,
+        le=0.99,
+        title="Variance kept",
+        description="Calibrate keeps the principal components that explain this share of the "
+        "signals' variance in normal operation.",
+    )
+    confidence: float = Field(
+        default=0.99,
+        ge=0.9,
+        le=0.9999,
+        title="Confidence",
+        description="Confidence of the T² and SPE limits: 0.99 means about 1 sample in 100 is "
+        "beyond each in normal operation.",
+    )
+    share: float = Field(
+        default=0.2,
+        ge=0.01,
+        le=1.0,
+        title="Share beyond the limits",
+        description="A run deviates when at least this share of its samples is beyond a limit.",
+    )
+    persistence: int = Field(
+        default=3,
+        ge=1,
+        le=50,
+        title="Runs in a row",
+        description="Deviating runs in a row before attention becomes a problem.",
+    )
+    calibration: dict[str, Any] | None = Field(
+        default=None,
+        title="Calibration",
+        description="The principal components of the signals in normal operation. Filled by "
+        "Calibrate in the editor on a period you choose.",
+    )
+
+    @model_validator(mode="after")
+    def _calibration(self) -> Empirical:
+        if self.calibration is not None:
+            try:
+                PcaModel.from_dict(self.calibration)
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("a calibration made by Calibrate") from exc
+        return self
+
+
+def _empirical(inputs: dict[str, Any], parameters: Any, ctx: Any) -> dict[str, Any]:
+    state = ctx.state
+    signals = residual_frame(inputs.get("signals") or [])
+
+    def inactive(reason: str) -> dict[str, Any]:
+        state["verdict"] = "inactive"
+        missing = NoData(reason, ctx.node_id)
+        return {"result": Result.unknown(reason), "t2": missing, "spe": missing, "exceed": missing}
+
+    if signals.empty:
+        reasons = [item.reason for item in inputs.get("signals") or [] if isinstance(item, NoData)]
+        return inactive(reasons[0] if reasons else t("No signal to judge."))
+    reason = unjudgeable(signals, inputs.get("active"))
+    if reason:
+        return inactive(reason)
+    if parameters.calibration is None:
+        return inactive(
+            t("Not calibrated yet: press Calibrate in the editor on a period of normal operation.")
+        )
+    model = PcaModel.from_dict(parameters.calibration)
+    missing = [name for name in model.signals if name not in signals.columns]
+    if missing:
+        return inactive(t("The signals changed since the calibration: calibrate again."))
+    rows = signals[model.signals].ffill().to_numpy(dtype=float)
+    judgement = judge_pca(rows, model, confidence=parameters.confidence)
+    deviating = judgement.exceed_share >= parameters.share
+    streak = int(state.get("streak") or 0)
+    streak = streak + 1 if deviating else 0
+    level = _level(streak, parameters.persistence)
+    state.update(streak=streak, verdict=level)
+    score = round(100.0 * (1.0 - judgement.exceed_share), 1)
+    top = max(judgement.contributions.items(), key=lambda pair: pair[1], default=None)
+    if level == "normal":
+        message = t("The signals move together as in normal operation.")
+    else:
+        message = (
+            t("Off normal operation for {count} run(s).", count=streak)
+            if level == "attention"
+            else t("Persistently off normal operation.")
+        )
+        message += " " + (
+            t("The signals no longer move together as they did.")
+            if judgement.spe_share >= 0.5
+            else t("The signals move as usual, but farther than normal.")
+        )
+        if top and top[1] > 0:
+            message += t(" {name} explains {share}% of it.", name=top[0], share=f"{top[1]:.0f}")
+    t2 = pd.Series(judgement.t2, index=signals.index, name="T²")
+    spe = pd.Series(judgement.spe, index=signals.index, name="SPE")
+    return {
+        "result": Result(
+            SUITE_LEVEL[level],
+            score,
+            message,
+            t("Empirical model"),
+            {
+                "t2_limit": judgement.t2_limit,
+                "spe_limit": judgement.spe_limit,
+                "exceed_share": judgement.exceed_share,
+                "spe_share": judgement.spe_share,
+                "contributions": judgement.contributions,
+                "components": model.components,
+                "streak": streak,
+                "level": level,
+            },
+        ),
+        "t2": t2,
+        "spe": spe,
+        "exceed": round(judgement.exceed_share * 100.0, 1),
+    }
+
+
+EMPIRICAL = Block(
+    BlockSpec(
+        "model.empirical",
+        "1.0",
+        LIBRARY,
+        "Empirical model (PCA)",
+        BlockDocs(
+            summary="Judges a unit with no physical model by how its signals moved together in "
+            "normal operation.",
+            description=(
+                "Learns, on a period of normal operation, how the unit's signals move together: "
+                "their principal components (PCA). Each run then measures every sample two "
+                "ways. T² says how far the plant moved along its normal directions; SPE (Q) says "
+                "how far the signals left the way they moved together, which is how most faults "
+                "show. A run deviates when enough samples are beyond either limit; a deviation "
+                "that lasts several runs in a row is a problem. The share each signal explains "
+                "points at where to look."
+            ),
+            reading=(
+                "Ok: the signals move together as in normal operation. Warning (attention): off "
+                "normal operation for fewer runs than the persistence. Bad (problem): "
+                "persistently off; the sentence says whether the signals stopped moving together "
+                "(SPE) or moved farther than normal (T²) and names the signal that explains most "
+                "of it. Unknown: not calibrated, a signal not measured or the unit out of "
+                "operation. The score is the share of samples inside both limits."
+            ),
+            assumptions=(
+                "The calibration period is normal operation that covers the unit's usual "
+                "operating points.",
+                "The signals wired are the ones it was calibrated on.",
+            ),
+            limitations=(
+                "An empirical model knows only the operation it saw: a new normal operating point "
+                "reads as a deviation until it is calibrated again.",
+                "The contributions are the share of the excess each signal explains, not the "
+                "probability it failed; a fault often shows first on signals downstream of it.",
+            ),
+            formula=(
+                "z = (x - mean)/std; t = z P; T² = Σ t_a²/λ_a; SPE = ‖z - t Pᵀ‖²; "
+                "limits χ²(confidence, k) and g χ²(confidence, h)"
+            ),
+            references=(
+                "Jackson, J. E. (1991). A User's Guide to Principal Components. Wiley.",
+                "MacGregor, J. F., Kourti, T. (1995). Statistical process control of "
+                "multivariate processes.",
+                "Box, G. E. P. (1954). Some theorems on quadratic forms applied in the study of "
+                "analysis of variance problems.",
+                "Qin, S. J. (2003). Statistical process monitoring: basics and beyond. Journal of "
+                "Chemometrics 17, 480-502.",
+                "Westerhuis, J. A. et al. (2000). Generalized contribution plots in multivariate "
+                "statistical process monitoring.",
+            ),
+        ),
+        inputs=(
+            inport(
+                "signals",
+                "series",
+                "Signals",
+                "The unit's signals, one wire each.",
+                multiple=True,
+            ),
+            inport(
+                "active",
+                "intervals",
+                "In operation",
+                "When the unit runs; outside it the block does not judge. Not wired: always.",
+                required=False,
+            ),
+        ),
+        outputs=(
+            outport(
+                "result",
+                "result",
+                "Verdict",
+                "Normal, attention, problem or unknown, with the score and the sentence.",
+            ),
+            outport("t2", "series", "T²", "Hotelling's T² of every sample.", record=False),
+            outport(
+                "spe", "series", "SPE", "Squared prediction error of every sample.", record=False
+            ),
+            outport(
+                "exceed",
+                "number",
+                "Beyond the limits",
+                "Share of the samples beyond the T² or the SPE limit.",
+                unit="%",
+                low=0,
+                high=100,
+                better="lower",
+            ),
+        ),
+        parameters=Empirical,
+        runs_on_missing=True,
+        group="Judge",
+    ),
+    _empirical,
+)
+
+
+BLOCKS = (DEVIATION, OPERATING, EMPIRICAL)
 
 __all__ = [
     "BLOCKS",

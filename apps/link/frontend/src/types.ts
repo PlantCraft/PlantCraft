@@ -200,8 +200,8 @@ export interface Algorithm {
 export type UserGroup = { id: string; name: string };
 
 /** An asset an algorithm on assets may name (``GET /api/asset-choices``). */
-/** A Deviation (T²) block's calibration: the residuals' mean and covariance in normal operation. */
-export type Calibration = { outputs: string[]; mean: number[]; cov: number[][]; std?: number[]; samples: number; warnings?: string[]; asset?: string; start?: string; end?: string };
+/** A Deviation block's calibration (mean, covariance) or an Empirical model's (kind "pca": its principal components, M4). */
+export type Calibration = { outputs: string[]; mean: number[]; cov?: number[][]; std?: number[]; samples: number; warnings?: string[]; asset?: string; start?: string; end?: string; kind?: "pca"; eigenvalues?: number[]; explained?: number };
 export type CalibrationAnswer = { node_id: string; asset_id: string; calibration: Calibration; outputs: string[]; std: number[]; samples: number; warnings: string[]; runs: number; used: number; skipped: number; skipped_reason: string; period: { start: string; end: string; every: number } };
 export type AssetChoice = { id: string; name: string; kind: string; path: string; roles: string[] };
 
