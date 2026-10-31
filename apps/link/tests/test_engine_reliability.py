@@ -181,8 +181,14 @@ def test_the_tick_prunes_the_health_history_at_most_hourly():
     from linkcraft.api.runtime import Runtime
 
     calls: list[float] = []
-    latest = SimpleNamespace(prune_history=lambda days: calls.append(days) or 0)
-    quality = SimpleNamespace(prune=lambda days: calls.append(days) or 0)
+    latest = SimpleNamespace(
+        prune_history=lambda days: calls.append(days) or 0,
+        thin_history=lambda full_days: calls.append(("full", full_days)) or 0,
+    )
+    quality = SimpleNamespace(
+        prune=lambda days: calls.append(days) or 0,
+        thin_history=lambda full_days: calls.append(("full", full_days)) or 0,
+    )
     jobs = SimpleNamespace(
         prune_jobs=lambda days: calls.append(days) or 0,
         prune_detail=lambda keep: calls.append(keep) or 0,
@@ -203,7 +209,7 @@ def test_the_tick_prunes_the_health_history_at_most_hourly():
     Runtime.tick(runtime)
     Runtime.tick(runtime)
     # Old summaries thinned until none is left, then the stalled schedules every 5 minutes.
-    assert calls == ["thin", 90, 90, 90, 50, "stalled"]
+    assert calls == ["thin", 90, 90, ("full", 14), ("full", 14), 90, 50, "stalled"]
 
 
 def test_old_finished_runs_are_pruned_but_each_subject_keeps_its_newest(tmp_path):

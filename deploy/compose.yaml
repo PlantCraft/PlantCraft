@@ -370,6 +370,8 @@ services:
       LINKCRAFT_DATA_DIR: /data
       LINKCRAFT_SIGNAL_ROUND_MINUTES: "${LINKCRAFT_SIGNAL_ROUND_MINUTES:-15}"
       LINKCRAFT_SIGNAL_WINDOW_HOURS: "${LINKCRAFT_SIGNAL_WINDOW_HOURS:-24}"
+      LINKCRAFT_HISTORY_DAYS: "${LINKCRAFT_HISTORY_DAYS:-90}"
+      LINKCRAFT_HISTORY_FULL_DAYS: "${LINKCRAFT_HISTORY_FULL_DAYS:-14}"
       # Set by install.sh on an upgrade from PlantCraft Twin: its data, copied to
       # data/linkcraft/migrate/, is copied into LinkCraft once at start (then nothing happens).
       # Twin's models join Link's and its twins become algorithms on assets.

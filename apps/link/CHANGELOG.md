@@ -8,6 +8,13 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Changed
 
+- History keeps a configurable time (`LINKCRAFT_HISTORY_DAYS`, default 90 days) and, past
+  `LINKCRAFT_HISTORY_FULL_DAYS` (default 14), only the last point of each hour per loop, and per
+  signal for good checks (every problem verdict stays). The hourly upkeep thins at most a day per
+  pass (about 2 s for 205 loops and 821 signals), so a large existing file is worked down over
+  days without holding the database. With 2050 loops and 8214
+  signals the file grew without bound (F9, 2.5 to 18.5 GB in about an hour of replay); it now
+  levels off. Freed space is reused, and the file only shrinks after `VACUUM`.
 - The Overview keeps its answer 3 s per asset scope: with 50 people on it during a round its p95
   went from 2.0 to 0.15 s (0.6.0 load test C4 with an account per person).
 

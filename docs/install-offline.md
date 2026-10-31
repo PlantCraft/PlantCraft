@@ -194,6 +194,7 @@ settings and certificates.
 | `COMPOSE_PROFILES` | empty | `linkcraft`, `dashcraft`, `histcraft`, `alarmcraft`, `modelcraft`, `demo`, comma-separated; `install.sh` keeps `PLANTCRAFT_APPS` (the launcher's list) in step |
 | `LINKCRAFT_VERSION`, `DASHCRAFT_VERSION`, `HISTCRAFT_VERSION`, `ALARMCRAFT_VERSION`, `MODELCRAFT_VERSION` | from the bundle | Image of each app; set by `install.sh` |
 | `LINKCRAFT_SIGNAL_ROUND_MINUTES`, `LINKCRAFT_SIGNAL_WINDOW_HOURS` | `15`, `24` | Analytics' Signal quality schedule and window at its first start (then changed in Analytics) |
+| `LINKCRAFT_HISTORY_DAYS`, `LINKCRAFT_HISTORY_FULL_DAYS` | `90`, `14` | How long Analytics keeps loop health and signal check history, and how many recent days keep every point (older days keep the last point of each hour; signal problems are always kept) |
 | `HISTCRAFT_URL` | empty | Optional data layer. Empty: PlantCraft reads its own sources. With the Historian on, `http://histcraft:8100/hist` makes the Historian the data layer (sources kept in the Historian, signals and series read through it) |
 | `SIMCRAFT_VERSION` | `0.5.1` | Image of the `demo` profile; set by `install.sh` from the bundle |
 | `PLANTCRAFT_ADMIN_USERNAME` | `admin` | Emergency administrator |

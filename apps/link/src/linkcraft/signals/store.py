@@ -18,6 +18,7 @@ from plantcraft_sdk.refs import split_signal_id
 from plantcraft_sdk.utc import utc_iso
 
 from linkcraft.db import Migration, Store, add_columns
+from linkcraft.engine.latest import THIN_STEP_DAYS, mark_thinned, thin_window
 from linkcraft.signals.models import (
     SETTING_KEYS,
     STATUSES,
@@ -233,6 +234,11 @@ class QualityResultStore(Store):
     -- A row per signal every round for 90 days (71 million at 8,000 signals): the week's summary
     -- and the pruning read it by time.
     CREATE INDEX IF NOT EXISTS quality_history_time ON quality_history (checked_at);
+    -- How far back each table's history is thinned to a point an hour (``thin_history``).
+    CREATE TABLE IF NOT EXISTS history_thinned (
+        name TEXT PRIMARY KEY,
+        upto TEXT NOT NULL
+    );
     -- Each signal's worst verdict of a closed day (UTC), kept once the day is over: the week's
     -- summary of the Analytics home reads 6 closed days here and only today in quality_history.
     CREATE TABLE IF NOT EXISTS quality_days (
@@ -391,6 +397,40 @@ class QualityResultStore(Store):
                 (start, end),
             ).fetchall()
         return {row[0]: row[1] for row in rows}
+
+    def thin_history(self, *, full_days: float, step_days: float = THIN_STEP_DAYS) -> int:
+        """Past ``full_days`` ago, keep of each signal's good verdicts the last of every hour,
+        and every other verdict; the rows deleted, at most ``step_days`` more a call
+        (``LatestStore.thin_history``). A check every 15 minutes of 8,000 signals is 71 million
+        rows in 90 days, nearly all good: each day keeps its worst and its last verdict
+        (``daily``, ``statuses_between``) at about a quarter of the rows."""
+
+        now = datetime.now(timezone.utc)
+        with self._lock, self._connect() as connection:
+            oldest = connection.execute("SELECT MIN(checked_at) FROM quality_history").fetchone()[0]
+            if oldest is None:
+                return 0
+            window = thin_window(
+                connection,
+                "quality_history",
+                str(oldest),
+                utc_iso(now),
+                full_days,
+                step_days,
+                write=utc_iso,
+            )
+            if window is None:
+                return 0
+            start, end = window
+            removed = connection.execute(
+                "DELETE FROM quality_history WHERE checked_at >= ? AND checked_at < ?"
+                " AND status = 'good' AND rowid NOT IN (SELECT rowid FROM (SELECT rowid,"
+                " MAX(checked_at) FROM quality_history WHERE checked_at >= ? AND checked_at < ?"
+                " AND status = 'good' GROUP BY signal_id, substr(checked_at, 1, 13)))",
+                (start, end, start, end),
+            ).rowcount
+            mark_thinned(connection, "quality_history", end)
+        return removed
 
     def prune(self, days: float = 90) -> int:
         since = utc_iso(datetime.now(timezone.utc) - timedelta(days=days))
