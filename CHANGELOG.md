@@ -33,6 +33,14 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Min and max trend lines come from the Historian, 10× faster (2026-10-31).** A View trend's
+  min or max line read every raw sample of its period and summarised them in Python (50 dense
+  signals x 24 h: 1.8 million values, 7.5 s). `POST /api/v1/series` with a `step` now takes
+  `"extremes": true` and gives each cell's lowest and highest value beside the means (`low`,
+  `high`; from the hourly rollups where whole hours allow); `plantcraft-sdk` 0.85.0
+  `series_many(..., extremes=True)`, also in `FakePlantCraft`. The View asks for it for min and
+  max lines: one grid read, 7.5 to 0.7 s and the Historian's CPU 3.2 to 0.6 s, the same values
+  (`ci/bench/reads/trendbench.py`). First and last lines still summarise the samples.
 - **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
   went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
   the chunks 0.6 s). `plantcraft-sdk` 0.85.0 adds `plantcraft_sdk.wire`, a binary answer for

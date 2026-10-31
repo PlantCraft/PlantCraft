@@ -360,6 +360,11 @@
       ],
       "title": "End"
      },
+     "extremes": {
+      "default": false,
+      "title": "Extremes",
+      "type": "boolean"
+     },
      "quality": {
       "default": false,
       "title": "Quality",

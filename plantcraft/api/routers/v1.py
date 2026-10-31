@@ -74,6 +74,8 @@ class SeriesBatchRequest(BaseModel):
     # Each series also lists where its samples were not good (``quality``: [{t, quality}]),
     # so a check can tell bad, uncertain and substituted values from good ones.
     quality: bool = False
+    # With ``step``: each number series also holds every cell's lowest and highest value.
+    extremes: bool = False
 
 
 def _unprocessable(error: ContractError) -> HTTPException:
@@ -514,7 +516,9 @@ def series_batch(
     in ``errors`` (404, 422, 502, or 413 when the request ran out of points)."""
 
     # Only a source that keeps quality is asked for it (a local source has none).
-    quality = {"quality": True} if payload.quality else {}
+    quality: dict[str, bool] = {"quality": True} if payload.quality else {}
+    if payload.extremes:
+        quality["extremes"] = True
     hidden = [item for item in payload.signals if not scope.signal(item)]
     if hidden:
         # Signals out of the caller's asset scope answer 404, as unknown ones do.

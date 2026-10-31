@@ -252,10 +252,13 @@ class HistCraftDataLayer(DataLayer):
         step: float | None,
         *,
         quality: bool = False,
+        extremes: bool = False,
     ) -> dict[str, Any]:
         body = {"signals": signals, "start": start, "end": end, "step": step}
         if quality:
             body["quality"] = True
+        if extremes:
+            body["extremes"] = True
         return self.call("POST", "/series", json=body)
 
     # The same reads as JSON bytes: API v1 passes HistCraft's answer on without parsing it and
@@ -282,10 +285,13 @@ class HistCraftDataLayer(DataLayer):
         step: float | None,
         *,
         quality: bool = False,
+        extremes: bool = False,
     ) -> bytes:
         body = {"signals": signals, "start": start, "end": end, "step": step}
         if quality:
             body["quality"] = True
+        if extremes:
+            body["extremes"] = True
         return self.call("POST", "/series", json=body, raw=True)
 
     def value(self, signal_id: str, agg: str, window: str) -> dict[str, Any]:
