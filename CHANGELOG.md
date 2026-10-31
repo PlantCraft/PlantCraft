@@ -58,6 +58,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **`ci/e2e-upgrade.sh` stops at once when it cannot read the admin password.** On Linux the
+  installation's password file is readable by root only, and the test found out after an 11-minute
+  build; it now asks for root before anything starts. `docs/install.md` names the release key id
+  (`af2643fa16867976`) that `install.sh` prints next to the fingerprint.
 - **A backup restores on a machine with fewer CPUs (2026-10-31 VM test).** A backup carries the
   `.env` of the server it was made on, so restoring a 4-CPU server's backup on a 2-CPU one failed
   to start ("range of CPUs is from 0.01 to 2.00") and returned to the state before it. The restore
