@@ -8,6 +8,12 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **The plant's process display opens on a generated overview (Level 1).** From assets › **The
+  whole plant** draws a first page with a block per unit (its equipment and loop count and up
+  to eight loop-health bubbles, linked to the unit's page) and a page per unit, each with
+  **‹ Plant overview** back to it. `POST /api/diagrams/draw-plant`.
+- **Back between diagrams.** A diagram opened from another one's link shows **Back** with that
+  diagram's name and returns to the page it was opened from (`?from=`).
 - **Trends compare earlier periods (V11).** "Compare with" draws up to three earlier periods over
   the trend's own: the previous period, 1 day, 1 week or 4 weeks earlier. Each line of an
   earlier period is dotted and lighter, in its own line's colour, moved onto the trend's time

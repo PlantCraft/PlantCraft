@@ -9,6 +9,9 @@ import { diagramsApi, type DiagramStart } from "./api";
 
 export type StartMode = "assets" | "assistant";
 
+/** The choice that draws the whole plant: an overview (Level 1) and a page per unit. */
+export const WHOLE_PLANT = "*plant";
+
 const UNIT_KINDS = new Set(["plant", "site", "area", "unit", "section", "system", "train"]);
 
 /** The assets a diagram can be drawn for: the units, else anything that holds other assets. */
@@ -24,7 +27,7 @@ export function StartDialog({ mode, assets, replaces, onDrawn, onClose }: {
   onDrawn: (start: DiagramStart) => void; onClose: () => void;
 }) {
   const units = useMemo(() => unitsOf(assets).sort((a, b) => a.name.localeCompare(b.name)), [assets]);
-  const [unit, setUnit] = useState(units[0]?.id ?? "");
+  const [unit, setUnit] = useState(mode === "assets" && units.length > 1 ? WHOLE_PLANT : units[0]?.id ?? "");
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -36,7 +39,8 @@ export function StartDialog({ mode, assets, replaces, onDrawn, onClose }: {
     setBusy(true);
     setError("");
     try {
-      onDrawn(mode === "assets" ? await diagramsApi.drawFromAssets(unit) : await diagramsApi.draft(description.trim(), unit || null));
+      onDrawn(mode === "assistant" ? await diagramsApi.draft(description.trim(), unit === WHOLE_PLANT ? null : unit || null)
+        : unit === WHOLE_PLANT ? await diagramsApi.drawPlant() : await diagramsApi.drawFromAssets(unit));
     } catch (err) { setError(message(err)); } finally { setBusy(false); }
   }
 
@@ -49,6 +53,7 @@ export function StartDialog({ mode, assets, replaces, onDrawn, onClose }: {
       <label>{mode === "assets" ? t("Unit") : t("Unit (optional)")}
         <select value={unit} onChange={(event) => setUnit(event.target.value)} autoFocus={mode === "assets"}>
           {mode === "assistant" && <option value="">{t("The whole plant")}</option>}
+          {mode === "assets" && units.length > 1 && <option value={WHOLE_PLANT}>{t("The whole plant: an overview and a page per unit")}</option>}
           {units.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
         </select>
       </label>
