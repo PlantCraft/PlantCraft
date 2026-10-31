@@ -20,6 +20,8 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from plantcraft_sdk.server.workers import available_cpus
+
 from linkcraft.engine.jobs import JobStore
 from linkcraft.i18n import t
 
@@ -67,7 +69,9 @@ def default_slots() -> int:
     configured = os.environ.get("LINKCRAFT_WORKERS", "").strip()
     if configured.isdigit() and int(configured) > 0:
         return int(configured)
-    return max(2, min(8, (os.cpu_count() or 2)))
+    # The container's CPUs (its cgroup limit), not the host's cores: with cpus: 4 on a 12-core
+    # Mac mini, os.cpu_count() said 12 and the engine ran 8 executions at once (plan B1).
+    return max(2, min(8, available_cpus()))
 
 
 class Dispatcher:
