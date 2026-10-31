@@ -8,6 +8,12 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **Days to the limit.** For loops whose health is falling, a line fitted to the last 14 days
+  (6-hour means) says how many days are left until the health reaches the alarm limit (50). The
+  forecast is shown only when the line fits (R² of at least 0.5) and the limit is less than a year
+  away. `GET /api/loop-days-to-limit` lists the soonest first, and so does the widget "Analytics:
+  closest to the limit" (`engine/days_to_limit.py`).
+
 - **Loop-hours lost by cause.** Every monitoring round adds the part of its window no earlier
   round on the loop covered, split by cause: out of normal mode, output at a limit, oscillating
   and bad signal (missing or frozen PV). `GET /api/loop-losses?days=&until=&group_by=area|loop`
