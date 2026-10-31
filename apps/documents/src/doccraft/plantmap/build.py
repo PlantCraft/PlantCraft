@@ -33,9 +33,14 @@ RELATION_TYPES = {"feeds": "feeds", "measures": "measures", "controls": "control
 CONFIDENCE = {"low": 0, "medium": 1, "high": 2}
 
 
-def build_map(diagrams: list[dict[str, Any]], known: set[str] | None = None) -> dict[str, Any]:
+def build_map(
+    diagrams: list[dict[str, Any]],
+    known: set[str] | None = None,
+    reviews: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     """``diagrams``: rows of ``DocumentStore.diagrams(full=True)``; ``known``: PlantCraft's
-    asset ids (None when it could not be read)."""
+    asset ids (None when it could not be read); ``reviews``: ``DocumentStore.map_reviews()``,
+    what people approved (kept, made sure) or rejected (left out of the map)."""
 
     items: dict[str, dict[str, Any]] = {}
     edges: dict[tuple[str, str, str], dict[str, Any]] = {}
@@ -118,6 +123,7 @@ def build_map(diagrams: list[dict[str, Any]], known: set[str] | None = None) -> 
                     "why": "named by an off-page connector; its sheet is not here",
                     "places": [],
                 }
+    rejected = _apply_reviews(items, edges, reviews or {})
     for tag, entry in items.items():
         entry["in_plantcraft"] = None if known is None else tag in known
     loops = _loops(items, edges)
@@ -126,8 +132,106 @@ def build_map(diagrams: list[dict[str, Any]], known: set[str] | None = None) -> 
         "relations": sorted(edges.values(), key=lambda e: (e["type"], e["from"], e["to"])),
         "loops": loops,
         "sheets": sheets,
+        "rejected": rejected,
         "summary": summary(items, edges, loops, sheets, known),
     }
+
+
+def relation_key(rel: dict[str, Any]) -> str:
+    return f"{rel['from']}|{rel['type']}|{rel['to']}"
+
+
+def _apply_reviews(items, edges, reviews) -> list[dict[str, str]]:
+    """A rejected item or relation leaves the map (with the relations of a rejected item); an
+    approved one becomes sure, saying who checked it."""
+
+    rejected = {key for key, r in reviews.items() if r["verdict"] == "rejected"}
+    for tag in [t for t in items if t in rejected]:
+        del items[tag]
+    for key in list(edges):
+        edge = edges[key]
+        if relation_key(edge) in rejected or edge["from"] in rejected or edge["to"] in rejected:
+            del edges[key]
+    for entry in list(items.values()) + list(edges.values()):
+        key = entry["tag"] if "tag" in entry else relation_key(entry)
+        review = reviews.get(key)
+        entry["review"] = review["verdict"] if review else ""
+        if review and review["verdict"] == "approved":
+            entry["confidence"] = "high"
+            entry["why"] = f"checked by {review['by']}"
+    return [
+        {"key": key, "kind": reviews[key]["kind"], "by": reviews[key]["by"]}
+        for key in sorted(rejected)
+    ]
+
+
+LIST_COLUMNS = {
+    "equipment": ("tag", "kind", "unit", "area", "sheet", "confidence", "checked", "in_plantcraft"),
+    "instruments": (
+        "tag",
+        "kind",
+        "unit",
+        "area",
+        "sheet",
+        "confidence",
+        "checked",
+        "in_plantcraft",
+    ),
+    "lines": ("from", "relation", "to", "sheets", "confidence", "checked"),
+    "loops": ("loop", "transmitters", "valves", "equipment", "unit", "area", "complete"),
+}
+
+
+def lists(plant: dict[str, Any], kind: str) -> list[list[str]]:
+    """The map as a table (header first): equipment, instruments, process lines or loops."""
+
+    rows: list[list[str]] = [list(LIST_COLUMNS[kind])]
+
+    def flag(value):
+        return "" if value is None else ("yes" if value else "no")
+
+    if kind in {"equipment", "instruments"}:
+        family = "equipment" if kind == "equipment" else "instrument"
+        for i in plant["items"]:
+            if i["family"] == family:
+                rows.append(
+                    [
+                        i["tag"],
+                        i["cls"].replace("_", " "),
+                        i["unit"],
+                        i["area"],
+                        i["sheet"],
+                        i["confidence"],
+                        flag(i.get("review") == "approved"),
+                        flag(i.get("in_plantcraft")),
+                    ]
+                )
+    elif kind == "lines":
+        for r in plant["relations"]:
+            rows.append(
+                [
+                    r["from"],
+                    r["type"],
+                    r["to"],
+                    " ".join(r["sheets"]),
+                    r["confidence"],
+                    flag(r.get("review") == "approved"),
+                ]
+            )
+    else:
+        for x in plant["loops"]:
+            rows.append(
+                [
+                    x["loop"],
+                    " ".join(x["transmitters"]),
+                    " ".join(x["valves"]),
+                    " ".join(x["equipment"]),
+                    x["unit"],
+                    x["area"],
+                    flag(x["complete"]),
+                ]
+            )
+    return rows
 
 
 def _loops(items, edges) -> list[dict[str, Any]]:

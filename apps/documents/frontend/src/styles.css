@@ -131,3 +131,7 @@ button.chip { cursor: pointer; font: inherit; color: inherit; }
 .map-pill-open rect { stroke: var(--pc-problem-text); stroke-dasharray: 3 2; }
 .map-pill.map-picked rect { stroke: var(--pc-attention, #e0a100); stroke-width: 3; }
 .map-loose-title { font-size: 11px; fill: var(--pc-text-3); }
+.map-lists { display: flex; flex-wrap: wrap; gap: 8px; }
+.map-review { font-size: 13px; white-space: nowrap; }
+.map-match h3 { font-size: 14px; margin: 12px 0 4px; }
+.map-tags { overflow-wrap: anywhere; font-size: 13px; }

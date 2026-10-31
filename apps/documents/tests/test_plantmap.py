@@ -7,13 +7,14 @@ import json
 
 import pytest
 
+from doccraft.api.routers.plantmap import _cell
 from doccraft.plantmap.build import asset_file, build_map
 from doccraft.plantmap.diagrams import describe, read_diagrams
 from doccraft.plantmap.reader import DrawingError, read_drawing
 from doccraft.plantmap.reader import tags as isa
 from doccraft.plantmap.reader.score import score, total
 from doccraft.plantmap.sample.draw import draw_all, draw_sheet, spec
-from tests.conftest import index, send
+from tests.conftest import client_for, index, send
 
 
 @pytest.fixture(scope="module")
@@ -114,7 +115,9 @@ def test_sheets_join_into_one_plant_and_an_asset_file(sheets):
     assert {"from": "FIC-1001", "type": "controls", "to": "FV-1001"} in document["relations"]
 
 
-def test_a_pdf_sent_to_the_library_lands_in_diagrams_and_the_map(client, runtime, tmp_path, sheets):
+def test_a_pdf_sent_to_the_library_lands_in_diagrams_and_the_map(
+    client, runtime, fake, tmp_path, sheets
+):
     _, canvas, _ = sheets[1]
     pdf = tmp_path / "PID-U-100-02.pdf"
     canvas.pdf(pdf)
@@ -138,6 +141,37 @@ def test_a_pdf_sent_to_the_library_lands_in_diagrams_and_the_map(client, runtime
     assert exported.status_code == 200
     assert json.loads(exported.content)["format"] == "processcraft-assets"
     assert svg["doc_id"]
+
+    # Lists for a spreadsheet; a text from a drawing never starts a formula.
+    equipment = client.get("/api/plant-map/lists/equipment.csv")
+    assert equipment.status_code == 200 and equipment.text.startswith("tag,kind,unit")
+    assert "P-1001,pump" in equipment.text
+    assert client.get("/api/plant-map/lists/other.csv").status_code == 422
+
+    # People check the map: rejected leaves it, approved becomes sure; operators only read.
+    with client_for(runtime, fake, "operator") as operator:
+        refused = operator.put(
+            "/api/plant-map/reviews", json={"key": "P-1001", "kind": "item", "verdict": "approved"}
+        )
+        assert refused.status_code == 403
+    review = {"key": "P-1001|feeds|E-1009", "kind": "relation", "verdict": "rejected"}
+    assert client.put("/api/plant-map/reviews", json=review).status_code == 200
+    ok = {"key": "P-1001", "kind": "item", "verdict": "approved"}
+    assert client.put("/api/plant-map/reviews", json=ok).status_code == 200
+    plant = client.get("/api/plant-map").json()
+    assert ("P-1001", "E-1009") not in {(r["from"], r["to"]) for r in plant["relations"]}
+    pump = next(i for i in plant["items"] if i["tag"] == "P-1001")
+    assert pump["confidence"] == "high" and pump["review"] == "approved"
+    assert "checked by engineer" in pump["why"]
+    lines = client.get("/api/plant-map/lists/lines.csv").text
+    assert "P-1001,feeds,E-1009" not in lines
+    undo = {**review, "verdict": ""}
+    assert client.put("/api/plant-map/reviews", json=undo).status_code == 200
+    assert "P-1001,feeds,E-1009" in client.get("/api/plant-map/lists/lines.csv").text
+
+
+def test_a_cell_from_a_drawing_never_starts_a_formula():
+    assert _cell("=HYPERLINK(1)") == "'=HYPERLINK(1)" and _cell("P-1001") == "P-1001"
 
 
 def canvas_svg(sheet) -> bytes:

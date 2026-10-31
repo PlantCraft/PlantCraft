@@ -7,6 +7,7 @@
 | ``revisions`` | one file of a document (``Rev. C``): its SHA-256 in ``files/``, format, pages and where its reading stands (queued, indexed, failed, superseded) |
 | ``document_assets`` | the assets a document is about: given by a person, or suggested from the tags found in it and then confirmed |
 | ``passages`` | the passages of each indexed revision: text, pages, headings, the assets of the tags in it, its vector |
+| ``map_reviews`` | the plant map's items and relations a person approved or rejected |
 | ``diagrams`` | the pages of a revision that are diagrams (P&IDs): sheet, unit and what the drawing reader found on them (items and relations, as JSON) |
 | ``passages_fts`` | the FTS5 index of the passages (BM25), with diacritics folded so "válvula" finds "valvula" |
 
@@ -113,6 +114,13 @@ class DocumentStore(Store):
         PRIMARY KEY (rev_id, page)
     );
     CREATE INDEX IF NOT EXISTS diagrams_doc ON diagrams (doc_id);
+    CREATE TABLE IF NOT EXISTS map_reviews (
+        key TEXT PRIMARY KEY,
+        kind TEXT NOT NULL,
+        verdict TEXT NOT NULL,
+        by TEXT NOT NULL DEFAULT '',
+        at TEXT NOT NULL
+    );
     CREATE VIRTUAL TABLE IF NOT EXISTS passages_fts USING fts5(
         text, section, title,
         tokenize = 'unicode61 remove_diacritics 2'
@@ -538,6 +546,27 @@ class DocumentStore(Store):
         item = dict(row)
         item["result"] = json.loads(item["result"])
         return item
+
+    def map_reviews(self) -> dict[str, dict[str, Any]]:
+        """What people checked on the plant map: a tag (``kind`` item) or a relation (``kind``
+        relation, key ``from|type|to``) approved or rejected. Kept by name, so it survives a
+        new revision of the drawing."""
+
+        with self._lock, self._connect() as connection:
+            rows = connection.execute("SELECT * FROM map_reviews").fetchall()
+        return {row["key"]: dict(row) for row in rows}
+
+    def set_map_review(self, key: str, kind: str, verdict: str, by: str) -> None:
+        with self._lock, self._connect() as connection:
+            if not verdict:
+                connection.execute("DELETE FROM map_reviews WHERE key = ?", (key,))
+                return
+            connection.execute(
+                "INSERT INTO map_reviews (key, kind, verdict, by, at) VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET kind = excluded.kind, verdict = excluded.verdict, "
+                "by = excluded.by, at = excluded.at",
+                (key, kind, verdict, by, self._now()),
+            )
 
     def _drop_passages(
         self, connection: Any, rev_id: str | None = None, doc_id: str | None = None

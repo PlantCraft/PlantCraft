@@ -1,6 +1,6 @@
 import { createApiClient, jsonBody, query, type HelpEntry, type HelpPage } from "@plantcraft/ui";
 import { href } from "./nav";
-import type { Diagram, DiagramRow, Doc, DocRow, Folder, Hit, Me, Passage, PlantMap, SendFields } from "./types";
+import type { Diagram, DiagramRow, Doc, DocRow, Folder, Hit, Me, Passage, PlantMap, SendFields, Verdict } from "./types";
 
 const client = createApiClient({ app: "doccraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -42,6 +42,10 @@ export const api = {
   diagramImage: (revId: string, page: number) => href(`/api/diagrams/${id(revId)}/${page}/image`),
   plantMap: () => request<PlantMap>("/api/plant-map"),
   assetFileUrl: () => href("/api/plant-map/asset-file"),
+  /** Approve, reject or uncheck an item (its tag) or a relation (`from|type|to`) of the map. */
+  review: (key: string, kind: "item" | "relation", verdict: Verdict) =>
+    request<{ key: string; verdict: Verdict }>("/api/plant-map/reviews", jsonBody("PUT", { key, kind, verdict })),
+  listUrl: (kind: "equipment" | "instruments" | "lines" | "loops") => href(`/api/plant-map/lists/${kind}.csv`),
   help: () => request<HelpEntry[]>("/api/help"),
   helpPage: (pageId: string) => request<HelpPage>(`/api/help/${id(pageId)}`),
 };

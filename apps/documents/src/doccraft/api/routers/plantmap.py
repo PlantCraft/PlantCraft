@@ -7,6 +7,7 @@ person reviews on PlantCraft's Assets › Import.
 
 from __future__ import annotations
 
+import csv
 import io
 import json
 from typing import Any
@@ -14,11 +15,12 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Path
 from fastapi.responses import Response
 from plantcraft_sdk.auth import User
+from pydantic import BaseModel, ConfigDict, Field
 
-from doccraft.api.deps import CurrentUser, RuntimeDep
+from doccraft.api.deps import CurrentUser, EditorUser, RuntimeDep
 from doccraft.api.runtime import Runtime
 from doccraft.i18n import t
-from doccraft.plantmap.build import asset_file, build_map
+from doccraft.plantmap.build import LIST_COLUMNS, asset_file, build_map, lists
 
 router = APIRouter(prefix="/api", tags=["plant map"])
 IMAGE_DPI = 110
@@ -113,7 +115,7 @@ def _render(data: bytes, fmt: str, page: int) -> bytes | None:
 @router.get("/plant-map")
 def plant_map(rt: RuntimeDep, user: CurrentUser) -> dict[str, Any]:
     diagrams = rt.store.diagrams(_visible(rt, user), full=True)
-    return build_map(diagrams, _known(rt))
+    return build_map(diagrams, _known(rt), rt.store.map_reviews())
 
 
 @router.get("/plant-map/asset-file")
@@ -121,10 +123,59 @@ def plant_map_asset_file(rt: RuntimeDep, user: CurrentUser) -> Response:
     """The map as PlantCraft's asset file: Assets › Import reviews it before anything changes."""
 
     diagrams = rt.store.diagrams(_visible(rt, user), full=True)
-    document = asset_file(build_map(diagrams, None))
+    document = asset_file(build_map(diagrams, None, rt.store.map_reviews()))
     rt.audit(user, "plantmap.export", "plant-map", {"assets": len(document["assets"])})
     return Response(
         json.dumps(document, indent=1, ensure_ascii=False),
         media_type="application/json",
         headers={"Content-Disposition": 'attachment; filename="plant-map-assets.json"'},
     )
+
+
+class Review(BaseModel):
+    """An item (``kind`` item, ``key`` its tag) or a relation (``kind`` relation, ``key``
+    ``from|type|to``) approved, rejected, or back to unchecked (``verdict`` empty)."""
+
+    model_config = ConfigDict(extra="forbid")
+    key: str = Field(min_length=1, max_length=200)
+    kind: str = Field(pattern="^(item|relation)$")
+    verdict: str = Field(pattern="^(approved|rejected|)$")
+
+
+@router.put("/plant-map/reviews")
+def review(body: Review, rt: RuntimeDep, user: EditorUser) -> dict[str, Any]:
+    rt.store.set_map_review(body.key, body.kind, body.verdict, user.username)
+    rt.audit(user, "plantmap.review", body.key, {"kind": body.kind, "verdict": body.verdict})
+    return {"key": body.key, "verdict": body.verdict}
+
+
+@router.get("/plant-map/lists/{kind}.csv")
+def plant_map_list(
+    rt: RuntimeDep,
+    user: CurrentUser,
+    kind: str = Path(pattern="^(equipment|instruments|lines|loops)$"),
+) -> Response:
+    """Equipment, instrument, process line or loop list of the map, for a spreadsheet."""
+
+    assert kind in LIST_COLUMNS
+    diagrams = rt.store.diagrams(_visible(rt, user), full=True)
+    rows = lists(build_map(diagrams, _known(rt), rt.store.map_reviews()), kind)
+    out = io.StringIO()
+    writer = csv.writer(out)
+    for row in rows:
+        writer.writerow([_cell(value) for value in row])
+    return Response(
+        out.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="plant-map-{kind}.csv"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+def _cell(value: str) -> str:
+    """A text read from a drawing never starts a spreadsheet formula."""
+
+    text = str(value)
+    return "'" + text if text[:1] in {"=", "+", "-", "@", "\t", "\r"} else text

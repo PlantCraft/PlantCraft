@@ -70,9 +70,10 @@ export interface Diagram extends Omit<DiagramRow, "items" | "relations"> {
 export interface MapPlace { doc_id: string; rev_id: string; page: number; sheet: string; doc_title: string; box: [number, number, number, number] }
 export interface MapItem {
   tag: string; family: string; cls: string; unit: string; area: string; sheet: string;
-  confidence: "high" | "medium" | "low"; why: string; places: MapPlace[]; in_plantcraft: boolean | null;
+  confidence: "high" | "medium" | "low"; why: string; places: MapPlace[]; in_plantcraft: boolean | null; review?: Verdict;
 }
-export interface MapRelation { from: string; type: string; to: string; confidence: "high" | "medium" | "low"; why: string; sheets: string[] }
+export type Verdict = "" | "approved" | "rejected";
+export interface MapRelation { from: string; type: string; to: string; confidence: "high" | "medium" | "low"; why: string; sheets: string[]; review?: Verdict }
 export interface MapSheet {
   doc_id: string; rev_id: string; page: number; sheet: string; doc_title: string; title: string; unit: string; source: string;
   width: number; height: number; items: Array<{ tag: string; family: string; cls: string; box: [number, number, number, number] }>;
@@ -80,6 +81,7 @@ export interface MapSheet {
 export interface MapLoop { loop: string; transmitters: string[]; valves: string[]; equipment: string[]; unit: string; area: string; complete: boolean }
 export interface PlantMap {
   items: MapItem[]; relations: MapRelation[]; loops: MapLoop[]; sheets: MapSheet[];
+  rejected: Array<{ key: string; kind: "item" | "relation"; by: string }>;
   summary: {
     sheets: number; equipment: number; instruments: number; loops: number; loops_complete: number; feeds: number; relations: number;
     units: Array<{ unit: string; areas: string[]; equipment: Record<string, number>; loops: number; instruments: number }>;

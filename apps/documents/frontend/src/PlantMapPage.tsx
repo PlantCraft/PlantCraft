@@ -5,18 +5,23 @@ import { api } from "./api";
 import { ConfidencePill } from "./DiagramsPage";
 import { t } from "./i18n";
 import { Link } from "./nav";
-import type { MapItem, MapRelation, Me, PlantMap } from "./types";
+import type { MapItem, MapRelation, Me, PlantMap, Verdict } from "./types";
 import { ErrorBox, Heading, Loading, message } from "./ui";
 
 
 /** The plant map: every diagram read, joined into one plant. Each sheet keeps its drawing's
  * layout as a tile, units in rows; lines that leave a sheet arrive on the next. Nothing is
  * written to PlantCraft here: the map is offered as an asset file that Assets › Import reviews. */
-export function PlantMapPage(_props: { me: Me }) {
+export function PlantMapPage({ me }: { me: Me }) {
   const [plant, setPlant] = useState<PlantMap | null>(null);
   const [error, setError] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
-  useEffect(() => { api.plantMap().then(setPlant).catch((err) => setError(message(err))); }, []);
+  const load = () => api.plantMap().then(setPlant).catch((err) => setError(message(err)));
+  useEffect(() => { void load(); }, []);
+  /** Approve, reject or uncheck, then read the map again (a rejected item leaves it). */
+  const review = (key: string, kind: "item" | "relation", verdict: Verdict) =>
+    api.review(key, kind, verdict).then(load).catch((err) => setError(message(err)));
+  const canReview = me.can_edit;
   if (error) return <ErrorBox text={error} />;
   if (!plant) return <Loading />;
   const s = plant.summary;
@@ -39,7 +44,7 @@ export function PlantMapPage(_props: { me: Me }) {
       </div>
       <div className="map-columns">
         <div className="panel map-panel"><MapCanvas plant={plant} picked={picked} onPick={setPicked} /></div>
-        <div className="panel map-side">{item ? <ItemCard item={item} relations={plant.relations} onPick={setPicked} />
+        <div className="panel map-side">{item ? <ItemCard item={item} relations={plant.relations} onPick={setPicked} onReview={canReview ? review : undefined} />
           : <p className="muted">{t("Click an item on the map to see its lines, its sheets and whether PlantCraft has it.")}</p>}</div>
       </div>
       <div className="panel">
@@ -70,6 +75,21 @@ export function PlantMapPage(_props: { me: Me }) {
         <div className="panel-header"><div><h2>{t("To check")}</h2><p>{t("What the reader was unsure of: check it on the drawing before importing.")}</p></div></div>
         <ul className="map-doubts">{s.doubts.map((d) => <li key={d.tag}><b>{d.tag}</b> <span className="muted">{d.why}</span></li>)}</ul>
       </div>}
+      {plant.rejected.length > 0 && <div className="panel">
+        <div className="panel-header"><div><h2>{t("Rejected")}</h2><p>{t("Left out of the map by a person. Undo to bring one back.")}</p></div></div>
+        <ul className="map-doubts">{plant.rejected.map((r) => <li key={r.key}>
+          <b>{r.key.split("|").join(" ")}</b> <span className="muted">{t("by {name}", { name: r.by })}</span>
+          {canReview && <> <button type="button" className="link-button" onClick={() => review(r.key, r.kind, "")}>{t("Undo")}</button></>}
+        </li>)}</ul>
+      </div>}
+      <div className="panel">
+        <div className="panel-header"><div><h2>{t("Lists")}</h2><p>{t("The map as tables for a spreadsheet.")}</p></div></div>
+        <div className="map-lists">
+          {(["equipment", "instruments", "lines", "loops"] as const).map((kind) =>
+            <a key={kind} className="button" href={api.listUrl(kind)} download><Download size={16} /> {t(LIST_NAMES[kind])}</a>)}
+        </div>
+      </div>
+      <TagListCheck plant={plant} />
     </>}
   </>;
 }
@@ -78,12 +98,27 @@ function Kpi({ value, label }: { value: number | string; label: string }) {
   return <div className="panel kpi-card"><span className="kpi-value">{value}</span><small>{label}</small></div>;
 }
 
-function ItemCard({ item, relations, onPick }: { item: MapItem; relations: MapRelation[]; onPick: (tag: string) => void }) {
+const LIST_NAMES = { equipment: "Equipment list", instruments: "Instrument list", lines: "Process lines", loops: "Control loops" } as const;
+
+type OnReview = (key: string, kind: "item" | "relation", verdict: Verdict) => void;
+
+/** Correct / Wrong for an editor; Undo once checked. */
+function ReviewButtons({ value, onChange }: { value?: Verdict; onChange: (verdict: Verdict) => void }) {
+  if (value) return <span className="map-review">{value === "approved" ? t("Checked") : t("Rejected")} <button type="button" className="link-button" onClick={() => onChange("")}>{t("Undo")}</button></span>;
+  return <span className="map-review">
+    <button type="button" className="link-button" onClick={() => onChange("approved")}>{t("Correct")}</button>
+    {" · "}
+    <button type="button" className="link-button" onClick={() => onChange("rejected")}>{t("Wrong")}</button>
+  </span>;
+}
+
+function ItemCard({ item, relations, onPick, onReview }: { item: MapItem; relations: MapRelation[]; onPick: (tag: string) => void; onReview?: OnReview }) {
   const mine = relations.filter((r) => r.from === item.tag || r.to === item.tag);
   return <div className="map-item">
     <h2>{item.tag}</h2>
     <p className="muted">{t(item.cls.replace("_", " "))} · {[item.unit, item.area].filter(Boolean).join(" · ") || t("no unit")}</p>
     <p><ConfidencePill value={item.confidence} /> <span className="muted">{item.why}</span></p>
+    {onReview && <p><ReviewButtons value={item.review} onChange={(v) => onReview(item.tag, "item", v)} /></p>}
     <p>{item.in_plantcraft === null ? t("PlantCraft's assets could not be read.")
       : item.in_plantcraft ? <a href={`/assets/${encodeURIComponent(item.tag)}`}>{t("In PlantCraft: open the asset")}</a>
         : t("Not in PlantCraft yet: the asset file creates it.")}</p>
@@ -91,10 +126,49 @@ function ItemCard({ item, relations, onPick }: { item: MapItem; relations: MapRe
     {mine.length === 0 ? <p className="muted">{t("None found.")}</p> : <ul>{mine.map((r) => <li key={`${r.from}-${r.type}-${r.to}`}>
       <button type="button" className="link-button" onClick={() => onPick(r.from)}>{r.from}</button> <b>{t(r.type)}</b>{" "}
       <button type="button" className="link-button" onClick={() => onPick(r.to)}>{r.to}</button> <ConfidencePill value={r.confidence} />
+      {onReview && <> <ReviewButtons value={r.review} onChange={(v) => onReview(`${r.from}|${r.type}|${r.to}`, "relation", v)} /></>}
     </li>)}</ul>}
     <h3>{t("Drawn on")}</h3>
     {item.places.length === 0 ? <p className="muted">{t("Only named by a connector: its sheet is not in the documents.")}</p>
       : <ul>{item.places.map((p) => <li key={`${p.rev_id}-${p.page}`}><Link to={`/diagrams/${p.rev_id}/${p.page}`}>{p.sheet}</Link> <span className="muted">{p.doc_title}</span></li>)}</ul>}
+  </div>;
+}
+
+/** Match the map with a tag list the plant already has (a CSV or text file: the first cell of
+ * each line). Read in the browser only; nothing is sent. */
+export function compareTags(listText: string, plant: PlantMap) {
+  const list = new Set<string>();
+  for (const line of listText.split(/\r?\n/)) {
+    const cell = line.split(/[,;\t]/)[0]?.trim().replace(/^"|"$/g, "").toUpperCase();
+    if (cell && /\d/.test(cell) && /^[A-Z]/.test(cell) && cell.length <= 40) list.add(cell);
+  }
+  const drawn = new Set(plant.items.filter((i) => i.family === "equipment" || i.family === "instrument").map((i) => i.tag.toUpperCase()));
+  return {
+    both: [...drawn].filter((tag) => list.has(tag)).sort(),
+    onlyDrawn: [...drawn].filter((tag) => !list.has(tag)).sort(),
+    onlyList: [...list].filter((tag) => !drawn.has(tag)).sort(),
+  };
+}
+
+function TagListCheck({ plant }: { plant: PlantMap }) {
+  const [result, setResult] = useState<ReturnType<typeof compareTags> | null>(null);
+  const [name, setName] = useState("");
+  const read = (file: File | undefined) => {
+    if (!file) return;
+    setName(file.name);
+    void file.slice(0, 5_000_000).text().then((text) => setResult(compareTags(text, plant)));
+  };
+  const show = (tags: string[]) => tags.length === 0 ? <p className="muted">{t("None.")}</p>
+    : <p className="map-tags">{tags.slice(0, 300).join(", ")}{tags.length > 300 ? " …" : ""}</p>;
+  return <div className="panel">
+    <div className="panel-header"><div><h2>{t("Check against a tag list")}</h2>
+      <p>{t("Pick the plant's tag list (CSV or text, the tag in the first column) to see what the drawings miss and what the list misses. The file stays in your browser.")}</p></div></div>
+    <input type="file" accept=".csv,.txt,text/csv,text/plain" aria-label={t("Tag list")} onChange={(e) => read(e.target.files?.[0])} />
+    {result && <div className="map-match">
+      <p>{t("{file}: {both} tags on both, {drawn} only on the drawings, {list} only in the list.", { file: name, both: result.both.length, drawn: result.onlyDrawn.length, list: result.onlyList.length })}</p>
+      <h3>{t("Only on the drawings")}</h3>{show(result.onlyDrawn)}
+      <h3>{t("Only in the list")}</h3>{show(result.onlyList)}
+    </div>}
   </div>;
 }
 

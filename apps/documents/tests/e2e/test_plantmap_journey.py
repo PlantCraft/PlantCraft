@@ -60,3 +60,25 @@ def test_pids_become_diagrams_and_a_plant_map(signed_in, app_url, fake, tmp_path
     page.locator(".map-node", has_text="E-1009").first.click()
     expect(page.locator(".map-item")).to_contain_text("P-1001")
     _shot(page, screenshots, "map-3-plant-map")
+
+    # An editor checks the map: Correct makes an item sure, Wrong takes a line out, Undo
+    # brings it back.
+    card = page.locator(".map-item")
+    card.locator(".map-review").first.get_by_role("button", name="Correct").click()
+    expect(card.locator(".map-review").first).to_contain_text("Checked")
+    line = card.locator("li", has_text="P-1001").first
+    line.get_by_role("button", name="Wrong").click()
+    rejected = page.locator(".panel", has=page.get_by_role("heading", name="Rejected"))
+    expect(rejected).to_contain_text("P-1001 feeds E-1009")
+    _shot(page, screenshots, "map-4-checked")
+    rejected.get_by_role("button", name="Undo").click()
+    expect(page.get_by_role("heading", name="Rejected")).to_have_count(0)
+
+    # The plant's own tag list, compared in the browser.
+    tag_list = tmp_path / "tags.csv"
+    tag_list.write_text("tag,description\nP-1001,Feed pump\nE-1009,Cooler\nXV-9999,Not drawn\n")
+    page.get_by_label("Tag list").set_input_files(str(tag_list))
+    match = page.locator(".map-match")
+    expect(match).to_contain_text("2 tags on both")
+    expect(match).to_contain_text("XV-9999")
+    _shot(page, screenshots, "map-5-tag-list")
