@@ -22,6 +22,15 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   are valves; arrows drawn along a line, away from any symbol, give the line's direction; a
   pump drawn small to scale is still a pump. On the DEXPI example the reader finds 4 of its 6
   equipment feeds with none wrong (3, one of them reversed, before).
+- **The plant map as a document the assistant cites.** **Write the plant summary** on the
+  plant map writes the map of a folder's P&IDs out as a document in that same folder:
+  - each unit, with its equipment in flow order and what feeds what;
+  - the control loops and the instruments;
+  - the sheets each item is drawn on.
+
+  It is indexed like any other document, so search and the assistant cite it. It is made with no
+  language model, and making it again adds a revision. Only that folder's drawings go into it,
+  so it has the same readers as they do.
 - **Hand valves drawn with no tag are followed.** A small circle in a gap of the line (a
   ball or hand valve as DIN/ISO 10628 tools draw it) is a valve the line runs through. A valve
   between two lines with arrows takes its direction from the line where it is alone. On the

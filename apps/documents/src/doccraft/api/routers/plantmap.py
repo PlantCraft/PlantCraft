@@ -10,9 +10,10 @@ from __future__ import annotations
 import csv
 import io
 import json
+from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path, Query
 from fastapi.responses import Response
 from plantcraft_sdk.auth import User
 from plantcraft_sdk.client import PlantCraftError
@@ -21,9 +22,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from doccraft.api.deps import CurrentUser, EditorUser, RuntimeDep
 from doccraft.api.runtime import Runtime
 from doccraft.i18n import t
+from doccraft.library.service import Refused
 from doccraft.plantmap import llm as diagram_llm
 from doccraft.plantmap.build import LIST_COLUMNS, asset_file, build_map, lists
 from doccraft.plantmap.dexpi import dexpi_xml
+from doccraft.plantmap.summary_doc import NUMBER, summary_markdown
 
 router = APIRouter(prefix="/api", tags=["plant map"])
 IMAGE_DPI = 110
@@ -198,6 +201,70 @@ def plant_map_dexpi(rt: RuntimeDep, user: CurrentUser) -> Response:
             "X-Content-Type-Options": "nosniff",
         },
     )
+
+
+@router.post("/plant-map/summary-document", status_code=201)
+def plant_map_summary_document(
+    rt: RuntimeDep, user: EditorUser, folder: str | None = Query(None, max_length=12)
+) -> dict[str, Any]:
+    """The map of a folder's P&IDs written out as a document in that same folder (a new
+    revision each time), so search and the assistant cite it. Only that folder's drawings go
+    in: whoever reads the folder could read them already. No folder: the one with most."""
+
+    perms = rt.permissions(user)
+    visible = perms.docs(rt.store.documents(perms.visible_folders()))
+    in_folder: dict[str, set[str]] = {}
+    for doc in visible:
+        in_folder.setdefault(doc.get("folder_id") or "", set()).add(doc["doc_id"])
+    drawn = {d["doc_id"] for d in rt.store.diagrams(set().union(*in_folder.values()))}
+    if folder is None:
+        folder = max(in_folder, key=lambda f: (len(in_folder[f] & drawn), f), default="")
+    if not perms.sees_folder(folder) or (folder and perms.folder(folder) is None):
+        raise HTTPException(status_code=404, detail=t("Folder not found."))
+    if not perms.edits_folder(folder):
+        raise HTTPException(
+            status_code=403, detail=t("Only the editors of this folder send documents to it.")
+        )
+    diagrams = rt.store.diagrams(in_folder.get(folder, set()), full=True)
+    if not diagrams:
+        raise HTTPException(status_code=409, detail=t("This folder has no diagrams to sum up."))
+    name = (perms.folder(folder) or {}).get("name") or "General"
+    text = summary_markdown(build_map(diagrams, None, rt.store.map_reviews()), name)
+    number = NUMBER if not folder else f"{NUMBER}-{folder}".upper()
+    existing = rt.store.by_number(number)
+    if existing is not None and not perms.edits_folder(existing["folder_id"]):
+        raise HTTPException(
+            status_code=403,
+            detail=t("Document {number} is in a folder you do not change.", number=number),
+        )
+    now = datetime.now(UTC)
+    fields = {
+        "folder_id": folder,
+        "number": number,
+        "title": f"Plant summary from the P&IDs ({name})",
+        "description": "The plant map written out: units, equipment in flow order, what feeds "
+        "what, control loops and the sheets each item is drawn on. Made from the drawings with "
+        "no language model; remade when an editor asks.",
+        "kind": "Other",
+    }
+    try:
+        doc = rt.library.add(
+            text.encode(),
+            "plant-summary.md",
+            fields,
+            now.strftime("%Y%m%d-%H%M%S"),
+            now.strftime("%Y-%m-%d"),
+            user.username,
+        )
+    except Refused as error:
+        raise HTTPException(status_code=422, detail=t(str(error))) from error
+    rt.audit(
+        user,
+        "plantmap.summary",
+        doc["doc_id"],
+        {"folder": folder, "sheets": len(diagrams), "bytes": len(text)},
+    )
+    return doc
 
 
 class Review(BaseModel):

@@ -45,6 +45,8 @@ export const api = {
   plantMap: () => request<PlantMap>("/api/plant-map"),
   assetFileUrl: () => href("/api/plant-map/asset-file"),
   dexpiUrl: () => href("/api/plant-map/dexpi.xml"),
+  /** The map written out as a document of the library (a new revision each time), so the assistant cites it. */
+  summaryDocument: () => request<Doc>("/api/plant-map/summary-document", { method: "POST" }),
   /** Approve, reject or uncheck an item (its tag) or a relation (`from|type|to`) of the map. */
   review: (key: string, kind: "item" | "relation", verdict: Verdict) =>
     request<{ key: string; verdict: Verdict }>("/api/plant-map/reviews", jsonBody("PUT", { key, kind, verdict })),

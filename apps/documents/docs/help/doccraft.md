@@ -65,6 +65,11 @@ On the map you can work with what was read:
   Hexagon Smart P&ID or COMOS. It holds equipment, lines and instrument loops, with no drawing.
 - **Asset file** goes to PlantCraft's Assets › Import, where you review it before anything
   changes.
+- **Write the plant summary** (if you can edit) writes the map out as a document of the
+  library, in the folder that holds most of the P&IDs. It covers each unit, the equipment in flow
+  order with what feeds what, the control loops, and the sheets each item is drawn on. It is
+  made from the drawings with no language model. Search and the assistant find it and cite it
+  like any other document. Make it again after a change: it becomes a new revision.
 - **Check against a tag list**: pick your plant's tag list (CSV or text, the tag in the first
   column) to see which tags are on both, and which are only on one. The file stays in your
   browser.
