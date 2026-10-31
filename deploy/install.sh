@@ -38,6 +38,8 @@
 #          loops, algorithms, model examples, dashboards, messages; `processcraft demo seed`),
 #          --public-demo (--demo left open to visitors: a read-only account `demo` shown on the
 #          sign-in page, no LLM for visitors, rate limits), --yes,
+#          --install-docker (no Docker on this Linux server: install the Docker Engine and Compose
+#          the bundle carries in docker-engine/, offline, as root),
 #          --dev (run from a source checkout: no bundle checks, images built locally).
 #
 # Needs Docker Engine and the Compose plugin, run as root or as a member of the `docker` group.
@@ -98,6 +100,7 @@ BACKUP_NAME=""
 ALLOW_UNSIGNED=0
 ALLOW_EMULATION=0
 PUBLISHER_KEY=""
+INSTALL_DOCKER=0
 # The installation file (docs/installation-file.md): read once, after the options.
 INSTALLATION_CONF="${PLANTCRAFT_INSTALLATION_CONF:-}"
 CONF_ENV=()      # KEY=VALUE pairs it sets in .env, applied last by write_env
@@ -148,6 +151,7 @@ while [ $# -gt 0 ]; do
         --demo) WITH_DEMO=1 ;;
         --public-demo) WITH_DEMO=1; PUBLIC_DEMO=1 ;;
         --dev) DEV=1 ;;
+        --install-docker) INSTALL_DOCKER=1 ;;
         --allow-unsigned) ALLOW_UNSIGNED=1 ;;
         --allow-emulation) ALLOW_EMULATION=1 ;;
         --publisher-key) [ $# -ge 2 ] || die "--publisher-key needs a public key file"; PUBLISHER_KEY="$2"; shift ;;
@@ -300,7 +304,11 @@ version_ge() {
 }
 
 check_docker() {
-    command -v docker >/dev/null 2>&1 || die "Docker is not installed (docs/install-offline.md, section 1)."
+    if ! command -v docker >/dev/null 2>&1 && [ "$INSTALL_DOCKER" = 1 ]; then
+        [ -x "$BUNDLE_DIR/docker-engine/docker-engine.sh" ] || die "--install-docker: this bundle has no docker-engine/ folder."
+        "$BUNDLE_DIR/docker-engine/docker-engine.sh" install "$BUNDLE_DIR/docker-engine"
+    fi
+    command -v docker >/dev/null 2>&1 || die "Docker is not installed: run again with --install-docker (the bundle carries Docker Engine), or see docs/install-offline.md, section 1."
     docker info >/dev/null 2>&1 ||
         die "cannot reach the Docker daemon: start it, and run as root or as a member of the docker group."
     local engine compose
@@ -1506,6 +1514,8 @@ case "$ACTION" in
     show-config) do_show_config ;;
     install)
         # A server that fails the requirements stops here, before anything is changed.
+        # --install-docker puts the bundle's Docker Engine in place before the check looks for it.
+        if [ "$INSTALL_DOCKER" = 1 ]; then check_docker; fi
         if [ -x "$BUNDLE_DIR/preflight.sh" ] && [ "$DEV" = 0 ] && [ "${PLANTCRAFT_SKIP_CHECK:-0}" != 1 ]; then
             do_check || die "the requirements check failed (above); nothing was changed. PLANTCRAFT_SKIP_CHECK=1 skips it."
         fi
