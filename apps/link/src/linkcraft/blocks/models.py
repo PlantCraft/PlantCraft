@@ -41,6 +41,7 @@ from pydantic import BaseModel, Field, create_model, model_validator
 
 from linkcraft.i18n import t
 from linkcraft.models.pca import PcaModel, judge_pca
+from linkcraft.models.regression import Regression
 from linkcraft.models.simulate import Simulation, SimulationError
 from linkcraft.models.stats import Calibration, judge
 
@@ -985,7 +986,237 @@ EMPIRICAL = Block(
 )
 
 
-BLOCKS = (DEVIATION, OPERATING, EMPIRICAL)
+# Regression with a validity range (A4) -------------------------------------------------------
+
+
+class RegressionParameters(BaseModel):
+    method: Literal["ols", "ridge", "pls"] = Field(
+        default="ridge",
+        title="Method",
+        description="OLS: least squares. Ridge: least squares that keeps the coefficients "
+        "small, steadier with few samples. PLS: for inputs that move together.",
+    )
+    alpha: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1e6,
+        title="Ridge strength",
+        description="Ridge only: how strongly the coefficients are kept small (on standardised "
+        "inputs).",
+    )
+    components: int = Field(
+        default=2,
+        ge=1,
+        le=20,
+        title="PLS components",
+        description="PLS only: the directions of the inputs it keeps.",
+    )
+    margin: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        title="Margin outside the training range",
+        description="How far beyond each input's training range still counts as inside, as a "
+        "share of that range (0.1: 10% on each side).",
+    )
+    share: float = Field(
+        default=0.1,
+        ge=0.0,
+        le=1.0,
+        title="Share outside before a warning",
+        description="The verdict is a warning when the inputs are outside their range for more "
+        "than this share of the window.",
+    )
+    calibration: dict[str, Any] | None = Field(
+        default=None,
+        title="Calibration",
+        description="The coefficients and each input's training range. Filled by Calibrate in "
+        "the editor on a period with target samples.",
+    )
+
+    @model_validator(mode="after")
+    def _calibration(self) -> RegressionParameters:
+        if self.calibration is not None:
+            try:
+                Regression.from_dict(self.calibration)
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("a calibration made by Calibrate") from exc
+        return self
+
+
+def _regression(inputs: dict[str, Any], parameters: Any, ctx: Any) -> dict[str, Any]:
+    wired = residual_frame(inputs.get("inputs") or [])
+
+    def inactive(reason: str) -> dict[str, Any]:
+        missing = NoData(reason, ctx.node_id)
+        return {
+            "value": missing,
+            "valid": missing,
+            "result": Result.unknown(reason),
+            "outside": missing,
+        }
+
+    if wired.empty:
+        return inactive(t("No input to predict from."))
+    if parameters.calibration is None:
+        return inactive(
+            t("Not calibrated yet: press Calibrate in the editor on a period with target samples.")
+        )
+    model = Regression.from_dict(parameters.calibration)
+    if [name for name in model.inputs if name not in wired.columns]:
+        return inactive(t("The inputs changed since the calibration: calibrate again."))
+    rows = wired[model.inputs].ffill().to_numpy(dtype=float)
+    value = pd.Series(model.predict(rows), index=wired.index, name=model.target or "estimate")
+    flags = model.outside(rows, parameters.margin)
+    out_rows = np.any(flags != 0, axis=1)
+    valid = pd.Series(~out_rows, index=wired.index, name="valid")
+    share = float(out_rows.mean()) if len(out_rows) else 0.0
+    details: dict[str, Any] = {
+        "method": model.method,
+        "r2": model.r2,
+        "rmse": model.rmse,
+        "outside_share": share,
+        "inputs": {},
+    }
+    worst = None
+    for index, name in enumerate(model.inputs):
+        below = float(np.mean(flags[:, index] < 0)) if len(flags) else 0.0
+        above = float(np.mean(flags[:, index] > 0)) if len(flags) else 0.0
+        details["inputs"][name] = {
+            "low": model.low[index],
+            "high": model.high[index],
+            "below": below,
+            "above": above,
+        }
+        if below + above > 0 and (worst is None or below + above > worst[1] + worst[2]):
+            worst = (name, below, above, index)
+    target = inputs.get("target")
+    if isinstance(target, pd.Series):
+        measured = pd.to_numeric(target, errors="coerce").dropna()
+        if len(measured):
+            at = value.reindex(measured.index, method="nearest")
+            error = (measured - at).dropna()
+            if len(error):
+                details["rmse_now"] = float(np.sqrt(np.mean(error.to_numpy() ** 2)))
+                details["target_samples"] = int(len(error))
+    if worst is None:
+        status, message = "ok", t("Every input stayed inside the range it was trained on.")
+    else:
+        name, below, above, index = worst
+        side = t("below") if below >= above else t("above")
+        bound = model.low[index] if below >= above else model.high[index]
+        message = t(
+            "Outside the training range {share}% of the time: {name} went {side} {bound:.4g}, "
+            "so the estimate extrapolates there.",
+            share=f"{100 * share:.0f}",
+            name=name,
+            side=side,
+            bound=bound,
+        )
+        status = "warning" if share > parameters.share else "ok"
+    return {
+        "value": value,
+        "valid": valid,
+        "result": Result(
+            status, round(100.0 * (1.0 - share), 1), message, t("Regression"), details
+        ),
+        "outside": round(100.0 * share, 1),
+    }
+
+
+REGRESSION = Block(
+    BlockSpec(
+        "model.regression",
+        "1.0",
+        LIBRARY,
+        "Regression (OLS, Ridge, PLS)",
+        BlockDocs(
+            summary="A value the plant only samples (a lab analysis) predicted at every step "
+            "by a regression trained once, with the range it is valid in.",
+            description=(
+                "Calibrate fits the regression on a period: the target's samples (a lab or "
+                "analyzer series) against the inputs at those times, by OLS, ridge or PLS. It "
+                "keeps the coefficients, the fit (R², RMSE) and each input's range in the "
+                "training. Each run predicts at every step and marks where an input left its "
+                "range: there the regression extrapolates."
+            ),
+            reading=(
+                "Estimate: the target at every step. Valid: true where every input is inside its "
+                "training range. The verdict is a warning when the inputs were outside for more "
+                "than the share set, and names the input and the side. When the target is wired "
+                "its samples in the window give the error now, against the RMSE of the training."
+            ),
+            assumptions=(
+                "The inputs explain the target the same way as in the training period.",
+                "The target's samples are at the times the process was in that state (shift "
+                "the lab by its sampling delay before wiring it).",
+            ),
+            limitations=(
+                "Inside the range is necessary, not enough: a combination of inputs never seen "
+                "together can still extrapolate.",
+                "Linear: a process that bends inside the range is fitted by a straight line.",
+            ),
+            formula="ŷ = b₀ + Σ bᵢ xᵢ; valid when lowᵢ − m·spanᵢ ≤ xᵢ ≤ highᵢ + m·spanᵢ",
+            references=(
+                "Hoerl, A. E., Kennard, R. W. (1970). Ridge regression: biased estimation for "
+                "nonorthogonal problems. Technometrics 12(1), 55-67.",
+                "Wold, S., Sjöström, M., Eriksson, L. (2001). PLS-regression: a basic tool of "
+                "chemometrics. Chemometrics and Intelligent Laboratory Systems 58, 109-130.",
+                "Kadlec, P., Gabrys, B., Strandt, S. (2009). Data-driven soft sensors in the "
+                "process industry. Computers & Chemical Engineering 33(4), 795-814.",
+            ),
+        ),
+        inputs=(
+            inport(
+                "inputs",
+                "series",
+                "Inputs",
+                "The signals that explain the target, one wire each.",
+                multiple=True,
+            ),
+            inport(
+                "target",
+                "series",
+                "Target",
+                "The sampled value it predicts (gaps between samples). Needed to calibrate; "
+                "wired at run time it also gives the error now.",
+                required=False,
+            ),
+        ),
+        outputs=(
+            outport("value", "series", "Estimate", "The target at every step."),
+            outport(
+                "valid",
+                "intervals",
+                "Valid",
+                "True where every input is inside its training range.",
+            ),
+            outport(
+                "result",
+                "result",
+                "Verdict",
+                "Ok, or a warning when the inputs left their range, with the input named.",
+            ),
+            outport(
+                "outside",
+                "number",
+                "Outside the range",
+                "Share of the window with an input outside its training range.",
+                unit="%",
+                low=0,
+                high=100,
+                better="lower",
+            ),
+        ),
+        parameters=RegressionParameters,
+        runs_on_missing=True,
+        group="Soft sensors",
+    ),
+    _regression,
+)
+
+
+BLOCKS = (DEVIATION, OPERATING, EMPIRICAL, REGRESSION)
 
 __all__ = [
     "BLOCKS",
