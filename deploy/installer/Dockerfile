@@ -71,6 +71,10 @@ COPY plantcraft/legacy.py /app/processcraft/__init__.py
 COPY plantcraft/apps/__init__.py plantcraft/apps/package.py plantcraft/apps/installer.py plantcraft/apps/operations.py plantcraft/apps/historian_backup.py plantcraft/apps/release.py plantcraft/apps/host_usage.py /app/plantcraft/apps/
 # Backup, restore and updates (docs/operations.md), run by the operations driver: this image as root.
 COPY plantcraft/ops/__init__.py plantcraft/ops/snapshot.py /app/plantcraft/ops/
+# write_atomic (state files written whole or not at all): plantcraft/files.py and the three SDK
+# files it needs (standard library only; tests/test_isolation.py checks the imports are all here).
+COPY plantcraft/files.py /app/plantcraft/files.py
+COPY sdk/python/plantcraft_sdk/__init__.py sdk/python/plantcraft_sdk/settings_compat.py sdk/python/plantcraft_sdk/files.py /app/plantcraft_sdk/
 RUN python -m compileall -q /app/plantcraft /app/processcraft \
     && chmod -R u=rwX,go=rX /app \
     && su -s /bin/sh installer -c 'python -c "import plantcraft.apps.installer, plantcraft.apps.operations, plantcraft.apps.historian_backup, plantcraft.apps.release, processcraft.apps.release"'

@@ -1184,3 +1184,31 @@ def test_the_code_sandboxes_have_no_network_no_secret_and_no_app_data() -> None:
         assert sandbox["volumes"] == [f"./data/{app}-sandbox:/sandbox"]
         assert f"./data/{app}-sandbox:/sandbox" in owner["volumes"]
         assert owner["environment"]["ALARMCRAFT_CODE_SOCKET"] == "/sandbox/code.sock"
+
+
+def test_the_installer_image_holds_every_module_its_code_imports() -> None:
+    """The installer image copies single files, not the package: each first-party module those
+    files import must be copied too, or the image build stops (plantcraft.files, 2026-10-31)."""
+
+    text = (ROOT / "deploy" / "installer" / "Dockerfile").read_text(encoding="utf-8")
+    copied: dict[str, Path] = {}
+    for sources, target in re.findall(r"^COPY (?!--)(.+) (/app/\S+)$", text, re.MULTILINE):
+        for source in sources.split():
+            dest = target + Path(source).name if target.endswith("/") else target
+            module = dest.removeprefix("/app/").removesuffix(".py").replace("/", ".")
+            copied[module.removesuffix(".__init__")] = ROOT / source
+    missing = []
+    for module, path in copied.items():
+        if path.suffix != ".py":
+            continue
+        for name in re.findall(
+            r"^\s*(?:from|import) ((?:plantcraft|plantcraft_sdk|processcraft)(?:\.\w+)*)",
+            path.read_text(encoding="utf-8"),
+            re.MULTILINE,
+        ):
+            parts = name.split(".")
+            if not any(".".join(parts[:i]) in copied for i in range(len(parts), 1, -1)) and (
+                name not in copied
+            ):
+                missing.append(f"{module} imports {name}")
+    assert not missing, missing

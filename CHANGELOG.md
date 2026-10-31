@@ -195,6 +195,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Release bundles build again.** The installer image copies single files, and since
+  `write_atomic` moved to the SDK (#54) its backup and update code imported `plantcraft.files`,
+  which it did not hold: `make bundle` stopped at the installer image. It now carries that file
+  and the three standard-library SDK files it needs, and a test checks that every first-party
+  import of the copied files is copied too.
 - **`ci/e2e-upgrade.sh` stops at once when it cannot read the admin password.** On Linux the
   installation's password file is readable by root only, and the test found out after an 11-minute
   build; it now asks for root before anything starts. `docs/install.md` names the release key id
