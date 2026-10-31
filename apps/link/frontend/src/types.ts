@@ -512,6 +512,21 @@ export interface TuningSuggestion {
   source_start?: string | null; source_end?: string | null;
 }
 
+/** One setpoint step of the loop's last window and how the PV answered it (A10). */
+export interface SetpointStep {
+  at: string | null; sp_before: number; sp_after: number; size: number; pv_before: number; hold_seconds: number;
+  overshoot_pct: number; rise_seconds: number | null; settling_seconds: number | null;
+  reached: boolean; settled: boolean; iae: number; iae_seconds: number;
+}
+
+/** The setpoint steps found in the loop's last window, with their medians (A10). */
+export interface StepResponses {
+  available: boolean; reason?: string; steps?: SetpointStep[];
+  skipped?: { small: number; short: number; manual: number };
+  summary?: { steps: number; overshoot_pct: number | null; rise_seconds: number | null; settling_seconds: number | null; iae_seconds: number | null; settled_pct: number };
+  source_start?: string | null; source_end?: string | null;
+}
+
 /** A third-party multivariable controller, read from its own signals (`GET /api/apc`, A16/A17). */
 export interface ApcSummary {
   on_now: boolean;

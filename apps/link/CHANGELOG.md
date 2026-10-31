@@ -19,6 +19,12 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   - the verdict: a warning when that happens for more than the share you set, naming the input
     and the side. With the target wired, it also gives the error now against the training
     RMSE.
+- **How the loop answers its setpoint steps** (gap A10). "Find steps" on the loop page finds
+  each setpoint change of the last window (a jump, or a ramp of up to three samples) that stands
+  clear of the PV's noise and is held at least ten samples, and gives its overshoot, rise time
+  (10 to 90%), settling time (inside 5% of the step, or three noise widths) and IAE, also per unit
+  of step, with the medians. Steps taken in manual are left out. Read from the history only
+  (`GET /api/loops/{loop_id}/step-response`, `engine/step_response.py`).
 - **A new action from a loop's result, with its charts.** "New action" on every analysed loop's
   page (not only loops from PlantCraft's assets) opens PlantCraft's action form with the result
   written out (status, health, window, limiting finding, likely cause and what to do first), the
