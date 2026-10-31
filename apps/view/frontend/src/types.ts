@@ -173,7 +173,7 @@ export interface Section {
   title: string; text: string; card: Card | null; events: EventsSpec | null; assistant?: AssistantSpec | null; width: "full" | "half";
 }
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
-export interface Schedule { every: "off" | "day" | "week" | "month"; at: string; weekday: Weekday; day: number }
+export interface Schedule { every: "off" | "day" | "week" | "fortnight" | "month" | "quarter"; at: string; weekday: Weekday; day: number }
 export interface ReportDraft {
   name: string; description: string; folder_id: string; period: string; schedule: Schedule;
   recipients: string[]; email: boolean; sections: Section[];

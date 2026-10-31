@@ -29,7 +29,7 @@ OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("bench-out")
 OUT.mkdir(parents=True, exist_ok=True)
 ANSWERS = Path(sys.argv[sys.argv.index("--answers") + 1]) if "--answers" in sys.argv else None
 OPENAI = "--openai" in sys.argv
-MODEL = os.environ.get("E2_MODEL", "gpt-5-nano")
+MODEL = os.environ.get("E2_MODEL", "gpt-5-mini")
 FEEDBACK = [
     "Muito longo para a gerência. Quero no começo uma tabela com as 5 piores malhas (malha, "
     "problema, pontuação, alarmes na semana). Junte os analisadores numa linha só. Nas ações, diga "

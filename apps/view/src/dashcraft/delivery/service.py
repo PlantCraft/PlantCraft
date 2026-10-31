@@ -237,7 +237,7 @@ class ReportService:
         requirements = helper.clean_text(answer)[: helper.MAX_REQUIREMENTS].strip()
         if not requirements:
             raise ValueError(t("The model answered no requirements."))
-        # A proposal: the editor reads it (and what it names of this week's data) and applies it.
+        # A proposal: the editor reads it (and what it names of this period's data) and applies it.
         return {
             "requirements": requirements,
             "previous": spec.requirements,

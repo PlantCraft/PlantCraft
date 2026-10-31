@@ -208,10 +208,10 @@ function ReportSettingsDialog({ draft, folders, zone, onApply, onClose }: { draf
         <fieldset className="tc-wide tc-report-schedule">
           <legend>{t("When it is made and sent")}</legend>
           <label>{t("Repeat")}<select value={schedule.every} onChange={(event) => setEvery(event.target.value as typeof schedule.every)}>
-            <option value="off">{t("Not scheduled")}</option><option value="day">{t("Every day")}</option><option value="week">{t("Every week")}</option><option value="month">{t("Every month")}</option>
+            <option value="off">{t("Not scheduled")}</option><option value="day">{t("Every day")}</option><option value="week">{t("Every week")}</option><option value="fortnight">{t("Every other week")}</option><option value="month">{t("Every month")}</option><option value="quarter">{t("Every quarter")}</option>
           </select></label>
-          {schedule.every === "week" && <label>{t("On")}<select value={schedule.weekday} onChange={(event) => setValue({ ...value, schedule: { ...schedule, weekday: event.target.value as typeof schedule.weekday } })}>{WEEKDAYS.map((day) => <option key={day} value={day}>{t(WEEKDAY_NAMES[day])}</option>)}</select></label>}
-          {schedule.every === "month" && <label>{t("On day")}<select value={schedule.day} onChange={(event) => setValue({ ...value, schedule: { ...schedule, day: Number(event.target.value) } })}>{Array.from({ length: 28 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}</select></label>}
+          {(schedule.every === "week" || schedule.every === "fortnight") && <label>{t("On")}<select value={schedule.weekday} onChange={(event) => setValue({ ...value, schedule: { ...schedule, weekday: event.target.value as typeof schedule.weekday } })}>{WEEKDAYS.map((day) => <option key={day} value={day}>{t(WEEKDAY_NAMES[day])}</option>)}</select></label>}
+          {(schedule.every === "month" || schedule.every === "quarter") && <label>{t("On day")}<select value={schedule.day} onChange={(event) => setValue({ ...value, schedule: { ...schedule, day: Number(event.target.value) } })}>{Array.from({ length: 28 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}</select></label>}
           {schedule.every !== "off" && <label>{t("At")}<input type="time" required value={schedule.at} onChange={(event) => setValue({ ...value, schedule: { ...schedule, at: event.target.value } })} /></label>}
           <label>{t("Covers")}<select value={value.period} onChange={(event) => setValue({ ...value, period: event.target.value })}>
             {!PERIODS.includes(value.period) && <option value={value.period}>{periodLabel(value.period)}</option>}

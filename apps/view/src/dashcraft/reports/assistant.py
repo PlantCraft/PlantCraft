@@ -321,7 +321,7 @@ the new requirements: the current ones changed so the next text follows the feed
 the feedback does not touch, keep it a short list of rules, write it in the language of the
 current requirements, and never add a rule that asks the writer to invent facts. The requirements
 say how to write, never what the data is: no asset names or tags, no numbers or counts of this
-week, no statement about which data exists. Keep the words of the feedback ("worst" means the
+period, no statement about which data exists. Keep the words of the feedback ("worst" means the
 lowest score). Answer with the requirements only, no preface."""
 
 SCOPE_SYSTEM = """\
@@ -404,7 +404,7 @@ def ungrounded(text: str, facts: dict[str, Any]) -> list[str]:
 
 
 def requirement_problems(requirements: str) -> list[str]:
-    """What a proposal of requirements says about this week's data instead of how to write:
+    """What a proposal of requirements says about this period's data instead of how to write:
     the tags it names (a small model copied facts into the prompt, 2026-10-31)."""
 
     tags = sorted(set(TAG.findall(requirements)))
