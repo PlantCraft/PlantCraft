@@ -7,7 +7,9 @@ the stick band, then slips in one jump, and the loop cycles. The screen reads th
 output's moves that are stuck and the share of jumps right after a stuck move (stick then slip),
 while the PV oscillates. It also reads the shape of a regular oscillation: a sticky valve makes
 the controller output of a self-regulating loop (and the PV of a level) cycle in triangles, while
-aggressive tuning or a disturbance from outside keeps the cycles round, like a sine.
+aggressive tuning or a disturbance from outside keeps the cycles round, like a sine. When the OP
+is the controller's own output, it also reads the phase between OP and PV (Horch): a sticky valve
+shifts them by about a quarter cycle, tuning or a disturbance keeps them in or against phase.
 
 ## Reference
 
@@ -18,6 +20,9 @@ aggressive tuning or a disturbance from outside keeps the cycles round, like a s
 - He, Wang, Pottmann and Qin (2007), A curve fitting method for detecting valve stiction in
   oscillating control loops, Industrial & Engineering Chemistry Research 46(13): each half cycle
   fitted with a sine and with a triangle; index = sine error / (sine + triangle error).
+- Horch (1999), A simple method for detection of stiction in control valves, Control Engineering
+  Practice 7(10): the cross-correlation of controller output and PV is odd under stiction and
+  even under tuning or a disturbance (self-regulating loops).
 - Jelali and Huang (2010), Detection and Diagnosis of Stiction in Control Loops (Springer):
   saturation is ruled out before a stiction test.
 - Thornhill and Hägglund (1997): the PV oscillation test (autocorrelation peak).
@@ -40,6 +45,12 @@ aggressive tuning or a disturbance from outside keeps the cycles round, like a s
   is full (0.5 is undecided, 1 a pure triangle).
 - `min_half_cycles` (default 4): the regular half cycles needed before the shape is judged; half
   cycles whose lengths spread more than half their mean are no regular oscillation.
+- `op_is` (default valve_command): what the OP records. Set `controller_output` when it is the
+  controller's own output (most DCS records) to use Horch's test; with a recorded valve movement
+  the test does not hold, because the valve cycles in phase with the PV under stiction too.
+- `horch_even` (default 0.8): with `op_is` = `controller_output`, a cross-correlation at lag 0 of
+  at least this share of its largest value (an in-phase or anti-phase cycle) leaves the shape
+  evidence out. The ratio is always reported as `horch_index`.
 
 ## How to read the finding
 
@@ -52,6 +63,7 @@ limit" means a saturated window, where stiction cannot be seen.
 ## Limits
 
 - The stick-slip part needs an output that shows the valve's movement; the shape part needs a
-  regular oscillation over a few cycles of the window. Horch's cross-correlation, the ellipse and
-  bicoherence are not implemented (gap G28).
+  regular oscillation over a few cycles of the window. Horch's test needs the controller's own
+  output and a self-regulating loop (a level reads differently). The ellipse and bicoherence are
+  not implemented (gap G28).
 - Other causes (a quantised output, a slow positioner, deadband) can look similar.
