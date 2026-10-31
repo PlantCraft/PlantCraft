@@ -56,6 +56,15 @@ The coming sends show on Desk's calendar, and PlantCraft lists the schedule with
 - **Events**: up to 10 kinds of events of the installed apps; the section counts each kind in
   the period and lists the latest (up to 100).
 - **Page break**: the PDF starts a new page there.
+- **Assistant section**: text the language model writes from the latest loop, signal-quality and
+  alarm results and the period's events about the assets you pick (tick them, or describe them
+  and the model picks). **Requirements (the prompt)** says what to write and can be edited;
+  feedback on an edition goes to the model, which proposes the next requirements, kept version
+  by version. Every number, date or finding the text states cites its fact as a numbered
+  footnote, and **Evidence** lists what each one is: a result with its status, score and time,
+  an event with its time and summary, or the period's counts. A tag or date the facts do not
+  give is flagged, and a citation of a fact the model was not given is dropped. The section is
+  off until an administrator gives the uses `report-write` and `report-tune` a model.
 
 Move sections up and down; panels and events can be **half width**, and two half sections in a
 row sit side by side. While you edit, the panels read with your own access; the PDF reads with

@@ -1,7 +1,8 @@
 # Running the suite
 
 What an administrator looks after once the suite is installed: its time zone, its health, its
-backups and its updates. Every page named here is in PlantCraft, under **Administration**.
+backups, its updates and the Operations app. Every page named here is in PlantCraft, under
+**Administration**, or in Operations.
 
 ## Time zone
 
@@ -65,3 +66,55 @@ sudo ./install.sh
 It checks the signature, backs up, updates and checks the new version. When the new version is
 not healthy it returns to the previous one by itself. **Updates** shows the installed version, its
 release notes and every update with its result.
+
+## Operations
+
+**Operations** sits beside Desk in the app switcher, for administrators and for people with the
+**Operations** role (IT, or an integrator's team, without making them administrators).
+
+- **Status**: every app's CPU and memory against its own limit ("86 %, 3.4 of 4 CPUs"), the
+  machine's CPU, memory, load and free disk, and the incidents. Each app's **uptime** over 24
+  hours, 7 and 30 days leaves out planned maintenance. An administrator plans a **maintenance
+  window** (now or later, every app or some, up to 72 hours); while it lasts the watch keeps
+  quiet about those apps.
+- **The machine and its profile**: suite health names the machine as Docker sees it, the
+  **machine profile** that sized the suite (small, medium, large or xlarge) and each service's
+  CPU limit beside its use. When the machine fits another profile (more memory added, a profile
+  pinned by hand), it names it with the command to apply it on the server, `sudo ./install.sh
+  --machine auto`. Nothing is changed from the web.
+- **Logs**: every server's log in one list, with period, level, text, request and app filters,
+  the most frequent warnings and errors, "Same request in every app" and CSV export.
+- **Load alerts**: tells the administrators when an app or the machine stays above a level (CPU
+  or memory at 80 % warning and 95 % critical, or errors logged a minute) for 5 minutes. The
+  levels are changed on the page.
+- **Requests**: anyone asks for help with **Ask for help** in their menu, in every app, with the
+  app and page already filled in; a log record and an open incident have **Open a request**.
+  Each queue can have working hours, and each priority a first-answer and a resolution target;
+  the clocks run only in working hours and stop while a request is Blocked. Requests shows the
+  time left or how late. Time is logged on any request or action, billable or not.
+- **Partners**: the companies working at the plant (groups of kind **Company**), each with its
+  coordinator, teams, a sponsor at the plant and a last day of access, after which nobody in it
+  signs in. Partners shows each company's people, access, open requests and the month's hours.
+  After a month ends, an administrator or the sponsor approves its hours, and the month is
+  closed. A sponsor without the Operations role sees only Requests and Partners, for their own
+  companies.
+- **Temporary support access**: an administrator gives a person Operations for up to 72 hours,
+  for a reason. It ends by itself or with **End now**, the person is told, and both are in the
+  audit log.
+
+## From the server
+
+These run on the server, from the install folder, as root:
+
+- `./install.sh --security-check`: 36 checks of the installation, with a score; `--format json`,
+  `junit`, `sarif` or an evidence report for an audit. Exceptions can be recorded with an end
+  date.
+- `./install.sh --rotate-admin-password`: a new password for the emergency administrator, shown
+  once. The security check fails when that password is older than 90 days.
+- `./install.sh --machine small|medium|large|xlarge|auto`: sizes every container from one choice.
+- `./install.sh --show-config`: the installation file (`/etc/plantcraft/installation.conf`) and
+  whether it is applied. Its values win over the command line and `.env`.
+
+The bundle also carries a Zabbix template (`monitoring/plantcraft_zabbix_agent.yaml`, Zabbix 7.0
+and later) that watches the machine, the free disk and every service with the same levels as
+the load alerts.

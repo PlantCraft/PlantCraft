@@ -21,6 +21,10 @@ and **‹ Plant overview** on each unit page leads back.
 - **Live** shows the values now, refreshed every few seconds (the diagram's own cadence).
 - **Colours**: green is normal, amber a warning, red an alarm (it blinks), grey no data. Grey also
   means a value has not changed for 15 minutes: an old number is never shown as a healthy plant.
+- A symbol bound to an alarm state of Alarms gets a mark in its corner while an alarm is active,
+  by its most urgent priority (ISA-101): a square with 1 for critical, a triangle with 2 for
+  high, a diamond with 3 for medium and a circle with 4 for low. Shape and number read without
+  colour.
 - Point at an element to read its values, their unit and why one cannot be read. The list under
   the diagram names every value that cannot be read.
 - A large drawing can name its **parts** (Edit › Process display › Parts): tabs over it,
