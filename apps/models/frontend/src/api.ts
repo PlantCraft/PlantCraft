@@ -1,7 +1,7 @@
 import { configureFolders, createApiClient, jsonBody, query, withImageHrefs, type HelpEntry, type HelpPage, type PromptText } from "@plantcraft/ui";
 import { href } from "./nav";
 import type { BlockCatalog } from "@plantcraft/ui/blockEditor";
-import type { AssetRuns, BlockLibrary, BlockUse, CheckResult, ClassInfo, ComputeOffer, Diagram, FileContent, LibraryClass, LibraryEntry, CatalogBlock, Me, ModelDetail, ModelItem, Project, SimSettings, BlockDiagram, ProjectFile, QueueState, Revision, Run, RunnerState, SeriesAnswer, SignalOption, StatisticRow, Study, StudyPreview, StudySeries, SweepItem, Variable } from "./types";
+import type { AssetRuns, BlockLibrary, BlockUse, CheckResult, ClassInfo, ComputeOffer, Diagram, FileContent, LibraryClass, LibraryEntry, CatalogBlock, Me, ModelDetail, ModelItem, Project, SimSettings, BlockDiagram, ProjectFile, QueueState, Revision, Run, RunnerState, SeriesAnswer, SignalOption, StatisticRow, Study, StudyPreview, StudySeries, SweepItem, Tracking, TrackingBody, Variable } from "./types";
 
 const client = createApiClient({ app: "modelcraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -96,6 +96,12 @@ export const api = {
   libraryClass: (name: string) => request<LibraryClass>(`/api/library/class${query({ name })}`),
   signals: (q: string) => request<SignalOption[]>(`/api/signals${query({ q, limit: "30" })}`),
   assetRuns: (assetId: string) => request<AssetRuns>(`/api/asset-runs${query({ asset: assetId })}`),
+  /** Trackings (M3): a model against the plant on a schedule, its error kept as signals. */
+  trackings: () => request<Tracking[]>("/api/trackings"),
+  createTracking: (tracking: TrackingBody) => request<Tracking>("/api/trackings", body("POST", tracking)),
+  saveTracking: (trackingId: string, tracking: TrackingBody) => request<Tracking>(`/api/trackings/${id(trackingId)}`, body("PUT", tracking)),
+  deleteTracking: (trackingId: string) => request<void>(`/api/trackings/${id(trackingId)}`, { method: "DELETE" }),
+  runTracking: (trackingId: string) => request<Tracking>(`/api/trackings/${id(trackingId)}/run`, { method: "POST" }),
   help: () => request<HelpEntry[]>("/api/help"),
   helpPage: (pageId: string) => request<HelpPage>(`/api/help/${id(pageId)}`),
 };

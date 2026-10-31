@@ -16,6 +16,7 @@ HELP_CATEGORIES = {
     "simulating": "Simulating",
     "studies": "Simulating",
     "plant-data": "Simulating",
+    "tracking": "Simulating",
     "fmu": "Exporting FMUs",
     "editor": "Modelica code",
     "diagram": "Modelica code",
