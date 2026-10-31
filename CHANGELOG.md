@@ -39,7 +39,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 ### Changed
 
 - **State files are written whole or not at all, everywhere (storage tests, 2026-10-31).**
-  `plantcraft-sdk` 0.88.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
+  `plantcraft-sdk` 0.89.0 adds `plantcraft_sdk.files.write_atomic` and `write_json`: a hidden,
   unique temporary file created with its final mode, `fsync`, then a rename, so a process killed
   mid-write leaves the old file, never half a JSON (71 of 100 kills broke a `write_text` file).
   The platform's `plantcraft.files` and Models' `modelcraft.atomic` now use it, and so do the
