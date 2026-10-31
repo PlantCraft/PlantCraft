@@ -444,3 +444,35 @@ td small + small { margin-top: 3px; }
 .compare-charts { display: grid; gap: 16px; margin-top: 12px; }
 .compare-charts h3 { margin: 0 0 4px; font-size: var(--pc-fs-sm); }
 .alg-settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--pc-space-4); align-items: start; }
+
+/* The plant map (A6): heat map by area and treemap by criticality, one colour scale. */
+.pmap { display: grid; gap: 10px; min-width: 0; }
+.pmap-controls { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.pmap-kpi { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.pmap-heat { display: grid; gap: 10px; }
+.pmap-area h3 { margin: 0 0 4px; font-size: 12px; font-weight: 600; color: inherit; opacity: 0.75; }
+.pmap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 4px; }
+.pmap-cell { display: flex; flex-direction: column; justify-content: space-between; min-height: 44px; padding: 4px 6px; border-radius: 4px; border: 1px solid transparent; overflow: hidden; text-decoration: none; font-size: 11px; line-height: 1.25; box-sizing: border-box; }
+.pmap-cell:hover, .pmap-cell:focus-visible { outline: 2px solid var(--pc-primary-border, currentColor); outline-offset: -2px; }
+.pmap-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pmap-value { font-variant-numeric: tabular-nums; }
+.pmap-good { background: var(--pc-good-soft); color: var(--pc-good-text); border-color: var(--pc-good-border); }
+.pmap-fair { background: var(--pc-attention-soft); color: var(--pc-attention-text); border-color: var(--pc-attention-border); }
+.pmap-poor { background: var(--pc-serious-soft); color: var(--pc-serious-text); border-color: var(--pc-serious-border); }
+.pmap-bad { background: var(--pc-problem-soft); color: var(--pc-problem-text); border-color: var(--pc-problem-border); }
+.pmap-none { background: var(--pc-inactive-soft); color: var(--pc-inactive-text); border-color: var(--pc-inactive-border); }
+.pmap-tree { position: relative; width: 100%; height: 190px; }
+.pmap-tree-area { position: absolute; box-sizing: border-box; border: 2px solid var(--pc-chrome-border, #ccc); background: var(--pc-chrome-border, #ccc); overflow: hidden; }
+.pmap-tree-area .pmap-cell { border-radius: 0; min-height: 0; border-color: var(--pc-chrome-border, #ccc); }
+.pmap-tree-label { position: absolute; right: 2px; bottom: 2px; z-index: 1; padding: 0 4px; font-size: 10px; font-weight: 600; border-radius: 3px; background: Canvas; color: CanvasText; opacity: 0.9; pointer-events: none; }
+.pmap-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; }
+.pmap-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.pmap-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; border: 1px solid transparent; }
+.pmap-swatch.pmap-good { background: var(--pc-good-fill); }
+.pmap-swatch.pmap-fair { background: var(--pc-attention-fill); }
+.pmap-swatch.pmap-poor { background: var(--pc-serious-fill); }
+.pmap-swatch.pmap-bad { background: var(--pc-problem-fill); }
+.pmap-swatch.pmap-none { background: var(--pc-inactive-fill); }
+.schedule-all-assets { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; font-size: 13px; }
+.pmap-tree-cell { display: flex; }
+.pmap-tree-cell .pmap-cell { flex: 1; }

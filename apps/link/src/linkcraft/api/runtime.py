@@ -93,6 +93,8 @@ STALL_CHECK_SECONDS = 300
 # schedules at start (``migrate_asset_schedules``), at least this far apart.
 ASSET_SCHEDULE_KIND = "cycle"
 MIN_MIGRATED_MINUTES = 15.0
+# How long the assets of an equipment type, read from PlantCraft, are kept (A20).
+TYPE_ASSETS_SECONDS = 60.0
 
 
 def _days(name: str, default: float, low: float, high: float) -> float:
@@ -164,6 +166,8 @@ class Runtime(PlatformRuntime):
             http_client=http_client,
         )
         self.service_client: Any = self.service_client or _NoServiceClient()
+        # Equipment type -> (when read, its asset ids), for the algorithms on a type (A20).
+        self._type_assets: dict[str, tuple[float, list[str]]] = {}
         # "Local time" in a schedule is the installation's zone, as PlantCraft says it.
         reader = getattr(self.service_client, "installation_time_zone", None)
         if callable(reader):
@@ -426,10 +430,39 @@ class Runtime(PlatformRuntime):
             state["error"] = job["error_message"]
         return state
 
+    def algorithm_assets(self, profile: dict[str, Any]) -> list[str]:
+        """The assets an algorithm on assets runs on now: those it names, then every asset of
+        the equipment types it names (``asset_types``, subtypes included, A20), so an asset of
+        that type added in PlantCraft is picked up without editing the algorithm. The types'
+        assets are read from PlantCraft at most once a minute; when PlantCraft does not answer,
+        the last list read stands (none before the first)."""
+
+        config = profile.get("method_config") or {}
+        found = [str(item) for item in config.get("assets") or []]
+        for type_id in config.get("asset_types") or []:
+            found.extend(self._assets_of_type(str(type_id)))
+        return list(dict.fromkeys(found))
+
+    def _assets_of_type(self, type_id: str) -> list[str]:
+        cache = self._type_assets
+        kept = cache.get(type_id)
+        if kept and time.monotonic() - kept[0] < TYPE_ASSETS_SECONDS:
+            return kept[1]
+        try:
+            ids = [
+                str(item.get("id"))
+                for item in self.service_client.assets(type=type_id)
+                if item.get("id")
+            ]
+        except Exception as exc:  # PlantCraft away: keep the last list rather than none
+            LOGGER.warning("Could not list the assets of type %s: %s", type_id, exc)
+            return kept[1] if kept else []
+        cache[type_id] = (time.monotonic(), ids)
+        return ids
+
     def queue_asset_runs(self, profile: dict[str, Any], user: str = "") -> list[str]:
         """One execution of an algorithm per asset it runs on, now (its "Run now")."""
 
-        config = profile.get("method_config") or {}
         ids = [
             self.jobs.create_job(
                 loop_id=asset_id,
@@ -441,7 +474,7 @@ class Runtime(PlatformRuntime):
                 subject_kind="asset",
                 work="asset",
             )
-            for asset_id in config.get("assets") or []
+            for asset_id in self.algorithm_assets(profile)
         ]
         if ids:
             self.queued()
@@ -555,9 +588,13 @@ class Runtime(PlatformRuntime):
         selector = schedule.get("selector") or {}
         if selector.get("mode") == "algorithm":
             profile = self.presets.get_profile(schedule.get("profile_id") or "") or {}
-            return list((profile.get("method_config") or {}).get("assets") or [])
+            return self.algorithm_assets(profile) if profile else []
         if schedule.get("subject_kind") == "asset":
-            # Assets are PlantCraft's: the schedule names them (a list); none are looked up here.
+            # Assets are PlantCraft's: the schedule names them (a list), or takes every asset
+            # its algorithm names and of the algorithm's equipment types (A20).
+            if selector.get("mode") == "all":
+                profile = self.presets.get_profile(schedule.get("profile_id") or "") or {}
+                return self.algorithm_assets(profile) if profile else []
             return [str(item) for item in selector.get("ids") or []]
         return self.resolve_selector(selector)
 
