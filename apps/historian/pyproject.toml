@@ -11,8 +11,8 @@ license = {text = "Apache-2.0"}
 requires-python = ">=3.11"
 dependencies = [
     # Not on any index: install it from vendor/ first
-    # (pip install --no-index --find-links vendor plantcraft-sdk==0.91.0).
-    "plantcraft-sdk==0.91.0",
+    # (pip install --no-index --find-links vendor plantcraft-sdk==0.92.0).
+    "plantcraft-sdk==0.92.0",
     "asyncua>=1.1.8,<2",
     # Source passwords encrypted at rest (histcraft.vault).
     "cryptography>=43,<51",
