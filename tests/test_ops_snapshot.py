@@ -218,3 +218,53 @@ def test_folders_return_with_their_owners_even_when_empty(tmp_path):
     snapshot.restore(tmp_path / "b", install, tmp_path / "aside")
     for path in (installer, installer / "routes"):
         assert path.is_dir() and (path.stat().st_uid, path.stat().st_gid) == (10005, 10005), path
+
+
+def test_the_backup_holds_every_app_at_one_instant_while_they_write(tmp_path):
+    """Storage test 2026-10-31: the databases were copied one after another, each at its own
+    moment (a run published in one app could be missing from the copy of another), and a
+    copy in steps started again at every commit of a busy app."""
+
+    install = _install(tmp_path / "install")
+    for app in ("processcraft", "linkcraft"):
+        with sqlite3.connect(install / "data" / app / f"{app}.sqlite3") as db:
+            db.execute("CREATE TABLE ticks (n INTEGER)")
+            # Big enough that the old copy took several steps (4,096 pages each).
+            db.execute("CREATE TABLE ballast (b BLOB)")
+            db.executemany("INSERT INTO ballast VALUES (?)", [(os.urandom(4000),)] * 6000)
+    stop = threading.Event()
+    counter = [0]
+    lock = threading.Lock()
+
+    def write():
+        # One writer for both apps: every tick goes to both, so at any instant both have the
+        # same number of ticks, give or take the few written while the snapshots open.
+        dbs = [
+            sqlite3.connect(install / "data" / app / f"{app}.sqlite3", timeout=30)
+            for app in ("processcraft", "linkcraft")
+        ]
+        while not stop.is_set():
+            with lock:
+                counter[0] += 1
+                for db in dbs:
+                    db.execute("INSERT INTO ticks VALUES (?)", (counter[0],))
+                    db.commit()
+            time.sleep(0.002)
+        for db in dbs:
+            db.close()
+
+    writer = threading.Thread(target=write)
+    writer.start()
+    time.sleep(0.2)
+    try:
+        started = time.monotonic()
+        manifest = snapshot.take(install, tmp_path / "b", reason="test")
+        took = time.monotonic() - started
+    finally:
+        stop.set()
+        writer.join()
+    platform = manifest["files"]["data/processcraft/processcraft.sqlite3"]["tables"]["ticks"]
+    link = manifest["files"]["data/linkcraft/linkcraft.sqlite3"]["tables"]["ticks"]
+    assert abs(platform - link) <= 5, (platform, link)  # the old copy: hundreds apart
+    assert took < 20
+    assert snapshot.verify(tmp_path / "b") == []

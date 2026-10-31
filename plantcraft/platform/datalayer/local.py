@@ -208,7 +208,13 @@ class LocalDataLayer(DataLayer):
         return {"signal": signal_id, "runs": self.platform.derived.run_list(found, limit=limit)}
 
     def series_batch(
-        self, signals: list[str], start: str | None, end: str | None, step: float | None
+        self,
+        signals: list[str],
+        start: str | None,
+        end: str | None,
+        step: float | None,
+        *,
+        quality: bool = False,
     ) -> dict[str, Any]:
         start_at, end_at, step_s = self._range(start, end, step)
         catalog = self._catalog()
