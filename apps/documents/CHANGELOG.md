@@ -27,6 +27,8 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   two pieces of equipment with a nozzle at each end, and each instrument loop with its valves
   and the equipment it measures. No graphics; what was marked Wrong is left out. The help page
   now explains Diagrams and the plant map.
+- **From the map to the plant.** An item PlantCraft already has opens its asset, its signals
+  (the Historian's) and what the suite's apps say about it, from the item's card on the map.
 - `tools/llm_vision_eval.py --dexpi DIR --xml DIR` scores a vision model on public P&IDs against
   their DEXPI XML (`tools/dexpi_truth.py`), next to the classical reader on the same files.
 

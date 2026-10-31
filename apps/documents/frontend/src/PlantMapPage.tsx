@@ -121,7 +121,10 @@ function ItemCard({ item, relations, onPick, onReview }: { item: MapItem; relati
     <p><ConfidencePill value={item.confidence} /> <span className="muted">{item.why}</span></p>
     {onReview && <p><ReviewButtons value={item.review} onChange={(v) => onReview(item.tag, "item", v)} /></p>}
     <p>{item.in_plantcraft === null ? t("PlantCraft's assets could not be read.")
-      : item.in_plantcraft ? <a href={`/assets/${encodeURIComponent(item.tag)}`}>{t("In PlantCraft: open the asset")}</a>
+      : item.in_plantcraft ? <span className="map-links">{t("In PlantCraft:")}{" "}
+        <a href={`/assets/${encodeURIComponent(item.tag)}`}>{t("the asset")}</a>{" · "}
+        <a href={`/assets/${encodeURIComponent(item.tag)}?tab=signals`}>{t("its signals")}</a>{" · "}
+        <a href={`/assets/${encodeURIComponent(item.tag)}?tab=situation`}>{t("what the apps say")}</a></span>
         : t("Not in PlantCraft yet: the asset file creates it.")}</p>
     <h3>{t("Lines")}</h3>
     {mine.length === 0 ? <p className="muted">{t("None found.")}</p> : <ul>{mine.map((r) => <li key={`${r.from}-${r.type}-${r.to}`}>

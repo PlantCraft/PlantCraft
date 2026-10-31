@@ -56,6 +56,8 @@ of what to check first. Each finding says how sure the reader is and why.
 
 On the map you can work with what was read:
 
+- Pick an item to see its lines and the sheets it is drawn on. If PlantCraft already has it, its
+  card opens the asset, its signals and what the suite's apps say about it.
 - **Correct** or **Wrong** on any item or line, if you can edit. Wrong takes it off the map and
   out of every export. **Undo** brings it back.
 - **Lists** downloads the equipment, instrument, line and loop lists as CSV.
