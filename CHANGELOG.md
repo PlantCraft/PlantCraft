@@ -41,6 +41,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   and highest value, in time order, so every spike, trip and step is drawn at its full height
   with the same number of points (`plantcraft/industrial_data/thinning.py`; Historian and direct
   sources alike). Values that are not numbers (states) still keep every n-th point.
+
 - **Long tables sort by a text column in a fraction of a second (`@plantcraft/ui`).** The
   suite's table compared texts with `localeCompare` and its options, which builds a collator
   for every comparison: 100,000 rows sorted by tag took 13.4 s in the browser. One collator for all
