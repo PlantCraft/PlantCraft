@@ -9,6 +9,14 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **An official Zabbix template.** `monitoring/plantcraft_zabbix_agent.yaml` in the bundle
+  (Zabbix 7.0 and later): a Zabbix agent on the PlantCraft machine reads the installer's
+  `metrics.json` and watches the machine, the free disk and every service (state, health,
+  restarts, CPU and memory against its own limit), with the same 80 % and 95 % levels as
+  Operations' load alerts (`docs/operations.md`, section 4).
+- **`./install.sh --rotate-admin-password`.** A new password for the emergency administrator,
+  shown once and written to `data/initial-admin-password` (0600); PlantCraft restarts to read it.
+  The security check (PC-ACC-01) now gives the password's age, and fails after 90 days.
 - **Working hours for a request queue.** An administrator sets the days and hours a queue works
   (and a default); its requests' first answer and resolution clocks run only inside them, and
   due times land on the next working minute.
