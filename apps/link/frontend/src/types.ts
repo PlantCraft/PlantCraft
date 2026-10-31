@@ -490,3 +490,11 @@ export type OwnSeries = { signal: string; t: string[]; v: (number | string | nul
 
 /** One save of a method's or a check's defaults (GET /api/methods/<id>/defaults/versions). */
 export type DefaultsVersion = { number: number; parameters: Record<string, unknown>; description: string; saved_by: string; saved_at: string; current: boolean };
+
+/** PI settings from a model fitted to the loop's last window (Lambda/IMC), read only (A12). */
+export interface TuningSuggestion {
+  available: boolean; reason?: string; reliable?: boolean; caveats?: string[]; action?: "reverse" | "direct";
+  model?: { gain: number; tau_seconds: number; dead_time_seconds: number; r2: number; samples?: number };
+  settings?: Array<{ choice: "tight" | "moderate" | "robust"; lambda_seconds: number; kc: number; ti_seconds: number }>;
+  source_start?: string | null; source_end?: string | null;
+}

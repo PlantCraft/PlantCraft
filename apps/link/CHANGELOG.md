@@ -8,6 +8,14 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **A PI tuning suggestion on the loop page, read only.** "Suggest tuning" fits a first order
+  plus dead time from the OP to the PV on the loop's last window and gives PI settings by Lambda
+  (IMC) rules for three closed-loop speeds: tight (lambda = dead time), moderate (lambda = time
+  constant) and robust (lambda = 3 time constants). It also gives the controller action.
+  Closed-loop data is a weak experiment, so the page calls it a starting point for a step test,
+  and says why it is not reliable when the fit explains under half of the PV, the OP barely
+  moved, or the time constant is shorter than a sample. Nothing is sent to the controller
+  (`GET /api/loops/{loop_id}/tuning`).
 - **Horch's cross-correlation in the stiction screen.** When the loop cycles, the screen reports
   `horch_index`: the cross-correlation of OP and PV at lag 0 over its largest value within half
   a period. Near 0 means a quarter-cycle shift (stiction behind a controller output), and near 1
