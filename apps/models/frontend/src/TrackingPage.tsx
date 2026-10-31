@@ -4,7 +4,7 @@
  * signal in PlantCraft and, when a limit is set, opens "Model off the plant" while the mean
  * absolute error stays above it. The page lists them, starts one now, pauses, and adds new ones.
  */
-import { confirmAction, DataTable, type DataColumn } from "@plantcraft/ui";
+import { DataTable, confirmAction, type DataColumn } from "@plantcraft/ui";
 import { Play, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "./api";
@@ -83,7 +83,7 @@ export function TrackingPage({ me }: { me: Me }) {
   }, [read]);
   const act = (work: Promise<unknown>) => { work.then(read).catch((err) => setError(message(err))); };
   const remove = async (tracking: Tracking) => {
-    if (await confirmAction(t("Delete the tracking {name}? Its error signals stay in PlantCraft.", { name: tracking.name }), { confirm: t("Delete"), danger: true })) act(api.deleteTracking(tracking.id));
+    if (await confirmAction(t("Its error signals stay in PlantCraft."), { title: t("Delete the tracking {name}?", { name: tracking.name }), confirm: t("Delete"), danger: true })) act(api.deleteTracking(tracking.id));
   };
   const columns: DataColumn<Tracking>[] = [
     { key: "name", label: t("Tracking"), sort: (item) => item.name.toLowerCase(), render: (item) => <><b>{item.name}</b><small>{item.model.split(".").pop()} · {t("last {window} min every {every} min", { window: reading(item.config.window_minutes), every: reading(item.config.every_minutes) })}</small></> },

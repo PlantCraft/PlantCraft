@@ -7,7 +7,9 @@
   seed``) in one of a few places at once, for as long as it is used, with a line to wait in when
   every place is taken (``plantcraft.auth.demo_visits``, docs/public-demo.md). From outside, through
   the proxy, the visitor account signs in only that way, never with its password
-  (``PLANTCRAFT_PUBLIC_DEMO_PASSWORD``, which ``processcraft demo seed`` still uses inside);
+  (``visitor_password()``: the file ``PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE`` names, which
+  ``install.sh`` writes once as ``data/public-demo-password``, mode 600, or
+  ``PLANTCRAFT_PUBLIC_DEMO_PASSWORD``; ``processcraft demo seed`` still uses it inside);
 - viewers (the visitor account) are read-only in PlantCraft, conversations included, so a
   visitor cannot write anything another visitor would read; editors and administrators are
   people the administrator created on purpose (the demo's cast has random passwords);
@@ -27,6 +29,7 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass
+from pathlib import Path
 
 from plantcraft_sdk.server.settings import env_flag
 
@@ -90,6 +93,23 @@ def _number(name: str, default: int, low: int, high: int) -> int:
     return min(max(value, low), high)
 
 
+def visitor_password() -> str:
+    """The visitor account's password: ``PLANTCRAFT_PUBLIC_DEMO_PASSWORD`` when set, else the
+    content of the file ``PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE`` names (a Compose secret, so the
+    password never sits in ``.env``); empty when neither gives one."""
+
+    password = os.environ.get("PLANTCRAFT_PUBLIC_DEMO_PASSWORD", "").strip()
+    if password:
+        return password
+    file = os.environ.get("PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE", "").strip()
+    if not file:
+        return ""
+    try:
+        return Path(file).read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+
+
 def public_demo() -> PublicDemo | None:
     """The public demo's settings, or None when the installation is not a public demo."""
 
@@ -98,7 +118,7 @@ def public_demo() -> PublicDemo | None:
     return PublicDemo(
         username=os.environ.get("PLANTCRAFT_PUBLIC_DEMO_USER", DEFAULT_USER).strip().lower()
         or DEFAULT_USER,
-        password=os.environ.get("PLANTCRAFT_PUBLIC_DEMO_PASSWORD", "").strip(),
+        password=visitor_password(),
         rate_per_minute=_number("PLANTCRAFT_PUBLIC_DEMO_RATE", DEFAULT_RATE, 1, 1_000_000),
         seats=_number("PLANTCRAFT_PUBLIC_DEMO_SEATS", DEFAULT_SEATS, 1, 500),
         minutes=_number("PLANTCRAFT_PUBLIC_DEMO_MINUTES", DEFAULT_MINUTES, 1, 24 * 60),

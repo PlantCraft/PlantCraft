@@ -26,6 +26,8 @@ is the read-only visitor account `demo`, in one of a few places at once:
   (the per-visit request limits still hold);
 - from outside (through the proxy) the visitor account signs in only this way, never with its
   password; inside the network the password still works, and `plantcraft demo seed` uses it.
+  `install.sh` keeps that password in `data/public-demo-password` (mode 600), never in `.env`:
+  random on a new installation, and moved there from an older installation's `.env` unchanged.
 
 When the visit ends, the browser is back on the sign-in page, which thanks the visitor and offers
 to enter again. The places are in the database (`demo_visits`, `demo_line`), so every server
