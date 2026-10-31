@@ -27,6 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from plantcraft_sdk.asset_scope import AssetScope
 from plantcraft_sdk.auth import AuthError
+from plantcraft_sdk.wire import FORMAT as WIRE_FORMAT
 
 from histcraft.api.deps import RuntimeDep, in_scope
 from histcraft.api.routers import data
@@ -72,7 +73,8 @@ ReaderScope = Annotated[AssetScope, Depends(reader_scope)]
 
 @router.get("/reads")
 def reads(_caller: Reader) -> dict[str, Any]:
-    return {"api": READS_API}
+    # ``formats``: the answers ``POST /series`` also writes besides JSON (``Accept``).
+    return {"api": READS_API, "formats": [WIRE_FORMAT]}
 
 
 @router.get("/signals")
@@ -123,10 +125,13 @@ def signal(signal_id: str, runtime: RuntimeDep, scope: ReaderScope) -> Any:
 
 
 @router.post("/series")
-def series_batch(body: data.BatchIn, runtime: RuntimeDep, scope: ReaderScope) -> Any:
+def series_batch(
+    body: data.BatchIn, runtime: RuntimeDep, scope: ReaderScope, request: Request
+) -> Any:
+    binary = data.wants_binary(request)
     hidden = [item for item in body.signals if isinstance(item, str) and not scope.signal(item)]
     if not hidden:
-        return data.series_batch(body, runtime, None)
+        return data.series_batch(body, runtime, None, request)
     # Signals outside the caller's part of the plant answer as signals that are not here.
     shown = [item for item in body.signals if item not in hidden]
     missing = [
@@ -136,5 +141,7 @@ def series_batch(body: data.BatchIn, runtime: RuntimeDep, scope: ReaderScope) ->
     if not shown:
         return JSONResponse({"series": [], "errors": missing})
     with read_timeout(runtime.settings.query_timeout), runtime.read_budget.hold() as ticket:
-        answer = data.read_batch(body.model_copy(update={"signals": shown}), runtime, ticket)
+        answer = data.read_batch(
+            body.model_copy(update={"signals": shown}), runtime, ticket, binary=binary
+        )
         return answer.response(missing)

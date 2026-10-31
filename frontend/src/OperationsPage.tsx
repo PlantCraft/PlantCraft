@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { locale, t } from "./i18n";
 import { navigate } from "./nav";
 import { askUrl } from "./OperationsRequests";
-import { forecastText, operationsApi, type Backup, type Certificate, type Operation, type OperationsOverview, type ServiceMetrics, type Schedule, type SuiteHealth, type SuiteStatus } from "./operationsApi";
+import { forecastText, operationsApi, type Backup, type Certificate, type MachineInfo, type Operation, type OperationsOverview, type ServiceMetrics, type Schedule, type SuiteHealth, type SuiteStatus } from "./operationsApi";
 import { useAccess, useAdminView, useCanOperate, useIsAdmin } from "./session";
 import "./access.css";
 import "./apps.css";
@@ -416,6 +416,17 @@ function HostLine({ health }: { health: SuiteHealth }) {
   </div>;
 }
 
+/** The machine the suite runs on and the profile that sized it (install.sh --machine). */
+function MachineLine({ machine }: { machine?: MachineInfo | null }) {
+  if (!machine || machine.cpus == null) return null;
+  const sizes: Record<string, string> = { small: t("small"), medium: t("medium"), large: t("large"), xlarge: t("extra large") };
+  const profile = machine.size
+    ? t("profile {size} ({how})", { size: sizes[machine.size] ?? machine.size, how: machine.profile === "auto" || !machine.profile ? t("chosen by the machine") : t("chosen at install") })
+    : t("no machine profile: limits as set in .env");
+  const ceilings = [machine.max_cpus && t("at most {count} CPUs", { count: machine.max_cpus }), machine.max_memory && t("at most {size}", { size: machine.max_memory })].filter(Boolean).join(", ");
+  return <p className="muted" data-testid="ops-machine">{t("Machine: {cpus} CPUs, {memory}, as Docker sees it", { cpus: machine.cpus, memory: size(machine.memory_bytes) })} · {profile}{ceilings ? ` · ${ceilings}` : ""}</p>;
+}
+
 function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean }) {
   const limits = health.limits;
   const columns = limits ? serviceColumns({ warning: limits.cpu_warning, critical: limits.cpu_critical }, { warning: limits.memory_warning, critical: limits.memory_critical }) : serviceColumns();
@@ -434,6 +445,7 @@ function HealthPanel({ health, canAct }: { health: SuiteHealth; canAct: boolean 
     <HostLine health={health} />
     {health.open.length ? <ul className="ops-incidents">{health.open.map((item) => <li key={item.incident_id}><AlertTriangle size={14} /> <strong>{item.subject}</strong>: {item.detail} <small>{t("since {date}", { date: when(item.opened_at) })}</small> <a className="ops-incident-ask" href={askUrl({ title: `${item.subject}: ${item.detail}`, text: t("Incident since {date}", { date: item.opened_at }), category: "error" })} onClick={(event) => { if (event.metaKey || event.ctrlKey) return; event.preventDefault(); navigate(askUrl({ title: `${item.subject}: ${item.detail}`, text: t("Incident since {date}", { date: item.opened_at }), category: "error" })); }}>{t("Open a request")}</a></li>)}</ul>
       : <p className="ops-all-good"><CheckCircle2 size={15} /> {t("Everything is running.")}</p>}
+    <MachineLine machine={health.metrics?.machine} />
     {services.length > 0 && <DataTable rows={services} columns={columns} rowKey={(item) => item.service} searchText={(item) => item.service} searchPlaceholder={t("Filter by name")} initialSort={{ key: "service", descending: false }} label={t("Services")} />}
     {disk && forecastText(health.disk_forecast, size) && <p className="muted">{t("Disk: {forecast}", { forecast: forecastText(health.disk_forecast, size) })}</p>}
     {recent.length > 0 && <details className="ops-recent"><summary>{t("Recent incidents")}</summary>

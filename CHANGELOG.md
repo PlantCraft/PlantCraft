@@ -68,6 +68,31 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
+  went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
+  the chunks 0.6 s). `plantcraft-sdk` 0.85.0 adds `plantcraft_sdk.wire`, a binary answer for
+  `POST /api/v1/series` (int64 ms times and float64 values, asked with `Accept:
+  application/x-plantcraft-series` when the Historian lists `pcs1` in `GET /api/v1/reads`;
+  JSON stays the default, `PLANTCRAFT_BINARY_READS=0` keeps it). Analytics builds its raw frame
+  as one block instead of `pd.concat`, and its loop rounds and Signal quality ask only for what
+  is new since their last read (`LINKCRAFT_READ_CACHE`, 15 min overlap, whole read every 6 h).
+  The Historian's CPU per round: 0.85 to 0.07 s on the demo's 200 signals, 59 to 0.8 s on
+  2,000 dense signals (`ci/bench/reads`).
+- **Signal quality sees the source's quality (2026-10-31).** API v1 gave a bad sample as a null
+  value and an uncertain or substituted one as good, so the `sq_*` checks never saw them.
+  `POST /api/v1/series` takes `"quality": true` and then lists, per series, where the source's
+  quality was not good (`"quality": [{t, quality}]`, each change holding until the next; the
+  Historian reads it for all signals in one query). `plantcraft-sdk` 0.85.0:
+  `series_many(..., quality=True)`, and `series_many_pandas` keeps the list in
+  `attrs["quality"]`. Analytics asks for it in Signal quality (the incremental read joins it
+  across rounds), and `sq_availability` 1.1.0 counts substituted time as missing, warns on
+  uncertain time above `1 - warn_coverage` and reports `quality_bad`, `quality_uncertain` and
+  `quality_substituted`. Without the field nothing changes.
+- **Operations shows the machine and its profile.** Suite health names the machine as Docker
+  sees it (CPUs, memory), the machine profile that sized the suite (`install.sh --machine`) and
+  its ceilings, and each service's CPU limit beside its use. The `small` profile gives Analytics
+  and its executor 2 CPUs and 2 slots and Documents 1 GB, after a 2 CPU / 4 GB machine ran its
+  round slower with 1 and Documents reached 540 MB idle (plan B, 2026-10-31).
 - **The Historian's database has its own CPU limit, `HISTCRAFT_DB_CPUS` (default 2).** It
   shared `HISTCRAFT_CPUS` with the Historian, so lowering the Historian's limit also slowed the
   database it reads from (0.6.0 load tests, 2026-10-31). An installation that set

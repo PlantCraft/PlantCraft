@@ -26,7 +26,7 @@ export interface OperationsOverview {
 }
 /** One container as the installer sees it. `cpu_pct` is Docker's own number (% of one core: 400 % is
  * 4 cores busy); `cpu_load_pct` is the share of the CPUs it may use (`cpus`, else the machine's), 0-100. */
-export interface ServiceMetrics { service: string; name?: string; state: string; health: string; exit_code?: number | null; status?: string; restarts?: number | null; started_at?: string | null; cpu_pct?: number | null; cpus?: number | null; cpu_load_pct?: number | null; mem_bytes?: number | null; mem_limit_bytes?: number | null; mem_pct?: number | null }
+export interface ServiceMetrics { service: string; name?: string; state: string; health: string; exit_code?: number | null; status?: string; restarts?: number | null; started_at?: string | null; cpu_pct?: number | null; cpus?: number | null; cpu_load_pct?: number | null; mem_bytes?: number | null; mem_limit_bytes?: number | null; mem_pct?: number | null; cpu_limit?: number | null }
 /** The machine the suite runs on (on Docker Desktop, the Linux machine Docker runs in). */
 export interface HostLoad { cpus?: number | null; cpu_pct?: number | null; mem_pct?: number | null; mem_total_bytes?: number | null; mem_used_bytes?: number | null; load_1m?: number | null }
 /** Load alerts (Operations › Load alerts): two levels, held `minutes` before the watch tells. */
@@ -44,6 +44,8 @@ export interface LogsAnswer {
   top: { service: string; level: string; message: string; count: number }[];
 }
 export interface LogsQuery { services?: string[]; hours?: number; level?: string; text?: string; request_id?: string; limit?: number }
+/** The machine as Docker sees it and the profile install.sh applied (--machine). */
+export interface MachineInfo { cpus: number | null; memory_bytes: number | null; profile: string | null; size: string | null; max_cpus: string | null; max_memory: string | null }
 export interface Incident { incident_id: number; check_key: string; subject: string; detail: string; opened_at: string; closed_at: string | null; notified: number }
 export interface SuiteHealth {
   at: string | null;
@@ -52,7 +54,7 @@ export interface SuiteHealth {
   checks: { key: string; subject: string; bad: boolean; detail: string }[];
   open: Incident[];
   recent: Incident[];
-  metrics: { at: string; services: ServiceMetrics[]; host?: HostLoad | null; disk: { total_bytes: number; free_bytes: number; free_pct: number | null } | null; error: string | null } | null;
+  metrics: { at: string; services: ServiceMetrics[]; host?: HostLoad | null; disk: { total_bytes: number; free_bytes: number; free_pct: number | null } | null; error: string | null; machine?: MachineInfo | null } | null;
   /** The load alerts' levels the watch uses now. */
   limits?: LoadLimits;
   conversation_id: number | null;

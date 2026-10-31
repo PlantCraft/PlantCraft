@@ -56,8 +56,8 @@ Anything in the app's data folder that none of the three names is copied as a fi
 file is never lost because nobody declared it. `plantcraft-app check` fails when a
 `*.sqlite3` named in the code is missing from `sqlite`.
 
-**Online.** The suite keeps running: SQLite files through the online backup API, the Historian's
-PostgreSQL by blocks (below), settings (`.env`, `compose.yaml`, `bundle.env`, `release.json`,
+**Online, the suite at one instant.** The suite keeps running. Every app's SQLite file is held at the same moment first (a read snapshot each, opened together in a few milliseconds; in WAL mode the apps keep writing beside it), then each is copied from its snapshot in one step of the online backup API, so the backup never holds a run in one app that another app's copy is missing. A copy in steps started again at every commit of a busy app and did not finish in 16 minutes with the apps writing (storage test 2026-10-31, `ci/bench/storage/backup_bench.py`); the one-instant copy took 28 s for 1.5 GB of databases, the same as with the apps idle. A database not in WAL mode (a Docker Desktop bind mount, a share) is copied on its own, in one step, while its app waits. The Historian's
+PostgreSQL goes just before, by blocks, at its own consistent point (below); settings (`.env`, `compose.yaml`, `bundle.env`, `release.json`,
 `certs/`) as files. Each backup is `backups/<date>-<reason>/` with `manifest.json` (versions,
 image ids, size and SHA-256 per file, rows per table), `data.tar.gz` and `histcraft-db/`; the
 images get a `:rollback-<date>` tag.
