@@ -85,6 +85,13 @@ export interface Performance {
   chattering: Array<{ alarm_id: string; name: string }>; stale: Array<{ alarm_id: string; name: string }>;
   priorities: Array<{ priority: string; share: number; target: number }>;
   mean_ack_seconds: number | null; unacked: number;
+  /** EEMUA 191 band from the average and the peak per 10 minutes. */
+  eemua: { level: string; average_per_10min: number; peak_per_10min: number; bands: Array<{ level: string; average: number | null; peak: number | null }> };
+  /** Floods with hysteresis: start above the flood limit, end below half of it. */
+  floods: Array<{ start: string; end: string; minutes: number; alarms: number; peak: number }>;
+  flood_minutes: number;
+  acknowledge: Array<{ priority: string; count: number; median_seconds: number | null; p90_seconds: number | null }>;
+  fleeting: Array<{ alarm_id: string; name: string; count: number; owner?: string | null }>;
 }
 
 export interface AssetOption { id: string; name: string; kind: string | null; parent: string | null; signals: Record<string, string> }
@@ -174,6 +181,7 @@ export interface Philosophy {
   immediate: Priority[]; digest: Priority[]; digest_times: string[]; timezone: string;
   chatter_minute: number; chatter_hour: number; stale_hours: number;
   target_high: number; target_medium: number; target_low: number;
+  shelve_hours_critical: number; shelve_hours_high: number; shelve_hours_medium: number; shelve_hours_low: number;
 }
 export interface PhilosophyRecord extends Philosophy { defaults: Philosophy; updated_at: string | null; updated_by: string | null; next_summary: string }
 export interface IncomingCount { app: string; kind: string; count: number; last: string; counted: number }

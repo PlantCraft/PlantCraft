@@ -15,6 +15,15 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   3.6 mA or less, 21 mA or more, is the transmitter reporting its own fault: any fault level is a
   warning, over 1% of the values is bad, and saturation beyond the measuring range is a warning.
   Both need the signal's limits (or, for the rate, a limit of its own), and otherwise do not apply.
+- **Loop-hours lost by cause.** Every monitoring round adds the part of its window no earlier
+  round on the loop covered, split by cause: out of normal mode, output at a limit, oscillating
+  and bad signal (missing or frozen PV). `GET /api/loop-losses?days=&until=&group_by=area|loop`
+  sums them by area or loop over any period up to 400 days; the widget "Analytics: loop-hours
+  lost, 7 days" shows them by area on the Overview and on Desk.
+- **Effective control**, a composite score per loop: the share of the time in normal mode x
+  inside its operating band x with the output off its limits, from the loop's own methods (a part
+  it does not measure counts as 1). `GET /api/loop-effective-control` and the widget "Analytics:
+  effective control" list the lowest first.
 - **Source quality, a signal check (`sq_source_quality`).** It shows how much of the window the
   source itself marked bad, substituted or uncertain, per signal, from the per-sample quality
   PlantCraft returns (OPC UA, PI and Canary keep one with every value). Bad or substituted time

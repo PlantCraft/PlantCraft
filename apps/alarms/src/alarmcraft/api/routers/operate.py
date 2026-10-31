@@ -156,6 +156,16 @@ def shelve(alarm_id: str, body: ShelveBody, rt: RuntimeDep, user: EditorUser) ->
     reason = body.reason.strip()
     if not reason:
         raise HTTPException(422, t("Say why the alarm is shelved."))
+    longest = rt.philosophy.get().shelve_minutes(alarm.get("priority"))
+    if body.minutes > longest:
+        raise HTTPException(
+            422,
+            t(
+                "A {priority} alarm is shelved for {hours} h at most (the alarm philosophy).",
+                priority=alarm.get("priority") or "medium",
+                hours=longest // 60,
+            ),
+        )
     rt.alarms.shelve(alarm_id, until=until, by=user.username, reason=reason)
     rt.alarms.log(
         alarm,
@@ -222,7 +232,7 @@ def alarm_performance(
     for item in found:
         names.setdefault(item["alarm_id"], item["name"])
     result = performance(found, start, end, names=names, targets=rt.philosophy.get())
-    for group in ("top", "chattering", "stale"):
+    for group in ("top", "chattering", "stale", "fleeting"):
         for item in result.get(group) or []:
             item["owner"] = owners.get(item["alarm_id"])
     return {**result, "window": window}

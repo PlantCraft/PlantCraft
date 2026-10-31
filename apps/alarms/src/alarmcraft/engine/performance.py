@@ -14,6 +14,20 @@ out-of-service alarms raise no occurrence, so they never count.
 | Chattering alarms (3 or more raises within a minute) | none |
 | Stale alarms (active for more than 24 hours) | fewer than 5 |
 | Priority distribution (high and critical / medium / low) | about 5 % / 15 % / 80 % |
+| Time above 30 alarms an hour | as little as possible |
+
+Also here:
+
+* **EEMUA 191 performance level** from the average and the peak alarms per 10 minutes, in four
+  bands (the public EEMUA 191 chart, without its fifth "predictive" level, which needs more than
+  rates): *robust* (average ≤ 1 and peak ≤ 10), *stable* (average ≤ 1 and peak ≤ 100),
+  *reactive* (average ≤ 10) and *overloaded* (average above 10).
+* **Floods with hysteresis** (ISA-18.2): a flood starts in the 10-minute period with more than
+  ``flood_alarms`` alarms and ends at the first period with fewer than half that (10 and 5 by
+  default), so one quiet period in the middle does not split it.
+* **From the journal**: time to acknowledge (median and 90th percentile, by priority), fleeting
+  alarms (back to normal within ``FLEETING_SECONDS`` with nobody acting), and the 20 most
+  frequent alarms.
 """
 
 from __future__ import annotations
@@ -30,6 +44,56 @@ CHATTER_COUNT = 3
 CHATTER_SECONDS = 60.0
 STALE_HOURS = 24.0
 PRIORITY_TARGETS = {"high": 5.0, "medium": 15.0, "low": 80.0}
+TOP = 20
+FLEETING_SECONDS = 10.0
+BUSY_PER_HOUR = 30
+# EEMUA 191 levels: (name, highest average per 10 minutes, highest peak per 10 minutes).
+EEMUA_LEVELS = (
+    ("robust", 1.0, 10.0),
+    ("stable", 1.0, 100.0),
+    ("reactive", 10.0, math.inf),
+    ("overloaded", math.inf, math.inf),
+)
+
+
+def eemua_level(average: float, peak: float) -> str:
+    """The EEMUA 191 band of an average and a peak alarm rate per 10 minutes."""
+
+    for name, most_average, most_peak in EEMUA_LEVELS:
+        if average <= most_average and peak <= most_peak:
+            return name
+    return "overloaded"
+
+
+def floods(per_slot: list[int], start: datetime, begin_above: int) -> list[dict[str, Any]]:
+    """Floods with hysteresis: from a 10-minute period with more than ``begin_above`` alarms
+    to the first period with fewer than half of it (ISA-18.2: above 10, ends below 5)."""
+
+    end_below = max(1, begin_above // 2)
+    out: list[dict[str, Any]] = []
+    first = None
+    for index, count in enumerate([*per_slot, 0]):
+        if first is None and count > begin_above:
+            first = index
+        elif first is not None and count < end_below:
+            out.append(
+                {
+                    "start": (start + SLOT * first).isoformat(),
+                    "end": (start + SLOT * index).isoformat(),
+                    "minutes": int((index - first) * SLOT.total_seconds() // 60),
+                    "alarms": sum(per_slot[first:index]),
+                    "peak": max(per_slot[first:index]),
+                }
+            )
+            first = None
+    return out
+
+
+def _percentile(values: list[float], share: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    return round(ordered[min(len(ordered) - 1, int(share * (len(ordered) - 1) + 0.5))], 1)
 
 
 def _time(text: Any) -> datetime | None:
@@ -91,8 +155,8 @@ def performance(
     counts = Counter(item["alarm_id"] for _, item in raised)
     # Each alarm's priority when it last went off (the bad actors' colour).
     last_priority = {item["alarm_id"]: item.get("priority") or "medium" for _, item in raised}
-    top = counts.most_common(10)
-    top_share = 100.0 * sum(count for _, count in top) / total if total else 0.0
+    top = counts.most_common(TOP)
+    top_share = 100.0 * sum(count for _, count in top[:10]) / total if total else 0.0
 
     by_alarm: dict[str, list[datetime]] = defaultdict(list)
     for moment, item in raised:
@@ -133,10 +197,30 @@ def performance(
         if acked is not None and acked >= moment
     ]
 
+    ack_by_priority: dict[str, list[float]] = defaultdict(list)
+    for moment, item in raised:
+        acked = _time(item.get("acked_at"))
+        if acked is not None and acked >= moment:
+            ack_by_priority[item.get("priority") or "medium"].append(
+                (acked - moment).total_seconds()
+            )
+    fleeting = Counter(
+        item["alarm_id"]
+        for moment, item in raised
+        for ended in [_time(item.get("ended_at"))]
+        if ended is not None
+        and (ended - moment).total_seconds() <= FLEETING_SECONDS
+        and not item.get("acked_at")
+    )
+    flood_list = floods(per_slot, start, flood_alarms)
+    flood_minutes = sum(f["minutes"] for f in flood_list)
+    busy_hours = sum(1 for counted in hourly if sum(counted.values()) > BUSY_PER_HOUR)
+
     per_hour = total / hours
     per_ten = total / max(hours * 6.0, 1e-9)
     flood_share = 100.0 * flood_slots / slots
     peak = max(per_slot) if per_slot else 0
+    level = eemua_level(per_ten, peak)
     figures = [
         {
             "id": "per_hour",
@@ -162,6 +246,23 @@ def performance(
             "unit": "%",
             "target": f"< 1 % of 10-minute periods with more than {flood_alarms} alarms",
             "status": _status(flood_share, 1, 5),
+        },
+        {
+            "id": "busy",
+            "label": "Time above 30 alarms an hour",
+            "help": "The share of hours with more than 30 alarms: five times what one person handles, when alarms stop being read.",
+            "value": round(100.0 * busy_hours / len(hourly), 1),
+            "unit": "%",
+            "target": f"as little as possible (hours with more than {BUSY_PER_HOUR} alarms)",
+            "status": _status(100.0 * busy_hours / len(hourly), 1, 5),
+        },
+        {
+            "id": "fleeting",
+            "label": "Fleeting alarms",
+            "help": f"Alarms back to normal within {FLEETING_SECONDS:g} seconds with nobody acting: they ask for nothing, so they should not be alarms (a delay or a deadband removes them).",
+            "value": sum(fleeting.values()),
+            "target": "none",
+            "status": "ok" if not fleeting else "warning",
         },
         {
             "id": "peak",
@@ -228,5 +329,35 @@ def performance(
             for key, target in priority_targets.items()
         ],
         "mean_ack_seconds": round(sum(ack_seconds) / len(ack_seconds), 1) if ack_seconds else None,
+        "eemua": {
+            "level": level,
+            "average_per_10min": round(per_ten, 2),
+            "peak_per_10min": peak,
+            "bands": [
+                {
+                    "level": name,
+                    "average": None if math.isinf(a) else a,
+                    "peak": None if math.isinf(p) else p,
+                }
+                for name, a, p in EEMUA_LEVELS
+            ],
+        },
+        "floods": flood_list,
+        "flood_minutes": flood_minutes,
+        "acknowledge": [
+            {
+                "priority": key,
+                "count": len(values),
+                "median_seconds": _percentile(values, 0.5),
+                "p90_seconds": _percentile(values, 0.9),
+            }
+            for key in ("critical", "high", "medium", "low")
+            for values in [ack_by_priority.get(key, [])]
+            if values
+        ],
+        "fleeting": [
+            {"alarm_id": a, "name": names.get(a, a), "count": n}
+            for a, n in fleeting.most_common(TOP)
+        ],
         "unacked": sum(1 for _, item in raised if not item.get("acked_at")),
     }

@@ -187,7 +187,7 @@
 
 	handle_errors 502 503 504 {
 		header Content-Type "text/plain; charset=utf-8"
-		respond "This application is not running. Ask the administrator to check docker compose ps on the server." {err.status_code}
+		respond "This application is not installed on this server, or it is not running. Ask the administrator: PlantCraft lists the installed apps in its launcher." {err.status_code}
 	}
 }
 
