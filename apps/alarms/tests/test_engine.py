@@ -444,3 +444,76 @@ def test_the_permissive_reads_in_the_sentence():
             {"conditions": logic.model_dump()["conditions"],
              "enable_when": {"input": "event", "event": {"kinds": ["a.b"]}}}
         )  # fmt: skip
+
+
+# L8: limits by product grade (the grade from a signal holding its code, or from events).
+GRADE = "plantcraft:LINE-1.GRADE"
+GRADES = [{"grade": "1", "limit": 50.0}, {"grade": "2", "limit": 80.0}]
+
+
+def graded_rule(grade: dict, limits=GRADES, limit: float = 60.0) -> dict:
+    condition = {"input": "value", "value": {"role": "pv", "name": "Melt index"}, "op": ">",
+                 "limit": limit, "grade_limits": limits}  # fmt: skip
+    return to_diagram(SimpleLogic.model_validate({"conditions": [condition], "grade": grade}))
+
+
+def test_the_grade_from_a_signal_sets_the_limit():
+    diagram = graded_rule({"source": "value", "value": {"signal": GRADE}})
+    assert check(diagram).valid
+    stop = T0 + timedelta(seconds=5)
+    # 70 is over grade 1's 50 (raised), under grade 2's 80 (cleared), over 60 for grade 3,
+    # which has no limit of its own.
+    found = engine.run(diagram, ASSET, {}, end=stop, events=[], series={
+        SIGNAL: series([70, 70, 70, 70, 70, 70]), GRADE: series([1, 1, 2, 2, 3, 3])})  # fmt: skip
+    assert [(kind, moment.second) for kind, moment in found.transitions] == [
+        ("raised", 0), ("cleared", 2), ("raised", 4)]  # fmt: skip
+    assert "Grade 3 has no limit of its own" in found.message
+    assert found.signal == SIGNAL and found.value == 70  # the value shown is not the grade code
+
+
+def test_the_grade_from_events_sets_the_limit_and_is_kept_between_runs():
+    diagram = graded_rule({"source": "event", "kinds": ["mes.grade.changed"]})
+    changed = [
+        event(0.0, kind="mes.grade.changed", subject="line:L1", payload={"grade": "2"}),
+        event(0.05, kind="mes.grade.changed", subject="line:L1", payload={"grade": "1"}),
+    ]
+    stop = T0 + timedelta(seconds=5)
+    found = engine.run(
+        diagram, ASSET, {}, series={SIGNAL: series([70] * 6)}, events=changed, end=stop
+    )
+    assert [(kind, moment.second) for kind, moment in found.transitions] == [("raised", 3)]
+    assert "Grade 1: limit 50" in found.message
+    # The next run hears no grade event: grade 1 holds.
+    later = engine.run(diagram, ASSET, found.state, events=[], end=stop + timedelta(seconds=3),
+                       series={SIGNAL: series([70] * 9)})  # fmt: skip
+    assert later.state["active"] is True and "Grade 1" in later.message
+    # No grade known yet: the fixed limit (60) holds.
+    fresh = engine.run(diagram, ASSET, {}, series={SIGNAL: series([55, 65])}, events=[],
+                       end=T0 + timedelta(seconds=1))  # fmt: skip
+    assert kinds(fresh) == ["raised"]
+
+
+def test_grade_limits_read_in_the_sentence_and_are_checked():
+    logic = SimpleLogic.model_validate({
+        "conditions": [{"input": "value", "value": {"role": "pv", "name": "MI"}, "op": ">",
+                        "limit": 60, "grade_limits": GRADES}],
+        "grade": {"source": "event", "kinds": ["mes.grade.changed"], "name": "Grade change"},
+    })  # fmt: skip
+    assert (
+        logic.sentence() == "MI > 60 (1: 50, 2: 80 by grade); the grade from Grade change (grade)"
+    )
+    bad = [
+        {"conditions": logic.model_dump()["conditions"]},  # limits, no grade source
+        {"conditions": [{"input": "value", "value": {"role": "pv"}, "op": ">", "limit": 1}],
+         "grade": {"source": "value", "value": {"signal": GRADE}}},  # a source, no limits
+        {"conditions": [{"input": "value", "value": {"role": "pv"}, "op": "between", "limit": 1,
+                         "high": 2, "grade_limits": GRADES}],
+         "grade": {"source": "value", "value": {"signal": GRADE}}},
+        {"conditions": [{"input": "value", "value": {"role": "pv"}, "op": ">", "limit": 1,
+                         "grade_limits": [*GRADES, GRADES[0]]}],
+         "grade": {"source": "value", "value": {"signal": GRADE}}},
+        {"conditions": logic.model_dump()["conditions"], "grade": {"source": "event"}},
+    ]  # fmt: skip
+    for body in bad:
+        with pytest.raises(ValueError):
+            SimpleLogic.model_validate(body)

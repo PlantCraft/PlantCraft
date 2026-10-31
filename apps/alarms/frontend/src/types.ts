@@ -126,7 +126,12 @@ export interface SimpleEvent { kinds: string[]; severities: Severity[]; about: s
 export interface SimpleCondition {
   input: "value" | "event"; value: SimpleValue | null; op: Op; limit: number | null; high: number | null; deadband: number;
   event: SimpleEvent | null; test: "open" | "count"; count: number; window_minutes: number; for_seconds: number; for_points: number;
+  /** Limits by product grade (with the rule's grade): the limit while each grade is made. */
+  grade_limits?: GradeLimit[];
 }
+export interface GradeLimit { grade: string; limit: number }
+/** Where the product grade comes from: a signal holding its code, or the latest event naming it. */
+export interface SimpleGrade { source: "value" | "event"; value: SimpleValue | null; kinds: string[]; about: string; field: string; name: string }
 /** The Simple form: one to three conditions joined by and (or by or). */
 export interface SimpleLogic {
   conditions: SimpleCondition[]; combine: "and" | "or"; clear_after_seconds: number;
@@ -134,6 +139,8 @@ export interface SimpleLogic {
   enable_when?: SimpleCondition | null;
   /** Seconds the permissive must hold before the alarm is judged (the flow settles after a start). */
   enable_delay_seconds?: number;
+  /** Limits by product grade: where the grade comes from. */
+  grade?: SimpleGrade | null;
 }
 
 export type Per = "asset" | "execution" | "rule";
