@@ -200,3 +200,22 @@ export interface BlockUse { project_id: string; model: string; name: string; exa
 export type CatalogBlock = BlockSpec & { library_name: string; library_group: string; example: boolean; file: string; code: string;
   /** The version in use of a site block: who saved it, when, and what changed. */
   updated_at?: string | null; updated_by?: string | null; version_name?: string; version_note?: string };
+
+/** A tracking (M3): a model simulated against the plant on a schedule, its error kept as signals. */
+export interface TrackingConfig {
+  inputs: Record<string, string>; compare: Record<string, string>;
+  window_minutes: number; every_minutes: number; step_seconds: number | null; intervals: number;
+  overrides: Record<string, number | boolean>; limits: Record<string, number>;
+}
+export interface TrackingMetrics { mae: number | null; bias: number | null; max: number | null; last: number | null; n: number }
+export interface Tracking {
+  id: string; project_id: string; model: string; name: string; config: TrackingConfig;
+  enabled: boolean; next_at: string | null;
+  last: { status?: string; run_id?: string; at?: string; metrics?: Record<string, TrackingMetrics>; written?: number; detail?: string };
+  /** The variables off the plant now (their mismatch event open). */
+  open: string[];
+  /** Each compared variable's error signal in PlantCraft. */
+  signals: Record<string, string>;
+  created_by: string; created_at: string; updated_at: string;
+}
+export type TrackingBody = Omit<TrackingConfig, "step_seconds"> & { project_id: string; model: string; name: string; step_seconds?: number | null; enabled: boolean };
