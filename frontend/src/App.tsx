@@ -359,8 +359,12 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
     ...(operate ? [{ id: "operations", name: "Operations", url: "/health" }] : []),
     ...data.apps.filter((app) => app.access).map((app) => ({ id: app.id, name: app.name, url: app.url, version: app.version })),
   ];
-  const prefix = offFrame ? null : appPrefix(path, apps.map((app) => app.url));
-  const entry = prefix ? apps.find((app) => appPrefix(app.url, [prefix]) === prefix) ?? null : null;
+  // Only the apps in frames have an address prefix: Desk, PlantCraft and Operations are pages of
+  // this front end (Operations at /health must not open the platform again in a frame).
+  const LOCAL: ("desk" | "processcraft" | "operations")[] = ["desk", "processcraft", "operations"];
+  const framedApps = apps.filter((app) => !(LOCAL as string[]).includes(app.id));
+  const prefix = offFrame ? null : appPrefix(path, framedApps.map((app) => app.url));
+  const entry = prefix ? framedApps.find((app) => appPrefix(app.url, [prefix]) === prefix) ?? null : null;
   const address = `${path}${window.location.search}${window.location.hash}`;
   if (prefix && (lastApp?.prefix !== prefix || lastApp.url !== address)) setLastApp({ prefix, url: address });
   const shown = prefix ? frame : null;
@@ -381,7 +385,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
       app={framed ? shown?.app ?? entry!.id : desk ? "desk" : operating ? "operations" : "processcraft"}
       appName={framed ? shown?.appName ?? entry!.name : undefined}
       home={framed ? shown?.home ?? "/" : desk ? "/" : operating ? "/health" : "/admin"}
-      localApps={["desk", "processcraft", "operations"]}
+      localApps={LOCAL}
       assistant={framed ? shown?.assistant ?? false : path !== "/assistant" && !path.startsWith("/assistant/")}
       assistantControl={framed ? assistantControl : undefined}
       tourId={framed ? undefined : "processcraft"}
