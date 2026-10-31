@@ -12,6 +12,13 @@ them, and at the pace its priority asks:
 - ``digest`` priorities (medium and low) and every notice wait for the **shift summary**, sent at
   each ``digest_times`` in ``timezone``; a rule may ask for "always at once" (``always_now``).
 
+**Consoles** (operator positions, ISA-18.2): the load targets are for one operator, so a plant
+with several boards splits its alarms by console. A console covers areas of the asset tree (an
+alarm's area chain, ``AssetTree.area_of``); an alarm goes to the console that names the deepest
+asset of its chain (the first console on a tie), and to none when no console covers it. Each
+console may set its own alarms-an-hour target for its operator; the others use
+``per_person_hour``.
+
 | Table | Holds |
 |---|---|
 | ``philosophy`` | the one philosophy of the installation (``PhilosophyDraft``), who changed it and when |
@@ -19,6 +26,7 @@ them, and at the pace its priority asks:
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -27,6 +35,44 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from alarmcraft.alarms.model import Priority
 from alarmcraft.alarms.notices import CLOCK, LIMIT_PER_HOUR, LOCAL, minutes_of, valid_zone, zone_of
+
+CONSOLE_ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
+
+
+class Console(BaseModel):
+    """One operator position: the areas whose alarms its operator answers."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1, max_length=40)
+    name: str = Field(min_length=1, max_length=80)
+    # Asset ids of the areas (any level of the tree) this console covers.
+    areas: list[str] = Field(min_length=1, max_length=100)
+    # Who sits at it (usernames): Performance opens on their console.
+    operators: list[str] = Field(default_factory=list, max_length=100)
+    # The alarms an hour its operator can answer; none: the philosophy's ``per_person_hour``.
+    per_hour: int | None = Field(default=None, ge=1, le=60)
+
+    @field_validator("id")
+    @classmethod
+    def _id(cls, value: str) -> str:
+        value = (value or "").strip().lower()
+        if not CONSOLE_ID.match(value):
+            raise ValueError("a console id is lowercase letters, digits and dashes, like board-1")
+        return value
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, value: str) -> str:
+        value = " ".join((value or "").split())
+        if not value:
+            raise ValueError("a console has a name")
+        return value
+
+    @field_validator("areas", "operators")
+    @classmethod
+    def _unique(cls, value: list[str]) -> list[str]:
+        return list(dict.fromkeys(item.strip() for item in value if item and item.strip()))
 
 
 class PhilosophyDraft(BaseModel):
@@ -58,6 +104,8 @@ class PhilosophyDraft(BaseModel):
     shelve_hours_high: int = Field(default=4, ge=1, le=168)
     shelve_hours_medium: int = Field(default=12, ge=1, le=168)
     shelve_hours_low: int = Field(default=24, ge=1, le=168)
+    # The operator positions; none: the whole installation is one position.
+    consoles: list[Console] = Field(default_factory=list, max_length=50)
 
     def shelve_minutes(self, priority: str | None) -> int:
         """The longest shelving allowed for an alarm of ``priority``, in minutes."""
@@ -99,7 +147,35 @@ class PhilosophyDraft(BaseModel):
             raise ValueError("the target shares of the priorities add up to 100 %")
         if self.chatter_hour < self.chatter_minute:
             raise ValueError("chattering in an hour counts at least as many as in a minute")
+        ids = [console.id for console in self.consoles]
+        if len(set(ids)) != len(ids):
+            raise ValueError("each console has its own id")
+        names = [console.name.casefold() for console in self.consoles]
+        if len(set(names)) != len(names):
+            raise ValueError("each console has its own name")
         return self
+
+    def console(self, console_id: str) -> Console | None:
+        return next((item for item in self.consoles if item.id == console_id), None)
+
+    def console_of(self, chain: list[str]) -> Console | None:
+        """The console of an alarm whose area chain (root first) is ``chain``: the one naming
+        its deepest asset; the first one on a tie; None when no console covers it."""
+
+        best, depth = None, -1
+        for console in self.consoles:
+            areas = set(console.areas)
+            found = max((index for index, item in enumerate(chain) if item in areas), default=-1)
+            if found > depth:
+                best, depth = console, found
+        return best
+
+    def for_console(self, console: Console | None) -> PhilosophyDraft:
+        """The targets as one console's operator is measured on them."""
+
+        if console is None or console.per_hour is None:
+            return self
+        return self.model_copy(update={"per_person_hour": console.per_hour})
 
     def last_digest(self, now: datetime) -> datetime:
         """The latest summary time at or before ``now`` (UTC-aware, in the philosophy's zone)."""
