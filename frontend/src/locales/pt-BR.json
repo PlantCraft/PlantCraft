@@ -1493,5 +1493,9 @@
   "To apply it, run in the installation folder on the server:": "Para aplicar, rode na pasta da instalação, no servidor:",
   "Values changed by hand in .env are kept. If the installation file sets MACHINE, change it there instead: it wins.": "Valores mudados à mão no .env são mantidos. Se o arquivo da instalação define MACHINE, mude lá: ele tem prioridade.",
   "Assistant read limit reached (possible extraction)": "Limite de leitura do assistente atingido (possível extração)",
-  "Assistant read many signals at once (possible extraction)": "Assistente leu muitos sinais de uma vez (possível extração)"
+  "Assistant read many signals at once (possible extraction)": "Assistente leu muitos sinais de uma vez (possível extração)",
+  "Permissions (optional)": "Permissões (opcional)",
+  "All of the app's; or e.g. read.signals, read.series": "Todas as da app; ou por exemplo read.signals, read.series",
+  "All of the app's": "Todas as da app",
+  "Permissions": "Permissões"
 }

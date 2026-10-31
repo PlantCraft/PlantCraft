@@ -335,6 +335,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **App keys with scopes** (backlog B8). A key may hold less than its app: `POST /api/app-keys`
+  takes `scopes`, the service tokens carry them, and each API v1 route needs a permission both the
+  app and the key hold. A key without scopes holds all of the app's, as before. Settings › App
+  keys shows and sets them. `PLANTCRAFT_APP_PERMISSIONS=strict` also holds an app that declared
+  no permissions yet to none.
 - **The security check includes Lynis and OpenSCAP when the host has them** (`PC-HOST-05`,
   `PC-HOST-06`). As root it runs `lynis audit system --quick` and the SCAP Security Guide's CIS
   level 1 (or standard) profile. Otherwise it reads their last report. A host without them reports

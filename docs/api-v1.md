@@ -136,7 +136,14 @@ lists of API v1 answer in pages and say when nothing changed (`plantcraft_sdk.se
   SDK 0.42 from `app.toml`). An app that declared nothing yet is not held (until the freeze of
   v1). A person's token keeps the person's access. Your identity, the installation and what
   `[contributes]` declares (language model uses, calendar feeds, to-dos, settings) need no
-  permission. `PLANTCRAFT_APP_PERMISSIONS=audit` only logs what would be refused.
+  permission. `PLANTCRAFT_APP_PERMISSIONS=audit` only logs what would be refused;
+  `strict` also holds an app that declared nothing yet to nothing, as an installation that
+  admits other publishers' apps should (backlog B8).
+- **A key may hold less than its app** (backlog B8, 2026-10-31). `POST /api/app-keys` takes
+  `scopes`, a list of permissions; the key's service tokens carry them (`scope` claim) and may
+  use only what both the app and the key hold (a read-only key for a collector, say). Without
+  `scopes` the key holds all of the app's, as before. An unknown permission is refused (`422`),
+  and Settings › App keys shows each key's permissions.
 
 ## Details settled by the first implementation (2026-10-19)
 

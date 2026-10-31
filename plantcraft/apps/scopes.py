@@ -33,8 +33,18 @@ PACKAGED = {"package", "catalog"}
 CACHE_SECONDS = 10.0
 
 
+def _mode() -> str:
+    return (os.environ.get("PLANTCRAFT_APP_PERMISSIONS") or "enforce").strip().lower()
+
+
 def enforcing() -> bool:
-    return (os.environ.get("PLANTCRAFT_APP_PERMISSIONS") or "enforce").strip().lower() != "audit"
+    return _mode() != "audit"
+
+
+def strict() -> bool:
+    """An app with no permissions known is held to none (default: not held until it declares)."""
+
+    return _mode() == "strict"
 
 
 class AppScopes:
@@ -89,8 +99,11 @@ class AppScopes:
             return {}
         return found if isinstance(found, dict) else {}
 
-    def refusal(self, app_id: str, method: str, route: str) -> str | None:
-        """Why the app's token may not use this route, or None when it may."""
+    def refusal(
+        self, app_id: str, method: str, route: str, key_scopes: list[str] | None = None
+    ) -> str | None:
+        """Why the app's token may not use this route, or None when it may. ``key_scopes``: the
+        scopes of the key the token came from (None: the key holds all of the app's)."""
 
         known, scope = required(method, route)
         if not known:
@@ -99,9 +112,14 @@ class AppScopes:
             return None
         else:
             granted = self.granted(app_id)
-            if granted is None or scope in granted:
+            if granted is None and strict():
+                granted = set()
+            if granted is not None and scope not in granted:
+                reason = f"{app_id} did not ask for {scope} in its app.toml [permissions]"
+            elif key_scopes is not None and scope not in _known(key_scopes):
+                reason = f"this key of {app_id} does not hold {scope}"
+            else:
                 return None
-            reason = f"{app_id} did not ask for {scope} in its app.toml [permissions]"
         if not enforcing():
             LOGGER.warning("App permissions (audit only): %s", reason)
             return None
@@ -112,4 +130,4 @@ def _known(items: Any) -> set[str]:
     return {str(item) for item in items or [] if str(item) in PERMISSIONS}
 
 
-__all__ = ["AppScopes", "enforcing"]
+__all__ = ["AppScopes", "enforcing", "strict"]

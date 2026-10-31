@@ -630,5 +630,6 @@
   "The demo is being prepared. Try again in a few minutes.": "A demo está sendo preparada. Tente de novo em alguns minutos.",
   "Your demo visit ended.": "Sua visita à demo terminou.",
   "The installation file fixed the time zone. Change it on the server: edit /etc/plantcraft/installation.conf and run install.sh again.": "O arquivo da instalação fixou o fuso horário. Mude no servidor: edite /etc/plantcraft/installation.conf e rode o install.sh de novo.",
-  "Today's limit of {count} signal reads by the assistant for this person is reached. Answer from what was already read and say so; it starts again tomorrow.": "O limite de hoje de {count} leituras de sinais pelo assistente para esta pessoa foi atingido. Responda com o que já foi lido e diga isso; ele recomeça amanhã."
+  "Today's limit of {count} signal reads by the assistant for this person is reached. Answer from what was already read and say so; it starts again tomorrow.": "O limite de hoje de {count} leituras de sinais pelo assistente para esta pessoa foi atingido. Responda com o que já foi lido e diga isso; ele recomeça amanhã.",
+  "Unknown permissions: {names}.": "Permissões desconhecidas: {names}."
 }

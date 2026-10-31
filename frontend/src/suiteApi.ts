@@ -3,7 +3,7 @@ import { requestJson } from "./api";
 
 export interface SuiteApp { id: string; name: string; url: string; access: "editor" | "viewer"; version: string | null }
 export interface TokenGrant { token: string; expires_at: string }
-export interface AppKey { key_id: string; app_id: string; label: string; created_by: string | null; created_at: string; revoked_at: string | null; revoked_by: string | null; last_used_at: string | null; active: boolean }
+export interface AppKey { key_id: string; app_id: string; label: string; created_by: string | null; created_at: string; revoked_at: string | null; revoked_by: string | null; last_used_at: string | null; active: boolean; scopes?: string[] | null }
 export interface NewAppKey extends AppKey { key: string }
 export interface AppKeyList { keys: AppKey[]; apps: { id: string; name: string; url: string }[] }
 
@@ -19,6 +19,6 @@ export const suiteApi = {
     return requestJson<SuiteApp[]>("/api/v1/apps", { headers: { Authorization: `Bearer ${token}` } });
   },
   appKeys: () => requestJson<AppKeyList>("/api/app-keys"),
-  createAppKey: (app_id: string, label: string) => requestJson<NewAppKey>("/api/app-keys", { method: "POST", body: JSON.stringify({ app_id, label }) }),
+  createAppKey: (app_id: string, label: string, scopes: string[] | null = null) => requestJson<NewAppKey>("/api/app-keys", { method: "POST", body: JSON.stringify({ app_id, label, scopes }) }),
   revokeAppKey: (keyId: string) => requestJson<AppKey>(`/api/app-keys/${encodeURIComponent(keyId)}`, { method: "DELETE" }),
 };
