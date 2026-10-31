@@ -18,6 +18,11 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   with Tesseract OCR (now in the image), within a time budget. New dependencies: pdfplumber,
   pypdfium2, pillow. A DEXPI example P&ID (CC BY 4.0) is a test file.
 
+### Security
+
+- Drawings are read in the same worker process as the text of the file, with the same limits:
+  120 s, a memory budget, no network and no file writes.
+
 ## [0.5.1] - 2026-10-30
 
 - Suite 0.5.1: `plantcraft-sdk` 0.79.0 and `@plantcraft/ui` 0.89.0, with the new look (the PC valve logo, Steel Blue and the new app marks).

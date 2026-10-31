@@ -103,6 +103,11 @@ def revoked(rt: Runtime) -> dict[str, Any]:
             {"key_id": key_id, "revoked_at": stamp}
             for key_id, stamp in rt.workspace.app_keys.revoked_since(now - SERVICE_TOKEN_SECONDS)
         ],
+        # Browser sessions signed out: their tokens carry the same digest (``sid`` claim).
+        "sessions": [
+            {"sid_sha256": digest, "ended_at": stamp}
+            for digest, stamp in rt.workspace.ended_sessions.ended_since(now - USER_TOKEN_SECONDS)
+        ],
     }
 
 

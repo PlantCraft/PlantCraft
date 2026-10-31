@@ -1038,6 +1038,8 @@ class FakePlantCraft(_LinksRoutes):
         # Tokens ended early (``revoke``), as ``GET /api/v1/auth/revoked`` lists them.
         self.revoked_users: dict[str, int] = {}
         self.revoked_keys: set[str] = set()
+        # Sessions signed out (``end_session``): the ``sid`` claim of their tokens.
+        self.ended_sessions: set[str] = set()
         self.private_key = jwt.generate_private_key()
         self.kid = jwt.key_id(self.private_key)
         self._public = [jwt.public_key_to_jwk(self.private_key, self.kid)]
@@ -1074,6 +1076,11 @@ class FakePlantCraft(_LinksRoutes):
         """End the tokens ``username`` holds now (disabled, new password or access)."""
 
         self.revoked_users[username] = int(time.time()) + 1 if at is None else at
+
+    def end_session(self, sid: str) -> None:
+        """Sign out the browser session whose tokens carry ``sid`` (the session's digest)."""
+
+        self.ended_sessions.add(sid)
 
     def rotate_key(self) -> str:
         """Sign with a new key from now on; the old public key stays listed."""
@@ -1395,6 +1402,7 @@ class FakePlantCraft(_LinksRoutes):
                 for name, stamp in self.revoked_users.items()
             ],
             "keys": [{"key_id": key_id, "revoked_at": 0} for key_id in sorted(self.revoked_keys)],
+            "sessions": [{"sid_sha256": sid, "ended_at": 0} for sid in sorted(self.ended_sessions)],
         }
 
     def _route_renew(self, request: "_Request") -> FakeResponse:

@@ -62,6 +62,21 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **`install.sh` fits every CPU limit to small hosts**, also the ones left at their default in
   `compose.yaml` (a 2-CPU machine stopped on `LINKCRAFT_EXECUTOR_CPUS`, default 4).
 
+### Security
+
+- **Signing out ends the browser's token in every app too.** The 12-minute token carries the
+  SHA-256 of its session (`sid` claim). After sign-out PlantCraft refuses it at once, and
+  `GET /api/v1/auth/revoked` lists the session (`sessions`), so the apps refuse it within 10 s
+  (`plantcraft-sdk` 0.84.0). The person's other sessions keep working.
+- **`./install.sh --security-check`: 36 checks with stable ids, a score and machine-readable
+  output.** Each check (`PC-CTR-01` and so on) has a severity, the evidence it saw, how to fix it
+  and its IEC 62443-4-2 and NIST SP 800-53 references; `--format json|junit|sarif`, `--skip`, and
+  exit code 1 on a failure (docs/security-guide.md, "Security check").
+- **Fresher proxy and installer images.** The proxy moves to Caddy 2.11.6 and upgrades its Alpine
+  packages at build, and the installer's Docker CLI and Compose to 29.9.2. Trivy counted 3
+  critical and 84 high fixable findings in the proxy, and 3 and 87 in the installer, all in the old
+  Go binaries and curl.
+
 ### Fixed
 
 - **Installer, from the first tries on Windows 11 (WSL) and a clean Linux VM.** The setup

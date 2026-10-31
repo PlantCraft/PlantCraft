@@ -92,3 +92,32 @@ def test_the_route_list_is_not_served(app):  # noqa: F811
         answer = client.get("/openapi.json")
         # Not the API description (the page's own HTML, or nothing at all).
         assert '"paths"' not in answer.text
+
+
+def test_signing_out_ends_the_browser_token_in_the_platform_and_the_apps(app):  # noqa: F811
+    from plantcraft_sdk import jwt
+
+    with TestClient(app):
+        person = _login(app, "joao.op", "senha-do-joao")
+        token = person.post("/api/v1/auth/token").json()["token"]
+        sid = jwt.unverified_claims(token)["sid"]
+        bearer = {"Authorization": f"Bearer {token}"}
+        assert TestClient(app).get("/api/v1/me", headers=bearer).status_code == 200
+        assert TestClient(app).get("/api/v1/auth/revoked").json()["sessions"] == []
+        assert person.post("/api/logout").status_code == 200
+        # The token copied before sign-out: refused by the platform at once ...
+        assert TestClient(app).get("/api/v1/me", headers=bearer).status_code == 401
+        # ... and listed for the apps, which refuse it within REVOKED_TTL_SECONDS.
+        listed = [
+            s["sid_sha256"] for s in TestClient(app).get("/api/v1/auth/revoked").json()["sessions"]
+        ]
+        assert listed == [sid]
+        # A new sign-in gets a new session and a token that works.
+        again = _login(app, "joao.op", "senha-do-joao")
+        fresh = again.post("/api/v1/auth/token").json()["token"]
+        assert (
+            TestClient(app)
+            .get("/api/v1/me", headers={"Authorization": f"Bearer {fresh}"})
+            .status_code
+            == 200
+        )
