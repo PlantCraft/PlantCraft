@@ -113,6 +113,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Analytics › Algorithms opens without the diagram editor.** The list moved to its own module
+  (`AlgorithmList.tsx`), so opening it no longer loads React Flow and the test tools: 724 KB to
+  443 KB of script. The algorithm's page still loads them.
 - **Schedules and the block pages open without the block editor (`@plantcraft/ui`).**
   `ParameterField` and `typeLabel` have their own subpath, `@plantcraft/ui/blockParameter`
   (still exported from `blockEditor`), so Analytics › Schedules and Models › Blocks no longer
