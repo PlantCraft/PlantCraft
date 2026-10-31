@@ -17,6 +17,7 @@ from linkcraft.api.scope import Scope, sees_job, sees_loop
 from linkcraft.catalog.loop_types import known_loop_type
 from linkcraft.catalog.registry import METHOD_SPECS
 from linkcraft.config import LoopConfig, LoopSignals
+from linkcraft.engine.references import compare
 from linkcraft.i18n import t
 from linkcraft.loops.defaults import record_defaults, setting_sources
 from linkcraft.loops.monitor import APPLICATION_ID, SUBJECT_KIND, incomplete_reason, missing_roles
@@ -121,6 +122,7 @@ def loop_detail(loop_id: str, user: CurrentUser, rt: RuntimeDep, scope: Scope) -
     else:
         payload = rt.monitor.loop_payload(loop_id, plant=rt.user_plant(user)) or {}
     record = loop.asset_record
+    summary = payload.get("summary") or {}
     return {
         "loop": loop.model_dump(mode="json"),
         "origin": origin,
@@ -139,7 +141,51 @@ def loop_detail(loop_id: str, user: CurrentUser, rt: RuntimeDep, scope: Scope) -
         "series": frame_rows(payload.get("frame"), SERIES_POINTS),
         "history": rt.latest.history(APPLICATION_ID, SUBJECT_KIND, loop_id, days=30),
         "jobs": rt.jobs.list_jobs(loop_id=loop_id, limit=20),
+        "reference": compare(
+            rt.monitor.references.get(loop_id),
+            payload.get("results") or [],
+            summary.get("health"),
+            summary.get("algorithm_version"),
+        ),
     }
+
+
+@router.post("/api/loops/{loop_id}/reference")
+def record_reference(
+    loop_id: str, user: EditorUser, rt: RuntimeDep, scope: Scope
+) -> dict[str, Any]:
+    """Keep the loop's last run as its reference: later runs are shown against it (A8)."""
+
+    loop = _loop_or_404(rt, loop_id, scope)
+    latest = rt.latest.get(APPLICATION_ID, SUBJECT_KIND, loop_id)
+    if loop.incomplete or latest is None or not latest.get("results"):
+        raise HTTPException(
+            status_code=409,
+            detail=t("Run the loop first: there is no result to keep as its reference."),
+        )
+    reference = rt.monitor.references.record(loop_id, latest, user.username)
+    rt.audit(
+        user,
+        "loop.reference_recorded",
+        f"loop:{loop_id}",
+        {"source_start": reference["source_start"], "source_end": reference["source_end"]},
+    )
+    summary = latest.get("summary") or {}
+    return (
+        compare(
+            reference, latest["results"], summary.get("health"), summary.get("algorithm_version")
+        )
+        or {}
+    )
+
+
+@router.delete("/api/loops/{loop_id}/reference", status_code=204)
+def delete_reference(loop_id: str, user: EditorUser, rt: RuntimeDep, scope: Scope) -> Response:
+    _loop_or_404(rt, loop_id, scope)
+    if not rt.monitor.references.delete(loop_id):
+        raise HTTPException(status_code=404, detail=t("This loop has no reference."))
+    rt.audit(user, "loop.reference_deleted", f"loop:{loop_id}")
+    return Response(status_code=204)
 
 
 @router.patch("/api/loops/{loop_id}")

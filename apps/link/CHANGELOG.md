@@ -8,6 +8,13 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **A loop compared with a recorded reference.** "Record as reference" on the loop page keeps the
+  loop's last run (health, and each method's status, score and numeric indicators) as the run to
+  compare against, after commissioning or a retune. The page then shows health then and now, and
+  for each method judged in both runs its status, score change and the indicator that moved most
+  (now / reference). It also warns when the algorithm changed since. One reference per loop:
+  recording again replaces it (`POST` and `DELETE /api/loops/{loop_id}/reference`, editors;
+  `reference` in `GET /api/loops/{loop_id}`).
 - **Days to the limit.** For loops whose health is falling, a line fitted to the last 14 days
   (6-hour means) says how many days are left until the health reaches the alarm limit (50). The
   forecast is shown only when the line fits (R² of at least 0.5) and the limit is less than a year
