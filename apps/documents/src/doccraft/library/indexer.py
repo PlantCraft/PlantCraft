@@ -17,7 +17,7 @@ from doccraft.library.embed import Embedder
 from doccraft.library.passages import Passage, cut
 from doccraft.library.store import DocumentStore
 from doccraft.library.tags import known
-from doccraft.plantmap.diagrams import describe, read_diagrams
+from doccraft.plantmap.diagrams import describe
 
 log = logging.getLogger(__name__)
 
@@ -36,9 +36,9 @@ class Indexed:
 def index_file(
     data: bytes, filename: str, tag_ids: dict[str, str], embedder: Embedder, title: str = ""
 ) -> Indexed:
-    extracted = reader.extract_isolated(data, filename)
+    # Text and drawings are both read in a worker process with time and memory limits.
+    extracted, diagrams = reader.read_isolated(data, filename)
     kind = reader.format_of(filename)
-    diagrams = read_diagrams(data, filename) if kind in {"pdf", *reader.DRAWING_ONLY} else []
     # Each diagram page gets a passage saying what it shows, in words.
     for page in diagrams:
         heading = ["Diagram", " ".join(x for x in (page.get("sheet"), page.get("title")) if x)]

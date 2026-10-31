@@ -48,6 +48,7 @@ before anything changes (`PLANTCRAFT_SKIP_CHECK=1` skips it).
 ## Setup wizard
 
 `sudo python3 wizard/wizard.py` from the bundle folder opens the installer's screens in a browser
-(127.0.0.1 only, one-time key in the address; from another computer through `ssh -L`). It runs the
-requirements check, asks the choices above, shows the file, writes it as root and, with `--apply`,
+(127.0.0.1 only; the address carries a random key, new on each start and valid while the wizard
+runs; from another computer through `ssh -L`). It asks the apps, runs the requirements check for
+them (including that the folder is a complete release bundle), asks the other choices above, shows the file, writes it as root and, with `--apply`,
 runs `install.sh --config` and shows its log. Standard library only.

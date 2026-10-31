@@ -77,7 +77,7 @@ input. Times are ISO 8601 with offset; series timestamps are UTC.
 | Method and path | Purpose |
 |---|---|
 | `GET /api/v1/auth/keys` | `{"keys": [{"kid", "kty": "OKP", "crv": "Ed25519", "x"}]}` (JWK, public) |
-| `GET /api/v1/auth/revoked` | Tokens ended before they expire (public): `{"users": [{"sub_sha256", "not_before"}], "keys": [{"key_id", "revoked_at"}]}`; see "Ending tokens early" below |
+| `GET /api/v1/auth/revoked` | Tokens ended before they expire (public): `{"users": [{"sub_sha256", "not_before"}], "keys": [{"key_id", "revoked_at"}], "sessions": [{"sid_sha256", "ended_at"}]}`; see "Ending tokens early" below |
 | `POST /api/v1/auth/token` | Renew the browser token from the session cookie: `{"token", "expires_at"}` |
 | `POST /api/v1/auth/service-token` | Body `{"app", "key"}`: `{"token", "expires_at"}` |
 | `GET /api/v1/me` | `{"username", "name", "level", "apps": {...}, "notebooks_url"}` from the bearer token; `notebooks_url` is `/notebooks` when the person may open data in a notebook (Notebooks on, viewer and up; added 2026-10-23), else `null` |
@@ -170,6 +170,9 @@ These complete the table above; `tests/contract/test_api_v1.py` checks them.
   last hour (`key_id`, `revoked_at`), whose service tokens are refused. Entries stay only as long
   as a token from before them could still be alive (15 minutes for people, an hour for keys).
   A token issued after the change (signing in again) gets `iat` at least `not_before`.
+  Signing out ends that browser session's tokens the same way (since SDK 0.84.0): the browser's
+  token carries the SHA-256 of its session id (`sid` claim), and the list gives the sessions signed
+  out in the last 15 minutes (`sid_sha256`, `ended_at`). The person's other sessions keep working.
   `plantcraft_sdk.auth.TokenVerifier` reads the list at most every 10 seconds; when it cannot
   (PlantCraft down, or older than this list), the last list read stays in force.
 - **`apps` claim.** Editors and admins get `editor`, viewers `viewer`, `dashboards` people no app.

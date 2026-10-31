@@ -41,6 +41,42 @@ PDF's **Open the PDF** opens at that page; a Word file's **Open the document** s
 (its text, headings and tables). Ctrl+K, anywhere in the
 suite, finds documents by number or title and the best passages.
 
+## Diagrams and the plant map (beta)
+
+P&IDs sent to the library are also read as drawings, offline and with no language model. This
+works for PDF from a CAD tool, SVG, and scans or images (PNG, JPEG, TIFF). Every page that is a
+diagram is listed in **Diagrams**. Each page opens with boxes over what was found and a list
+of what to check first. Each finding says how sure the reader is and why.
+
+**Plant map** joins all the sheets into one plant:
+
+- the units, with the equipment in flow order and the control loops on each piece;
+- the lines from one sheet to another, through the off-page connectors;
+- a summary and the list **To check**.
+
+On the map you can work with what was read:
+
+- Pick an item to see its lines and the sheets it is drawn on. If PlantCraft already has it, its
+  card opens the asset, its signals and what the suite's apps say about it.
+- **Correct** or **Wrong** on any item or line, if you can edit. Wrong takes it off the map and
+  out of every export. **Undo** brings it back.
+- **Lists** downloads the equipment, instrument, line and loop lists as CSV.
+- **DEXPI (XML)** downloads the map in the open P&ID exchange format, for tools such as AVEVA,
+  Hexagon Smart P&ID or COMOS. It holds equipment, lines and instrument loops, with no drawing.
+- **Asset file** goes to PlantCraft's Assets › Import, where you review it before anything
+  changes.
+- **Check against a tag list**: pick your plant's tag list (CSV or text, the tag in the first
+  column) to see which tags are on both, and which are only on one. The file stays in your
+  browser.
+
+How well it reads depends on the drawing:
+
+- A clean vector P&ID is read almost completely.
+- On a scan, the tags are read, but the lines are not.
+- On a P&ID from a commercial tool, the tags are read well, but only part of the lines.
+
+So check the lines before you use them.
+
 ## Ask the assistant
 
 The assistant searches and reads the documents you may open, and cites each fact as [n] with the

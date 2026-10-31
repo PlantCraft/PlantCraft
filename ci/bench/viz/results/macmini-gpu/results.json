@@ -1,0 +1,1033 @@
+{
+ "c1-uplot?n=50000": {
+  "render": 201,
+  "zoom": 165,
+  "unzoom": 33,
+  "heap_mb": 2,
+  "dom_nodes": 37,
+  "print": "prints/c1-uplot_n_50000.png",
+  "wall_s": 0.5,
+  "bundle": {
+   "kb": 54,
+   "kb_gzip": 24
+  }
+ },
+ "c1-uplot?n=100000": {
+  "render": 38,
+  "zoom": 30,
+  "unzoom": 34,
+  "heap_mb": 2,
+  "dom_nodes": 37,
+  "print": "prints/c1-uplot_n_100000.png",
+  "wall_s": 0.5,
+  "bundle": {
+   "kb": 54,
+   "kb_gzip": 24
+  }
+ },
+ "c1-uplot?n=200000": {
+  "render": 47,
+  "zoom": 21,
+  "unzoom": 32,
+  "heap_mb": 2,
+  "dom_nodes": 37,
+  "print": "prints/c1-uplot_n_200000.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 54,
+   "kb_gzip": 24
+  }
+ },
+ "c1-echarts?n=50000": {
+  "render": 58,
+  "zoom": 75,
+  "unzoom": 17,
+  "heap_mb": 5,
+  "dom_nodes": 20,
+  "print": "prints/c1-echarts_n_50000.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 503,
+   "kb_gzip": 171
+  }
+ },
+ "c1-echarts?n=100000": {
+  "render": 74,
+  "zoom": 19,
+  "unzoom": 34,
+  "heap_mb": 5,
+  "dom_nodes": 20,
+  "print": "prints/c1-echarts_n_100000.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 503,
+   "kb_gzip": 171
+  }
+ },
+ "c1-echarts?n=200000": {
+  "render": 82,
+  "zoom": 30,
+  "unzoom": 33,
+  "heap_mb": 5,
+  "dom_nodes": 20,
+  "print": "prints/c1-echarts_n_200000.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 503,
+   "kb_gzip": 171
+  }
+ },
+ "c1-chartjs?n=50000": {
+  "render": 57,
+  "zoom": 50,
+  "unzoom": 34,
+  "heap_mb": 31,
+  "dom_nodes": 18,
+  "print": "prints/c1-chartjs_n_50000.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 138,
+   "kb_gzip": 49
+  }
+ },
+ "c1-chartjs?n=100000": {
+  "render": 72,
+  "zoom": 25,
+  "unzoom": 33,
+  "heap_mb": 53,
+  "dom_nodes": 18,
+  "print": "prints/c1-chartjs_n_100000.png",
+  "wall_s": 0.4,
+  "bundle": {
+   "kb": 138,
+   "kb_gzip": 49
+  }
+ },
+ "c1-chartjs?n=200000": {
+  "render": 123,
+  "zoom": 19,
+  "unzoom": 33,
+  "heap_mb": 101,
+  "dom_nodes": 18,
+  "print": "prints/c1-chartjs_n_200000.png",
+  "wall_s": 0.4,
+  "bundle": {
+   "kb": 138,
+   "kb_gzip": 49
+  }
+ },
+ "c1-plotly-svg?n=50000": {
+  "render": 143,
+  "zoom": 131,
+  "unzoom": 50,
+  "heap_mb": 38,
+  "dom_nodes": 324,
+  "print": "prints/c1-plotly-svg_n_50000.png",
+  "wall_s": 0.8,
+  "bundle": {
+   "kb": 1487,
+   "kb_gzip": 491
+  }
+ },
+ "c1-plotly-svg?n=100000": {
+  "render": 207,
+  "zoom": 86,
+  "unzoom": 68,
+  "heap_mb": 67,
+  "dom_nodes": 335,
+  "print": "prints/c1-plotly-svg_n_100000.png",
+  "wall_s": 0.8,
+  "bundle": {
+   "kb": 1487,
+   "kb_gzip": 491
+  }
+ },
+ "c1-plotly-svg?n=200000": {
+  "render": 373,
+  "zoom": 150,
+  "unzoom": 117,
+  "heap_mb": 127,
+  "dom_nodes": 332,
+  "print": "prints/c1-plotly-svg_n_200000.png",
+  "wall_s": 1,
+  "bundle": {
+   "kb": 1487,
+   "kb_gzip": 491
+  }
+ },
+ "c1-plotly-gl?n=50000": {
+  "render": 260,
+  "zoom": 31,
+  "unzoom": 47,
+  "heap_mb": 31,
+  "dom_nodes": 260,
+  "print": "prints/c1-plotly-gl_n_50000.png",
+  "wall_s": 0.7,
+  "bundle": {
+   "kb": 1475,
+   "kb_gzip": 489
+  }
+ },
+ "c1-plotly-gl?n=100000": {
+  "render": 317,
+  "zoom": 34,
+  "unzoom": 33,
+  "heap_mb": 97,
+  "dom_nodes": 271,
+  "print": "prints/c1-plotly-gl_n_100000.png",
+  "wall_s": 0.7,
+  "bundle": {
+   "kb": 1475,
+   "kb_gzip": 489
+  }
+ },
+ "c2-svg": {
+  "render": 25,
+  "update_ms": 16.7,
+  "heap_mb": 1,
+  "dom_nodes": 209,
+  "print": "prints/c2-svg.png",
+  "wall_s": 1.3,
+  "bundle": {
+   "kb": 2,
+   "kb_gzip": 1
+  }
+ },
+ "c2-uplot": {
+  "render": 28,
+  "update_ms": 16.4,
+  "heap_mb": 2,
+  "dom_nodes": 305,
+  "print": "prints/c2-uplot.png",
+  "wall_s": 1.1,
+  "bundle": {
+   "kb": 54,
+   "kb_gzip": 24
+  }
+ },
+ "c2-echarts": {
+  "render": 44,
+  "update_ms": 16.6,
+  "heap_mb": 6,
+  "dom_nodes": 209,
+  "print": "prints/c2-echarts.png",
+  "wall_s": 1.3,
+  "bundle": {
+   "kb": 468,
+   "kb_gzip": 159
+  }
+ },
+ "c2-plotly": {
+  "render": 58,
+  "update_ms": 18.9,
+  "heap_mb": 9,
+  "dom_nodes": 2205,
+  "print": "prints/c2-plotly.png",
+  "wall_s": 1.5,
+  "bundle": {
+   "kb": 1488,
+   "kb_gzip": 491
+  }
+ },
+ "c3-plotly-gl?n=100000": {
+  "render": 208,
+  "zoom": 25,
+  "heap_mb": 13,
+  "dom_nodes": 258,
+  "print": "prints/c3-plotly-gl_n_100000.png",
+  "wall_s": 0.6,
+  "bundle": {
+   "kb": 1474,
+   "kb_gzip": 489
+  }
+ },
+ "c3-deckgl?n=100000": {
+  "render": 190,
+  "zoom": 39,
+  "note": "no axes: deck.gl draws points only",
+  "heap_mb": 4,
+  "dom_nodes": 21,
+  "print": "prints/c3-deckgl_n_100000.png",
+  "wall_s": 0.5,
+  "bundle": {
+   "kb": 773,
+   "kb_gzip": 219
+  }
+ },
+ "c3-regl-scatterplot?n=100000": {
+  "render": 595,
+  "zoom": 49,
+  "note": "no axes: lasso selection built in",
+  "heap_mb": 10,
+  "dom_nodes": 25,
+  "print": "prints/c3-regl-scatterplot_n_100000.png",
+  "wall_s": 0.9,
+  "bundle": {
+   "kb": 220,
+   "kb_gzip": 75
+  }
+ },
+ "c3-plotly-gl?n=1000000": {
+  "render": 381,
+  "zoom": 30,
+  "heap_mb": 69,
+  "dom_nodes": 270,
+  "print": "prints/c3-plotly-gl_n_1000000.png",
+  "wall_s": 0.8,
+  "bundle": {
+   "kb": 1474,
+   "kb_gzip": 489
+  }
+ },
+ "c3-deckgl?n=1000000": {
+  "render": 58,
+  "zoom": 50,
+  "note": "no axes: deck.gl draws points only",
+  "heap_mb": 4,
+  "dom_nodes": 21,
+  "print": "prints/c3-deckgl_n_1000000.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 773,
+   "kb_gzip": 219
+  }
+ },
+ "c3-regl-scatterplot?n=1000000": {
+  "render": 453,
+  "zoom": 50,
+  "note": "no axes: lasso selection built in",
+  "heap_mb": 47,
+  "dom_nodes": 25,
+  "print": "prints/c3-regl-scatterplot_n_1000000.png",
+  "wall_s": 0.7,
+  "bundle": {
+   "kb": 220,
+   "kb_gzip": 75
+  }
+ },
+ "c4-canvas?cols=2000&rows=500": {
+  "render": 21,
+  "zoom": 20,
+  "note": "no axes or tooltip: those are ours to write",
+  "heap_mb": 1,
+  "dom_nodes": 18,
+  "print": "prints/c4-canvas_cols_2000_rows_500.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 2,
+   "kb_gzip": 1
+  }
+ },
+ "c4-echarts?cols=2000&rows=500": {
+  "render": 2194,
+  "zoom": 263,
+  "heap_mb": 797,
+  "dom_nodes": 22,
+  "print": "prints/c4-echarts_cols_2000_rows_500.png",
+  "wall_s": 4.5,
+  "bundle": {
+   "kb": 517,
+   "kb_gzip": 173
+  }
+ },
+ "c4-plotly?cols=2000&rows=500": {
+  "render": 194,
+  "zoom": 87,
+  "heap_mb": 29,
+  "dom_nodes": 275,
+  "print": "prints/c4-plotly_cols_2000_rows_500.png",
+  "wall_s": 0.8,
+  "bundle": {
+   "kb": 1487,
+   "kb_gzip": 491
+  }
+ },
+ "c4-canvas?cols=4000&rows=500": {
+  "render": 27,
+  "zoom": 20,
+  "note": "no axes or tooltip: those are ours to write",
+  "heap_mb": 1,
+  "dom_nodes": 18,
+  "print": "prints/c4-canvas_cols_4000_rows_500.png",
+  "wall_s": 0.4,
+  "bundle": {
+   "kb": 2,
+   "kb_gzip": 1
+  }
+ },
+ "c4-echarts?cols=4000&rows=500": {
+  "render": 3459,
+  "zoom": 443,
+  "heap_mb": 1572,
+  "dom_nodes": 22,
+  "print": "prints/c4-echarts_cols_4000_rows_500.png",
+  "wall_s": 8.1,
+  "bundle": {
+   "kb": 517,
+   "kb_gzip": 173
+  }
+ },
+ "c4-plotly?cols=4000&rows=500": {
+  "render": 270,
+  "zoom": 148,
+  "heap_mb": 54,
+  "dom_nodes": 307,
+  "print": "prints/c4-plotly_cols_4000_rows_500.png",
+  "wall_s": 1,
+  "bundle": {
+   "kb": 1487,
+   "kb_gzip": 491
+  }
+ },
+ "c5-svg-react": {
+  "render": 25,
+  "one_update_ms": 3.4,
+  "fps": 60,
+  "frame_ms": 16.6,
+  "p95_ms": 17.6,
+  "heap_mb": 3,
+  "dom_nodes": 1604,
+  "print": "prints/c5-svg-react.png",
+  "wall_s": 3.3,
+  "bundle": {
+   "kb": 221,
+   "kb_gzip": 69
+  }
+ },
+ "c5-svg-dom": {
+  "render": 30,
+  "one_update_ms": 0.8,
+  "fps": 60,
+  "frame_ms": 16.6,
+  "p95_ms": 17.4,
+  "heap_mb": 1,
+  "dom_nodes": 1603,
+  "print": "prints/c5-svg-dom.png",
+  "wall_s": 3.3,
+  "bundle": {
+   "kb": 2,
+   "kb_gzip": 1
+  }
+ },
+ "c5-konva": {
+  "render": 43,
+  "one_update_ms": 6,
+  "fps": 60,
+  "frame_ms": 16.6,
+  "p95_ms": 17.6,
+  "heap_mb": 3,
+  "dom_nodes": 22,
+  "print": "prints/c5-konva.png",
+  "wall_s": 3.1,
+  "bundle": {
+   "kb": 193,
+   "kb_gzip": 59
+  }
+ },
+ "c5-pixi": {
+  "render": 264,
+  "one_update_ms": 4.6,
+  "fps": 60,
+  "frame_ms": 16.6,
+  "p95_ms": 17.5,
+  "note": "values as bitmap text (pre-drawn digits)",
+  "heap_mb": 9,
+  "dom_nodes": 21,
+  "print": "prints/c5-pixi.png",
+  "wall_s": 3.5,
+  "bundle": {
+   "kb": 562,
+   "kb_gzip": 164
+  }
+ },
+ "c5-jointjs": {
+  "render": 122,
+  "one_update_ms": 39.9,
+  "fps": 36,
+  "frame_ms": 28,
+  "p95_ms": 32.4,
+  "note": "tank level drawn as fill opacity (JointJS has no partial fill shape out of the box)",
+  "heap_mb": 6,
+  "dom_nodes": 2387,
+  "print": "prints/c5-jointjs.png",
+  "wall_s": 3.3,
+  "bundle": {
+   "kb": 425,
+   "kb_gzip": 129
+  }
+ },
+ "c6-xyflow?n=200": {
+  "render": 83,
+  "add_node": 33,
+  "pan_fps": 60,
+  "pan_p95_ms": 17.5,
+  "heap_mb": 8,
+  "dom_nodes": 1830,
+  "print": "prints/c6-xyflow_n_200.png",
+  "wall_s": 2.4,
+  "bundle": {
+   "kb": 413,
+   "kb_gzip": 128
+  }
+ },
+ "c6-rete?n=200": {
+  "render": 128,
+  "add_node": 35,
+  "pan_fps": 60,
+  "pan_p95_ms": 17.3,
+  "heap_mb": 13,
+  "dom_nodes": 4814,
+  "print": "prints/c6-rete_n_200.png",
+  "wall_s": 2.5,
+  "bundle": {
+   "kb": 327,
+   "kb_gzip": 99
+  }
+ },
+ "c6-litegraph?n=200": {
+  "render": 54,
+  "add_node": 33,
+  "pan_fps": 61,
+  "pan_p95_ms": 17.5,
+  "note": "canvas; original litegraph.js is unmaintained, the maintained fork is ComfyUI's @comfyorg/litegraph",
+  "heap_mb": 2,
+  "dom_nodes": 20,
+  "print": "prints/c6-litegraph_n_200.png",
+  "wall_s": 2.3,
+  "bundle": {
+   "kb": 502,
+   "kb_gzip": 123
+  }
+ },
+ "c6-drawflow?n=200": {
+  "render": 109,
+  "add_node": 33,
+  "pan_fps": 60,
+  "pan_p95_ms": 17.5,
+  "heap_mb": 2,
+  "dom_nodes": 2321,
+  "print": "prints/c6-drawflow_n_200.png",
+  "wall_s": 2.5,
+  "bundle": {
+   "kb": 49,
+   "kb_gzip": 10
+  }
+ },
+ "c6-xyflow?n=400": {
+  "render": 115,
+  "add_node": 35,
+  "pan_fps": 60,
+  "pan_p95_ms": 17.6,
+  "heap_mb": 13,
+  "dom_nodes": 3670,
+  "print": "prints/c6-xyflow_n_400.png",
+  "wall_s": 2.3,
+  "bundle": {
+   "kb": 413,
+   "kb_gzip": 128
+  }
+ },
+ "c6-rete?n=400": {
+  "render": 286,
+  "add_node": 34,
+  "pan_fps": 60,
+  "pan_p95_ms": 17.5,
+  "heap_mb": 23,
+  "dom_nodes": 9654,
+  "print": "prints/c6-rete_n_400.png",
+  "wall_s": 2.6,
+  "bundle": {
+   "kb": 327,
+   "kb_gzip": 99
+  }
+ },
+ "c6-litegraph?n=400": {
+  "render": 68,
+  "add_node": 33,
+  "pan_fps": 61,
+  "pan_p95_ms": 17.5,
+  "note": "canvas; original litegraph.js is unmaintained, the maintained fork is ComfyUI's @comfyorg/litegraph",
+  "heap_mb": 3,
+  "dom_nodes": 20,
+  "print": "prints/c6-litegraph_n_400.png",
+  "wall_s": 2.4,
+  "bundle": {
+   "kb": 502,
+   "kb_gzip": 123
+  }
+ },
+ "c6-drawflow?n=400": {
+  "render": 131,
+  "add_node": 32,
+  "pan_fps": 61,
+  "pan_p95_ms": 17.4,
+  "heap_mb": 2,
+  "dom_nodes": 4641,
+  "print": "prints/c6-drawflow_n_400.png",
+  "wall_s": 2.4,
+  "bundle": {
+   "kb": 49,
+   "kb_gzip": 10
+  }
+ },
+ "c7-cytoscape-dagre?n=1000": {
+  "render": 2054,
+  "pan_fps": 61,
+  "pan_p95_ms": 17.5,
+  "heap_mb": 17,
+  "dom_nodes": 27,
+  "print": "prints/c7-cytoscape-dagre_n_1000.png",
+  "wall_s": 4.2,
+  "bundle": {
+   "kb": 481,
+   "kb_gzip": 155
+  }
+ },
+ "c7-cytoscape-elk?n=1000": {
+  "render": 2057,
+  "pan_fps": 61,
+  "pan_p95_ms": 17.6,
+  "heap_mb": 90,
+  "dom_nodes": 27,
+  "print": "prints/c7-cytoscape-elk_n_1000.png",
+  "wall_s": 4.3,
+  "bundle": {
+   "kb": 1879,
+   "kb_gzip": 574
+  }
+ },
+ "c7-sigma?n=1000": {
+  "render": 1523,
+  "pan_fps": 61,
+  "pan_p95_ms": 17.5,
+  "note": "WebGL; layout = ForceAtlas2 300 iterations (no layered layout built in)",
+  "heap_mb": 6,
+  "dom_nodes": 25,
+  "print": "prints/c7-sigma_n_1000.png",
+  "wall_s": 3.6,
+  "bundle": {
+   "kb": 451,
+   "kb_gzip": 115
+  }
+ },
+ "c7-vis-network?n=1000": {
+  "render": 222,
+  "pan_fps": 60,
+  "pan_p95_ms": 17.5,
+  "heap_mb": 8,
+  "dom_nodes": 33,
+  "print": "prints/c7-vis-network_n_1000.png",
+  "wall_s": 2.3,
+  "bundle": {
+   "kb": 653,
+   "kb_gzip": 157
+  }
+ },
+ "c7-cytoscape-dagre?n=2000": {
+  "render": 6735,
+  "pan_fps": 51,
+  "pan_p95_ms": 32.7,
+  "heap_mb": 29,
+  "dom_nodes": 27,
+  "print": "prints/c7-cytoscape-dagre_n_2000.png",
+  "wall_s": 8.9,
+  "bundle": {
+   "kb": 481,
+   "kb_gzip": 155
+  }
+ },
+ "c7-cytoscape-elk?n=2000": {
+  "render": 5422,
+  "pan_fps": 54,
+  "pan_p95_ms": 26.8,
+  "heap_mb": 224,
+  "dom_nodes": 27,
+  "print": "prints/c7-cytoscape-elk_n_2000.png",
+  "wall_s": 7.7,
+  "bundle": {
+   "kb": 1879,
+   "kb_gzip": 574
+  }
+ },
+ "c7-sigma?n=2000": {
+  "render": 1184,
+  "pan_fps": 60,
+  "pan_p95_ms": 17.6,
+  "note": "WebGL; layout = ForceAtlas2 300 iterations (no layered layout built in)",
+  "heap_mb": 9,
+  "dom_nodes": 25,
+  "print": "prints/c7-sigma_n_2000.png",
+  "wall_s": 3.3,
+  "bundle": {
+   "kb": 451,
+   "kb_gzip": 115
+  }
+ },
+ "c7-vis-network?n=2000": {
+  "render": 452,
+  "pan_fps": 60,
+  "pan_p95_ms": 18,
+  "heap_mb": 12,
+  "dom_nodes": 33,
+  "print": "prints/c7-vis-network_n_2000.png",
+  "wall_s": 2.7,
+  "bundle": {
+   "kb": 653,
+   "kb_gzip": 157
+  }
+ },
+ "c8-datatable?n=100000": {
+  "render": 80,
+  "sort_number": 201,
+  "sort_text": 850,
+  "scroll": "paged (100 rows a page)",
+  "heap_mb": 25,
+  "dom_nodes": 1806,
+  "print": "prints/c8-datatable_n_100000.png",
+  "wall_s": 1.8,
+  "bundle": {
+   "kb": 312,
+   "kb_gzip": 87
+  }
+ },
+ "c8-tanstack?n=100000": {
+  "render": 133,
+  "sort_number": 233,
+  "sort_text": 317,
+  "scroll_fps": 60,
+  "scroll_p95_ms": 17.6,
+  "heap_mb": 314,
+  "dom_nodes": 1415,
+  "print": "prints/c8-tanstack_n_100000.png",
+  "wall_s": 2.9,
+  "bundle": {
+   "kb": 305,
+   "kb_gzip": 92
+  }
+ },
+ "c8-aggrid?n=100000": {
+  "render": 107,
+  "sort_number": 145,
+  "sort_text": 83,
+  "scroll_fps": 56,
+  "scroll_p95_ms": 17.7,
+  "heap_mb": 49,
+  "dom_nodes": 1331,
+  "print": "prints/c8-aggrid_n_100000.png",
+  "wall_s": 2.8,
+  "bundle": {
+   "kb": 1108,
+   "kb_gzip": 309
+  }
+ },
+ "c8-glide?n=100000": {
+  "render": 90,
+  "sort_number": 51,
+  "sort_text": 50,
+  "scroll_fps": 57,
+  "scroll_p95_ms": 17.5,
+  "note": "canvas; sort written by us (Glide has none)",
+  "heap_mb": 26,
+  "dom_nodes": 34,
+  "print": "prints/c8-glide_n_100000.png",
+  "wall_s": 2.4,
+  "bundle": {
+   "kb": 552,
+   "kb_gzip": 177
+  }
+ },
+ "c8-datatable?n=200000": {
+  "render": 112,
+  "sort_number": 208,
+  "sort_text": 1734,
+  "scroll": "paged (100 rows a page)",
+  "heap_mb": 48,
+  "dom_nodes": 1806,
+  "print": "prints/c8-datatable_n_200000.png",
+  "wall_s": 2.9,
+  "bundle": {
+   "kb": 312,
+   "kb_gzip": 87
+  }
+ },
+ "c8-tanstack?n=200000": {
+  "render": 215,
+  "sort_number": 499,
+  "sort_text": 700,
+  "scroll_fps": 60,
+  "scroll_p95_ms": 17.5,
+  "heap_mb": 618,
+  "dom_nodes": 1466,
+  "print": "prints/c8-tanstack_n_200000.png",
+  "wall_s": 3.8,
+  "bundle": {
+   "kb": 305,
+   "kb_gzip": 92
+  }
+ },
+ "c8-aggrid?n=200000": {
+  "render": 182,
+  "sort_number": 256,
+  "sort_text": 117,
+  "scroll_fps": 60,
+  "scroll_p95_ms": 17.6,
+  "heap_mb": 92,
+  "dom_nodes": 1377,
+  "print": "prints/c8-aggrid_n_200000.png",
+  "wall_s": 2.9,
+  "bundle": {
+   "kb": 1108,
+   "kb_gzip": 309
+  }
+ },
+ "c8-glide?n=200000": {
+  "render": 89,
+  "sort_number": 66,
+  "sort_text": 50,
+  "scroll_fps": 60,
+  "scroll_p95_ms": 17.6,
+  "note": "canvas; sort written by us (Glide has none)",
+  "heap_mb": 48,
+  "dom_nodes": 35,
+  "print": "prints/c8-glide_n_200000.png",
+  "wall_s": 2.4,
+  "bundle": {
+   "kb": 552,
+   "kb_gzip": 177
+  }
+ },
+ "c9-react-grid-layout": {
+  "render": 38,
+  "move_card": 34,
+  "relayout_900px": 66,
+  "heap_mb": 3,
+  "dom_nodes": 290,
+  "print": "prints/c9-react-grid-layout.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 297,
+   "kb_gzip": 92
+  }
+ },
+ "c9-gridstack": {
+  "render": 32,
+  "move_card": 32,
+  "relayout_900px": 67,
+  "note": "no React wrapper: cards are DOM nodes we fill",
+  "heap_mb": 2,
+  "dom_nodes": 261,
+  "print": "prints/c9-gridstack.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 98,
+   "kb_gzip": 27
+  }
+ },
+ "c9-css-grid": {
+  "render": 30,
+  "move_card": 20,
+  "relayout_900px": 67,
+  "note": "no drag or resize by hand",
+  "heap_mb": 1,
+  "dom_nodes": 198,
+  "print": "prints/c9-css-grid.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 2,
+   "kb_gzip": 1
+  }
+ },
+ "c9-react-grid-layout?phone=1": {
+  "render": 45,
+  "move_card": 33,
+  "relayout_900px": 67,
+  "heap_mb": 3,
+  "dom_nodes": 290,
+  "print": "prints/c9-react-grid-layout_phone_1.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 297,
+   "kb_gzip": 92
+  }
+ },
+ "c9-gridstack?phone=1": {
+  "render": 28,
+  "move_card": 35,
+  "relayout_900px": 66,
+  "note": "no React wrapper: cards are DOM nodes we fill",
+  "heap_mb": 2,
+  "dom_nodes": 261,
+  "print": "prints/c9-gridstack_phone_1.png",
+  "wall_s": 0.2,
+  "bundle": {
+   "kb": 98,
+   "kb_gzip": 27
+  }
+ },
+ "c10-codemirror": {
+  "open": 44,
+  "per_key_ms_over_frame": -0.05,
+  "jump_to_end": 33,
+  "heap_mb": 5,
+  "dom_nodes": 651,
+  "print": "prints/c10-codemirror.png",
+  "wall_s": 4.4,
+  "bundle": {
+   "kb": 455,
+   "kb_gzip": 151
+  }
+ },
+ "c10-monaco": {
+  "open": 120,
+  "per_key_ms_over_frame": -0.02,
+  "jump_to_end": 32,
+  "heap_mb": 13,
+  "dom_nodes": 2019,
+  "print": "prints/c10-monaco.png",
+  "wall_s": 4.5,
+  "bundle": {
+   "kb": 2786,
+   "kb_gzip": 719
+  }
+ },
+ "c10-codemirror?phone=1": {
+  "open": 30,
+  "per_key_ms_over_frame": -0.06,
+  "jump_to_end": 32,
+  "heap_mb": 5,
+  "dom_nodes": 665,
+  "print": "prints/c10-codemirror_phone_1.png",
+  "wall_s": 4.3,
+  "bundle": {
+   "kb": 455,
+   "kb_gzip": 151
+  }
+ },
+ "c10-monaco?phone=1": {
+  "open": 57,
+  "per_key_ms_over_frame": -0.04,
+  "jump_to_end": 31,
+  "heap_mb": 13,
+  "dom_nodes": 1872,
+  "print": "prints/c10-monaco_phone_1.png",
+  "wall_s": 4.3,
+  "bundle": {
+   "kb": 2786,
+   "kb_gzip": 719
+  }
+ },
+ "c1-uplot?n=600": {
+  "render": 25,
+  "zoom": 33,
+  "unzoom": 33,
+  "heap_mb": 2,
+  "dom_nodes": 37,
+  "print": "prints/c1-uplot_n_600.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 54,
+   "kb_gzip": 24
+  }
+ },
+ "c1-echarts?n=600": {
+  "render": 39,
+  "zoom": 31,
+  "unzoom": 33,
+  "heap_mb": 4,
+  "dom_nodes": 20,
+  "print": "prints/c1-echarts_n_600.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 503,
+   "kb_gzip": 171
+  }
+ },
+ "c1-chartjs?n=600": {
+  "render": 34,
+  "zoom": 17,
+  "unzoom": 32,
+  "heap_mb": 3,
+  "dom_nodes": 18,
+  "print": "prints/c1-chartjs_n_600.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 138,
+   "kb_gzip": 49
+  }
+ },
+ "c1-plotly-svg?n=600": {
+  "render": 53,
+  "zoom": 19,
+  "unzoom": 33,
+  "heap_mb": 6,
+  "dom_nodes": 333,
+  "print": "prints/c1-plotly-svg_n_600.png",
+  "wall_s": 0.5,
+  "bundle": {
+   "kb": 1487,
+   "kb_gzip": 491
+  }
+ },
+ "c1-uplot?n=5000": {
+  "render": 27,
+  "zoom": 29,
+  "unzoom": 34,
+  "heap_mb": 2,
+  "dom_nodes": 37,
+  "print": "prints/c1-uplot_n_5000.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 54,
+   "kb_gzip": 24
+  }
+ },
+ "c1-echarts?n=5000": {
+  "render": 65,
+  "zoom": 26,
+  "unzoom": 32,
+  "heap_mb": 5,
+  "dom_nodes": 20,
+  "print": "prints/c1-echarts_n_5000.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 503,
+   "kb_gzip": 171
+  }
+ },
+ "c1-chartjs?n=5000": {
+  "render": 45,
+  "zoom": 16,
+  "unzoom": 33,
+  "heap_mb": 8,
+  "dom_nodes": 18,
+  "print": "prints/c1-chartjs_n_5000.png",
+  "wall_s": 0.3,
+  "bundle": {
+   "kb": 138,
+   "kb_gzip": 49
+  }
+ },
+ "c1-plotly-svg?n=5000": {
+  "render": 66,
+  "zoom": 20,
+  "unzoom": 34,
+  "heap_mb": 10,
+  "dom_nodes": 320,
+  "print": "prints/c1-plotly-svg_n_5000.png",
+  "wall_s": 0.6,
+  "bundle": {
+   "kb": 1487,
+   "kb_gzip": 491
+  }
+ },
+ "c0-react": {
+  "heap_mb": 2,
+  "dom_nodes": 20,
+  "print": "prints/c0-react.png",
+  "wall_s": 0.1,
+  "bundle": {
+   "kb": 219,
+   "kb_gzip": 68
+  }
+ }
+}

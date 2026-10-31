@@ -19,6 +19,10 @@ sizes, see [Sizing the server](en/sizing.md).
 
 Why these numbers:
 
+- **Below the minimum.** A 2 vCPU, 4 GB machine runs the demo with every app on only with
+  **2 GB of swap**: without it the kernel stops the Historian, Models and Documents for lack of
+  memory (0.6.0 load tests, 2026-10-30). With swap it took 10 analysis methods at once plus 20
+  people in a 2.5 s round. Use it for trials only.
 - **Memory.** With every app on and idle, the suite uses **4.5 GB** (16 containers, Windows with
   WSL 2) to **7.0 GB** (Mac mini, Docker Desktop, with two compute workers). At the bench's target
   scale the busiest containers peak at about 1 GB each (Analytics, PlantCraft, the Historian's

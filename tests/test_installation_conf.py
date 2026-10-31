@@ -230,3 +230,73 @@ def test_max_parallel_runs_caps_every_executor(tmp_path):
     assert values["LINKCRAFT_EXECUTOR_SLOTS"] == "2"
     assert values["MODELCRAFT_RUN_WORKERS"] == "1"
     assert "MODELCRAFT_EXECUTOR_SLOTS" not in values
+
+
+def _wizard_module():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "wizard", ROOT / "deploy" / "wizard" / "wizard.py"
+    )
+    wizard = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(wizard)
+    return wizard
+
+
+def test_the_wizard_says_first_when_its_folder_is_not_a_release_bundle(tmp_path):
+    wizard = _wizard_module()
+    (tmp_path / "install.sh").write_text("#!/bin/sh\n")
+    preflight = tmp_path / "preflight.sh"
+    preflight.write_text('#!/bin/sh\necho \'{"checks": [], "fails": 0, "warnings": 0}\'\n')
+    preflight.chmod(0o755)
+    assert "SHA256SUMS" in wizard.bundle_problem(tmp_path)
+
+    # --apply: install.sh would refuse this folder, so the requirements stop here, not at the end.
+    applying = wizard.Wizard(True, tmp_path / "installation.conf", bundle=tmp_path)
+    report = applying.check("analytics")
+    assert report["checks"][0]["id"] == "release-bundle"
+    assert report["checks"][0]["state"] == "FAIL" and report["fails"] == 1
+    # Without --apply the wizard only writes the file: a warning.
+    writing = wizard.Wizard(False, tmp_path / "installation.conf", bundle=tmp_path)
+    assert writing.check("analytics")["checks"][0]["state"] == "WARN"
+
+    (tmp_path / "SHA256SUMS").write_text("")
+    assert wizard.bundle_problem(tmp_path) == ""
+    complete = wizard.Wizard(True, tmp_path / "installation.conf", bundle=tmp_path)
+    assert complete.check("analytics")["checks"][0]["state"] == "PASS"
+
+
+def test_the_wizard_starts_from_the_file_already_there(tmp_path):
+    wizard = _wizard_module()
+    conf = tmp_path / "installation.conf"
+    conf.write_text("APPS=analytics, historian  # two\nMACHINE=small\nLLM=maybe\nOTHER=1\n")
+    # Unknown keys and values outside the wizard's own rules are left out.
+    assert wizard.read_conf(conf) == {"APPS": "analytics,historian", "MACHINE": "small"}
+    assert wizard.read_conf(tmp_path / "none.conf") == {}
+
+
+def test_check_json_reports_the_apps_this_run_would_install(tmp_path):
+    import json
+
+    conf = tmp_path / "installation.conf"
+    conf.write_text("APPS=analytics,historian\n")
+    conf.chmod(0o644)
+    common = ["--check", "--json", "--dev", "--prefix", str(tmp_path / "p")]
+    done = subprocess.run(
+        [str(ROOT / "deploy" / "install.sh"), *common, "--config", str(conf)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    report = json.loads(done.stdout)
+    assert report["apps"].split() == ["linkcraft", "histcraft"]
+    # Without a file: Analytics (on by default) and the --with-<app> ones, not every app.
+    if Path("/etc/plantcraft/installation.conf").exists():
+        pytest.skip("this host has an installation file")
+    done = subprocess.run(
+        [str(ROOT / "deploy" / "install.sh"), *common, "--with-alarmcraft"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert json.loads(done.stdout)["apps"].split() == ["linkcraft", "alarmcraft"]

@@ -97,17 +97,44 @@ def _extract_payload(payload: dict) -> Extracted:
     return extract(payload["data"], payload["filename"])
 
 
-def extract_isolated(data: bytes, filename: str) -> Extracted:
-    """``extract`` in a worker process, within the time and memory limits."""
+def _read_payload(payload: dict) -> tuple[Extracted, list[dict]]:
+    from doccraft.plantmap.diagrams import read_diagrams
 
+    data, filename = payload["data"], payload["filename"]
+    extracted = extract(data, filename)
+    kind = format_of(filename)
+    diagrams = read_diagrams(data, filename) if kind in {"pdf", *DRAWING_ONLY} else []
+    return extracted, diagrams
+
+
+def _limits() -> None:
     import os
-
-    from plantcraft_sdk.sandbox import CodeError, pool
 
     os.environ.setdefault(f"{EXTRACT}_TIMEOUT_SECONDS", "120")
     os.environ.setdefault(f"{EXTRACT}_WORKERS", "1")
+
+
+def extract_isolated(data: bytes, filename: str) -> Extracted:
+    """``extract`` in a worker process, within the time and memory limits."""
+
+    from plantcraft_sdk.sandbox import CodeError, pool
+
+    _limits()
     try:
         return pool(EXTRACT).run(_extract_payload, {"data": data, "filename": filename})
+    except CodeError as error:
+        raise Unreadable(f"The file could not be read within the limits: {error}") from error
+
+
+def read_isolated(data: bytes, filename: str) -> tuple[Extracted, list[dict]]:
+    """The text and the diagram pages of a file, read together in one worker process with the
+    same limits as ``extract_isolated`` (no network, no file writes, time and memory)."""
+
+    from plantcraft_sdk.sandbox import CodeError, pool
+
+    _limits()
+    try:
+        return pool(EXTRACT).run(_read_payload, {"data": data, "filename": filename})
     except CodeError as error:
         raise Unreadable(f"The file could not be read within the limits: {error}") from error
 

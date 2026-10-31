@@ -4,7 +4,8 @@ browser, before the suite exists.
     sudo python3 wizard/wizard.py              # from the bundle folder, as root
     sudo python3 wizard/wizard.py --apply      # the last screen may also run install.sh
 
-It listens on 127.0.0.1 only and prints an address with a one-time key; from another computer,
+It listens on 127.0.0.1 only and prints an address with a random key
+(new on each start, valid while the wizard runs); from another computer,
 reach it through SSH (`ssh -L 8765:127.0.0.1:8765 server`). It runs preflight.sh, shows the
 choices, writes /etc/plantcraft/installation.conf (root, 644) and, with --apply, runs
 `install.sh --config` and shows its log. Standard library only: it runs on the server's own
@@ -74,9 +75,49 @@ def conf_text(values: dict[str, str]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def bundle_problem(folder: Path) -> str:
+    """Why install.sh cannot install from this folder, or "" when it is a complete release bundle
+    (install.sh refuses a folder without SHA256SUMS: a source checkout, for example)."""
+
+    if not (folder / "install.sh").is_file():
+        return f"{folder} has no install.sh."
+    if not (folder / "SHA256SUMS").is_file():
+        return (
+            f"{folder} is not a complete release bundle (no SHA256SUMS): a source checkout, for"
+            " example. The wizard can write the installation file, but install.sh will not"
+            " install from here. Run the wizard from the unpacked release bundle."
+        )
+    return ""
+
+
+def read_conf(path: Path) -> dict[str, str]:
+    """The values of an installation file already there (the wizard starts from them), only the
+    keys and values the wizard itself would write; {} when there is none or it cannot be read."""
+
+    import re
+
+    values: dict[str, str] = {}
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return values
+    for line in text.splitlines():
+        line = line.split("#", 1)[0].strip()
+        if "=" not in line:
+            continue
+        key, value = (part.strip() for part in line.split("=", 1))
+        if key == "APPS":
+            value = ",".join(part.strip() for part in value.split(","))
+        if key in KEYS and re.fullmatch(KEYS[key], value):
+            values[key] = value
+    return values
+
+
 class Wizard:
-    def __init__(self, apply: bool, conf_path: Path) -> None:
+    def __init__(self, apply: bool, conf_path: Path, bundle: Path = BUNDLE) -> None:
         self.key = secrets.token_urlsafe(18)
+        self.bundle = bundle
+        self.bundle_problem = bundle_problem(bundle)
         self.apply = apply
         self.conf_path = conf_path
         self.log: list[str] = []
@@ -84,13 +125,33 @@ class Wizard:
 
     def check(self, apps: str) -> dict:
         done = subprocess.run(
-            [str(BUNDLE / "preflight.sh"), "--json", "--apps", apps or "all"],
+            [str(self.bundle / "preflight.sh"), "--json", "--apps", apps or "all"],
             capture_output=True,
             text=True,
             timeout=120,
             check=False,
         )
-        return json.loads(done.stdout or "{}")
+        report = json.loads(done.stdout or "{}")
+        report.setdefault("checks", [])
+        report.setdefault("fails", 0)
+        report.setdefault("warnings", 0)
+        # The bundle itself, so a folder install.sh will refuse is caught here and not at the end.
+        state = "PASS"
+        if self.bundle_problem:
+            state = "FAIL" if self.apply else "WARN"
+            report["fails" if state == "FAIL" else "warnings"] += 1
+        report["checks"].insert(
+            0,
+            {
+                "id": "release-bundle",
+                "name": "Release bundle",
+                "state": state,
+                "found": "incomplete" if self.bundle_problem else "complete (SHA256SUMS)",
+                "needed": "the unpacked release bundle",
+                "fix": self.bundle_problem,
+            },
+        )
+        return report
 
     def write(self, text: str) -> None:
         self.conf_path.parent.mkdir(parents=True, exist_ok=True)
@@ -104,7 +165,7 @@ class Wizard:
     def install(self) -> None:
         self.state, self.log = "running", []
         process = subprocess.Popen(
-            [str(BUNDLE / "install.sh"), "--config", str(self.conf_path), "--yes"],
+            [str(self.bundle / "install.sh"), "--config", str(self.conf_path), "--yes"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -128,6 +189,12 @@ def handler(wizard: Wizard) -> type[BaseHTTPRequestHandler]:
             return hmac.compare_digest(given, wizard.key)
 
         def _send(self, status: int, body: bytes, kind: str = "application/json") -> None:
+            try:
+                self._write(status, body, kind)
+            except (BrokenPipeError, ConnectionResetError):
+                pass  # the browser closed or reloaded during the answer
+
+        def _write(self, status: int, body: bytes, kind: str) -> None:
             self.send_response(status)
             self.send_header("Content-Type", kind)
             self.send_header("Cache-Control", "no-store")
@@ -142,6 +209,8 @@ def handler(wizard: Wizard) -> type[BaseHTTPRequestHandler]:
             self._send(status, json.dumps(data).encode())
 
         def do_GET(self) -> None:
+            if urlparse(self.path).path == "/favicon.ico":
+                return self._send(204, b"", "image/x-icon")
             if not self._authorised():
                 return self._send(
                     403, b"Open the address the wizard printed (it carries the key).", "text/plain"
@@ -152,6 +221,10 @@ def handler(wizard: Wizard) -> type[BaseHTTPRequestHandler]:
             if route == "/api/check":
                 apps = (parse_qs(urlparse(self.path).query).get("apps") or ["all"])[0]
                 return self._json(200, wizard.check(apps))
+            if route == "/api/current":
+                return self._json(
+                    200, {"path": str(wizard.conf_path), "values": read_conf(wizard.conf_path)}
+                )
             if route == "/api/status":
                 return self._json(
                     200,
@@ -160,6 +233,7 @@ def handler(wizard: Wizard) -> type[BaseHTTPRequestHandler]:
                         "log": wizard.log[-400:],
                         "apply": wizard.apply,
                         "conf": str(wizard.conf_path),
+                        "bundle_problem": wizard.bundle_problem,
                     },
                 )
             return self._send(404, b"{}")
@@ -178,8 +252,15 @@ def handler(wizard: Wizard) -> type[BaseHTTPRequestHandler]:
                 return self._json(200, {"text": text, "path": str(wizard.conf_path)})
             if route == "/api/install":
                 wizard.write(text)
-                if not wizard.apply:
-                    return self._json(200, {"written": str(wizard.conf_path), "installing": False})
+                if not wizard.apply or wizard.bundle_problem:
+                    return self._json(
+                        200,
+                        {
+                            "written": str(wizard.conf_path),
+                            "installing": False,
+                            "bundle_problem": wizard.bundle_problem,
+                        },
+                    )
                 if wizard.state == "running":
                     return self._json(409, {"error": "already installing"})
                 threading.Thread(target=wizard.install, daemon=True).start()
