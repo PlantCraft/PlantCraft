@@ -9,6 +9,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- `plantcraft-sdk`: `PlantCraftClient.lab_samples(signal, start, end)` reads a laboratory
+  signal's samples from the Historian, each with its status and its received and approved times
+  (an empty list without a Historian). View's trends use it.
 - **Security check: signed catalogue, exceptions that expire, an evidence report.** The checks'
   severities, titles and references move to `security-checks.tsv`, which the bundle signs with the
   rest; the installer keeps the signed hashes beside it, and the new check `PC-INT-01` fails when

@@ -8,6 +8,10 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Laboratory results in Trends.** A `laboratory:<analysis>` signal is drawn as markers at its
+  sampling times, never averaged over the interval, whenever the result arrived. The tooltip
+  gives its status (approved, not yet approved, rejected) and when it was received and approved.
+  An approved result is a filled circle, one not yet approved an open circle, a rejected one an x.
 - **A process display marks an alarm by its priority (ISA-101).** A symbol bound to Alarms'
   alarm state gets a mark in its corner while an alarm is active, with a shape and a number for
   the most urgent priority: a square with 1 for critical, a triangle with 2 for high, a diamond

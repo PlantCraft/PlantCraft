@@ -678,6 +678,37 @@ class PlantCraftClient:
         )
         return list((answer or {}).get("runs") or [])
 
+    def lab_samples(
+        self,
+        signal_id: str,
+        start: str | datetime | None = None,
+        end: str | datetime | None = None,
+    ) -> list[dict[str, Any]]:
+        """A laboratory signal's samples (``laboratory:<analysis>``), oldest first:
+        ``[{"sampled_at", "value", "status", "received_at", "approved_at", "written_at",
+        "written_by", "writes", "delay_hours"}]``; ``status`` is ``entered``, ``approved`` or
+        ``rejected``. The Historian keeps them (``GET /api/v1/lab/{signal}``, default: the
+        last 30 days); with no Historian, or one that keeps none, the list is empty."""
+
+        historian = self._historian
+        if historian is None or not self._historian_serves(historian):
+            return []
+        try:
+            answer = self._send(
+                "GET",
+                f"/api/v1/lab/{quote(signal_id, safe='')}",
+                params={
+                    "start": _time(start),
+                    "end": _time(end),
+                },
+                base=historian.url,
+            )
+        except PlantCraftError as exc:
+            if exc.status_code == 404:
+                return []
+            raise
+        return list((answer or {}).get("samples") or [])
+
     def series_pandas(
         self,
         signal_id: str,

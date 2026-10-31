@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chipText, EMPTY_VIEW, lineName, readable, stateRuns, subplotDomains, trendCsv, trendTraces, viewFromAddress } from "./trendModel";
+import { chipText, EMPTY_VIEW, labDetail, lineName, readable, stateRuns, subplotDomains, trendCsv, trendTraces, viewFromAddress } from "./trendModel";
 import type { TrendData } from "./types";
 
 const line = (label: string, signal: string, t: string[], v: Array<number | null>) => ({ label, signal, unit: "m3/h", kind: "number", error: null, t, v });
@@ -52,6 +52,23 @@ describe("trends", () => {
     expect(drawn.line.shape).toBe("hv");
     expect(axes.yaxis4).toMatchObject({ overlaying: "y2", side: "right", title: { text: "%" } });
     expect(Object.keys(axes).sort()).toEqual(["yaxis", "yaxis2", "yaxis4"]);
+  });
+
+  it("draws laboratory results as markers at their sampling times, with their times in the tooltip", () => {
+    const samples = [
+      { sampled_at: "2026-10-31T06:00:00Z", value: 412, status: "approved", received_at: "2026-10-31T08:00:00Z", approved_at: "2026-10-31T09:30:00Z" },
+      { sampled_at: "2026-10-31T10:00:00Z", value: 415, status: "entered", received_at: null, approved_at: null },
+      { sampled_at: "2026-10-31T11:00:00Z", value: 9, status: "rejected" },
+    ];
+    const lab = { ...line("Viscosity", "laboratory:VISC", samples.map((s) => s.sampled_at), [412, 415, 9]), unit: "cP", samples };
+    const data: TrendData = { plots: [{ title: "", lines: [lab] }], range: { start: "t1", end: "t2", step: 60, shifted: false }, read_at: "2026-10-31T12:00:00Z" };
+    const [trace] = trendTraces(data).traces as Array<{ mode: string; x: string[]; marker: { symbol: string[] }; customdata: string[]; hovertemplate: string }>;
+    expect(trace.mode).toBe("markers");
+    expect(trace.x).toEqual(samples.map((s) => s.sampled_at));
+    expect(trace.marker.symbol).toEqual(["circle", "circle-open", "x"]);
+    expect(trace.customdata[0]).toMatch(/^Approved<br>Received .+<br>Approved .+$/);
+    expect(labDetail(samples[1])).toBe("Not yet approved");
+    expect(trace.hovertemplate).toContain("%{customdata}");
   });
 
   it("names a unit on an axis only when every line on it shares it", () => {

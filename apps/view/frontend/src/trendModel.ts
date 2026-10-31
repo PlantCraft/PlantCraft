@@ -3,7 +3,7 @@ import { fileTime, fileTimeHeader, localOf, sharedUnit } from "@plantcraft/ui";
 import { t } from "./i18n";
 import { windowLabel } from "./model";
 import type { Data } from "plotly.js";
-import type { LineStyle, TrendAgg, TrendData, TrendLine, TrendLineSpec, TrendView } from "./types";
+import type { LabSample, LineStyle, TrendAgg, TrendData, TrendLine, TrendLineSpec, TrendView } from "./types";
 
 export const TREND_WINDOWS = ["15m", "1h", "2h", "8h", "24h", "7d", "30d"];
 /** The interval each value summarises (each line says how): null = chosen from the period, 0 = as recorded. */
@@ -84,6 +84,7 @@ export function trendTraces(data: TrendData, axisTheme: Record<string, unknown> 
     for (const line of numbers) {
       if (!line.t.length) continue;
       const style = styleOf(line.style);
+      if (line.samples?.length) { traces.push(labTrace(line, line.samples, style, style.axis === "right" ? right : left)); continue; }
       traces.push({
         type: "scatter", mode: style.mode, x: line.t, y: line.v, connectgaps: false, name: lineName(line),
         line: { width: style.width, dash: style.dash, shape: style.shape, ...(style.color ? { color: style.color } : {}) },
@@ -94,6 +95,33 @@ export function trendTraces(data: TrendData, axisTheme: Record<string, unknown> 
     }
   });
   return { traces, axes, anchor };
+}
+
+/** How a laboratory result reads by its status: the marker and the word in the tooltip. */
+const LAB_STATUS: Record<string, { symbol: string; label: string }> = {
+  approved: { symbol: "circle", label: "Approved" },
+  entered: { symbol: "circle-open", label: "Not yet approved" },
+  rejected: { symbol: "x", label: "Rejected" },
+};
+
+/** The tooltip lines of a laboratory result: its status, when it reached the laboratory and when it was approved. */
+export function labDetail(sample: LabSample): string {
+  const status = LAB_STATUS[sample.status] ?? { label: sample.status };
+  const lines = [t(status.label)];
+  if (sample.received_at) lines.push(t("Received {when}", { when: localOf(sample.received_at).replace("T", " ") }));
+  if (sample.approved_at) lines.push(t("Approved {when}", { when: localOf(sample.approved_at).replace("T", " ") }));
+  return lines.join("<br>");
+}
+
+/** A laboratory signal's results as markers at their sampling times (a line joins them only when its style asks). */
+function labTrace(line: TrendLine, samples: LabSample[], style: LineStyle, yaxis: string): Data {
+  return {
+    type: "scatter", mode: style.mode === "lines" ? "markers" : style.mode, x: samples.map((sample) => sample.sampled_at), y: samples.map((sample) => sample.value), name: lineName(line),
+    line: { width: style.width, dash: style.dash, ...(style.color ? { color: style.color } : {}) },
+    marker: { size: Math.max(style.marker_size, 8), symbol: samples.map((sample) => LAB_STATUS[sample.status]?.symbol ?? "circle"), line: { width: 2 }, ...(style.color ? { color: style.color } : {}) },
+    customdata: samples.map(labDetail), xaxis: "x", yaxis,
+    hovertemplate: `%{y:.4~g} ${line.unit}<br>${t("Sampled")} %{x}<br>%{customdata}<extra>${lineName(line)}</extra>`,
+  } as Data;
 }
 
 /** A text signal's values as runs of one state: each from its first sample to the next state's. */

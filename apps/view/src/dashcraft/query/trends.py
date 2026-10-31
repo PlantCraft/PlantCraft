@@ -106,6 +106,36 @@ def _read_groups(
     return answers, failures
 
 
+# Laboratory results (the Historian's ``laboratory:<analysis>`` signals, 2026-10-31).
+LAB_PREFIX = "laboratory:"
+# The fields of a sample a trend shows beside its value.
+LAB_FIELDS = ("sampled_at", "value", "status", "received_at", "approved_at")
+
+
+def _is_lab(signal_id: str | None) -> bool:
+    return bool(signal_id) and str(signal_id).startswith(LAB_PREFIX)
+
+
+def _lab_samples(reader: Reader, signal_id: str, start: Any, end: Any) -> list[dict[str, Any]]:
+    """A laboratory signal's samples in the period, each with its status and its received and
+    approved times; none when the Historian keeps none (the line stays as read)."""
+
+    read = getattr(reader.client, "lab_samples", None)
+    if read is None:
+        return []
+    try:
+        found = read(signal_id, start, end)
+    except Unauthorized:
+        raise
+    except PlantCraftError:
+        return []
+    return [
+        {key: sample.get(key) for key in LAB_FIELDS}
+        for sample in found
+        if sample.get("sampled_at") and sample.get("value") is not None
+    ]
+
+
 def read_view(reader: Reader, view: TrendView) -> dict[str, Any]:
     """``{plots: [{title, lines}], range}``; a line is a card trend's line (label, unit, t, v).
 
@@ -219,6 +249,13 @@ def read_view(reader: Reader, view: TrendView) -> dict[str, Any]:
                             spec.agg,
                             end,
                         )
+            if line["error"] is None and _is_lab(item.signal_id):
+                line["samples"] = _lab_samples(reader, item.signal_id or "", start, end)
+                if line["samples"]:
+                    # A result belongs to its sampling time: drawn there, never averaged.
+                    line["t"] = [sample["sampled_at"] for sample in line["samples"]]
+                    line["v"] = [sample.get("value") for sample in line["samples"]]
+                    line["agg"] = "recorded"
             lines.append(line)
         plots.append({"title": plot.title, "lines": lines})
     return {

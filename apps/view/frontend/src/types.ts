@@ -142,7 +142,9 @@ export interface LineStyle { mode: "lines" | "markers" | "lines+markers"; shape:
 /** A line of a trend; `step_seconds` is its own interval (0 = as recorded), null or absent: the trend's. */
 export interface TrendLineSpec { signal_id: string; label?: string; agg?: TrendAgg; step_seconds?: number | null; style?: Partial<LineStyle> }
 /** A trend line as read: the summary used ("recorded" for the samples as they are) and a note when it fell back. */
-export type TrendLine = Line & { agg?: TrendAgg | "recorded"; step?: number; style?: LineStyle; note?: string | null }
+/** A laboratory result (`laboratory:<analysis>`): drawn at its sampling time, with its other times. */
+export interface LabSample { sampled_at: string; value: number | null; status: "entered" | "approved" | "rejected" | string; received_at?: string | null; approved_at?: string | null }
+export type TrendLine = Line & { agg?: TrendAgg | "recorded"; step?: number; style?: LineStyle; note?: string | null; samples?: LabSample[] }
 export interface TrendPlotSpec { title?: string; lines: TrendLineSpec[] }
 export interface TrendPeriod { mode: "relative" | "fixed"; window: string; start?: string | null; end?: string | null }
 export interface TrendView { plots: TrendPlotSpec[]; period: TrendPeriod; step_seconds: number | null }
