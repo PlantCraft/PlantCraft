@@ -261,3 +261,25 @@ def test_misdated_flags_a_finding_shifted_by_a_day():
     assert helper.misdated(text, facts) == ["FIC-1003 2026-10-30", "FIC-1003 2026-10-31"]
     cell = helper.section_text("U-200", text, facts)
     assert "dates its facts do not have for FIC-1003 2026-10-30, FIC-1003 2026-10-31" in cell
+
+
+def test_by_asset_compares_with_the_previous_period():
+    facts = {
+        "results": [{"asset": "PIC-1", "status": "alarm", "score": 40, "summary": "Oscillation"}]
+    }
+    now = [
+        {"asset": "PIC-1", "kind": "alarmcraft.alarm.raised", "severity": "critical"},
+        {"asset": "PIC-1", "kind": "alarmcraft.alarm.raised", "severity": "high"},
+        {"asset": "FIC-2", "kind": "linkcraft.finding.closed"},
+    ]
+    then = [
+        {"asset": "PIC-1", "kind": "alarmcraft.alarm.raised", "severity": "high"},
+        {"asset": "LIC-3", "kind": "alarmcraft.alarm.raised", "severity": "high"},
+        {"asset": "LIC-3", "kind": "alarmcraft.alarm.raised", "severity": "high"},
+    ]
+    rows = {row["asset"]: row for row in helper.by_asset(facts, now, then)}
+    assert rows["PIC-1"]["alarms"] == 2 and rows["PIC-1"]["previous"]["alarms"] == 1
+    assert rows["PIC-1"]["alarms_change"] == 1 and rows["PIC-1"]["rank"] == 1
+    assert rows["LIC-3"]["alarms"] == 0 and rows["LIC-3"]["alarms_change"] == -2
+    assert rows["FIC-2"]["findings_closed"] == 1
+    assert "previous" not in helper.by_asset(facts, now)[0]

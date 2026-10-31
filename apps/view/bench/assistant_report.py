@@ -35,8 +35,8 @@ FEEDBACK = [
     "problema, pontuação, alarmes na semana). Junte os analisadores numa linha só. Nas ações, diga "
     "quem deve agir: instrumentação, controle ou operação.",
     "Melhorou. Agora separe os problemas de válvula/atuador (mecânicos) dos de sintonia, e diga "
-    "quantos alarmes cada grupo gerou. Tire a frase sobre a semana anterior: se não há dado, não "
-    "comente.",
+    "quantos alarmes cada grupo gerou e quanto isso mudou em relação à semana anterior. Na "
+    "tabela, acrescente a variação de alarmes.",
 ]
 NOW = datetime(2026, 11, 2, 10, 0, tzinfo=UTC)  # Monday 07:00 BRT
 MAP = json.loads((VIEW.parents[1] / "deploy/demo/plantcraft-50-loops-map.json").read_text())
@@ -153,6 +153,21 @@ def build() -> FakePlantCraft:
             events.append(
                 (
                     NOW - timedelta(hours=3 + i * 11 + k),
+                    "alarmcraft.alarm.raised",
+                    loop_id,
+                    "warning" if i % 3 else "critical",
+                    f"{loop_id} PV {'high' if i % 2 else 'low'} alarm",
+                )
+            )
+    # The week before, so the report can say what got worse and what got better: PIC-1002 and
+    # LIC-1004 worse now, PIC-1103 better, FIC-1206 quiet now after 5 alarms then.
+    for k, (loop_id, count) in enumerate(
+        [("PIC-1002", 6), ("PIC-1103", 12), ("PIC-1202", 4), ("TIC-1005", 3), ("FIC-1206", 5)]
+    ):
+        for i in range(count):
+            events.append(
+                (
+                    NOW - timedelta(days=7, hours=5 + i * 11 + k),
                     "alarmcraft.alarm.raised",
                     loop_id,
                     "warning" if i % 3 else "critical",

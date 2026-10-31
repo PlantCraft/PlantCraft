@@ -168,8 +168,10 @@ def gather(reader: Any, spec: AssistantSpec, start: datetime, end: datetime) -> 
     assets = scope(list(reader.assets(None) or []), spec)
     names = {f"asset:{a['id']}": str(a.get("name") or a["id"]) for a in assets}
     subjects = list(names)
+    before = start - (end - start)
     facts: dict[str, Any] = {
         "period": {"start": start.isoformat(), "end": end.isoformat()},
+        "previous_period": {"start": before.isoformat(), "end": start.isoformat()},
         "analyses": [ANALYSES[a]["title"] for a in spec.analyses],
         "assets": [
             {
@@ -183,6 +185,7 @@ def gather(reader: Any, spec: AssistantSpec, start: datetime, end: datetime) -> 
         "events": [],
         "event_counts": {},
     }
+    earlier: list[dict[str, Any]] = []
     for key in spec.analyses:
         for kind in ANALYSES[key]["results"]:
             try:
@@ -200,13 +203,21 @@ def gather(reader: Any, spec: AssistantSpec, start: datetime, end: datetime) -> 
                 rows = reader.events(kind, EVENTS_READ)
             except Exception:  # noqa: BLE001 - an app not installed publishes nothing
                 rows = []
-            inside = [
-                row
-                for row in rows
-                if str(row.get("subject") or "") in names
-                and (at := _instant(row.get("at"))) is not None
-                and start <= at <= end
-            ]
+            inside = []
+            for row in rows:
+                at = _instant(row.get("at"))
+                if str(row.get("subject") or "") not in names or at is None:
+                    continue
+                if start <= at <= end:
+                    inside.append(row)
+                elif before <= at < start:
+                    earlier.append(
+                        {
+                            "kind": kind,
+                            "asset": names[str(row["subject"])],
+                            "severity": row.get("severity") or "info",
+                        }
+                    )
             facts["event_counts"][kind] = len(inside)
             for row in inside:
                 facts["events"].append(
@@ -225,7 +236,7 @@ def gather(reader: Any, spec: AssistantSpec, start: datetime, end: datetime) -> 
     # Worst first, so a cut keeps what matters.
     rank = {"alarm": 0, "critical": 0, "error": 0, "warning": 1, "ok": 3}
     facts["results"].sort(key=lambda r: (rank.get(str(r.get("status")), 2), r.get("asset", "")))
-    facts["by_asset"] = by_asset(facts, all_events)
+    facts["by_asset"] = by_asset(facts, all_events, earlier)
     facts["legend"] = LEGEND
     text = json.dumps(facts, ensure_ascii=False, default=str)
     while len(text) > MAX_FACT_CHARS and (facts["events"] or facts["results"]):
@@ -241,14 +252,50 @@ def gather(reader: Any, spec: AssistantSpec, start: datetime, end: datetime) -> 
 LEGEND = (
     "score: 0 to 100, LOWER IS WORSE. status: alarm is worse than warning, warning worse than ok. "
     "by_asset is already counted and ranked: rank 1 is the worst asset; use its counts, do not "
-    "recount events."
+    "recount events. previous holds the same counts over previous_period (the period of the same "
+    "length just before); alarms_change is alarms now minus alarms then (negative: fewer alarms, "
+    "better). Scores are the latest only: there is no previous score."
 )
 
 
-def by_asset(facts: dict[str, Any], events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _counts(events: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    """Per asset: alarms, critical alarms, findings opened and closed, other events."""
+
+    out: dict[str, dict[str, int]] = {}
+    for event in events:
+        item = out.setdefault(
+            str(event.get("asset")),
+            {
+                "alarms": 0,
+                "critical_alarms": 0,
+                "findings_opened": 0,
+                "findings_closed": 0,
+                "other_events": 0,
+            },
+        )
+        kind = str(event.get("kind") or "")
+        if kind.endswith(".alarm.raised"):
+            item["alarms"] += 1
+            item["critical_alarms"] += event.get("severity") == "critical"
+        elif kind.endswith(".finding.opened"):
+            item["findings_opened"] += 1
+        elif kind.endswith(".finding.closed"):
+            item["findings_closed"] += 1
+        else:
+            item["other_events"] += 1
+    return out
+
+
+def by_asset(
+    facts: dict[str, Any],
+    events: list[dict[str, Any]],
+    earlier: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
     """One row per asset with a result or an event, counted here so a small model needs neither
     to count nor to sort: its worst status, lowest score, problems, and the period's alarms,
-    findings opened and other events. Ranked worst first (rank 1)."""
+    findings opened and closed and other events, beside the same counts over the previous period
+    of the same length (``previous``, when ``earlier`` is given) and the change in alarms. Ranked
+    worst first (rank 1)."""
 
     rows: dict[str, dict[str, Any]] = {}
     severity = {"alarm": 0, "critical": 0, "error": 0, "warning": 1, "ok": 3}
@@ -264,6 +311,7 @@ def by_asset(facts: dict[str, Any], events: list[dict[str, Any]]) -> list[dict[s
                 "alarms": 0,
                 "critical_alarms": 0,
                 "findings_opened": 0,
+                "findings_closed": 0,
                 "other_events": 0,
             },
         )
@@ -278,16 +326,19 @@ def by_asset(facts: dict[str, Any], events: list[dict[str, Any]]) -> list[dict[s
             item["score"] = score
         if status not in ("ok", "") and result.get("summary"):
             item["problems"].append(str(result["summary"]))
-    for event in events:
-        item = row(str(event.get("asset")))
-        kind = str(event.get("kind") or "")
-        if kind.endswith(".alarm.raised"):
-            item["alarms"] += 1
-            item["critical_alarms"] += event.get("severity") == "critical"
-        elif kind.endswith(".finding.opened"):
-            item["findings_opened"] += 1
-        else:
-            item["other_events"] += 1
+    for asset, counted in _counts(events).items():
+        row(asset).update(counted)
+    if earlier is not None:
+        then = _counts(earlier)
+        for asset in then:
+            row(asset)  # quiet now, busy then: an asset that got better
+        zero = dict.fromkeys(("alarms", "critical_alarms", "findings_opened"), 0)
+        for asset, item in rows.items():
+            past = then.get(asset, zero)
+            item["previous"] = {
+                k: past[k] for k in ("alarms", "critical_alarms", "findings_opened")
+            }
+            item["alarms_change"] = item["alarms"] - past["alarms"]
     ranked = sorted(
         rows.values(),
         key=lambda r: (
@@ -310,8 +361,9 @@ in scope, the latest results the plant's analysis apps keep about them, the peri
 the REQUIREMENTS of the person who owns the report. Follow the requirements. Use only the facts:
 name assets as the facts name them, quote numbers as given, and never invent a value, an asset or
 an event. FACTS.legend says how to read scores; FACTS.by_asset is already counted and ranked
-(rank 1 is the worst): take counts and order from it. Say nothing about earlier periods unless
-the facts give them. Answer with the section's text in Markdown (headings start at ##), nothing
+(rank 1 is the worst): take counts and order from it. Compare with the previous period only
+through by_asset.previous and alarms_change; there is no earlier score, so never say a score
+changed. Answer with the section's text in Markdown (headings start at ##), nothing
 else."""
 
 TUNE_SYSTEM = """\
@@ -322,7 +374,9 @@ the feedback does not touch, keep it a short list of rules, write it in the lang
 current requirements, and never add a rule that asks the writer to invent facts. The requirements
 say how to write, never what the data is: no asset names or tags, no numbers or counts of this
 period, no statement about which data exists. Keep the words of the feedback ("worst" means the
-lowest score). Answer with the requirements only, no preface."""
+lowest score). When the feedback says the text is too long or too short, add a rule with a
+length to aim for (for example "at most 250 words" or "at most 3 lines per asset"), since a rule
+without a number does not change the length. Answer with the requirements only, no preface."""
 
 SCOPE_SYSTEM = """\
 You pick the assets a report should cover. You get ASSETS (id, name, kind, parent) as JSON and a
