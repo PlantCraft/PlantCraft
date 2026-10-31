@@ -17,8 +17,13 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { "content-type": types[path.extname(file)] ?? "application/octet-stream" }).end(readFileSync(file));
 }).listen(0);
 const port = server.address().port;
-const browser = await chromium.launch({ args: ["--enable-precise-memory-info", "--js-flags=--expose-gc", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+// BENCH_HEADED=1 opens a window (a real graphics card on a desktop); BENCH_CHANNEL=chrome uses installed Chrome.
+const browser = await chromium.launch({ headless: !process.env.BENCH_HEADED, channel: process.env.BENCH_CHANNEL || undefined, args: ["--enable-precise-memory-info", "--js-flags=--expose-gc", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 const resultsFile = path.join(out, "results.json");
+// What drew WebGL here (a GPU or SwiftShader), written next to the results.
+const probe = await (await browser.newPage()).evaluate(() => { const gl = document.createElement("canvas").getContext("webgl"); const ext = gl && gl.getExtension("WEBGL_debug_renderer_info"); return { renderer: ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : String(gl && gl.getParameter(gl.RENDERER)), cores: navigator.hardwareConcurrency, ua: navigator.userAgent }; });
+writeFileSync(path.join(out, "machine.json"), JSON.stringify(probe, null, 1));
+console.log("machine", JSON.stringify(probe));
 const results = existsSync(resultsFile) ? JSON.parse(readFileSync(resultsFile, "utf8")) : {};
 for (const step of plan) {
   const key = `${step.case}${step.q ? "?" + step.q : ""}`;
