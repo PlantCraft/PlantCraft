@@ -38,6 +38,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Pages open without Plotly until they draw a chart (`@plantcraft/ui`).** `Plot` fetched
+  Plotly (1.4 MB) with any page that could show a chart, even when the chart sat behind a tab or
+  a click. It now arrives the first time a chart is drawn, with an empty box of the chart's size
+  in the meantime. In Analytics, opening Blocks loads 1.15 MB of script instead of 2.5 MB and
+  Algorithms 0.7 MB instead of 2.1 MB; a page whose chart shows at once (Signal, Loop) is drawn
+  first and gets Plotly right after.
+
 - **Rounds read the Historian 9 to 77 times lighter (read tests, 2026-10-31).** A round's read
   went to text, not to the database (200 dense signals x 24 h: 19 s, of which PostgreSQL and
   the chunks 0.6 s). `plantcraft-sdk` 0.85.0 adds `plantcraft_sdk.wire`, a binary answer for
@@ -125,6 +132,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   and highest value, in time order, so every spike, trip and step is drawn at its full height
   with the same number of points (`plantcraft/industrial_data/thinning.py`; Historian and direct
   sources alike). Values that are not numbers (states) still keep every n-th point.
+
+- **Long tables sort by a text column in a fraction of a second (`@plantcraft/ui`).** The
+  suite's table compared texts with `localeCompare` and its options, which builds a collator
+  for every comparison: 100,000 rows sorted by tag took 13.4 s in the browser. One collator for all
+  comparisons gives the same order (numbers in names in order, case and accents aside) in 0.4 s.
 
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the
