@@ -8,6 +8,11 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **The OPC UA status code is kept with each change of quality**: a read with `quality` gives,
+  beside `uncertain`, `bad` or `good`, the sub-code (`status`, like `UncertainLastUsableValue` or
+  `BadSensorFailure`) and the LimitBits (`limit`: `low`, `high` or `constant`, a value pinned at
+  a limit or unable to move). A change of sub-code or limit is a change of quality too, so a
+  good value that hits its high limit is archived where it did.
 - **Notes on a signal**, at an instant or over an interval: the signal's page lists the notes of
   the period shown and editors add them (their own removed by them, any by an administrator);
   `GET`, `POST` and `DELETE /api/v1/annotations` for scripts and apps. Each note is told to

@@ -218,6 +218,10 @@ class ArchiveStore(Store):
         ("rollups", "low", "REAL"),
         ("rollups", "high", "REAL"),
         ("rollups", "n", "INTEGER"),
+        # The source's whole status code at a change of quality (OPC UA sub-code and LimitBits,
+        # H6, ``histcraft.opc_status``); NULL when it said nothing more than the quality.
+        ("qualities", "status", "BIGINT"),
+        ("qualities", "status_name", "TEXT"),
     )
 
     def __init__(self, db: Database):
@@ -545,14 +549,18 @@ class ArchiveStore(Store):
             out.append((int(row["run_at"]), times, np.asarray(values, dtype=float)))
         return out
 
-    def put_qualities(self, changes: Iterable[tuple[int, int, str]]) -> None:
-        """Store ``(point, ms, quality)`` changes of quality (the collector's)."""
+    def put_qualities(self, changes: Iterable[tuple]) -> None:
+        """Store ``(point, ms, quality)``, or ``(point, ms, quality, status, name)``, changes of
+        quality (``status``: the source's whole status code, ``name`` its sub-code's; or None)."""
 
+        rows = [(*change[:3], *(tuple(change[3:5]) + (None, None))[:2]) for change in changes]
         with self._lock, self._connect() as connection:
             connection.executemany(
-                "INSERT INTO qualities VALUES (?, ?, ?) ON CONFLICT(point, t) DO UPDATE"
-                " SET quality = excluded.quality",
-                list(changes),
+                "INSERT INTO qualities (point, t, quality, status, status_name)"
+                " VALUES (?, ?, ?, ?, ?) ON CONFLICT(point, t) DO UPDATE"
+                " SET quality = excluded.quality, status = excluded.status,"
+                " status_name = excluded.status_name",
+                rows,
             )
 
     def put_lab_samples(self, rows: Iterable[tuple[Any, ...]]) -> None:
@@ -984,27 +992,32 @@ class ArchiveStore(Store):
             for point, chunks in found.items()
         }
 
-    def qualities(self, point: int, start_ms: int, end_ms: int) -> list[tuple[int, str]]:
-        """The quality in effect at ``start`` (when not good) and its changes up to ``end``."""
+    def qualities(
+        self, point: int, start_ms: int, end_ms: int, *, with_status: bool = False
+    ) -> list[tuple]:
+        """The quality in effect at ``start`` (when not good, or good with a status) and its
+        changes up to ``end``: ``(ms, quality)``, or ``(ms, quality, status)``."""
 
         with self._connect() as connection:
             before = connection.execute(
-                "SELECT t, quality FROM qualities WHERE point = ? AND t <= ? ORDER BY t DESC"
-                " LIMIT 1",
+                "SELECT t, quality, status, status_name FROM qualities WHERE point = ? AND t <= ?"
+                " ORDER BY t DESC LIMIT 1",
                 (point, start_ms),
             ).fetchone()
             rows = connection.execute(
-                "SELECT t, quality FROM qualities WHERE point = ? AND t > ? AND t <= ? ORDER BY t",
+                "SELECT t, quality, status, status_name FROM qualities"
+                " WHERE point = ? AND t > ? AND t <= ?"
+                " ORDER BY t",
                 (point, start_ms, end_ms),
             ).fetchall()
-        out = [(int(row["t"]), str(row["quality"])) for row in rows]
-        if before is not None and before["quality"] != "good":
-            out.insert(0, (int(before["t"]), str(before["quality"])))
+        out = [_quality_row(row, with_status) for row in rows]
+        if before is not None and (before["quality"] != "good" or before["status"]):
+            out.insert(0, _quality_row(before, with_status))
         return out
 
     def qualities_many(
-        self, points: Iterable[int], start_ms: int, end_ms: int
-    ) -> dict[int, list[tuple[int, str]]]:
+        self, points: Iterable[int], start_ms: int, end_ms: int, *, with_status: bool = False
+    ) -> dict[int, list[tuple]]:
         """``qualities`` of many points: one round trip on PostgreSQL (one query per point on
         SQLite); a point whose quality stayed good has an empty list."""
 
@@ -1012,22 +1025,26 @@ class ArchiveStore(Store):
         if not ids:
             return {}
         if not self.db.postgres:
-            return {point: self.qualities(point, start_ms, end_ms) for point in ids}
+            return {
+                point: self.qualities(point, start_ms, end_ms, with_status=with_status)
+                for point in ids
+            }
         with self._connect() as connection:
             rows = connection.execute(
-                "SELECT point, t, quality FROM qualities WHERE point = ANY(?) AND t > ? AND t <= ?"
-                " UNION ALL SELECT q.point, q.t, q.quality FROM unnest(?::bigint[]) AS p(point)"
-                " CROSS JOIN LATERAL (SELECT point, t, quality FROM qualities WHERE point = p.point"
-                " AND t <= ? ORDER BY t DESC LIMIT 1) q ORDER BY 1, 2",
+                "SELECT point, t, quality, status, status_name FROM qualities"
+                " WHERE point = ANY(?) AND t > ? AND t <= ?"
+                " UNION ALL SELECT q.point, q.t, q.quality, q.status, q.status_name"
+                " FROM unnest(?::bigint[]) AS p(point)"
+                " CROSS JOIN LATERAL (SELECT point, t, quality, status, status_name FROM qualities"
+                " WHERE point = p.point AND t <= ? ORDER BY t DESC LIMIT 1) q ORDER BY 1, 2",
                 (ids, start_ms, end_ms, ids, start_ms),
             ).fetchall()
-        found: dict[int, list[tuple[int, str]]] = {point: [] for point in ids}
+        found: dict[int, list[tuple]] = {point: [] for point in ids}
         for row in rows:
-            point, at, code = int(row["point"]), int(row["t"]), str(row["quality"])
-            changes = found[point]
-            if at <= start_ms and code == "good":
-                continue  # good at the start: nothing to say
-            changes.append((at, code))
+            point, at = int(row["point"]), int(row["t"])
+            if at <= start_ms and row["quality"] == "good" and not row["status"]:
+                continue  # plainly good at the start: nothing to say
+            found[point].append(_quality_row(row, with_status))
         return found
 
     def point_ids(self) -> set[int]:
@@ -1434,3 +1451,11 @@ def _real(value: Any) -> float | None:
         return None
     number = float(value)
     return number if math.isfinite(number) else None
+
+
+def _quality_row(row: Any, with_status: bool) -> tuple:
+    if with_status:
+        status = row["status"]
+        code = None if status is None else int(status)
+        return (int(row["t"]), str(row["quality"]), code, row["status_name"])
+    return (int(row["t"]), str(row["quality"]))
