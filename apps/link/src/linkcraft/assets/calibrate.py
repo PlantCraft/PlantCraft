@@ -1,4 +1,5 @@
-"""Calibrate: what a deviation block judges by, learned from a period of normal operation.
+"""Calibrate: what a deviation block (or an empirical model, M4) judges by, learned from a
+period of normal operation.
 
 The algorithm runs on one asset over the period people choose, as its cycle would have run it
 (one run per judged part, end to end), and every residual wired to the deviation block is kept.
@@ -6,6 +7,9 @@ Their mean and covariance (``models.stats.calibrate``) become the block's ``cali
 parameter, so the diagram holds everything it judges by. Runs whose residuals could not be
 judged (an output not measured, the unit out of operation, the model failed) are left out and
 counted, with the first reason.
+
+An empirical model block (``model.empirical``) is calibrated the same way on the signals wired
+to it: their principal components (``models.pca.fit_pca``) become its ``calibration``.
 """
 
 from __future__ import annotations
@@ -19,9 +23,13 @@ from plantcraft_sdk.blocks import NoData
 from linkcraft.assets.run import AssetTiming, runs_over, segment_ends
 from linkcraft.blocks.models import JUDGED_SECONDS, PREFIX, residual_frame, unjudgeable
 from linkcraft.i18n import t
+from linkcraft.models.pca import fit_pca
 from linkcraft.models.stats import calibrate
 
 DEVIATION_BLOCK = "model.deviation"
+EMPIRICAL_BLOCK = "model.empirical"
+# The port each calibrated block reads its series on.
+CALIBRATED = {DEVIATION_BLOCK: "residuals", EMPIRICAL_BLOCK: "signals"}
 # Runs one calibration makes at most: three and a half days of ten-minute parts, a minute or
 # two of simulation while the editor waits.
 MAX_RUNS = 500
@@ -74,11 +82,18 @@ def calibrate_on_asset(
     node = next(
         (item for item in diagram.get("nodes") or [] if str(item.get("id")) == node_id), None
     )
-    if node is None or node.get("block") != DEVIATION_BLOCK:
-        raise ValueError(t("Calibrate works on a Deviation (T²) block of the diagram."))
-    residuals = wires_into(diagram, node_id, "residuals")
+    if node is None or node.get("block") not in CALIBRATED:
+        raise ValueError(
+            t("Calibrate works on a Deviation (T²) or an Empirical model block of the diagram.")
+        )
+    empirical = node.get("block") == EMPIRICAL_BLOCK
+    residuals = wires_into(diagram, node_id, CALIBRATED[str(node.get("block"))])
     if not residuals:
-        raise ValueError(t("Wire the model's residuals into the Deviation block first."))
+        raise ValueError(
+            t("Wire the unit's signals into the Empirical model block first.")
+            if empirical
+            else t("Wire the model's residuals into the Deviation block first.")
+        )
     active = wires_into(diagram, node_id, "active")
     stride = judged_part(diagram, residuals, timing)
     ends = segment_ends(start, end, stride)
@@ -130,6 +145,34 @@ def calibrate_on_asset(
             )
         )
     names = [str(name) for name in frames[0].columns]
+    if empirical:
+        rows = np.vstack([frame.ffill().to_numpy(dtype=float) for frame in frames])
+        variance = float((node.get("parameters") or {}).get("variance") or 0.9)
+        try:
+            model = fit_pca(rows, names, variance=variance)
+        except ValueError as exc:
+            raise ValueError(t("Too few samples to calibrate: {why}.", why=exc)) from exc
+        return {
+            "node_id": node_id,
+            "asset_id": asset_id,
+            "calibration": {
+                **model.as_dict(),
+                # As a deviation's calibration reads, so the editor lists the signals.
+                "outputs": model.signals,
+                "asset": asset_id,
+                "start": start.isoformat(),
+                "end": end.isoformat(),
+            },
+            "outputs": model.signals,
+            "std": model.std,
+            "samples": model.samples,
+            "warnings": list(model.warnings),
+            "runs": len(ends),
+            "used": len(frames),
+            "skipped": len(skipped),
+            "skipped_reason": skipped[0] if skipped else "",
+            "period": {"start": start.isoformat(), "end": end.isoformat(), "every": stride},
+        }
     rows = np.vstack([frame.to_numpy(dtype=float) for frame in frames])
     try:
         found = calibrate(rows, names)
@@ -156,4 +199,4 @@ def calibrate_on_asset(
     }
 
 
-__all__ = ["DEVIATION_BLOCK", "calibrate_on_asset", "judged_part", "wires_into"]
+__all__ = ["DEVIATION_BLOCK", "EMPIRICAL_BLOCK", "calibrate_on_asset", "judged_part", "wires_into"]

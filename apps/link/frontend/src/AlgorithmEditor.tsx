@@ -16,7 +16,7 @@ import { resultLabel } from "./status";
 import { href } from "./nav";
 import { assetChoices } from "./AssetSettings";
 import { sketchDiagram } from "./algorithmSketch";
-import { CalibrateTool, DEVIATION_BLOCK } from "./Calibrate";
+import { CALIBRATED_BLOCKS, CalibrateTool } from "./Calibrate";
 import { DEFAULT_TIMING, EMPTY_DOCS, type Algorithm, type AlgorithmDocs, type AlgorithmTest, type AssetChoice, type AssetTiming, type BlockResult, type Blocks, type ComputePlacement, type Me, type SubjectKind } from "./types";
 import { ErrorBox, Loading, Pill } from "./ui";
 import { blockCatalog } from "./blockCatalog";
@@ -200,7 +200,7 @@ function EditorLoaded({ me, start, catalog, taken }: { me: Me; start: { draft: D
     {draft.system && me.can_edit && <div className="alg-window-notice notice">{t("PlantCraft's own algorithms are read-only, so every site starts from the same reference. Duplicate it to change a copy.")}</div>}
     <div className="alg-window-editor">
       <BlockEditor catalog={catalog} diagram={diagram} onChange={readOnly ? undefined : edit} check={check} trace={trace} blockHref={blockHref}
-        inspectorTools={(node) => node.block === DEVIATION_BLOCK && draft.subject_kind === "asset"
+        inspectorTools={(node) => CALIBRATED_BLOCKS.has(node.block) && draft.subject_kind === "asset"
           ? <CalibrateTool node={node} diagram={diagram} timing={draft.timing} assets={draft.assets} readOnly={readOnly} disabled={check && !check.valid ? t("Fix the problems first.") : ""} onCalibrated={edit} />
           : null}
         aside={<DocsPanel draft={draft} setDraft={setDraft} readOnly={readOnly} />} />
