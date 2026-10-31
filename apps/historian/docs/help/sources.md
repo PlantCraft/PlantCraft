@@ -20,7 +20,10 @@ change or remove sources.
   administrator sees, then **Trust** it. From then on a server presenting another certificate
   is refused.
 - **Quality**: OPC UA and PI tell the quality of each value. Uncertain values are archived and
-  shaded on the signal's trend; bad values are gaps. CSV files report a quality only in a
+  shaded on the signal's trend; bad values are gaps. With OPC UA the status code is kept too
+  (like `UncertainLastUsableValue` or `BadSensorFailure`), and so are the limit bits (a value
+  pinned at its low or high limit, or constant), so a good value that hits its high limit is
+  archived where it did. CSV files report a quality only in a
   `quality` column (long layout); apps' series report none: their values count as good.
 - **Mode**: where the history of its signals comes from (read from the source, archived here,
   or both), unless a signal sets its own.
@@ -58,3 +61,9 @@ change or remove sources.
   period (10 s when empty) by a user that can only read. The time column and the tag columns
   are not signals of their own. Only rows newer than a signal's last value are archived.
   **Browse** lists what the gateway has sent; a source silent for 60 s shows Disconnected.
+  Store and forward: values the gateway reads while the collector is away wait in its disk buffer and arrive in
+  order when the collector is back, also after a gateway restart; a batch sent twice is taken
+  once. The suite's health raises a warning when more than 64 MB waits.
+- **Laboratory results (LIMS)**: an SQL source marked so writes each row as a laboratory result
+  at its sampling time, with its status (uncertain until approved, bad when rejected) and the
+  times it reached the laboratory and was approved. A row read again unchanged is not rewritten.

@@ -16,6 +16,10 @@ Scan, deviation, max interval and retention can be left empty: the signal then t
 source's value, else the general settings. Under each field the page shows the value in effect
 and where it comes from ("set on this signal", "from the source", "from general settings").
 
+The installation can cap how many signals Historian records (`MAX_SIGNALS` in PlantCraft's
+installation file). Signals added past the cap are skipped, and the answer says why. The series
+apps write do not count.
+
 The signal page shows its trend for any range and the bytes it takes on disk. Deleting a signal
 removes its archive too (admins only).
 

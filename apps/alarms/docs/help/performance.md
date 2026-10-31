@@ -17,6 +17,19 @@ out-of-service alarms raise nothing and are not counted.
 The priority distribution is compared with about 5 % high (critical and high), 15 % medium and
 80 % low.
 
+## The EEMUA 191 level, floods and what the journal tells
+
+- **EEMUA 191 level**: the period as one point, average against peak alarms per 10 minutes, on
+  EEMUA 191's four bands: robust, stable, reactive and overloaded.
+- **Floods**: a flood starts above the flood limit (10 alarms in 10 minutes) and ends below half
+  of it, so a short lull does not split it. Each flood is listed with its length, its alarms and
+  its peak.
+- **Hours above 30 alarms**: the share of the period's hours with more than 30 alarms.
+- **Fleeting alarms**: alarms back to normal within 10 seconds with nobody acting. They are
+  candidates for a delay.
+- **Time to acknowledge** by priority, as the median and the 90th percentile.
+- **Most frequent alarms**: the 20 that raise most often.
+
 ## Consoles (operator positions)
 
 The targets are for one operator. When the plant has several boards, set the **consoles** in

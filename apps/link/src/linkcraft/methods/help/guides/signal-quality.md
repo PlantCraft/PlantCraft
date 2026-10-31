@@ -13,3 +13,21 @@ asset (the worst of its signals), and the derived series `app-linkcraft:<signal>
 
 The loop methods read these results: a loop whose PV or OP is bad is not analysed (it is
 reported as blocked by Signal quality), and a suspect signal is noted on the loop's finding.
+
+## The checks
+
+- **Availability and gaps**, **Freshness**: the source sends values, and recently.
+- **Source quality**: how much of the window the source itself marked bad, substituted or
+  uncertain (OPC UA, PI and Canary keep a quality with every value). Bad or substituted time over
+  1% is a warning, over 5% makes the data unusable; uncertain time is a warning at most. On a
+  source without quality it does not apply.
+- **Frozen value**, **Spikes**, **Noise**, **Resolution and compression**, **Drift**.
+- **Out of range**: values outside the signal's limits.
+- **Rate of change**: changes, measured over at least a minute, faster than the process can move.
+  The limit is the signal's own (per minute), or half of its range per minute by default.
+- **Transmitter fault levels (NE 43)**: a 4-20 mA signal read on its range as NAMUR NE 43 does.
+  3.8 to 20.5 mA is measurement; 3.6 mA or less, or 21 mA or more, is the transmitter reporting
+  its own fault. Any fault level is a warning and over 1% of the values is bad.
+
+Out of range, Rate of change and NE 43 need the signal's limits (the rate can have a limit of
+its own); without them they do not apply.
