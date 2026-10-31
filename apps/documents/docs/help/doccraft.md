@@ -30,6 +30,10 @@ files are not read: save them in the new format first.
 - The tags found in the text (FIC-1003, FV-1003, P-1003) that exist in PlantCraft's asset tree
   are **suggested** as the document's assets. Confirm them on the document's page: the
   assistant ranks a document linked to an asset first when you ask about that asset.
+- **Links to check** (in the Library, if you can edit) lists the assets found in the text of
+  every document you can change. Pick several and mark them **Correct**, to link them, or
+  **Wrong**, so they are not suggested again. An administrator can set a number of mentions
+  from which an asset is linked at once (`DOCCRAFT_ASSET_AUTO_MENTIONS`, off by default).
 
 ## Find something
 
@@ -44,9 +48,13 @@ suite, finds documents by number or title and the best passages.
 ## Diagrams and the plant map (beta)
 
 P&IDs sent to the library are also read as drawings, offline and with no language model. This
-works for PDF from a CAD tool, SVG, and scans or images (PNG, JPEG, TIFF). Every page that is a
+works for PDF from a CAD tool, SVG, and scans or images (PNG, JPEG, TIFF). A P&ID tool's
+DEXPI export (XML) is read exactly: the tool already says what each item is and what joins
+what, so nothing there is a guess. Every page that is a
 diagram is listed in **Diagrams**. Each page opens with boxes over what was found and a list
 of what to check first. Each finding says how sure the reader is and why.
+Pick a box: if PlantCraft has that tag, the asset, its signals and what the apps say about it
+are one click away.
 
 **Plant map** joins all the sheets into one plant:
 
@@ -65,6 +73,11 @@ On the map you can work with what was read:
   Hexagon Smart P&ID or COMOS. It holds equipment, lines and instrument loops, with no drawing.
 - **Asset file** goes to PlantCraft's Assets › Import, where you review it before anything
   changes.
+- **Write the plant summary** (if you can edit) writes the map out as a document of the
+  library, in the folder that holds most of the P&IDs. It covers each unit, the equipment in flow
+  order with what feeds what, the control loops, and the sheets each item is drawn on. It is
+  made from the drawings with no language model. Search and the assistant find it and cite it
+  like any other document. Make it again after a change: it becomes a new revision.
 - **Check against a tag list**: pick your plant's tag list (CSV or text, the tag in the first
   column) to see which tags are on both, and which are only on one. The file stays in your
   browser.

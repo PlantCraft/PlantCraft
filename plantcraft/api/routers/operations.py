@@ -698,3 +698,61 @@ def end_support_access(grant_id: int, admin: AdminUser, rt: Runtime) -> dict[str
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     _audit(rt, admin, "operations.support_access.ended", grant)
     return grant
+
+
+# Uptime and maintenance windows (plantcraft.watch.uptime) ----------------------------------
+
+
+@router.get("/uptime")
+def uptime(_reader: OperationsView, rt: Runtime) -> dict[str, Any]:
+    """Each app's uptime over 24 h, 7 and 30 days (planned maintenance left out), and the
+    maintenance windows planned, in force or recent."""
+
+    return rt.watch.uptime()
+
+
+class MaintenanceWindow(BaseModel):
+    # None: now.
+    starts_at: str | None = Field(default=None, max_length=40)
+    hours: float = Field(gt=0, le=72)
+    # Service names; None or empty: every app.
+    services: list[str] | None = Field(default=None, max_length=50)
+    reason: str = Field(min_length=1, max_length=300)
+
+
+@router.post("/maintenance/windows", status_code=201)
+def plan_maintenance(payload: MaintenanceWindow, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    """A maintenance window: the watch keeps quiet about the apps it covers while it lasts, and
+    the uptime leaves it out. In the audit log."""
+
+    from plantcraft.watch import uptime as maintenance
+
+    now = rt.watch.clock()
+    starts = parse_instant(payload.starts_at) if payload.starts_at else now
+    if starts is None:
+        raise HTTPException(status_code=422, detail=t("Invalid start time."))
+    ends = starts + timedelta(hours=payload.hours)
+    try:
+        reason = maintenance.check_window(starts, ends, payload.reason, now)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    services = [name.strip() for name in payload.services or [] if name.strip()] or None
+    window = rt.watch.store.add_window(
+        max(starts, now - timedelta(minutes=1)), ends, services, reason, admin
+    )
+    _audit(rt, admin, "operations.maintenance.planned", window)
+    return window
+
+
+@router.delete("/maintenance/windows/{window_id}")
+def end_maintenance(window_id: int, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    """Ends a window in force now, or cancels a planned one."""
+
+    try:
+        window = rt.watch.store.end_window(window_id, admin, rt.watch.clock())
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=t("Window not found.")) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    _audit(rt, admin, "operations.maintenance.ended", window)
+    return window

@@ -24,7 +24,7 @@ const lines = (text: string) => text.split(/[\s,]+/).map((item) => item.trim()).
 /** A document's assets in one line: the first picked by hand and how many more (all of them on
  * hover), else how many are suggested (– for none). */
 function AssetIds({ doc }: { doc: DocRow }) {
-  const manual = doc.assets.filter((item) => item.source === "manual").map((item) => item.asset_id);
+  const manual = doc.assets.filter((item) => item.source !== "suggested").map((item) => item.asset_id);
   if (!manual.length) return doc.assets.length ? <span className="muted nowrap">{t("{n} suggested", { n: doc.assets.length })}</span> : <>–</>;
   const more = manual.length - 1;
   return <span className="nowrap" title={manual.join(", ")}>{manual[0]}{more > 0 && <span className="muted"> {t("+{n}", { n: more })}</span>}</span>;
@@ -141,6 +141,7 @@ export function LibraryPage({ me, folderId, assetId }: { me: Me; folderId?: stri
   return <div onDragOver={(event) => { if (canSend) { event.preventDefault(); setDragging(true); } }} onDragLeave={() => setDragging(false)} onDrop={drop}
     className={dragging ? "drop-target dragging" : "drop-target"}>
     <Heading title={assetId ? t("Documents about {id}", { id: assetId }) : folder ? folder.name : general ? t("General") : t("Documents")} actions={<>
+      {me.can_edit && !assetId && <Link to="/links" className="button button-secondary">{t("Links to check")}</Link>}
       {canSend && !assetId && <button className="button button-primary" type="button" onClick={() => picker.current?.click()} title={fileTypesLine(me.max_file_mb)}><Upload size={16} /> {t("Send files")}</button>}
     </>} />
     <input ref={picker} type="file" multiple accept={ACCEPT} hidden onChange={(event) => { if (event.target.files?.length) setFiles([...event.target.files]); event.target.value = ""; }} />

@@ -35,6 +35,8 @@ class Settings(AppSettings):
     embedding_dir: str = DEFAULT_EMBEDDING_DIR
     max_file_mb: int = 200
     quota_gb: float = 20.0
+    # A tag found this many times links its asset with no one checking it (0: every link waits).
+    asset_auto_mentions: int = 0
 
     @property
     def files_dir(self) -> Path:
@@ -47,4 +49,5 @@ class Settings(AppSettings):
             embedding_dir=env_text("DOCCRAFT_EMBEDDING_DIR", DEFAULT_EMBEDDING_DIR),
             max_file_mb=int(env_text("DOCCRAFT_MAX_FILE_MB", "200") or 200),
             quota_gb=float(env_text("DOCCRAFT_QUOTA_GB", "20") or 20),
+            asset_auto_mentions=int(env_text("DOCCRAFT_ASSET_AUTO_MENTIONS", "0") or 0),
         )

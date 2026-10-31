@@ -131,7 +131,7 @@ def test_an_exception_holds_until_its_day_and_then_the_check_fails_again(tmp_pat
         tmp_path,
         exceptions="# accepted risks\n"
         "PC-REC-01 2999-12-31 backups go to the plant NAS (ticket 42)\n"
-        "PC-NET-03 2000-01-01 firewall rules planned\n"
+        "PC-REC-02 2000-01-01 drill planned for next month\n"
         "PC-NOPE-01 2999-12-31 not a check\n"
         "PC-MIN-02 soon no date\n",
     )
@@ -139,9 +139,9 @@ def test_an_exception_holds_until_its_day_and_then_the_check_fails_again(tmp_pat
     assert checks["PC-REC-01"]["result"] == "excepted"
     assert checks["PC-REC-01"]["exception"]["state"] == "active"
     assert "it was fail" in checks["PC-REC-01"]["evidence"]
-    assert checks["PC-NET-03"]["result"] == "warn"
-    assert checks["PC-NET-03"]["exception"]["state"] == "expired"
-    assert "expired on 2000-01-01" in checks["PC-NET-03"]["evidence"]
+    assert checks["PC-REC-02"]["result"] == "warn"
+    assert checks["PC-REC-02"]["exception"]["state"] == "expired"
+    assert "expired on 2000-01-01" in checks["PC-REC-02"]["evidence"]
     assert doc["summary"]["excepted"] == 1
     # Without the exception the same install fails (exit 1); with it, it does not.
     assert _run(folder).returncode == 0
@@ -279,3 +279,20 @@ def test_the_check_verifies_itself_against_the_signed_release(tmp_path):
     assert checks["PC-INT-01"]["result"] == "fail"
     assert "security-checks.tsv" in checks["PC-INT-01"]["evidence"]
     assert _run(folder).returncode == 1
+
+
+def test_the_emergency_password_is_rotated_every_90_days():
+    """P8 (LACUNAS-0-6): install.sh writes a new password on stdin to the helper (never on a
+    command line), keeps the file's owner and mode, and the check fails after 90 days."""
+
+    install = (SCRIPT.parent / "install.sh").read_text()
+    assert '--rotate-admin-password) ACTION="rotate-admin-password"' in install
+    assert "rotate-admin-password) do_rotate_admin_password" in install
+    body = install[install.index("do_rotate_admin_password() {") :]
+    body = body[: body.index("\n}\n")]
+    assert "docker run --rm -i" in body and "cat >/install/data/initial-admin-password" in body
+    assert "chmod 0600 /install/data/initial-admin-password" in body
+    assert "compose restart processcraft" in body
+    check = SCRIPT.read_text()
+    assert 'if [ "$age" -gt 90 ]; then r=fail; else r=warn; fi' in check
+    assert "--rotate-admin-password" in check
