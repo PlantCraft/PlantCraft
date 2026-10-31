@@ -323,6 +323,12 @@ def test_the_plant_map_is_kept_as_a_document_the_assistant_cites(
         canvas.pdf(pdf)
         send(client, pdf.name, pdf.read_bytes(), number=key["sheet"], kind="P&ID")
     index(runtime)
+    # D4: a diagram names the tags on it that PlantCraft has, so their boxes open the asset.
+    one = client.get("/api/diagrams").json()[0]
+    page = client.get(f"/api/diagrams/{one['rev_id']}/{one['page']}").json()
+    tags = {i["tag"] for i in page["result"]["items"] if i.get("tag")}
+    known = {a["id"] for a in fake.assets}
+    assert page["in_plantcraft"] == sorted(tags & known) and page["in_plantcraft"]
     with client_for(runtime, fake, "operator") as operator:
         assert operator.post("/api/plant-map/summary-document").status_code == 403
     made = client.post("/api/plant-map/summary-document")

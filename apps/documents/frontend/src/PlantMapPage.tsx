@@ -155,7 +155,7 @@ function ItemCard({ item, relations, onPick, onReview }: { item: MapItem; relati
     </li>)}</ul>}
     <h3>{t("Drawn on")}</h3>
     {item.places.length === 0 ? <p className="muted">{t("Only named by a connector: its sheet is not in the documents.")}</p>
-      : <ul>{item.places.map((p) => <li key={`${p.rev_id}-${p.page}`}><Link to={`/diagrams/${p.rev_id}/${p.page}`}>{p.sheet}</Link> <span className="muted">{p.doc_title}</span></li>)}</ul>}
+      : <ul>{item.places.map((p) => <li key={`${p.rev_id}-${p.page}`}><Link to={`/diagrams/${p.rev_id}/${p.page}/${encodeURIComponent(item.tag)}`}>{p.sheet}</Link> <span className="muted">{p.doc_title}</span></li>)}</ul>}
   </div>;
 }
 

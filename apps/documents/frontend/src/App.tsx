@@ -15,13 +15,13 @@ import type { Me } from "./types";
 import { ErrorBox, Loading } from "./ui";
 
 function Route({ path, me }: { path: string; me: Me }) {
-  const [, section, id, part] = path.split("/").map((part) => decodeURIComponent(part));
+  const [, section, id, part, extra] = path.split("/").map((part) => decodeURIComponent(part));
   if (section === "documents" && id && part === "view") return <DocumentView key={`v-${id}`} docId={id} me={me} />;
   if (section === "documents" && id) return <DocumentPage key={id} docId={id} me={me} />;
   if (section === "folders" && id) return <LibraryPage key={`f-${id}`} folderId={id} me={me} />;
   if (section === "assets" && id) return <LibraryPage key={`a-${id}`} assetId={id} me={me} />;
   if (section === "search") return <SearchPage me={me} />;
-  if (section === "diagrams" && id && part) return <DiagramView key={`${id}-${part}`} revId={id} page={Number(part) || 1} me={me} />;
+  if (section === "diagrams" && id && part) return <DiagramView key={`${id}-${part}-${extra ?? ""}`} revId={id} page={Number(part) || 1} me={me} pick={extra || undefined} />;
   if (section === "diagrams") return <DiagramsPage me={me} />;
   if (section === "plant-map") return <PlantMapPage me={me} />;
   // The reading queue moved to the suite's Queue (side bar); an old link opens the library.

@@ -47,6 +47,8 @@ P&IDs sent to the library are also read as drawings, offline and with no languag
 works for PDF from a CAD tool, SVG, and scans or images (PNG, JPEG, TIFF). Every page that is a
 diagram is listed in **Diagrams**. Each page opens with boxes over what was found and a list
 of what to check first. Each finding says how sure the reader is and why.
+Pick a box: if PlantCraft has that tag, the asset, its signals and what the apps say about it
+are one click away.
 
 **Plant map** joins all the sheets into one plant:
 

@@ -65,6 +65,8 @@ export interface DrawnItem {
 export interface DrawnRelation { from: string; type: string; to: string; confidence: "high" | "medium" | "low"; why: string }
 export interface Diagram extends Omit<DiagramRow, "items" | "relations"> {
   items: number; relations: number;
+  /** The page's tags that PlantCraft has (null: PlantCraft not read). */
+  in_plantcraft?: string[] | null;
   result: { sheet: string; unit: string; title: string; items: DrawnItem[]; relations: DrawnRelation[]; notes: string[]; width: number; height: number; source: string };
 }
 export interface MapPlace { doc_id: string; rev_id: string; page: number; sheet: string; doc_title: string; box: [number, number, number, number] }

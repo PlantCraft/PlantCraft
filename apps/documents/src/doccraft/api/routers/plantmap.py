@@ -65,6 +65,10 @@ def get_diagram(
 ) -> dict[str, Any]:
     found = _diagram_or_404(rt, user, rev_id, page)
     found.pop("sha256", None)
+    # The tags on the page that PlantCraft has: their boxes open the asset and its signals.
+    known = _known(rt)
+    tags = {i["tag"] for i in found["result"]["items"] if i.get("tag")}
+    found["in_plantcraft"] = None if known is None else sorted(tags & known)
     return found
 
 
