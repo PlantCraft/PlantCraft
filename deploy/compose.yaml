@@ -175,6 +175,9 @@ services:
       # that the audit log flags as a possible extraction (docs/assistant.md, Limits).
       PLANTCRAFT_ASSISTANT_DAILY_READS: "${PLANTCRAFT_ASSISTANT_DAILY_READS:-2000}"
       PLANTCRAFT_ASSISTANT_BULK_SIGNALS: "${PLANTCRAFT_ASSISTANT_BULK_SIGNALS:-60}"
+      # Apps' tokens held to their permissions: enforce (default), audit (only logs) or strict
+      # (an app that declared none yet gets none: for an installation with other publishers' apps).
+      PLANTCRAFT_APP_PERMISSIONS: "${PLANTCRAFT_APP_PERMISSIONS:-enforce}"
       # Security switches the installation may turn off for good (empty: allowed, off until an
       # administrator turns them on): assistants through MCP, and Notebooks.
       PLANTCRAFT_MCP: "${PLANTCRAFT_MCP:-}"

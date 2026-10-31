@@ -1503,5 +1503,9 @@
   "Larger text": "Texto maior",
   "Large": "Grande",
   "Compact": "Compacto",
-  "More space": "Mais espaço"
+  "More space": "Mais espaço",
+  "Permissions (optional)": "Permissões (opcional)",
+  "All of the app's; or e.g. read.signals, read.series": "Todas as da app; ou por exemplo read.signals, read.series",
+  "All of the app's": "Todas as da app",
+  "Permissions": "Permissões"
 }
