@@ -38,6 +38,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **The Historian's means on a grid take one pass (2026-10-31).** A grid read built each
+  signal's segments four times to get its covered time and area; now once, with the same
+  arithmetic and the same values to the bit. 200 dense signals x 24 h at 60 s: the Historian's
+  CPU 0.89 to 0.67 s per read (`ci/bench/reads`).
 - **Notebooks read raw series 7 to 9 times faster (2026-10-31).** `plantcraft-notebook` 0.3.0
   on a computer asks `POST /api/v1/series` for the binary answer, and PlantCraft passes the
   Historian's binary answer on as it came, without parsing it (`Accept:
