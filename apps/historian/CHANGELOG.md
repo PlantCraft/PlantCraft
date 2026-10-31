@@ -6,6 +6,14 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Changed
+
+- **Reads of the same hours decode each archive chunk once.** Each process keeps the chunks it
+  decoded last (`HISTCRAFT_CHUNK_CACHE_MB`, 32 by default, 0 turns it off); a chunk's bytes are
+  its key, so a rewritten chunk is read anew. A read of 167 signals over a day went from 1.0 to
+  0.45 s, and an Analytics round, its checks and its methods a quarter to a third faster under
+  the 0.6.0 load test C2 (2026-10-31).
+
 ### Added
 
 - **A limit on the points it records**, from `MAX_SIGNALS` of PlantCraft's installation file

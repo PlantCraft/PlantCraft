@@ -264,3 +264,19 @@ and its swap warning are built on. On a 2 CPU / 4 GB virtual machine with 2 GB o
 `small` profile ran C2 four times without a container stopped (RAM peak 3.0 GB, swap 0.9 GB);
 with Analytics and its executor at 1 CPU and 1 slot its round was slower, so `small` gives
 them 2.
+
+The Historian's reads, profiled under C2 (main's image, 2 processes, `py-spy`): decoding archive
+chunks was about a quarter of its CPU, and the round, its checks and the methods read the same
+day again and again. Each process now keeps the chunks it decoded (`HISTCRAFT_CHUNK_CACHE_MB`,
+32 by default; a chunk's bytes are its key, so a rewritten chunk is never served stale). Results,
+4 vCPU, three runs each way, alternated:
+
+| C2, mean of 3 | Round (s) | Checks (s) | 9 methods (s) | Method reads p50 (s) | Historian at a full core (s) | Historian memory peak (MiB) |
+|---|---:|---:|---:|---:|---:|---:|
+| cache off | 30.5 | 30.5 | 30.6 | 21.6 | 24.7 | 780 |
+| cache on | 23.0 | 20.6 | 21.9 | 15.6 | 16.0 | 861 |
+
+One read of 167 signals over 24 h (750,000 values) in the container: 1.0 s without the cache,
+0.45 s once it holds them (2.2 times faster), 18 MB of cache. The Historian's peak with 2 processes
+(780 to 910 MiB) is above the `small` profile's 768m, so `small` gives it 1 GB and `medium`
+1.5 GB.

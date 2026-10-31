@@ -33,6 +33,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **The machine profile gives the Historian 1 GB on `small` and 1.5 GB on `medium`.** With 2
+  processes its peak under the 0.6.0 load test C2 reached 780 to 910 MiB, above the 768m `small`
+  gave it (plan B, 2026-10-31). The Historian also keeps the archive chunks it decoded, so reads
+  of the same day decode them once (`HISTCRAFT_CHUNK_CACHE_MB`).
 - **Operations shows the machine and its profile.** Suite health names the machine as Docker
   sees it (CPUs, memory), the machine profile that sized the suite (`install.sh --machine`) and
   its ceilings, and each service's CPU limit beside its use. The `small` profile gives Analytics
