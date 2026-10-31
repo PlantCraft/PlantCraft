@@ -35,6 +35,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **A backup restores on a machine with fewer CPUs (2026-10-31 VM test).** A backup carries the
+  `.env` of the server it was made on, so restoring a 4-CPU server's backup on a 2-CPU one failed
+  to start ("range of CPUs is from 0.01 to 2.00") and returned to the state before it. The restore
+  now caps every CPU limit of `compose.yaml` at the host's CPU count before the suite starts, as
+  `install.sh` already did on install and update.
 - **Accessibility: no WCAG AA finding left in the suite's frame.** An axe-core sweep of 35 pages
   (desktop and phone, every app, 2026-10-31) found no critical issue and five small ones, all in
   shared parts: the count badges on the sidebar had white on red or light blue (3.5:1 and 2.5:1;
