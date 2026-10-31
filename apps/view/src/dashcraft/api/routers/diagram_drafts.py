@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 
 from dashcraft.api.deps import CurrentUser, EditorUser, EditorView, RuntimeDep, guarded
 from dashcraft.api.routers.diagrams import diagram_or_404
-from dashcraft.diagrams.autodraw import draw_unit, plant_display
+from dashcraft.diagrams.autodraw import OVERVIEW_PAGE, draw_unit, plant_display, plant_units
 from dashcraft.diagrams.draft import candidates, prompt, read_answer
 from dashcraft.diagrams.symbols import library
 from dashcraft.i18n import t
@@ -60,6 +60,32 @@ def draw_from_assets(body: DrawIn, rt: RuntimeDep, user: EditorView) -> dict[str
         raise HTTPException(status_code=404, detail=t("Unit not found."))
     diagram, notes = drawn
     return {"diagram": diagram, "notes": notes}
+
+
+@router.post("/diagrams/draw-plant")
+def draw_plant(rt: RuntimeDep, user: EditorView) -> dict[str, Any]:
+    """The whole plant from its assets: an overview page (Level 1, a block per unit with its
+    loops' health) and a page per unit (``diagrams/autodraw.py``): ``{diagram, notes}``, not
+    saved."""
+
+    assets = _assets(rt, user)
+    units = plant_units(assets)
+    drawn = (
+        plant_display(assets, units, name=t("Plant process"), library=library()) if units else None
+    )
+    if drawn is None:
+        raise HTTPException(status_code=404, detail=t("No unit with equipment to draw was found."))
+    notes = (
+        [
+            t(
+                "{count} units, each on its own page, with an overview first.",
+                count=len(drawn["pages"]) - 1,
+            )
+        ]
+        if len(drawn["pages"]) > 1
+        else []
+    )
+    return {"diagram": drawn, "notes": notes}
 
 
 @router.post("/diagrams/draft")
@@ -122,7 +148,8 @@ def start_unit_diagrams(body: StartIn, rt: RuntimeDep, user: EditorUser) -> dict
         if draft is not None:
             item = rt.diagrams.create(draft, user.username)
             rt.audit(user, "diagram.create", item["diagram_id"], {"name": item["name"]})
-            created, pages = 1, len(draft.get("pages") or [])
+            created = 1
+            pages = sum(1 for page in draft.get("pages") or [] if page["id"] != OVERVIEW_PAGE)
     summary = t(
         "The plant's process display was drawn in General, a page per unit ({pages}).", pages=pages
     )

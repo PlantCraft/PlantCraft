@@ -8,6 +8,12 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **The plant's process display opens on a generated overview (Level 1).** From assets › **The
+  whole plant** draws a first page with a block per unit (its equipment and loop count and up
+  to eight loop-health bubbles, linked to the unit's page) and a page per unit, each with
+  **‹ Plant overview** back to it. `POST /api/diagrams/draw-plant`.
+- **Back between diagrams.** A diagram opened from another one's link shows **Back** with that
+  diagram's name and returns to the page it was opened from (`?from=`).
 - **The ISA-101 analog indicator, on a gauge card and under a diagram's value.** A grey bar over the
   signal's range draws the normal range as a darker band, the LL, L, H and HH limits as ticks (a
   card takes them from its thresholds, a diagram value from its limits), the setpoint as a hollow
