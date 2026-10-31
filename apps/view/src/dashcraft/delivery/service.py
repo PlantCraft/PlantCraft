@@ -28,6 +28,7 @@ from dashcraft.dashboards.model import window_seconds
 from dashcraft.delivery.read import read_sections
 from dashcraft.i18n import t
 from dashcraft.query.cards import Reader
+from dashcraft.reports import assistant as helper
 from dashcraft.reports import document, docx, html, pdf, text
 from dashcraft.reports.model import ReportPayload, Schedule
 from dashcraft.reports.schedule import cadence, next_run, runs_between
@@ -135,7 +136,9 @@ class ReportService:
             report, trigger=trigger, by=by, period_start=start, period_end=end
         )
         try:
-            items, problems = read_sections(reader, report.get("sections") or [], report["period"])
+            items, problems = read_sections(
+                reader, report.get("sections") or [], report["period"], self.writer(report)
+            )
             document = pdf.render(
                 report,
                 items,
@@ -159,9 +162,133 @@ class ReportService:
                 error=t("The PDF could not be made: {error}", error=str(exc)[:300]),
             )
         summary = unread(problems) if problems else t("Every section read.")
+        for item in items:
+            written = item.get("assistant")
+            if written and written.get("text"):
+                self.store.keep_draft(report["report_id"], run["run_id"], written)
         return self.store.finish_run(
             run["run_id"], status="done", pdf=document, problems=problems, summary=summary
         )
+
+    # Assistant sections -------------------------------------------------------------------
+
+    def writer(self, report: dict[str, Any]) -> Callable[..., str]:
+        """What writes the report's assistant sections: the model of ``report-write``."""
+
+        def write(
+            section_id: str,
+            spec: helper.AssistantSpec,
+            facts: dict[str, Any],
+            start: datetime,
+            end: datetime,
+        ) -> str:
+            clock = pdf.Clock(self.zone())
+            words = t(
+                "{start} to {end} ({zone})",
+                start=clock.text(start, "%a %d %b %H:%M"),
+                end=clock.text(end, "%a %d %b %H:%M"),
+                zone=self.zone(),
+            )
+            return self.suite.ask_model(
+                helper.WRITE_USE,
+                helper.write_question(spec, facts, words),
+                system=helper.WRITE_SYSTEM,
+            )
+
+        return write
+
+    def last_written(self, report: dict[str, Any]) -> Callable[..., str]:
+        """The text each assistant section was last written with (a file made on request never
+        asks the model again: the PDFs are what the model wrote)."""
+
+        def last(section_id: str, *_args: Any) -> str:
+            found = self.store.last_draft(report["report_id"], section_id)
+            if not found:
+                raise ValueError(t("Not written yet: make the report once to write it."))
+            return str(found["text"])
+
+        return last
+
+    def tune(
+        self,
+        report: dict[str, Any],
+        section_id: str,
+        feedback: str,
+        by: str,
+        run_id: str | None = None,
+    ) -> dict[str, Any]:
+        """A person's feedback on what the assistant wrote, turned by the model of
+        ``report-tune`` into the section's next requirements; the report is saved with them and
+        the version kept (the old ones stay, to read or go back to)."""
+
+        sections = list(report.get("sections") or [])
+        index = next((i for i, s in enumerate(sections) if s.get("section_id") == section_id), None)
+        if index is None or sections[index].get("kind") != "assistant":
+            raise KeyError(section_id)
+        spec = helper.AssistantSpec.model_validate(sections[index]["assistant"])
+        draft = self.store.last_draft(report["report_id"], section_id, run_id=run_id)
+        written = str((draft or {}).get("text") or "")
+        answer = self.suite.ask_model(
+            helper.TUNE_USE,
+            helper.tune_question(spec.requirements, written, feedback),
+            system=helper.TUNE_SYSTEM,
+        )
+        requirements = helper.clean_text(answer)[: helper.MAX_REQUIREMENTS].strip()
+        if not requirements:
+            raise ValueError(t("The model answered no requirements."))
+        return self.set_requirements(
+            report,
+            section_id,
+            requirements,
+            by,
+            feedback=feedback,
+            run_id=(draft or {}).get("run_id"),
+        )
+
+    def set_requirements(
+        self,
+        report: dict[str, Any],
+        section_id: str,
+        requirements: str,
+        by: str,
+        *,
+        feedback: str = "",
+        run_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Save new requirements as the section's next version (by hand, by feedback, or going
+        back to an older one)."""
+
+        sections = [dict(s) for s in report.get("sections") or []]
+        section = next(s for s in sections if s.get("section_id") == section_id)
+        spec = helper.AssistantSpec.model_validate(section["assistant"])
+        versions = self.store.assistant_versions(report["report_id"], section_id)
+        if not versions:  # the first version is what the section started with
+            self.store.keep_version(
+                report["report_id"], section_id, 1, spec.requirements, "", None, by
+            )
+            versions = self.store.assistant_versions(report["report_id"], section_id)
+        number = max(v["version"] for v in versions) + 1
+        self.store.keep_version(
+            report["report_id"], section_id, number, requirements, feedback, run_id, by
+        )
+        section["assistant"] = {
+            **spec.model_dump(),
+            "requirements": requirements,
+            "version": number,
+        }
+        payload = ReportPayload.model_validate(
+            {
+                **{k: report[k] for k in ReportPayload.model_fields if k in report},
+                "sections": sections,
+            }
+        )
+        self.update(report["report_id"], payload, by)
+        return {
+            "version": number,
+            "requirements": requirements,
+            "previous": spec.requirements,
+            "versions": self.store.assistant_versions(report["report_id"], section_id),
+        }
 
     # Other formats ----------------------------------------------------------------------
 
@@ -170,7 +297,9 @@ class ReportService:
 
         end = reader.clock()
         start = end - timedelta(seconds=window_seconds(report.get("period") or "24h"))
-        items, problems = read_sections(reader, report.get("sections") or [], report["period"])
+        items, problems = read_sections(
+            reader, report.get("sections") or [], report["period"], self.last_written(report)
+        )
         info = {
             "start": start,
             "end": end,

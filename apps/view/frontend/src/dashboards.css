@@ -422,3 +422,16 @@ body.tc-screen .pcs-content, body.tc-screen .content { max-width: none; padding:
   .tc-report-cell-edit { grid-template-columns: 1fr; }
   .tc-report-add-here { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Assistant sections of a report (prototype, E2). */
+.tc-report-assistant { padding: 14px 16px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); }
+.tc-report-assistant h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: var(--pc-fs-sm); font-weight: 700; }
+.tc-report-assistant-scope { margin: 0 0 10px; font-size: var(--pc-fs-xs); }
+.tc-report-feedback { display: grid; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--pc-border-subtle); }
+.tc-report-feedback label { display: grid; gap: 4px; font-size: var(--pc-fs-sm); }
+.tc-report-feedback-row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.tc-report-feedback-row input { flex: 1 1 220px; }
+.tc-report-requirements { white-space: pre-wrap; font-size: var(--pc-fs-xs); margin: 6px 0 0; }
+.tc-report-versions { margin: 0; padding-left: 18px; font-size: var(--pc-fs-xs); display: grid; gap: 6px; }
+.tc-report-versions blockquote { margin: 2px 0; padding-left: 8px; border-left: 2px solid var(--pc-border-subtle); }
+.tc-report-asset-list { max-height: 220px; overflow: auto; display: grid; gap: 2px; padding: 4px 0; }

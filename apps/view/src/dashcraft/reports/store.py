@@ -100,7 +100,116 @@ class ReportStore(Store):
         pdf_bytes INTEGER NOT NULL DEFAULT 0
     );
     CREATE INDEX IF NOT EXISTS idx_report_runs_report ON report_runs(report_id, started_at);
+
+    -- What the assistant wrote in each run (``reports.assistant``), to show, export and comment.
+    CREATE TABLE IF NOT EXISTS assistant_drafts (
+        run_id TEXT NOT NULL,
+        report_id TEXT NOT NULL,
+        section_id TEXT NOT NULL,
+        version INTEGER NOT NULL,
+        text TEXT NOT NULL,
+        facts_json TEXT NOT NULL DEFAULT '{}',
+        written_at TEXT NOT NULL,
+        PRIMARY KEY (run_id, section_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_assistant_drafts ON assistant_drafts(report_id, section_id, written_at);
+
+    -- Each version of an assistant section's requirements, and the feedback that made it.
+    CREATE TABLE IF NOT EXISTS assistant_versions (
+        report_id TEXT NOT NULL,
+        section_id TEXT NOT NULL,
+        version INTEGER NOT NULL,
+        requirements TEXT NOT NULL,
+        feedback TEXT NOT NULL DEFAULT '',
+        run_id TEXT,
+        created_by TEXT,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (report_id, section_id, version)
+    );
     """
+
+    # Assistant sections -------------------------------------------------------------
+
+    def keep_draft(self, report_id: str, run_id: str, written: dict[str, Any]) -> None:
+        with self._lock, self._connect() as connection:
+            connection.execute(
+                "INSERT OR REPLACE INTO assistant_drafts VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    run_id,
+                    report_id,
+                    written["section_id"],
+                    int(written.get("version") or 1),
+                    written["text"],
+                    json.dumps(written.get("facts") or {}),
+                    utc_iso(datetime.now().astimezone()),
+                ),
+            )
+
+    def last_draft(
+        self, report_id: str, section_id: str, *, run_id: str | None = None
+    ) -> dict[str, Any] | None:
+        query = "SELECT * FROM assistant_drafts WHERE report_id = ? AND section_id = ?"
+        params: list[Any] = [report_id, section_id]
+        if run_id:
+            query += " AND run_id = ?"
+            params.append(run_id)
+        with self._lock, self._connect() as connection:
+            row = connection.execute(
+                query + " ORDER BY written_at DESC, rowid DESC LIMIT 1", params
+            ).fetchone()
+        if not row:
+            return None
+        item = dict(row)
+        item["facts"] = json.loads(item.pop("facts_json") or "{}")
+        return item
+
+    def drafts(self, report_id: str, section_id: str, limit: int = 20) -> list[dict[str, Any]]:
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM assistant_drafts WHERE report_id = ? AND section_id = ? "
+                "ORDER BY written_at DESC, rowid DESC LIMIT ?",
+                (report_id, section_id, limit),
+            ).fetchall()
+        out = []
+        for row in rows:
+            item = dict(row)
+            item["facts"] = json.loads(item.pop("facts_json") or "{}")
+            out.append(item)
+        return out
+
+    def keep_version(
+        self,
+        report_id: str,
+        section_id: str,
+        version: int,
+        requirements: str,
+        feedback: str,
+        run_id: str | None,
+        by: str | None,
+    ) -> None:
+        with self._lock, self._connect() as connection:
+            connection.execute(
+                "INSERT OR REPLACE INTO assistant_versions VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    report_id,
+                    section_id,
+                    version,
+                    requirements,
+                    feedback,
+                    run_id,
+                    by,
+                    utc_iso(datetime.now().astimezone()),
+                ),
+            )
+
+    def assistant_versions(self, report_id: str, section_id: str) -> list[dict[str, Any]]:
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM assistant_versions WHERE report_id = ? AND section_id = ? "
+                "ORDER BY version",
+                (report_id, section_id),
+            ).fetchall()
+        return [dict(row) for row in rows]
 
     # Reports -------------------------------------------------------------------
 

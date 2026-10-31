@@ -8,6 +8,7 @@ of the report is still made; only a refused token stops it, so the caller can sa
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -16,7 +17,12 @@ from plantcraft_sdk.client import PlantCraftError, Unauthorized
 from dashcraft.dashboards.model import window_seconds
 from dashcraft.i18n import t
 from dashcraft.query.cards import Reader, read_card
+from dashcraft.reports import assistant as helper
 from dashcraft.reports.model import EventsSpec, Section
+
+# Writes an assistant section: (section_id, spec, facts, start, end) -> Markdown
+# (``ReportService.writer``).
+Writer = Callable[[str, helper.AssistantSpec, dict[str, Any], datetime, datetime], str]
 
 # Events of one kind read per section: the period's, newest first, up to this many.
 EVENTS_READ = 500
@@ -209,6 +215,15 @@ def read_section(reader: Reader, section: Section, period: str) -> dict[str, Any
             out["data"] = read_card(reader, section.card, None, period)
         elif section.kind == "events" and section.events is not None:
             out["data"] = read_events(reader, section.events, start, end)
+        elif section.kind == "assistant" and section.assistant is not None:
+            facts = helper.gather(reader, section.assistant, start, end)
+            out["data"] = {
+                "kind": "assistant",
+                "assets": len(facts["assets"]),
+                "results": len(facts["results"]),
+                "events": facts["events_total"],
+                "event_counts": facts["event_counts"],
+            }
     except Unauthorized:
         raise
     except PlantCraftError as exc:
@@ -216,10 +231,55 @@ def read_section(reader: Reader, section: Section, period: str) -> dict[str, Any
     return out
 
 
+def write_assistant(
+    reader: Reader, section: Section, period: str, writer: Writer
+) -> dict[str, Any]:
+    """An assistant section written now: read as a text cell (so every file format draws it as
+    one), with what the model was given in ``assistant``. A model that cannot write leaves the
+    reason in the cell and ``error``, and the rest of the report is still made."""
+
+    assert section.assistant is not None
+    end = reader.clock()
+    start = end - timedelta(seconds=window_seconds(period))
+    facts = helper.gather(reader, section.assistant, start, end)
+    error = None
+    try:
+        body = helper.clean_text(writer(section.section_id, section.assistant, facts, start, end))
+        if not body:
+            raise ValueError(t("The model answered nothing."))
+    except Unauthorized:
+        raise
+    except Exception as exc:  # noqa: BLE001 - no model, a refusal, a timeout: said in the cell
+        error = str(getattr(exc, "detail", None) or exc)[:300]
+        body = t("The assistant could not write this section: {reason}", reason=error)
+    text = helper.section_text(section.title, body, facts)
+    cell = {**section.model_dump(), "kind": "text", "title": "", "text": text}
+    return {
+        "section": cell,
+        "data": None,
+        "error": error,
+        "assistant": {
+            "section_id": section.section_id,
+            "version": section.assistant.version,
+            "text": body if error is None else "",
+            "facts": {
+                "assets": len(facts["assets"]),
+                "results": len(facts["results"]),
+                "events": facts["events_total"],
+            },
+        },
+    }
+
+
 def read_sections(
-    reader: Reader, sections: list[dict[str, Any]], period: str
+    reader: Reader,
+    sections: list[dict[str, Any]],
+    period: str,
+    writer: Writer | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
-    """Every section of a report, and how many could not be read in full."""
+    """Every section of a report, and how many could not be read in full. With ``writer``,
+    assistant sections are written by the model; without, they are left out (a page shows
+    the last written text instead)."""
 
     items = []
     problems = 0
@@ -235,6 +295,13 @@ def read_sections(
                 }
             )
             problems += 1
+            continue
+        if section.kind == "assistant":
+            if writer is None:
+                continue
+            item = write_assistant(reader, section, period, writer)
+            problems += 1 if item["error"] else 0
+            items.append(item)
             continue
         item = read_section(reader, section, period)
         if section.kind in ("card", "events") and (item["error"] or section_problems(item["data"])):
