@@ -210,3 +210,29 @@ def test_meaning_search_walks_past_passages_the_person_may_not_read():
     assert Searcher(Everyone(), HashEmbedder())._best(ids, scores, None, False) == list(
         range(CANDIDATES)
     )
+
+
+def test_a_document_that_looks_confidential_is_kept_from_the_assistant(client, runtime):
+    """Security test D11 (2026-10-31): a "not for the assistant" line inside the text was only
+    text, and answers quoted the PIN it held. Its first revision now switches the assistant
+    off; a plain document keeps it on, and the editor can switch it back on."""
+
+    from tests.conftest import index, send
+
+    secret = send(
+        client,
+        "CONF-001.md",
+        b"# Access\n\nNot for the assistant.\n\nThe panel PIN is 4821 and the VPN password: "
+        b"Valve-2026.\n",
+    )
+    plain = send(client, "SOP-001.md", b"# Start-up\n\nOpen the suction valve, then start P-101.\n")
+    assert index(runtime) == 2
+    assert runtime.library.store.document(secret["doc_id"])["assistant"] is False
+    assert runtime.library.store.document(plain["doc_id"])["assistant"] is True
+
+    from doccraft.library.indexer import looks_confidential
+
+    assert not looks_confidential(["Enter the password to unlock the keypad."])
+    assert not looks_confidential(["The PIN is required at start-up."])
+    assert looks_confidential(["API key = sk-test-123456"])
+    assert looks_confidential(["Documento confidencial."])

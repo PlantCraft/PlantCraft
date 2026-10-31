@@ -132,6 +132,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **The assistant no longer says it created what it only prepared** (security test D11). After
+  it proposes an action, an event or another object, "I created" in its answer becomes "I
+  prepared": only the card's button creates it. The tool's answer and the instructions say so too.
 - **Signing out ends the browser's token in every app too.** The 12-minute token carries the
   SHA-256 of its session (`sid` claim). After sign-out PlantCraft refuses it at once, and
   `GET /api/v1/auth/revoked` lists the session (`sessions`), so the apps refuse it within 10 s
