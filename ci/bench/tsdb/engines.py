@@ -599,9 +599,13 @@ class ClickHouse(Engine):
         return self.client().query_arrow(sql, use_strings=False)
 
     def scan(self, ids, t0, t1):
-        return self.client().command(
-            f"SELECT count(), sum(v) FROM hist WHERE point IN ({','.join(map(str, ids))})"
-            f" AND t >= fromUnixTimestamp64Milli({t0}) AND t < fromUnixTimestamp64Milli({t1})"
+        return (
+            self.client()
+            .query(
+                f"SELECT count(), sum(v) FROM hist WHERE point IN ({','.join(map(str, ids))})"
+                f" AND t >= fromUnixTimestamp64Milli({t0}) AND t < fromUnixTimestamp64Milli({t1})"
+            )
+            .result_rows[0][0]
         )
 
     def raw_many(self, ids, t0, t1):
@@ -1211,7 +1215,7 @@ class DuckParquet(Engine):
                 f"SELECT count(*), sum(v) FROM hist WHERE point IN ({','.join(map(str, ids))})"
                 f" AND t >= {t0} AND t < {t1}"
             )
-            .fetchone()[0]
+            .fetchall()[0][0]
         )
 
     def raw_many(self, ids, t0, t1):
