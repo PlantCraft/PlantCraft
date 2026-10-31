@@ -4,6 +4,7 @@ joined into one plant (``doccraft.plantmap``)."""
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,9 @@ from doccraft.plantmap.reader import tags as isa
 from doccraft.plantmap.reader.score import score, total
 from doccraft.plantmap.sample.draw import draw_all, draw_sheet, spec
 from tests.conftest import client_for, index, send
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+from dexpi_truth import truth as dexpi_truth  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -169,6 +173,25 @@ def test_a_pdf_sent_to_the_library_lands_in_diagrams_and_the_map(
     undo = {**review, "verdict": ""}
     assert client.put("/api/plant-map/reviews", json=undo).status_code == 200
     assert "P-1001,feeds,E-1009" in client.get("/api/plant-map/lists/lines.csv").text
+
+    # The map in DEXPI for a P&ID tool: read back with our DEXPI reader, the same plant.
+    exported = client.get("/api/plant-map/dexpi.xml")
+    assert exported.status_code == 200 and exported.headers["content-type"] == "application/xml"
+    path = tmp_path / "plant.xml"
+    path.write_bytes(exported.content)
+    back = dexpi_truth(path)
+    tags = {i["tag"] for i in plant["items"] if i["family"] in {"equipment", "instrument"}}
+    assert set(back["tags"]) == tags
+    feeds = {
+        (r["from"], r["to"])
+        for r in plant["relations"]
+        if r["type"] == "feeds"
+        and all(
+            next(i for i in plant["items"] if i["tag"] == end)["family"] == "equipment"
+            for end in (r["from"], r["to"])
+        )
+    }
+    assert {tuple(f) for f in back["feeds"]} >= feeds and feeds
 
 
 def test_a_cell_from_a_drawing_never_starts_a_formula():

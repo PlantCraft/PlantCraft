@@ -22,6 +22,11 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   are valves; arrows drawn along a line, away from any symbol, give the line's direction; a
   pump drawn small to scale is still a pump. On the DEXPI example the reader finds 4 of its 6
   equipment feeds with none wrong (3, one of them reversed, before).
+- **The plant map in DEXPI.** **DEXPI (XML)** under Lists downloads the map in the open P&ID
+  exchange format (Proteus XML): equipment with its class and tag, each process line between
+  two pieces of equipment with a nozzle at each end, and each instrument loop with its valves
+  and the equipment it measures. No graphics; what was marked Wrong is left out. The help page
+  now explains Diagrams and the plant map.
 - `tools/llm_vision_eval.py --dexpi DIR --xml DIR` scores a vision model on public P&IDs against
   their DEXPI XML (`tools/dexpi_truth.py`), next to the classical reader on the same files.
 

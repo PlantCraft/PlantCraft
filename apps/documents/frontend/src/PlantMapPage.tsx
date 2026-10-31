@@ -83,10 +83,11 @@ export function PlantMapPage({ me }: { me: Me }) {
         </li>)}</ul>
       </div>}
       <div className="panel">
-        <div className="panel-header"><div><h2>{t("Lists")}</h2><p>{t("The map as tables for a spreadsheet.")}</p></div></div>
+        <div className="panel-header"><div><h2>{t("Lists")}</h2><p>{t("The map as tables for a spreadsheet, or as DEXPI for a P&ID tool.")}</p></div></div>
         <div className="map-lists">
           {(["equipment", "instruments", "lines", "loops"] as const).map((kind) =>
             <a key={kind} className="button" href={api.listUrl(kind)} download><Download size={16} /> {t(LIST_NAMES[kind])}</a>)}
+          <a className="button" href={api.dexpiUrl()} download><Download size={16} /> {t("DEXPI (XML)")}</a>
         </div>
       </div>
       <TagListCheck plant={plant} />
