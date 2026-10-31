@@ -1491,5 +1491,7 @@
   "This machine fits the {size} profile{within}.": "Esta máquina pede o perfil {size}{within}.",
   " within the installation's ceilings": " dentro dos tetos da instalação",
   "To apply it, run in the installation folder on the server:": "Para aplicar, rode na pasta da instalação, no servidor:",
-  "Values changed by hand in .env are kept. If the installation file sets MACHINE, change it there instead: it wins.": "Valores mudados à mão no .env são mantidos. Se o arquivo da instalação define MACHINE, mude lá: ele tem prioridade."
+  "Values changed by hand in .env are kept. If the installation file sets MACHINE, change it there instead: it wins.": "Valores mudados à mão no .env são mantidos. Se o arquivo da instalação define MACHINE, mude lá: ele tem prioridade.",
+  "Assistant read limit reached (possible extraction)": "Limite de leitura do assistente atingido (possível extração)",
+  "Assistant read many signals at once (possible extraction)": "Assistente leu muitos sinais de uma vez (possível extração)"
 }

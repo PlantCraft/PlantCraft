@@ -9,6 +9,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Working hours for a request queue.** An administrator sets the days and hours a queue works
+  (and a default); its requests' first answer and resolution clocks run only inside them, and
+  due times land on the next working minute.
+- **Partners for a company's sponsor.** A sponsor at the plant without the Operations role opens
+  Operations with Requests and Partners only, sees the companies they sponsor and approves their
+  months' hours.
+
 - **Operations, a built-in app for the people who keep the suite running.** Beside Desk in the
   app switcher, for administrators and for a new **Operations** role (Users: IT, or an
   integrator's team, without making them administrators). **Status** shows every app's CPU and
@@ -182,6 +189,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **A daily limit on what the assistant reads for each person, and extraction flags in the audit
+  log** (backlog B13). Each tool call counts the signals it reads. Past
+  `PLANTCRAFT_ASSISTANT_DAILY_READS` (2000 a day) the assistant reads nothing more for that person
+  until the next day, and the audit log records `assistant.read_limit`. One answer that reads
+  more than `PLANTCRAFT_ASSISTANT_BULK_SIGNALS` (60) signals is recorded as
+  `assistant.bulk_read`. Both show with a warning mark in Settings › Audit. The count starts from
+  the day's audit records, so a restart does not reset it.
 - **The assistant no longer says it created what it only prepared** (security test D11). After
   it proposes an action, an event or another object, "I created" in its answer becomes "I
   prepared": only the card's button creates it. The tool's answer and the instructions say so too.
@@ -200,6 +214,19 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Long trends come from the Historian already reduced.** PlantCraft's charts read every raw
+  sample of the window and kept each stretch's lowest and highest value themselves: a day at 1 s
+  moved 4 MB and took 0.2 s, and a week was refused (over 200,000 values). The platform now asks
+  the Historian for about 750 cells with each cell's low and high (hourly rollups past a week):
+  a day in 0.02 s and 67 KB, a week in 0.13 s, the same spikes. Text signals, and signals the
+  Historian gives no extremes for, are still read raw and cut as before.
+
+- **`install.sh --uninstall --purge` no longer deletes another installation's images.** With
+  two installations on one Docker (test and production), purging one removed the image tags the
+  other's containers were created from, and the other could not start again. Purge now keeps
+  every image a container of another Compose project uses and says which.
+  `install.sh --show-config` exits 1 when `.env` differs from the installation file or the file
+  was not applied, and 0 when they match (docs/installation-file.md).
 - **Release bundles build again.** The installer image copies single files, and since
   `write_atomic` moved to the SDK (#54) its backup and update code imported `plantcraft.files`,
   which it did not hold: `make bundle` stopped at the installer image. It now carries that file

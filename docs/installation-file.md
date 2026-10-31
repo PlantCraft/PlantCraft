@@ -36,6 +36,13 @@ See [`deploy/installation.conf.example`](../deploy/installation.conf.example). I
 | `LLM` | off, on | `PLANTCRAFT_LLM` (off forbids models everywhere) |
 | `TIMEZONE`, `LOCK_TIMEZONE` | IANA name, yes/no | `PLANTCRAFT_TIMEZONE`, `PLANTCRAFT_TIMEZONE_LOCKED` |
 
+## Is the file applied?
+
+`sudo ./install.sh --show-config` lists each value the file sets next to what `.env` holds now,
+and marks the ones that differ (`.env` edited by hand, or the file changed and `install.sh` was
+not run since). Like `diff`, it exits 0 when everything matches and the file was applied as it
+is now, and 1 otherwise, so monitoring can alert on it.
+
 ## Requirements check
 
 `./install.sh --check` (or `./preflight.sh`, `--json` for tools) checks the server for the apps

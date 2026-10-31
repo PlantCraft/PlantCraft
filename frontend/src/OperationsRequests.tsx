@@ -11,7 +11,7 @@ import { collabApi, type Action, type ActionList, type SlaClock } from "./collab
 import { hoursText } from "./actionsBoard";
 import { t } from "./i18n";
 import { navigate } from "./nav";
-import { operationsApi, type Priority, type TargetsAnswer } from "./operationsApi";
+import { operationsApi, type DayName, type Priority, type TargetsAnswer } from "./operationsApi";
 import { useCanOperate, useIsAdmin } from "./session";
 import "./apps.css";
 import "./collab.css";
@@ -87,6 +87,7 @@ export function RequestTargets({ request }: { request: Action }) {
   return <>
     {admin && OPEN.includes(request.status) && <div><span>{t("Support access")}</span><strong><Go to={`/ops/support?${support.toString()}`}>{t("Give someone Operations for a few hours")}</Go></strong></div>}
     <div><span>{t("First answer target")}</span><strong>{minutesText(request.sla.response.target_minutes)} <SlaChip clock={request.sla.response} /></strong></div>
+    {request.sla.service_hours && <div><span>{t("Working hours")}</span><strong>{workingHoursText(request.sla.service_hours)} <small className="muted">{t("the clocks stop outside them")}</small></strong></div>}
     <div><span>{t("Resolution target")}</span><strong>{minutesText(request.sla.resolution.target_minutes)} <SlaChip clock={request.sla.resolution} />{(request.sla.resolution.paused_minutes ?? 0) > 0 && <small className="muted"> · {t("{time} blocked, not counted", { time: minutesText(request.sla.resolution.paused_minutes ?? 0) })}</small>}</strong></div>
   </>;
 }
@@ -147,7 +148,7 @@ export function RequestsPage() {
     {list && <DataTable rows={items} columns={COLUMNS} rowKey={(item) => String(item.action_id)} label={t("Requests")} onRowClick={(item) => navigate(`/actions/${encodeURIComponent(String(item.action_id))}`)}
       searchText={(item) => `${item.title} ${item.created_by_name} ${item.category_label ?? ""}`} searchPlaceholder={t("Filter requests")} initialSort={{ key: "asked_at", descending: true }}
       empty={open ? t("No open requests.") : t("No requests yet.")} />}
-    {targeting && <TargetsDialog editable={admin} onClose={() => setTargeting(false)} onSaved={() => { setTargeting(false); void load(); }} />}
+    {targeting && <TargetsDialog editable={admin} groups={list?.groups ?? []} onClose={() => setTargeting(false)} onSaved={() => { setTargeting(false); void load(); }} />}
     {asking && list && <AskDialog list={list} prefill={asking} onClose={() => setAsking(null)} onAsked={(action) => { setAsking(null); navigate(`/actions/${encodeURIComponent(String(action.action_id))}`); }} />}
   </div>;
 }
@@ -192,7 +193,7 @@ const PRIORITY_LABEL: Record<Priority, string> = { critical: "Critical", high: "
 
 /** The requests' targets by priority, in hours: the first answer and the resolution (Blocked
  * time not counted). Administrators change them; Operations reads them. */
-export function TargetsDialog({ editable, onClose, onSaved }: { editable: boolean; onClose: () => void; onSaved: () => void }) {
+export function TargetsDialog({ editable, groups, onClose, onSaved }: { editable: boolean; groups: Array<{ group_id: string; name: string }>; onClose: () => void; onSaved: () => void }) {
   const [answer, setAnswer] = useState<TargetsAnswer | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -210,7 +211,7 @@ export function TargetsDialog({ editable, onClose, onSaved }: { editable: boolea
   }
   return <Dialog title={t("Request targets")} onClose={onClose} onSubmit={editable ? () => void save() : undefined}
     footer={<><button type="button" className="button button-secondary" onClick={onClose}>{editable ? t("Cancel") : t("Close")}</button>{editable && <button className="button button-primary" disabled={busy || !answer}>{busy ? <LoaderCircle className="spin" size={15} /> : null} {t("Save targets")}</button>}</>}>
-    <p className="muted">{t("Hours on the clock, day and night. The resolution clock stops while a request is Blocked: waiting for who asked, or for a third party.")}</p>
+    <p className="muted">{t("Hours on the clock: day and night, or only in the queue's working hours below. The resolution clock stops while a request is Blocked: waiting for who asked, or for a third party.")}</p>
     {!answer && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading…")}</span></div>}
     {answer && <table className="ops-targets">
       <thead><tr><th>{t("Priority")}</th><th>{t("First answer (h)")}</th><th>{t("Resolution (h)")}</th></tr></thead>
@@ -221,6 +222,55 @@ export function TargetsDialog({ editable, onClose, onSaved }: { editable: boolea
           : <span>{draft[`${key}.${part}`]}</span>}</td>)}
       </tr>)}</tbody>
     </table>}
+    {answer && <ServiceHoursPanel answer={answer} groups={groups} editable={editable} onChanged={setAnswer} />}
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
   </Dialog>;
+}
+
+const DAYS: DayName[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+const DAY_LABEL: Record<DayName, string> = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
+
+/** "Mon–Fri 08:00–17:00", "Mon, Wed 06:00–14:00". */
+export function workingHoursText(hours: { days: string[]; start: string; end: string }): string {
+  const index = hours.days.map((day) => DAYS.indexOf(day as DayName)).filter((day) => day >= 0).sort();
+  const run = index.length > 2 && index.every((day, at) => at === 0 || day === index[at - 1] + 1);
+  const days = run ? `${t(DAY_LABEL[DAYS[index[0]]])}–${t(DAY_LABEL[DAYS[index[index.length - 1]]])}` : index.map((day) => t(DAY_LABEL[DAYS[day]])).join(", ");
+  return `${days} ${hours.start}–${hours.end}`;
+}
+
+/** When each queue works: its requests' clocks run only then (none: day and night). */
+function ServiceHoursPanel({ answer, groups, editable, onChanged }: { answer: TargetsAnswer; groups: Array<{ group_id: string; name: string }>; editable: boolean; onChanged: (answer: TargetsAnswer) => void }) {
+  const set = answer.service_hours ?? [];
+  const [queue, setQueue] = useState("");
+  const current = set.find((item) => (item.queue ?? "") === queue);
+  const [days, setDays] = useState<DayName[]>(["mon", "tue", "wed", "thu", "fri"]);
+  const [start, setStart] = useState("08:00");
+  const [end, setEnd] = useState("17:00");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (current) { setDays(current.days); setStart(current.start); setEnd(current.end); }
+  }, [current]);
+  async function save(clear: boolean) {
+    setBusy(true);
+    try { onChanged(await operationsApi.setServiceHours(queue || null, clear ? null : { days, start, end })); setError(""); } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
+  }
+  return <section className="ops-service-hours" aria-labelledby="ops-service-hours-title">
+    <h3 id="ops-service-hours-title">{t("Working hours")} {answer.timezone && <small className="muted">{answer.timezone}</small>}</h3>
+    {set.length ? <ul>{set.map((item) => <li key={item.queue ?? ""}><strong>{item.queue_name ?? t("Default")}</strong> {workingHoursText(item)}</li>)}</ul> : <p className="muted">{t("Every queue works day and night.")}</p>}
+    {editable && <div className="ops-service-hours-form">
+      <label><span>{t("Queue")}</span><select value={queue} onChange={(event) => setQueue(event.target.value)}>
+        <option value="">{t("Default (no queue, or a queue without its own)")}</option>
+        {groups.map((group) => <option key={group.group_id} value={group.group_id}>{group.name}</option>)}
+      </select></label>
+      <fieldset><legend>{t("Days")}</legend>{DAYS.map((day) => <label key={day} className="act-mine"><input type="checkbox" checked={days.includes(day)} onChange={(event) => setDays((now) => event.target.checked ? DAYS.filter((item) => now.includes(item) || item === day) : now.filter((item) => item !== day))} /> {t(DAY_LABEL[day])}</label>)}</fieldset>
+      <label><span>{t("From")}</span><input type="time" value={start} onChange={(event) => setStart(event.target.value)} /></label>
+      <label><span>{t("To")}</span><input type="time" value={end} onChange={(event) => setEnd(event.target.value)} /></label>
+      <div className="ops-service-hours-actions">
+        <button type="button" className="button button-secondary" disabled={busy || !days.length} onClick={() => void save(false)}>{t("Save working hours")}</button>
+        {current && <button type="button" className="button button-ghost" disabled={busy} onClick={() => void save(true)}>{t("Day and night")}</button>}
+      </div>
+    </div>}
+    {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
+  </section>;
 }

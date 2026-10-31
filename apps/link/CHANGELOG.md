@@ -8,6 +8,13 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Changed
 
+- A round hands each loop only its own signals' samples. It read 50 loops at once into one
+  frame of all their times and gave every loop its columns of it, so on a raw day each loop's task
+  carried every other loop's times as empty rows (99.5% of a 50-loop, 200-signal batch). Building
+  and shipping a batch's tasks went from 9.8 to 0.36 s, 1154 to 24 MB pickled to the compute
+  processes, and 896 to 20 MB of peak memory (`ci/bench/reads/roundframes.py`), with the same
+  results. A loop whose signals start later or stop earlier than the rest of its batch now gets
+  the result it gets when it runs alone.
 - History keeps a configurable time (`LINKCRAFT_HISTORY_DAYS`, default 90 days) and, past
   `LINKCRAFT_HISTORY_FULL_DAYS` (default 14), only the last point of each hour per loop, and per
   signal for good checks (every problem verdict stays). The hourly upkeep thins at most a day per

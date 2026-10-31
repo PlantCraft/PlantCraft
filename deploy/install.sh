@@ -1468,6 +1468,24 @@ legacy_rollback() {
     print_access
 }
 
+# purge_images PROJECT < image names: remove each image no container of another Compose project
+# uses (by the name it was started with: removing a tag that another installation's containers
+# were created from leaves them unable to start again); prints the names kept. An installation
+# whose containers were removed (compose down) cannot be seen, and its images go.
+purge_images() {
+    local project="$1" others image
+    others="$(docker ps -a --format '{{.Label "com.docker.compose.project"}}|{{.Image}}' 2>/dev/null |
+        awk -F'|' -v p="$project" '$1 != p {print $2}' | sort -u)"
+    while IFS= read -r image; do
+        [ -n "$image" ] || continue
+        if printf '%s\n' "$others" | grep -qxF -- "$image"; then
+            printf '%s\n' "$image"
+        else
+            docker image rm "$image" >/dev/null 2>&1 || true
+        fi
+    done
+}
+
 do_uninstall() {
     check_docker
     [ -d "$PREFIX" ] || die "no installation in $PREFIX (use --prefix)"
@@ -1479,11 +1497,14 @@ do_uninstall() {
         image="$(helper_image)"
         compose down --remove-orphans --volumes || true
         as_root "$image" "cd /install && rm -rf data backups certs/key.pem certs/cert.pem local-ca-root.crt"
-        compose config --images 2>/dev/null | sort -u | xargs -r docker image rm >/dev/null 2>&1 || true
-        docker images --format '{{.Repository}}:{{.Tag}}' |
-            grep -E '^(processcraft|processcraft-proxy|processcraft-installer|linkcraft|dashcraft|histcraft|alarmcraft|modelcraft|modelcraft-runner|doccraft|postgres|telegraf|simcraft|plantcraft):rollback-' |
-            xargs -r docker image rm >/dev/null 2>&1 || true
+        local project kept
+        project="$(compose config 2>/dev/null | awk '/^name:/ {print $2; exit}')"
+        kept="$( { compose config --images 2>/dev/null
+            docker images --format '{{.Repository}}:{{.Tag}}' |
+                grep -E '^(processcraft|processcraft-proxy|processcraft-installer|linkcraft|dashcraft|histcraft|alarmcraft|modelcraft|modelcraft-runner|doccraft|postgres|telegraf|simcraft|plantcraft):rollback-'
+        } | sort -u | purge_images "$project")"
         log "Removed containers, networks, images, data and backups. The folder $PREFIX holds only the suite files now."
+        [ -z "$kept" ] || log "Kept the images another installation on this Docker still uses: $(printf '%s' "$kept" | xargs)"
     else
         compose down --remove-orphans
         log "Stopped and removed the containers and networks. Data, backups, settings and images are kept in $PREFIX."
@@ -1750,16 +1771,20 @@ do_check() {
 
 # What the installation file sets against what .env holds: "differs" means .env was edited by
 # hand (or install.sh was not run since the file changed): the next run puts the file's value back.
+# Exit code, like diff: 0 when .env holds what the file sets and the file was applied as it is
+# now; 1 when a value differs or the file changed or was never applied (monitoring can alert on it).
 do_show_config() {
     [ -n "$INSTALLATION_CONF" ] || { log "No installation file (/etc/plantcraft/installation.conf): .env alone decides."; return 0; }
-    local env="$PREFIX/.env" pair key want have state applied current
+    local env="$PREFIX/.env" pair key want have state applied current differs=0
     printf 'Installation file: %s\n' "$INSTALLATION_CONF"
     current="$(sha256sum "$INSTALLATION_CONF" | cut -c 1-64)"
     applied="$(env_get PLANTCRAFT_INSTALLATION_CONF_SHA256 "$env")"
     if [ -z "$applied" ]; then
         printf 'Never applied to %s: run %s/install.sh\n\n' "$env" "$PREFIX"
+        differs=1
     elif [ "$applied" != "$current" ]; then
         printf 'Changed since it was last applied: run %s/install.sh to apply it\n\n' "$PREFIX"
+        differs=1
     else
         printf 'Applied (SHA-256 %s)\n\n' "${current:0:16}"
     fi
@@ -1769,16 +1794,17 @@ do_show_config() {
         want="${pair#*=}"
         have="$(env_get "$key" "$env")"
         state=""
-        [ "$want" = "$have" ] || state="differs"
+        [ "$want" = "$have" ] || { state="differs"; differs=1; }
         printf '  %-36s %-28s %-28s %s\n' "$key" "${want:-(empty)}" "${have:-(empty)}" "$state"
     done
     if [ -n "$CONF_APPS" ]; then
         want="$(printf '%s' "$CONF_APPS" | xargs | tr ' ' ',')"
         have="$(env_get COMPOSE_PROFILES "$env" | tr ',' '\n' | grep -v '^demo$' | paste -sd, -)"
         state=""
-        [ "$want" = "$have" ] || state="differs"
+        [ "$want" = "$have" ] || { state="differs"; differs=1; }
         printf '  %-36s %-28s %-28s %s\n' "COMPOSE_PROFILES (apps)" "$want" "${have:-(empty)}" "$state"
     fi
+    return "$differs"
 }
 
 # With --check --json only the report goes to stdout, so tools can read it.
