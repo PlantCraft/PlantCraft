@@ -6,7 +6,8 @@ with ``make e2e-suite SUITE_URL=https://host/``. Without ``PLANTCRAFT_SUITE_URL`
 skipped.
 
 - ``PLANTCRAFT_SUITE_URL``: the installation's address (``https://processcraft.company.local/``).
-- The visitor enters with the sign-in page's "Enter the demo": a read-only demo visit.
+- The visitor enters with the sign-in page's "Enter the demo": a read-only demo visit. On an
+  installation without the public demo (``--demo`` alone) the visitor's journeys are skipped.
 - ``PLANTCRAFT_SUITE_CHROMIUM``: a Chromium binary, when Playwright's own is not installed.
 - ``PLANTCRAFT_SUITE_STRICT_TLS=1``: check the certificate (an install's local CA is otherwise
   accepted without being installed in the test browser).
@@ -14,8 +15,11 @@ skipped.
 
 from __future__ import annotations
 
+import json
 import os
+import ssl
 from urllib.parse import urlsplit
+from urllib.request import urlopen
 
 import pytest
 
@@ -84,10 +88,26 @@ def watch():
     return Watch()
 
 
+def public_demo() -> bool:
+    """Whether the installation offers "Enter the demo" (``GET /api/session``'s public_demo)."""
+
+    context = ssl.create_default_context()
+    if os.environ.get("PLANTCRAFT_SUITE_STRICT_TLS") != "1":
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+    with urlopen(URL + "/api/session", context=context, timeout=20) as answer:
+        return bool(json.load(answer).get("public_demo"))
+
+
 @pytest.fixture(scope="session")
 def visitor(browser, watch):
     """One signed-in visitor page for every journey, as a first visitor walks the demo."""
 
+    if not public_demo():
+        pytest.skip(
+            "this installation has no public demo, so no visitor can enter it: "
+            "install with --public-demo (or DEMO=public) to walk the visitor's journeys"
+        )
     context = _context(browser)
     page = context.new_page()
     page.set_default_timeout(20_000)
