@@ -63,6 +63,16 @@ payload = { source = "Source id", detail = "Why, as the source answered", since_
 rule = { when = "open", minutes = 10, priority = "high", notify = "admins" }
 
 [[publishes.events]]
+name = "gateway.backlog"
+title = "Gateway backlog"
+description = "The gateway's disk buffer (store and forward) holds more than 64 MB: values wait at the edge that the collector has not taken. Not lost, not archived yet. Key: gateway."
+severity = "warning"
+category = "data"
+phase = "interval"
+payload = { bytes = "What the buffer holds (bytes)" }
+rule = { when = "open", minutes = 15, priority = "medium", notify = "admins" }
+
+[[publishes.events]]
 name = "source.late"
 title = "Source late"
 description = "A source with an expected interval sent no value for longer than it (the integration stopped delivering). Key: source:<id>. Its signals' alarms of no data are this one condition."

@@ -189,6 +189,9 @@ class Collector:
         # The state last written to each source's history (``catalog.source_events``, H13);
         # read from the catalog at the first flush.
         self._noted: dict[str, str] | None = None
+        # The gateway's disk buffer (store and forward, H3), measured once a minute.
+        self._buffer_bytes = 0
+        self._buffer_checked = -math.inf
         self._tasks: dict[str, asyncio.Task] = {}
         self._signatures: dict[str, tuple] = {}
         self._version = -1
@@ -458,6 +461,7 @@ class Collector:
         self._rate = max(reads - self._last_flush_reads, 0) / elapsed
         self._last_flush_reads = reads
         self._note_changes()
+        self._measure_buffer()
         self.archive.set_state(
             "collector",
             {
@@ -467,9 +471,23 @@ class Collector:
                 "points": len(states),
                 "reads_per_second": round(self._rate, 1),
                 "sources": self.source_status,
+                "gateway_buffer_bytes": self._buffer_bytes,
             },
         )
         return written
+
+    def _measure_buffer(self) -> None:
+        """What waits in the gateway's disk buffer, once a minute (only with a gateway)."""
+
+        if not self.settings.ingest_port or time.monotonic() - self._buffer_checked < 60:
+            return
+        from histcraft.collector.gateway import buffer_bytes
+
+        self._buffer_checked = time.monotonic()
+        try:
+            self._buffer_bytes = buffer_bytes(self.settings.data_dir)
+        except OSError:
+            self._buffer_bytes = 0
 
     def _note_changes(self) -> None:
         """Write each source whose state changed since the last flush to its history."""

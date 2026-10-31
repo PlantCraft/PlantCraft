@@ -23,6 +23,9 @@ PlantCraft tells the owners (with an email) when the condition opens and settles
   when it starts and once when it ends (never again while it lasts); points the collector does
   not read (written by an app or PlantCraft, imported) are never named; at most ``MAX_POINTS``
   (what the SDK lets an app report, less room for the others) are named, the oldest first.
+- ``gateway.backlog``: the gateway's disk buffer (store and forward, H3) holds more than
+  ``BACKLOG_BYTES``: values wait at the edge that the collector has not taken (key
+  ``gateway``). They are not lost, but they are not in the archive yet either.
 - ``archive.disk_low``: the disk forecast the collector's housekeeping stores hourly
   (``archive.forecast``) fills the disk in fewer than ``ALERT_DAYS`` days (key ``disk``).
 """
@@ -42,6 +45,7 @@ HEARTBEAT_MS = 120_000
 STALE_SCANS = 10
 STALE_MIN_MS = 600_000
 MAX_POINTS = MAX_CONDITIONS - 10
+BACKLOG_BYTES = 64 * 1024 * 1024
 ARCHIVED = ("archive", "both")
 # Sources the collector does not read: what an app or PlantCraft writes, and imported files. A
 # gap there is their writer's business (an algorithm's version is written once per version).
@@ -111,8 +115,25 @@ def open_conditions(catalog: Any, archive: Any, *, now: int | None = None) -> li
         | {source["id"] for source in catalog.sources() if source.get("kind") in UNCOLLECTED}
     )
     found += _points([p for p in points if p.get("source_id") not in skipped], snaps, now)
+    found += _backlog(int(collector.get("gateway_buffer_bytes") or 0))
     found += _disk(state.get("forecast") or {})
     return found
+
+
+def _backlog(size: int) -> list[Condition]:
+    if size <= BACKLOG_BYTES:
+        return []
+    return [
+        Condition(
+            name="gateway.backlog",
+            key="gateway",
+            summary=t(
+                "The gateway holds {mb} MB of values the collector has not taken yet",
+                mb=round(size / 1024 / 1024),
+            ),
+            payload={"bytes": size},
+        )
+    ]
 
 
 def _disk(forecast: dict[str, Any]) -> list[Condition]:

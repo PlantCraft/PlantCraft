@@ -129,6 +129,12 @@ class Settings(AppSettings):
     # (0: no gateway), at this address as the gateway reaches it.
     ingest_port: int = 0
     ingest_url: str = "http://histcraft-collector:8186"
+    # Where the gateway keeps what the collector has not taken yet (store and forward, H3):
+    # ``disk`` survives a restart of the gateway during an outage of the collector, ``memory``
+    # does not but costs far less CPU (ci/bench/storage/gateway_buffer.md). The folder is
+    # ``<data>/gateway-buffer`` here and ``gateway_buffer_dir`` as the gateway sees it.
+    gateway_buffer: str = "disk"
+    gateway_buffer_dir: str = "/var/lib/telegraf-buffer"
 
     def database_password(self) -> str:
         """The PostgreSQL password, read from its file when needed (never kept)."""
@@ -180,4 +186,8 @@ class Settings(AppSettings):
             database_password_file=env_text("HISTCRAFT_DATABASE_PASSWORD_FILE"),
             ingest_port=int(env_text("HISTCRAFT_INGEST_PORT", "0") or 0),
             ingest_url=env_text("HISTCRAFT_INGEST_URL", "http://histcraft-collector:8186"),
+            gateway_buffer=(
+                "memory" if env_text("HISTCRAFT_GATEWAY_BUFFER", "disk") == "memory" else "disk"
+            ),
+            gateway_buffer_dir=env_text("HISTCRAFT_GATEWAY_BUFFER_DIR", "/var/lib/telegraf-buffer"),
         )
