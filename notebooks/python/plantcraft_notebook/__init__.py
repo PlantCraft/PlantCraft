@@ -273,7 +273,13 @@ class Client:
         that does not write it answers JSON, read as before. ``PLANTCRAFT_BINARY_READS=0``
         keeps JSON."""
 
-        if IN_BROWSER or os.environ.get("PLANTCRAFT_BINARY_READS", "1").strip() == "0":
+        # JSON in the browser, when asked, and when the transport was swapped (a test that
+        # answers ``_computer`` itself, as ``plantcraft_sdk.apptest`` does).
+        if (
+            IN_BROWSER
+            or os.environ.get("PLANTCRAFT_BINARY_READS", "1").strip() == "0"
+            or Client._computer is not _OWN_COMPUTER
+        ):
             return _columns(self.request("POST", "/api/v1/series", payload))
         body = json.dumps(payload).encode("utf-8")
         accept = f"{WIRE_MEDIA_TYPE}, application/json;q=0.5"
@@ -335,6 +341,9 @@ def connect(url: str | None = None, token: str | None = None, ca: Any = None) ->
     global _client
     _client = Client(url, token, ca)
     return _client
+
+
+_OWN_COMPUTER = Client._computer
 
 
 def client() -> Client:
