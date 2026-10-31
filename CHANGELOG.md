@@ -121,7 +121,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - **Customizing an overview shows that it is on.** A tinted bar that stays in view says
   "Customizing this page", explains the moves and keeps **Done** at hand; each widget gets a
-  stronger outline (ui 0.96.0, interface pass of 2026-10-31).
+  stronger outline (ui 0.97.0, interface pass of 2026-10-31).
 - **Plotly and the fonts download once for the whole suite, not once per app (ui 0.96.0).**
   The platform serves them at `/static/vendor/` under names that carry a hash of their bytes
   (kept a year by the proxy), and every app asks there first: `@plantcraft/ui/plot` loads
