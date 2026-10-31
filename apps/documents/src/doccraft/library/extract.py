@@ -85,6 +85,33 @@ def extract(data: bytes, filename: str) -> Extracted:
         ) from error
 
 
+# The readers run in a worker process with a time and memory limit, no network and no file
+# writes (plantcraft_sdk.sandbox): a crafted file that makes a reader spin or swell stops there,
+# not in the app (security test 2026-10-31, D10). DOCCRAFT_EXTRACT_TIMEOUT_SECONDS (120) and
+# DOCCRAFT_EXTRACT_MEMORY_MB (1024) set the limits; DOCCRAFT_EXTRACT_SANDBOX=inline reads in
+# this process (tests).
+EXTRACT = "DOCCRAFT_EXTRACT"
+
+
+def _extract_payload(payload: dict) -> Extracted:
+    return extract(payload["data"], payload["filename"])
+
+
+def extract_isolated(data: bytes, filename: str) -> Extracted:
+    """``extract`` in a worker process, within the time and memory limits."""
+
+    import os
+
+    from plantcraft_sdk.sandbox import CodeError, pool
+
+    os.environ.setdefault(f"{EXTRACT}_TIMEOUT_SECONDS", "120")
+    os.environ.setdefault(f"{EXTRACT}_WORKERS", "1")
+    try:
+        return pool(EXTRACT).run(_extract_payload, {"data": data, "filename": filename})
+    except CodeError as error:
+        raise Unreadable(f"The file could not be read within the limits: {error}") from error
+
+
 def _check_zip(data: bytes) -> None:
     try:
         archive = zipfile.ZipFile(io.BytesIO(data))

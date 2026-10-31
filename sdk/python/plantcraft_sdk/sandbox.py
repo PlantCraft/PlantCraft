@@ -90,6 +90,10 @@ DENIED_MODULES = frozenset(
         "numpy.testing",
         "pandas.io",
         "pandas.testing",
+        # pickle_compat.loads unpickles, and unpickling calls any function (os.system)
+        "pandas.compat",
+        # Expr("x.__class__") reads any attribute by name (pandas.eval's own machinery)
+        "pandas.core.computation",
     }
 )
 DENIED_NAMES = frozenset(
@@ -170,6 +174,15 @@ DENIED_ATTRIBUTES = frozenset(
         "extbuild",
         "tempdir",
         "temppath",
+        # unpickling calls any function
+        "Unpickler",
+        "pickle",
+        "pickle_compat",
+        "computation",
+        "Expr",
+        "Scope",
+        # imports any module by name and hands it back unguarded
+        "import_optional_dependency",
         # the system
         "system",
         "popen",
@@ -377,6 +390,10 @@ def check_code(code: str, policy: Policy = Policy()) -> list[str]:  # noqa: B008
                 )
             elif _attribute_denied(node.attr):
                 problem(node, t("{name} is not allowed in {what}.", name=node.attr, what=what))
+        elif isinstance(node, ast.MatchClass):
+            # A class pattern reads attributes by name, like getattr: ``case object(__class__=c)``,
+            # or ``case K(c)`` with a ``__match_args__`` the code set through type().
+            problem(node, t("class patterns in match are not allowed in {what}.", what=what))
         elif isinstance(node, ast.Name):
             if node.id.startswith("__"):
                 problem(node, t("names that start with __ are not allowed ({name}).", name=node.id))
@@ -622,8 +639,17 @@ def pool(prefix: str) -> CodePool | InlinePool:
     with _POOLS_LOCK:
         found = _POOLS.get(prefix)
         if found is None:
+            remote = os.environ.get(f"{prefix}_SOCKET", "").strip()
             if os.environ.get(f"{prefix}_SANDBOX", "").strip().lower() == "inline":
                 found = InlinePool()
+            elif remote:
+                # The workers in a container of their own, no network, no secret
+                # (plantcraft_sdk.sandbox_remote).
+                from plantcraft_sdk.sandbox_remote import RemotePool
+
+                found = RemotePool(  # type: ignore[assignment]
+                    remote, _number(f"{prefix}_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS)
+                )
             else:
                 found = CodePool(
                     workers=int(_number(f"{prefix}_WORKERS", 2)),

@@ -8,6 +8,9 @@
 #   ./install.sh --backup        back up now, while the suite runs (verified; docs/operations.md)
 #   ./install.sh --list-backups  the backups and their state
 #   ./install.sh --restore NAME  return to a backup; the current state is set aside, not deleted
+#   ./install.sh --export-backup NAME --passphrase-file FILE [--out FILE]
+#                                an encrypted copy of a backup to take off the server
+#                                (AES-256, key from the passphrase; backups hold every key)
 #   ./install.sh --drill         restore the latest good backup into an isolated copy and start it
 #   ./install.sh --diagnostics   write a diagnostic bundle (zip, no secrets, no plant data) here
 #   ./install.sh --uninstall     stop and remove the containers; data and backups are kept
@@ -93,6 +96,8 @@ PUBLIC_DEMO=0
 APP_PACKAGE=""
 APP_ID=""
 BACKUP_NAME=""
+PASSPHRASE_FILE=""
+EXPORT_OUT=""
 ALLOW_UNSIGNED=0
 ALLOW_EMULATION=0
 PUBLISHER_KEY=""
@@ -124,6 +129,9 @@ while [ $# -gt 0 ]; do
         --drill) ACTION="drill" ;;
         --diagnostics) ACTION="diagnostics" ;;
         --restore) [ $# -ge 2 ] || die "--restore needs a backup name (see --list-backups)"; ACTION="restore"; BACKUP_NAME="$2"; shift ;;
+        --export-backup) [ $# -ge 2 ] || die "--export-backup needs a backup name (see --list-backups)"; ACTION="export-backup"; BACKUP_NAME="$2"; shift ;;
+        --passphrase-file) [ $# -ge 2 ] || die "--passphrase-file needs a file"; PASSPHRASE_FILE="$2"; shift ;;
+        --out) [ $# -ge 2 ] || die "--out needs a file name"; EXPORT_OUT="$2"; shift ;;
         --add) [ $# -ge 2 ] || die "--add needs a package file"; ACTION="add"; APP_PACKAGE="$2"; shift ;;
         --remove) [ $# -ge 2 ] || die "--remove needs an app id"; ACTION="remove"; APP_ID="$2"; shift ;;
         --uninstall) ACTION="uninstall" ;;
@@ -364,6 +372,54 @@ check_signature() { # check_signature VERSION
     fi
 }
 
+# Before any image is loaded: the signature over SHA256SUMS checked with this server's own
+# OpenSSL (Ed25519, 1.1.1 or later), not with a program that came in the bundle being checked.
+# SHA256SUMS was already checked against every file (verify_bundle), so a good signature covers
+# images.tar too. Without a usable openssl the check runs, as before, in the installer image
+# after the load (check_signature), and a warning says so.
+host_signature() {
+    local sig="$BUNDLE_DIR/SHA256SUMS.sig" publisher raw key tmp
+    INSTALLED_TRUST=0
+    if has_installed_trust; then INSTALLED_TRUST=1; fi
+    set_trust_dir
+    if [ ! -f "$sig" ]; then
+        if compgen -G "$TRUST_DIR/*.pub" >/dev/null 2>&1 && [ "$ALLOW_UNSIGNED" != 1 ]; then
+            die "the bundle is not signed (SHA256SUMS.sig is missing) and this server trusts publisher keys: get the signed bundle, or pass --allow-unsigned for a development bundle. Nothing was loaded."
+        fi
+        host_signature_done
+        return 0
+    fi
+    if ! command -v openssl >/dev/null 2>&1 ||
+        ! openssl pkeyutl -help 2>&1 | grep -q -- '-rawin'; then
+        warn "openssl 1.1.1 or later is not on this server: the signature is checked after the images are loaded, by the bundle's installer."
+        host_signature_done
+        return 0
+    fi
+    publisher="$(sed -n 's/^ *"publisher": *"\([a-z0-9-]*\)".*/\1/p' "$sig" | head -n 1)"
+    raw="$(sed -n 's/^ *"signature": *"\([A-Za-z0-9+\/=]*\)".*/\1/p' "$sig" | head -n 1)"
+    [ -n "$publisher" ] && [ -n "$raw" ] || die "SHA256SUMS.sig cannot be read. Nothing was loaded."
+    key="$TRUST_DIR/$publisher.pub"
+    if [ ! -f "$key" ]; then
+        if [ "$FIRST_TRUST" = 0 ]; then
+            die "the bundle is signed by '$publisher', which this server does not trust (trusted-publishers/). Nothing was loaded."
+        fi
+        die "the bundle is signed by '$publisher' but carries no key for it. Nothing was loaded."
+    fi
+    tmp="$(mktemp)"
+    printf '%s' "$raw" | base64 -d >"$tmp" 2>/dev/null || { rm -f "$tmp"; die "SHA256SUMS.sig cannot be read. Nothing was loaded."; }
+    log "Checking the bundle's signature with this server's OpenSSL (before loading anything)"
+    if ! openssl pkeyutl -verify -pubin -inkey "$key" -rawin -in "$BUNDLE_DIR/SHA256SUMS" -sigfile "$tmp" >/dev/null 2>&1; then
+        rm -f "$tmp"
+        die "the signature does not match SHA256SUMS: the bundle was modified. Nothing was loaded."
+    fi
+    rm -f "$tmp"
+    echo "    signature checked: publisher $publisher"
+    host_signature_done
+}
+host_signature_done() {
+    if [ -n "$TRUST_TMP" ]; then rm -rf "$TRUST_TMP"; TRUST_TMP=""; fi
+}
+
 load_images() {
     log "Loading images from images.tar (no download)"
     docker load -i "$BUNDLE_DIR/images.tar" | sed 's/^/    /'
@@ -424,6 +480,7 @@ copy_files() {
     if [ "$PREFIX" = "$BUNDLE_DIR" ]; then return 0; fi
     log "Copying the suite files to $PREFIX"
     cp "$BUNDLE_DIR/compose.yaml" "$BUNDLE_DIR/.env.example" "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/firewall.sh" "$PREFIX/"
+    if [ -f "$BUNDLE_DIR/security-check.sh" ]; then cp "$BUNDLE_DIR/security-check.sh" "$PREFIX/"; chmod 0755 "$PREFIX/security-check.sh"; fi
     local file
     for file in bundle.env release.json RELEASE-NOTES.md; do
         if [ -f "$BUNDLE_DIR/$file" ]; then cp "$BUNDLE_DIR/$file" "$PREFIX/"; fi
@@ -854,6 +911,10 @@ prepare_data() {
         # second install.sh run as a member of the docker group cannot reach inside it.
         mkdir -p data/compute-jobs/linkcraft data/compute-jobs/modelcraft
         chown -R $COMPUTE_UID:$COMPUTE_UID data/compute-jobs
+        # Alarms and its sandbox container share only this folder (its socket).
+        mkdir -p data/alarmcraft-sandbox
+        chown 10009:10009 data/alarmcraft-sandbox
+        chmod 0700 data/alarmcraft-sandbox
         chown $COMPUTE_UID:$PLANTCRAFT_UID data/compute-local-key
         chmod 0640 data/compute-local-key
         $owners
@@ -1036,6 +1097,7 @@ do_install() {
         log "Version $version is already installed: applying settings and certificates again"
     fi
     if [ "$DEV" = 0 ] && [ -f "$BUNDLE_DIR/images.tar" ]; then
+        host_signature
         load_images
         # An update was checked above by the installed version, before anything changed.
         if [ "$UPDATE_APPLYING" = 0 ]; then check_signature "$version"; fi
@@ -1354,6 +1416,30 @@ do_restore() {
     print_access
 }
 
+# A backup holds .env, every app key, the admin and database passwords and the certificate
+# authority's key in clear (mode 0600, root): fine on the server, not on a disk that leaves it.
+# The copy is AES-256 (OpenSSL, key from the passphrase with PBKDF2, 600,000 rounds); the backup's
+# manifest checks every file again when it is restored.
+#   openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass file:PASS -in X.tar.enc | tar -x
+do_export_backup() {
+    check_docker
+    installed_prefix
+    [[ "$BACKUP_NAME" =~ ^[0-9]{8}-[0-9]{6}-[a-z][a-z0-9-]{1,30}$ ]] || die "invalid backup name: $BACKUP_NAME (see --list-backups)"
+    [ -n "$PASSPHRASE_FILE" ] && [ -r "$PASSPHRASE_FILE" ] || die "--passphrase-file FILE is needed: the passphrase, one line, at least 16 characters"
+    [ "$(head -n 1 "$PASSPHRASE_FILE" | tr -d '\n' | wc -c)" -ge 16 ] || die "the passphrase must have at least 16 characters"
+    command -v openssl >/dev/null 2>&1 || die "openssl is not on this server"
+    local out="${EXPORT_OUT:-$PWD/plantcraft-backup-$BACKUP_NAME.tar.enc}" image
+    image="$(helper_image)"
+    [ ! -e "$out" ] || die "$out exists: choose another --out"
+    log "Encrypting backups/$BACKUP_NAME to $out"
+    (umask 077 && as_root "$image" "cd /install/backups && test -d '$BACKUP_NAME' && tar --numeric-owner -cf - '$BACKUP_NAME'" |
+        openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass "file:$PASSPHRASE_FILE" -out "$out") ||
+        { rm -f "$out"; die "the backup could not be exported (is the name right? see --list-backups)."; }
+    [ -s "$out" ] || { rm -f "$out"; die "the export wrote nothing."; }
+    chmod 0600 "$out"
+    log "Written: $out ($(du -h "$out" | cut -f1)). Keep the passphrase apart from the file."
+}
+
 do_diagnostics() {
     check_docker
     installed_prefix
@@ -1422,6 +1508,7 @@ do_worker() {
     fi
     if [ "$PREFIX" != "$BUNDLE_DIR" ]; then
         if [ -f "$BUNDLE_DIR/images.tar" ]; then
+            host_signature
             load_images
             check_signature "$version"
         fi
@@ -1502,5 +1589,6 @@ case "$ACTION" in
     drill) do_drill ;;
     diagnostics) do_diagnostics ;;
     restore) do_restore ;;
+    export-backup) do_export_backup ;;
     uninstall) do_uninstall ;;
 esac

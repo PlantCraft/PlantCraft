@@ -47,6 +47,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   looked for "Public demo" / "A visit lasts" (the visit clock went away on 2026-10-28), for the
   older "read-only" refusal and for the tour's last step "Your apps"; 13 of 15 failed on a VM
   after the update from 0.5.1, all from the first. 15 of 15 pass on main.
+- **Trends keep their spikes.** When a trend had more points than a chart takes (1,500 by
+  default), PlantCraft kept every n-th point, so any event shorter than the gap vanished: a day at
+  1 s with twenty 5 s spikes showed none of them. Each stretch of the series now keeps its lowest
+  and highest value, in time order, so every spike, trip and step is drawn at its full height
+  with the same number of points (`plantcraft/industrial_data/thinning.py`; Historian and direct
+  sources alike). Values that are not numbers (states) still keep every n-th point.
 
 - **Installing again, or a release after its candidates, works without a manual step.**
   `install.sh` compared versions with `sort -V`, which puts `0.5.1-rc3` after `0.5.1`, so the
