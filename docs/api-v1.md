@@ -585,10 +585,11 @@ starts off whatever it declares, until an administrator gives it a model.
 
 | Endpoint | Shape |
 |---|---|
-| `POST /api/v1/llm/{use}` | An app's service token only, with `write.llm` (403 otherwise); `use` is `<id>` or `<app id>:<id>` of one of its own uses. Body `{"system"?: text, "messages": [{"role": "user" \| "assistant", "content"}]}`, the last message the user's, at most 200,000 characters in all: `{"use": "<app>:<id>", "model", "text"}`. 404 for a use the app did not declare, 409 when the use has no model now (off, nothing set up, or models forbidden in the installation), 429 past `PLANTCRAFT_LLM_APP_DAILY` calls of the app per plant day (500), 502 when the model's server did not answer. Each call is audited (`language_model.used`: provider, model, characters sent and received). Added 2026-10-25, SDK 0.32.0 |
+| `POST /api/v1/llm/{use}` | An app's service token only, with `write.llm` (403 otherwise); `use` is `<id>` or `<app id>:<id>` of one of its own uses. Body `{"system"?: text, "messages": [{"role": "user" \| "assistant", "content", "images"?}]}`, the last message the user's, at most 200,000 characters in all; a user's turn may carry `images` (`[{"media_type": "image/png" \| "image/jpeg" \| "image/webp" \| "image/gif", "data": base64}]`, at most 4 a call, 5 MB each, for a model that reads images; added 2026-10-31): `{"use": "<app>:<id>", "model", "text"}`. 404 for a use the app did not declare, 409 when the use has no model now (off, nothing set up, or models forbidden in the installation), 429 past `PLANTCRAFT_LLM_APP_DAILY` calls of the app per plant day (500), 502 when the model's server did not answer. Each call is audited (`language_model.used`: provider, model, characters sent, images sent and characters received). Added 2026-10-25, SDK 0.32.0 |
 
-`client.llm(use, messages, system=...)` sends it (a question or the turns of a chat; 120 s
-timeout). `FakePlantCraft` answers it for the uses the app sent in its contributions, keeps
+`client.llm(use, messages, system=..., images=[png_bytes])` sends it (a question or the turns
+of a chat, images with the last user turn; `plantcraft_sdk.llm.image(data, media_type)` for a
+JPEG; 120 s timeout). `FakePlantCraft` answers it for the uses the app sent in its contributions, keeps
 `fake.links.llm_calls` and answers `fake.links.llm_answer` (a text, a function of the call, or
 None for 409). The model only reads what the app sends: it never acts on the plant or the suite.
 

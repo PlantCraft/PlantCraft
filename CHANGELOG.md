@@ -9,6 +9,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Images in an app's language model calls** (SDK 0.85.0). `POST /api/v1/llm/{use}` takes
+  images in a user's turn (PNG, JPEG, WebP or GIF, at most 4 a call, 5 MB each), and
+  `client.llm(use, question, images=[png])` sends them. They reach Anthropic as image blocks and
+  OpenAI (chat completions or the Responses API) as data URLs. The audit log counts the images
+  sent. It is for a model that reads drawings: a scanned P&ID, a photo of a gauge, a chart.
 - **Configuration decided before installing, outside the platform** (`docs/installation-file.md`).
   `/etc/plantcraft/installation.conf`, owned by root and never mounted in a container, holds
   which apps exist, whether apps may be installed from Settings › Apps, the demo, the machine
