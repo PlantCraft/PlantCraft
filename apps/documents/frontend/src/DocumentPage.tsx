@@ -42,7 +42,7 @@ function EditDialog({ doc, folders, kinds, onClose, onSaved }: { doc: Doc; folde
 }
 
 function AssetsPanel({ doc, onSaved }: { doc: Doc; onSaved: (doc: Doc) => void }) {
-  const manual = doc.assets.filter((item) => item.source === "manual").map((item) => item.asset_id);
+  const manual = doc.assets.filter((item) => item.source !== "suggested").map((item) => item.asset_id);
   const suggested = doc.assets.filter((item) => item.source === "suggested").sort((a, b) => b.mentions - a.mentions);
   const [adding, setAdding] = useState("");
   const [error, setError] = useState("");

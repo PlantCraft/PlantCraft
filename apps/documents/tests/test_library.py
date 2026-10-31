@@ -236,3 +236,52 @@ def test_a_document_that_looks_confidential_is_kept_from_the_assistant(client, r
     assert not looks_confidential(["The PIN is required at start-up."])
     assert looks_confidential(["API key = sk-test-123456"])
     assert looks_confidential(["Documento confidencial."])
+
+
+def test_links_to_assets_wait_in_a_queue_editors_clear_in_a_batch(client, runtime, fake):
+    """D5: the assets found in a document's text wait for a person below the threshold, are
+    approved or rejected several at once, and a rejected one is not suggested again."""
+
+    from tests.conftest import client_for, guide, index
+
+    doc = guide(client, runtime)
+    queue = client.get("/api/asset-links").json()
+    assert queue["threshold"] == 0
+    mine = [link for link in queue["links"] if link["doc_id"] == doc["doc_id"]]
+    assert len(mine) >= 2, queue
+    keep, drop = mine[0], mine[1]
+    ref = lambda link: {"doc_id": link["doc_id"], "asset_id": link["asset_id"]}  # noqa: E731
+    with client_for(runtime, fake, "operator") as operator:
+        assert operator.get("/api/asset-links").status_code == 403
+    assert client.post(
+        "/api/asset-links/review", json={"links": [ref(keep)], "verdict": "approved"}
+    ).json() == {"changed": 1}
+    assert client.post(
+        "/api/asset-links/review", json={"links": [ref(drop)], "verdict": "rejected"}
+    ).json() == {"changed": 1}
+    assets = {
+        a["asset_id"]: a["source"]
+        for a in client.get(f"/api/documents/{doc['doc_id']}").json()["assets"]
+    }
+    assert assets[keep["asset_id"]] == "manual" and drop["asset_id"] not in assets
+    # Read again: the rejected link is not suggested again, the approved one stays.
+    assert client.post(f"/api/documents/{doc['doc_id']}/reindex").status_code == 202
+    index(runtime)
+    left = {(l["doc_id"], l["asset_id"]) for l in client.get("/api/asset-links").json()["links"]}
+    assert (doc["doc_id"], drop["asset_id"]) not in left and (
+        doc["doc_id"],
+        keep["asset_id"],
+    ) not in left
+    # Above the threshold a link is taken at once and never waits.
+    runtime.store.auto_mentions = 1
+    from tests.conftest import GUIDE, send
+
+    other = send(client, "guide-2.md", GUIDE.encode(), number="DOC-TG-002")
+    index(runtime)
+    assert not [
+        l for l in client.get("/api/asset-links").json()["links"] if l["doc_id"] == other["doc_id"]
+    ]
+    sources = {
+        a["source"] for a in client.get(f"/api/documents/{other['doc_id']}").json()["assets"]
+    }
+    assert sources == {"auto"}

@@ -1,6 +1,6 @@
 import { createApiClient, jsonBody, query, type HelpEntry, type HelpPage } from "@plantcraft/ui";
 import { href } from "./nav";
-import type { Diagram, DiagramRow, Doc, DocRow, Folder, Hit, Me, Passage, PlantMap, SendFields, Verdict } from "./types";
+import type { Diagram, DiagramRow, Doc, DocRow, Folder, Hit, LinkToCheck, Me, Passage, PlantMap, SendFields, Verdict } from "./types";
 
 const client = createApiClient({ app: "doccraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -26,6 +26,10 @@ export const api = {
   update: (docId: string, fields: Partial<Pick<Doc, "folder_id" | "number" | "title" | "description" | "kind" | "unit" | "language" | "assistant">>) =>
     request<Doc>(`/api/documents/${id(docId)}`, jsonBody("PATCH", fields)),
   setAssets: (docId: string, assets: string[]) => request<Doc>(`/api/documents/${id(docId)}/assets`, jsonBody("PUT", { assets })),
+  /** Links between documents and the assets found in their text that wait for a person. */
+  linksToCheck: () => request<{ threshold: number; links: LinkToCheck[] }>("/api/asset-links"),
+  reviewLinks: (links: Array<{ doc_id: string; asset_id: string }>, verdict: "approved" | "rejected") =>
+    request<{ changed: number }>("/api/asset-links/review", jsonBody("POST", { links, verdict })),
   reindex: (docId: string) => request<{ queued: boolean }>(`/api/documents/${id(docId)}/reindex`, { method: "POST" }),
   remove: (docId: string) => request<void>(`/api/documents/${id(docId)}`, { method: "DELETE" }),
   /** A Word file as a page: its text in a fixed set of tags, escaped by the server. */
