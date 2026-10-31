@@ -25,6 +25,9 @@ joins it into the bundle's release notes.
   its value and counts the write. `GET /api/v1/lab/{signal}` lists a window's samples with their
   times and how late each was written. Trends, Analytics and the estimators read the analysis as
   any signal, at the time the sample was taken (industry reference library, LIMS and MES).
+- **A LIMS read as a SQL source.** A SQL source marked **Laboratory results (LIMS)** writes each
+  row as a laboratory result at its sampling time, with its status and times, through the same
+  path as `POST /api/v1/lab`; a row read again unchanged is not rewritten (`docs/gateway.md`).
 - **A limit on the points it records**, from `MAX_SIGNALS` of PlantCraft's installation file
   (`PLANTCRAFT_MAX_SIGNALS`): points past it are skipped with the reason; the series apps write
   do not count.
