@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from dashcraft.dashboards.folders import ENTRY
 from dashcraft.dashboards.model import Card, check_window, window_seconds
 from dashcraft.i18n import t
+from dashcraft.reports.assistant import AssistantSpec
 
 MAX_SECTIONS = 60
 MAX_TEXT = 20000
@@ -35,8 +36,15 @@ EVENT_KIND = re.compile(r"^[a-z][a-z0-9_-]{0,39}\.[a-z][a-z0-9_]{0,40}(\.[a-z][a
 CLOCK = re.compile(r"^([01][0-9]|2[0-3]):([0-5][0-9])$")
 WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 # The period a cadence suggests (the editor's default when the cadence changes).
-PERIOD_FOR = {"off": "24h", "day": "24h", "week": "7d", "month": "30d"}
-SectionKind = Literal["text", "card", "events", "break"]
+PERIOD_FOR = {
+    "off": "24h",
+    "day": "24h",
+    "week": "7d",
+    "fortnight": "14d",
+    "month": "30d",
+    "quarter": "90d",
+}
+SectionKind = Literal["text", "card", "events", "break", "assistant"]
 # What an events section may count its events by, instead of listing them: who they are about,
 # their kind, their severity, or one field of their payload (``payload.method_id``).
 GROUP_BY = re.compile(r"^(subject|kind|severity|payload\.[a-z][a-z0-9_]{0,40})$")
@@ -44,9 +52,11 @@ GROUP_BY = re.compile(r"^(subject|kind|severity|payload\.[a-z][a-z0-9_]{0,40})$"
 
 class Schedule(BaseModel):
     """When the report is made and sent, in the installation's time zone (``PLANTCRAFT_TIMEZONE``):
-    every day at ``at``, every week on ``weekday`` at ``at``, every month on ``day`` at ``at``."""
+    every day at ``at``, every week (or every other week) on ``weekday`` at ``at``, every month (or
+    every quarter: January, April, July, October) on ``day`` at ``at``. The period the report
+    covers is the report's own (``Report.period``): any window up to a year, whatever the cadence."""
 
-    every: Literal["off", "day", "week", "month"] = "off"
+    every: Literal["off", "day", "week", "fortnight", "month", "quarter"] = "off"
     at: str = "06:00"
     weekday: Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"] = "mon"
     # Up to the 28th, so every month has the day.
@@ -116,6 +126,8 @@ class Section(BaseModel):
     text: str = Field(default="", max_length=MAX_TEXT)
     card: Card | None = None
     events: EventsSpec | None = None
+    # What an assistant section reads and how the model writes it (``reports.assistant``).
+    assistant: AssistantSpec | None = None
     # Two half sections in a row sit side by side on the page.
     width: Literal["full", "half"] = "full"
 
@@ -155,7 +167,11 @@ class Section(BaseModel):
             raise ValueError(t("Pick the events the section lists."))
         if self.kind != "events":
             self.events = None
-        if self.kind in ("text", "break"):
+        if self.kind == "assistant" and self.assistant is None:
+            raise ValueError(t("Pick the assets and analyses the assistant reads."))
+        if self.kind != "assistant":
+            self.assistant = None
+        if self.kind in ("text", "break", "assistant"):
             self.width = "full"
         return self
 

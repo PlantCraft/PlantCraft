@@ -157,17 +157,23 @@ export interface TrendData {
 
 /** A report (`/api/reports`): sections read over one period, made into a PDF on a schedule and
  * sent to people and groups in Messages. */
-export type SectionKind = "text" | "card" | "events" | "break";
+export type SectionKind = "text" | "card" | "events" | "break" | "assistant";
 /** ``group_by``: count the period's events by subject, kind, severity or ``payload.<field>``
  * and rank the groups (the most first) instead of listing the latest; "" lists them. */
 export interface EventsSpec { kinds: string[]; limit: number; group_by?: string }
+/** What an assistant section reads and how the model writes it (prototype, E2). */
+export interface AssistantSpec { asset_ids: string[]; children: boolean; analyses: string[]; requirements: string; version: number }
+export interface AssistantWritten { run_id: string; version: number; text: string; written_at: string; facts: { assets: number; results: number; events: number } }
+export interface AssistantData { kind: "assistant"; assets: number; results: number; events: number; event_counts: Record<string, number>; written: AssistantWritten | null }
+export interface AssistantVersion { version: number; requirements: string; feedback: string; run_id: string | null; created_by: string | null; created_at: string }
+export interface Analysis { id: string; title: string }
 export interface Section {
   section_id: string; kind: SectionKind;
   /** An events section's title (a card keeps its own; a text cell writes its headings in its Markdown). */
-  title: string; text: string; card: Card | null; events: EventsSpec | null; width: "full" | "half";
+  title: string; text: string; card: Card | null; events: EventsSpec | null; assistant?: AssistantSpec | null; width: "full" | "half";
 }
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
-export interface Schedule { every: "off" | "day" | "week" | "month"; at: string; weekday: Weekday; day: number }
+export interface Schedule { every: "off" | "day" | "week" | "fortnight" | "month" | "quarter"; at: string; weekday: Weekday; day: number }
 export interface ReportDraft {
   name: string; description: string; folder_id: string; period: string; schedule: Schedule;
   recipients: string[]; email: boolean; sections: Section[];
@@ -188,7 +194,7 @@ export interface Report extends ReportDraft {
 export type ShareTarget = "dashboard" | "report" | "diagram";
 export type ExportFormat = "docx" | "html" | "md";
 /** One section as read: its data (a card's, or the events'), or why it could not be read. */
-export interface SectionData { section: Section; data: (CardData | EventsData) | null; error: string | null }
+export interface SectionData { section: Section; data: (CardData | EventsData | AssistantData) | null; error: string | null }
 export interface EventRow { at: string; kind: string; title: string; subject: string; subject_name: string; summary: string; severity: string }
 export interface EventsData {
   kind: "events"; counts: Array<{ kind: string; title: string; count: number; more: boolean }>;
