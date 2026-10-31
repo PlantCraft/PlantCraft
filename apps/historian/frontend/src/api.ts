@@ -50,7 +50,15 @@ export type NewPoint = Partial<Point> & { tag: string; source_id: string; addres
 /** A point an admin removed, kept with its archive until ``purge_ms`` (``/api/points/retired``). */
 export type RetiredPoint = { id: number; signal: string; source_id: string; tag: string; name: string; unit: string; kind: string; retired_ms: number; retired_by: string; purge_ms: number };
 
+/** A note on a signal (``/api/v1/annotations``): an instant, or an interval when ``end`` is set. */
+export interface Note { id: number; signal: string; at: string; end: string | null; text: string; author: string; created_at: string }
+/** The PlantCraft event a new note answers, for the page to post (``POST /api/v1/events``). */
+export interface NoteEvent { app: string; kind: string; subject: string; summary: string; payload: Record<string, unknown> }
+
 export const api = {
+  notes: (signal: string, start: string, end: string) => request<{ notes: Note[]; truncated: boolean }>(`/api/v1/annotations?${new URLSearchParams({ signal, start, end }).toString()}`),
+  addNote: (note: { signal: string; at: string; end: string | null; text: string }) => request<Note & { event: NoteEvent }>("/api/v1/annotations", body("POST", note)),
+  removeNote: (noteId: number) => request<void>(`/api/v1/annotations/${noteId}`, { method: "DELETE" }),
   me: () => request<Me>("/api/me"),
   meta: () => request<AppMeta>("/api/meta"),
   help: () => request<HelpEntry[]>("/api/help"),

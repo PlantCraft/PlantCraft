@@ -43,6 +43,7 @@ SCADA and IIoT platforms. Sources are public only (clean room, see AGENTS.md).
 | Archive | Retention per point | | done (whole chunks; PostgreSQL drops whole past months) | `tests/test_archive.py`, `tests/test_partitions.py` |
 | Archive | PostgreSQL tables partitioned by month, an older archive migrated on start | | done | `tests/test_partitions.py` |
 | Admin | Settings in three levels (general, per source, per point; the most specific wins), with the origin of each value shown | | done | `tests/test_settings_levels.py` |
+| Archive | Notes on a signal at an instant or over an interval, told to PlantCraft as events | | done (`/api/v1/annotations`, the signal's page; the page posts `histcraft.annotation.added`) | `tests/test_annotations.py` |
 | Archive | Quality flags stored with values (good, uncertain, substituted, bad) | Part 11 | done (changes of quality kept per point; sources without quality count as good) | `tests/test_quality.py` |
 | Archive | Backfill from the source's own history (OPC UA HistoryRead), up to where archiving began | Part 11 | done | `tests/test_backfill.py` |
 | Archive | Edits of archived values with an audit trail | Part 11 | missing | |

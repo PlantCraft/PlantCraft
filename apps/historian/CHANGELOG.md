@@ -8,6 +8,11 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Notes on a signal**, at an instant or over an interval: the signal's page lists the notes of
+  the period shown and editors add them (their own removed by them, any by an administrator);
+  `GET`, `POST` and `DELETE /api/v1/annotations` for scripts and apps. Each note is told to
+  PlantCraft as the event `histcraft.annotation.added` (*Note on a signal*), posted by the page in
+  the person's name, since the Historian never calls the suite.
 - **Shortest interval between archived values** per number signal (`min_seconds`, PI's
   CompMin; empty: none), on the signal's page and in `PATCH /api/points/{signal}`: a faster
   change is held until then. Gaps, quality changes, step and text signals are never held back.
