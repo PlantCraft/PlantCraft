@@ -7,7 +7,8 @@
  * Versions. The shipped libraries are read-only; Duplicate copies any block into the site's own
  * library, and a library of the site's own is written in the code editor (New block library).
  */
-import { ParameterField, typeLabel, type BlockCatalog, type DiagramNode, type PortSpec } from "@plantcraft/ui/blockEditor";
+import type { BlockCatalog, DiagramNode, PortSpec } from "@plantcraft/ui/blockEditor";
+import { ParameterField, typeLabel } from "@plantcraft/ui/blockParameter";
 import { BlockDrawing, BlockImageField, chosenFolder, ComparePicker, FolderButton, FolderColumn, folderName, FolderPlaceLine, inFolder, NO_FOLDER, PageTabs, rememberFolder, useFolders, VersionsTab } from "@plantcraft/ui";
 import { Code2, Copy, Puzzle, Save, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -15,7 +16,7 @@ import { api } from "./api";
 import { t } from "./i18n";
 import { href, navigate } from "./nav";
 import { blockPath, codePath, modelPath, type BlockTab } from "./paths";
-import { modelVersions, VersionDialog } from "./ModelPage";
+import { modelVersions, VersionDialog } from "./versionParts";
 import { BlockCompare } from "./Versions";
 import type { BlockLibrary, BlockUse, CatalogBlock, Me, Revision } from "./types";
 import { Dialog, ErrorBox, Heading, Link, Loading, message } from "./ui";

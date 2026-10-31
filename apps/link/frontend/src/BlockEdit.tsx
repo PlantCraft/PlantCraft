@@ -8,7 +8,7 @@ import { Dialog, useAssistantPage } from "@plantcraft/ui";
 import { ChevronRight, FileUp, FormInput, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import { forgetBlockCatalog, blockCatalog } from "./AlgorithmEditor";
+import { forgetBlockCatalog, blockCatalog } from "./blockCatalog";
 import { blockFromDraft, changedFromDraft, contractChanged, newBlockFile, parseBlockFile } from "./blockFile";
 import { assistantDraft } from "./Assistant";
 import { BlockForm, type FormLibrary } from "./BlockForm";

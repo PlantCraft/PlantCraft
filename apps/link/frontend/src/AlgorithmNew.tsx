@@ -9,7 +9,7 @@ import { ChevronRight, FileUp, FormInput, Workflow } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { assistantDraft } from "./Assistant";
-import { blockCatalog } from "./AlgorithmEditor";
+import { blockCatalog } from "./blockCatalog";
 import { parseAlgorithmFile, type AlgorithmFile } from "./algorithmFile";
 import { sketchDiagram } from "./algorithmSketch";
 import { announceSaved, editorPath, newAlgorithmId } from "./algorithms";
