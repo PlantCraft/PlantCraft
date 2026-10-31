@@ -8,9 +8,8 @@ start.
 
 from __future__ import annotations
 
-import io
 import math
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -31,11 +30,11 @@ from modelcraft.api.routers.model import CLASS, _workbench_error
 from modelcraft.i18n import t
 from modelcraft.omc import results
 from modelcraft.omc.runner import METHODS, OVERRIDE_NAME
+from modelcraft.runs.plant import PlantError, read_plant
+from modelcraft.runs.plant import utc as _utc
 from modelcraft.runs.service import WorkbenchError
 
 router = APIRouter(prefix="/api", tags=["runs"])
-MAX_PLANT_SECONDS = 31 * 24 * 3600
-MAX_PLANT_POINTS = 100_000
 
 
 class ComputeBody(BaseModel):
@@ -139,93 +138,22 @@ def with_progress(rt, run: dict[str, Any], *, light: bool = False) -> dict[str, 
     return item
 
 
-def _utc(moment: datetime) -> datetime:
-    return (
-        moment.replace(tzinfo=timezone.utc)
-        if moment.tzinfo is None
-        else moment.astimezone(timezone.utc)
-    )
-
-
-def _seconds(stamp: str, origin: datetime) -> float | None:
-    try:
-        return (_utc(datetime.fromisoformat(stamp.replace("Z", "+00:00"))) - origin).total_seconds()
-    except ValueError:
-        return None
-
-
 def _plant(rt, user, plant: PlantBody) -> tuple[dict[str, bytes], dict[str, Any], float]:
-    """(the inputs CSV for omc, the comparison series, the period's length in seconds)."""
+    """(the inputs CSV for omc, the comparison series, the period's length in seconds), read
+    with the person's own token."""
 
-    start, end = _utc(plant.start), _utc(plant.end)
-    duration = (end - start).total_seconds()
-    if duration <= 0 or duration > MAX_PLANT_SECONDS:
-        raise HTTPException(422, t("The plant period must be from a minute to 31 days long."))
-    step = plant.step or max(1.0, duration / 5000)
-    if duration / step > MAX_PLANT_POINTS:
-        raise HTTPException(
-            422, t("Use a longer step: the period would have more than 100,000 points.")
-        )
-    signals = list(dict.fromkeys([*plant.inputs.values(), *plant.compare.values()]))
-    if not signals:
-        return {}, {}, duration
     client = rt.user_client(user)
-    batch = guarded(lambda: client.series_many(signals, start, end, step), service=False)
-    if batch.get("errors"):
-        first = batch["errors"][0]
-        raise HTTPException(
-            422,
-            t(
-                "Signal {signal} could not be read: {detail}",
-                signal=first.get("signal"),
-                detail=first.get("detail"),
-            ),
+    try:
+        return read_plant(
+            lambda *args: guarded(lambda: client.series_many(*args), service=False),
+            plant.start,
+            plant.end,
+            plant.step,
+            plant.inputs,
+            plant.compare,
         )
-    found: dict[str, list[tuple[float, float]]] = {}
-    for item in batch.get("series") or []:
-        points = []
-        for stamp, value in zip(item.get("t") or [], item.get("v") or [], strict=False):
-            seconds = _seconds(str(stamp), start)
-            if seconds is not None and isinstance(value, (int, float)) and math.isfinite(value):
-                points.append((seconds, float(value)))
-        found[item["signal"]] = points
-    extra: dict[str, bytes] = {}
-    if plant.inputs:
-        for name, signal in plant.inputs.items():
-            if len(found.get(signal) or []) < 1:
-                raise HTTPException(
-                    422, t("Signal {signal} has no values in this period.", signal=signal)
-                )
-        times = sorted(
-            {0.0, duration, *(s for signal in plant.inputs.values() for s, _ in found[signal])}
-        )
-        times = [s for s in times if 0 <= s <= duration]
-        columns = []
-        for signal in plant.inputs.values():
-            points = found[signal]
-            column, index, last = [], 0, points[0][1]
-            for moment in times:
-                while index < len(points) and points[index][0] <= moment:
-                    last = points[index][1]
-                    index += 1
-                column.append(last)  # the last value held: what the plant recorded until then
-            columns.append(column)
-        buffer = io.StringIO()
-        buffer.write(",".join(["time", *plant.inputs]) + "\n")
-        for row, moment in enumerate(times):
-            buffer.write(
-                ",".join([repr(moment), *(repr(column[row]) for column in columns)]) + "\n"
-            )
-        extra["inputs.csv"] = buffer.getvalue().encode()
-    compare = {
-        name: {
-            "signal": signal,
-            "time": [s for s, _ in found.get(signal, [])],
-            "values": [v for _, v in found.get(signal, [])],
-        }
-        for name, signal in plant.compare.items()
-    }
-    return extra, compare, duration
+    except PlantError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 @router.post("/projects/{project_id}/simulate", status_code=201)

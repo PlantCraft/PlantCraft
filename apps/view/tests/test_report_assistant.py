@@ -314,3 +314,55 @@ def test_by_asset_compares_with_the_previous_period():
     assert rows["LIC-3"]["alarms"] == 0 and rows["LIC-3"]["alarms_change"] == -2
     assert rows["FIC-2"]["findings_closed"] == 1
     assert "previous" not in helper.by_asset(facts, now)[0]
+
+
+def test_citations_become_numbered_evidence_footnotes():
+    facts = helper.number(
+        {
+            "assets": [{"asset": "FIC-101"}],
+            "by_asset": [{"asset": "FIC-101", "rank": 1, "alarms": 4, "critical_alarms": 1}],
+            "results": [
+                {
+                    "asset": "FIC-101",
+                    "analysis": "linkcraft.loop_health",
+                    "status": "warning",
+                    "score": 42.0,
+                    "summary": "Oscillation",
+                    "updated_at": "2026-10-31T08:00:00+00:00",
+                }
+            ],
+            "events": [
+                {
+                    "at": "2026-10-30T07:12:00+00:00",
+                    "kind": "alarmcraft.alarm.raised",
+                    "asset": "FIC-101",
+                    "severity": "critical",
+                    "summary": "High flow",
+                }
+            ],
+        }
+    )
+    assert [facts[k][0]["id"] for k in ("by_asset", "results", "events")] == ["A1", "R1", "E1"]
+    body = "FIC-101 scored 42 [R1] with 4 alarms [A1][E1], one on [E1, E9]."
+    text, notes, unknown = helper.cite(body, facts)
+    assert text == "FIC-101 scored 42 [1] with 4 alarms [2][3], one on [3]."
+    assert unknown == ["E9"]
+    assert notes[0] == (
+        "Result · FIC-101 · Control loop performance: warning, score 42, Oscillation, "
+        "as of 2026-10-31 08:00"
+    )
+    assert notes[1].startswith("Counted · FIC-101 · rank 1 over the period: 4 alarms (1 critical)")
+    assert notes[2] == "Event 2026-10-30 07:12 · FIC-101 · alarm raised (critical): High flow"
+
+    cell = helper.section_text("Week", body, facts)
+    assert "**Evidence**\n\n1. Result · FIC-101" in cell
+    assert "3. Event 2026-10-30 07:12" in cell
+    assert "cites E9, which the facts it was given do not have" in cell
+
+
+def test_a_text_without_citations_has_no_evidence_list():
+    facts = helper.number({"assets": [], "results": [], "events": []})
+    cell = helper.section_text("Week", "Nothing to report. See [the help](https://x.io).", facts)
+    assert "Evidence" not in cell and "[the help](https://x.io)" in cell
+    text, notes, unknown = helper.cite("Only [E1] cited.", facts)
+    assert (text, notes, unknown) == ("Only cited.", [], ["E1"])

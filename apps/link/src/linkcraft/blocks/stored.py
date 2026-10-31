@@ -43,12 +43,14 @@ def method_config(
     *,
     timing: Mapping[str, Any] | None = None,
     assets: list[str] | None = None,
+    asset_types: list[str] | None = None,
     compute: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """An algorithm's stored configuration: its diagram, its docs and what the diagram runs.
 
     An algorithm on assets also keeps its ``timing`` (cycle, window and step) and the
-    ``assets`` it runs on. ``compute`` is where its work runs (``compute_placement``), kept
+    ``assets`` it runs on, and the equipment ``asset_types`` whose every asset it also runs on
+    (kept only when there are some). ``compute`` is where its work runs (``compute_placement``), kept
     when it is not the default.
     """
 
@@ -66,6 +68,8 @@ def method_config(
     if subject_kind == "asset":
         config["timing"] = dict(timing or {})
         config["assets"] = list(assets or [])
+        if asset_types:
+            config["asset_types"] = list(dict.fromkeys(asset_types))
     placement = compute_placement(compute)
     if placement != DEFAULT_PLACEMENT:
         config["compute"] = placement

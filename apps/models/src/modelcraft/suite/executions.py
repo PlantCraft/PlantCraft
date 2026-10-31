@@ -21,7 +21,8 @@ def put_run(client: Any, run: dict[str, Any], root_path: str) -> str:
         "id": run["id"],
         "name": name[:200],
         "status": status,
-        "trigger": "manual",
+        # A tracking's simulation runs on its schedule (runs/tracking.py).
+        "trigger": "schedule" if (run.get("options") or {}).get("tracking") else "manual",
         "started_at": run.get("started_at") or run["created_at"],
         "finished_at": run.get("finished_at"),
         "subjects": [],

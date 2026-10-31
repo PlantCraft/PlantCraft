@@ -222,3 +222,51 @@ def test_a_rule_only_while_its_permissive_holds(signed_in, app_url, screenshots)
     _shot(page, screenshots, "9-only-while")
     page.get_by_role("button", name="Remove the permissive").click()
     expect(page.get_by_role("button", name="Only while…")).to_be_visible()
+
+
+def test_consoles_split_the_load_by_operator(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/alarm/targets")
+    page.get_by_role("button", name="Add a console").click()
+    board = page.locator(".al-console").first
+    board.get_by_label("Console name").fill("Unit board")
+    board.get_by_label("Alarms an hour, at most").fill("4")
+    board.get_by_label("Areas", exact=True).fill("Simulated")
+    page.get_by_role("button", name=re.compile("Simulated unit")).first.click()
+    expect(board.locator(".al-chip", has_text="Simulated unit")).to_be_visible()
+    board.get_by_label("Operators", exact=True).select_option(index=1)
+    expect(board.locator(".al-chip")).to_have_count(2)
+    _shot(page, screenshots, "10-consoles")
+    page.get_by_role("button", name="Save").click()
+    expect(page.get_by_text(re.compile("Saved. The next shift summary goes at"))).to_be_visible()
+
+    page.goto(f"{app_url}/alarm/performance")
+    table = page.get_by_role("table", name="Consoles")
+    expect(table.get_by_role("button", name="Unit board")).to_be_visible()
+    page.get_by_label("Console", exact=True).select_option(label="Unit board")
+    expect(
+        page.get_by_text("Console Unit board: at most 4 alarms an hour for its operator.")
+    ).to_be_visible()
+    _shot(page, screenshots, "11-performance-by-console")
+
+
+def test_limits_by_product_grade(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/alarm/rules/new")
+    page.get_by_label("Limit", exact=True).fill("60")
+    page.get_by_role("button", name="Limits by grade…").click()
+    expect(page.get_by_role("group", name="Limits by grade")).to_be_visible()
+    page.get_by_role("group", name="The grade comes from").get_by_role(
+        "button", name="An event"
+    ).click()
+    expect(page.get_by_label("Field with the grade")).to_have_value("grade")
+    page.get_by_label("Grade 1", exact=True).fill("HD-5")
+    page.get_by_label("Limit for grade 1").fill("50")
+    page.get_by_role("button", name="Add a grade").click()
+    page.get_by_label("Grade 2", exact=True).fill("LD-2")
+    page.get_by_label("Limit for grade 2").fill("90")
+    _shot(page, screenshots, "12-limits-by-grade")
+    page.get_by_role("button", name="Remove grade 2").click()
+    expect(page.get_by_label("Grade 2", exact=True)).to_have_count(0)
+    page.get_by_role("button", name="Remove the limits by grade").click()
+    expect(page.get_by_role("button", name="Limits by grade…")).to_be_visible()

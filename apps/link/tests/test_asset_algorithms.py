@@ -484,3 +484,70 @@ def test_the_shipped_virtual_sensor_records_the_filter_and_finds_a_drift(tmp_pat
     assert {"value", "uncertainty", "bias", "corrected"} <= recorded
     assert clean["verdict"]["status"] == "ok", clean["verdict"]
     assert drifted["verdict"]["status"] in ("warning", "alarm", "bad"), drifted["verdict"]
+
+
+# Every asset of an equipment type (A20) -------------------------------------------------------
+
+
+def test_an_algorithm_runs_on_every_asset_of_its_equipment_types(tmp_path, calibration):
+    fake = unit_fake()
+    runtime = unit_runtime(tmp_path, fake)
+    try:
+        with client_for(runtime, fake, "admin") as client:
+            answer = client.put(
+                "/link/api/algorithms/unit-twin",
+                json={
+                    "algorithm_id": "unit-twin",
+                    "name": "Unit twin",
+                    "subject_kind": "asset",
+                    "diagram": twin_diagram(calibration),
+                    "timing": TIMING,
+                    "assets": [UNIT],
+                    "asset_types": ["loop", "loop"],
+                },
+            )
+            assert answer.status_code == 200, answer.text
+            assert answer.json()["asset_types"] == ["loop"]
+            profile = runtime.presets.get_profile("unit-twin")
+            # Its own asset, then every asset of the type, each once.
+            assert runtime.algorithm_assets(profile) == [UNIT, "tic-1"]
+            # A save that does not name the types keeps them (a rename, a new diagram).
+            kept = _save(client, calibration)
+            assert kept["asset_types"] == ["loop"]
+            # A monitor on every asset of the algorithm follows the types at each run.
+            made = client.post(
+                "/link/api/schedules",
+                json={
+                    "name": "Every loop",
+                    "profile_id": "unit-twin",
+                    "selector": {"mode": "all"},
+                    "cadence": "daily",
+                },
+            )
+            assert made.status_code == 201, made.text
+            schedule = made.json()
+            assert schedule["selector"] == {"mode": "all"}
+            assert runtime.schedule_subjects(schedule) == [UNIT, "tic-1"]
+            # The types an algorithm can name, as PlantCraft lists them.
+            types = client.get("/link/api/asset-type-choices")
+            assert types.status_code == 200, types.text
+            assert "loop" in {item["id"] for item in types.json()}
+    finally:
+        runtime.shutdown()
+
+
+def test_the_assets_of_a_type_outlive_a_plantcraft_that_does_not_answer(tmp_path):
+    fake = unit_fake()
+    runtime = unit_runtime(tmp_path, fake)
+    try:
+        profile = {"method_config": {"subject_kind": "asset", "asset_types": ["loop"]}}
+        assert runtime.algorithm_assets(profile) == ["tic-1"]
+        runtime._type_assets["loop"] = (0.0, ["tic-1"])  # stale: read again
+
+        def away(**_kwargs):
+            raise RuntimeError("PlantCraft away")
+
+        runtime.service_client.assets = away
+        assert runtime.algorithm_assets(profile) == ["tic-1"]
+    finally:
+        runtime.shutdown()

@@ -25,6 +25,7 @@ import re
 from datetime import datetime
 from typing import Any
 
+from plantcraft_sdk.utc import local_text
 from pydantic import BaseModel, Field, field_validator
 
 from dashcraft.i18n import t
@@ -246,6 +247,18 @@ def gather(reader: Any, spec: AssistantSpec, start: datetime, end: datetime) -> 
             facts["results"] = facts["results"][: len(facts["results"]) // 2]
         facts["cut"] = True
         text = json.dumps(facts, ensure_ascii=False, default=str)
+    return number(facts)
+
+
+def number(facts: dict[str, Any]) -> dict[str, Any]:
+    """Give every fact the model may cite an id: ``A1`` for the counted row of the asset ranked
+    first, ``R1`` for a result, ``E1`` for an event (the order they are sent in)."""
+
+    for prefix, key in (("A", "by_asset"), ("R", "results"), ("E", "events")):
+        facts[key] = [
+            {"id": f"{prefix}{index}", **{k: v for k, v in item.items() if k != "id"}}
+            for index, item in enumerate(facts.get(key) or [], start=1)
+        ]
     return facts
 
 
@@ -254,7 +267,8 @@ LEGEND = (
     "by_asset is already counted and ranked: rank 1 is the worst asset; use its counts, do not "
     "recount events. previous holds the same counts over previous_period (the period of the same "
     "length just before); alarms_change is alarms now minus alarms then (negative: fewer alarms, "
-    "better). Scores are the latest only: there is no previous score."
+    "better). Scores are the latest only: there is no previous score. Every row has an id (A1, R1, "
+    "E1): cite it in square brackets right after the number or claim it supports."
 )
 
 
@@ -363,7 +377,9 @@ name assets as the facts name them, quote numbers as given, and never invent a v
 an event. FACTS.legend says how to read scores; FACTS.by_asset is already counted and ranked
 (rank 1 is the worst): take counts and order from it. Compare with the previous period only
 through by_asset.previous and alarms_change; there is no earlier score, so never say a score
-changed. Answer with the section's text in Markdown (headings start at ##), nothing
+changed. After every number, date or finding you state, cite the fact it comes from by its id in
+square brackets, as "score 42 [R3]", "4 alarms [A1]" or "since 07:12 [E5][E6]"; cite only ids
+the facts have. Answer with the section's text in Markdown (headings start at ##), nothing
 else."""
 
 TUNE_SYSTEM = """\
@@ -521,14 +537,144 @@ def requirement_problems(requirements: str) -> list[str]:
     ]
 
 
+# Evidence footnotes (V4) -------------------------------------------------------------------
+
+# A citation the writer puts after a claim: [R3], [A1][E5], [E5, E6].
+_CITE = re.compile(r"([ \t]*)\[\s*([ARE]\d{1,4}(?:\s*[,;]\s*[ARE]\d{1,4})*)\s*\](?!\()")
+_CITED_ID = re.compile(r"[ARE]\d{1,4}")
+MAX_EVIDENCE = 60
+
+
+def _when(value: Any) -> str:
+    """An instant on the plant's wall clock (the installation's time zone), as people read it."""
+
+    at = _instant(value)
+    return local_text(at) if at else str(value or "")
+
+
+def _number(value: Any) -> str:
+    return f"{value:g}" if isinstance(value, float) else str(value)
+
+
+def _analysis_title(kind: str) -> str:
+    for item in ANALYSES.values():
+        if kind in item["results"]:
+            return t(item["title"])
+    return kind
+
+
+def _event_words(kind: str) -> str:
+    return " ".join(kind.split(".")[1:]).replace("_", " ") or kind
+
+
+def evidence_line(fact: dict[str, Any]) -> str:
+    """One footnote: what a cited fact is and where it came from, in words a reader can check
+    in the app that keeps it."""
+
+    fact_id = str(fact.get("id") or "")
+    asset = str(fact.get("asset") or "")
+    if fact_id.startswith("E"):
+        severity = str(fact.get("severity") or "")
+        words = _event_words(str(fact.get("kind") or ""))
+        summary = str(fact.get("summary") or "").strip()
+        tail = f": {summary}" if summary else ""
+        level = f" ({severity})" if severity and severity != "info" else ""
+        return t(
+            "Event {when} · {asset} · {what}{level}{tail}",
+            when=_when(fact.get("at")),
+            asset=asset,
+            what=words,
+            level=level,
+            tail=tail,
+        )
+    if fact_id.startswith("R"):
+        parts = [str(fact.get("status") or "")]
+        if fact.get("score") is not None:
+            parts.append(t("score {score}", score=_number(fact["score"])))
+        if fact.get("summary"):
+            parts.append(str(fact["summary"]))
+        if fact.get("updated_at"):
+            parts.append(t("as of {when}", when=_when(fact["updated_at"])))
+        return t(
+            "Result · {asset} · {analysis}: {what}",
+            asset=asset,
+            analysis=_analysis_title(str(fact.get("analysis") or "")),
+            what=", ".join(p for p in parts if p),
+        )
+    counted = t(
+        "{alarms} alarms ({critical} critical), {opened} findings opened, {closed} closed",
+        alarms=fact.get("alarms", 0),
+        critical=fact.get("critical_alarms", 0),
+        opened=fact.get("findings_opened", 0),
+        closed=fact.get("findings_closed", 0),
+    )
+    previous = fact.get("previous")
+    if isinstance(previous, dict):
+        counted += t(
+            "; the previous period: {alarms} alarms, {opened} findings opened",
+            alarms=previous.get("alarms", 0),
+            opened=previous.get("findings_opened", 0),
+        )
+    return t(
+        "Counted · {asset} · rank {rank} over the period: {counted}",
+        asset=asset,
+        rank=fact.get("rank", ""),
+        counted=counted,
+    )
+
+
+def cite(body: str, facts: dict[str, Any]) -> tuple[str, list[str], list[str]]:
+    """The text with each citation turned into a footnote number (``[R3]`` → ``[1]``, numbered
+    by first use), the footnotes in that order, and the ids it cited that the facts do not have
+    (dropped from the text, and named in a check)."""
+
+    known = {
+        str(item.get("id")): item
+        for key in ("by_asset", "results", "events")
+        for item in facts.get(key) or []
+        if isinstance(item, dict) and item.get("id")
+    }
+    order: dict[str, int] = {}
+    unknown: list[str] = []
+
+    def replace(match: re.Match[str]) -> str:
+        numbers: list[int] = []
+        for fact_id in _CITED_ID.findall(match.group(2)):
+            if fact_id not in known:
+                if fact_id not in unknown:
+                    unknown.append(fact_id)
+                continue
+            if fact_id not in order:
+                if len(order) >= MAX_EVIDENCE:
+                    continue
+                order[fact_id] = len(order) + 1
+            if order[fact_id] not in numbers:
+                numbers.append(order[fact_id])
+        # A dropped citation takes the space before it along.
+        return f"{match.group(1)}[{', '.join(str(n) for n in numbers)}]" if numbers else ""
+
+    text = _CITE.sub(replace, body)
+    notes = [evidence_line(known[fact_id]) for fact_id in order]
+    return text, notes, unknown
+
+
 def section_text(title: str, body: str, facts: dict[str, Any], model: str = "") -> str:
-    """The cell the report keeps: the title as its heading, the model's text, and a line saying
-    it was written by a model from N facts (so a reader knows what they read)."""
+    """The cell the report keeps: the title as its heading, the model's text with its citations
+    as numbered footnotes under it (each the result, event or count it came from), and a line
+    saying it was written by a model from N facts (so a reader knows what they read)."""
 
     heading = f"# {title.strip()}\n\n" if title.strip() else ""
+    body, notes, unknown = cite(body, facts)
     invented = ungrounded(body, facts)
     dated = misdated(body, facts)
     checks = []
+    if unknown:
+        checks.append(
+            t(
+                "Check: the text cites {ids}, which the facts it was given do not have.",
+                ids=", ".join(unknown[:10]),
+            )
+        )
     if invented:
         checks.append(
             t(
@@ -544,6 +690,9 @@ def section_text(title: str, body: str, facts: dict[str, Any], model: str = "") 
             )
         )
     warning = "".join(f"\n\n> {check}" for check in checks)
+    if notes:
+        listed = "\n".join(f"{index}. {note}" for index, note in enumerate(notes, start=1))
+        warning += f"\n\n**{t('Evidence')}**\n\n{listed}"
     counted = t(
         "Written by a language model{model} from {results} results and {events} events of "
         "{assets} assets. Check before acting.",

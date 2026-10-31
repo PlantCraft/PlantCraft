@@ -17,7 +17,7 @@ every vendored file. Run this right before merging instead of picking a number b
    app and the template (``dev/revendor --all``, ``--sdk-only`` when ui/ is unchanged) and into
    the platform's ``frontend/``;
 4. moves "SDK 0.72.0", "ui 0.72.0" (or `plantcraft-sdk` 0.72.0) to the new numbers in the Markdown lines this branch adds
-   (changelogs, devlog), and commits.
+   (changelogs, devlog), and commits. The platform's pin in ``pyproject.toml`` follows the SDK.
 
 Then ``dev/ship``, push and merge at once. If main takes another SDK first, GitHub shows a
 conflict in the vendored wheels: run it again.
@@ -91,6 +91,9 @@ def stale(base: str) -> list[str]:
         ours, theirs = read((HERE / file).read_text(encoding="utf-8")), read(at(base, file))
         if parse(ours) <= parse(theirs):
             found.append(f"{name} {ours} changes {path}/ but main has {theirs} already")
+    sdk = sdk_version((HERE / SDK_FILES[0]).read_text(encoding="utf-8"))
+    if root_pin(sdk) not in (HERE / "pyproject.toml").read_text(encoding="utf-8"):
+        found.append(f"pyproject.toml does not pin plantcraft-sdk {sdk} as {root_pin(sdk)}")
     return found
 
 
@@ -138,10 +141,19 @@ def next_minor(version: str) -> str:
     return f"{major}.{minor + 1}.0"
 
 
+def root_pin(version: str) -> str:
+    """The platform's pin on the SDK (pyproject.toml): this minor version, up to the next."""
+
+    major, minor = parse(version)[:2]
+    return f'"plantcraft-sdk>={major}.{minor},<{major}.{minor + 1}"'
+
+
 def write_sdk(version: str) -> None:
     for path, pattern, line in (
         (SDK_FILES[0], r'^version = "[^"]+"', f'version = "{version}"'),
         (SDK_FILES[1], r'^__version__ = "[^"]+"', f'__version__ = "{version}"'),
+        # Without it the platform's image refuses the new wheel (make image, 2026-10-31).
+        ("pyproject.toml", r'"plantcraft-sdk>=[^"]+"', root_pin(version)),
     ):
         file = HERE / path
         file.write_text(

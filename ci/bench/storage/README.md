@@ -11,6 +11,7 @@ Where the suite keeps its objects and whether one database for every app would b
 | `json_list_bench.py` | an asset's runs and the texts about a reference (filters inside a JSON list), before and after their side tables |
 | `flood_count_bench.py` | Alarms' flood count on 30 days of outbox, before and after the index on its time |
 | `crash_test.py` | `kill -9` in the middle of saves: in-place `write_text`, temporary + rename, SQLite, PostgreSQL |
+| `gateway_buffer/` | The Historian gateway's memory or disk buffer during a collector outage, and its cost (H3); results in `gateway_buffer.md` |
 
 They need `psycopg` and a PostgreSQL to point at (`--pg "host=... port=... user=..."`). Results of
 the first run (4 vCPU): one SQLite per app stays; JSON stays inside it; files are written

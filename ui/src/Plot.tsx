@@ -3,21 +3,51 @@
  * app without charts never loads Plotly; an app with charts installs `react-plotly.js` and
  * `plotly.js-cartesian-dist-min` and imports `Plot` from here instead of keeping its own.
  * Plotly (1.4 MB) itself is fetched the first time a chart is drawn, not when a page that
- * could draw one opens: a page whose charts sit behind a tab or a click opens without it.
+ * could draw one opens: a page whose charts sit behind a tab or a click opens without it. It
+ * comes from the platform (/static/vendor/, one copy for all apps), or from the app's own
+ * build where the platform does not serve it.
  */
 import { lazy, Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
 import type { PlotParams } from "react-plotly.js";
 import type { BrandTheme } from "./brandTheme.js";
+import { SHARED_PLOTLY, SHARED_VENDOR_URL } from "./sharedVendor.js";
 import { timeFigure, type TimeFigureOptions } from "./timeChart.js";
 import { zonedFigure } from "./timeZone.js";
 import { useBrandTheme } from "./useBrandTheme.js";
 
-let plotly: typeof import("plotly.js-cartesian-dist-min").default | null = null;
+type Plotly = typeof import("plotly.js-cartesian-dist-min").default;
+
+let plotly: Plotly | null = null;
+
+/** How long the platform's copy may take before the app's own is used instead. */
+const SHARED_WAIT_MS = 20000;
+
+/**
+ * Plotly from the platform, one copy for every app (sharedVendor.ts). Rejects where the platform
+ * does not have this exact build (404: an app run on its own, another Plotly version) or the
+ * script does not load in time; the caller then imports the app's own copy.
+ */
+export function loadSharedPlotly(url = SHARED_VENDOR_URL + SHARED_PLOTLY.name, wait = SHARED_WAIT_MS): Promise<Plotly> {
+  const host = globalThis as unknown as { Plotly?: Plotly; document?: Document; navigator?: Navigator };
+  if (host.Plotly) return Promise.resolve(host.Plotly);
+  // jsdom (unit tests) never runs a script it was given: go straight to the import.
+  if (!host.document || /jsdom/i.test(host.navigator?.userAgent ?? "")) return Promise.reject(new Error("no shared Plotly here"));
+  return new Promise((resolve, reject) => {
+    const script = host.document!.createElement("script");
+    const fail = (why: string) => { clearTimeout(timer); script.remove(); reject(new Error(why)); };
+    const timer = setTimeout(() => fail("shared Plotly took too long"), wait);
+    script.src = url;
+    script.async = true;
+    script.onload = () => { clearTimeout(timer); if (host.Plotly) resolve(host.Plotly); else fail("shared Plotly did not define Plotly"); };
+    script.onerror = () => fail("shared Plotly not served");
+    host.document!.head.appendChild(script);
+  });
+}
 
 const PlotlyPlot = lazy(async () => {
-  const [{ default: createPlotlyComponent }, { default: Plotly }] = await Promise.all([
+  const [{ default: createPlotlyComponent }, Plotly] = await Promise.all([
     import("react-plotly.js/factory"),
-    import("plotly.js-cartesian-dist-min"),
+    loadSharedPlotly().catch(() => import("plotly.js-cartesian-dist-min").then((module) => module.default)),
   ]);
   plotly = Plotly;
   return { default: createPlotlyComponent(Plotly) };

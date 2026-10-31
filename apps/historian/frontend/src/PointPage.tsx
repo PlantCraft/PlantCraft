@@ -11,6 +11,7 @@ import { FormulaHelp } from "./CalcPoint";
 import { MODE_LABELS, statusLabel } from "./PointsPage";
 import { isWritten, type Me, type Point, type PointSetting, type Profile } from "./types";
 import { NotebookButton } from "./notebook";
+import { PointEdits } from "./PointEdits";
 import { PointNotes } from "./PointNotes";
 import { PointTrend } from "./PointTrend";
 import { RunsTrend } from "./RunsTrend";
@@ -141,6 +142,7 @@ export function PointPage({ signal, me }: { signal: string; me: Me }) {
       : <PointTrend point={point} signal={signal} tag={tag} period={period} onPeriod={setPeriod} />}
     </div>
     {point.kind !== "runs" && <PointNotes signal={signal} period={period} me={me} />}
+    {point.kind !== "runs" && !derived && point.mode !== "source" && <PointEdits point={point} signal={signal} period={period} me={me} />}
     <div className="panel form-panel">
       <FormSection title={t("Collection and compression")} detail={derived
         ? point.managed_by

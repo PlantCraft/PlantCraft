@@ -696,6 +696,144 @@ def unit_diagrams(
     return out
 
 
+# The kinds a plant's display gives a page each (the frontend's StartDialog offers the same).
+UNIT_KINDS = frozenset({"area", "unit", "section", "system", "train"})
+
+
+def plant_units(assets: list[dict[str, Any]]) -> list[str]:
+    """The units of the plant, by name: the assets of a unit kind, else those that hold others."""
+
+    named = sorted(
+        (asset for asset in assets if isinstance(asset, dict) and asset.get("id")),
+        key=lambda asset: (_text(asset.get("name") or asset["id"]).lower(), asset["id"]),
+    )
+    units = [asset["id"] for asset in named if str(asset.get("kind") or "").lower() in UNIT_KINDS]
+    if units:
+        return units
+    parents = {_parent(asset) for asset in named}
+    return [asset["id"] for asset in named if asset["id"] in parents]
+
+
+# The plant's overview page (Level 1 of ISA-101's display hierarchy): a block per unit.
+OVERVIEW_PAGE = "overview"
+TILE_W, TILE_H = 320, 220
+TILE_COLUMNS = 4
+TILE_BUBBLES = 8
+TILE_BUBBLE = 36
+
+
+def _overview(
+    assets: list[dict[str, Any]], units: list[tuple[str, str, str]], stop: list[str]
+) -> tuple[list[dict[str, Any]], int, int]:
+    """The overview page's elements, width and height: for each ``(unit_id, name, page)`` a
+    block that opens the unit's page, its name, how much is under it, and its first control
+    loops as bubbles coloured by Analytics' loop health (each opens its loop)."""
+
+    ids = _Ids()
+    elements: list[dict[str, Any]] = [
+        {
+            "id": ids("title", "overview"),
+            "type": "text",
+            "x": MARGIN,
+            "y": MARGIN,
+            "text": t("Plant overview: open a unit for its process display"),
+            "size": 18,
+            "bold": True,
+            "page": OVERVIEW_PAGE,
+        }
+    ]
+    top = MARGIN + TITLE_HEIGHT
+    for index, (unit_id, name, page) in enumerate(units):
+        x = MARGIN + (index % TILE_COLUMNS) * TILE_W
+        y = top + (index // TILE_COLUMNS) * TILE_H
+        opens = {"kind": "page", "target": page}
+        under = _descendants(assets, unit_id, frozenset(stop) - {unit_id})
+        loops = [asset for asset in under if _is_loop(_words(asset))]
+        equipment = [
+            asset
+            for asset in under
+            if not any(word in STRUCTURE for word in _words(asset)[:1])
+            and "result" not in _words(asset)[:1]
+            and not _is_loop(_words(asset))
+            and not _is_instrument(_words(asset))
+        ]
+        elements += [
+            {
+                "id": ids("unit", unit_id),
+                "type": "symbol",
+                "symbol": "shape.panel",
+                "x": x,
+                "y": y,
+                "w": TILE_W - 20,
+                "h": TILE_H - 20,
+                "label": "",
+                "label_position": "none",
+                "link": opens,
+                "page": OVERVIEW_PAGE,
+            },
+            {
+                "id": ids("name", unit_id),
+                "type": "text",
+                "x": x + 14,
+                "y": y + 30,
+                "text": _text(name, 30),
+                "size": 16,
+                "bold": True,
+                "link": opens,
+                "page": OVERVIEW_PAGE,
+            },
+            {
+                "id": ids("count", unit_id),
+                "type": "text",
+                "x": x + 14,
+                "y": y + 50,
+                "text": t(
+                    "{equipment} equipment · {loops} control loops",
+                    equipment=len(equipment),
+                    loops=len(loops),
+                ),
+                "size": 12,
+                "link": opens,
+                "page": OVERVIEW_PAGE,
+            },
+        ]
+        per_row = TILE_BUBBLES // 2
+        for at, loop in enumerate(loops[:TILE_BUBBLES]):
+            elements.append(
+                {
+                    "id": ids("loop", loop["id"]),
+                    "type": "symbol",
+                    "symbol": "instrument.bubble",
+                    "x": x + 24 + (at % per_row) * 70,
+                    "y": y + 68 + (at // per_row) * 62,
+                    "w": TILE_BUBBLE,
+                    "h": TILE_BUBBLE,
+                    "label": _text(loop.get("name") or loop["id"], 10),
+                    "label_position": "below",
+                    "asset_id": loop["id"],
+                    "state": {"item": {"asset_id": loop["id"], "result": LOOP_HEALTH}},
+                    "page": OVERVIEW_PAGE,
+                }
+            )
+        if len(loops) > TILE_BUBBLES:
+            elements.append(
+                {
+                    "id": ids("more", unit_id),
+                    "type": "text",
+                    "x": x + TILE_W - 34,
+                    "y": y + 50,
+                    "text": t("+{count} more", count=len(loops) - TILE_BUBBLES),
+                    "size": 11,
+                    "align": "end",
+                    "link": opens,
+                    "page": OVERVIEW_PAGE,
+                }
+            )
+    columns = min(len(units), TILE_COLUMNS)
+    rows = math.ceil(len(units) / TILE_COLUMNS)
+    return elements, MARGIN * 2 + columns * TILE_W, top + rows * TILE_H + MARGIN
+
+
 def plant_display(
     assets: list[dict[str, Any]],
     units: list[str],
@@ -710,15 +848,25 @@ def plant_display(
     symbols = list(library)
     names = {item.get("id"): item.get("name") or item.get("id") for item in assets}
     wanted = list(dict.fromkeys(unit for unit in units if isinstance(unit, str)))
-    drawn: list[tuple[str, dict[str, Any]]] = []
+    drawn: list[tuple[str, str, dict[str, Any]]] = []
     for unit_id in wanted:
         found = draw_unit(assets, unit_id, library=symbols, stop=wanted)
         if found is not None and any(item["type"] == "symbol" for item in found[0]["elements"]):
-            drawn.append((str(names.get(unit_id) or unit_id), found[0]))
+            drawn.append((unit_id, str(names.get(unit_id) or unit_id), found[0]))
     if not drawn:
         return None
-    pages, elements = [], []
-    for number, (unit, diagram) in enumerate(drawn, start=1):
+    # Two units or more: an overview page first (Level 1), each unit's page a way back to it.
+    overview = len(drawn) > 1
+    pages: list[dict[str, Any]] = []
+    elements: list[dict[str, Any]] = []
+    sizes = [(diagram["width"], diagram["height"]) for _, _, diagram in drawn]
+    if overview:
+        tiles = [(unit_id, unit, f"p{n}") for n, (unit_id, unit, _) in enumerate(drawn, start=1)]
+        found, width, height = _overview(assets, tiles, wanted)
+        pages.append({"id": OVERVIEW_PAGE, "name": t("Overview")})
+        elements += found
+        sizes.append((width, height))
+    for number, (_unit_id, unit, diagram) in enumerate(drawn, start=1):
         page = f"p{number}"
         pages.append({"id": page, "name": _text(unit, 60)})
         for element in diagram["elements"]:
@@ -727,13 +875,29 @@ def plant_display(
                 if moved.get(end):
                     moved[end] = {**moved[end], "element": f"{page}-{moved[end]['element']}"[:40]}
             elements.append(moved)
+        if overview:
+            elements.append(
+                {
+                    "id": f"{page}-back"[:40],
+                    "type": "text",
+                    "x": MARGIN,
+                    "y": 20,
+                    "text": t("‹ Plant overview"),
+                    "size": 12,
+                    "link": {"kind": "page", "target": OVERVIEW_PAGE},
+                    "page": page,
+                }
+            )
     payload = {
         "name": _text(name),
         "description": _text(
-            t("Drawn from the plant's assets in PlantCraft, a page per unit."), 400
+            t("Drawn from the plant's assets in PlantCraft: an overview and a page per unit.")
+            if overview
+            else t("Drawn from the plant's assets in PlantCraft, a page per unit."),
+            400,
         ),
-        "width": max(diagram["width"] for _, diagram in drawn),
-        "height": max(diagram["height"] for _, diagram in drawn),
+        "width": min(MAX_SIZE, max(width for width, _ in sizes)),
+        "height": min(MAX_SIZE, max(height for _, height in sizes)),
         "grid": GRID,
         "pages": pages,
         "elements": elements,

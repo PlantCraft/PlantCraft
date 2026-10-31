@@ -13,6 +13,61 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   written out (status, health, window, limiting finding, likely cause and what to do first), the
   reference `#loop_result:<loop>@<window end>` (declared in `app.toml`, it opens the loop again) and
   the PV/SP and OP charts attached as one PNG (`frontend/src/loopResult.ts`).
+- **Mass balance reconciliation and redundant pair drift** (gaps M5, A23), two blocks in the
+  Estimators library. *Mass balance reconciliation* takes up to eight flows (ports s1 to s8) and
+  their balances as text (`s1 + s2 = s3; s3 = s4 + 0.5*s5`), with each meter's uncertainty in % of
+  its reading (2% by default). At each step it gives the reconciled flows, which close every
+  balance (weighted least squares), and the raw imbalance. On the window's mean it judges whether
+  the balances close within the uncertainty (global χ² test). When they do not, it names the meter
+  with the gross error and its bias, using the measurement test and serial elimination. Meters
+  that sit in exactly the same balances are named together. *Redundant pair drift* filters the
+  difference between two meters of the same quantity with a local level Kalman filter. It gives
+  the drift and its uncertainty, and it judges the drift bad when it exceeds both a tolerance and
+  a number of standard deviations. NumPy only (`linkcraft/methods/reconciliation.py`).
+
+- **Lab fusion block** (`estimator.lab_fusion`, Estimators, group Soft sensors). It corrects an
+  analyzer or a soft sensor with the lab results. Each result counts at its sampling time, from
+  the approval delay you give. The block outputs the corrected value, the bias and the
+  uncertainty.
+- **A signal against the lab** (signal page, panel "Against the lab"). Set a signal's reference to
+  its lab analysis (`laboratory:<analysis>`), and its page shows three things over the last 7
+  days. First, the health from 0 to 100 at the sampling times, raw and corrected by the lab.
+  Second, the bias over time. Third, actual × predicted. Each result counts from its approval in
+  the Historian; a rejected one is left out. `GET /api/signals/{id}/lab`.
+- **Third-party multivariable controllers (APC), read only: health and the cost of each active
+  limit** (gaps A16, A17). Results has a *Multivariable controllers* tab: per controller, over the
+  last day, week or month, the time it was on, its MVs in service and its CVs at a limit; one
+  controller's page ranks its active limits by the worth of 1% more range (its shadow price times
+  1% of the variable's range) and lists each MV and CV with its value, target, limits and state.
+  The weekly report has the same tables, and the widget "Analytics: multivariable controllers"
+  shows each controller on the Overview and on Desk. It reads the assets of types `apc`, `apc_mv`
+  and `apc_cv` (`GET /api/apc`, `GET /api/apc/<id>`) and writes nothing.
+- **A plant map on the Overview: every loop coloured by the KPI you pick.** The KPIs are health,
+  effective control, time in normal mode, time inside the band, and time with the output off its
+  limits. All of them are percentages where higher is better, so one scale colours them: good
+  from 90, fair from 75, poor from 50, bad below. Two views: a heat map grouped by area, and a
+  treemap whose rectangles are sized by the loop's criticality (critical, high, medium, low), so
+  the critical loops take the most room. Each loop opens its page. `GET /api/plant-map`.
+- **An algorithm on assets can run on every asset of an equipment type.** On the algorithm's
+  page, "And every asset of a type" adds PlantCraft asset types, subtypes included, for example
+  every pump or every exchanger. A monitor on "Every asset of the algorithm" reads the type's
+  assets from PlantCraft at each run (at most once a minute), so an asset added later is picked
+  up without changing the algorithm. Saving without naming the types keeps them. New route:
+  `GET /api/asset-type-choices`.
+- **Oscillations several loops share, grouped by period, with where each likely starts.**
+  The loops the last runs found oscillating are grouped when their periods are within 15% of
+  each other: a plant-wide oscillation starts in one place and travels. In each group the loop
+  to look at first is the one whose valve shows stiction, then the one with the most regular
+  cycle (it is cleanest near its source). `GET /api/oscillation-groups` and the widget
+  "Analytics: oscillations shared by several loops" on the Overview and on Desk.
+- **A PI tuning suggestion on the loop page, read only.** "Suggest tuning" fits a first order
+  plus dead time from the OP to the PV on the loop's last window and gives PI settings by Lambda
+  (IMC) rules for three closed-loop speeds: tight (lambda = dead time), moderate (lambda = time
+  constant) and robust (lambda = 3 time constants). It also gives the controller action.
+  Closed-loop data is a weak experiment, so the page calls it a starting point for a step test,
+  and says why it is not reliable when the fit explains under half of the PV, the OP barely
+  moved, or the time constant is shorter than a sample. Nothing is sent to the controller
+  (`GET /api/loops/{loop_id}/tuning`).
 - **Horch's cross-correlation in the stiction screen.** When the loop cycles, the screen reports
   `horch_index`: the cross-correlation of OP and PV at lag 0 over its largest value within half
   a period. Near 0 means a quarter-cycle shift (stiction behind a controller output), and near 1

@@ -94,6 +94,10 @@ model's inputs, plus the measured value of each output, and it gives what the mo
 and the residual (measured minus predicted). Wire the residuals to a **Deviation (T²)** block,
 which judges them against normal operation.
 
+The **Virtual sensors** library holds estimators that need no model of your own: a Kalman filter
+of a PV from its valve, and a sensor drift estimate. The **Virtual sensor** algorithm wires both
+on a loop, records them as series and judges the drift with a limit check.
+
 A model comes from PlantCraft Models: on an exported FMU's run, an administrator presses
 **Publish to Analytics**, and the model is a block of the library at once. **Build an algorithm with
 it** there (or **New algorithm with this model** on the block's page) opens the editor on a new

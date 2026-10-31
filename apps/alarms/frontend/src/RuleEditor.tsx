@@ -1,5 +1,5 @@
 import { DataTable, FormFooter, FormSection, RecipientPicker, confirmAction } from "@plantcraft/ui";
-import { FlaskConical, Save, Trash2, X } from "lucide-react";
+import { FlaskConical, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { AlarmChart } from "./AlarmChart";
@@ -8,7 +8,7 @@ import { navigate } from "./nav";
 import { NotifyEditor } from "./notify";
 import { useDirectory } from "./people";
 import { draftOf, EMPTY_RULE, NO_WHERE, scheduleRule } from "./rules";
-import { AssetSearch } from "./SourcePicker";
+import { AssetChips } from "./Chips";
 import type { AssetOption, Creates, Discipline, Execution, Me, Per, Priority, Rule, RuleDraft, TryResult, Where } from "./types";
 import { DISCIPLINE_WORDS, ErrorBox, Heading, Link, Loading, PRIORITY_WORDS, WindowPicker, message } from "./ui";
 import { WhenEditor } from "./WhenEditor";
@@ -40,17 +40,6 @@ export function scopeOf(where: Where): Scope {
   if (where.executions.length || where.per === "execution") return "executions";
   if (where.assets.length || where.under.length || where.types.length) return "assets";
   return "none";
-}
-
-/** Assets chosen one by one (search, then each shows as a chip). */
-function AssetChips({ label, value, assets, onChange, hint }: { label: string; value: string[]; assets: AssetOption[]; onChange: (value: string[]) => void; hint?: string }) {
-  const name = (id: string) => { const found = assets.find((item) => item.id === id); return found ? (found.parent ? `${found.parent} › ${found.name}` : found.name) : id; };
-  return <div><span className="al-label">{label}</span>
-    {value.length > 0 && <div className="al-chips">{value.map((id) => <span key={id} className="al-chip">{name(id)}
-      <button type="button" aria-label={t("Remove {name}", { name: name(id) })} onClick={() => onChange(value.filter((item) => item !== id))}><X size={12} /></button></span>)}</div>}
-    <AssetSearch assets={assets.filter((item) => !value.includes(item.id))} value="" label={label} placeholder={t("Search assets to add")} onPick={(id) => { if (id && !value.includes(id)) onChange([...value, id]); }} />
-    {hint && <small className="muted">{hint}</small>}
-  </div>;
 }
 
 /** Choices ticked from a short list (asset types, executions). */

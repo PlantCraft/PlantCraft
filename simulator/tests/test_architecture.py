@@ -21,9 +21,11 @@ LAYERS: dict[str, int] = {
     "dataset": 4,
     "experiments": 4,
     "server": 4,
+    "loops.faults": 1,
     "loops.dynamics": 1,
     "loops.storage": 2,
     "loops.server": 4,
+    "loops.control": 4,
     "loops": 4,
     # The source test kit (development and CI only) reads the benchmark's engine.
     "testkit.plant": 4,

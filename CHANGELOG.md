@@ -13,6 +13,30 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   description (`text=`) and an image left in the tab (`attach=`); the new action keeps the image
   (PNG, JPEG or WebP, up to 2 MB) and its page shows it. Analytics uses it to open an action from a
   loop's result with the loop's chart (docs/collaboration.md).
+- `plantcraft-sdk`: **lab fusion** (`plantcraft_sdk.estimators.fuse_lab`). It corrects an online
+  value (an analyzer or a soft sensor) with the lab results. Each result counts at its sampling
+  time and only from its approval: a Kalman filter with a delayed measurement. The fusion returns
+  the corrected value, the bias and the uncertainty. A dead zone and a largest correction per
+  result keep the lab's scatter and a bad sample from moving the bias. `sensor_health` grades a virtual sensor
+  from 0 to 100 against the lab. Analytics runs it as the block `estimator.lab_fusion` (library
+  Estimators, group Soft sensors).
+
+- `plantcraft-sdk`: starter asset types for a third-party multivariable controller:
+  *Multivariable controller* (`apc`, role `on`, attributes `vendor` and `cost_unit`) and inside it
+  *Manipulated variable* (`apc_mv`) and *Controlled variable* (`apc_cv`), both from *Controller
+  variable* (`apc_variable`: roles `value`, `lo`, `hi`, `target`, `status`, `shadow_price`,
+  attribute `limit_band`). An existing installation gets them at its next start. Analytics' APC
+  health and View's MV/CV widget read them.
+- The Historian's gateway writes its buffer to `data/histcraft/gateway-buffer` (made by
+  `install.sh`; mounted read-write in `histcraft-gateway`, its only writable folder), so values
+  read while the collector is away survive a gateway restart.
+
+- **The owners of a failing source hear of it** (gap H13): a condition the Historian reports
+  with `owners` in its payload (`source.disconnected`, `source.late`) is told to them as a
+  Historian notification, in Messages and by email, with the team's contact and a link to the
+  source; when the condition ends the notification is settled ("Back to normal at …"). No alarm
+  rule is needed for it.
+
 - **Windows without Docker Desktop: Rancher Desktop.** `./install.sh --check` in WSL now accepts
   Rancher Desktop's Linux `docker`, which reaches Ubuntu through Windows' PATH. It refused that
   path before, as if it were Docker Desktop's. `docs/install.md` gives the Rancher Desktop
@@ -117,6 +141,15 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Customizing an overview shows that it is on.** A tinted bar that stays in view says
+  "Customizing this page", explains the moves and keeps **Done** at hand; each widget gets a
+  stronger outline (ui 0.97.0, interface pass of 2026-10-31).
+- **Plotly and the fonts download once for the whole suite, not once per app (ui 0.96.0).**
+  The platform serves them at `/static/vendor/` under names that carry a hash of their bytes
+  (kept a year by the proxy), and every app asks there first: `@plantcraft/ui/plot` loads
+  Plotly from the platform and `fonts.css` lists the platform's copy before the app's own. An
+  app run on its own, or a platform with another Plotly build, answers 404 and the app uses its
+  own copy as before. `node ui/scripts/shared-vendor-names.mjs` prints the names after an upgrade.
 - **Analytics › Algorithms opens without the diagram editor.** The list moved to its own module
   (`AlgorithmList.tsx`), so opening it no longer loads React Flow and the test tools: 724 KB to
   443 KB of script. The algorithm's page still loads them.
@@ -257,6 +290,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   models still wait for the plant's data.
 
 ### Fixed
+
+- **The suite's journeys on an installation without the public demo.** `tests/e2e_suite` walked
+  the visitor's journeys only through "Enter the demo", so on a `--demo` install 13 of 15 failed.
+  They now read `GET /api/session` first and skip, saying to install with `--public-demo`.
+- **The release bundle carries the setup wizard.** `deploy/bundle.sh` left `wizard/` out, so the
+  documented `sudo python3 wizard/wizard.py` found nothing in a bundle.
 
 - **Interface pass, second round** (every page clicked like a person, light, dark and phone):
   the platform's windows (new action, calendar event, messages, people, asset forms) close with

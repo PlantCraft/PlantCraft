@@ -33,8 +33,10 @@ from pydantic import BaseModel, Field, ValidationError
 from histcraft.api.deps import RuntimeDep, current_user, time_limited
 from histcraft.api.read_budget import BinaryBatch, EncodedBatch, Ticket, json_bytes
 from histcraft.api.runtime import Runtime, point_ref
+from histcraft.archive.edit_marks import edit_marks
 from histcraft.archive.query import Reader, SourceUnavailable, iso_ms, to_ms
 from histcraft.catalog.models import (
+    INTEGRATION_FIELDS,
     PLANT_KINDS,
     SOURCE_SETTINGS,
     SYSTEM_SOURCE,
@@ -147,6 +149,8 @@ def sources(runtime: RuntimeDep, _caller: PlantCraft) -> list[dict[str, Any]]:
             "options": item["options"],
             # Overrides of the general settings for the source's signals (null: general).
             **{key: item[key] for key in SOURCE_SETTINGS},
+            # The integration: who answers for it, the team's contact, the expected interval.
+            **{key: item[key] for key in INTEGRATION_FIELDS},
             "status": state.get(item["id"]),
             "signals": item["points"],
         }
@@ -233,6 +237,19 @@ def update_source(
         raise HTTPException(exc.status, str(exc)) from exc
     runtime.audit(caller, "source.update", source_id, {"endpoint": body.endpoint})
     return _source_answer(runtime, source_id)
+
+
+@router.get("/sources/{source_id}/history")
+def source_history(
+    source_id: str, runtime: RuntimeDep, _caller: PlantCraft, limit: int = 100
+) -> list[dict[str, Any]]:
+    """When the collector found the source connected and disconnected, the newest first."""
+
+    try:
+        runtime.catalog.source(source_id)
+    except CatalogError as exc:
+        raise HTTPException(exc.status, str(exc)) from exc
+    return runtime.catalog.source_events(source_id, limit)
 
 
 @router.delete("/sources/{source_id}", status_code=204)
@@ -614,13 +631,19 @@ def read_batch(
         )
         + (len(refs) - len(stored)) * _values_of(None, begin, finish, step)
     )
-    quality: dict[int, list[tuple[int, str]]] = {}
+    quality: dict[int, list[tuple]] = {}
+    edited: dict[int, list[dict[str, Any]]] = {}
     if body.quality:
         quality = runtime.archive.qualities_many(
             [int(p["id"]) for p in points.values() if p is not None and p["mode"] != "source"],
             begin_ms,
             finish_ms,
             with_status=True,
+        )
+        edited = runtime.archive.edits(
+            [int(p["id"]) for p in points.values() if p is not None and p["mode"] != "source"],
+            begin_ms,
+            finish_ms,
         )
     builder: EncodedBatch | BinaryBatch = BinaryBatch() if binary else EncodedBatch()
     read = runtime.reader.series_arrays if binary else runtime.reader.series
@@ -672,6 +695,9 @@ def read_batch(
                     for at, (_, code, status, name) in zip(stamps_q, changes, strict=True)
                 ]
             }
+            marks = edit_marks(edited.get(int(point["id"]), []))
+            if marks:
+                extra["edits"] = marks
         if body.extremes and step:
             bounds = runtime.reader.extremes(ref, begin, finish, step)
             if bounds is not None and len(bounds[0]) == len(stamps):

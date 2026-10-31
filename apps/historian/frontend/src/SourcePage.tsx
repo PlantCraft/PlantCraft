@@ -12,7 +12,7 @@ import { navigate } from "./nav";
 import { ago, formatBytes, formatCount } from "./format";
 import { MODE_LABELS, pointColumns, pointPath } from "./PointsPage";
 import { appOfSource, Connection, KIND_ABOUT, KINDS, SourceActions, sourceName, useSourceActions } from "./SourcesPage";
-import { isWritten, type Me, type Point, type Settings, type Source } from "./types";
+import { isWritten, type Me, type Point, type Settings, type Source, type SourceEvent } from "./types";
 import { ErrorBox, Heading, Link, Loading } from "./ui";
 
 /** A source's setting in effect: its own, else the general one. */
@@ -39,16 +39,40 @@ function SourceArchive({ points, reads }: { points: Point[]; reads: boolean }) {
   </div>;
 }
 
+const STATUS_LABELS: Record<string, string> = { connected: "Connected", disconnected: "Disconnected" };
+
+/** Who answers for the source, how to reach them, what is expected, and its recent history (H13). */
+function SourceIntegration({ source, history }: { source: Source; history: SourceEvent[] }) {
+  const owners = source.owners ?? [];
+  const minutes = (source.heartbeat_seconds ?? 0) / 60;
+  return <div className="panel">
+    <div className="panel-header"><div><h2>{t("Integration")}</h2><p>{t("The owners are told, with an email, when the source disconnects or sends nothing for longer than expected.")}</p></div></div>
+    <dl className="settings-list">
+      <dt>{t("Owners")}</dt><dd>{owners.length ? owners.join(", ") : t("Nobody yet: edit the source to name its owners.")}</dd>
+      <dt>{t("Contact")}</dt><dd>{source.contact || "—"}</dd>
+      <dt>{t("Expected interval")}</dt><dd>{minutes ? t("A new value at least every {minutes} min", { minutes: formatCount(minutes) }) : t("Not watched")}</dd>
+    </dl>
+    <h3>{t("History")}</h3>
+    {history.length === 0
+      ? <p className="muted">{t("No change of state recorded yet.")}</p>
+      : <ul className="source-history">{history.map((item) => <li key={`${item.at_ms}-${item.status}`}>
+          <b>{t(STATUS_LABELS[item.status] ?? item.status)}</b> · {ago(item.at_ms)}{item.detail ? ` · ${item.detail}` : ""}
+        </li>)}</ul>}
+  </div>;
+}
+
 export function SourcePage({ sourceId, me }: { sourceId: string; me: Me }) {
   const [source, setSource] = useState<Source | null>(null);
   const [points, setPoints] = useState<Point[] | null>(null);
   const [general, setGeneral] = useState<Settings | null>(null);
+  const [history, setHistory] = useState<SourceEvent[]>([]);
   const [error, setError] = useState("");
   const apps = useSuiteApps();
   const load = () => Promise.all([api.sources(), api.points("", sourceId)]).then(([sources, found]) => {
     const match = sources.find((item) => item.id === sourceId);
     if (!match) { setError(t("No source {id}.", { id: sourceId })); return; }
     setSource(match); setPoints(found); setError("");
+    api.sourceHistory(sourceId).then(setHistory).catch(() => undefined);
   }).catch((err: Error) => setError(err.message));
   const actions = useSourceActions(load, () => navigate("/sources"));
   useEffect(() => {
@@ -93,6 +117,7 @@ export function SourcePage({ sourceId, me }: { sourceId: string; me: Me }) {
         <dt>{t("Longest interval between archived values")}</dt><dd>{inEffect(source.default_max_seconds, general?.default_max_seconds, "s")}</dd>
       </dl>
     </div>}
+    {!system && source.kind !== "import" && <SourceIntegration source={source} history={history} />}
     <h2 className="section-title">{t("Signals from this source")}</h2>
     {points.length === 0
       ? <div className="panel empty"><p>{derived ? t("No data received from this app.") : t("No signals. Browse the source to add signals.")}</p></div>

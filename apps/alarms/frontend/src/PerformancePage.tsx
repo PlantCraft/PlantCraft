@@ -1,24 +1,59 @@
 import { DataTable, useAssistantPage, BRAND_COLORS, currentTheme, plotTheme, statusVar } from "@plantcraft/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import { formatDate, formatDuration, t } from "./i18n";
 import { Plot } from "@plantcraft/ui/plot";
+import { homeConsole } from "./consoles";
 import { useDirectory, whoLabel } from "./people";
-import type { Performance } from "./types";
+import type { ConsoleLoads, Me, Performance } from "./types";
 import { PerformanceTabs } from "./PerformanceTabs";
 import { ErrorBox, Heading, Link, Loading, Pill, PRIORITY_WORDS, WindowPicker, message } from "./ui";
 
 const FIGURE_WORDS: Record<string, string> = { ok: "Acceptable", warning: "Manageable", alarm: "Over target" };
 
-/** Alarm performance against the ISA-18.2 and EEMUA 191 targets. */
-export function PerformancePage() {
+const EEMUA_WORDS: Record<string, string> = { robust: "Robust", stable: "Stable", reactive: "Reactive", overloaded: "Overloaded" };
+const EEMUA_STATUS: Record<string, string> = { robust: "ok", stable: "ok", reactive: "warning", overloaded: "alarm" };
+
+/** Each operator position's load against its own target (shown once consoles are set). */
+function ConsolesTable({ loads, chosen, onChoose }: { loads: ConsoleLoads; chosen: string; onChoose: (id: string) => void }) {
+  return <section className="panel table-panel">
+    <div className="panel-header al-pad"><div><h2>{t("Consoles")}</h2><p>{t("Each operator position against its own target, in this period.")}</p></div></div>
+    <DataTable rows={loads.consoles} rowKey={(item) => item.id} label={t("Consoles")} columns={[
+      { key: "name", label: t("Console"), sort: (item) => item.name, render: (item) => <button type="button" className={`link-button${item.id === chosen ? " strong" : ""}`} onClick={() => onChoose(item.id)}>{item.name}</button> },
+      { key: "alarms", label: t("Alarms"), numeric: true, phone: "hide", sort: (item) => item.alarms },
+      { key: "total", label: t("Raised"), numeric: true, sort: (item) => item.total },
+      { key: "per_hour", label: t("Per hour"), numeric: true, sort: (item) => item.per_hour, render: (item) => <><span className="pc-num">{item.per_hour}</span> <small className="muted">≤ {item.target_per_hour}</small> <Pill status={item.per_hour_status} label={t(FIGURE_WORDS[item.per_hour_status] ?? item.per_hour_status)} /></> },
+      { key: "peak", label: t("Peak in 10 min"), numeric: true, phone: "hide", sort: (item) => item.peak_10min, render: (item) => <Pill status={item.peak_status} label={String(item.peak_10min)} /> },
+      { key: "eemua", label: t("EEMUA 191"), sort: (item) => item.eemua, render: (item) => <Pill status={EEMUA_STATUS[item.eemua] ?? "unknown"} label={t(EEMUA_WORDS[item.eemua] ?? item.eemua)} /> },
+    ]} />
+  </section>;
+}
+
+/** Alarm performance against the ISA-18.2 and EEMUA 191 targets: of every alarm the person
+ * sees, or of one console (operator position) against its own target. */
+export function PerformancePage({ me, console: asked }: { me: Me; console?: string }) {
   const [period, setPeriod] = useState("24h");
   const [data, setData] = useState<Performance | null>(null);
+  const [loads, setLoads] = useState<ConsoleLoads | null>(null);
+  const [chosen, setChosen] = useState<string | null>(asked ?? null);
   const [error, setError] = useState("");
   const directory = useDirectory();
-  useEffect(() => { setData(null); api.performance(period).then(setData).catch((err) => setError(message(err))); }, [period]);
+  const picked = useRef(asked !== undefined);
+  useEffect(() => { api.consoleLoads(period).then(setLoads).catch(() => setLoads({ window: period, consoles: [], defined: 0 })); }, [period]);
+  // Opened without a console: the one the person sits at, once the consoles are known.
+  useEffect(() => {
+    if (picked.current || !loads) return;
+    picked.current = true;
+    setChosen(loads.defined ? homeConsole(loads.consoles, me.username) : "");
+  }, [loads, me.username]);
+  useEffect(() => {
+    if (chosen === null) return;
+    setData(null); setError("");
+    api.performance(period, chosen || undefined).then(setData).catch((err) => setError(message(err)));
+  }, [period, chosen]);
+  const choose = (id: string) => { picked.current = true; setChosen(id); };
   // Alarms' works here (app.toml): the load against the targets, the bad actors.
-  useAssistantPage(data && { place: t("Alarms › Performance"), page: "alarmcraft:performance", facts: { period, total: data.total, unacked: data.unacked, mean_ack_seconds: data.mean_ack_seconds ?? "" },
+  useAssistantPage(data && { place: t("Alarms › Performance"), page: "alarmcraft:performance", facts: { period, console: data.console?.name ?? "", total: data.total, unacked: data.unacked, mean_ack_seconds: data.mean_ack_seconds ?? "" },
     view: { top: data.top.slice(0, 15).map((item) => `${item.name} (${item.alarm_id}): ${item.count}, ${Math.round(100 * item.share)} %${item.chattering ? ", chattering" : ""}`), stale: data.stale.slice(0, 15).map((item) => item.alarm_id), priorities: data.priorities.map((item) => `${item.priority} ${Math.round(100 * item.share)} % (target ${Math.round(100 * item.target)} %)`) } });
   const mode = currentTheme();
   const layout = plotTheme(mode);
@@ -28,8 +63,17 @@ export function PerformancePage() {
       detail={t("The alarm load for one operator position against the ISA-18.2 and EEMUA 191 targets. Alerts are not counted.")}
       actions={<WindowPicker value={period} onChange={setPeriod} />} />
     <PerformanceTabs />
+    {loads && loads.defined > 0 && <div className="al-console-pick">
+      <label>{t("Console")} <select aria-label={t("Console")} value={chosen ?? ""} onChange={(event) => choose(event.target.value)}>
+        <option value="">{t("Every alarm")}</option>
+        {loads.consoles.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+      </select></label>
+      {data?.console && <span className="muted small">{t("Console {name}: at most {n} alarms an hour for its operator.", { name: data.console.name, n: data.console.per_hour })}</span>}
+      <Link to="/targets">{t("Set the consoles")}</Link>
+    </div>}
     {error && <ErrorBox text={error} />}
     {!data ? <Loading /> : <>
+      {loads && loads.defined > 0 && <ConsolesTable loads={loads} chosen={chosen ?? ""} onChoose={choose} />}
       <section className="pc-grid">
         {data.figures.map((figure) => <div key={figure.id} className="panel kpi-card" style={{ borderTopColor: statusVar(figure.status) }}>
           <small>{t(figure.label)}</small>
@@ -94,9 +138,6 @@ export function PerformancePage() {
     </>}
   </>;
 }
-
-const EEMUA_WORDS: Record<string, string> = { robust: "Robust", stable: "Stable", reactive: "Reactive", overloaded: "Overloaded" };
-const EEMUA_STATUS: Record<string, string> = { robust: "ok", stable: "ok", reactive: "warning", overloaded: "alarm" };
 
 /** The EEMUA 191 chart: the period as one point, average against peak alarms per 10 minutes,
  * over the four bands (robust, stable, reactive, overloaded). */

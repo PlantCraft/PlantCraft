@@ -20,13 +20,24 @@ change or remove sources.
   administrator sees, then **Trust** it. From then on a server presenting another certificate
   is refused.
 - **Quality**: OPC UA and PI tell the quality of each value. Uncertain values are archived and
-  shaded on the signal's trend; bad values are gaps. CSV files report a quality only in a
+  shaded on the signal's trend; bad values are gaps. With OPC UA the status code is kept too
+  (like `UncertainLastUsableValue` or `BadSensorFailure`), and so are the limit bits (a value
+  pinned at its low or high limit, or constant), so a good value that hits its high limit is
+  archived where it did. CSV files report a quality only in a
   `quality` column (long layout); apps' series report none: their values count as good.
 - **Mode**: where the history of its signals comes from (read from the source, archived here,
   or both), unless a signal sets its own.
 - **Settings of this source's signals**: retention, scan, deviation (% of span) and max
   interval for every signal of the source. Empty fields take the general settings; a signal's
   own value wins over the source's (see Settings).
+- **Integration**: who answers for the source and how often it must deliver. **Owners** are
+  people or groups of PlantCraft (`user:ana, group:automation`); **Contact** says how to reach
+  the team that runs the connection; **Expected interval** is how often a new value must arrive
+  on at least one of its signals (empty: not watched). When the source disconnects, or sends
+  nothing for longer than expected (*Source late*), PlantCraft tells the owners in Messages and
+  by email, with the contact, and settles the message when the source is back. The source's
+  page lists its owners and the **history** of its states (connected, disconnected), kept 90
+  days.
 - **Test** asks the collector to connect once and report the server's answer.
 - **CSV files**: a file, or a pattern in the last part of the path (`/csv/lab/*.csv`), that
   another application keeps writing. The collector checks it every **Check every (minutes)**
@@ -50,3 +61,9 @@ change or remove sources.
   period (10 s when empty) by a user that can only read. The time column and the tag columns
   are not signals of their own. Only rows newer than a signal's last value are archived.
   **Browse** lists what the gateway has sent; a source silent for 60 s shows Disconnected.
+  Store and forward: values the gateway reads while the collector is away wait in its disk buffer and arrive in
+  order when the collector is back, also after a gateway restart; a batch sent twice is taken
+  once. The suite's health raises a warning when more than 64 MB waits.
+- **Laboratory results (LIMS)**: an SQL source marked so writes each row as a laboratory result
+  at its sampling time, with its status (uncertain until approved, bad when rejected) and the
+  times it reached the laboratory and was approved. A row read again unchanged is not rewritten.

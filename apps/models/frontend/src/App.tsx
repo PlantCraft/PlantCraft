@@ -27,6 +27,7 @@ const StudiesPage = lazy(() => import("./StudiesPage").then((m) => ({ default: m
 const StudyPage = lazy(() => import("./StudiesPage").then((m) => ({ default: m.StudyPage })));
 const AssetPage = lazy(() => import("./SuitePages").then((m) => ({ default: m.AssetPage })));
 const HelpView = lazy(() => import("./SuitePages").then((m) => ({ default: m.HelpView })));
+const TrackingPage = lazy(() => import("./TrackingPage").then((m) => ({ default: m.TrackingPage })));
 const Workbench = lazy(() => import("./Workbench").then((m) => ({ default: m.Workbench })));
 
 function Route({ path, me }: { path: string; me: Me }) {
@@ -49,6 +50,7 @@ function Route({ path, me }: { path: string; me: Me }) {
   if (section === "blocks" && id) return <BlockPage key={id} blockId={id} tab={blockTab(sub)} me={me} />;
   if (section === "blocks") return <BlocksPage me={me} />;
   if (section === "assets" && id) return <AssetPage key={id} assetId={id} me={me} />;
+  if (section === "tracking") return <TrackingPage me={me} />;
   if (section === "help") return <HelpView pageId={id || undefined} />;
   if (!section) return <OverviewPage me={me} />;
   return <ErrorBox text={t("Page not found.")} />;

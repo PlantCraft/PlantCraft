@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Annotated, Any
 
 import pandas as pd
@@ -11,6 +12,7 @@ from plantcraft_sdk.contributes import StartIn, StartOut
 from pydantic import ValidationError
 
 from linkcraft.api.deps import CurrentUser, EditorUser, RuntimeDep, frame_rows
+from linkcraft.api.routers.apc import apc_rows
 from linkcraft.api.runtime import ROUND_ID
 from linkcraft.api.schemas import LoopPatchPayload, LoopPayload
 from linkcraft.api.scope import Scope, sees_job, sees_loop
@@ -18,6 +20,7 @@ from linkcraft.catalog.loop_types import known_loop_type
 from linkcraft.catalog.registry import METHOD_SPECS
 from linkcraft.config import LoopConfig, LoopSignals
 from linkcraft.engine.references import compare
+from linkcraft.engine.tuning import suggest
 from linkcraft.i18n import t
 from linkcraft.loops.defaults import record_defaults, setting_sources
 from linkcraft.loops.monitor import APPLICATION_ID, SUBJECT_KIND, incomplete_reason, missing_roles
@@ -26,6 +29,7 @@ from linkcraft.report.causes import likely_causes
 from linkcraft.report.loop import loop_report_pdf
 from linkcraft.report.weekly import weekly_report_pdf
 
+LOGGER = logging.getLogger(__name__)
 router = APIRouter()
 SERIES_POINTS = 420
 
@@ -150,6 +154,33 @@ def loop_detail(loop_id: str, user: CurrentUser, rt: RuntimeDep, scope: Scope) -
     }
 
 
+@router.get("/api/loops/{loop_id}/tuning")
+def tuning_suggestion(
+    loop_id: str, user: CurrentUser, rt: RuntimeDep, scope: Scope
+) -> dict[str, Any]:
+    """PI settings from a model fitted to the loop's last window (Lambda/IMC rules), read only:
+    nothing is written to the controller (A12)."""
+
+    loop = _loop_or_404(rt, loop_id, scope)
+    latest = rt.latest.get(APPLICATION_ID, SUBJECT_KIND, loop_id)
+    if loop.incomplete or latest is None or not latest.get("source_end"):
+        return {"available": False, "reason": t("Run the loop first: there is no window to fit.")}
+    frame = rt.monitor.frame_for_loop(
+        loop_id,
+        start=latest.get("source_start"),
+        end=latest.get("source_end"),
+        plant=rt.user_plant(user),
+    )
+    found = suggest(frame, rt.monitor.analysis.resample_seconds)
+    if found.get("reason"):
+        found["reason"] = t(found["reason"])
+    return {
+        **found,
+        "source_start": latest.get("source_start"),
+        "source_end": latest.get("source_end"),
+    }
+
+
 @router.post("/api/loops/{loop_id}/reference")
 def record_reference(
     loop_id: str, user: EditorUser, rt: RuntimeDep, scope: Scope
@@ -261,9 +292,20 @@ def loop_report(loop_id: str, user: CurrentUser, rt: RuntimeDep, scope: Scope) -
     )
 
 
+def _apc_week(user: Any, rt: Any, now: Any) -> list[dict[str, Any]]:
+    """The controllers' last 7 days; a PlantCraft that does not answer leaves the section out."""
+
+    try:
+        return apc_rows(user, rt, days=7, until=now)["controllers"]
+    except (HTTPException, PlantCraftError) as exc:
+        LOGGER.warning("The weekly report has no APC section: %s", exc)
+        return []
+
+
 @router.get("/api/reports/weekly.pdf")
-def weekly_report(scope: Scope, rt: RuntimeDep) -> Response:
-    """The weekly portfolio PDF: priority loops, score trend and diagnoses to confirm."""
+def weekly_report(scope: Scope, rt: RuntimeDep, user: CurrentUser) -> Response:
+    """The weekly portfolio PDF: priority loops, score trend, diagnoses to confirm and, when the
+    plant has them, its multivariable controllers and their costliest limits."""
 
     snapshot = rt.round_header()
     end = pd.to_datetime(snapshot.get("source_end"), errors="coerce")
@@ -278,6 +320,7 @@ def weekly_report(scope: Scope, rt: RuntimeDep) -> Response:
         ],
         actions=[],
         now=now,
+        apc=_apc_week(user, rt, now),
     )
     stamp = (now or pd.Timestamp.now().to_pydatetime()).strftime("%Y-%m-%d")
     return Response(

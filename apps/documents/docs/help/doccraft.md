@@ -60,6 +60,8 @@ are one click away.
 
 - the units, with the equipment in flow order and the control loops on each piece;
 - the lines from one sheet to another, through the off-page connectors;
+- hand valves drawn with no tag: a small circle in a gap of a line (a ball or hand valve as
+  DIN/ISO 10628 tools draw it) is a valve the line runs through;
 - a summary and the list **To check**.
 
 On the map you can work with what was read:

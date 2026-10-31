@@ -13,10 +13,10 @@ import { useEffect, useState } from "react";
 import { api } from "./api";
 import { t } from "./i18n";
 import {
-  canBeRelative, eventCondition, inputLabel, MAX_CONDITIONS, NEW_PERMISSIVE, overAssets, pythonDiagram, pythonForm, pythonFromSimple, pythonTemplate,
+  canBeRelative, eventCondition, inputLabel, MAX_CONDITIONS, NEW_GRADE, NEW_PERMISSIVE, takesGrades, overAssets, pythonDiagram, pythonForm, pythonFromSimple, pythonTemplate,
   simpleComplete, valueCondition, valueOfPick, valueWords, type PythonForm,
 } from "./rules";
-import type { Editor, Op, RuleDraft, Severity, SimpleCondition, SimpleLogic, SimpleValue, Where } from "./types";
+import type { Editor, GradeLimit, Op, RuleDraft, Severity, SimpleCondition, SimpleGrade, SimpleLogic, SimpleValue, Where } from "./types";
 import { ErrorBox, message } from "./ui";
 
 const OPS: Array<[Op, string]> = [
@@ -66,7 +66,22 @@ function ValueField({ value, where, onChange, label }: { value: SimpleValue | nu
   </div>;
 }
 
-function ConditionRow({ condition, where, onChange, onRemove, index }: { condition: SimpleCondition; where: Where; onChange: (condition: SimpleCondition) => void; onRemove?: () => void; index: number }) {
+/** A condition's limits by grade: one row per grade the plant makes, with its limit. */
+function GradeLimits({ condition, onChange }: { condition: SimpleCondition; onChange: (condition: SimpleCondition) => void }) {
+  const limits = condition.grade_limits ?? [];
+  const set = (next: GradeLimit[]) => onChange({ ...condition, grade_limits: next });
+  return <div className="field-span al-grades"><span className="al-label">{t("Limit by grade")}</span>
+    {limits.map((item, at) => <div key={at} className="al-inline">
+      <label>{t("Grade")}<input aria-label={t("Grade {n}", { n: at + 1 })} value={item.grade} maxLength={60} placeholder="HD-5" onChange={(event) => set(limits.map((one, i) => (i === at ? { ...one, grade: event.target.value } : one)))} /></label>
+      <NumberField label={t("Limit for grade {n}", { n: at + 1 })} value={Number.isFinite(item.limit) ? item.limit : null} onChange={(limit) => set(limits.map((one, i) => (i === at ? { ...one, limit: limit ?? Number.NaN } : one)))} />
+      <button type="button" className="icon-button" aria-label={t("Remove grade {n}", { n: at + 1 })} onClick={() => set(limits.filter((_, i) => i !== at))}><Trash2 size={16} /></button>
+    </div>)}
+    <button type="button" className="button button-small button-secondary" onClick={() => set([...limits, { grade: "", limit: Number.NaN }])}><Plus size={14} />{t("Add a grade")}</button>
+    <small className="muted">{t("Any other grade, or none known yet, keeps the limit above.")}</small>
+  </div>;
+}
+
+function ConditionRow({ condition, where, onChange, onRemove, index, graded = false }: { condition: SimpleCondition; where: Where; onChange: (condition: SimpleCondition) => void; onRemove?: () => void; index: number; graded?: boolean }) {
   const [picking, setPicking] = useState(false);
   const set = (patch: Partial<SimpleCondition>) => onChange({ ...condition, ...patch });
   const event = condition.event;
@@ -84,12 +99,13 @@ function ConditionRow({ condition, where, onChange, onRemove, index }: { conditi
     <div className="form-grid">
       {condition.input === "value" && <>
         <div className="field-span"><ValueField label={t("Value")} value={condition.value} where={where} onChange={(value) => set({ value })} /></div>
-        <label>{t("Is")}<select value={condition.op} onChange={(item) => set({ op: item.target.value as Op })}>
+        <label>{t("Is")}<select value={condition.op} onChange={(item) => { const op = item.target.value as Op; set({ op, grade_limits: takesGrades({ ...condition, op }) ? condition.grade_limits : [] }); }}>
           {OPS.map(([id, words]) => <option key={id} value={id}>{t(words)}</option>)}
         </select></label>
         {!moving && <NumberField label={range ? t("Low") : t("Limit")} value={condition.limit} onChange={(limit) => set({ limit })} />}
         {range && <NumberField label={t("High")} value={condition.high} onChange={(high) => set({ high })} />}
         {!moving && !range && <NumberField label={t("Deadband")} value={condition.deadband} min={0} onChange={(deadband) => set({ deadband: deadband ?? 0 })} hint={t("Clears only this far back inside the limit.")} />}
+        {graded && takesGrades(condition) && <GradeLimits condition={condition} onChange={onChange} />}
       </>}
       {condition.input === "event" && event && <>
         <div className="field-span"><span className="al-label">{t("Event")}</span>
@@ -146,6 +162,38 @@ function PermissiveRow({ simple, where, onChange }: { simple: SimpleLogic; where
   </fieldset>;
 }
 
+/** Limits by grade: where the product grade comes from, a signal holding its code or the
+ * latest event naming it (an MES grade change). Each condition then lists its grades. */
+function GradeRow({ simple, where, onChange }: { simple: SimpleLogic; where: Where; onChange: (simple: SimpleLogic) => void }) {
+  const [picking, setPicking] = useState(false);
+  const grade = simple.grade;
+  if (!grade) return null;
+  const set = (patch: Partial<SimpleGrade>) => onChange({ ...simple, grade: { ...grade, ...patch } });
+  return <fieldset className="al-condition">
+    <legend>{t("Limits by grade")}</legend>
+    <div className="al-inline al-condition-head">
+      <div className="pc-segmented" role="group" aria-label={t("The grade comes from")}>
+        <button type="button" className={grade.source === "value" ? "on" : ""} onClick={() => set({ source: "value", value: grade.value ?? NEW_GRADE().value })}>{t("A signal")}</button>
+        <button type="button" className={grade.source === "event" ? "on" : ""} onClick={() => set({ source: "event" })}>{t("An event")}</button>
+      </div>
+      <button type="button" className="icon-button" aria-label={t("Remove the limits by grade")} title={t("Remove the limits by grade")} onClick={() => onChange({ ...simple, grade: null, conditions: simple.conditions.map((item) => ({ ...item, grade_limits: [] })) })}><Trash2 size={16} /></button>
+    </div>
+    <div className="form-grid">
+      {grade.source === "value" ? <div className="field-span"><ValueField label={t("Grade signal")} value={grade.value} where={where} onChange={(value) => set({ value })} /><small className="muted">{t("A signal holding the grade's code: code 3 is grade \"3\".")}</small></div> : <>
+        <div className="field-span"><span className="al-label">{t("Grade events")}</span>
+          <div className="al-inline">
+            {grade.kinds.length ? grade.kinds.map((kind) => <span key={kind} className="al-chip">{kind}<button type="button" aria-label={t("Remove {name}", { name: kind })} onClick={() => set({ kinds: grade.kinds.filter((item) => item !== kind) })}><X size={12} /></button></span>) : <span className="muted">{t("Nothing picked yet")}</span>}
+            <button type="button" className="button button-small button-secondary" onClick={() => setPicking(true)}><Search size={14} />{t("Pick in the Explorer")}</button>
+          </div>
+          <small className="muted">{t("The latest of these events names the grade; until one comes, the fixed limits hold.")}</small>
+        </div>
+        <label>{t("Field with the grade")}<input value={grade.field} maxLength={60} onChange={(event) => set({ field: event.target.value })} /><small>{t("In the event's payload, such as grade.")}</small></label>
+        {picking && <PickDialog want={["event"]} where={where} onClose={() => setPicking(false)} onPick={(pick) => set({ kinds: grade.kinds.includes(pick.id) ? grade.kinds : [...grade.kinds, pick.id] })} />}
+      </>}
+    </div>
+  </fieldset>;
+}
+
 function SimpleForm({ simple, where, onChange }: { simple: SimpleLogic; where: Where; onChange: (simple: SimpleLogic) => void }) {
   const [sentence, setSentence] = useState("");
   useEffect(() => {
@@ -160,13 +208,15 @@ function SimpleForm({ simple, where, onChange }: { simple: SimpleLogic; where: W
         <button type="button" className={simple.combine === "and" ? "on" : ""} onClick={() => onChange({ ...simple, combine: "and" })}>{t("and")}</button>
         <button type="button" className={simple.combine === "or" ? "on" : ""} onClick={() => onChange({ ...simple, combine: "or" })}>{t("or")}</button>
       </div>}
-      <ConditionRow index={index} condition={condition} where={where} onChange={(item) => setCondition(index, item)}
+      <ConditionRow index={index} condition={condition} where={where} graded={Boolean(simple.grade)} onChange={(item) => setCondition(index, item)}
         onRemove={simple.conditions.length > 1 ? () => onChange({ ...simple, conditions: simple.conditions.filter((_, at) => at !== index) }) : undefined} />
     </div>)}
     <PermissiveRow simple={simple} where={where} onChange={onChange} />
+    <GradeRow simple={simple} where={where} onChange={onChange} />
     <div className="al-inline al-simple-foot">
       {simple.conditions.length < MAX_CONDITIONS && <button type="button" className="button button-small button-secondary" onClick={() => onChange({ ...simple, conditions: [...simple.conditions, valueCondition()] })}><Plus size={14} />{t("Add a condition")}</button>}
       {!simple.enable_when && <button type="button" className="button button-small button-secondary" onClick={() => onChange({ ...simple, enable_when: NEW_PERMISSIVE(), enable_delay_seconds: 0 })}><Plus size={14} />{t("Only while…")}</button>}
+      {!simple.grade && simple.conditions.some(takesGrades) && <button type="button" className="button button-small button-secondary" onClick={() => onChange({ ...simple, grade: NEW_GRADE(), conditions: simple.conditions.map((item, at) => (at === simple.conditions.findIndex(takesGrades) ? { ...item, grade_limits: [{ grade: "", limit: Number.NaN }] } : item)) })}><Plus size={14} />{t("Limits by grade…")}</button>}
       <div className="al-narrow"><NumberField label={t("Clears after back to normal for (min)")} value={simple.clear_after_seconds ? simple.clear_after_seconds / 60 : null} min={0} onChange={(minutes) => onChange({ ...simple, clear_after_seconds: Math.max(0, Math.round((minutes ?? 0) * 60)) })} /></div>
     </div>
     {sentence && <p className="notice notice-ok al-sentence"><b>{t("When")}</b> {sentence}{t(", it raises.")}</p>}

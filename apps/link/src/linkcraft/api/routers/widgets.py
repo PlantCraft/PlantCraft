@@ -17,8 +17,10 @@ from plantcraft_sdk import widgets as w
 
 from linkcraft.api.deps import CurrentUser, RuntimeDep
 from linkcraft.api.plant_widgets import STATUS_WORDS, alarm_history, health_map
+from linkcraft.api.routers.apc import apc_rows
 from linkcraft.api.routers.groups import _algorithms, _group, _outputs, _rows
 from linkcraft.api.routers.losses import loop_days_to_limit, loop_effective_control, loop_losses
+from linkcraft.api.routers.oscillations import oscillation_groups
 from linkcraft.api.routers.results import BUILDERS, KIND_LABELS, KINDS, _key, scoped_rows
 from linkcraft.api.routers.runs import run_rows
 from linkcraft.api.scope import Scope
@@ -103,6 +105,37 @@ def widget_options(widget_id: str, rt: RuntimeDep, scope: Scope) -> dict[str, An
     raise HTTPException(status_code=404, detail=t("Widget not found."))
 
 
+def _apc_health(user: Any, rt: Any, root: str) -> dict[str, Any]:
+    """Each multivariable controller: on, MVs in service, CVs at a limit, its costliest limit."""
+
+    rows = []
+    for row in apc_rows(user, rt, days=1)["controllers"]:
+        summary = row["summary"]
+        detail = t(
+            "MVs in service {mvs} · CVs at a limit {cvs}",
+            mvs=f"{summary['mvs_in_service']}/{summary['mvs']}",
+            cvs=f"{summary['cvs_at_limit']}/{summary['cvs']}",
+        )
+        top = next((item for item in row["constraints"] if item["worth_1pct"]), None)
+        if top:
+            detail += " · " + t(
+                "{name} at its {side} limit: {worth} for 1% more",
+                name=top["name"],
+                side=t("low") if top["side"] == "lo" else t("high"),
+                worth=f"{top['worth_1pct']:.3g} {row['cost_unit']}".strip(),
+            )
+        rows.append(
+            w.item(
+                row["name"],
+                detail=detail,
+                value=t("on {share}", share=_share(summary["on_pct"])),
+                state=summary["state"] if summary["state"] != "ok" else None,
+                href=f"{root}/apc/{quote(row['id'], safe='')}",
+            )
+        )
+    return w.items(rows, href=f"{root}/apc", empty=t("No multivariable controller in the plant."))
+
+
 def _share(value: float | None) -> str:
     return "—" if value is None else f"{value:.0f}%"
 
@@ -112,9 +145,12 @@ def widget(
     widget_id: str,
     rt: RuntimeDep,
     scope: Scope,
+    user: CurrentUser,
     item: str | None = Query(default=None, max_length=400),
 ) -> dict[str, Any]:
     root = rt.root_path
+    if widget_id == "apc-health":
+        return _apc_health(user, rt, root)
     if widget_id == "attention":
         rows = [row for row in _results(rt, scope) if row["status"] in {"alarm", "warning"}]
         alarms = sum(1 for row in rows if row["status"] == "alarm")
@@ -197,6 +233,32 @@ def widget(
             ],
             href=f"{root}/results?kind=loop",
             empty=t("No loop monitored in the last 7 days."),
+        )
+    if widget_id == "oscillation-groups":
+        found = oscillation_groups(scope, rt, tolerance=0.15)
+        return w.items(
+            [
+                w.item(
+                    t(
+                        "{count} loops at {period} min",
+                        count=group["loop_count"],
+                        period=f"{group['period_seconds'] / 60:.1f}",
+                    ),
+                    detail=t(
+                        "Look first at {loop}{why}; also {others}",
+                        loop=group["likely_origin"],
+                        why=f" ({', '.join(group['why'])})" if group["why"] else "",
+                        others=", ".join(item["loop_id"] for item in group["loops"][1:4])
+                        + ("…" if group["loop_count"] > 4 else ""),
+                    ),
+                    value=str(group["loop_count"]),
+                    state="warning",
+                    href=f"{root}/loops/{quote(group['likely_origin'], safe='')}",
+                )
+                for group in found["groups"][:8]
+            ],
+            href=f"{root}/results?kind=loop",
+            empty=t("No oscillation shared by several loops."),
         )
     if widget_id == "effective-control":
         rows = [row for row in loop_effective_control(scope, rt) if row["score"] is not None][:8]

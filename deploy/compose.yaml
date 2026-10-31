@@ -860,13 +860,16 @@ services:
     # token). Its whole configuration is data/histcraft/gateway/telegraf.conf, written by the
     # collector from the sources (only reading inputs, one output to the collector), read-only
     # here and reloaded when it changes. No port, no secret but that file (0600, HistCraft's
-    # uid). Networks: `plant` and `demo` for the sources and the collector.
+    # uid). Networks: `plant` and `demo` for the sources and the collector. Store and forward:
+    # what the collector has not taken waits on disk in data/histcraft/gateway-buffer (the only
+    # folder it writes) and goes in order once the collector answers, after a restart too.
     # The bundle sets HISTCRAFT_GATEWAY_IMAGE to the one-platform digest it saved (bundle.env).
     image: ${HISTCRAFT_GATEWAY_IMAGE:-telegraf:1.40.2@sha256:074419740e5b702f2f358262c1e3036ec1e9c09e0d0eef388dff7ed838dea202}
     user: "10008:10008"
     command: ["telegraf", "--config", "/etc/telegraf/telegraf.conf", "--watch-config", "poll"]
     volumes:
       - ./data/histcraft/gateway:/etc/telegraf:ro
+      - ./data/histcraft/gateway-buffer:/var/lib/telegraf-buffer
     networks:
       - plant
       - demo

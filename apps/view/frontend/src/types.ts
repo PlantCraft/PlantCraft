@@ -1,6 +1,6 @@
 import type { DiagramData, DiagramDraft, SymbolDef } from "./diagrams/model";
 
-export type Kind = "stat" | "gauge" | "trend" | "bar" | "table" | "scatter" | "text" | "diagram";
+export type Kind = "stat" | "gauge" | "trend" | "bar" | "table" | "scatter" | "text" | "diagram" | "apc";
 export type Aggregation = "last" | "mean" | "min" | "max" | "std";
 export type State = "ok" | "warning" | "alarm" | "unknown" | "none";
 /** The level of a threshold step: a state, or "none" for a colour that is not a state. */
@@ -62,6 +62,8 @@ export interface Card {
   text?: string;
   /** Diagram cards: the saved diagram they show. */
   diagram_id?: string;
+  /** Multivariable controller cards: the asset of kind `apc` they show. */
+  apc_id?: string;
   repeat?: Repeat | null;
 }
 
@@ -118,6 +120,23 @@ export interface CardData {
   /** Diagram cards: the diagram with the symbols it draws and its values now, or why it is not
    * shown; `url` (signed in only) is its page. */
   diagram?: PublicDiagram; data?: DiagramData; unavailable?: string; url?: string;
+  /** Multivariable controller cards: the controller and its MVs and CVs (read only). */
+  apc?: ApcData;
+}
+
+/** A manipulated (mv) or controlled (cv) variable of a multivariable controller. */
+export interface ApcVariable {
+  id: string; name: string; type: "mv" | "cv"; description: string; unit: string;
+  value: number | null; lo: number | null; hi: number | null; target: number | null;
+  status: number | null; shadow_price: number | null; in_service: boolean | null;
+  at_limit: "lo" | "hi" | null; missing: string[];
+  t: string[]; value_line: Array<number | null>; target_t: string[]; target_line: Array<number | null>;
+}
+export interface ApcData {
+  controller?: { id: string; name: string; on: boolean | null; mode: string | number | null; vendor: string; cost_unit: string };
+  variables?: ApcVariable[];
+  counts?: { mv: number; cv: number; in_service: number; at_limits: number };
+  error: string | null;
 }
 
 /** A diagram as a public link and a dashboard card draw it (no authors or stamps). */
@@ -146,10 +165,13 @@ export interface TrendLineSpec { signal_id: string; label?: string; agg?: TrendA
 /** A trend line as read: the summary used ("recorded" for the samples as they are) and a note when it fell back. */
 /** A laboratory result (`laboratory:<analysis>`): drawn at its sampling time, with its other times. */
 export interface LabSample { sampled_at: string; value: number | null; status: "entered" | "approved" | "rejected" | string; received_at?: string | null; approved_at?: string | null }
-export type TrendLine = Line & { agg?: TrendAgg | "recorded"; step?: number; style?: LineStyle; note?: string | null; samples?: LabSample[] }
+/** `compare`: an earlier period's line moved onto the trend's time axis; `source`: the index of its line in the plot. */
+export type TrendLine = Line & { agg?: TrendAgg | "recorded"; step?: number; style?: LineStyle; note?: string | null; samples?: LabSample[]; compare?: TrendCompare; source?: number }
 export interface TrendPlotSpec { title?: string; lines: TrendLineSpec[] }
 export interface TrendPeriod { mode: "relative" | "fixed"; window: string; start?: string | null; end?: string | null }
-export interface TrendView { plots: TrendPlotSpec[]; period: TrendPeriod; step_seconds: number | null }
+/** An earlier period drawn over the trend's own: the one just before, or a day, a week or four weeks back. */
+export type TrendCompare = "previous" | "1d" | "7d" | "28d";
+export interface TrendView { plots: TrendPlotSpec[]; period: TrendPeriod; step_seconds: number | null; compare?: TrendCompare[] }
 export interface Trend extends TrendView {
   trend_id: string; name: string; description: string; created_by: string | null; created_at: string; updated_by: string | null; updated_at: string;
 }
@@ -177,7 +199,10 @@ export interface Section {
   title: string; text: string; card: Card | null; events: EventsSpec | null; assistant?: AssistantSpec | null; width: "full" | "half";
 }
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
-export interface Schedule { every: "off" | "day" | "week" | "fortnight" | "month" | "quarter"; at: string; weekday: Weekday; day: number; /** Cover the last whole calendar period (last week, last month), not the period up to the send. */ closed?: boolean }
+export interface Schedule { every: "off" | "day" | "week" | "fortnight" | "month" | "quarter"; at: string; weekday: Weekday; day: number; /** Cover the last whole calendar period (last week, last month), not the period up to the send. */ closed?: boolean;
+  /** Also when an event ends a batch or a start-up: a report over that period (V5). */
+  on_event?: EventTrigger | null }
+export interface EventTrigger { end_kind: string; start_kind?: string; subject?: string }
 export interface ReportDraft {
   name: string; description: string; folder_id: string; period: string; schedule: Schedule;
   recipients: string[]; email: boolean; sections: Section[];

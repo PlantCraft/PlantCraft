@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chipText, EMPTY_VIEW, labDetail, lineName, readable, stateRuns, subplotDomains, trendCsv, trendTraces, viewFromAddress } from "./trendModel";
+import { chipText, EMPTY_VIEW, labDetail, lineName, MAX_COMPARISONS, readable, stateRuns, subplotDomains, TREND_COMPARISONS, trendCsv, trendTraces, viewFromAddress } from "./trendModel";
 import type { TrendData } from "./types";
 
 const line = (label: string, signal: string, t: string[], v: Array<number | null>) => ({ label, signal, unit: "m3/h", kind: "number", error: null, t, v });
@@ -122,5 +122,38 @@ describe("a trend from the address", () => {
     expect(view?.period).toMatchObject({ mode: "fixed", start: "2026-10-25T00:00:00.000Z", end: "2026-10-26T00:00:00.000Z" });
     expect(viewFromAddress("?signal=A")?.period.mode).toBe("relative");
     expect(viewFromAddress("")).toBeNull();
+  });
+});
+
+describe("earlier periods over the trend (V11)", () => {
+  const line = (label: string, extra: Record<string, unknown> = {}) => ({ label, unit: "m3/h", t: ["2026-10-31T00:00:00Z"], v: [1], kind: "number", error: null, ...extra });
+  const data = {
+    plots: [{ title: "", lines: [
+      line("FIC-101"), line("FIC-102", { style: { color: "#123456" } }),
+      line("FIC-101 · 1 day earlier", { compare: "1d", source: 0 }), line("FIC-102 · 1 day earlier", { compare: "1d", source: 1 }),
+    ] }],
+    range: { start: "2026-10-30T00:00:00Z", end: "2026-10-31T00:00:00Z", step: 60, shifted: false }, read_at: "2026-10-31T00:00:00Z",
+  } as unknown as TrendData;
+
+  it("draws each earlier line dotted, lighter, in its own line's colour", () => {
+    const { traces } = trendTraces(data, {}, ["#aa0000", "#00aa00"]);
+    const colour = (index: number) => (traces[index] as { line: { color?: string } }).line.color;
+    expect(colour(0)).toBe("#aa0000");
+    expect(colour(1)).toBe("#123456");
+    expect(colour(2)).toBe("#aa0000");
+    expect(colour(3)).toBe("#123456");
+    expect((traces[2] as { line: { dash: string } }).line.dash).toBe("dot");
+    expect((traces[2] as { opacity?: number }).opacity).toBe(0.7);
+    expect((traces[0] as { opacity?: number }).opacity).toBeUndefined();
+  });
+
+  it("leaves the colours to the chart when nothing is compared", () => {
+    const own = { ...data, plots: [{ title: "", lines: data.plots[0].lines.slice(0, 1) }] } as TrendData;
+    expect((trendTraces(own, {}, ["#aa0000"]).traces[0] as { line: { color?: string } }).line.color).toBeUndefined();
+  });
+
+  it("offers four earlier periods, at most three at once", () => {
+    expect(TREND_COMPARISONS.map((item) => item.id)).toEqual(["previous", "1d", "7d", "28d"]);
+    expect(MAX_COMPARISONS).toBe(3);
   });
 });

@@ -63,3 +63,15 @@ def test_processcraft_asks_for_the_sdk_in_the_tree() -> None:
     ]
     assert len(pins) == 1
     assert version in SpecifierSet(pins[0].removeprefix("plantcraft-sdk")), (pins[0], version)
+
+
+def test_the_platform_pins_the_sdk_of_this_tree():
+    """make image installs the platform with the vendored wheel: a pin that leaves this tree's
+    SDK version out fails the image (main, 2026-10-31). dev/sdk-version moves both."""
+
+    version = re.search(
+        r'^version = "([^"]+)"', (ROOT / "sdk/python/pyproject.toml").read_text(), re.M
+    ).group(1)
+    major, minor = (int(part) for part in version.split(".")[:2])
+    pin = f'"plantcraft-sdk>={major}.{minor},<{major}.{minor + 1}"'
+    assert pin in (ROOT / "pyproject.toml").read_text(), f"pyproject.toml must pin {pin}"
