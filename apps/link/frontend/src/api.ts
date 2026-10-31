@@ -1,7 +1,7 @@
 import { configureFolders, createApiClient, jsonBody, withImageHrefs, type PromptText } from "@plantcraft/ui";
 import type { Diagram, DiagramCheck } from "@plantcraft/ui/blockEditor";
 import { href } from "./nav";
-import type { Algorithm, AlgorithmDocs, AlgorithmVersion, AlgorithmTest, AlgorithmUsage, AssetChoice, AssetTypeChoice, AssetLink, AssetRun, AssetTiming, BlockCheck, BlockCode, BlockDetail, BlockFileDoc, Blocks, BlockSaved, BlockTestAnswer, CalibrationAnswer, CheckSpec, ComputeOffer, DefaultsVersion, ComputePlacement, Execution, ExecutionGroup, ExecutionList, GroupSubject, OwnSeries, SubjectHistory, HelpDocEntry, HistoryPoint, Job, LoopConfig, LoopDetail, LoopReference, LoopRow, TuningSuggestion, Me, PlantMap, MethodGroup, MethodSpec, ModelExample, ModelExampleCreated, ModelRow, ModelStarter, Overview, QualityRun, RepeatedAlgorithm, ResultList, ResultQuery, RunRow, Schedule, SchedulePreview, SignalAlgorithm, SignalData, SignalDetail, SignalOption, SignalRow, Status_, SyncResult, UserGroup, Verdict, ApcController, ApcList } from "./types";
+import type { Algorithm, AlgorithmDocs, AlgorithmVersion, AlgorithmTest, AlgorithmUsage, AssetChoice, AssetTypeChoice, AssetLink, AssetRun, AssetTiming, BlockCheck, BlockCode, BlockDetail, BlockFileDoc, Blocks, BlockSaved, BlockTestAnswer, CalibrationAnswer, CheckSpec, ComputeOffer, DefaultsVersion, ComputePlacement, Execution, ExecutionGroup, ExecutionList, GroupSubject, OwnSeries, SubjectHistory, HelpDocEntry, HistoryPoint, Job, LoopConfig, LoopDetail, LoopReference, LoopRow, TuningSuggestion, Me, PlantMap, MethodGroup, MethodSpec, ModelExample, ModelExampleCreated, ModelRow, ModelStarter, Overview, QualityRun, RepeatedAlgorithm, ResultList, ResultQuery, RunRow, Schedule, SchedulePreview, SignalAlgorithm, SignalData, SignalDetail, SignalLab, SignalOption, SignalRow, Status_, SyncResult, UserGroup, Verdict, ApcController, ApcList } from "./types";
 import { RESULT_FILTERS } from "./types";
 
 const client = createApiClient({ app: "linkcraft", href });
@@ -154,6 +154,7 @@ export const api = {
   signals: (params: SignalQuery = {}) => request<{ total: number; items: SignalRow[] }>(`/api/signals?${signalQuery(params)}`),
   signal: (signalId: string) => request<SignalDetail>(`/api/signals/${id(signalId)}`),
   signalData: (signalId: string, start?: string, end?: string) => request<SignalData>(`/api/signals/${id(signalId)}/data${start || end ? `?${new URLSearchParams({ ...(start ? { start } : {}), ...(end ? { end } : {}) })}` : ""}`),
+  signalLab: (signalId: string, days = 7) => request<SignalLab>(`/api/signals/${id(signalId)}/lab?days=${days}`),
   signalHistory: (signalId: string, days = 30) => request<HistoryPoint[]>(`/api/signals/${id(signalId)}/history?days=${days}`),
   checkSignal: (signalId: string, window: { start?: string; end?: string } = {}) => request<Verdict>(`/api/signals/${id(signalId)}/check`, body("POST", window)),
   updateSignal: (signalId: string, payload: Record<string, unknown>) => request<SignalDetail>(`/api/signals/${id(signalId)}`, body("PATCH", payload)),

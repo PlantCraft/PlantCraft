@@ -9,6 +9,14 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- `plantcraft-sdk`: **lab fusion** (`plantcraft_sdk.estimators.fuse_lab`). It corrects an online
+  value (an analyzer or a soft sensor) with the lab results. Each result counts at its sampling
+  time and only from its approval: a Kalman filter with a delayed measurement. The fusion returns
+  the corrected value, the bias and the uncertainty. A dead zone and a largest correction per
+  result keep the lab's scatter and a bad sample from moving the bias. `sensor_health` grades a virtual sensor
+  from 0 to 100 against the lab. Analytics runs it as the block `estimator.lab_fusion` (library
+  Estimators, group Soft sensors).
+
 - `plantcraft-sdk`: starter asset types for a third-party multivariable controller:
   *Multivariable controller* (`apc`, role `on`, attributes `vendor` and `cost_unit`) and inside it
   *Manipulated variable* (`apc_mv`) and *Controlled variable* (`apc_cv`), both from *Controller
@@ -278,6 +286,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   models still wait for the plant's data.
 
 ### Fixed
+
+- **The release bundle carries the setup wizard.** `deploy/bundle.sh` left `wizard/` out, so the
+  documented `sudo python3 wizard/wizard.py` found nothing in a bundle.
 
 - **Interface pass, second round** (every page clicked like a person, light, dark and phone):
   the platform's windows (new action, calendar event, messages, people, asset forms) close with

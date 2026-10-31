@@ -1,5 +1,6 @@
 """Estimators over plant data (prototype, 2026-10-31, item E3.2 of the Saturday plan): Kalman
-filters, a first-order-plus-dead-time fit to build their model, and soft sensors.
+filters, a first-order-plus-dead-time fit to build their model, soft sensors, and the fusion of an online value with the
+laboratory at each sample's time (``fuse_lab``).
 
 A filter or soft sensor turns signals a plant already measures into a better estimate of one
 it measures badly (noisy, drifting) or not at all (a lab value between samples). Each is a pure
@@ -9,6 +10,7 @@ blocks (``estimator.*``), so both use this one copy (``apps/models/docs/estimato
 here acts on the plant. NumPy only.
 """
 
+from plantcraft_sdk.estimators.fusion import LabFusion, fuse_lab, sensor_health
 from plantcraft_sdk.estimators.identify import Fopdt, fit_fopdt
 from plantcraft_sdk.estimators.kalman import (
     Filtered,
@@ -24,13 +26,16 @@ from plantcraft_sdk.estimators.softsensor import SoftSensor, fit_soft_sensor
 __all__ = [
     "Filtered",
     "Fopdt",
+    "LabFusion",
     "SoftSensor",
     "StateSpace",
     "fit_fopdt",
     "fit_soft_sensor",
     "fopdt_model",
+    "fuse_lab",
     "kalman_filter",
     "local_level",
     "noise_variance",
+    "sensor_health",
     "tune",
 ]
