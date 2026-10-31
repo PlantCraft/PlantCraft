@@ -197,7 +197,7 @@ class MapContext:
         return source_id in self.remote_sources()
 
     def remote_sources(self) -> set[str]:
-        """With HistCraft, the sources kept there (added on its pages too): read once per file."""
+        """With Historian, the sources kept there (added on its pages too): read once per file."""
 
         if self._remote_sources is None:
             layer = self.platform.datalayer
@@ -205,7 +205,7 @@ class MapContext:
             if layer is not None and layer.manages_sources:
                 try:
                     found = {item["source_id"] for item in layer.sources()}
-                except Exception:  # noqa: BLE001 - HistCraft down: only the local sources count
+                except Exception:  # noqa: BLE001 - Historian down: only the local sources count
                     found = set()
             self._remote_sources = found
         return self._remote_sources
@@ -420,7 +420,7 @@ class SourcesSection:
             ) -> None:
                 layer = ctx.platform.datalayer
                 if layer is not None and layer.manages_sources:
-                    # With HistCraft, sources live there: the import creates or edits them there.
+                    # With Historian, sources live there: the import creates or edits them there.
                     layer.save_source(
                         source_id,
                         name=name,
@@ -718,7 +718,7 @@ class SignalsSection:
         bound: set[tuple[str, str]] = set()
         layer = ctx.platform.datalayer
         remote = layer is not None and layer.manages_sources
-        # With HistCraft, the source's signals are collected there: one call per source.
+        # With Historian, the source's signals are collected there: one call per source.
         collect: dict[tuple[str, bool], list[str]] = {}
         for row in rows:
             tag, source_id = text(row, "tag"), text(row, "source_id") or PRIMARY

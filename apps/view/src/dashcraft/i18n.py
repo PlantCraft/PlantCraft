@@ -1,6 +1,6 @@
 """One hook for user-facing text: ``t("Dashboard {name} not found.", name=name)``.
 
-DashCraft is English only for now (owner decision, 2026-10-19). Every string a
+View is English only for now (owner decision, 2026-10-19). Every string a
 person reads still goes through ``t()`` so a catalog can be installed later
 without touching the call sites.
 """

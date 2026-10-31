@@ -108,7 +108,7 @@ if [ "$SKIP_BUILD" = 0 ]; then
     done
 fi
 
-# Third-party images pinned by digest in compose.yaml (HistCraft's PostgreSQL and its Telegraf
+# Third-party images pinned by digest in compose.yaml (Historian's PostgreSQL and its Telegraf
 # gateway), written plain or as a ${VAR:-default}: pulled once, bundled like the rest.
 for pinned in $(grep -o '[a-z][a-z0-9./_-]*:[^ @}]*@sha256:[0-9a-f]\{64\}' "$ROOT/deploy/compose.yaml" | sort -u); do
     if ! docker image inspect "$pinned" >/dev/null 2>&1; then

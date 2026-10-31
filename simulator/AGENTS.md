@@ -71,7 +71,7 @@ docs/                    interface, contracts, scientific model, validation, rel
 ### Never break the plant, never break the user (outranks feature work)
 
 - **PlantCraft Simulator is the suite's only write target**, and today it accepts no writes: every node
-  is read-only. A writable node (for ModelCraft/MPC against simulation) is a maintainer decision.
+  is read-only. A writable node (for Models/MPC against simulation) is a maintainer decision.
 - **Deterministic.** The same seed, start time and settings give the same values on the same
   platform. Randomness comes only from seeded, documented functions.
 - **Bad states are explicit.** Faults show as values, status codes and gaps a client can see

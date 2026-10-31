@@ -1,6 +1,6 @@
 """Plant data, read only through PlantCraft API v1 (``plantcraft_sdk.client``).
 
-LinkCraft never opens a historian or an OPC UA connection: every sample comes
+Analytics never opens a historian or an OPC UA connection: every sample comes
 from ``POST /api/v1/series`` (many signals per request, ``series_many``). This
 module turns those series into the wide, time-indexed frame (naive UTC, one
 column per signal id) that ``frames.build_loop_frame`` resamples for the

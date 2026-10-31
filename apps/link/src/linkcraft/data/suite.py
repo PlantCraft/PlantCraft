@@ -1,10 +1,10 @@
 """The suite contract of API v1: results, events, runs and schedules (app standard, section 6).
 
-How apps link: LinkCraft publishes each loop's health as a result on its asset and as a derived
+How apps link: Analytics publishes each loop's health as a result on its asset and as a derived
 series, its signals' quality as results and derived series, its findings as events, its
 algorithm executions as runs and its schedules. Everything goes through PlantCraft with the
 SDK client (``put_results``, ``put_series``, ``results``, ``post_events``, ``put_runs``,
-``put_schedules``); references are written with ``plantcraft_sdk.refs``. LinkCraft never calls
+``put_schedules``); references are written with ``plantcraft_sdk.refs``. Analytics never calls
 another app.
 
 This module only makes publishing optional: a PlantCraft that does not serve an endpoint yet
@@ -115,7 +115,7 @@ class SuiteClient:
                 self._logged.add(endpoint)
             if first:
                 LOGGER.warning(
-                    "PlantCraft does not serve %s yet; LinkCraft carries on without it.", endpoint
+                    "PlantCraft does not serve %s yet; Analytics carries on without it.", endpoint
                 )
             return None
         except passthrough:
@@ -276,7 +276,7 @@ class SuiteClient:
         return self._saved("schedules", self._call("schedules", "put_schedules", rows))
 
     def put_knowledge(self, items: list[dict[str, Any]]) -> bool:
-        """What LinkCraft explains (API v1 ``/knowledge``, PlantCraft 0.3 and SDK 0.10).
+        """What Analytics explains (API v1 ``/knowledge``, PlantCraft 0.3 and SDK 0.10).
 
         An SDK without ``put_knowledge`` sends the request itself; a PlantCraft without the
         route answers 404 and the texts wait an hour (``_call``).

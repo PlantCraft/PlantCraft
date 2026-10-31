@@ -1,4 +1,4 @@
-"""The one interface HistCraft calls to read history from a plant source.
+"""The one interface Historian calls to read history from a plant source.
 
 ``open_source(row, password)`` answers a ``SourceHistory`` for a PI Web API, OPC UA
 (Historical Access) or CSV source. Every call is synchronous (it runs in a worker
@@ -42,7 +42,7 @@ class SourceHistory(Protocol):
 
 
 def open_source(source: dict[str, Any], password: str) -> SourceHistory:
-    """The history reader of a HistCraft source row; ``ValueError`` for another kind."""
+    """The history reader of a Historian source row; ``ValueError`` for another kind."""
 
     config = from_source(source, password)
     if config.type == "pi_web_api":
@@ -158,7 +158,7 @@ class PiHistory:
     """Recorded events of PI Points (PI tag names) through PI Web API."""
 
     def __init__(self, config: SourceConfig):
-        # Imported here: a HistCraft without PI sources never loads requests.
+        # Imported here: a Historian without PI sources never loads requests.
         from histcraft.sources.pi_web_api import PiWebApiSource
 
         if not config.base_url:

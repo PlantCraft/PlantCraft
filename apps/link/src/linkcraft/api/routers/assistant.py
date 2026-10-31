@@ -1,6 +1,6 @@
-"""The assistant beside LinkCraft's objects (``AssistantButton`` of ``@plantcraft/ui``).
+"""The assistant beside Analytics' objects (``AssistantButton`` of ``@plantcraft/ui``).
 
-Before the panel opens, the page asks LinkCraft to write what it knows about the object to
+Before the panel opens, the page asks Analytics to write what it knows about the object to
 PlantCraft (``linkcraft.knowledge``): an algorithm's documentation, a run's report. The
 conversation itself happens in PlantCraft (API v1 ``/assistant``), with the person's token.
 """
@@ -23,6 +23,6 @@ class PreparePayload(BaseModel):
 
 @router.post("/prepare")
 def prepare(payload: PreparePayload, _user: CurrentUser, rt: RuntimeDep) -> dict[str, Any]:
-    """Publish the text about ``ref`` (an algorithm or a run of LinkCraft); others are left alone."""
+    """Publish the text about ``ref`` (an algorithm or a run of Analytics); others are left alone."""
 
     return {"ref": payload.ref, "published": rt.publish_explanation(payload.ref)}

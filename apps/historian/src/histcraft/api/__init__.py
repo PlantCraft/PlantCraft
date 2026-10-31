@@ -1,1 +1,1 @@
-"""HistCraft web application."""
+"""Historian web application."""

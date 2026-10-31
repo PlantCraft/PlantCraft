@@ -117,7 +117,7 @@ class CardItem(BaseModel):
     roles: list[str] = Field(default_factory=list, max_length=30)
     # Another app's result about the asset (or signal) instead of its data: ``<app>.<kind>``,
     # read from API v1 results (the suite's app standard, section 6); on a trend, the history
-    # of that result the app archives in HistCraft (a derived signal).
+    # of that result the app archives in Historian (a derived signal).
     result: str | None = Field(default=None, max_length=100, pattern=RESULT_KIND)
     label: str = Field(default="", max_length=80)
 

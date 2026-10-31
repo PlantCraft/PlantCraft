@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
-// LinkCraft is served under /link/ behind the suite's proxy (PlantCraft owns /).
+// Analytics is served under /link/ behind the suite's proxy (PlantCraft owns /).
 export default defineConfig({
   base: "/link/",
   plugins: [react()],

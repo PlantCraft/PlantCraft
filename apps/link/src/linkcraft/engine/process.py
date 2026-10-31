@@ -88,11 +88,11 @@ def run_engine(
     releaser = Releaser().start()
     try:
         runtime.start_engine()
-        LOGGER.info("LinkCraft engine started (%d workers)", runtime.engine.dispatcher.slots)
+        LOGGER.info("Analytics engine started (%d workers)", runtime.engine.dispatcher.slots)
         while wanted():
             stop.wait(PARENT_SECONDS)
     finally:
-        LOGGER.info("LinkCraft engine stopping")
+        LOGGER.info("Analytics engine stopping")
         releaser.stop()
         runtime.shutdown()
         lease.release()
@@ -147,7 +147,7 @@ class EngineProcess:
     def _spawn(self) -> None:
         self.process = subprocess.Popen(self.command, env=os.environ.copy())
         self._started_at = time.monotonic()
-        LOGGER.info("LinkCraft engine process %d started", self.process.pid)
+        LOGGER.info("Analytics engine process %d started", self.process.pid)
 
     def _watch(self) -> None:
         delay = RESTART_SECONDS[0]

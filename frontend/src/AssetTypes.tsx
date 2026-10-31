@@ -75,7 +75,7 @@ export function AssetTypesPage({ selected }: { selected: string | null }) {
       <article className="panel ty-list" aria-label={t("Asset types")}>
         <div className="ty-row ty-head" role="row"><span>{t("Type")}</span><span>{t("Attributes")}</span><span>{t("Roles")}</span><span>{t("Assets")}</span></div>
         {rows.map(({ type, depth }) => <Go key={type.id} to={`/asset-types/${encodeURIComponent(type.id)}`} className={`ty-row ${type.id === selected ? "ty-active" : ""}`}>
-          <span className="ty-name" style={{ paddingLeft: depth * 16 }}><TypeIcon icon={type.icon} kind={type.id} /><span><strong>{type.name}</strong><small>{type.id}</small></span></span>
+          <span className="ty-name" style={{ paddingLeft: depth * 16 }}><TypeIcon icon={type.icon} kind={type.id} /><span><strong>{type.name}</strong>{type.description && <small title={type.description}>{type.description}</small>}</span></span>
           <span>{type.attributes.length}</span>
           <span>{type.roles.length}</span>
           <span title={t("{count} of this type, {total} with its subtypes", { count: type.count ?? 0, total: type.total ?? 0 })}>{type.total ?? 0}</span>

@@ -1,8 +1,8 @@
-"""Everything one DashCraft server holds: settings, the dashboard store and PlantCraft clients.
+"""Everything one View server holds: settings, the dashboard store and PlantCraft clients.
 
 Who reads plant data:
 
-- **Saved dashboards and public links** read with DashCraft's service token
+- **Saved dashboards and public links** read with View's service token
   (``PLANTCRAFT_APP_KEY``), like a published report: whoever may open the
   dashboard sees what its editors put on it, and one read per card serves every
   viewer for ``DASHCRAFT_CACHE_SECONDS``. Without an app key, signed-in people

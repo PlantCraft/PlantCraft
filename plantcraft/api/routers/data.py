@@ -1,6 +1,6 @@
 """HTTP routes: industrial data (sources, connection, signals, history).
 
-With HistCraft as the data layer (``HISTCRAFT_URL``), sources live in HistCraft: these routes
+With Historian as the data layer (``HISTCRAFT_URL``), sources live in Historian: these routes
 check the person, then forward through ``rt.datalayer`` (``platform/datalayer/histcraft.py``),
 so PlantCraft opens no connection to a plant source. Without it, nothing changes.
 """
@@ -57,7 +57,7 @@ def _registry(rt: Any) -> Any:
 
 
 def _remote(rt: Any) -> Any:
-    """The data layer when it keeps the sources (HistCraft), else None."""
+    """The data layer when it keeps the sources, else None."""
 
     layer = rt.datalayer
     return layer if layer.manages_sources else None
@@ -327,7 +327,7 @@ def use_signals(
     remote = _remote(rt)
     if remote is not None:
         _require_source(rt, source_id)
-        if not payload.monitored:  # HistCraft stops collecting them and keeps their history
+        if not payload.monitored:  # Historian stops collecting them and keeps their history
             stopped = _forward(remote.stop_signals, source_id, payload.tags)
             return {"updated": stopped["updated"], "kept_by_scenario": []}
         answer = _forward(remote.add_signals, source_id, payload.tags)
@@ -355,7 +355,7 @@ def bind_signals(
     if rt.workspace.assets.get(payload.asset_id) is None:
         raise HTTPException(status_code=404, detail=t("Asset not found."))
     if _remote(rt) is not None:
-        # HistCraft's source: the binding records it; nothing is routed here.
+        # Historian's source: the binding records it; nothing is routed here.
         rt.workspace.assets.bind_signals(
             payload.asset_id,
             [

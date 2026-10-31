@@ -116,7 +116,7 @@ def run_check(
     *,
     hours: float = 48.0,
 ) -> Report:
-    """Check the HistCraft source row ``source`` and read ``tags`` over the last ``hours``."""
+    """Check the Historian source row ``source`` and read ``tags`` over the last ``hours``."""
 
     report = Report(str(source.get("name") or source.get("id") or "PI"))
     if source.get("kind") != "pi_web_api":

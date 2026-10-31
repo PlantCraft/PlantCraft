@@ -1,4 +1,4 @@
-"""API v1 derived series (docs/api-v1.md, "Derived series"), local data layer (no HistCraft).
+"""API v1 derived series (docs/api-v1.md, "Derived series"), local data layer (no Historian).
 
 An app's service token writes computed series to ``app-<app id>``; they are signals like the
 others: listed with ``app``, ``subject`` and ``result`` (and filtered by them), read through

@@ -1,4 +1,4 @@
-"""HistCraft never writes to a plant server (AGENTS.md, "Read-only on plant systems").
+"""Historian never writes to a plant server (AGENTS.md, "Read-only on plant systems").
 
 The OPC UA client may only Read, Browse and look up namespaces. These names are
 the asyncua calls (and OPC UA services) that change a server; none may appear in
