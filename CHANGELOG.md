@@ -13,7 +13,6 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   24 hours, 7 and 30 days, from the watch's incidents and without planned maintenance. An
   administrator plans a maintenance window (now or later, every app or some, up to 72 hours):
   while it lasts the watch keeps quiet about those apps.
-
 - **An official Zabbix template.** `monitoring/plantcraft_zabbix_agent.yaml` in the bundle
   (Zabbix 7.0 and later): a Zabbix agent on the PlantCraft machine reads the installer's
   `metrics.json` and watches the machine, the free disk and every service (state, health,
