@@ -94,7 +94,7 @@ input. Times are ISO 8601 with offset; series timestamps are UTC.
 | `GET /api/v1/signals/{id}` | One signal, same shape |
 | `GET /api/v1/signals/{id}/series?start&end&step` | `{"signal", "kind", "t": [iso...], "v": [number \| string \| null...]}` (typed by the point's kind); `step` in seconds (optional: recorded values); at most 200,000 points. A runs point answers `{"signal", "kind": "runs", "runs": [{"run_at", "t", "v"}]}` (`run`, `runs`) |
 | `POST /api/v1/series` | Body `{"signals": [id...], "start", "end", "step", "quality", "extremes"}` (1 to 500 ids; `quality` and `extremes` optional): `{"series": [{"signal", "kind", "t", "v"}...], "errors": [{"signal", "status", "detail"}...]}` |
-| `GET /api/v1/signals/{id}/value?agg&window` | `{"signal", "agg", "window", "value", "at"}`; `agg` one of `last, mean, min, max, std`; `window` like `1h`, `24h`, `7d` |
+| `GET /api/v1/signals/{id}/value?agg&window&end` | `{"signal", "agg", "window", "value", "at"}`; `agg` one of `last, mean, min, max, std`; `window` like `1h`, `24h`, `7d`; optional `end` (ISO 8601, never later than now) reads a window that closed earlier, like last week |
 | `PUT /api/v1/series` | Derived series, an app's service token only. Body: up to 500 items `[{"signal": "app-<app id>:<name>", "t": [iso...], "v": [...], "name", "unit", "kind", "subject", "result"}]`: `{"written", "errors"}` |
 | `PUT /api/v1/series/runs` | Runs points, an app's service token only. Body: up to 500 runs `[{"signal": "app-<app id>:<name>", "run_at", "t": [iso...], "v": [number...], "keep_runs", "keep_days", ...}]`: `{"written", "errors"}` (see "Value kinds, retention and runs") |
 | `GET /api/v1/signals/{id}/runs?limit` | A runs point's executions, newest first: `{"signal", "runs": [{"run_at", "start", "end", "n"}]}` |
@@ -781,7 +781,7 @@ checks the forwarding against a stub.
 | `GET /api/v1/signals/{id}` (also result and event subjects) | `GET .../api/v1/data/signals/{id}` |
 | `GET /api/v1/signals/{id}/series?start&end&step` (also the asset page and history charts) | `GET .../api/v1/data/signals/{id}/series` |
 | `POST /api/v1/series` | `POST .../api/v1/data/series` (same body) |
-| `GET /api/v1/signals/{id}/value?agg&window` | `GET .../api/v1/data/signals/{id}/value` |
+| `GET /api/v1/signals/{id}/value?agg&window&end` | `GET .../api/v1/data/signals/{id}/value` |
 | `PUT /api/v1/series` (derived) | `POST .../api/v1/data/derived` with `{"app", "series": [item + "app"]}`, answering `{"written", "errors": [{"signal", "status", "detail"}]}` (PlantCraft adds each error's `index`) |
 | `PUT /api/v1/series/runs` | `POST .../api/v1/data/derived/runs` with `{"app", "series": [run...]}`, answering as `/derived` |
 | `GET /api/v1/signals/{id}/series?run&runs`, `GET /api/v1/signals/{id}/runs?limit` | `GET .../api/v1/data/signals/{id}/series` and `.../runs` (same query) |
@@ -844,7 +844,7 @@ derived writes and everything else):
 | `GET {HISTCRAFT_URL}/api/v1/reads` | `{"api": 1}`: this Historian serves the reads below |
 | `GET {HISTCRAFT_URL}/api/v1/signals?q&app&subject&result`, `.../signals/{id}` | as API v1 |
 | `GET {HISTCRAFT_URL}/api/v1/signals/{id}/series?start&end&step`, `POST .../series` | as API v1 |
-| `GET {HISTCRAFT_URL}/api/v1/signals/{id}/value?agg&window` | as API v1 |
+| `GET {HISTCRAFT_URL}/api/v1/signals/{id}/value?agg&window&end` | as API v1 |
 
 - **Who reads.** The rule of API v1's reads: a token PlantCraft signed (a person's, or an
   app's service token), checked against `/api/v1/auth/keys` and the tokens ended early

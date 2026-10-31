@@ -16,14 +16,21 @@ Every section of a report reads the report's period, which ends when the report 
 report made every day at 06:00 over **the last 24 hours** covers 06:00 the day before to 06:00
 (the shift's day). Panels have no window of their own in a report.
 
+A scheduled report can instead cover **whole calendar periods**: yesterday from midnight to
+midnight, last week from Monday to Sunday, the two weeks before Monday, last month or last quarter,
+on the installation's clock. Every panel then reads the period that closed, whenever the report is
+made: a monthly report sent on day 3 still covers the first to the last day of the month before.
+
 ## Schedule and recipients
 
 **Settings** sets:
 
-- **Repeat**: every day, every week (on a weekday) or every month (on day 1 to 28), at a time of
-  the installation's time zone. *Not scheduled* reports are made only when someone asks.
-- **Covers**: the period, from 1 hour to 30 days. Changing the repeat suggests a matching period
-  (a day, 7 days, 30 days).
+- **Repeat**: every day, every week or every other week (on a weekday), every month or every
+  quarter (on day 1 to 28), at a time of the installation's time zone. *Not scheduled* reports are
+  made only when someone asks.
+- **Covers**: the period, from 1 hour to a year. Changing the repeat suggests a matching period
+  (a day, 7, 14, 30 or 90 days). **Whole calendar periods** covers the last closed day, week, two
+  weeks, month or quarter instead.
 - **Sent to**: people and groups of the platform. They get one notification per send; only
   those who may see the report's folder open it. **Also by email** adds an email where PlantCraft
   sends email and the person allows it.

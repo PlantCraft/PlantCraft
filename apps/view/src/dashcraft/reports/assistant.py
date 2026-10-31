@@ -478,13 +478,32 @@ def misdated(text: str, facts: dict[str, Any]) -> list[str]:
         if line.lstrip().startswith("#"):
             current = next(iter(tags)) if len(tags) == 1 else ""
             continue
-        tag = next(iter(tags)) if len(tags) == 1 else (current if not tags else "")
+        if len(tags) > 1:
+            found.update(_misdated_in_line(line, days, period))
+            continue
+        tag = next(iter(tags)) if tags else current
         if not tag or tag not in days:
             continue
         for day in DAY.findall(line):
             if day not in days[tag] and day not in period:
                 found.add(f"{tag} {day}")
     return sorted(found)
+
+
+def _misdated_in_line(line: str, days: dict[str, set[str]], period: set[str]) -> set[str]:
+    """A line naming several tags: each date belongs to the nearest tag before it, and counts as
+    wrong only when no tag on the line has that day (so a shared date never raises a false alarm;
+    gpt-5-mini's third 2026-10-31 edition shifted FIC-1003 on such a line)."""
+
+    named = [(m.start(), m.group(0)) for m in TAG.finditer(line)]
+    known = set().union(*(days.get(tag, set()) for _, tag in named))
+    found: set[str] = set()
+    for m in DAY.finditer(line):
+        before = [tag for at, tag in named if at < m.start()]
+        tag = before[-1] if before else ""
+        if tag in days and m.group(0) not in known and m.group(0) not in period:
+            found.add(f"{tag} {m.group(0)}")
+    return found
 
 
 def requirement_problems(requirements: str) -> list[str]:

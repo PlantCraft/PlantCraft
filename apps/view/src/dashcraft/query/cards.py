@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -82,6 +82,14 @@ class Reader:
     clock: Callable[[], datetime] = field(default=_utc_now)
     # Answers this request already read in one batch (``results_of``), by ``result``'s key.
     known: dict[tuple[str, str], Any] = field(default_factory=dict)
+    # Set when every read ends at a fixed past instant (a report of last week): values ask API
+    # v1 for the window that closed then (``end``), series end there.
+    closed_at: datetime | None = None
+
+    def until(self, end: datetime) -> Reader:
+        """This reader with every read ending at ``end``."""
+
+        return replace(self, clock=lambda: end, closed_at=end, known={})
 
     def _cached(self, cache: TtlCache | None, key: tuple, load: Callable[[], Any]) -> Any:
         return cache.get(key, load) if cache is not None else load()
@@ -102,6 +110,13 @@ class Reader:
         )
 
     def value(self, signal_id: str, agg: str, window: str) -> dict[str, Any]:
+        if self.closed_at is not None:
+            end = self.closed_at
+            return self._cached(
+                self.data_cache,
+                ("value", signal_id, agg, window, end.isoformat()),
+                lambda: self.client.value(signal_id, agg=agg, window=window, end=end),
+            )
         return self._cached(
             self.data_cache,
             ("value", signal_id, agg, window),

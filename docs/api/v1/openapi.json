@@ -4044,7 +4044,7 @@
   },
   "/api/v1/signals/{signal_id}/value": {
    "get": {
-    "description": "One aggregate (``last, mean, min, max, std``) over the ``window`` that ends now.\n\nA text signal has only ``last``, its newest label.",
+    "description": "One aggregate (``last, mean, min, max, std``) over the ``window`` that ends now, or at\n``end`` (ISO 8601, never later than now): a report of last week reads the closed week.\n\nA text signal has only ``last``, its newest label.",
     "operationId": "value_api_v1_signals__signal_id__value_get",
     "parameters": [
      {
@@ -4076,6 +4076,23 @@
        "maxLength": 20,
        "title": "Window",
        "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "end",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 40,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "End"
       }
      }
     ],
