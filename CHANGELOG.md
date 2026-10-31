@@ -9,6 +9,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Operations shows the machine and its profile.** Suite health names the machine as Docker
+  sees it (CPUs, memory), the machine profile that sized the suite (`install.sh --machine`) and
+  its ceilings, and each service's CPU limit beside its use. The `small` profile gives Analytics
+  and its executor 2 CPUs and 2 slots and Documents 1 GB, after a 2 CPU / 4 GB machine ran its
+  round slower with 1 and Documents reached 540 MB idle (plan B, 2026-10-31).
 - **The Historian answers from several processes (0.6.0 load tests, 2026-10-31).** Heavy reads
   ran in one Python process on one core. `histcraft serve` now starts as many processes as the
   CPUs its container may use (`HISTCRAFT_WORKERS`, `auto` by default: the container's CPU limit,

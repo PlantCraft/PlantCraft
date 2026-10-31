@@ -1456,5 +1456,17 @@
   "Keep exploring": "Continuar explorando",
   "Talk to us": "Fale com a gente",
   "Questions, a pilot on your plant, a call: the team answers": "Dúvidas, um piloto na sua planta, uma conversa: a equipe responde",
-  "Questions about your plant? Talk to us": "Dúvidas sobre a sua planta? Fale com a gente"
+  "Questions about your plant? Talk to us": "Dúvidas sobre a sua planta? Fale com a gente",
+  "limit {count} CPUs": "limite de {count} CPUs",
+  "small": "pequeno",
+  "medium": "médio",
+  "large": "grande",
+  "extra large": "extra grande",
+  "profile {size} ({how})": "perfil {size} ({how})",
+  "chosen by the machine": "escolhido pela máquina",
+  "chosen at install": "escolhido na instalação",
+  "no machine profile: limits as set in .env": "sem perfil de máquina: limites como estão no .env",
+  "at most {count} CPUs": "no máximo {count} CPUs",
+  "at most {size}": "no máximo {size}",
+  "Machine: {cpus} CPUs, {memory}, as Docker sees it": "Máquina: {cpus} CPUs, {memory}, como o Docker vê"
 }
