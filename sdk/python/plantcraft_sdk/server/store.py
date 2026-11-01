@@ -185,6 +185,7 @@ class Database:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
         self._applied: set[str] = set()
+        demo_slots.register(self.path)
         if version is not None:
             self._check_stamp(schema_stamp(version))
         self._utc_once()

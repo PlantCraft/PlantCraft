@@ -21,6 +21,7 @@ from fastapi import Depends, HTTPException, Request
 from plantcraft_sdk.auth import User
 from plantcraft_sdk.client import PlantCraftError, Unauthorized
 from plantcraft_sdk.i18n import t
+from plantcraft_sdk.server import demo_slots
 
 T = TypeVar("T")
 
@@ -41,14 +42,22 @@ CurrentUser = Annotated[User, Depends(current_user)]
 
 
 class Access:
-    """The access checks of one app; ``label`` is its short name in messages ("Twin")."""
+    """The access checks of one app; ``label`` is its short name in messages ("Twin").
 
-    def __init__(self, label: str):
+    ``demo_copy``: an isolated public demo visit saves, into its own copy of the app's data
+    (``plantcraft_sdk.server.demo_slots``); the app has checked that nothing it saves leaves that
+    copy (files on disk, other services)."""
+
+    def __init__(self, label: str, *, demo_copy: bool = False):
         self.label = label
+        self.demo_copy = demo_copy
         self.CurrentUser = CurrentUser
         self.EditorUser = Annotated[User, Depends(self.editor)]
 
     def editor(self, user: Annotated[User, Depends(current_user)]) -> User:
+        if not user.can_edit and user.demo is not None and self.demo_copy and demo_slots.editable():
+            # An isolated visit: what it saves stays in its own copy, deleted after the visit.
+            return user
         if not user.can_edit and user.demo is not None:
             # A public demo shows its editors; saving is what it refuses.
             raise HTTPException(
