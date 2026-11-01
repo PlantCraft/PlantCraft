@@ -4,7 +4,6 @@ the SDK sends when the app starts, and the fake holding it."""
 from __future__ import annotations
 
 import logging
-
 import tomllib
 from datetime import datetime, timezone
 
@@ -257,7 +256,6 @@ def test_without_an_app_key_the_metrics_carry_them():
         ops.report_catalog(None)
         ops.report_contributions(None)
     assert "contributions" not in ops.metrics("cpmcraft", "0.1.0")
-
 
 
 def test_a_stand_in_client_without_contributions_falls_back_to_the_metrics(caplog):
