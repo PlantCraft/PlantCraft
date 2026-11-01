@@ -7,7 +7,7 @@ link = json.loads(Path("server.json").read_text())
 view = json.loads(Path("server-view.json").read_text())
 PLANT = Path("/home/user/plantcraft/deploy/demo/diagrams/riverbend-plant.json")
 variants = sys.argv[1].split(",")
-out = Path("final"); out.mkdir(exist_ok=True)
+out = Path(sys.argv[3] if len(sys.argv) > 3 else "final"); out.mkdir(exist_ok=True)
 
 def assistant(route):
     if route.request.url.rstrip("/").endswith("/api/assistant"):
@@ -39,6 +39,9 @@ with sync_playwright() as p:
     setup.add_init_script("try{localStorage.setItem('plantcraft-ui:tours-off','1')}catch(e){}")
     dash, diagram = prepare_view(setup.new_page()); setup.close()
     pages = [
+        ("0-overview", link, link["url"] + "/link/"),
+        ("0-lista", link, link["url"] + "/link/results"),
+        ("0-malha", link, link["url"] + "/link/loops/fic-101"),
         ("1-algoritmo", link, link["url"] + "/link/algorithms/flow_loop/diagram"),
         ("2-blocos", link, link["url"] + "/link/blocks"),
         ("3-sinal", link, link["url"] + "/link/signals/fake%3ATIC-104.PV"),
