@@ -31,7 +31,9 @@ def _saves(user: Any) -> None:
     if user.demo is not None:
         raise HTTPException(
             status_code=403,
-            detail=t("This is a public demo: for security, this part is locked, and nothing is saved."),
+            detail=t(
+                "This is a public demo: for security, this part is locked, and nothing is saved."
+            ),
         )
 
 

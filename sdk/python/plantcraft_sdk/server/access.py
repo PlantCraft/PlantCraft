@@ -62,7 +62,9 @@ class Access:
             # A public demo shows its editors; saving is what it refuses.
             raise HTTPException(
                 status_code=403,
-                detail=t("This is a public demo: for security, this part is locked, and nothing is saved."),
+                detail=t(
+                    "This is a public demo: for security, this part is locked, and nothing is saved."
+                ),
             )
         if not user.can_edit:
             raise HTTPException(
