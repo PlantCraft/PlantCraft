@@ -4,7 +4,7 @@
  * draws with its own Plotly build and takes the periods, the layout, the hover text and the
  * buttons from here ("the same chart everywhere").
  */
-import { BRAND_COLORS, plotTheme, statusColors, type BrandTheme } from "./brandTheme.js";
+import { BRAND_COLORS, plotFontSize, plotTheme, statusColors, type BrandTheme } from "./brandTheme.js";
 import { t } from "./i18n.js";
 import { fromWallClock, wallClock } from "./timeZone.js";
 
@@ -192,7 +192,7 @@ export function timeFigure(props: TimeFigureOptions, theme: BrandTheme) {
     // A solid background, so the picture (PNG) reads in the theme it was taken in.
     paper_bgcolor: colors.surface, plot_bgcolor: colors.surface,
     shapes: bandShapes(props.bands ?? [], statusColors(theme)),
-    yaxis: { ...base.yaxis, title: { text: unit, font: { size: 10 } }, type: (text ? "category" : "linear") as "category" | "linear" },
+    yaxis: { ...base.yaxis, title: { text: unit, font: { size: plotFontSize(10) } }, type: (text ? "category" : "linear") as "category" | "linear" },
   };
   const config = { ...timePlotConfig({ modeBar: props.modeBar }), toImageButtonOptions: { format: "png" as const, filename: props.filename ?? "chart", scale: 2 } };
   return { data, layout, config };

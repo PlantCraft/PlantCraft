@@ -1,14 +1,14 @@
 /* PlantCraft Alarms: Active, the rules and the rule editor, Incoming and History. */
 
-.al-empty { text-align: center; padding: 40px; }
-.al-empty h2 { margin: 0 0 6px; }
-.al-starter { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; border-color: var(--pc-primary); }
-.al-starter h2 { margin: 0 0 4px; display: flex; gap: 6px; align-items: center; font-size: var(--pc-fs-base, 15px); }
+.al-empty { text-align: center; padding: var(--pc-space-10); }
+.al-empty h2 { margin: 0 0 calc(6px * var(--pc-space-scale, 1)); }
+.al-starter { display: flex; justify-content: space-between; align-items: center; gap: calc(18px * var(--pc-space-scale, 1)); flex-wrap: wrap; border-color: var(--pc-primary); }
+.al-starter h2 { margin: 0 0 var(--pc-space-1); display: flex; gap: calc(6px * var(--pc-space-scale, 1)); align-items: center; font-size: var(--pc-fs-base, 15px); }
 .al-starter p { margin: 0; max-width: 760px; }
-.al-filter { margin-bottom: 14px; }
-.al-query { margin-bottom: 14px; width: min(420px, 100%); }
+.al-filter { margin-bottom: calc(14px * var(--pc-space-scale, 1)); }
+.al-query { margin-bottom: calc(14px * var(--pc-space-scale, 1)); width: min(420px, 100%); }
 .al-reason { color: var(--pc-attention-text); }
-.al-pad { padding: 16px 20px 0; }
+.al-pad { padding: var(--pc-space-4) var(--pc-space-5) 0; }
 .al-span-2 { grid-column: span 2; }
 
 /* The summary: an unacknowledged alarm stands out; the most urgent ones carry a coloured edge. */
@@ -17,46 +17,46 @@
 .al-row-unacked.al-priority-critical { background: var(--pc-problem-soft); }
 .al-row-rtn_unacked td:first-child { box-shadow: inset 4px 0 0 var(--pc-info-fill); }
 .al-row-shelved, .al-row-out_of_service { opacity: .75; }
-.al-row .row-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.al-row .row-actions { display: flex; gap: calc(6px * var(--pc-space-scale, 1)); justify-content: flex-end; flex-wrap: wrap; }
 /* A phone (ui DataTable phone "hide"): the name column takes the room the left-out ones leave,
    with the alarm's priority and state under it. */
 .al-phone-pills { display: none; }
 @media (max-width: 720px) {
   .al-name { min-width: 11rem; }
-  .al-phone-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .al-phone-pills { display: flex; flex-wrap: wrap; gap: var(--pc-space-1); margin-top: var(--pc-space-1); }
 }
 
 /* Limits by grade: one line per grade, its name and its limit side by side. */
-.al-grades { display: grid; gap: 8px; justify-items: start; }
+.al-grades { display: grid; gap: var(--pc-space-2); justify-items: start; }
 .al-grades .al-inline { align-items: flex-end; flex-wrap: wrap; }
 
 /* Performance */
 /* Targets › Consoles: one bordered block per operator position. */
-.al-console { border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); padding: 12px 14px; margin-bottom: 12px; display: grid; gap: 10px; justify-items: start; }
+.al-console { border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); padding: var(--pc-space-3) calc(14px * var(--pc-space-scale, 1)); margin-bottom: var(--pc-space-3); display: grid; gap: calc(10px * var(--pc-space-scale, 1)); justify-items: start; }
 .al-console .form-grid { width: 100%; }
-.al-console-pick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-.al-shares { display: grid; gap: 10px; }
-.al-share { display: grid; grid-template-columns: 90px 1fr 56px 90px; gap: 10px; align-items: center; font-size: var(--pc-fs-sm); }
+.al-console-pick { display: flex; gap: var(--pc-space-2); align-items: center; flex-wrap: wrap; margin-bottom: calc(14px * var(--pc-space-scale, 1)); }
+.al-shares { display: grid; gap: calc(10px * var(--pc-space-scale, 1)); }
+.al-share { display: grid; grid-template-columns: 90px 1fr 56px 90px; gap: calc(10px * var(--pc-space-scale, 1)); align-items: center; font-size: var(--pc-fs-sm); }
 .al-share .health-bar { height: 8px; width: 100%; }
 .al-share b { text-align: right; color: var(--pc-text); }
 
 /* Editor */
 .al-editor { width: min(1100px, 100%); }
-.al-label { display: block; margin-bottom: 6px; font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); }
-.al-actions { display: flex; gap: 8px; justify-content: flex-end; margin: 6px 0 18px; }
+.al-label { display: block; margin-bottom: calc(6px * var(--pc-space-scale, 1)); font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); }
+.al-actions { display: flex; gap: var(--pc-space-2); justify-content: flex-end; margin: calc(6px * var(--pc-space-scale, 1)) 0 calc(18px * var(--pc-space-scale, 1)); }
 
 @media (max-width: 760px) {
   .al-span-2 { grid-column: auto; }
   .al-share { grid-template-columns: 70px 1fr 48px; }
   .al-share small { display: none; }
 }
-.al-scope { margin: 4px 0 12px; }
-.al-routed { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.al-scope { margin: var(--pc-space-1) 0 var(--pc-space-3); }
+.al-routed { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(6px * var(--pc-space-scale, 1)); }
 .button-link { background: none; border: 0; padding: 0; color: var(--pc-primary-text); cursor: pointer; font: inherit; text-decoration: underline; }
-.al-windows { display: grid; gap: 8px; }
-.al-window, .al-step { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; padding: 10px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); }
-.al-days { display: flex; flex-wrap: wrap; gap: 4px; }
-.al-day { display: inline-flex; align-items: center; padding: 4px 10px; border: 1px solid var(--pc-border); border-radius: 999px; cursor: pointer; font-size: var(--pc-fs-sm); font-weight: 500; user-select: none; }
+.al-windows { display: grid; gap: var(--pc-space-2); }
+.al-window, .al-step { display: flex; flex-wrap: wrap; gap: calc(10px * var(--pc-space-scale, 1)); align-items: flex-end; padding: calc(10px * var(--pc-space-scale, 1)); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); }
+.al-days { display: flex; flex-wrap: wrap; gap: var(--pc-space-1); }
+.al-day { display: inline-flex; align-items: center; padding: var(--pc-space-1) calc(10px * var(--pc-space-scale, 1)); border: 1px solid var(--pc-border); border-radius: 999px; cursor: pointer; font-size: var(--pc-fs-sm); font-weight: 500; user-select: none; }
 .al-day input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .form-grid .al-day.al-day-on, .al-day.al-day-on { background: var(--pc-primary); border-color: var(--pc-primary); color: var(--pc-on-accent); }
 .al-day:focus-within { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
@@ -65,23 +65,23 @@
 .form-grid .al-day { flex-direction: row; }
 
 /* The rule editor: the four kinds of "When" as cards, assets as chips. */
-.al-types { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin-bottom: 14px; }
-.al-type { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text); cursor: pointer; font: inherit; }
+.al-types { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--pc-space-2); margin-bottom: calc(14px * var(--pc-space-scale, 1)); }
+.al-type { display: grid; gap: 2px; text-align: left; padding: calc(10px * var(--pc-space-scale, 1)) var(--pc-space-3); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text); cursor: pointer; font: inherit; }
 .al-type small { color: var(--pc-text-2); font-size: var(--pc-fs-sm); }
 .al-type.on { border-color: var(--pc-primary); box-shadow: inset 0 0 0 1px var(--pc-primary); }
 .al-type:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
-.al-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
-.al-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 10px; border: 1px solid var(--pc-border); border-radius: 999px; font-size: var(--pc-fs-sm); }
+.al-chips { display: flex; flex-wrap: wrap; gap: calc(6px * var(--pc-space-scale, 1)); margin-bottom: calc(6px * var(--pc-space-scale, 1)); }
+.al-chip { display: inline-flex; align-items: center; gap: var(--pc-space-1); padding: 2px var(--pc-space-1) 2px calc(10px * var(--pc-space-scale, 1)); border: 1px solid var(--pc-border); border-radius: 999px; font-size: var(--pc-fs-sm); }
 .al-chip button { display: inline-flex; border: 0; background: none; color: var(--pc-text-2); cursor: pointer; padding: 2px; border-radius: 999px; }
 .al-chip button:hover { color: var(--pc-text); background: var(--pc-surface-3); }
-.al-inline { display: flex; gap: 14px; flex-wrap: wrap; }
-.al-sub { margin: 8px 0 0; font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); }
-.al-editor .form-grid + .form-grid { margin-top: 12px; }
-.al-gap { margin-top: 18px; align-items: center; }
-.al-block { display: block; margin-top: 4px; }
+.al-inline { display: flex; gap: calc(14px * var(--pc-space-scale, 1)); flex-wrap: wrap; }
+.al-sub { margin: var(--pc-space-2) 0 0; font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); }
+.al-editor .form-grid + .form-grid { margin-top: var(--pc-space-3); }
+.al-gap { margin-top: calc(18px * var(--pc-space-scale, 1)); align-items: center; }
+.al-block { display: block; margin-top: var(--pc-space-1); }
 
 /* Facts of one alarm or rule (owner's review, 2026-10-26): label at the left, the value beside it. */
-.al-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px 24px; margin: 0; }
+.al-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--pc-space-3) var(--pc-space-6); margin: 0; }
 .al-facts > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .al-facts dt { font-size: var(--pc-fs-xs); color: var(--pc-text-3); }
 .al-facts dd { margin: 0; overflow-wrap: anywhere; }
@@ -89,7 +89,7 @@
 .al-wrap { overflow-wrap: anywhere; min-width: 10rem; }
 
 /* A rule's on/off switch in the Rules table. */
-.al-switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: var(--pc-fs-sm); white-space: nowrap; }
+.al-switch { display: inline-flex; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); cursor: pointer; font-size: var(--pc-fs-sm); white-space: nowrap; }
 .al-switch input { appearance: none; width: 32px; height: 18px; border-radius: 9px; background: var(--pc-border); position: relative; cursor: pointer; transition: background .15s; margin: 0; }
 .al-switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--pc-surface); transition: left .15s; }
 .al-switch input:checked { background: var(--pc-primary); }
@@ -98,40 +98,40 @@
 .al-row-off td { color: var(--pc-text-3); }
 
 /* "Only mine" beside the table's filters. */
-.al-check { display: inline-flex; align-items: center; gap: 6px; font-size: var(--pc-fs-sm); white-space: nowrap; }
+.al-check { display: inline-flex; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); font-size: var(--pc-fs-sm); white-space: nowrap; }
 
 /* An event's page: where it came from, as links. */
-.al-sources { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.al-sources a { display: inline-flex; align-items: center; gap: 6px; }
-.al-gap-top { margin: 14px 0 0; }
+.al-sources { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--pc-space-2); }
+.al-sources a { display: inline-flex; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); }
+.al-gap-top { margin: calc(14px * var(--pc-space-scale, 1)) 0 0; }
 
 /* The When section (owner's review, 2026-10-27: "Add a condition" stuck to the condition above). */
-.al-when { display: grid; gap: 12px; }
+.al-when { display: grid; gap: var(--pc-space-3); }
 .al-when > .al-types { margin-bottom: 0; }
-.al-simple { display: grid; gap: 14px; }
-.al-condition { margin: 0; padding: 12px 16px 16px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); min-width: 0; }
-.al-condition legend { padding: 0 6px; font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); }
-.al-condition-head { justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.al-combine { margin: 0 0 14px; }
-.al-simple-foot { align-items: flex-end; justify-content: space-between; padding-top: 4px; }
+.al-simple { display: grid; gap: calc(14px * var(--pc-space-scale, 1)); }
+.al-condition { margin: 0; padding: var(--pc-space-3) var(--pc-space-4) var(--pc-space-4); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); min-width: 0; }
+.al-condition legend { padding: 0 calc(6px * var(--pc-space-scale, 1)); font-size: var(--pc-fs-sm); font-weight: 600; color: var(--pc-text-2); }
+.al-condition-head { justify-content: space-between; align-items: center; margin-bottom: var(--pc-space-3); }
+.al-combine { margin: 0 0 calc(14px * var(--pc-space-scale, 1)); }
+.al-simple-foot { align-items: flex-end; justify-content: space-between; padding-top: var(--pc-space-1); }
 .al-narrow { width: min(280px, 100%); }
-.al-narrow label { display: flex; flex-direction: column; gap: 6px; }
+.al-narrow label { display: flex; flex-direction: column; gap: calc(6px * var(--pc-space-scale, 1)); }
 .al-sentence { margin: 0; }
 
 /* The Python form: inputs, then the suite's code editor beside what check(inputs) receives. */
-.al-python { display: grid; gap: 12px; }
-.al-inputs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.al-inputs .al-inline { align-items: center; gap: 8px; }
+.al-python { display: grid; gap: var(--pc-space-3); }
+.al-inputs { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(6px * var(--pc-space-scale, 1)); }
+.al-inputs .al-inline { align-items: center; gap: var(--pc-space-2); }
 .al-input-name { font-family: var(--pc-font-mono); width: 14rem; }
-.al-python-head { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.al-python-head { display: flex; justify-content: space-between; align-items: center; margin-top: var(--pc-space-1); }
 .al-python-head .al-label { margin: 0; }
-.al-python-body { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; align-items: start; }
+.al-python-body { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: calc(14px * var(--pc-space-scale, 1)); align-items: start; }
 .al-python-full { height: min(72vh, 900px); align-items: stretch; }
 .al-python-full .al-python-guide { overflow: auto; }
-.al-python-guide { padding: 12px 14px; border: 1px solid var(--pc-border-subtle, var(--pc-border)); border-radius: var(--pc-radius-md); background: var(--pc-surface-2); }
+.al-python-guide { padding: var(--pc-space-3) calc(14px * var(--pc-space-scale, 1)); border: 1px solid var(--pc-border-subtle, var(--pc-border)); border-radius: var(--pc-radius-md); background: var(--pc-surface-2); }
 .al-python-guide .al-sub:first-child { margin-top: 0; }
-.al-python-guide ul { margin: 4px 0 8px; padding-left: 18px; }
-.al-python-guide p { margin: 4px 0 8px; }
+.al-python-guide ul { margin: var(--pc-space-1) 0 var(--pc-space-2); padding-left: calc(18px * var(--pc-space-scale, 1)); }
+.al-python-guide p { margin: var(--pc-space-1) 0 var(--pc-space-2); }
 @media (max-width: 900px) {
   .al-python-body { grid-template-columns: minmax(0, 1fr); }
   .al-python-full { height: auto; }
@@ -139,6 +139,6 @@
 }
 
 /* Rules › Import alarm list */
-.al-file { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; margin: 4px 0 16px; }
-.al-list { margin: 6px 0 16px; padding-left: 18px; }
-.al-diff { margin: 0; padding-left: 16px; }
+.al-file { display: inline-flex; gap: calc(6px * var(--pc-space-scale, 1)); align-items: center; cursor: pointer; margin: var(--pc-space-1) 0 var(--pc-space-4); }
+.al-list { margin: calc(6px * var(--pc-space-scale, 1)) 0 var(--pc-space-4); padding-left: calc(18px * var(--pc-space-scale, 1)); }
+.al-diff { margin: 0; padding-left: var(--pc-space-4); }

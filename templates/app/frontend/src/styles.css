@@ -7,4 +7,4 @@
 
 /* The note form: the text takes the whole row, the button sits under the fields. */
 .form-wide { grid-column: 1 / -1; }
-.form-actions { margin-top: 14px; }
+.form-actions { margin-top: calc(14px * var(--pc-space-scale, 1)); }

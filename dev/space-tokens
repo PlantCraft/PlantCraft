@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+"""Write CSS padding, margins and gaps with the spacing tokens, so they follow the display size.
+
+    dev/space-tokens ui/src/base.css apps/view/frontend/src/*.css
+
+A plain pixel value of 3 px or more becomes its token (`8px` -> `var(--pc-space-2)`) or, off the
+4 px grid, `calc(Npx * var(--pc-space-scale, 1))`. 1 and 2 px stay (hairlines). Declarations that
+already use calc() are left alone, so running it again changes nothing. See docs/brand.md,
+"Display size".
+"""
+
+import re
+import sys
+
+TOK = {2: "0-5", 4: "1", 8: "2", 12: "3", 16: "4", 20: "5", 24: "6", 32: "8", 40: "10", 48: "12"}
+decl = re.compile(
+    r"(?<![\w-])((?:padding|margin)(?:-(?:top|bottom|left|right|inline|block)(?:-(?:start|end))?)?|gap|row-gap|column-gap)(\s*:\s*)([^;}]+)"
+)
+num = re.compile(r"(?<![\w.(-])(-?)(\d+(?:\.\d+)?)px\b")
+
+
+def val(m):
+    sign, n = m.group(1), float(m.group(2))
+    if n < 3:
+        return m.group(0)
+    k = int(n) if n == int(n) else None
+    if k in TOK:
+        v = f"var(--pc-space-{TOK[k]})"
+    else:
+        v = f"calc({m.group(2)}px * var(--pc-space-scale, 1))"
+    return f"calc(-1 * {v})" if sign else v
+
+
+def fix(m):
+    if "calc(" in m.group(3) or "var(" in m.group(3) and "px" not in m.group(3):
+        return m.group(0)
+    return m.group(1) + m.group(2) + num.sub(val, m.group(3))
+
+
+n = 0
+for p in sys.argv[1:]:
+    s = open(p).read()
+    t = decl.sub(fix, s)
+    if t != s:
+        open(p, "w").write(t)
+        n += 1
+print(f"{n} files changed")

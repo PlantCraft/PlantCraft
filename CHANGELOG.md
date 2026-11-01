@@ -24,6 +24,18 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- `@plantcraft/ui`: **display size**, five steps from Larger text to More space, in the person's
+  menu under the theme, for every app of the suite. Larger text helps people who see less well;
+  More space fits more on a small laptop. The type and spacing tokens follow two scales
+  (`--pc-text-scale`, `--pc-space-scale`) set by `<html data-size>`; charts follow through
+  `plotTheme()`. New exports: `setDisplaySize`, `displaySize`, `textScale`,
+  `plotFontSize`, `DISPLAY_SIZES`. The CSS of the platform and the apps now writes its
+  padding, margins and gaps with the spacing tokens (`dev/space-tokens`). The card grid's rows
+  follow the text (`gridRow`, `gridGap`, `useDisplaySize`) and a widget list shows only the rows
+  that fit. See docs/brand.md.
+- `plantcraft-sdk`: **`displayfit`**, the check that every page fits at every display size, on a
+  small laptop and a large screen: no text cut, out of its card or over other text, no page wider
+  than the screen. PlantCraft and every app run it in `tests/e2e/test_display_sizes.py`.
 - The assistant's period statistics (`signal_stats`) give the standard deviation, and with `minus` a signal minus another point by point with its mean absolute value: a loop's error (PV minus setpoint) in one call, for up to ten loops. Found by the battery's hard questions, where both luna and terra could not rank loops by error from averaged history.
 
 - The assistant's test battery has hard questions: eleven analyses over a nine-loop plant of its own (rank loops by error, a sticky valve, an oscillation's period, a manual period, a level excursion, a drift, long notes, a fact from early in a long chat), and the works as their pages ask them, with the cost per group, to choose a model per use (docs/llm-battery.md).

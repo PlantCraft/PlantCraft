@@ -4,16 +4,36 @@
  * 2026-10-23: "uma coisa para fazer várias"). Twelve columns of 91 px rows with 14 px gaps (the
  * sizes View's dashboards already used); a cell is { i, x, y, w, h } in those units.
  *
+ * A row and a gap are those sizes at the default display size. Larger text grows the rows with
+ * the text (a card never cuts what it held); smaller sizes keep the rows, so cards show more
+ * (`gridRow`, `gridGap`).
+ *
  * Dragging and resizing are react-grid-layout's (MIT). On a narrow screen the cells are drawn one
  * under the other, in reading order, and do not move.
  */
 import ReactGridLayout, { useContainerWidth, type Layout, type LayoutItem } from "react-grid-layout";
 import { useCallback, useState, type ReactNode } from "react";
+import { displayScales, type DisplaySize } from "./displaySize.js";
+import { useDisplaySize } from "./useDisplaySize.js";
 
 export const GRID_COLUMNS = 12;
 export const GRID_ROW = 91;
 export const GRID_GAP = 14;
 export const GRID_MAX_H = 12;
+/**
+ * A row's height in pixels at a display size. Larger text grows the rows with the text, so a
+ * card holds what it holds at the default. Smaller text keeps the default's rows: the cards stay
+ * as tall and show more (more list rows, bigger squares), which is what More space is for.
+ */
+export function gridRow(size?: DisplaySize): number {
+  return Math.round(GRID_ROW * Math.max(1, displayScales(size).text));
+}
+
+/** The gap between cards in pixels at a display size: it follows the spacing. */
+export function gridGap(size?: DisplaySize): number {
+  return Math.round(GRID_GAP * displayScales(size).space);
+}
+
 /** Below this width the cells are stacked in one column. */
 export const GRID_NARROW = 720;
 
@@ -98,6 +118,9 @@ export type CardGridProps = {
 
 export function CardGrid({ cells, editing = false, resizable, onChange, limits, render, foldAfter, phoneHeight = "grid", handle = ".pc-cards-handle", className = "", label }: CardGridProps) {
   const { width, containerRef, mounted } = useContainerWidth();
+  const size = useDisplaySize();
+  const row = gridRow(size);
+  const gap = gridGap(size);
   const narrow = mounted && width < GRID_NARROW;
   const [unfolded, setUnfolded] = useState<ReadonlySet<string>>(() => new Set());
   const toggle = useCallback((id: string) => setUnfolded((prev) => {
@@ -121,11 +144,11 @@ export function CardGrid({ cells, editing = false, resizable, onChange, limits, 
       {readingOrder(cells).map((cell, index) => {
         // A phone shows the first cards whole and the rest as titles to open (a long page otherwise).
         const fold: CellFold | undefined = foldAfter !== undefined && !editing && index >= foldAfter ? { folded: !unfolded.has(cell.i), toggle: () => toggle(cell.i) } : undefined;
-        return <div key={cell.i} className={`pc-cards-cell${fold?.folded ? " pc-cards-folded" : ""}`} style={fold?.folded || phoneHeight === "content" ? undefined : { minHeight: cell.h * GRID_ROW + (cell.h - 1) * GRID_GAP }}>{render(cell.i, fold)}</div>;
+        return <div key={cell.i} className={`pc-cards-cell${fold?.folded ? " pc-cards-folded" : ""}`} style={fold?.folded || phoneHeight === "content" ? undefined : { minHeight: cell.h * row + (cell.h - 1) * gap }}>{render(cell.i, fold)}</div>;
       })}
     </div>}
     {mounted && !narrow && <ReactGridLayout layout={layout} width={width} onLayoutChange={change}
-      gridConfig={{ cols: GRID_COLUMNS, rowHeight: GRID_ROW, margin: [GRID_GAP, GRID_GAP], containerPadding: [0, 0] }}
+      gridConfig={{ cols: GRID_COLUMNS, rowHeight: row, margin: [gap, gap], containerPadding: [0, 0] }}
       dragConfig={{ enabled: editing, handle, cancel: "button, a, input, select, textarea, .pc-cards-nodrag" }}
       resizeConfig={{ enabled: editing && resizable !== false, handles: ["se"] }}>
       {cells.map((cell) => <div key={cell.i} className="pc-cards-cell">{render(cell.i)}</div>)}
