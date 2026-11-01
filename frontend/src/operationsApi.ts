@@ -122,6 +122,7 @@ export const operationsApi = {
   endMaintenance: (windowId: number) => requestJson<MaintenanceWindow>(`/api/operations/maintenance/windows/${windowId}`, { method: "DELETE" }),
   targets: () => requestJson<TargetsAnswer>("/api/operations/targets"),
   setServiceHours: (queue: string | null, hours: WorkingHours | null) => requestJson<TargetsAnswer>("/api/operations/service-hours", { method: "PUT", body: JSON.stringify({ queue, hours }) }),
+  setHolidays: (holidays: Holiday[]) => requestJson<TargetsAnswer>("/api/operations/holidays", { method: "PUT", body: JSON.stringify({ holidays }) }),
   setTargets: (targets: TargetsAnswer["targets"]) => requestJson<TargetsAnswer>("/api/operations/targets", { method: "PUT", body: JSON.stringify({ targets }) }),
   supportAccess: () => requestJson<{ grants: SupportGrant[]; max_hours: number }>("/api/operations/support-access"),
   grantSupport: (draft: { username: string; hours: number; reason: string; action_id?: number | null }) => requestJson<SupportGrant>("/api/operations/support-access/grants", post(draft)),
@@ -131,7 +132,9 @@ export const operationsApi = {
 /** A month's hours approved for a company (null company: the plant's own people). */
 export interface HoursApproval { month: string; company: string | null; hours: number; approved_by: string; approved_by_name: string; approved_at: string }
 export type Priority = "critical" | "high" | "medium" | "low";
-export interface TargetsAnswer { targets: Record<Priority, { response_hours: number; resolution_hours: number }>; defaults: TargetsAnswer["targets"]; service_hours?: QueueHours[]; timezone?: string }
+export interface TargetsAnswer { targets: Record<Priority, { response_hours: number; resolution_hours: number }>; defaults: TargetsAnswer["targets"]; service_hours?: QueueHours[]; holidays?: Holiday[]; timezone?: string }
+/** A day off for every queue with working hours, on the plant's clock. */
+export interface Holiday { day: string; name: string }
 export type DayName = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 /** When a queue works (null queue: the default); its requests' clocks run only then. */
 export interface WorkingHours { days: DayName[]; start: string; end: string }

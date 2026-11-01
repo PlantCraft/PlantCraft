@@ -354,8 +354,11 @@ applies to the open requests at once.
 days and hours (`{"days": ["mon", ...], "start": "08:00", "end": "17:00"}` on the plant's clock);
 its requests' clocks then run only inside them, due times land on the next working minute, and
 the request's page says so. The default calendar (`queue` null) covers requests without a queue
-and queues without their own; with none set, every clock runs day and night. Holidays are not
-modelled. Set on Requests › Targets.
+and queues without their own; with none set, every clock runs day and night. **Holidays**
+(`PUT /api/operations/holidays` `{holidays: [{day: "2026-12-25", name}]}`, the whole list,
+administrators, audited `operations.holidays`; read in `GET /api/operations/targets`) are the
+plant's days off, on its clock: every queue with working hours skips them, and a queue that works
+day and night ignores them. Set on Requests › Targets.
 
 **The month's approval** (`POST /api/operations/hours/approve` `{month, company}`, audited
 `operations.hours.approved`; `POST /api/operations/hours/reopen`, administrators, audited

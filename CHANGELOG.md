@@ -39,6 +39,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Operations: the plant's holidays.** Requests › Targets takes a list of holidays (a date and a
+  name per line, `PUT /api/operations/holidays`, audited). Queues with working hours stop their
+  clocks on them; a queue that works day and night ignores them.
+
 - `@plantcraft/ui`: **display size**, five steps from Larger text to More space, in the person's
   menu under the theme, for every app of the suite. Larger text helps people who see less well;
   More space fits more on a small laptop. The type and spacing tokens follow two scales
