@@ -75,6 +75,53 @@ def run_cases(battery: Battery, groups: set[str] | None = None, log=print) -> li
     return results
 
 
+# Hard questions: a nine-loop plant of its own, asked as the administrator (hard.py) --------------
+
+
+def run_hard(battery: Battery, log=print) -> list[Result]:
+    """Each hard question asked once; a real model only (the fake one cannot analyse)."""
+
+    from plantcraft.api.routers.assistant_chat import _reader
+    from tests.llm_battery import hard
+
+    if battery.fake:
+        return [
+            Result("hard", "hard", "The hard questions", "hard", None,
+                   ["only a real model can pass it"])
+        ]  # fmt: skip
+    hard.plant_notes(battery)
+    results = []
+    for case in hard.build_cases(_reader(battery.app, battery.rt, "admin")):
+        try:
+            outcome = hard.ask(battery, case)
+            if outcome.status != 201 or outcome.state not in ("", "done"):
+                passed, notes = (
+                    False,
+                    [f"FAIL: no answer ({outcome.status} {outcome.state} {outcome.detail})"],
+                )
+            else:
+                passed, notes = case.judge(outcome.text)
+        except Exception as exc:  # a case that breaks is a failed case, with why
+            outcome, passed, notes = None, False, [f"FAIL: the case broke: {exc!r}"[:400]]
+        notes.append(f"golden: {case.golden}")
+        result = Result(
+            id=case.id,
+            group="hard",
+            title=case.title,
+            expected="hard",
+            passed=passed,
+            notes=notes,
+            text=(outcome.text if outcome else "")[:2500],
+            seconds=round(outcome.seconds, 2) if outcome else 0.0,
+            tokens=outcome.tokens() if outcome else {},
+            tool_calls=outcome.tool_calls if outcome else 0,
+            model_calls=outcome.calls if outcome else 0,
+        )
+        results.append(result)
+        log(f"{result.verdict:16} {case.id:30} {' | '.join(notes)[:200]}")
+    return results
+
+
 # Quality: the assistant's own evaluation (Setup › Language models › Evaluate) --------------------
 
 
@@ -355,6 +402,8 @@ def write_report(
         f"{sum(1 for r in results if r.expected == 'quality' and r.passed is not None)} |",
         f"| Works (ask and create, as their pages ask) | {sum(bool(r.passed) for r in results if r.expected == 'works')} | "
         f"{sum(1 for r in results if r.expected == 'works' and r.passed is not None)} |",
+        f"| Hard questions (nine-loop plant) | {sum(bool(r.passed) for r in results if r.expected == 'hard')} | "
+        f"{sum(1 for r in results if r.expected == 'hard' and r.passed is not None)} |",
         f"| Load | {sum(bool(r.passed) for r in results if r.expected == 'load')} | "
         f"{sum(1 for r in results if r.expected == 'load' and r.passed is not None)} |",
         f"| **All asked** | **{sum(bool(r.passed) for r in asked)}** | **{len(asked)}** |",

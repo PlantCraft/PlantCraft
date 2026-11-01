@@ -21,8 +21,9 @@ from pathlib import Path
 
 from tests.llm_battery.cases import GROUPS
 from tests.llm_battery.fake import MeteredModel, ObedientModel
+from tests.llm_battery.hard import write_plant
 from tests.llm_battery.harness import installation
-from tests.llm_battery.runner import run_cases, run_load, run_quality, write_report
+from tests.llm_battery.runner import run_cases, run_hard, run_load, run_quality, write_report
 
 
 def read_key(path: str) -> str:
@@ -96,40 +97,58 @@ def main(argv: list[str] | None = None) -> int:
     if endpoint is not None:
         options["endpoint"] = endpoint
     print(f"battery: model {name}, installation in {workdir}", flush=True)
-    with installation(workdir, factory, **options) as battery:
-        secrets = dict(battery.canaries)
+    secrets: dict[str, str] = {}
 
-        def log(line: str) -> None:
-            for secret in secrets.values():
-                if secret:
-                    line = line.replace(secret, "[secret]")
-            print(line, flush=True)
+    def log(line: str) -> None:
+        for secret in secrets.values():
+            if secret:
+                line = line.replace(secret, "[secret]")
+        print(line, flush=True)
 
-        results = run_cases(battery, groups or None, log)
-        if not groups or "quality" in groups:
-            results += run_quality(battery, log)
-        if not groups or "works" in groups:
-            results += run_quality(battery, log, suite="works")
-        load = None
-        if not groups or "load" in groups:
-            before = ObedientModel.latency
-            ObedientModel.latency = args.fake_latency if fake else before
-            try:
-                found, load = run_load(battery, args.load_people, args.load_questions, log)
-            finally:
-                ObedientModel.latency = before
-            results += found
-        report = write_report(
-            out,
-            f"{name} (reasoning {args.reasoning or 'default'})"
-            if not fake
-            else "obedient fake model",
-            results,
-            load,
-            prices,
-            started_at=stamp,
-            secrets=secrets,
-        )
+    results = []
+    load = None
+    plant_groups = {"hard", "works"}
+    if not groups or groups - plant_groups:
+        with installation(workdir / "demo", factory, **options) as battery:
+            secrets.update(battery.canaries)
+            results += run_cases(battery, (groups - plant_groups) or None, log)
+            if not groups or "quality" in groups:
+                results += run_quality(battery, log)
+            if not groups or "load" in groups:
+                before = ObedientModel.latency
+                ObedientModel.latency = args.fake_latency if fake else before
+                try:
+                    found, load = run_load(battery, args.load_people, args.load_questions, log)
+                finally:
+                    ObedientModel.latency = before
+                results += found
+    if not groups or groups & plant_groups:
+        # The hard questions and the works, as an administrator outside the demo, in a
+        # nine-loop plant of the battery's own (hard.py).
+        scenario = write_plant(workdir / "hard-plant")
+        with installation(
+            workdir / "hard",
+            factory,
+            scenario_path=scenario,
+            traps=False,
+            env={"PLANTCRAFT_PUBLIC_DEMO": None, "PLANTCRAFT_PUBLIC_DEMO_LLM": None},
+            **options,
+        ) as battery:
+            secrets.setdefault("model key", battery.setup["key"])
+            secrets.setdefault("admin password", battery.admin_password)
+            if not groups or "hard" in groups:
+                results += run_hard(battery, log)
+            if not groups or "works" in groups:
+                results += run_quality(battery, log, suite="works")
+    report = write_report(
+        out,
+        f"{name} (reasoning {args.reasoning or 'default'})" if not fake else "obedient fake model",
+        results,
+        load,
+        prices,
+        started_at=stamp,
+        secrets=secrets,
+    )
     print(f"battery: report in {report}", flush=True)
     failed = [r for r in results if r.passed is False and r.expected == "hold"]
     return 1 if failed else 0

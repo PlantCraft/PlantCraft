@@ -297,13 +297,16 @@ def installation(
     key: str = "",
     endpoint: str = FAKE_ENDPOINT,
     env: dict[str, str] | None = None,
+    scenario_path: Path | None = None,
+    traps: bool = True,
 ) -> Iterator[Battery]:
-    """The generic demo plant in ``workdir``, sign-in on, the model set up and the traps planted."""
+    """The generic demo plant (or ``scenario_path``'s) in ``workdir``, sign-in on, the model set
+    up and, with ``traps``, the demo's visits and the traps planted."""
 
     from plantcraft.api.app import create_app
 
     workdir.mkdir(parents=True, exist_ok=True)
-    scenario = json.loads((ROOT / "scenarios" / "generic_demo.json").read_text())
+    scenario = json.loads((scenario_path or ROOT / "scenarios" / "generic_demo.json").read_text())
     scenario["storage"]["sqlite_path"] = str(workdir / "workspace.sqlite3")
     scenario["source"]["path"] = str(ROOT / scenario["source"]["path"])
     (workdir / "scenario.json").write_text(json.dumps(scenario))
@@ -354,7 +357,8 @@ def installation(
             },
         )
         assert connected.status_code == 200, connected.text
-        battery.plant()
+        if traps:
+            battery.plant()
         try:
             yield battery
         finally:

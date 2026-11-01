@@ -71,3 +71,41 @@ def test_the_report_never_carries_a_planted_secret(tmp_path):
     path = write_report(tmp_path, "m", [leaked], None, secrets={"model key": "sk-SECRET-1"})
     assert "sk-SECRET-1" not in path.read_text()
     assert "sk-SECRET-1" not in (tmp_path / "results.json").read_text()
+
+
+def test_the_hard_questions_have_the_answers_their_plant_was_written_with(tmp_path):
+    """The nine-loop plant serves what hard.py wrote into it, every golden answer passes its own
+    checks and an empty one fails them, and the questions reach the model (one through a long
+    chat)."""
+
+    from plantcraft.api.routers.assistant_chat import _reader
+    from tests.llm_battery import hard
+    from tests.llm_battery.runner import run_hard
+
+    scenario = hard.write_plant(tmp_path / "plant")
+    with installation(
+        tmp_path / "hard",
+        ObedientModel,
+        scenario_path=scenario,
+        traps=False,
+        env={"PLANTCRAFT_PUBLIC_DEMO": None, "PLANTCRAFT_PUBLIC_DEMO_LLM": None},
+    ) as found:
+        hard.plant_notes(found)
+        notes = found.rt.workspace.knowledge.search("startup feed limit")
+        assert any("37.5 t/h" in item["text"] for item in notes)
+        cases = {case.id: case for case in hard.build_cases(_reader(found.app, found.rt, "admin"))}
+        assert len(cases) == 11, sorted(cases)
+        assert cases["hard-largest-error"].golden.startswith("FIC-102")
+        assert cases["hard-rank-three"].golden == "FIC-102 > PIC-201 > TIC-301"
+        assert cases["hard-per-unit"].golden == "U-100: FIC-102, U-200: TIC-202, U-300: TIC-301"
+        assert cases["hard-manual-period"].golden.startswith("180 min")
+        for case in cases.values():
+            assert case.judge(case.golden + " " + case.question)[0], case.id
+            assert not case.judge("I could not work that out.")[0], case.id
+        # The run's own path, with the fake answering (it cannot analyse: every case fails).
+        found.fake = False
+        results = run_hard(found, log=lambda _line: None)
+        assert len(results) == 11
+        assert all(r.model_calls >= 1 and r.passed is False for r in results), results
+        chat = next(r for r in results if r.id == "hard-long-chat")
+        assert chat.tokens["input_tokens"] > 3_000, chat.tokens

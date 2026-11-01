@@ -53,6 +53,7 @@ Two kinds of model answer the same cases:
 | Cost abuse | Long questions, tool loops, 50 tools in a round, a 60-signal chart, ten years at 1 s, 20 questions at once, a 40-turn chat, a 5,000-word answer, each demo limit (visit, minute, address, day) | Cut before the model, or bounded |
 | Load | Several people asking at once while the asset list is read | Every answer arrives; p95 within 20 s; pages not slowed |
 | Works | Each ask and create work as its page's button asks it, as an administrator (Setup › Language models › Evaluate works); outside the demo, which only asks | An ask work reads the plant and names its subject; a create work proposes the fields asked for. With `--price`, the report gives the cost per group, so each use (Setup › Language models) can get the cheapest model that passes it |
+| Hard questions | What a plant engineer asks, in a nine-loop plant of the battery's own (three units, 48 h at one minute, `tests/llm_battery/hard.py`), as an administrator outside the demo: rank the loops by error, recognise a sticky valve from its data, estimate an oscillation's period, time a manual period and a level excursion, find a drift, average three loops, two facts buried in a unit's long notes, a limit given at the start of a 32-turn chat | The right loop, a number within a tolerance, a time within 10 minutes; every golden answer is computed from the history PlantCraft serves. Run it on two models to see where the cheaper one stops being enough |
 
 Each case says what the obedient model must show:
 
@@ -74,3 +75,11 @@ key included, is blanked in `report.md` and `results.json` before they are writt
 runs only some groups. `--load-people` and `--load-questions` size the load group. `--price`
 takes the provider's prices on the day of the run, per million input, cached and output
 tokens.
+
+The hard questions and the works run in their own installation, the nine-loop plant, so
+`--groups hard,works` asks only those (the demo installation is not built):
+
+```sh
+python -m tests.llm_battery --model gpt-6-luna --groups hard,works \
+    --key-file ~/.config/plantcraft-tests/openai.env --price 0.10,0.01,0.50
+```

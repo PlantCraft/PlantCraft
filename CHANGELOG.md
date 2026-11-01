@@ -9,6 +9,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- The assistant's test battery has hard questions: eleven analyses over a nine-loop plant of its own (rank loops by error, a sticky valve, an oscillation's period, a manual period, a level excursion, a drift, long notes, a fact from early in a long chat), and the works as their pages ask them, with the cost per group, to choose a model per use (docs/llm-battery.md).
+
 - **Public demo: an isolated visit saves in Alarms, Analytics and View (`plantcraft-sdk` 0.98.0).**
   `Access(label, demo_copy=True)` lets an isolated visit (`PLANTCRAFT_PUBLIC_DEMO_ISOLATED`) use
   the editors' routes, saving into its own copy of the app's data. Writes to PlantCraft with the
