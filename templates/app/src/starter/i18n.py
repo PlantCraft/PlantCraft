@@ -1,4 +1,4 @@
-"""One hook for user-facing text: ``t("Rule {name} not found.", name=name)``.
+"""One hook for user-facing text: ``t("No asset {asset} in PlantCraft.", asset=asset_id)``.
 
 English is the source and the key; this app's translations are ``locales/<language>.json``
 next to this file, over the SDK's own (docs/translations.md). The page's language comes with

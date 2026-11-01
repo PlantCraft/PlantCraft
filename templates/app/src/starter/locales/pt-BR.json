@@ -1,14 +1,4 @@
 {
-  "Follow up the note on {asset}": "Acompanhar a nota sobre {asset}",
-  "Follow up {asset}": "Acompanhar {asset}",
   "No asset {asset} in PlantCraft.": "Não há ativo {asset} no PlantCraft.",
-  "No language model for summaries: an administrator chooses one in Setup.": "Nenhum modelo de linguagem para resumos: um administrador escolhe um em Configurações.",
-  "No note yet.": "Ainda não há nota.",
-  "Note": "Nota",
-  "Note not found.": "Nota não encontrada.",
-  "Note on {asset}": "Nota sobre {asset}",
-  "PlantCraft did not answer: {error}": "O PlantCraft não respondeu: {error}",
-  "Rule {name} not found.": "Regra {name} não encontrada.",
-  "Widget not found.": "Widget não encontrado.",
-  "notes": "notas"
+  "Note not found.": "Nota não encontrada."
 }

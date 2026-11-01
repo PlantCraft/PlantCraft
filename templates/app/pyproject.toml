@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "starter"
-version = "0.1.0"
+version = "0.2.0"
 description = "StarterCraft: the smallest app of the PlantCraft suite, a note on any asset"
 readme = "README.md"
 license = {text = "Apache-2.0"}

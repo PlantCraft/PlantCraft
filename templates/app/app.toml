@@ -5,14 +5,14 @@
 [app]
 id = "starter"
 name = "StarterCraft"
-version = "0.1.0"
+version = "0.2.0"
 category = "Example"
 summary = "The smallest app of the PlantCraft suite: a note on any asset of the plant."
 description = """\
 A starting point for an app of one's own: notes on the assets of PlantCraft's asset tree, \
-listed, searched (Ctrl+K) and kept in the app's own database. It shows every part an app of the \
-suite has: the manifest, the server on the SDK, the interface on the suite's frame, the help \
-pages, the tests and the signed package."""
+listed and kept in the app's own database. It has only the parts every app of the suite needs: \
+the manifest, the server on the SDK, the interface on the suite's frame, a help page, the tests \
+and the signed package."""
 # "Dev Publisher" matches PlantCraft's development key (`make dev-package`); a real release names
 # the company whose key the stack trusts (prompts/05-package-and-install.md).
 publisher = "Dev Publisher"
@@ -37,66 +37,19 @@ roles = {}
 
 [permissions]
 read = ["assets"]
-write = ["audit", "events", "llm"]
+write = ["audit"]
 plant_write = false
 outbound = []
 
 [publishes]
 results = []
 
-# The events StarterCraft writes (PlantCraft docs/app-standard.md, section 6): declared here,
-# written by name through EventCatalog, judged only by Alarms. Delete it with the notes.
-[[publishes.events]]
-name = "note.written"
-title = "Note written"
-description = "An editor wrote a note on an asset."
-severity = "info"
-category = "user"
-payload = { note = "Note id" }
-
 [consumes]
 results = []
 
-# What StarterCraft adds to PlantCraft (PlantCraft docs/app-standard.md, section 4b): one example
-# of each, all from the notes. PlantCraft draws them without knowing the app; delete what yours
-# does not need, with its module in suite/.
-[contributes.search]                # Ctrl+K: api/routers/search.py
-types = ["Note"]
-
-[[contributes.calendar]]            # Desk's calendar: suite/desk.py sends the feed
-id = "follow-ups"
-title = "Follow-ups"
-description = "The notes that ask for a follow-up, on their day."
-
-[[contributes.todo]]                # Desk's to-do: suite/desk.py gives one per follow-up
-id = "follow-up"
-title = "Follow up a note"
-
-[[contributes.llm]]                 # Setup > Language models: suite/llm.py asks through PlantCraft
-id = "summary"
-title = "Summarise a note"
-reads = "The text of one note."
-default = "off"
-
-[[contributes.refs]]                # #starter_note:<id> in messages: api/routers/refs.py
-kind = "starter_note"
-title = "Note"
-url = "/starter/notes/{id}"
-
-[[contributes.widgets]]             # Overview and Desk's Today: api/routers/widgets.py
-id = "count"
-title = "StarterCraft: notes"
-description = "How many notes there are."
-size = "s"
-kind = "number"
-default = true
-
-[[contributes.widgets]]
-id = "latest"
-title = "StarterCraft: latest notes"
-description = "The newest notes, each one click away."
-size = "m"
-kind = "list"
+# What the app adds to PlantCraft's own screens (Ctrl+K search, widgets, Desk's calendar and
+# to-do, language model uses, references) and the events it writes go in [contributes] and
+# [[publishes.events]]. This template starts without any: docs/recipes/ has one recipe each.
 
 [backup]                            # its data folder in the suite's backup (PlantCraft docs/operations.md)
 sqlite = ["starter.sqlite3"]
@@ -104,3 +57,17 @@ skip = ["logs/"]
 
 [suggests]
 asset_types = []
+
+# Coming in the PlantCraft release after 0.6.0 (the app package format, PlantCraft PR #179): uncomment
+# when the SDK in vendor/ knows these keys; docs/packaging.md says what each one means.
+#
+# [app]  (these two go under [app] above)
+# source = "open"                   # "closed": compiled image and a licence
+# languages = ["en", "pt-BR"]       # each language other than "en" needs its locales/<lang>.json
+#
+# [requires]  (this one goes under [requires] above)
+# platform = ">=0.7,<0.9"           # PlantCraft versions the app installs on
+#
+# [license]                         # closed apps only: a signed .pclicense per installation
+# required = true
+# grace_days = 14

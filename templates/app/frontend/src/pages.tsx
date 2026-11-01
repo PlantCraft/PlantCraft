@@ -23,7 +23,7 @@ export function tourSteps(): TourStep[] {
       path: "/",
       target: ".pcs-content .panel",
       title: tt("Notes"),
-      body: tt("Every note, newest first. An editor writes one on any asset of PlantCraft's asset tree; Ctrl+K finds them from anywhere in the suite."),
+      body: tt("Every note, newest first. An editor writes one on any asset of PlantCraft's asset tree."),
     },
     tourClosing(),
   ];
