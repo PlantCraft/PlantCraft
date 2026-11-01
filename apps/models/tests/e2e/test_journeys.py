@@ -505,6 +505,20 @@ def test_export_an_fmu(signed_in, app_url, screenshots):
     _shot(page, screenshots, "11-fmu")
 
 
+def test_compile_a_model_and_see_it_compiled(signed_in, app_url, screenshots):
+    page = signed_in
+    _open_model(page, app_url)
+    page.get_by_role("button", name="Compile", exact=True).click()
+    built = page.get_by_role("region", name="Compiled version")
+    expect(built).to_contain_text("Compiled from the model as it is now", timeout=SLOW)
+    expect(page.locator(".mc-build-state")).to_contain_text("version")
+    expect(built.get_by_role("link", name="Download the FMU")).to_be_visible()
+    _shot(page, screenshots, "12-compiled")
+    page.goto(f"{app_url}/model/models")
+    expect(page.locator(".pcs-content")).to_contain_text("Compiled")
+    _shot(page, screenshots, "13-models-compiled")
+
+
 def test_addresses_of_earlier_versions_lead_to_their_new_place(signed_in, app_url):
     page = signed_in
     page.goto(f"{app_url}/model/projects")

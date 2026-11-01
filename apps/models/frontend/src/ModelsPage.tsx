@@ -8,6 +8,7 @@ import { chosenFolder, DataTable, FolderColumn, folderName, inFolder, newInFolde
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "./api";
+import { BUILD_ORDER, BUILD_WORDS, BuildPill } from "./Build";
 import { formatAgo, t } from "./i18n";
 import { Link, navigate } from "./nav";
 import { modelPath } from "./paths";
@@ -67,6 +68,8 @@ export function ModelsPage({ me }: { me: Me }) {
     { key: "blocks", label: t("Blocks"), numeric: true, sort: (model) => (model.diagram ? model.blocks : 1), render: (model) => (model.diagram ? model.blocks : <span title={t("Written in Modelica code: one block")}>{t("1 (code)")}</span>) },
     { key: "time", label: t("Simulated time"), numeric: true, sort: (model) => model.settings.stop - model.settings.start,
       render: (model) => <span className="nowrap">{reading(model.settings.stop - model.settings.start, "s")}<small>{SOLVER_NAMES[model.settings.solver] ?? model.settings.solver} · {t("step {step} s", { step: reading(model.settings.interval) })}</small></span> },
+    { key: "build", label: t("Compiled"), sort: (model) => BUILD_ORDER.indexOf(model.build ?? "not_compiled"), render: (model) => <BuildPill state={model.build ?? "not_compiled"} />,
+      filter: { value: (model) => model.build ?? "not_compiled", options: BUILD_ORDER.map((value) => ({ value, label: t(BUILD_WORDS[value].label) })) } },
     { key: "updated", label: t("Changed"), sort: (model) => model.updated_at, render: (model) => <span className="nowrap">{formatAgo(model.updated_at)}<small>{model.updated_by}</small></span> },
   ];
   const newModel = newInFolder("/models/new", folder);
