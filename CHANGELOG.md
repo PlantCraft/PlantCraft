@@ -31,6 +31,17 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **The guided tour goes to the end on a phone (SDK 0.103.0, ui 0.107.0).** On a 390 px phone the
+  platform tour stopped on its Apps step: the installed-apps table widened the page to about
+  600 px, the phone widened its frame to match, and the tour's card slid below the screen, under
+  the dimmed page, so only its close button could be reached. The Apps page now stays as wide as
+  the screen (the table scrolls inside its panel; Publisher and Adds are left out on a phone), and
+  the tour's card follows the part of the page that shows, so Next is always within reach. A
+  tour step that opens the assistant no longer sends an administrator without a language model
+  to its setup page, which ended the tour. New browser journeys walk the platform's tour and the
+  tours of Analytics, View, Alarms, Models and Documents to the end on a phone
+  (`plantcraft_sdk.e2e.walk_tour`, `e2e.page(..., phone=True, tours=True)`).
+
 - **Three months of plant-scale history on an 8 GB machine (pc-carga, 2026-11-01).** The Historian
   died for lack of memory with 1.5 GB on the `medium` machine profile: it now gets 3 GB (4 GB on
   `large`, 6 GB on `xlarge`). A Historian worker starting on a busy archive could deadlock the

@@ -679,7 +679,7 @@ export function AssistantTopButton({ platformUrl, page, variant = "top", collaps
   const off = `${label}: ${state?.reason || t("Language models are turned off in this installation.")}${setUp ? ` ${t("Click to set it up.")}` : ""}`;
   if (variant === "sidebar") {
     const hint = ready ? (collapsed ? label : t("Ask the assistant about this page")) : off;
-    return <button type="button" className={`pcs-quick-button${open ? " pcs-active" : ""}${ready ? "" : " pcs-quick-off"}`} onClick={toggle} aria-pressed={Boolean(open)} aria-label={hint} title={hint} data-tour="assistant-button">
+    return <button type="button" className={`pcs-quick-button${open ? " pcs-active" : ""}${ready ? "" : " pcs-quick-off"}`} onClick={toggle} aria-pressed={Boolean(open)} aria-label={hint} title={hint} data-tour="assistant-button" data-leaves-page={setUp || undefined}>
       <Sparkles size={18} aria-hidden="true" />
     </button>;
   }
