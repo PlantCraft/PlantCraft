@@ -9,7 +9,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
-- **Analytics on an 8 GB machine: 2 GB of memory, and health that sees a crash loop (SDK 0.100.0).**
+- **Analytics on an 8 GB machine: 2 GB of memory, and health that sees a crash loop (SDK 0.101.0).**
   The `medium` machine profile gave Analytics 1 GB (`LINKCRAFT_MEMORY`). With a plant of 2,050
   loops and three months of history, its engine died for lack of memory 56 times in four hours
   on a 4 CPU, 8 GB test machine while the container still said "healthy". The profile now gives

@@ -33,7 +33,7 @@ image = "alarmcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.100.0"
+sdk = "0.101.0"
 asset_types = []        # any signal, of any asset, can carry alarms
 roles = {}
 
