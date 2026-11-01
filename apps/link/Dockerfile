@@ -54,9 +54,9 @@ f'--build-arg VERSION=${VERSION}, app.toml says {want}: build with make image')"
 # PlantCraft Analytics wheel (--no-deps: the index only provides its build backend, setuptools).
 RUN --mount=type=secret,id=build_ca,required=false \
     if [ -s /run/secrets/build_ca ]; then export PIP_CERT=/run/secrets/build_ca; fi; \
-    grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.99.0-py3-none-any.whl' vendor/README.md \
+    grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.100.0-py3-none-any.whl' vendor/README.md \
         | (cd vendor && sha256sum -c -) \
-    && cp vendor/plantcraft_sdk-0.99.0-py3-none-any.whl /wheelhouse/ \
+    && cp vendor/plantcraft_sdk-0.100.0-py3-none-any.whl /wheelhouse/ \
     && pip wheel --no-cache-dir --no-deps --wheel-dir /wheelhouse . \
     && rm -rf build
 
@@ -108,7 +108,7 @@ RUN --mount=type=bind,from=wheels,source=/wheelhouse,target=/wheelhouse \
     python -m pip install --no-cache-dir --root-user-action=ignore --no-index --find-links /wheelhouse \
         --require-hashes --no-deps -r /tmp/requirements.lock \
     && python -m pip install --no-cache-dir --root-user-action=ignore --no-index --no-deps \
-        /wheelhouse/plantcraft_sdk-0.99.0-py3-none-any.whl /wheelhouse/linkcraft-*.whl \
+        /wheelhouse/plantcraft_sdk-0.100.0-py3-none-any.whl /wheelhouse/linkcraft-*.whl \
     && { python -m pip check | grep -Ev '^fmpy [0-9.]+ requires (cmake|jinja2|nbformat),' || true; } \
         | { ! grep . ; } \
     && python -m compileall -q "$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/linkcraft" \

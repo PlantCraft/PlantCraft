@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@plantcraft/ui": "file:../vendor/plantcraft-ui-0.104.0.tgz",
+    "@plantcraft/ui": "file:../vendor/plantcraft-ui-0.105.0.tgz",
     "lucide-react": "^0.468.0",
     "plotly.js-cartesian-dist-min": "^3.7.0",
     "react": "^19.1.1",

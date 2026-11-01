@@ -9,7 +9,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- **Public demo: the visitor is told the visit's limits (SDK 0.99.0, ui 0.104.0).** The sign-in page says a visit lasts
+- **Public demo: the visitor is told the visit's limits (SDK 0.100.0, ui 0.105.0).** The sign-in page says a visit lasts
   up to its minutes (30), that nothing changed is saved and that, as a public demo, some parts are
   locked for security; the platform tour's first step and the visit clock's hint say the same.
   A locked action answers "This is a public demo: for security, this part is locked, and nothing
