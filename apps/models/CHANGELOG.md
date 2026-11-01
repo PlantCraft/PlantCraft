@@ -8,6 +8,16 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Compile a model, and see whether it is compiled.** **Compile** on a model's page builds the
+  model as it is now into an FMU (FMI 2.0, co-simulation: what Analytics runs), kept with the
+  model; the last three compilations stay. The page says **Compiled** (with the version it was
+  compiled from), **Compiling**, **Out of date** (the model or a block it uses changed after),
+  **Compile failed** or **Not compiled**; the Overview's **Compiled version** has when and by whom,
+  how long it took, the FMU's size and variables, omc's messages, **Download the FMU** and the last
+  compilations. **Versions** names the compiled versions and the **Models** list has a
+  **Compiled** column. `GET /api/models/<project>/<model>/build`,
+  `POST /api/models/<project>/<model>/compile` (editors; audited as `model.compiled`).
+
 - **Tracking: the model checked against the plant on a schedule.** A tracking simulates a model
   over the last window of plant data every few minutes (both 5 minutes at least), writes model
   minus plant for each compared variable as a signal (`app-modelcraft:tracking-<id>.<variable>.error`)

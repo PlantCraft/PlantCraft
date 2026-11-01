@@ -177,7 +177,27 @@ export interface ModelItem {
   project_id: string; project: string; group: string; example: boolean;
   model: string; name: string; description: string; file: string;
   diagram: boolean; blocks: number; settings: SimSettings; updated_by: string; updated_at: string;
+  /** Whether it is compiled (Compile on its page keeps an FMU with it). */
+  build?: BuildState;
 }
+
+/** Whether a model is compiled: in the queue or compiling, compiled from the files as they are
+ * now, the last compilation failed, compiled then changed, or never compiled. */
+export type BuildState = "compiling" | "compiled" | "failed" | "out_of_date" | "not_compiled";
+
+/** One compilation of a model: its FMU (FMI 2.0, co-simulation) and what omc said. */
+export interface Build {
+  id: string; status: RunStatus; created_at: string; created_by: string; finished_at: string | null;
+  seconds: number | null; summary: string;
+  /** Compiled from the model as it is now. */
+  current: boolean;
+  /** The version of the model it was compiled from (null: a version no longer kept). */
+  version: number | null;
+  fmi_version: string; fmu_type: string; size: number | null; sha256: string; variables: number | null;
+  errors: number; warnings: number; messages: Message[];
+}
+
+export interface ModelBuild { state: BuildState; compiled: Build | null; builds: Build[] }
 
 /** One model with its diagram, read from its Modelica text. */
 export interface ModelDetail {

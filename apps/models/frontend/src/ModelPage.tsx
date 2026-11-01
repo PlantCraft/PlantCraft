@@ -12,12 +12,13 @@ import { ComparePicker, DataTable, FolderPlaceLine, PageTabs, useAssistantPage, 
 import { BlockEditor, ParameterField, type BlockCatalog } from "@plantcraft/ui/blockEditor";
 import "@xyflow/react/dist/style.css";
 import "@plantcraft/ui/blockEditor.css";
-import { Code2, Copy, ExternalLink, FlaskConical, Package, Play, Save, Trash2 } from "lucide-react";
+import { Code2, Copy, ExternalLink, FlaskConical, Hammer, Package, Play, Save, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 export { modelVersions, VersionDialog } from "./versionParts";
 import { ModelCompare, revisionOf, shownVersion } from "./Versions";
+import { BuildPanel, BuildPill, buildText } from "./Build";
 import { formatAgo, formatDate, t } from "./i18n";
 import { href, Link, navigate } from "./nav";
 import { NewModelDialog } from "./ModelsPage";
@@ -26,7 +27,7 @@ import { blockPath, codePath, editorPath, modelPath, newStudyPath, runPath, type
 import { FmuDialog } from "./RunDialogs";
 import { ResultsPlot, RunsTable } from "./RunsPage";
 import { checkDiagram, diagramParameters, scopeSignals, settingsProblem, SimulationSettings, SOLVER_NAMES } from "./SimulationSettings";
-import type { BlockDiagram, Me, ModelDetail, Revision, Run, SimSettings, Study } from "./types";
+import type { BlockDiagram, Me, ModelBuild, ModelDetail, Revision, Run, SimSettings, Study } from "./types";
 import { modelVersions, VersionDialog } from "./versionParts";
 import { Dialog, ErrorBox, Heading, Loading, message, Progress, reading, RunPill, StudyProgress } from "./ui";
 
@@ -227,14 +228,17 @@ function UsedByTab({ studies, action }: { studies: Study[]; action: ReactNode })
   </>;
 }
 
-function VersionsOfModel({ found, revisions, projectId, model, shown }: { found: ModelDetail; revisions: Revision[] | null; projectId: string; model: string; shown: number | null }) {
+function VersionsOfModel({ found, revisions, projectId, model, shown, build }: { found: ModelDetail; revisions: Revision[] | null; projectId: string; model: string; shown: number | null; build: ModelBuild | null }) {
   const base = modelPath(projectId, model);
   const count = (revisions?.length ?? 0) + 1;
+  // Which versions have a compiled version kept (Compile on the page).
+  const compiled = [...new Set((build?.builds ?? []).filter((item) => item.status === "done" && item.version).map((item) => item.version as number))].sort((a, b) => b - a);
   return <><VersionsTab
     shown={shown ?? count}
     onOpen={(number) => navigate(number === count ? base : `${base}?version=${number}`)}
     versions={revisions === null ? null : modelVersions(revisions, { by: found.updated_by, at: found.updated_at, name: found.version_name, note: found.version_note })}
-    footer={<>{t("Opening an older version shows it on the other tabs, read-only; Use this version saves it again as the newest.")} <Link to={codePath(projectId, model)}>{t("Its code")}</Link></>}
+    footer={<>{compiled.length > 0 && <span className="mc-versions-compiled">{t("Compiled: {versions}.", { versions: compiled.map((n) => t("version {n}", { n })).join(", ") })} </span>}
+      {t("Opening an older version shows it on the other tabs, read-only; Use this version saves it again as the newest.")} <Link to={codePath(projectId, model)}>{t("Its code")}</Link></>}
   />
   {revisions && <ComparePicker numbers={Array.from({ length: count }, (_, index) => index + 1)} text={t("Tick two or three versions: each runs with the same simulation settings and their results show on one chart.")}
     onCompare={(ticked) => navigate(`${base}/compare?versions=${ticked.join(",")}`)} />}
@@ -248,6 +252,8 @@ export function ModelPage({ projectId, model, tab, me }: { projectId: string; mo
   const [runs, setRuns] = useState<Run[] | null>(null);
   const [studies, setStudies] = useState<Study[] | null>(null);
   const [revisions, setRevisions] = useState<Revision[] | null>(null);
+  const [build, setBuild] = useState<ModelBuild | null>(null);
+  const [compiling, setCompiling] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [dialog, setDialog] = useState<"fmu" | "duplicate" | null>(null);
@@ -265,12 +271,20 @@ export function ModelPage({ projectId, model, tab, me }: { projectId: string; mo
     setFound(detail); setCatalog(blocks);
     api.revisions(projectId, detail.file).then(setRevisions).catch(() => setRevisions([]));
   }, [projectId, model]);
+  const loadBuild = useCallback(() => api.modelBuild(projectId, model).then(setBuild).catch(() => undefined), [projectId, model]);
   useEffect(() => {
     load().catch((err) => setError(message(err)));
+    void loadBuild();
     loadRuns().catch(() => setRuns([]));
     api.studies({ project: projectId, model }).then(setStudies).catch(() => setStudies([]));
-    return onSaved(projectId, model, () => void load().catch(() => undefined));
-  }, [load, loadRuns]);
+    return onSaved(projectId, model, () => { void load().catch(() => undefined); void loadBuild(); });
+  }, [load, loadRuns, loadBuild]);
+  // A compilation in the queue or running is followed until it ends.
+  useEffect(() => {
+    if (build?.state !== "compiling") return;
+    const timer = window.setTimeout(() => void loadBuild(), 1500);
+    return () => window.clearTimeout(timer);
+  }, [build, loadBuild]);
   useEffect(() => {
     setOld(null);
     if (version === null || !revisions) return;
@@ -309,6 +323,10 @@ export function ModelPage({ projectId, model, tab, me }: { projectId: string; mo
     setBusy(true); setError("");
     try { setRun(await api.runModel(projectId, model)); void loadRuns(); } catch (err) { setError(message(err)); } finally { setBusy(false); }
   };
+  const compile = async () => {
+    setCompiling(true); setError("");
+    try { await api.compileModel(projectId, model); await loadBuild(); } catch (err) { setError(message(err)); } finally { setCompiling(false); }
+  };
   const remove = async () => {
     if (!(await confirmAction(t("Delete {name}? Its simulations and studies stay in Simulations.", { name: found.name }), { confirm: t("Delete"), danger: true }))) return;
     try { await api.deleteModel(projectId, model); navigate("/models"); } catch (err) { setError(message(err)); }
@@ -328,6 +346,8 @@ export function ModelPage({ projectId, model, tab, me }: { projectId: string; mo
     <nav className="breadcrumb"><Link to="/models">{t("Models")}</Link></nav>
     <Heading eyebrow={[found.example ? t("Example") : found.group, view.code ? t("Modelica code") : t("Block diagram")].filter(Boolean).join(" · ")} title={found.name} detail={found.description || undefined}
       actions={<>
+        {build && <span className="mc-build-state" title={buildText(build)}><BuildPill state={build.state} />{build.state === "compiled" && build.compiled?.version ? <small className="muted">{t("version {n}", { n: build.compiled.version })}</small> : null}</span>}
+        {me.can_edit && !old && <button type="button" className="button button-secondary" disabled={compiling || build?.state === "compiling"} title={t("Compile the model as it is now; the compiled version (an FMU) is kept with it")} onClick={() => void compile()}><Hammer />{t("Compile")}</button>}
         {me.can_edit && found.editable && <button type="button" className="button button-secondary" onClick={() => setDialog("duplicate")}><Copy />{t("Duplicate")}</button>}
         {me.can_edit && <button type="button" className="button button-secondary button-icon" title={t("Export FMU")} aria-label={t("Export FMU")} onClick={() => setDialog("fmu")}><Package /></button>}
         <Link to={codePath(projectId, model)} className="button button-secondary button-icon" title={t("Modelica code")} aria-label={t("Modelica code")}><Code2 /></Link>
@@ -356,6 +376,7 @@ export function ModelPage({ projectId, model, tab, me }: { projectId: string; mo
       <div className="mc-page-main">
         {tab === "overview" && <FolderPlaceLine kind="model" itemId={`${projectId}/${model}`} canEdit={me.can_edit} />}
         {tab === "overview" && <Overview found={detail} diagram={view.diagram} catalog={view.catalog} code={view.code} />}
+        {tab === "overview" && !old && <BuildPanel build={build} />}
         {tab === "diagram" && <section className="panel mc-page-diagram">
           <div className="panel-header"><div><h2>{t("Diagram")}</h2><p>{view.code ? t("A model written as code is one block: its inputs, outputs and parameters.") : t("Select a block to read what it does. The editor opens in its own window.")}</p></div>
             <button type="button" className="button button-secondary" onClick={() => openEditor(projectId, model)}><ExternalLink size={16} />{t("Open the editor")}</button>
@@ -369,7 +390,7 @@ export function ModelPage({ projectId, model, tab, me }: { projectId: string; mo
         {tab === "settings" && <SettingsTab key={`${found.updated_at ?? ""}/${old?.revision ?? 0}`} {...saveProps} code={view.code} />}
         {tab === "test" && <TestTab run={run} runs={runs} signals={signals} settings={found.settings} canRun={canRun} busy={busy} title={runTitle} me={me} onRun={() => void simulate()} onChanged={() => void loadRuns()} />}
         {tab === "used-by" && (studies ? <UsedByTab studies={studies} action={me.can_edit && <Link to={newStudyPath(projectId, model)} className="button button-secondary"><FlaskConical size={16} />{t("Study it")}</Link>} /> : <Loading />)}
-        {tab === "versions" && <VersionsOfModel found={found} revisions={revisions} projectId={projectId} model={model} shown={shownVersion(window.location.search)} />}
+        {tab === "versions" && <VersionsOfModel found={found} revisions={revisions} projectId={projectId} model={model} shown={shownVersion(window.location.search)} build={build} />}
         {tab === "compare" && <ModelCompare projectId={projectId} model={model} revisions={revisions} signals={signals} canRun={me.can_edit} />}
       </div>
     </div>

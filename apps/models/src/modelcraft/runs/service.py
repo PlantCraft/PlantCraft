@@ -42,6 +42,8 @@ from modelcraft.runs.store import PRIORITY_SINGLE, PRIORITY_SWEEP, RunStore
 LOGGER = logging.getLogger(__name__)
 LIBRARY_ROOTS = ("Modelica", "ModelicaServices", "Complex")
 DIAGRAM_CACHE = 64
+# The compilations a model keeps (Compile on its page); older ones are deleted.
+KEEP_BUILDS = 3
 
 
 class WorkbenchError(ValueError):
@@ -465,6 +467,77 @@ class Workbench:
         threading.Thread(target=self._announce, args=(run,), daemon=True).start()
         return run
 
+    # Compiled models (2026-11-01) ---------------------------------------------------------
+
+    def compile_files(self, project_id: str) -> dict[str, str]:
+        """The files a compilation of the project's models takes (with the shared blocks)."""
+
+        return self._files(project_id)
+
+    def source_of(
+        self,
+        project_id: str,
+        model: str,
+        replace: dict[str, str] | None = None,
+        *,
+        files: dict[str, str] | None = None,
+    ) -> str:
+        """What a compilation of the model depends on: the project's files with the shared
+        blocks' libraries beside them, and the class. A change to any of them makes a build out
+        of date; ``replace``: files in place of the project's (an earlier version); ``files``:
+        the project's, when the caller has read them already."""
+
+        given = files if files is not None else self._files(project_id)
+        return _digest({**given, **(replace or {})}, model)
+
+    def compile(self, project_id: str, model: str, *, by: str) -> dict[str, Any]:
+        """Compile the model as it is now into an FMU (FMI 2.0, co-simulation: what Analytics
+        runs), kept with the model. The last ``KEEP_BUILDS`` compilations stay, older ones go."""
+
+        run = self.start(
+            project_id,
+            model,
+            "fmu",
+            {
+                "version": "2.0",
+                "type": "cs",
+                "compile": True,
+                "source": self.source_of(project_id, model),
+            },
+            by=by,
+            label=t("Compiled"),
+        )
+        for old in self.builds(project_id, model)[KEEP_BUILDS:]:
+            if old["status"] not in ("queued", "running"):
+                self.delete_run(old["id"])
+        return run
+
+    def builds(self, project_id: str, model: str) -> list[dict[str, Any]]:
+        """The model's compilations, newest first (FMU exports made with Compile)."""
+
+        found = self.runs.list(project_id=project_id, model=model, kind="fmu", limit=200)
+        return [run for run in found if (run.get("options") or {}).get("compile")]
+
+    def build_state(
+        self, builds: list[dict[str, Any]], source: str
+    ) -> tuple[str, dict[str, Any] | None]:
+        """Whether a model is compiled, and its compiled version (the newest that built):
+        ``compiling`` (in the queue or running), ``compiled`` (built from the files as they are
+        now), ``failed`` (the last compilation failed), ``out_of_date`` (built, then changed) or
+        ``not_compiled``."""
+
+        latest = builds[0] if builds else None
+        built = next((run for run in builds if run["status"] == "done"), None)
+        if latest and latest["status"] in ("queued", "running"):
+            return "compiling", built
+        if built and built["options"].get("source") == source:
+            return "compiled", built
+        if latest and latest["status"] == "failed":
+            return "failed", built
+        if built:
+            return "out_of_date", built
+        return "not_compiled", None
+
     def start_study(
         self,
         project_id: str,
@@ -758,6 +831,9 @@ class Workbench:
         options = dict(run["options"])
         plant = options.pop("plant", None)
         options.pop("compare", None)
+        # What the model page reads of a compilation, not the runner's.
+        options.pop("compile", None)
+        options.pop("source", None)
         files, extra = self._job_inputs(run)
         if "inputs.csv" in extra:
             options["inputs_file"] = "inputs.csv"

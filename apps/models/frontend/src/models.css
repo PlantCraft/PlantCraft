@@ -412,3 +412,13 @@ h4.mc-dialog-section { font-size: var(--pc-fs-sm); }
 @media (max-width: 640px) { .mc-constraint { grid-template-columns: 1fr 1fr; } }
 .mc-block-about h3 { margin: var(--pc-space-3) 0 4px; font-size: var(--pc-fs-sm); }
 .mc-formula { white-space: pre-wrap; font-family: var(--pc-font-mono); background: var(--pc-surface-2); padding: 8px 12px; border-radius: var(--pc-radius-md); margin: 0; }
+
+/* A model's compiled version (2026-11-01): the state beside the heading's actions, the Overview's
+   "Compiled version" panel and its last compilations. */
+.mc-build-state { display: inline-flex; align-items: center; gap: 6px; }
+.mc-model-build .panel-header p { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 0; }
+.mc-build-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 14px 0 0; }
+.mc-build-history { margin-top: 14px; font-size: var(--pc-fs-sm); }
+.mc-build-history summary { cursor: pointer; color: var(--pc-text-2); }
+.mc-build-history ul { margin: 8px 0 0; padding-left: 18px; color: var(--pc-text-2); }
+.mc-build-history li + li { margin-top: 4px; }

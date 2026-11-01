@@ -40,6 +40,14 @@ algorithms that run on the plant's data belong to Analytics.
 
 Examples stay as Models ships them. **Duplicate** makes your own copy to change.
 
+**Compile** on a model's page builds the model as it is now and keeps the compiled version with
+it: an FMU (FMI 2.0, co-simulation), the form Analytics runs. Beside the button the page says
+whether the model is **Compiled** (and from which version), **Out of date** (it, or a block it
+uses, changed after the compilation), **Compile failed** or **Not compiled**. The Overview's
+**Compiled version** says when and by whom, how long it took and what omc said, downloads the FMU
+and lists the last three compilations. Test and the studies still compile in the runner as they
+run; a study reuses the build its batches share.
+
 A block's page has the tabs of a block in Analytics: **Overview** (how it is drawn, what it does,
 how to read it and its formula), **Inputs and outputs** (its ports and parameters), **Code**,
 **Used by** (the models that place it) and **Versions**. The blocks Models ships stay as they are;

@@ -1,7 +1,7 @@
 import { configureFolders, createApiClient, jsonBody, query, withImageHrefs, type HelpEntry, type HelpPage, type PromptText } from "@plantcraft/ui";
 import { href } from "./nav";
 import type { BlockCatalog } from "@plantcraft/ui/blockEditor";
-import type { AssetRuns, BlockLibrary, BlockUse, CheckResult, ClassInfo, ComputeOffer, Diagram, FileContent, LibraryClass, LibraryEntry, CatalogBlock, Me, ModelDetail, ModelItem, Project, SimSettings, BlockDiagram, ProjectFile, QueueState, Revision, Run, RunnerState, SeriesAnswer, SignalOption, StatisticRow, Study, StudyPreview, StudySeries, SweepItem, Tracking, TrackingBody, Variable } from "./types";
+import type { AssetRuns, BlockLibrary, BlockUse, CheckResult, ClassInfo, ComputeOffer, Diagram, FileContent, LibraryClass, LibraryEntry, CatalogBlock, Me, ModelBuild, ModelDetail, ModelItem, Project, SimSettings, BlockDiagram, ProjectFile, QueueState, Revision, Run, RunnerState, SeriesAnswer, SignalOption, StatisticRow, Study, StudyPreview, StudySeries, SweepItem, Tracking, TrackingBody, Variable } from "./types";
 
 const client = createApiClient({ app: "modelcraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -36,6 +36,8 @@ export const api = {
   changeModel: (projectId: string, model: string, change: { name?: string; description?: string; group?: string }) => request<ModelDetail>(`/api/models/${id(projectId)}/${id(model)}`, body("PATCH", change)),
   duplicateModel: (projectId: string, model: string, name: string, group = "") => request<ModelDetail>(`/api/models/${id(projectId)}/${id(model)}/duplicate`, body("POST", { name, group })),
   deleteModel: (projectId: string, model: string) => request<void>(`/api/models/${id(projectId)}/${id(model)}`, { method: "DELETE" }),
+  modelBuild: (projectId: string, model: string) => request<ModelBuild>(`/api/models/${id(projectId)}/${id(model)}/build`),
+  compileModel: (projectId: string, model: string) => request<Run>(`/api/models/${id(projectId)}/${id(model)}/compile`, body("POST", {})),
   runModel: (projectId: string, model: string, label = "") => request<Run>(`/api/models/${id(projectId)}/${id(model)}/run`, body("POST", { label })),
   projects: () => request<Project[]>("/api/projects"),
   project: (projectId: string) => request<Project & { files: ProjectFile[]; classes: ClassInfo[] }>(`/api/projects/${id(projectId)}`),
