@@ -60,7 +60,7 @@ TOOL_TEXT = 12_000
 STREAM_SECONDS = 0.4
 # A question shorter than this ("ok", "and?") is not searched before the model answers.
 PREFETCH_MIN = 8
-ANSWER_LANGUAGE = {"pt-BR": "Brazilian Portuguese", "en": "English"}
+ANSWER_LANGUAGE = {"pt-BR": "Brazilian Portuguese", "es": "Spanish", "en": "English"}
 CHART = "show_chart"
 HELP = "read_help"
 

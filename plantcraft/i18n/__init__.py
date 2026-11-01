@@ -23,7 +23,7 @@ from pathlib import Path
 from plantcraft_sdk import i18n as _sdk_i18n
 
 DEFAULT_LANGUAGE = "en"
-LANGUAGES = {"en": "English", "pt-BR": "Português (Brasil)"}
+LANGUAGES = {"en": "English", "pt-BR": "Português (Brasil)", "es": "Español"}
 COOKIE = "processcraft_language"
 # Tells every page of the suite whether to offer other languages (@plantcraft/ui i18n.ts).
 TRANSLATIONS_COOKIE = "plantcraft_translations"

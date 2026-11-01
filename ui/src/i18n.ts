@@ -12,9 +12,10 @@
  * translations are on (the `plantcraft_translations` cookie, set by PlantCraft from
  * PLANTCRAFT_TRANSLATIONS); otherwise everyone sees English. */
 import { fillText } from "./files.js";
+import uiEs from "./locales/es.json" with { type: "json" };
 import uiPtBR from "./locales/pt-BR.json" with { type: "json" };
 
-export type Language = "en" | "pt-BR";
+export type Language = "en" | "pt-BR" | "es";
 export type Catalog = Record<string, string>;
 type Translate = (text: string, values?: Record<string, string | number>) => string;
 
@@ -22,13 +23,14 @@ type Translate = (text: string, values?: Record<string, string | number>) => str
 export const SUITE_LANGUAGES: { code: Language; label: string; locale: string }[] = [
   { code: "en", label: "English", locale: "en-US" },
   { code: "pt-BR", label: "Português (Brasil)", locale: "pt-BR" },
+  { code: "es", label: "Español", locale: "es" },
 ];
 
 export const LANGUAGE_COOKIE = "processcraft_language";
 export const LANGUAGE_STORAGE_KEY = "processcraft.language";
 export const TRANSLATIONS_COOKIE = "plantcraft_translations";
 
-const UI_CATALOGS: Partial<Record<Language, Catalog>> = { "pt-BR": uiPtBR as Catalog };
+const UI_CATALOGS: Partial<Record<Language, Catalog>> = { "pt-BR": uiPtBR as Catalog, es: uiEs as Catalog };
 
 let translate: Translate = fillText;
 let currentLocale = "en-US";

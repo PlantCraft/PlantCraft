@@ -21,7 +21,7 @@ lint:
 	ruff format --check .
 
 # Translations of the platform, the SDK and the shared ui (docs/translations.md): fails on a broken
-# catalog or a text missing from one (pt-BR is complete since 2026-11-01).
+# catalog or a text missing from one (pt-BR and es are complete since 2026-11-01).
 i18n:
 	$(PYTHON) -m plantcraft_sdk.i18n_check --strict frontend ui plantcraft sdk/python
 
