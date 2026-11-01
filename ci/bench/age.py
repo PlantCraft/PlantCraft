@@ -285,6 +285,7 @@ def measure(suite: Suite, months: float, args: argparse.Namespace) -> dict:
     report["memory"] = memory(suite)
     if args.users:
         log(f"{args.users} people at once for {args.minutes:g} min")
+        started = time.time()
         subprocess.run(
             [
                 sys.executable,
@@ -300,7 +301,16 @@ def measure(suite: Suite, months: float, args: argparse.Namespace) -> dict:
             ],
             check=False,
         )
-        newest = sorted(Path(args.out).glob("*-users.json"))
+        # This run's report only: the folder also holds older ones (the repository's own, named
+        # after other machines, sort after this one by name; pc-carga, 2026-11-01).
+        newest = sorted(
+            (
+                item
+                for item in Path(args.out).glob("*-users.json")
+                if item.stat().st_mtime >= started
+            ),
+            key=lambda item: item.stat().st_mtime,
+        )
         if newest:
             step = json.loads(newest[-1].read_text())["steps"][0]
             report["users"] = {
