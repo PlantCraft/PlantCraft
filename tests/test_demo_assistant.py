@@ -32,6 +32,7 @@ class VisitModel:
     tools: list[str] = []
     rounds: list[int] = []
     obeyed: list[str] = []
+    systems: list[str] = []
 
     def __init__(self, api_key, *, provider, model, endpoint, reasoning=""):
         self.label = f"Local · {model}"
@@ -40,6 +41,7 @@ class VisitModel:
 
     def answer(self, system, messages, tool=None, tools=None):
         VisitModel.tools = [item["name"] for item in tools or []]
+        VisitModel.systems.append(system)
         VisitModel.rounds.append(self.rounds)
         tool("search_signals", {"query": "pv"})
         self.usage = {"calls": 2, "input": 3000, "cached": 1000, "output": 200, "reasoning": 50}
@@ -178,6 +180,17 @@ def test_a_visit_only_asks_with_few_rounds(demo):
     # No card that creates, four rounds of reads.
     assert not [name for name in VisitModel.tools if name.startswith("propose")]
     assert VisitModel.rounds == [4]
+    # Told it is the demo, to be short, and that it creates nothing; the rules come before who
+    # asks and when, so the provider reuses them from one question to the next.
+    told = VisitModel.systems[-1]
+    assert told.startswith("You are PlantCraft's assistant, in Desk.")
+    assert "public demo" in told and "You cannot create anything here" in told
+    assert "propose_create" not in told
+    assert (
+        told.index("Be brief.")
+        < told.index("You are talking with")
+        < told.index("Times are ISO 8601")
+    )
     works = visitor.get("/api/assistant/works", params={"page": "processcraft:actions"}).json()
     assert works["works"] and all(item.get("kind") != "create" for item in works["works"])
     assert _ask(visitor, work="processcraft:new-action").status_code == 404
@@ -191,6 +204,9 @@ def test_a_visit_only_asks_with_few_rounds(demo):
     assert _ask(admin).status_code == 201
     assert [name for name in VisitModel.tools if name.startswith("propose")]
     assert VisitModel.rounds[-1] == 8
+    assert (
+        "propose_create" in VisitModel.systems[-1] and "public demo" not in VisitModel.systems[-1]
+    )
 
 
 def test_questions_per_visit_per_address_and_per_day(demo):
