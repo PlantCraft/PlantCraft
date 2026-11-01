@@ -4,7 +4,7 @@
  * from) and go on in the diagram's window; the assistant's button beside the title opens it on
  * designing an algorithm.
  */
-import { chosenFolder, FolderField, putInFolder, useAssistantPage } from "@plantcraft/ui";
+import { chosenFolder, FolderField, frameOff, putInFolder, useAssistantPage } from "@plantcraft/ui";
 import { ChevronRight, FileUp, FormInput, Workflow } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "./api";
@@ -82,7 +82,8 @@ function FormStart({ algorithms, start, folder }: { algorithms: Algorithm[]; sta
   useEffect(() => { if (start.sketch) blockCatalog().then(setCatalog).catch(() => setCatalog(null)); }, [start.sketch]);
   const read = catalog && sketch.trim() ? sketchDiagram(sketch, catalog) : null;
   const source = algorithms.find((item) => item.algorithm_id === from);
-  const go = () => window.open(href(newEditorPath({ from, kind: source?.subject_kind ?? kind, name, description, folder, sketch })), `linkcraft-editor-new-${Date.now()}`)?.focus();
+  // The editor's own page, not inside the suite's frame (algorithms.ts, openEditor).
+  const go = () => window.open(frameOff(href(newEditorPath({ from, kind: source?.subject_kind ?? kind, name, description, folder, sketch }))), `linkcraft-editor-new-${Date.now()}`)?.focus();
   return <section className="panel blkn-step">
     <h2>{t("Fill in the form")}</h2>
     <p className="muted">{t("Name it, say what it works on and where to start; the blocks are then placed and wired in the diagram's window, and its first save is version 1.")}</p>

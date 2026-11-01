@@ -20,12 +20,14 @@ from plantcraft.api.deps import (
     AdminUser,
     CurrentUser,
     Runtime,
+    demo_visit,
     is_admin,
     marks_owner,
     open_to,
     user_access,
 )
 from plantcraft.api.identity import READ_LEVELS, issue_user_token, user_claims, visible_apps
+from plantcraft.api.routers.demo import place_of
 from plantcraft.api.routers.messages import _resolve, present_ref
 from plantcraft.assistant_access import mcp
 from plantcraft.assistant_chat import (
@@ -37,10 +39,11 @@ from plantcraft.assistant_chat import (
     MAX_TITLE,
     chat_title,
 )
+from plantcraft.assistant_chat.demo import demo_assistant
 from plantcraft.assistant_chat.engine import Reader, Refused
 from plantcraft.assistant_chat.evals import Case
 from plantcraft.assistant_works import envelope, render
-from plantcraft.auth.public_demo import public_demo
+from plantcraft.auth.public_demo import VISIT_OWNER, public_demo
 from plantcraft.i18n import t
 from plantcraft.refs import parse_ref
 from plantcraft.specialists.profiles import models_allowed_for
@@ -148,6 +151,52 @@ def _owned(rt: Any, chat_id: int, user: str) -> dict[str, Any]:
     if found is None:
         raise HTTPException(status_code=404, detail=t("Chat not found."))
     return found
+
+
+def _is_visitor(user: str) -> bool:
+    """The public demo's visitor account, which every visit shares."""
+
+    demo = public_demo()
+    return demo is not None and user == demo.username
+
+
+def _owner(request: Request, rt: Any, user: str) -> str:
+    """Whose chats a request reads and writes: the person's, or a public demo visit's own
+    (``<visitor>#visit:<id>``, assistant_chat.demo), so a visit never reads another's."""
+
+    if not _is_visitor(user):
+        return user
+    visit = demo_visit(request, rt)
+    return f"{user}{VISIT_OWNER}{visit.visit}" if visit is not None else user
+
+
+def _visit_may_ask(request: Request, rt: Any, user: str, text: str = "") -> None:
+    """A demo visitor's question goes to the model only when the demo's assistant is on, from a
+    visit, within its limits (assistant_chat.demo); a person who is no visitor passes."""
+
+    if not _is_visitor(user):
+        return
+    settings = demo_assistant()
+    owner = _owner(request, rt, user)
+    if settings is None or owner == user:
+        raise HTTPException(
+            status_code=403,
+            detail=t("This is a public demo: you can try everything, but nothing is saved."),
+        )
+    if len(text.strip()) > settings.max_text:
+        raise HTTPException(
+            status_code=422,
+            detail=t(
+                "In this demo a question has {count} characters at most.",
+                count=settings.max_text,
+            ),
+        )
+    host = request.client.host if request.client else "-"
+    refused = rt.assistant.demo_limits.take(
+        settings, rt.assistant.demo_questions, owner, place_of(host)
+    )
+    if refused:
+        raise HTTPException(status_code=429, detail=refused)
 
 
 def _grants(rt: Any, user: str) -> set[str]:
@@ -260,7 +309,18 @@ def status(request: Request, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
     _reader_of(rt, user)
     state = rt.assistant.status()
     access = user_access(rt, user)
-    if state["allowed"] and not models_allowed_for(access.level if access else None):
+    owner = _owner(request, rt, user)
+    settings = demo_assistant() if owner != user else None
+    if settings is not None and state["available"]:
+        # A public demo's visit that may ask (assistant_chat.demo): how many questions are left.
+        left = rt.assistant.demo_limits.left(settings, rt.assistant.demo_questions, owner)
+        state = {
+            **state,
+            "profiles": [item for item in state["profiles"] if not item["id"]],
+            "daily_limit": settings.questions,
+            "visit": {**settings.as_dict(), "left": left},
+        }
+    elif state["allowed"] and not models_allowed_for(access.level if access else None):
         # A public demo's visitor: no assistant at all (the people an administrator created have it).
         state = {
             **state,
@@ -275,6 +335,9 @@ def status(request: Request, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
             "demo": True,
         }
     kept = rt.assistant.store.chats(user)
+    if owner != user:
+        # A visit's own chats first, then the visitor account's (the team's, as seeded).
+        kept = rt.assistant.store.chats(owner) + kept
     shared = rt.assistant.store.shared_with(user, _grants(rt, user))
     # Every chat's profile name and reference at once, with one reader of the person's access
     # (per chat, each built it again; the list is asked by every screen's side panel).
@@ -308,6 +371,20 @@ def start(payload: ChatStart, request: Request, user: CurrentUser, rt: Runtime) 
     """A new chat, opened by the person's first question (and the object it is about)."""
 
     _reader_of(rt, user)
+    owner = _owner(request, rt, user)
+    if owner != user or _is_visitor(user):
+        if payload.profile.strip():
+            raise HTTPException(
+                status_code=422, detail=t("In this demo only the assistant answers.")
+            )
+        if payload.work:
+            found_work = rt.assistant.works.get(payload.work)
+            if found_work is not None and found_work.spec.kind == "create":
+                raise HTTPException(status_code=404, detail=t("This work is not offered here."))
+        _visit_may_ask(request, rt, user, payload.text)
+        settings = demo_assistant()
+        if settings is not None:
+            rt.assistant.store.forget_visits(settings.keep_days)
     ref = ""
     if payload.ref.strip():
         try:
@@ -325,7 +402,7 @@ def start(payload: ChatStart, request: Request, user: CurrentUser, rt: Runtime) 
         )
     try:
         chat = rt.assistant.store.create(
-            user,
+            owner,
             chat_title(payload.text),
             profile=profile,
             ref=ref,
@@ -346,9 +423,9 @@ def start(payload: ChatStart, request: Request, user: CurrentUser, rt: Runtime) 
             _level(rt, user),
         )
     except Refused as exc:
-        rt.assistant.store.delete(chat["chat_id"], user)
+        rt.assistant.store.delete(chat["chat_id"], owner)
         raise HTTPException(status_code=exc.status, detail=str(exc)) from exc
-    found = rt.assistant.store.chat(chat["chat_id"], user) or chat
+    found = rt.assistant.store.chat(chat["chat_id"], owner) or chat
     return {
         "chat": _present_chat(rt, found),
         "messages": [_present_message(rt, question, user), _present_message(rt, answer, user)],
@@ -407,9 +484,12 @@ def works(
     level = access.level if access else None
     # A public demo's visitor sees them too, to know what the assistant does on each page (owner,
     # 2026-10-28); asking still needs a model (POST /chats refuses a visitor).
-    visitor = (demo := public_demo()) is not None and user == demo.username
+    visitor = _is_visitor(user)
     shown = models_allowed_for(level) or visitor
     offered = rt.assistant.works.for_page(page, level) if shown else []
+    if visitor and demo_assistant() is not None:
+        # A visit that asks the model only asks: the works that create are not offered it.
+        offered = [work for work in offered if work.spec.kind != "create"]
     return {"page": page, "works": [work.public() for work in offered]}
 
 
@@ -460,15 +540,21 @@ def chat(
     shared with the person reads the same, marked as someone else's (``mine`` false). Opening it
     takes away the person's "unread" mark."""
 
-    found = _readable(rt, chat_id, user)
+    owner = _owner(request, rt, user)
+    found = (rt.assistant.store.chat(chat_id, owner) if owner != user else None) or _readable(
+        rt, chat_id, user
+    )
     messages = rt.assistant.store.messages(chat_id)
     shown = [item for item in messages if item["message_id"] > after or item["state"] == "working"]
-    owner = marks_owner(request, rt, user)
-    if not after and f"chat:{chat_id}" in rt.desk.marks(owner, "unread"):
-        rt.desk.set_mark(owner, f"chat:{chat_id}", "unread", False)
-    stars = rt.desk.marks(owner, "star")
+    marker = marks_owner(request, rt, user)
+    if not after and f"chat:{chat_id}" in rt.desk.marks(marker, "unread"):
+        rt.desk.set_mark(marker, f"chat:{chat_id}", "unread", False)
+    stars = rt.desk.marks(marker, "star")
     return {
-        "chat": _with_marks(_present_chat(rt, found, user), stars, set()),
+        # A visit's own chat is the visit's (``mine``), as a person's own is theirs.
+        "chat": _with_marks(
+            _present_chat(rt, found, owner if found["username"] == owner else user), stars, set()
+        ),
         "messages": [_present_message(rt, item, user) for item in shown],
         "working": any(item["state"] == "working" for item in messages),
     }
@@ -480,7 +566,8 @@ def ask(
     chat_id: int, payload: ChatQuestion, request: Request, user: CurrentUser, rt: Runtime
 ) -> dict[str, Any]:
     _reader_of(rt, user)
-    found = _owned(rt, chat_id, user)
+    found = _owned(rt, chat_id, _owner(request, rt, user))
+    _visit_may_ask(request, rt, user, payload.text)
     try:
         question, answer = rt.assistant.ask(
             found,
@@ -501,7 +588,12 @@ def retry(chat_id: int, request: Request, user: CurrentUser, rt: Runtime) -> dic
     """The last question asked again after its answer failed (Try again)."""
 
     _reader_of(rt, user)
-    found = _owned(rt, chat_id, user)
+    found = _owned(rt, chat_id, _owner(request, rt, user))
+    if _is_visitor(user) and demo_assistant() is None:
+        raise HTTPException(
+            status_code=403,
+            detail=t("This is a public demo: you can try everything, but nothing is saved."),
+        )
     try:
         answer = rt.assistant.retry(
             found, user, _reader(request.app, rt, user), visible_apps(rt, user), _level(rt, user)

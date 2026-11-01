@@ -213,12 +213,12 @@ def test_the_guide_a_visitor_picked_is_in_the_audit_log_and_the_links_are_read(d
 
 def test_an_ipv6_visitor_counts_by_its_block_not_its_device():
     # One home gets a /64 and every device there its own address: they share their places.
-    from plantcraft.api.routers.demo import _place_of
+    from plantcraft.api.routers.demo import place_of
 
-    assert _place_of("2804:14c:1:2::a") == _place_of("2804:14c:1:2:ffff::b") == "2804:14c:1:2::/64"
-    assert _place_of("2804:14c:1:3::a") != _place_of("2804:14c:1:2::a")
-    assert _place_of("::ffff:203.0.113.7") == "203.0.113.7" == _place_of("203.0.113.7")
-    assert _place_of("testclient") == "testclient"
+    assert place_of("2804:14c:1:2::a") == place_of("2804:14c:1:2:ffff::b") == "2804:14c:1:2::/64"
+    assert place_of("2804:14c:1:3::a") != place_of("2804:14c:1:2::a")
+    assert place_of("::ffff:203.0.113.7") == "203.0.113.7" == place_of("203.0.113.7")
+    assert place_of("testclient") == "testclient"
 
 
 def test_each_visit_is_logged_without_its_address(store):

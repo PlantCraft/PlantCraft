@@ -15,8 +15,8 @@ model is chosen (the first model that answers its test becomes it); the Assistan
 **Models by use** may pick another model or turn it off. Until then its button is dimmed and
 an administrator's click opens that page. Providers: the company's own
 or a local one: any OpenAI-compatible server such as vLLM, Ollama or LM Studio, or Anthropic's
-API). `PLANTCRAFT_LLM=off` forbids models in the whole installation, and a public demo never
-uses one.
+API). `PLANTCRAFT_LLM=off` forbids models in the whole installation, and a public demo's visitors
+reach one only when its owner turns it on (`PLANTCRAFT_PUBLIC_DEMO_LLM`, docs/public-demo.md).
 
 ## Turn it on
 
@@ -34,7 +34,8 @@ administrator chooses a model. To turn it on:
 The assistant then answers in Desk › Assistant and in the side panel of every page, as the
 person who asks, reading only what that person may open. `PLANTCRAFT_LLM=off` in `.env` keeps
 models off in the whole installation, whatever Setup says. The public demo shows recorded chats
-only: its visitors never reach a model.
+only, unless its owner lets visits ask (`PLANTCRAFT_PUBLIC_DEMO_LLM`, a few questions each,
+ask-only: docs/public-demo.md).
 
 ## What the model can read
 
@@ -401,6 +402,7 @@ to an administrator, PlantCraft's and the installed apps':
 | `PLANTCRAFT_ASSISTANT_BULK_SIGNALS` | 60 | Distinct signals one answer may read before the audit log records `assistant.bulk_read` (a possible extraction); the answer goes on |
 | One at a time | | A person has one answer being written at a time |
 | Tool rounds | 8 | Rounds of tool calls before the model answers with what it read |
+| Tokens | | Each answer keeps what the model spent (`meta.usage`: calls, input, cached, output and reasoning tokens) |
 
 The limit that matters most is the model server itself: each answer takes from seconds to tens of
 seconds, whatever the number of workers.

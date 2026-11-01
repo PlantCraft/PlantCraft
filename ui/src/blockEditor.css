@@ -3,12 +3,15 @@
    (a full window: `height: 100vh`). */
 
 .be-editor {
+  /* What a wire carries, told apart by hue and by dash (Jonathan, 2026-11-01: signal, mode and
+     intervals were three blues): signal blue and solid, mode magenta and thicker, number amber,
+     verdict green and dashed, intervals rust and dash-dotted. */
   --be-series: var(--pc-series-1);
-  --be-state: var(--pc-violet-fill);
+  --be-state: var(--pc-series-7);
   --be-number: var(--pc-attention-fill);
   --be-result: var(--pc-good-fill);
-  --be-intervals: var(--pc-series-3);
-  --be-real: var(--pc-series-2);
+  --be-intervals: var(--pc-series-6);
+  --be-real: var(--pc-series-1);
   --be-lib-0: var(--pc-series-1);
   --be-lib-1: var(--pc-series-3);
   --be-lib-2: var(--pc-series-4);
@@ -17,6 +20,9 @@
   --be-lib-5: var(--pc-series-8);
   --be-lib-6: var(--pc-series-6);
   --be-lib-7: var(--pc-series-5);
+  --be-lib-8: var(--pc-text-3);
+  --be-lib-9: color-mix(in srgb, var(--pc-series-4) 55%, var(--pc-series-7));
+  --be-lib-10: color-mix(in srgb, var(--pc-series-3) 55%, var(--pc-series-1));
   height: 100%;
   min-height: 480px;
   display: grid;
@@ -38,6 +44,9 @@
 .be-lib-5 { --be-lib: var(--be-lib-5); }
 .be-lib-6 { --be-lib: var(--be-lib-6); }
 .be-lib-7 { --be-lib: var(--be-lib-7); }
+.be-lib-8 { --be-lib: var(--be-lib-8); }
+.be-lib-9 { --be-lib: var(--be-lib-9); }
+.be-lib-10 { --be-lib: var(--be-lib-10); }
 .be-type-series { --be-type: var(--be-series); }
 .be-type-state { --be-type: var(--be-state); }
 .be-type-number { --be-type: var(--be-number); }
@@ -126,20 +135,53 @@
 .be-canvas .react-flow__node { padding: 0; border: 0; background: transparent; }
 .be-canvas .react-flow__minimap { border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); }
 .be-canvas .be-mini { fill: var(--be-lib); }
-.be-edge .react-flow__edge-path { stroke: var(--be-type); stroke-width: 2; }
+.be-edge .react-flow__edge-path { stroke: var(--be-type); stroke-width: 2; transition: opacity .12s ease, stroke-width .12s ease; }
 .be-edge.be-type-result .react-flow__edge-path { stroke-dasharray: 6 4; }
-.be-edge.selected .react-flow__edge-path, .be-edge:hover .react-flow__edge-path { stroke-width: 3; }
-.be-edge.selected .react-flow__edge-path { filter: drop-shadow(0 0 2px var(--be-type)); }
+.be-edge.be-type-intervals .react-flow__edge-path { stroke-dasharray: 10 3 2 3; }
+.be-edge.be-type-state .react-flow__edge-path { stroke-width: 2.5; }
+/* A wire lit (pointed at, its port pointed at, selected, or its block selected) and the rest faded. */
+.be-edge.be-edge-hot .react-flow__edge-path { stroke-width: 3.5; filter: drop-shadow(0 0 3px color-mix(in srgb, var(--be-type) 60%, transparent)); }
+.be-edge.be-edge-faded .react-flow__edge-path { opacity: .14; }
 .be-edge-missing .react-flow__edge-path { stroke: var(--pc-text-4); stroke-dasharray: 2 4; }
-.be-canvas .react-flow__edge-text { font: var(--pc-fw-semibold) 10px var(--pc-font-mono); fill: var(--pc-text-2); }
-.be-canvas .react-flow__edge-textbg { fill: var(--pc-surface); stroke: var(--pc-border-subtle); }
+/* A wire's value from the last test: at its output, in the layer above every wire. */
+.be-wire-value { position: absolute; z-index: 1; padding: 1px 5px; border: 1px solid color-mix(in srgb, var(--be-type) 45%, var(--pc-border-subtle)); border-left: 3px solid var(--be-type); border-radius: 3px; color: var(--pc-text-2); background: var(--pc-surface); font: var(--pc-fw-semibold) 10px/1.4 var(--pc-font-mono); white-space: nowrap; pointer-events: none; box-shadow: 0 1px 3px color-mix(in srgb, var(--pc-shadow-color) 12%, transparent); }
+.be-wire-value-hot { z-index: 2; color: var(--pc-text); font-size: 11px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--be-type) 30%, transparent), var(--pc-shadow-2); }
+.be-canvas .be-handle.be-handle-hot { transform: scale(1.45); box-shadow: 0 0 0 3px color-mix(in srgb, var(--be-type) 35%, transparent); }
+.be-port-name { cursor: default; border-radius: 3px; }
+.be-port-name:hover { color: var(--pc-text); background: var(--pc-surface-3); }
 
 .be-refusal { position: absolute; left: 50%; top: 12px; z-index: 5; transform: translateX(-50%); max-width: min(520px, 90%); padding: 8px 12px; border: 1px solid var(--pc-problem-border); border-radius: var(--pc-radius-md); display: flex; align-items: center; gap: 7px; color: var(--pc-problem-text); background: var(--pc-problem-soft); box-shadow: var(--pc-shadow-2); font-size: var(--pc-fs-sm); }
 .be-empty-canvas { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; color: var(--pc-text-3); font-size: var(--pc-fs-md); }
-.be-legend { position: absolute; left: 56px; bottom: 12px; z-index: 4; padding: 5px 9px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); display: flex; gap: 10px; background: var(--pc-surface); color: var(--pc-text-3); font-size: var(--pc-fs-2xs); }
+.be-legend { position: absolute; left: 56px; bottom: 12px; z-index: 4; max-width: calc(100% - 290px); padding: 5px 9px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); display: grid; gap: 4px; background: var(--pc-surface); color: var(--pc-text-3); font-size: var(--pc-fs-2xs); }
+.be-legend-closed { padding: 0; border: 0; background: none; }
+.be-legend-toggle { width: fit-content; height: 26px; padding: 0 9px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); display: inline-flex; align-items: center; gap: 5px; color: var(--pc-text-2); background: var(--pc-surface); font-size: var(--pc-fs-2xs); font-weight: var(--pc-fw-semibold); cursor: pointer; }
+.be-legend:not(.be-legend-closed) .be-legend-toggle { height: auto; padding: 0; border: 0; background: none; }
+.be-legend-toggle:hover { color: var(--pc-text); }
+.be-legend-toggle:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 1px; }
+.be-legend-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.be-legend-row b { min-width: 38px; color: var(--pc-text-2); font-weight: var(--pc-fw-semibold); }
 .be-legend span { display: inline-flex; align-items: center; gap: 4px; }
-.be-swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; background: var(--be-type); }
+.be-legend-type { padding: 1px 4px; margin: -1px -4px; border-radius: 3px; cursor: default; }
+.be-legend-type:hover { color: var(--pc-text); background: var(--pc-surface-3); }
+.be-swatch { width: 16px; height: 3px; flex: none; border-radius: 2px; display: inline-block; background: var(--be-type); }
 .be-swatch.be-type-result { background: repeating-linear-gradient(90deg, var(--be-type) 0 4px, transparent 4px 6px); }
+.be-swatch.be-type-intervals { background: repeating-linear-gradient(90deg, var(--be-type) 0 6px, transparent 6px 8px, var(--be-type) 8px 9px, transparent 9px 11px); }
+.be-swatch-wide { width: 22px; height: 4px; }
+
+/* "Full screen": the editor over the whole window (Esc or the button leaves). */
+.be-editor.be-expanded { position: fixed; inset: 0; z-index: 900; min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+body.be-body-expanded { overflow: hidden; }
+
+/* A wire in the inspector: what it carries, from where to where. */
+.be-wire-title { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--pc-text); font: var(--pc-fw-semibold) var(--pc-fs-lg) var(--pc-font-display); }
+.be-wire-end { display: grid; gap: 4px; }
+.be-wire-end p { margin: 0; color: var(--pc-text-2); font-size: var(--pc-fs-xs); line-height: 1.45; }
+.be-wire-block { width: 100%; padding: 7px 9px; border: 1px solid var(--pc-border-subtle); border-left: 3px solid var(--be-lib); border-radius: var(--pc-radius-sm); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--pc-text-2); background: var(--pc-surface); font-size: var(--pc-fs-xs); text-align: left; cursor: pointer; }
+.be-wire-block:hover { border-color: var(--pc-border-strong); border-left-color: var(--be-lib); background: var(--pc-surface-2); }
+.be-wire-block strong { color: var(--pc-text); }
+.be-wire-port { display: inline-flex; align-items: center; gap: 5px; font-weight: var(--pc-fw-semibold); }
+.be-wire-siblings { margin: 0; padding-left: 16px; display: grid; gap: 3px; font-size: var(--pc-fs-xs); }
+.be-wire-siblings button { padding: 0; border: 0; color: var(--pc-primary-text); background: none; font-weight: var(--pc-fw-semibold); cursor: pointer; }
 
 /* A block ---------------------------------------------------------------------------------- */
 .be-node { min-width: 190px; max-width: 250px; border: 1px solid var(--pc-border); border-top: 3px solid var(--be-lib, var(--pc-border-strong)); border-radius: var(--pc-radius-md); color: var(--pc-text-2); background: var(--pc-surface); box-shadow: 0 3px 10px color-mix(in srgb, var(--pc-shadow-color) 8%, transparent); font-size: var(--pc-fs-xs); transition: box-shadow .12s ease, border-color .12s ease; }
@@ -264,6 +306,7 @@
 .be-check-ok { color: var(--pc-good-text); background: var(--pc-good-soft); }
 .be-check-bad { color: var(--pc-problem-text); background: var(--pc-problem-soft); }
 .be-check-warnings { color: var(--pc-attention-text); }
+.be-hint { margin: 0; color: var(--pc-text-3); font-size: var(--pc-fs-xs); line-height: 1.45; }
 .be-multi { margin: 0; color: var(--pc-text-2); }
 
 @media (max-width: 1100px) {

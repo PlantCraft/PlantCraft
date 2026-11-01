@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from plantcraft.api.deps import CurrentUser, Runtime, demo_visit
 from plantcraft.api.identity import refresh_browser_token
 from plantcraft.api.routers.session import _session_payload, audit_sign_in, open_session
+from plantcraft.assistant_chat.demo import demo_assistant, plant_day_start
 from plantcraft.auth.demo_visits import Visit
 from plantcraft.auth.public_demo import PublicDemo, public_demo
 from plantcraft.i18n import t
@@ -49,7 +50,7 @@ def _demo() -> PublicDemo:
     return demo
 
 
-def _place_of(host: str) -> str:
+def place_of(host: str) -> str:
     """Where a visitor comes from, for the places per address: an IPv6 address by its /64, the
     block one home or office is given (each device there has its own address)."""
 
@@ -81,7 +82,7 @@ def enter(
             seats=demo.seats,
             minutes=demo.minutes,
             idle_minutes=demo.idle_minutes,
-            address=_place_of(request.client.host if request.client else "-"),
+            address=place_of(request.client.host if request.client else "-"),
             ticket=payload.ticket,
         )
         if not isinstance(found, Visit):
@@ -136,6 +137,20 @@ def stats(
         "visits": rt.workspace.demo_visits.history(now - days * 86400, now),
         "pages": rt.workspace.demo_visits.pages(now - days * 86400),
         "journeys": rt.workspace.demo_visits.journeys(now - days * 86400, now=now),
+        # The visits' questions to the assistant today and the model's tokens they spent
+        # (PLANTCRAFT_PUBLIC_DEMO_LLM; None while visitors do not ask it).
+        "assistant": _assistant_today(rt),
+    }
+
+
+def _assistant_today(rt: Any) -> dict[str, Any] | None:
+    settings = demo_assistant()
+    if settings is None:
+        return None
+    return {
+        **rt.assistant.demo_questions.totals(plant_day_start()),
+        "daily_limit": settings.daily,
+        "questions_per_visit": settings.questions,
     }
 
 
