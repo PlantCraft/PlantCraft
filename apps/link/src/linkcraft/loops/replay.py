@@ -1,4 +1,4 @@
-"""History replay: LinkCraft fills its past from the plant data the historian already holds.
+"""History replay: Analytics fills its past from the plant data the historian already holds.
 
 A new installation (or a algorithm scheduled today) shows one round and empty run lists, although
 the historian may already hold days of the plant's data. ``HistoryReplay`` runs, over that
@@ -240,7 +240,7 @@ class HistoryReplay:
         self.latest.add_history(APPLICATION_ID, SUBJECT_KIND, rows)
         origins = self.monitor.loop_store.origins()
         publisher = self.monitor.publisher
-        if publisher is not None:  # the health trend other apps read (DashCraft's cards)
+        if publisher is not None:  # the health trend other apps read (View's cards)
             assets = [loop_id for loop_id in payloads if origins.get(loop_id) == "processcraft"]
             try:
                 publisher._series(payloads, assets, end)

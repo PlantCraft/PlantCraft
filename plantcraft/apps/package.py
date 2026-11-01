@@ -2,7 +2,7 @@
 
 One file, standard library plus ``cryptography``, importing nothing else from
 PlantCraft: the installer image runs it, ``install.sh --add`` runs it through
-that image, and another repository (LinkCraft) can run it as a script to build
+that image, and another repository can run it as a script to build
 and sign its own package::
 
     python package.py keygen --name my-publisher --out-dir keys/

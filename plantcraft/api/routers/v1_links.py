@@ -117,7 +117,7 @@ class _Subjects:
     def _signals(self) -> Any:
         if self._catalog is None:
             layer = self.rt.datalayer
-            # With HistCraft as the data layer, signals are its own: asked one by one.
+            # With Historian as the data layer, signals are its own: asked one by one.
             self._catalog = _catalog(self.rt) if not layer.manages_sources else _Remote(layer)
         return self._catalog
 
@@ -147,7 +147,7 @@ class _Subjects:
 
 
 class _Remote:
-    """``SignalCatalog.lookup`` and ``find`` answered by the data layer (HistCraft), memoized."""
+    """``SignalCatalog.lookup`` and ``find`` answered by the data layer, memoized."""
 
     def __init__(self, layer: Any):
         self.layer = layer

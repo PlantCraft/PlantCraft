@@ -1,6 +1,6 @@
 """The app standard's manifest and endpoints: app.toml, /api/meta, /api/help, assets/<id>.
 
-``app.toml`` is the one source of LinkCraft's metadata; every other place that repeats a value
+``app.toml`` is the one source of Analytics' metadata; every other place that repeats a value
 (pyproject, the package, the Dockerfile's build-arg defaults, the Vite base) must agree with it.
 """
 
@@ -65,13 +65,13 @@ def test_the_manifest_has_every_section_of_the_standard():
         "status.changed",
         "run.failed",
     }
-    assert MANIFEST["consumes"]["results"] == []  # signal quality is LinkCraft's own now
+    assert MANIFEST["consumes"]["results"] == []  # signal quality is Analytics' own now
     assert not re.search(r"https?://", MANIFEST["app"]["homepage"] + app["description"])
 
 
 def test_the_asset_page_links_linkcraft_on_control_loops():
     """Section 2: PlantCraft links an app on an asset page when ``[requires] asset_types``
-    lists the asset's type or an ancestor. LinkCraft covers Control loop (the starter type id
+    lists the asset's type or an ancestor. Analytics covers Control loop (the starter type id
     ``loop``) and so every type derived from it; the sync reads the same id."""
 
     from plantcraft_sdk.assets import LOOP_TYPE, resolve_types, starter_types
@@ -244,7 +244,7 @@ def test_a_loop_defined_here_is_not_an_asset(client, runtime):
 def built_ui(tmp_path, monkeypatch):
     folder = tmp_path / "ui"
     (folder / "static").mkdir(parents=True)
-    (folder / "index.html").write_text("<!doctype html><title>LinkCraft</title>", encoding="utf-8")
+    (folder / "index.html").write_text("<!doctype html><title>Analytics</title>", encoding="utf-8")
     (folder / "static" / "index-abc.js").write_text("console.log(1)", encoding="utf-8")
     monkeypatch.setenv("LINKCRAFT_UI_DIR", str(folder))
     return folder
@@ -255,7 +255,7 @@ def test_built_files_are_under_static_and_assets_is_the_deep_link(built_ui, runt
         script = client.get("/link/static/index-abc.js")
         assert script.status_code == 200 and "console.log" in script.text
         page = client.get("/link/assets/fic-101", headers={"Accept": "text/html"})
-        assert page.status_code == 200 and "<title>LinkCraft</title>" in page.text
+        assert page.status_code == 200 and "<title>Analytics</title>" in page.text
     anonymous = TestClient(create_app(runtime), raise_server_exceptions=False)
     redirect = anonymous.get(
         "/link/assets/fic-101", headers={"Accept": "text/html"}, follow_redirects=False

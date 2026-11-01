@@ -22,6 +22,8 @@ export function AppKeysSection() {
   const [error, setError] = useState("");
   const [appId, setAppId] = useState("");
   const [label, setLabel] = useState("");
+  // Empty: the key holds all of the app's permissions; else only these (read.signals, …).
+  const [scopes, setScopes] = useState("");
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<NewAppKey | null>(null);
   const [copied, setCopied] = useState(false);
@@ -33,9 +35,11 @@ export function AppKeysSection() {
     setBusy(true);
     setError("");
     try {
-      setCreated(await suiteApi.createAppKey(appId.trim(), label.trim()));
+      const held = scopes.split(/[\s,]+/).filter(Boolean);
+      setCreated(await suiteApi.createAppKey(appId.trim(), label.trim(), held.length ? held : null));
       setCopied(false);
       setLabel("");
+      setScopes("");
       await load();
     } catch (err) { setError(message(err)); }
     setBusy(false);
@@ -67,6 +71,7 @@ export function AppKeysSection() {
       <label>{t("App")}<input required list="app-key-apps" value={appId} pattern="[a-z][a-z0-9_\-]*" maxLength={40} placeholder="linkcraft" onChange={(event) => setAppId(event.target.value.toLowerCase())} /></label>
       <datalist id="app-key-apps">{(data?.apps ?? []).map((app) => <option key={app.id} value={app.id}>{app.name}</option>)}</datalist>
       <label>{t("Label")}<input value={label} maxLength={120} placeholder={t("E.g. production server")} onChange={(event) => setLabel(event.target.value)} /></label>
+      <label>{t("Permissions (optional)")}<input value={scopes} maxLength={600} placeholder={t("All of the app's; or e.g. read.signals, read.series")} onChange={(event) => setScopes(event.target.value)} /></label>
       <button className="button button-primary" disabled={busy || !appId.trim()}>{busy ? <LoaderCircle className="spin" size={15} /> : <Plus size={15} />} {t("Create key")}</button>
     </form>
     {!data && !error && <div className="module-state"><LoaderCircle className="spin" /><span>{t("Loading keys…")}</span></div>}
@@ -76,6 +81,7 @@ export function AppKeysSection() {
         { key: "app", label: t("App"), sort: (key) => appName(key.app_id), filter: { value: (key) => appName(key.app_id) }, render: (key) => <strong>{appName(key.app_id)}</strong> },
         { key: "label", label: t("Label"), sort: (key) => key.label, render: (key) => key.label || "—" },
         { key: "key", label: t("Key"), render: (key) => <code>pck_{key.key_id}…</code> },
+        { key: "scopes", label: t("Permissions"), render: (key) => (key.scopes == null ? t("All of the app's") : key.scopes.length ? key.scopes.join(", ") : t("None")) },
         { key: "created", label: t("Created"), sort: (key) => key.created_at, render: (key) => `${when(key.created_at)}${key.created_by ? ` · ${key.created_by}` : ""}` },
         { key: "used", label: t("Last used"), sort: (key) => key.last_used_at, render: (key) => when(key.last_used_at) },
         { key: "status", label: t("Status"), sort: (key) => (key.active ? 0 : 1), filter: { value: (key) => (key.active ? t("Active") : t("Revoked")) }, render: (key) => (key.active ? t("Active") : t("Revoked {date}", { date: when(key.revoked_at) })) },

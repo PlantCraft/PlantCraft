@@ -136,6 +136,9 @@
 .ops-service-hours { margin-top: var(--pc-space-4); border-top: 1px solid var(--pc-border); padding-top: var(--pc-space-3); }
 .ops-service-hours h3 { font-size: 0.95rem; margin: 0 0 calc(6px * var(--pc-space-scale, 1)); display: flex; gap: var(--pc-space-2); align-items: baseline; }
 .ops-service-hours ul { margin: 0 0 calc(10px * var(--pc-space-scale, 1)); padding-left: calc(18px * var(--pc-space-scale, 1)); }
+.ops-holidays { margin-top: var(--pc-space-3); }
+.ops-holidays h4 { font-size: 0.9rem; margin: 0 0 var(--pc-space-1); }
+.ops-holidays textarea { width: 100%; font-family: var(--pc-font-mono, monospace); }
 .ops-service-hours-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: calc(10px * var(--pc-space-scale, 1)); align-items: end; }
 .ops-service-hours-form label > span { display: block; font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: var(--pc-space-1); }
 .ops-service-hours-form fieldset { grid-column: 1 / -1; border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--pc-space-1) var(--pc-space-3); }

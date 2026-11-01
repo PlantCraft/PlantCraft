@@ -1,4 +1,4 @@
-"""The bench loops' past in Analytics (LinkCraft); run inside its container by ci/bench/age.py.
+"""The bench loops' past in Analytics; run inside its container by ci/bench/age.py.
 
     docker compose exec -T -e DAYS=91 linkcraft python - < link_age.py      # age to 91 days
     docker compose exec -T -e MEASURE=1 linkcraft python - < link_age.py    # time the reads

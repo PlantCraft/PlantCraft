@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Start the Simulator and PlantCraft together, and LinkCraft when it is installed.
+"""Start the Simulator and PlantCraft together, and Analytics when it is installed.
 
 PlantCraft reads the simulated plant over OPC UA from the Simulator's 50-loop portfolio
 (``simcraft loops serve``, from simulator/). When something already listens on
@@ -167,7 +167,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--no-linkcraft",
         action="store_true",
-        help="Does not start LinkCraft even when installed.",
+        help="Does not start Analytics even when installed.",
     )
     parser.add_argument(
         "--app",

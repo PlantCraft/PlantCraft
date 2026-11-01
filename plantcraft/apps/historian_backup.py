@@ -1,4 +1,4 @@
-"""HistCraft's PostgreSQL in a backup: full and incremental base backups (docs/operations.md).
+"""Historian's PostgreSQL in a backup: full and incremental base backups (docs/operations.md).
 
 PostgreSQL 17 backs itself up by blocks: ``pg_basebackup`` takes a **full** copy of the
 database files with the WAL that makes them consistent, and an **incremental** one
@@ -14,7 +14,7 @@ Where each part runs:
   user, over its local socket), into ``data/histcraft-db/.ops-staging/<name>``, which the
   driver then moves to ``backups/<name>/histcraft-db/``;
 - ``pg_verifybackup`` and ``pg_combinebackup`` in a throwaway container of the same image
-  (``processcraft-ops-pg``): no network, read-only, HistCraft's uid, the backups mounted
+  (``processcraft-ops-pg``): no network, read-only, Historian's uid, the backups mounted
   read-only.
 
 A **chain** is a full backup and the incrementals after it, each naming the one before
@@ -42,7 +42,7 @@ if TYPE_CHECKING:  # the driver imports this module
 
 SERVICE = "histcraft-db"
 FOLDER = "histcraft-db"  # in each backup folder
-UID = 10008  # HistCraft's uid (docs/suite.md)
+UID = 10008  # Historian's uid (docs/suite.md)
 MOUNT = "/var/lib/postgresql/data"  # data/histcraft-db inside the container
 PGDATA = "pgdata"
 STAGING = ".ops-staging"
@@ -58,7 +58,7 @@ class HistorianBackupError(Exception):
 
 
 def _own(path: Path) -> None:
-    """HistCraft's uid owns what its database and tools read or write (the driver is root)."""
+    """Historian's uid owns what its database and tools read or write (the driver is root)."""
 
     if os.geteuid() == 0:
         os.chown(path, UID, UID)

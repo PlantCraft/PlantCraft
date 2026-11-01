@@ -10,13 +10,15 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import re
 import secrets
 from datetime import datetime
 from typing import Any
 
-from plantcraft.db import Database, Store
+from plantcraft.db import Database, Migration, Store, add_columns
 from plantcraft.i18n import t
+from plantcraft_sdk.scopes import PERMISSIONS
 
 PREFIX = "pck"
 APP_ID = re.compile(r"^[a-z][a-z0-9_-]{0,39}$")
@@ -24,6 +26,17 @@ APP_ID = re.compile(r"^[a-z][a-z0-9_-]{0,39}$")
 
 def _digest(secret: str) -> str:
     return hashlib.sha256(secret.encode("utf-8")).hexdigest()
+
+
+def check_scopes(scopes: Any) -> list[str] | None:
+    """A key's scopes: None (all the app's permissions) or a list of known permissions."""
+
+    if scopes is None:
+        return None
+    unknown = sorted({str(item) for item in scopes} - set(PERMISSIONS))
+    if unknown:
+        raise ValueError(t("Unknown permissions: {names}.", names=", ".join(unknown)))
+    return sorted({str(item) for item in scopes})
 
 
 def check_app_id(app_id: str) -> str:
@@ -51,6 +64,11 @@ class AppKeyStore(Store):
 
     CREATE INDEX IF NOT EXISTS idx_app_keys_app ON app_keys(app_id);
     """
+    MIGRATIONS = (
+        # A key may hold less than its app's permissions (backlog B8, 2026-10-31): NULL is all
+        # of them, a JSON list only those (a read-only key for a collector, say).
+        Migration("key-scopes", add_columns("app_keys", {"scopes_json": "TEXT"})),
+    )
 
     def __init__(self, db: Database):
         super().__init__(db)
@@ -60,21 +78,45 @@ class AppKeyStore(Store):
         item = dict(row)
         item.pop("key_hash", None)
         item["active"] = item["revoked_at"] is None
+        raw = item.pop("scopes_json", None)
+        try:
+            scopes = None if raw is None else json.loads(raw)
+        except (TypeError, ValueError):
+            scopes = []  # an unreadable list grants nothing
+        item["scopes"] = None if scopes is None else [str(x) for x in scopes]
         return item
 
-    def create(self, app_id: str, *, label: str = "", actor: str | None = None) -> tuple[dict, str]:
-        """A new key for ``app_id``: its record and the key itself (shown once, never stored)."""
+    def create(
+        self,
+        app_id: str,
+        *,
+        label: str = "",
+        actor: str | None = None,
+        scopes: list[str] | None = None,
+    ) -> tuple[dict, str]:
+        """A new key for ``app_id``: its record and the key itself (shown once, never stored).
+        ``scopes``: the permissions its tokens hold, within the app's own; None: all of them."""
 
         app_id = check_app_id(app_id)
+        scopes = check_scopes(scopes)
         key_id = secrets.token_hex(6)
         secret = secrets.token_urlsafe(32)
         with self._lock, self._write() as connection:
             connection.execute(
                 """
-                INSERT INTO app_keys (key_id, app_id, label, key_hash, created_by, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO app_keys
+                    (key_id, app_id, label, key_hash, created_by, created_at, scopes_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (key_id, app_id, label.strip()[:120], _digest(secret), actor, self._now()),
+                (
+                    key_id,
+                    app_id,
+                    label.strip()[:120],
+                    _digest(secret),
+                    actor,
+                    self._now(),
+                    None if scopes is None else json.dumps(scopes),
+                ),
             )
         return self.get(key_id) or {}, f"{PREFIX}_{key_id}.{secret}"
 

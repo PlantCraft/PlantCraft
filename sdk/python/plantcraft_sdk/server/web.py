@@ -297,7 +297,17 @@ def mount(
     app.state.api = api
 
     @app.get("/healthz", include_in_schema=False)
-    def health() -> dict[str, Any]:
+    def health() -> Any:
+        # A runtime may name a problem the web server alone does not show, such as a child
+        # process that keeps dying for lack of memory (pc-carga, 2026-11-01): the container's
+        # health check then fails and System health, Operations and monitoring see it.
+        check = getattr(runtime, "health_problem", None)
+        problem = check() if callable(check) else None
+        if problem:
+            return JSONResponse(
+                {"status": "unhealthy", "version": version, "problem": str(problem)},
+                status_code=503,
+            )
         return {"status": "ok", "version": version}
 
     if root:

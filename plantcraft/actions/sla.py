@@ -11,6 +11,8 @@ Each priority has two targets, in calendar hours (a plant runs day and night):
 A queue may have **service hours** (``ServiceHours``: the days of the week and the hours of the
 day its people work, on the plant's clock); its requests' clocks then run only inside them. A
 request without a queue follows the default calendar, and with none the clock runs day and night.
+The plant's **holidays** (dates on the plant's clock) are days off for every queue that has
+service hours; a queue that works day and night ignores them.
 
 An archived request has no targets. The targets apply when they are read, so a change of target
 moves the clock of the open requests too (the closed ones keep their verdict as computed then).
@@ -19,8 +21,8 @@ moves the clock of the open requests too (the closed ones keep their verdict as 
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
-from datetime import UTC, datetime, time, timedelta
+from dataclasses import dataclass, field
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 
 from plantcraft.db import utc_text
@@ -100,11 +102,13 @@ HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 @dataclass(frozen=True)
 class ServiceHours:
     """When a queue works: ``days`` (0 Monday .. 6 Sunday) from ``start`` to ``end`` (minutes
-    after midnight on the plant's clock, ``end`` after ``start``). Holidays are not modelled."""
+    after midnight on the plant's clock, ``end`` after ``start``), except the plant's
+    ``holidays`` (local dates, set once for every queue: ``check_holidays``)."""
 
     days: frozenset[int]
     start: int
     end: int
+    holidays: frozenset[date] = field(default=frozenset(), compare=False)
 
     @classmethod
     def check(cls, payload: dict[str, Any]) -> ServiceHours:
@@ -135,7 +139,7 @@ class ServiceHours:
         day = first.astimezone(zone).date() - timedelta(days=1)
         stop = last.astimezone(zone).date() + timedelta(days=1)
         while day <= stop:
-            if day.weekday() in self.days:
+            if day.weekday() in self.days and day not in self.holidays:
                 midnight = datetime.combine(day, time(), zone)
                 yield (
                     (midnight + timedelta(minutes=self.start)).astimezone(UTC),
@@ -175,6 +179,33 @@ class ServiceHours:
                 cursor = close_at
             cursor = max(cursor, horizon)
         return cursor
+
+
+MAX_HOLIDAYS = 400
+HOLIDAY_NAME = 80
+
+
+def check_holidays(payload: Any) -> list[dict[str, str]]:
+    """``[{"day": "2026-12-25", "name": "Christmas"}, ...]`` checked, sorted by day, one per
+    day. ``ValueError`` when a day is not a date, repeats, or the list is too long."""
+
+    if not isinstance(payload, list):
+        raise ValueError(t("Holidays are a list of days."))
+    if len(payload) > MAX_HOLIDAYS:
+        raise ValueError(t("At most {count} holidays.", count=MAX_HOLIDAYS))
+    found: dict[str, str] = {}
+    for item in payload:
+        text = str((item or {}).get("day") or "") if isinstance(item, dict) else ""
+        try:
+            day = date.fromisoformat(text)
+        except ValueError as exc:
+            raise ValueError(t("A holiday's day is written as 2026-12-25.")) from exc
+        if len(text) != 10:
+            raise ValueError(t("A holiday's day is written as 2026-12-25."))
+        if text in found:
+            raise ValueError(t("{day} is listed twice.", day=text))
+        found[day.isoformat()] = str(item.get("name") or "").strip()[:HOLIDAY_NAME]
+    return [{"day": day, "name": found[day]} for day in sorted(found)]
 
 
 class _Clock:

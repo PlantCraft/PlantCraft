@@ -3,7 +3,7 @@
 Only the server writes these tables (docs/boundary.md); the collector rereads them
 every few seconds (``version`` changes on every write) and never writes them.
 
-- A **source** is a plant system HistCraft reads (PI Web API, OPC UA, MQTT, Modbus, SQL, CSV
+- A **source** is a plant system Historian reads (PI Web API, OPC UA, MQTT, Modbus, SQL, CSV
   files another application keeps writing), an **import** (``import-<n>``, a CSV file loaded
   once from Import & export, its values written as they were and kept until it is deleted) or
   an app's **derived** source, ``app-<app id>``, which only that app writes (through

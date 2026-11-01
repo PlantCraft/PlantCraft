@@ -160,7 +160,7 @@ def test_preview_and_pickers_use_the_editors_token(client, fake):
 
 
 def test_signal_search_lists_plant_signals_before_derived_series(client, fake):
-    # LinkCraft's FIC-101 loop health series match "FIC-101" too and PlantCraft lists them
+    # Analytics' FIC-101 loop health series match "FIC-101" too and PlantCraft lists them
     # first here (they were written last, say); the plant tags still come first.
     fake.signals.sort(key=lambda item: not item["id"].startswith("app-"))
     ids = [item["id"] for item in client.get("/dash/api/signals", params={"q": "FIC-101"}).json()]

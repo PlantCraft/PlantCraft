@@ -34,6 +34,10 @@ PARENT_SECONDS = 2.0
 # A child that stopped is started again after this long, doubling up to the last value.
 RESTART_SECONDS = (1.0, 60.0)
 STEADY_SECONDS = 60.0
+# This many restarts within the window make the server unhealthy (a crash loop, most often the
+# container's memory limit: the server stays up while its engine dies again and again).
+CRASH_LOOP_RESTARTS = 3
+CRASH_LOOP_SECONDS = 600.0
 
 
 def lease_for(database: Path) -> FileLease:
@@ -84,11 +88,11 @@ def run_engine(
     releaser = Releaser().start()
     try:
         runtime.start_engine()
-        LOGGER.info("LinkCraft engine started (%d workers)", runtime.engine.dispatcher.slots)
+        LOGGER.info("Analytics engine started (%d workers)", runtime.engine.dispatcher.slots)
         while wanted():
             stop.wait(PARENT_SECONDS)
     finally:
-        LOGGER.info("LinkCraft engine stopping")
+        LOGGER.info("Analytics engine stopping")
         releaser.stop()
         runtime.shutdown()
         lease.release()
@@ -110,6 +114,7 @@ class EngineProcess:
         ]
         self.process: subprocess.Popen[bytes] | None = None
         self.restarts = 0
+        self._restarted_at: list[float] = []
         self._started_at = 0.0
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
@@ -117,6 +122,19 @@ class EngineProcess:
     @property
     def alive(self) -> bool:
         return self.process is not None and self.process.poll() is None
+
+    def crash_loop(self, now: float | None = None) -> str | None:
+        """What is wrong when the engine was started again ``CRASH_LOOP_RESTARTS`` times within
+        ``CRASH_LOOP_SECONDS``; ``None`` otherwise."""
+
+        now = time.monotonic() if now is None else now
+        recent = [t for t in self._restarted_at if now - t <= CRASH_LOOP_SECONDS]
+        if len(recent) < CRASH_LOOP_RESTARTS:
+            return None
+        return (
+            f"The engine process stopped {len(recent)} times in the last "
+            f"{int(CRASH_LOOP_SECONDS // 60)} minutes (often the memory limit, LINKCRAFT_MEMORY)."
+        )
 
     def start(self) -> None:
         if self._thread is not None:
@@ -129,7 +147,7 @@ class EngineProcess:
     def _spawn(self) -> None:
         self.process = subprocess.Popen(self.command, env=os.environ.copy())
         self._started_at = time.monotonic()
-        LOGGER.info("LinkCraft engine process %d started", self.process.pid)
+        LOGGER.info("Analytics engine process %d started", self.process.pid)
 
     def _watch(self) -> None:
         delay = RESTART_SECONDS[0]
@@ -147,6 +165,8 @@ class EngineProcess:
                 return
             self._spawn()
             self.restarts += 1
+            self._restarted_at.append(time.monotonic())
+            del self._restarted_at[:-CRASH_LOOP_RESTARTS]
             delay = min(RESTART_SECONDS[1], delay * 2)
 
     def stop(self, timeout: float = 20.0) -> None:

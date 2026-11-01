@@ -1,4 +1,4 @@
-"""LinkCraft reads plant data only through API v1; the adapter's side of that contract."""
+"""Analytics reads plant data only through API v1; the adapter's side of that contract."""
 
 from __future__ import annotations
 

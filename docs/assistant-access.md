@@ -31,14 +31,14 @@ On their profile page (user menu › My profile), under **AI assistant**:
 2. Give it to the assistant. In Claude Code:
 
    ```bash
-   claude mcp add --transport http processcraft https://<server>/mcp \
+   claude mcp add --transport http plantcraft https://<server>/mcp \
      --header "Authorization: Bearer pcat_..."
    ```
 
    In other clients, the JSON form:
 
    ```json
-   {"mcpServers": {"processcraft": {"type": "http", "url": "https://<server>/mcp",
+   {"mcpServers": {"plantcraft": {"type": "http", "url": "https://<server>/mcp",
      "headers": {"Authorization": "Bearer pcat_..."}}}}
    ```
 

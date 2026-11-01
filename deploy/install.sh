@@ -36,7 +36,7 @@
 #          it exists: apps, machine size, network and security ceilings decided outside the
 #          platform; its values win over these options; docs/installation-file.md),
 #          --with-linkcraft, --with-dashcraft, --with-histcraft,
-#          --with-alarmcraft, --with-modelcraft, --with-doccraft (turn that app on; LinkCraft is on by default when the bundle
+#          --with-alarmcraft, --with-modelcraft, --with-doccraft (turn that app on; Analytics is on by default when the bundle
 #          has it), --all-apps (every app the bundle has),
 #          --publisher-key FILE (check the bundle's signature against this public key, got from
 #          the publisher through a channel you trust, instead of the keys the bundle or the
@@ -44,7 +44,7 @@
 #          not signed by a trusted publisher), --allow-emulation (a bundle built for another
 #          processor than this server's: runs emulated, slowly),
 #          --demo (the Simulator, if the bundle has it, and the demo story: plant map,
-#          loops, algorithms, model examples, dashboards, messages; `processcraft demo seed`),
+#          loops, algorithms, model examples, dashboards, messages; `plantcraft demo seed`),
 #          --public-demo (--demo left open to visitors: a read-only account `demo` shown on the
 #          sign-in page, no LLM for visitors, rate limits), --yes,
 #          --install-docker (no Docker on this Linux server: install the Docker Engine and Compose
@@ -76,11 +76,11 @@ SIMCRAFT_UID=10004
 INSTALLER_UID=10005
 # The apps of the suite table (docs/app-standard.md, section 7) that compose.yaml runs, each in
 # the profile named after it: "id:Name:prefix:uid:key". Each owns data/<id>/; an app with key=key
-# also data/<id>-app-key (HistCraft needs none).
+# also data/<id>-app-key (Historian needs none).
 SUITE_APPS=(
-    "linkcraft:LinkCraft:/link/:10012:key"
-    "dashcraft:DashCraft:/dash/:10006:key"
-    "histcraft:HistCraft:/hist/:10008:"
+    "linkcraft:Analytics:/link/:10012:key"
+    "dashcraft:View:/dash/:10006:key"
+    "histcraft:Historian:/hist/:10008:"
     "alarmcraft:PlantCraft Alarms:/alarm/:10009:key"
     "modelcraft:PlantCraft Models:/model/:10011:key"
     "doccraft:PlantCraft Documents:/doc/:10015:key"
@@ -610,11 +610,11 @@ rollback_tag() { # rollback_tag REF DATE
     printf '%s:rollback-%s' "$name" "$2"
 }
 
-# HistCraft's database, dumped while it still runs (pg_dump, custom format) before an upgrade:
+# Historian's database, dumped while it still runs (pg_dump, custom format) before an upgrade:
 # backups/<stamp>/histcraft-db.dump beside data.tar.gz, which holds its files too (stopped).
 dump_histcraft_db() { # dump_histcraft_db BACKUP_DIR
     [ -n "$(compose ps -q --status running histcraft-db 2>/dev/null)" ] || return 0
-    log "Dumping HistCraft's database (pg_dump) to $(basename "$1")/histcraft-db.dump"
+    log "Dumping Historian's database (pg_dump) to $(basename "$1")/histcraft-db.dump"
     (umask 077 && compose exec -T histcraft-db pg_dump -U histcraft -d histcraft -Fc >"$1/histcraft-db.dump") ||
         die "pg_dump of histcraft-db failed; nothing was changed."
     [ -s "$1/histcraft-db.dump" ] || die "pg_dump of histcraft-db wrote nothing; nothing was changed."
@@ -748,7 +748,7 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
         profiles="$(printf '%s' ",$profiles," | sed 's/,demo,/,/; s/^,//; s/,$//')"
     fi
     env_set COMPOSE_PROFILES "$profiles" "$env"
-    # The demo story archives every Simulator signal in HistCraft: with HistCraft on, it is the
+    # The demo story archives every Simulator signal in Historian: with Historian on, it is the
     # demo's data layer.
     if [ "$WITH_DEMO" = 1 ] && [[ ",$profiles," == *",histcraft,"* ]] && [ -z "$(env_get HISTCRAFT_URL "$env")" ]; then
         env_set HISTCRAFT_URL http://histcraft:8100/hist "$env"
@@ -820,7 +820,7 @@ PLANTCRAFT_WORKERS 2 3 4 8
 PLANTCRAFT_CPUS 2 cpus cpus 8
 PLANTCRAFT_MEMORY 768m 1536m 4g 8g
 LINKCRAFT_CPUS 2 2 4 4
-LINKCRAFT_MEMORY 896m 1g 4g 8g
+LINKCRAFT_MEMORY 896m 2g 4g 8g
 LINKCRAFT_WORKERS 2 3 6 rest
 LINKCRAFT_COMPUTE_SLOTS 2 3 6 rest
 LINKCRAFT_EXECUTOR_CPUS 2 3 6 rest
@@ -970,14 +970,14 @@ check_demo() { # check_demo SIMCRAFT_VERSION_OF_THE_BUNDLE
 BUNDLE_APP_VERSIONS=""
 bundle_app_version() { printf '%s' "$BUNDLE_APP_VERSIONS" | tr ' ' '\n' | sed -n "s/^$1=//p"; }
 
-# HistCraft's PostgreSQL image: the digest the bundle saved (bundle.env), else the compose.yaml pin.
+# Historian's PostgreSQL image: the digest the bundle saved (bundle.env), else the compose.yaml pin.
 histcraft_db_image() {
     local saved
     saved="$(env_get HISTCRAFT_DB_IMAGE "$BUNDLE_DIR/bundle.env")"
     if [ -n "$saved" ]; then printf '%s\n' "$saved"; else compose_db_image; fi
 }
 compose_db_image() { sed -n 's/^ *image: \${HISTCRAFT_DB_IMAGE:-\(postgres:[^ ]*@sha256:[0-9a-f]\{64\}\)}$/\1/p' "$BUNDLE_DIR/compose.yaml"; }
-# HistCraft's gateway (Telegraf): the same, for HISTCRAFT_GATEWAY_IMAGE.
+# Historian's gateway (Telegraf): the same, for HISTCRAFT_GATEWAY_IMAGE.
 histcraft_gateway_image() {
     local saved
     saved="$(env_get HISTCRAFT_GATEWAY_IMAGE "$BUNDLE_DIR/bundle.env")"
@@ -1003,10 +1003,10 @@ check_apps() {
             local db
             db="$(histcraft_db_image)"
             docker image inspect "$db" >/dev/null 2>&1 ||
-                die "--with-histcraft: HistCraft's database image $db is not loaded."
+                die "--with-histcraft: Historian's database image $db is not loaded."
             db="$(histcraft_gateway_image)"
             docker image inspect "$db" >/dev/null 2>&1 ||
-                die "--with-histcraft: HistCraft's gateway image $db (Telegraf) is not loaded."
+                die "--with-histcraft: Historian's gateway image $db (Telegraf) is not loaded."
         fi
     done
 }
@@ -1055,7 +1055,7 @@ prepare_data() {
         [ "${#NEW_PASSWORD}" -ge 20 ] || die "could not generate a password"
         (umask 077 && printf '%s\n' "$NEW_PASSWORD" >"$data/initial-admin-password")
     fi
-    # HistCraft's database password, written once (only histcraft and histcraft-db read it).
+    # Historian's database password, written once (only histcraft and histcraft-db read it).
     if [ ! -e "$data/histcraft-db-password" ]; then
         (umask 077 && random_secret >"$data/histcraft-db-password")
         [ "$(wc -c <"$data/histcraft-db-password")" -ge 20 ] || die "could not generate a password"
@@ -1072,7 +1072,7 @@ prepare_data() {
     for app in $(app_ids); do
         uid="$(app_field "$app" 4)"
         mkdir -p "$data/$app"
-        # HistCraft's gateway reads its configuration from here (written by the collector),
+        # Historian's gateway reads its configuration from here (written by the collector),
         # made as root: once data/histcraft is the app's (0700), a second run cannot reach it.
         if [ "$app" = histcraft ]; then owners="$owners
         mkdir -p data/$app/gateway data/$app/gateway-buffer"; fi
@@ -1196,7 +1196,7 @@ seed_demo() {
     log "Writing the demo story (plant map, loops, algorithms, model examples, dashboards, messages)"
     # The visitor's password comes from the secret file (PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE).
     if ! compose exec -T processcraft processcraft demo seed; then
-        warn "the demo story is incomplete (see above); run it again with: docker compose --project-directory $PREFIX exec processcraft processcraft demo seed"
+        warn "the demo story is incomplete (see above); run it again with: docker compose --project-directory $PREFIX exec processcraft plantcraft demo seed"
     fi
 }
 
@@ -1261,7 +1261,7 @@ do_install() {
             app_version="$(env_get "$(version_key "$app")" "$BUNDLE_DIR/bundle.env")"
             if [ -n "$app_version" ]; then BUNDLE_APP_VERSIONS="$BUNDLE_APP_VERSIONS $app=$app_version"; fi
         done
-        # LinkCraft is on by default when the bundle has it; the other apps with --with-<app>.
+        # Analytics is on by default when the bundle has it; the other apps with --with-<app>.
         if [ -n "$(bundle_app_version linkcraft)" ]; then WITH_APPS="$WITH_APPS""linkcraft "; fi
     fi
     mkdir -p "$PREFIX" 2>/dev/null || die "cannot create $PREFIX: choose another folder with --prefix, or create it first."

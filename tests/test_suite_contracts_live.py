@@ -16,7 +16,7 @@ def test_dials_are_two_rows_high():
 
 
 def test_a_historian_source_keeps_its_connection_state():
-    """HistCraft's data API answers the collector's view as ``status`` (live: every source
+    """Historian's data API answers the collector's view as ``status`` (live: every source
     showed "No news" on the Overview while the Historian said Connected)."""
 
     from plantcraft.platform.datalayer.histcraft import source_item

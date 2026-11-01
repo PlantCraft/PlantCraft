@@ -1,4 +1,4 @@
-"""HistCraft's own database and the base class for module stores.
+"""Historian's own database and the base class for module stores.
 
 Every module owns its tables and declares them in a ``SCHEMA`` string. The
 ``Database`` applies each module schema once, in dependency order, so a fresh

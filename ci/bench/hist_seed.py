@@ -1,11 +1,11 @@
-"""The bench plant in HistCraft; run inside its container by ci/bench/suite_bench.py.
+"""The bench plant in Historian; run inside its container by ci/bench/suite_bench.py.
 
     docker compose exec -T -e LOOPS=2000 -e EXTRA=2000 -e HOURS=6 histcraft python - < hist_seed.py
 
 Adds source ``bench`` (OPC UA, disabled: the collector never polls it) with LOOPS x PV/SP/OP and
 EXTRA signals, and archives HOURS of values, one every STEP_S (30) s, through the real compressors (0.1 %
 deviation, each point's max interval), written each simulated minute as the collector writes, then compacted. Prints one
-JSON line with the counts and times. ``CLEANUP=1`` removes the source, its signals and archive, and the results LinkCraft published
+JSON line with the counts and times. ``CLEANUP=1`` removes the source, its signals and archive, and the results Analytics published
 for the bench loops.
 """
 
@@ -36,7 +36,7 @@ archive = ArchiveStore(Database(settings.archive_target, password=password))
 
 def cleanup() -> None:
     bench = catalog.points(source_id=SOURCE)
-    # LinkCraft publishes under its own source each bench loop's results (LC-nnnnn.health,
+    # Analytics publishes under its own source each bench loop's results (LC-nnnnn.health,
     # LC-nnnnn.status) and each bench signal's data quality (bench:LC-nnnnn.PV.quality, ...).
     link = [
         point

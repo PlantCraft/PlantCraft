@@ -113,7 +113,7 @@ tour, visitors try the apps' editors but nothing is saved (not even a message), 
 stay off for them and each visit's requests are held to a few at once (only requests
 through the proxy count; the apps' own calls inside the network do not).
 The administrator account stays private. The seed can be run again on any installation with the
-demo plant: `docker compose exec processcraft processcraft demo seed`. The journeys in
+demo plant: `docker compose exec processcraft plantcraft demo seed`. The journeys in
 `tests/e2e_suite` walk that story in a browser: `make e2e-suite SUITE_URL=https://host/`.
 
 The Historian reads its own sources (OPC UA, PI Web API, CSV files dropped in

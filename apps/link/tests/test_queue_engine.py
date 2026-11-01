@@ -614,3 +614,17 @@ def test_latest_finished_reads_an_index_never_the_runs_rows(tmp_path):
                 for row in connection.execute(f"EXPLAIN QUERY PLAN {query}", parameters)
             )
             assert "COVERING INDEX" in plan, plan
+
+
+def test_an_engine_that_keeps_dying_makes_the_server_unhealthy(monkeypatch):
+    from linkcraft.engine import process
+
+    child = process.EngineProcess(None, command=[sys.executable, "-c", "pass"])
+    assert child.crash_loop() is None
+    now = time.monotonic()
+    child._restarted_at = [now - 30, now - 20]
+    assert child.crash_loop(now) is None
+    child._restarted_at.append(now - 10)
+    assert "LINKCRAFT_MEMORY" in child.crash_loop(now)
+    # Restarts older than the window no longer count: it heals by itself.
+    assert child.crash_loop(now + process.CRASH_LOOP_SECONDS + 1) is None

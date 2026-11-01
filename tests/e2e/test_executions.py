@@ -8,7 +8,7 @@ from playwright.sync_api import expect
 
 
 def _publish(page) -> None:
-    """LinkCraft reports a run and a schedule, as the app does with its key (here: the admin)."""
+    """Analytics reports a run and a schedule, as the app does with its key (here: the admin)."""
 
     api = page.context.request
     token = api.post("/api/v1/auth/token").json()["token"]

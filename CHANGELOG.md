@@ -18,6 +18,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   until an installation sets `PLANTCRAFT_TRANSLATIONS=1`, which PlantCraft now tells every page
   of the suite (the `plantcraft_translations` cookie). See docs/translations.md.
 
+### Fixed
+
+- **Analytics on an 8 GB machine: 2 GB of memory, and health that sees a crash loop (SDK 0.101.0).**
+  The `medium` machine profile gave Analytics 1 GB (`LINKCRAFT_MEMORY`). With a plant of 2,050
+  loops and three months of history, its engine died for lack of memory 56 times in four hours
+  on a 4 CPU, 8 GB test machine while the container still said "healthy". The profile now gives
+  it 2 GB (the engine settled at 1.2 GB), and `/healthz` answers 503 when the engine stopped 3
+  times in 10 minutes, so System health, Operations and monitoring show the problem. Any app's
+  runtime can name such a problem (`health_problem()`, `plantcraft_sdk.server.web`).
+
 ### Changed
 
 - **Public demo: the visitor is told the visit's limits (SDK 0.100.0, ui 0.105.0).** The sign-in page says a visit lasts
@@ -39,6 +49,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   are unchanged; page tabs keep their underline.
 
 ### Added
+
+- **Operations: the plant's holidays.** Requests › Targets takes a list of holidays (a date and a
+  name per line, `PUT /api/operations/holidays`, audited). Queues with working hours stop their
+  clocks on them; a queue that works day and night ignores them.
+- **Compute: a revoked worker enrolls again.** Settings › Compute gives a revoked worker a new
+  one-time code ("Enroll again"); it keeps its name and labels and needs no removing and adding.
 
 - `@plantcraft/ui`: **display size**, five steps from Larger text to More space, in the person's
   menu under the theme, for every app of the suite. Larger text helps people who see less well;
@@ -540,6 +556,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   PlantCraft as a Compose secret (`PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE`). An older installation's
   value moves there unchanged; a new installation gets a random one instead of `plantcraft-demo`,
   since visitors enter with the sign-in page's button. `PC-SEC-01` checks the file's mode.
+- **App keys with scopes** (backlog B8). A key may hold less than its app: `POST /api/app-keys`
+  takes `scopes`, the service tokens carry them, and each API v1 route needs a permission both the
+  app and the key hold. A key without scopes holds all of the app's, as before. Settings › App
+  keys shows and sets them. `PLANTCRAFT_APP_PERMISSIONS=strict` also holds an app that declared
+  no permissions yet to none.
 - **The security check includes Lynis and OpenSCAP when the host has them** (`PC-HOST-05`,
   `PC-HOST-06`). As root it runs `lynis audit system --quick` and the SCAP Security Guide's CIS
   level 1 (or standard) profile. Otherwise it reads their last report. A host without them reports

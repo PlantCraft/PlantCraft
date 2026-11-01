@@ -19,7 +19,7 @@
 |---|---|
 | D6 | Every app draws the same frame, `@plantcraft/ui` (section 10): one left sidebar with the app's brand and the fold button at the top, the app's pages ending with its own Help, and at the bottom every app the person may open (PlantCraft first, always), then the messages button and the user menu (theme, language, tour, about, sign out). |
 | D7 | Analysis apps order their pages the same way: Overview, the objects they analyse, Runs, Protocols, Methods, Help. |
-| D8 | Sources and signals are HistCraft's: connections, tags, collection, history and their settings (general, per source, per point; the most specific wins). PlantCraft keeps assets, asset types and which signal fills each role. |
+| D8 | Sources and signals are Historian's: connections, tags, collection, history and their settings (general, per source, per point; the most specific wins). PlantCraft keeps assets, asset types and which signal fills each role. |
 | D9 | CPMCraft and DataCraft become one app, **LinkCraft** (`linkcraft`, `/link/`): signals and loops, with methods wired as blocks into protocols that run on a schedule (section 11). TrendCraft stays a separate app, renamed **DashCraft** (`dashcraft`, `/dash/`): it only shows the data HistCraft and the apps hold. |
 | D10 | Only the platform keeps the Craft brand. A module's display name is **PlantCraft <name>** in documents, packages and proposals (PlantCraft Analytics, Historian, View, Plant, Twin, Alarms, Models) and just **<name>** inside the suite (sidebar, launcher). Ids, repositories, images and URL prefixes keep their `<function>craft` form. |
 
@@ -117,8 +117,8 @@ and its own database.
 
 ```text
           people (browser) ──HTTPS──> proxy ──> PlantCraft  /
-                                          ├──> LinkCraft    /link/
-                                          ├──> DashCraft    /dash/
+                                          ├──> Analytics    /link/
+                                          ├──> View    /dash/
                                           └──> ...
    every app ──API v1──> PlantCraft (http://processcraft:8060), never to another app
 ```
@@ -575,7 +575,7 @@ prefix or a uid of the table below.
 | DataCraft (merged into LinkCraft, D9) | `datacraft` | `/quality/` | 8090 | 10007 |
 | PlantCraft Historian | `histcraft` | `/hist/` | 8100 | 10008 |
 | PlantCraft Alarms | `alarmcraft` | `/alarm/` | 8110 | 10009 |
-| PlantCraft Twin (merged into LinkCraft, 2026-10-22) | `twincraft` | `/twin/` | 8120 | 10010 |
+| PlantCraft Twin (merged into Analytics, 2026-10-22) | `twincraft` | `/twin/` | 8120 | 10010 |
 | PlantCraft Models | `modelcraft` | `/model/` | 8130 | 10011 |
 | PlantCraft Analytics | `linkcraft` | `/link/` | 8140 | 10012 |
 | PlantCraft Documents | `doccraft` | `/doc/` | 8150 | 10015 |

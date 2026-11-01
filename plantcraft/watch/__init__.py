@@ -4,7 +4,7 @@ Every 30 s it reads what the installer writes (``metrics.json``: Docker's view o
 container, whose health checks call each server's ``/healthz``; the free disk) and what the
 operations driver writes (backups, the last drill, the last update), through
 :class:`plantcraft.apps.operations_desk.OperationsDesk`, and the work queues the servers
-report (``queues``: Link's executions, Models' simulations), which must drain. It needs neither HistCraft nor
+report (``queues``: Link's executions, Models' simulations), which must drain. It needs neither Historian nor
 Dashboards, so it still speaks when they are the ones down.
 
 A check that fails ``grace`` ticks in a row opens an incident: the robot user ``system``

@@ -2,7 +2,7 @@
 
 Source: the Simulator (Apache-2.0, PlantCraft authors), ``src/simcraft/loops/dynamics.py`` at
 commit ``3e0a912`` (the same models as PlantCraft's ``processcraft/simulator/dynamics.py``).
-The Simulator is not a dependency of LinkCraft (apps never import each other), so the few functions
+The Simulator is not a dependency of Analytics (apps never import each other), so the few functions
 that generate one loop's samples are copied here unchanged; only the 50-loop portfolio, the OPC UA
 tag naming and the state (de)serialisation are left out. Keep this file in step with the source
 when its dynamics change, and say so in the commit.

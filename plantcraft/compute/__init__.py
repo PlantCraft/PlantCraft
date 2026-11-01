@@ -264,18 +264,36 @@ class ComputeStore(Store):
         return self.worker(worker_id) or {}, code
 
     def renew_code(self, worker_id: str) -> str:
-        """A new one-time code for a worker that did not enroll yet (the old one stops working)."""
+        """A new one-time code for a worker that did not enroll yet (the old one stops working),
+        or for a revoked one: it waits for its machine again, with its name and labels, so it
+        needs no removing and adding."""
 
         code = CODE_PREFIX + secrets.token_urlsafe(18)
         expires = _text(_now() + timedelta(minutes=ENROLL_MINUTES))
         with self._lock, self._write() as connection:
+            row = connection.execute(
+                "SELECT name, state FROM compute_workers WHERE worker_id = ?", (worker_id,)
+            ).fetchone()
+            if row is not None and row["state"] == "revoked":
+                taken = connection.execute(
+                    """SELECT 1 FROM compute_workers
+                       WHERE name = ? AND state != 'revoked' AND worker_id != ?""",
+                    (row["name"], worker_id),
+                ).fetchone()
+                if taken:
+                    raise ComputeError(
+                        409, t("A worker named {name} already exists.", name=row["name"])
+                    )
             changed = connection.execute(
-                """UPDATE compute_workers SET enroll_hash = ?, enroll_expires_at = ?
-                   WHERE worker_id = ? AND state = 'pending'""",
+                """UPDATE compute_workers SET state = 'pending', enroll_hash = ?,
+                       enroll_expires_at = ?, revoked_at = NULL, credential_hash = NULL
+                   WHERE worker_id = ? AND state IN ('pending', 'revoked')""",
                 (_hash(code), expires, worker_id),
             ).rowcount
         if not changed:
-            raise ComputeError(409, t("Only a worker that has not started yet gets a new code."))
+            raise ComputeError(
+                409, t("Only a worker that has not started yet, or a revoked one, gets a new code.")
+            )
         return code
 
     def enroll(self, code: str, *, host: str, executors: list[dict[str, Any]]) -> tuple[dict, str]:

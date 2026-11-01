@@ -1503,5 +1503,14 @@
   "Larger text": "Texto maior",
   "Large": "Grande",
   "Compact": "Compacto",
-  "More space": "Mais espaço"
+  "More space": "Mais espaço",
+  "Permissions (optional)": "Permissões (opcional)",
+  "All of the app's; or e.g. read.signals, read.series": "Todas as da app; ou por exemplo read.signals, read.series",
+  "All of the app's": "Todas as da app",
+  "Permissions": "Permissões",
+  "Holidays": "Feriados",
+  "Days off for every queue with working hours. One per line: the date, then a name.": "Dias de folga de todas as filas com expediente. Um por linha: a data e depois um nome.",
+  "Save holidays": "Salvar feriados",
+  "No holidays.": "Nenhum feriado.",
+  "Enroll again": "Registrar de novo"
 }
