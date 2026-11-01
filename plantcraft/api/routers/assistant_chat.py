@@ -180,7 +180,7 @@ def _visit_may_ask(request: Request, rt: Any, user: str, text: str = "") -> None
         if public_demo() is not None and not models_allowed_for(_level(rt, user)):
             raise HTTPException(
                 status_code=403,
-                detail=t("This is a public demo: you can try everything, but nothing is saved."),
+                detail=t("This is a public demo: for security, this part is locked, and nothing is saved."),
             )
         return
     settings = demo_assistant()
@@ -188,7 +188,7 @@ def _visit_may_ask(request: Request, rt: Any, user: str, text: str = "") -> None
     if settings is None or owner == user:
         raise HTTPException(
             status_code=403,
-            detail=t("This is a public demo: you can try everything, but nothing is saved."),
+            detail=t("This is a public demo: for security, this part is locked, and nothing is saved."),
         )
     if len(text.strip()) > settings.max_text:
         raise HTTPException(
@@ -612,7 +612,7 @@ def retry(chat_id: int, request: Request, user: CurrentUser, rt: Runtime) -> dic
     ):
         raise HTTPException(
             status_code=403,
-            detail=t("This is a public demo: you can try everything, but nothing is saved."),
+            detail=t("This is a public demo: for security, this part is locked, and nothing is saved."),
         )
     try:
         answer = rt.assistant.retry(

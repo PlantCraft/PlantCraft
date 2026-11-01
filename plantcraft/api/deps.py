@@ -266,7 +266,7 @@ def access_guard(
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=t("This is a public demo: you can try everything, but nothing is saved."),
+                detail=t("This is a public demo: for security, this part is locked, and nothing is saved."),
             )
         endpoint = request.scope.get("endpoint")
         needed = getattr(endpoint, "min_access", None) or (

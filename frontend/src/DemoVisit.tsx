@@ -15,7 +15,7 @@ const HEARTBEAT_MS = 30_000;
 /** The public demo's way in, its only one (one short line and one button, nothing
  * that scares a first visitor): enter, or wait in line until a place frees. The platform's tour
  * opens inside; the guides by role are in the menu under the visitor's name. */
-export function DemoEntry({ ended, contactUrl, updating, onEntered }: { ended: boolean; contactUrl?: string; updating?: boolean; onEntered: (username: string) => void }) {
+export function DemoEntry({ ended, minutes, contactUrl, updating, onEntered }: { ended: boolean; minutes: number; contactUrl?: string; updating?: boolean; onEntered: (username: string) => void }) {
   const [waiting, setWaiting] = useState<Waiting | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -44,7 +44,7 @@ export function DemoEntry({ ended, contactUrl, updating, onEntered }: { ended: b
   return <div className="login-demo" role="note">
     {ended && <span className="demo-ended">{t("Your demo visit ended. Thank you for trying PlantCraft!")}</span>}
     {ended && contactUrl && <a className="demo-ended-contact" href={contactUrl} target="_blank" rel="noopener">{t("Questions about your plant? Talk to us")} <ArrowRight size={14} aria-hidden="true" /></a>}
-    <span>{t("A live demo of PlantCraft on a simulated refinery. Look around and try anything: nothing you change is saved.")}</span>
+    <span>{t("A live demo of PlantCraft on a simulated refinery. Look around and try the editors for up to {minutes} minutes: nothing you change is saved. As a public demo, some parts are locked for security.", { minutes })}</span>
     {updating ? <div className="demo-line" role="status">
       <LoaderCircle className="spin" size={16} />
       <span>{t("The demo is being updated with a new version. It will be back in a few minutes: nothing is broken.")}</span>
@@ -145,7 +145,7 @@ export function DemoVisitBar({ visit, updatingUrl, onEnded, onLeave }: { visit: 
   </div>}
   <div className={`demo-visit-bar${late ? " demo-visit-late" : ""}`} role={late ? "alert" : "status"}>
     <Clock3 size={14} aria-hidden="true" />
-    <span className="demo-visit-clock" title={t("Each demo visit lasts {minutes} minutes and ends after {idle} minutes without use. Nothing you change is kept.", { minutes: visit.minutes, idle: visit.idle_minutes })}>{clockText(idle ? left : clock)}</span>
+    <span className="demo-visit-clock" title={t("Each demo visit lasts {minutes} minutes and ends after {idle} minutes without use. Nothing you change is kept, and some parts are locked for security.", { minutes: visit.minutes, idle: visit.idle_minutes })}>{clockText(idle ? left : clock)}</span>
     <span className="demo-visit-note">{idle
       ? t("Still there? Without use, this visit ends and its changes are discarded.")
       : clock <= WARN_SECONDS ? t("Your visit is ending; its changes are discarded.") : t("left in your demo visit")}</span>

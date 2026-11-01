@@ -726,7 +726,7 @@ def audit(payload: AuditEntry, caller: V1Caller, rt: Runtime) -> dict[str, int]:
         # A public demo's visitors change nothing, so they have nothing to record either.
         raise HTTPException(
             status_code=403,
-            detail=t("This is a public demo: you can try everything, but nothing is saved."),
+            detail=t("This is a public demo: for security, this part is locked, and nothing is saved."),
         )
     app_id = caller.app_id or (payload.app.strip().lower() if payload.app else None)
     audit_id = rt.workspace.audit.record(

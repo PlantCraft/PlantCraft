@@ -29,6 +29,10 @@ is the read-only visitor account `demo`, in one of a few places at once:
   `install.sh` keeps that password in `data/public-demo-password` (mode 600), never in `.env`:
   random on a new installation, and moved there from an older installation's `.env` unchanged.
 
+The sign-in page, the tour's first step and the clock's hint tell the visitor the same three
+things: how long a visit lasts, that nothing changed is saved, and that some parts are locked for
+security because it is a public demo. A locked action answers with that same reason.
+
 When the visit ends, the browser is back on the sign-in page, which thanks the visitor and offers
 to enter again. The places are in the database (`demo_visits`, `demo_line`), so every server
 process sees the same ones (`plantcraft/auth/demo_visits.py`).

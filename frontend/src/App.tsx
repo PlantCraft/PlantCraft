@@ -105,7 +105,7 @@ function Login({ onLogin, publicDemo, demoEnded, installation }: { onLogin: (use
               team's form, which also shows a working installation. */}
           {publicDemo && <>
             <h1>{t("Demo")}</h1>
-            <DemoEntry ended={demoEnded ?? false} contactUrl={publicDemo.contact_url} updating={publicDemo.updating} onEntered={onLogin} />
+            <DemoEntry ended={demoEnded ?? false} minutes={publicDemo.minutes} contactUrl={publicDemo.contact_url} updating={publicDemo.updating} onEntered={onLogin} />
             {!accountOpen && <button type="button" className="button button-secondary button-wide" onClick={() => setAccountOpen(true)}>{t("Sign in")}</button>}
             {accountOpen && <div className="login-divider"><span>{t("or sign in with an account")}</span></div>}
           </>}
