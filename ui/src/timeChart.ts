@@ -89,14 +89,13 @@ export function qualityBands(changes: QualityChange[] | undefined, end: string):
 
 /**
  * A marked stretch of a time chart (a bad-quality period, a check's event, an alarm): a strip in
- * its colour along the top edge of the plot, with faint edges down to the axis. The plot itself
+ * its colour along the top edge of the plot. The plot itself
  * stays on the card's white or black, the same in every chart of the suite (2026-11-01: a tinted
  * fill over the whole plot read as a different chart). Needs a top margin of 14 px or more.
  */
 export function markStrip(x0: string | number, x1: string | number, color: string) {
   return [
     { type: "rect" as const, xref: "x" as const, yref: "paper" as const, x0, x1, y0: 1.004, y1: 1.034, fillcolor: color, opacity: 0.9, line: { width: 0 }, layer: "above" as const },
-    { type: "rect" as const, xref: "x" as const, yref: "paper" as const, x0, x1, y0: 0, y1: 1, fillcolor: color, opacity: 0.05, line: { width: 0 }, layer: "below" as const },
   ];
 }
 

@@ -190,7 +190,7 @@ a.kpi-split-item:hover { background: var(--pc-surface-2); }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: var(--pc-radius-pill); font-size: var(--pc-fs-xs); font-weight: 600; white-space: nowrap; }
 .pill i { width: 6px; height: 6px; border-radius: 50%; }
 /* In a table a status is its dot and its word: no filled capsule on every row. */
-.table .pill { padding-left: 0; padding-right: 0; border-color: transparent; background: transparent; }
+.table .pill { padding-left: 0; padding-right: 0; border-color: transparent; background: transparent !important; } /* !important: pills take their soft colour inline */
 .health { display: inline-flex; align-items: center; gap: 8px; min-width: 110px; }
 .health-bar { width: 70px; height: 6px; border-radius: 3px; background: var(--pc-surface-3); overflow: hidden; }
 .health-bar span { display: block; height: 100%; }
@@ -222,6 +222,7 @@ a.kpi-split-item:hover { background: var(--pc-surface-2); }
 .table td { padding: 7px 12px; border-bottom: 1px solid var(--pc-border-subtle); vertical-align: top; font-size: var(--pc-fs-sm); }
 .table :is(td, th):first-child { padding-left: 18px; }
 .table :is(td, th):last-child { padding-right: 18px; }
+.table td:last-child { white-space: nowrap; } /* "3 min ago", a row's buttons: never broken */
 /* A row is two lines: the name, then its description cut to one line (DataTable shows the whole
    text on hover). */
 .table td small { display: -webkit-box; margin-top: 1px; color: var(--pc-text-3); -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
@@ -418,8 +419,8 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 .pc-wg-head { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 10px; min-height: 28px; flex-wrap: wrap; }
 /* An Overview without buttons of its own: Customize sits on the title's line, at the right, so
    the cards start right under the title (2026-11-01). */
-.pc-overview-heading:not(:has(.heading-actions)) ~ .pc-wg > .pc-wg-head:not(.pc-wg-head-editing) { margin-top: calc(-16px - var(--pc-heading-height)); margin-bottom: 16px; min-height: var(--pc-heading-height); pointer-events: none; }
-.pc-overview-heading:not(:has(.heading-actions)) ~ .pc-wg > .pc-wg-head:not(.pc-wg-head-editing) > * { pointer-events: auto; }
+:is(.pc-overview-heading:not(:has(.heading-actions > *)) ~ .pc-wg, .pc-overview-heading:not(:has(.heading-actions > *)) ~ * .pc-wg) > .pc-wg-head:not(.pc-wg-head-editing) { margin-top: calc(-16px - var(--pc-heading-height, 40px)); margin-bottom: 16px; min-height: var(--pc-heading-height, 40px); pointer-events: none; }
+:is(.pc-overview-heading:not(:has(.heading-actions > *)) ~ .pc-wg, .pc-overview-heading:not(:has(.heading-actions > *)) ~ * .pc-wg) > .pc-wg-head:not(.pc-wg-head-editing) > * { pointer-events: auto; }
 .pc-wg-hint { margin: 0 auto 0 0; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
 /* Customize is seldom used: a quiet text button, not a primary action. */
 .pc-wg-customize { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 0; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-3); font: inherit; font-size: var(--pc-fs-sm); cursor: pointer; }

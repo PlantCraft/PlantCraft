@@ -34,8 +34,8 @@
 .pcs-brand .brand strong > span { font-weight: 400; }
 .pcs-brand .brand small { display: block; margin-top: 5px; color: var(--pc-chrome-text-3); font-size: var(--pc-fs-xs); font-weight: 500; }
 .pcs-nav { display: flex; flex-direction: column; gap: 3px; }
-.pcs-nav-item { min-height: 40px; padding: 0 11px; border-radius: var(--pc-radius-md); display: flex; align-items: center; gap: 12px; color: var(--pc-chrome-text-2); font-size: var(--pc-fs-md); font-weight: 600; text-decoration: none; white-space: nowrap; transition: background .15s ease, color .15s ease; }
-.pcs-nav-item > svg { width: 18px; height: 18px; flex: none; }
+.pcs-nav-item { min-height: 34px; padding: 0 11px; border-radius: var(--pc-radius-md); display: flex; align-items: center; gap: 11px; color: var(--pc-chrome-text-2); font-size: var(--pc-fs-sm); font-weight: 500; text-decoration: none; white-space: nowrap; transition: background .15s ease, color .15s ease; }
+.pcs-nav-item > svg { width: 17px; height: 17px; flex: none; }
 .pcs-nav-item:hover { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-text-strong) 5%, transparent); }
 .pcs-nav-item.pcs-active { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-text-strong) 8%, transparent); }
 .pcs-nav-item.pcs-active > svg { color: var(--pc-chrome-accent); }
