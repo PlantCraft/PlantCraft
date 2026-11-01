@@ -21,7 +21,7 @@ FOSSEE (IIT Bombay) develops it under the **BSD-3-Clause** license.
   or names it in `uses(...)` (`modelcraft.omc.runner.named_libraries`). The Overview shows
   the runner's libraries and their versions.
 - The example project **Process library examples** (`PlantCraftProcess`, our own model) is a
-  flash drum: a methanol and water feed at 1 atm whose temperature rises from 350 K to 360 K over
+  flash drum: a methanol and water feed at 1 atm whose temperature rises from 355 K to 362 K over
   ten minutes, split into vapour and liquid by Raoult's law. Duplicate it to start a flowsheet of
   your own.
 

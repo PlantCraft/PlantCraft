@@ -24,7 +24,8 @@ joins it into the bundle's release notes.
   - A job loads it only when the project's files use it.
   - The new example project "Process library examples" (`PlantCraftProcess.MethanolWaterFlash`)
     splits a methanol and water feed into vapour and liquid with Raoult's law while the feed
-    heats from 350 K to 360 K.
+    heats from 355 K to 362 K. The feed stays in the two-phase region (below about 351 K
+    there is no vapour); the example was run in OpenModelica 1.24.4.
   - ThermoSysPro is not shipped, because its Modelica License 2 binds modified copies and the
     built executables. `docs/process-libraries.md` explains this and how a site can add it to
     its own image.
