@@ -81,6 +81,10 @@ PI signals in `archive` mode are a gap (`docs/gaps.md`).
 
 ## Open points
 
+- OPC UA sources are read with Read by default. A source with `subscribe` on (the maintainer's
+  decision of 2026-11-01, H4) gets a subscription in Historian's own session, with monitored
+  items on the Value attribute only: the server reports changes. It goes with the session and
+  changes no value, node or setting of the plant (`tests/test_read_only.py`).
 - MQTT, Modbus TCP and SQL sources are read by the gateway (`docs/gateway.md`), buffered on disk
   while the collector is away. Sparkplug B is read by the collector itself (`histcraft.sparkplug`,
   `collector/sparkplug.py`): it subscribes to births, data and deaths and publishes nothing, so it

@@ -20,6 +20,7 @@ the archive from the source's history, in the background), merges small chunks h
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import logging
 import math
 import os
@@ -72,6 +73,8 @@ TEXT_BACKFILL_HOURS = 48
 LEASE_RETRY_SECONDS = 5.0
 # A gateway source with no value for this long (or three of its intervals) is disconnected.
 GATEWAY_STALE_SECONDS = 60.0
+# How often a subscribed OPC UA source is checked to answer (seconds).
+SUBSCRIPTION_CHECK_SECONDS = 5.0
 # How often a Sparkplug B source's messages are taken (seconds).
 SPARKPLUG_TICK = 0.2
 # Series the gateway sent that no point archives, kept per source for Browse.
@@ -887,9 +890,89 @@ class Collector:
         if not groups:
             while True:  # nothing to read: keep the connection, wait for points
                 await asyncio.sleep(3600)
+        options = (self.sources.get(source_id) or {}).get("options") or {}
+        if options.get("subscribe") and hasattr(reader, "subscribe"):
+            await self._monitor(source_id, reader, groups)
+            return
         await asyncio.gather(
             *(self._scan(reader, period, states) for period, states in groups.items())
         )
+
+    async def _monitor(
+        self, source_id: str, reader: Any, groups: dict[float, list[PointState]]
+    ) -> None:
+        """An OPC UA source that opts in (``subscribe``, H4): the server reports each change,
+        sampled at the point's scan period. A value that holds is taken again every scan period
+        here, as a scan would read it, so compression and the longest interval work alike.
+        Addresses the server refuses to monitor are read on a scan instead."""
+
+        by_address: dict[str, list[PointState]] = defaultdict(list)
+        period_of: dict[str, float] = {}
+        for period, states in groups.items():
+            for state in states:
+                address = state.point["address"]
+                by_address[address].append(state)
+                period_of[address] = min(period, period_of.get(address, period))
+        latest: dict[str, Reading] = {}
+
+        def take(address: str, reading: Reading) -> None:
+            latest[address] = reading
+            with self._lock:
+                for state in by_address.get(address, []):
+                    if state.last is None or reading.at_ms > state.last[0] or not reading.good:
+                        state.take(reading)
+
+        wanted: dict[float, list[str]] = defaultdict(list)
+        for address, period in period_of.items():
+            wanted[period].append(address)
+        try:
+            refused = await asyncio.wait_for(
+                reader.subscribe(dict(wanted), take), max(self.settings.opcua_timeout * 10, 60)
+            )
+        except (asyncio.CancelledError, ConnectionError, TimeoutError):
+            raise
+        except Exception as exc:  # noqa: BLE001 - a server without subscriptions is scanned
+            LOGGER.warning("Source %s: no subscription (%s), scanned", source_id, _describe(exc))
+            refused = {address: None for address in period_of}
+        scanned: dict[float, list[PointState]] = defaultdict(list)
+        for period, states in groups.items():
+            for state in states:
+                if state.point["address"] in refused:
+                    scanned[period].append(state)
+        monitored = {a: p for a, p in period_of.items() if a not in refused}
+        self.source_status[source_id] = {
+            **(self.source_status.get(source_id) or {}),
+            "reading": "subscription",
+            "monitored": len(monitored),
+            "scanned": len(refused),
+        }
+        await asyncio.gather(
+            self._take_held_values(reader, monitored, latest, take),
+            *(self._scan(reader, period, states) for period, states in scanned.items()),
+        )
+
+    async def _take_held_values(
+        self,
+        reader: Any,
+        periods: dict[str, float],
+        latest: dict[str, Reading],
+        take: Any,
+    ) -> None:
+        """Take again each monitored value that held for its scan period; check the server
+        answers every few seconds (a quiet subscription is not a dead one)."""
+
+        tick = max(min(periods.values(), default=1.0), 0.1)
+        checked = time.monotonic()
+        while True:
+            await asyncio.sleep(tick)
+            now = now_ms()
+            for address, period in periods.items():
+                reading = latest.get(address)
+                if reading is not None and reading.good and now - reading.at_ms >= period * 1000:
+                    take(address, dataclasses.replace(reading, at_ms=now))
+            if time.monotonic() - checked >= SUBSCRIPTION_CHECK_SECONDS:
+                await asyncio.wait_for(reader.alive(), self.settings.opcua_timeout + 5)
+                checked = time.monotonic()
 
     async def _scan(self, reader: Any, period: float, states: list[PointState]) -> None:
         by_address: dict[str, list[PointState]] = defaultdict(list)

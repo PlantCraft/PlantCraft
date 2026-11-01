@@ -16,7 +16,8 @@ WRITES = re.compile(
     r"\b(write_value|write_attribute|write_values|set_value|set_attribute|write_params|"
     r"call_method|call_methods|history_update|HistoryUpdate|add_nodes|delete_nodes|"
     r"add_references|delete_references|add_variable|add_object|add_method|add_folder|"
-    r"WriteRequest|CallRequest|create_subscription|register_nodes)\b"
+    r"WriteRequest|CallRequest|register_nodes|create_monitored_items|modify_monitored_items|"
+    r"set_monitoring_mode|set_publishing_mode|subscribe_events)\b"
 )
 
 
@@ -34,6 +35,31 @@ def test_no_write_service_in_histcraft():
         for match in WRITES.finditer(_code_without_comments(path)):
             offenders.append(f"{path.relative_to(ROOT)}: {match.group(0)}")
     assert not offenders, "\n".join(offenders)
+
+
+def test_only_an_opted_in_source_subscribes_and_only_to_values():
+    """Subscriptions (H4, the maintainer's decision of 2026-11-01): only the collector's OPC UA
+    reader creates one, monitors the Value attribute only, and the collector asks for it only
+    for a source whose ``subscribe`` option is on (off by default)."""
+
+    found = {}
+    for path in (ROOT / "src" / "histcraft").rglob("*.py"):
+        code = _code_without_comments(path)
+        for name in ("create_subscription", "subscribe_data_change"):
+            if name in code:
+                found.setdefault(name, set()).add(path.relative_to(ROOT).as_posix())
+    assert found == {
+        "create_subscription": {"src/histcraft/collector/opcua.py"},
+        "subscribe_data_change": {"src/histcraft/collector/opcua.py"},
+    }
+    reader = _code_without_comments(ROOT / "src" / "histcraft" / "collector" / "opcua.py")
+    assert reader.count("create_subscription(") == 1 and "attr=" not in reader
+    service = (ROOT / "src" / "histcraft" / "collector" / "service.py").read_text(encoding="utf-8")
+    assert 'options.get("subscribe") and hasattr(reader, "subscribe")' in service
+    from histcraft.catalog.models import SourceIn
+
+    source = SourceIn(id="plant", name="Plant", endpoint="opc.tcp://plant:4840")
+    assert source.options["subscribe"] is False
 
 
 def test_the_check_finds_a_write():

@@ -276,3 +276,93 @@ def test_a_calculated_point_follows_its_inputs(setup, server):
             == "connected"
         )
     )
+
+
+@pytest.fixture
+def subscribed(tmp_path, server):
+    """The same plant with ``subscribe`` on (H4); every Read the collector makes is counted."""
+
+    from histcraft.collector.opcua import OpcUaReader
+
+    settings = make_settings(tmp_path)
+    catalog = CatalogStore(Database(settings.config_target))
+    archive = ArchiveStore(Database(settings.archive_target))
+    catalog.save_source(
+        SourceIn(
+            id="plant",
+            name="Test plant",
+            endpoint=server.endpoint,
+            namespace_uri=NAMESPACE,
+            options={"subscribe": True},
+        ),
+        create=True,
+    )
+    catalog.add_points(
+        [
+            PointIn(
+                tag="FIC-101.PV",
+                source_id="plant",
+                address="ns=2;s=FIC-101.PV",
+                scan_seconds=0.2,
+                deviation=0.5,
+                max_seconds=1,
+            ),
+            PointIn(
+                tag="FIC-101.MODE",
+                source_id="plant",
+                address="ns=2;s=FIC-101.MODE",
+                kind="text",
+                scan_seconds=0.2,
+            ),
+            PointIn(tag="BAD", source_id="plant", address="ns=2;s=missing", scan_seconds=0.5),
+        ]
+    )
+    reads: list[list[str]] = []
+
+    class Counted(OpcUaReader):
+        async def read(self, addresses):
+            reads.append(list(addresses))
+            return await super().read(addresses)
+
+    collector = Collector(
+        settings,
+        catalog,
+        archive,
+        reader_factory=lambda source: Counted(source, timeout=settings.opcua_timeout),
+    )
+    thread = CollectorThread(collector)
+    thread.start()
+    yield catalog, archive, collector, reads
+    thread.stop()
+
+
+def test_a_subscribed_source_takes_changes_without_reading_each_scan(subscribed, server):
+    """H4: the server reports changes; only the address it refused is read on a scan."""
+
+    catalog, archive, collector, reads = subscribed
+    points = ids(catalog)
+    wait_for(lambda: (collector.source_status.get("plant") or {}).get("reading") == "subscription")
+    server.set("FIC-101.PV", 61.5)
+    server.set("FIC-101.MODE", "CAS")
+    snapshot = lambda tag: archive.snapshots().get(points[tag]["id"]) or {}  # noqa: E731
+    wait_for(lambda: snapshot("FIC-101.PV").get("value") == 61.5)
+    wait_for(lambda: snapshot("FIC-101.MODE").get("value") == "CAS")
+    status = collector.source_status["plant"]
+    assert (status["monitored"], status["scanned"]) == (2, 1)
+    wait_for(lambda: snapshot("BAD").get("status") == "bad")
+    # A value that holds is still taken every scan period (a steady signal is archived at its
+    # longest interval), with no Read of it: the only address read is the one refused.
+    held = snapshot("FIC-101.MODE").get("reads", 0)
+    time.sleep(1.5)
+    assert snapshot("FIC-101.MODE").get("reads", 0) >= held + 3
+    assert reads and all(addresses == ["ns=2;s=missing"] for addresses in reads)
+    times, _ = archive.read(points["FIC-101.PV"]["id"], 0, 10**13)
+    assert len(times) >= 2
+
+
+def test_a_subscribed_source_lost_is_a_gap(subscribed, server):
+    catalog, archive, collector, _ = subscribed
+    point = ids(catalog)["FIC-101.PV"]
+    wait_for(lambda: (collector.source_status.get("plant") or {}).get("reading") == "subscription")
+    server.stop()
+    wait_for(lambda: archive.snapshots([point["id"]])[point["id"]]["status"] == "disconnected", 30)
