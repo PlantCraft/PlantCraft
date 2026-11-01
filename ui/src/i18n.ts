@@ -12,7 +12,7 @@
  * translations are on (the `plantcraft_translations` cookie, set by PlantCraft from
  * PLANTCRAFT_TRANSLATIONS); otherwise everyone sees English. */
 import { fillText } from "./files.js";
-import uiPtBR from "./locales/pt-BR.json";
+import uiPtBR from "./locales/pt-BR.json" with { type: "json" };
 
 export type Language = "en" | "pt-BR";
 export type Catalog = Record<string, string>;

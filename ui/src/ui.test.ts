@@ -302,8 +302,9 @@ describe("the published modules", () => {
     for (const name of readdirSync(dir)) {
       if (!/\.tsx?$/.test(name) || /\.test\.tsx?$/.test(name)) continue;
       const text = readFileSync(dir + name, "utf8");
-      for (const match of text.matchAll(/from\s+"(\.{1,2}\/[^"]+)"/g)) {
-        if (!/\.(js|css)$/.test(match[1])) bare.push(`${name}: ${match[1]}`);
+      for (const match of text.matchAll(/from\s+"(\.{1,2}\/[^"]+)"(\s+with\s*\{\s*type:\s*"json"\s*\})?/g)) {
+        // A catalog (locales/*.json) is imported as JSON, which Node needs said in the import.
+        if (!/\.(js|css)$/.test(match[1]) && !(/\.json$/.test(match[1]) && match[2])) bare.push(`${name}: ${match[1]}`);
       }
     }
     expect(bare).toEqual([]);
