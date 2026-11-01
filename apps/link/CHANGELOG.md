@@ -8,6 +8,79 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Added
 
+- **A regression trained once, with the range it is valid in (OLS, Ridge, PLS).** The new block
+  "Regression (OLS, Ridge, PLS)" (`model.regression`, Soft sensors) predicts a value the plant
+  only samples, such as a lab analysis, at every step. Calibrate in the editor fits it on a
+  period: the target's samples against the inputs at those times. PLS is for inputs that move
+  together. It keeps the coefficients, the fit (R², RMSE) and each input's range in the
+  training. Each run gives two outputs:
+  - "Valid": false where an input left that range, optionally widened by a margin, because
+    there the estimate extrapolates;
+  - the verdict: a warning when that happens for more than the share you set, naming the input
+    and the side. With the target wired, it also gives the error now against the training
+    RMSE.
+- **How the loop answers its setpoint steps** (gap A10). "Find steps" on the loop page finds
+  each setpoint change of the last window (a jump, or a ramp of up to three samples) that stands
+  clear of the PV's noise and is held at least ten samples, and gives its overshoot, rise time
+  (10 to 90%), settling time (inside 5% of the step, or three noise widths) and IAE, also per unit
+  of step, with the medians. Steps taken in manual are left out. Read from the history only
+  (`GET /api/loops/{loop_id}/step-response`, `engine/step_response.py`).
+- **A new action from a loop's result, with its charts.** "New action" on every analysed loop's
+  page (not only loops from PlantCraft's assets) opens PlantCraft's action form with the result
+  written out (status, health, window, limiting finding, likely cause and what to do first), the
+  reference `#loop_result:<loop>@<window end>` (declared in `app.toml`, it opens the loop again) and
+  the PV/SP and OP charts attached as one PNG (`frontend/src/loopResult.ts`).
+- **Mass balance reconciliation and redundant pair drift** (gaps M5, A23), two blocks in the
+  Estimators library. *Mass balance reconciliation* takes up to eight flows (ports s1 to s8) and
+  their balances as text (`s1 + s2 = s3; s3 = s4 + 0.5*s5`), with each meter's uncertainty in % of
+  its reading (2% by default). At each step it gives the reconciled flows, which close every
+  balance (weighted least squares), and the raw imbalance. On the window's mean it judges whether
+  the balances close within the uncertainty (global χ² test). When they do not, it names the meter
+  with the gross error and its bias, using the measurement test and serial elimination. Meters
+  that sit in exactly the same balances are named together. *Redundant pair drift* filters the
+  difference between two meters of the same quantity with a local level Kalman filter. It gives
+  the drift and its uncertainty, and it judges the drift bad when it exceeds both a tolerance and
+  a number of standard deviations. NumPy only (`linkcraft/methods/reconciliation.py`).
+
+- **Lab fusion block** (`estimator.lab_fusion`, Estimators, group Soft sensors). It corrects an
+  analyzer or a soft sensor with the lab results. Each result counts at its sampling time, from
+  the approval delay you give. The block outputs the corrected value, the bias and the
+  uncertainty.
+- **A signal against the lab** (signal page, panel "Against the lab"). Set a signal's reference to
+  its lab analysis (`laboratory:<analysis>`), and its page shows three things over the last 7
+  days. First, the health from 0 to 100 at the sampling times, raw and corrected by the lab.
+  Second, the bias over time. Third, actual × predicted. Each result counts from its approval in
+  the Historian; a rejected one is left out. `GET /api/signals/{id}/lab`.
+- **Third-party multivariable controllers (APC), read only: health and the cost of each active
+  limit** (gaps A16, A17). Results has a *Multivariable controllers* tab: per controller, over the
+  last day, week or month, the time it was on, its MVs in service and its CVs at a limit; one
+  controller's page ranks its active limits by the worth of 1% more range (its shadow price times
+  1% of the variable's range) and lists each MV and CV with its value, target, limits and state.
+  The weekly report has the same tables, and the widget "Analytics: multivariable controllers"
+  shows each controller on the Overview and on Desk. It reads the assets of types `apc`, `apc_mv`
+  and `apc_cv` (`GET /api/apc`, `GET /api/apc/<id>`) and writes nothing.
+- **An empirical model for a unit with no physical model (PCA).** The new block "Empirical model
+  (PCA)" (`model.empirical`) takes the unit's signals. Calibrate in the editor learns on a period
+  of normal operation how they move together: the principal components that explain 90% of
+  their variance. Each run then measures every sample two ways:
+  - T² (Hotelling): the plant moved along its normal directions, but farther than normal;
+  - SPE (Q): the signals no longer move together as they did.
+
+  The sentence names the signal that explains most of the excess. Constant signals are left out
+  of the calibration with a warning. Measured on three years of the Tennessee Eastman process
+  (`ci/bench/tep/tep.py`).
+- **A plant map on the Overview: every loop coloured by the KPI you pick.** The KPIs are health,
+  effective control, time in normal mode, time inside the band, and time with the output off its
+  limits. All of them are percentages where higher is better, so one scale colours them: good
+  from 90, fair from 75, poor from 50, bad below. Two views: a heat map grouped by area, and a
+  treemap whose rectangles are sized by the loop's criticality (critical, high, medium, low), so
+  the critical loops take the most room. Each loop opens its page. `GET /api/plant-map`.
+- **An algorithm on assets can run on every asset of an equipment type.** On the algorithm's
+  page, "And every asset of a type" adds PlantCraft asset types, subtypes included, for example
+  every pump or every exchanger. A monitor on "Every asset of the algorithm" reads the type's
+  assets from PlantCraft at each run (at most once a minute), so an asset added later is picked
+  up without changing the algorithm. Saving without naming the types keeps them. New route:
+  `GET /api/asset-type-choices`.
 - **Oscillations several loops share, grouped by period, with where each likely starts.**
   The loops the last runs found oscillating are grouped when their periods are within 15% of
   each other: a plant-wide oscillation starts in one place and travels. In each group the loop
@@ -79,6 +152,11 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Changed
 
+- **Runs with many signals keep their wires faster.** A run kept each wire's thinned series
+  and then cut it to its last point; it now keeps the last point directly, and it formats the
+  times without a Python loop. On 52 signals that was about three quarters of a run's time.
+  The wires now show the series' true last point, where before they showed the last thinned
+  one.
 - **A loop's page opens lighter**: its algorithm diagram (React Flow and the editor) comes
   once it is drawn, not with the page: 781 → 552 KiB of script to open a loop.
 - A round hands each loop only its own signals' samples. It read 50 loops at once into one

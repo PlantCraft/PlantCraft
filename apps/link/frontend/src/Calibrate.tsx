@@ -1,7 +1,8 @@
 /**
- * Calibrate, in the inspector of a Deviation (T²) block: the algorithm runs on one asset over a
- * period of normal operation, as its cycle would have, and the residuals' mean and covariance
- * become the block's calibration parameter. Nothing is saved until the algorithm is.
+ * Calibrate, in the inspector of a Deviation (T²) or an Empirical model (PCA) block: the
+ * algorithm runs on one asset over a period of normal operation, as its cycle would have, and the
+ * residuals' mean and covariance (or the signals' principal components) become the block's
+ * calibration parameter. Nothing is saved until the algorithm is.
  */
 import type { Diagram, DiagramNode } from "@plantcraft/ui/blockEditor";
 import { AlertTriangle, Gauge, LoaderCircle } from "lucide-react";
@@ -13,6 +14,8 @@ import type { AssetChoice, AssetTiming, Calibration, CalibrationAnswer } from ".
 import { isoOf, localOf } from "@plantcraft/ui";
 
 export const DEVIATION_BLOCK = "model.deviation";
+/** The blocks Calibrate fills: a Deviation (T²), an Empirical model (PCA, M4) and a Regression (A4). */
+export const CALIBRATED_BLOCKS = new Set([DEVIATION_BLOCK, "model.empirical", "model.regression"]);
 const HOUR = 3_600_000;
 
 /** A moment as a datetime-local input writes it (display time zone, to the minute). */
@@ -64,9 +67,14 @@ export function CalibrateTool({ node, diagram, timing, assets, readOnly, disable
   return <div className="calibrate">
     <strong><Gauge size={14} /> {t("Calibration")}</strong>
     <p className="muted small">{calibrationLine(shown, nameOf(shown?.asset))}</p>
-    {shown && <ul className="calibrate-outputs">
-      {shown.outputs.map((name, index) => <li key={name}><span>{name}</span><small>{t("mean {mean}, spread {std}", { mean: formatNumber(shown.mean[index], 3), std: formatNumber((shown.std ?? [])[index] ?? Math.sqrt(shown.cov[index][index]), 3) })}</small></li>)}
+    {shown?.kind === "regression" && <p className="muted small">{t("{method}: R² {r2}, RMSE {rmse}. Outside each input's range below, the estimate extrapolates.", { method: (shown.method ?? "").toUpperCase(), r2: formatNumber(shown.r2 ?? 0, 3), rmse: formatNumber(shown.rmse ?? 0, 3) })}</p>}
+    {shown?.kind === "regression" && <ul className="calibrate-outputs">
+      {shown.outputs.map((name, index) => <li key={name}><span>{name}</span><small>{t("range {low} to {high}, coefficient {coefficient}", { low: formatNumber(shown.low?.[index] ?? 0, 3), high: formatNumber(shown.high?.[index] ?? 0, 3), coefficient: formatNumber(shown.coefficients?.[index] ?? 0, 4) })}</small></li>)}
     </ul>}
+    {shown && shown.kind !== "regression" && <ul className="calibrate-outputs">
+      {shown.outputs.map((name, index) => <li key={name}><span>{name}</span><small>{t("mean {mean}, spread {std}", { mean: formatNumber(shown.mean[index], 3), std: formatNumber((shown.std ?? [])[index] ?? Math.sqrt(shown.cov?.[index]?.[index] ?? 0), 3) })}</small></li>)}
+    </ul>}
+    {shown?.kind === "pca" && <p className="muted small">{t("{k} principal components explain {share}% of the signals' variance.", { k: shown.eigenvalues?.length ?? 0, share: formatNumber(100 * (shown.explained ?? 0), 1) })}</p>}
     {(shown?.warnings ?? []).map((item) => <p key={item} className="calibrate-warning"><AlertTriangle size={12} /> {item}</p>)}
     {answer && <p className="muted small">{answer.skipped
       ? t("{used} of {runs} runs used; {skipped} left out: {reason}", { used: answer.used, runs: answer.runs, skipped: answer.skipped, reason: answer.skipped_reason })

@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException
+from plantcraft_sdk.auth import User
 from plantcraft_sdk.server.access import Access, CurrentUser, runtime
 
 from alarmcraft.api.runtime import Runtime
@@ -20,7 +21,20 @@ RuntimeDep = Annotated[Runtime, Depends(runtime)]
 EditorUser = ACCESS.EditorUser
 guarded = ACCESS.guarded
 
-__all__ = ["CurrentUser", "EditorUser", "RuntimeDep", "guarded"]
+
+def editor_view(user: CurrentUser) -> User:
+    """An editor, or a public demo visit: the visitor is shown the editors (``plantcraft_sdk.
+    server.demo``), so the reads they make (the asset and signal pickers, a rule filled in from
+    an event) answer while every save stays refused by ``EditorUser``."""
+
+    if user.demo is not None:
+        return user
+    return ACCESS.editor(user)
+
+
+EditorView = Annotated[User, Depends(editor_view)]
+
+__all__ = ["CurrentUser", "EditorUser", "EditorView", "RuntimeDep", "guarded"]
 
 
 def alarm_or_404(rt: Runtime, alarm_id: str, user: Any = None) -> dict[str, Any]:

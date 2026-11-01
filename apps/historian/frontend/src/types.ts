@@ -40,7 +40,18 @@ export type Source = {
   quality_reported?: boolean;
   // A derived source of an app merged into another: the app that took over its work.
   retired_into?: string | null;
-} & SourceSettings;
+} & SourceSettings & SourceIntegration;
+
+/** The integration around a source (H13): who answers for it (told with an email when it fails),
+ * how to reach the team that runs it, and how often a value must arrive (0: not watched). */
+export type SourceIntegration = {
+  owners: string[];
+  contact: string;
+  heartbeat_seconds: number;
+};
+
+/** A change of a source's state, as the collector saw it (``/api/sources/<id>/history``). */
+export type SourceEvent = { at_ms: number; status: string; detail: string };
 
 /** A source's overrides of the general settings for its points; null: the general value. */
 export type SourceSettings = {
@@ -123,6 +134,9 @@ export type Point = {
 
 export type Settings = {
   retention_days: number;
+  hourly_retention_days: number;
+  daily_retention_days: number;
+  monthly_retention_days: number;
   default_scan_seconds: number;
   default_deviation_percent: number;
   default_max_seconds: number;
@@ -205,3 +219,6 @@ export type ImportItem = {
 };
 
 export type ImportRepeat = { pattern: string; check_minutes: number; by: string; checked_ms: number | null; files: number; problem: string };
+
+/** The disk one retention takes (H9): raw values or a rollup level, now and at full retention. */
+export type RetentionLevel = { level: "raw" | "hour" | "day" | "month"; days: number; now: number; full: number; per_year: boolean };

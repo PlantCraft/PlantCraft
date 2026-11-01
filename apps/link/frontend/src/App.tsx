@@ -6,6 +6,7 @@ import { href, navigate, SIGNAL_RUN_PREFIX, usePath } from "./nav";
 import { NAV, tourExamples, tourSteps, type TourExamples } from "./pages";
 import type { Me } from "./types";
 import { ErrorBox, Loading } from "./ui";
+import { parseResult } from "./loopResult";
 
 // Each page loads when it is first opened: Plotly (1.4 MB), the code editor and the diagram
 // editor come only with the pages that draw them, not with every page of Link.
@@ -43,6 +44,8 @@ const LegacyResultsPage = lazy(() => import("./ResultsPage").then((m) => ({
     return <m.ResultsPage key={target} me={me} />;
   },
 })));
+const ApcListPage = lazy(() => import("./ApcPage").then((m) => ({ default: m.ApcListPage })));
+const ApcPage = lazy(() => import("./ApcPage").then((m) => ({ default: m.ApcPage })));
 const SignalPage = lazy(() => import("./SignalPage").then((m) => ({ default: m.SignalPage })));
 const SignalQualityPage = lazy(() => import("./SignalQualityPage").then((m) => ({ default: m.SignalQualityPage })));
 const SignalRunPage = lazy(() => import("./SignalQualityPage").then((m) => ({ default: m.SignalRunPage })));
@@ -52,11 +55,19 @@ function Route({ path, me }: { path: string; me: Me }) {
   const id = rest.length ? rest.map(decodeURIComponent).join("/") : "";
   if (section === "assets" && id) return <AssetLinkPage assetId={id} me={me} />;
   if (section === "help") return <HelpPage path={path} />;
+  if (section === "apc" && id) return <ApcPage key={id} controllerId={id} />;
+  if (section === "apc") return <ApcListPage />;
   if (section === "signals" && id) return <SignalPage signalId={id} me={me} />;
   if ((section === "signals" || section === "loops") && !id) return <LegacyResultsPage kind={section === "signals" ? "signal" : "loop"} me={me} />;
   if (section === "results" && id === "runs") return <RunHistoryPage me={me} />;
   if (section === "results") return <ResultsPage me={me} />;
   if (section === "loops" && id) return <LoopPage loopId={id} me={me} />;
+  if (section === "loop-results" && id) {
+    // #loop_result:<loop>@<window end> from an action (loopResult.ts): the loop's page.
+    const target = `/loops/${encodeURIComponent(parseResult(id).loopId)}`;
+    window.history.replaceState({}, "", href(target));
+    return <LoopPage loopId={parseResult(id).loopId} me={me} />;
+  }
   if (section === "protocols") {
     // The protocols of 0.2 became algorithms.
     const target = !id ? "/algorithms" : id === "signal-quality" ? "/algorithms/signal_quality/settings" : `/algorithms/${encodeURIComponent(id)}`;

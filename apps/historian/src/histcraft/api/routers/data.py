@@ -24,7 +24,9 @@ from plantcraft_sdk.contract import (
     MAX_BATCH_SIGNALS,
     ContractError,
     parse_time,
+    sampling_options,
     series_range,
+    total_per,
     unique_signals,
 )
 from plantcraft_sdk.wire import MEDIA_TYPE as WIRE_MEDIA_TYPE
@@ -36,6 +38,7 @@ from histcraft.api.runtime import Runtime, point_ref
 from histcraft.archive.edit_marks import edit_marks
 from histcraft.archive.query import Reader, SourceUnavailable, iso_ms, to_ms
 from histcraft.catalog.models import (
+    INTEGRATION_FIELDS,
     PLANT_KINDS,
     SOURCE_SETTINGS,
     SYSTEM_SOURCE,
@@ -148,6 +151,8 @@ def sources(runtime: RuntimeDep, _caller: PlantCraft) -> list[dict[str, Any]]:
             "options": item["options"],
             # Overrides of the general settings for the source's signals (null: general).
             **{key: item[key] for key in SOURCE_SETTINGS},
+            # The integration: who answers for it, the team's contact, the expected interval.
+            **{key: item[key] for key in INTEGRATION_FIELDS},
             "status": state.get(item["id"]),
             "signals": item["points"],
         }
@@ -234,6 +239,19 @@ def update_source(
         raise HTTPException(exc.status, str(exc)) from exc
     runtime.audit(caller, "source.update", source_id, {"endpoint": body.endpoint})
     return _source_answer(runtime, source_id)
+
+
+@router.get("/sources/{source_id}/history")
+def source_history(
+    source_id: str, runtime: RuntimeDep, _caller: PlantCraft, limit: int = 100
+) -> list[dict[str, Any]]:
+    """When the collector found the source connected and disconnected, the newest first."""
+
+    try:
+        runtime.catalog.source(source_id)
+    except CatalogError as exc:
+        raise HTTPException(exc.status, str(exc)) from exc
+    return runtime.catalog.source_events(source_id, limit)
 
 
 @router.delete("/sources/{source_id}", status_code=204)
@@ -416,19 +434,32 @@ def series(
     step: float | None = None,
     run: str | None = None,
     runs: int | None = None,
+    sampling: str | None = None,
+    max_gap: float | None = None,
 ) -> dict[str, Any]:
     point = _point(runtime, signal_id)
     if point["kind"] == RUNS:
         return {"signal": signal_id, "kind": RUNS, "runs": run_reads(runtime, point, run, runs)}
     begin, finish, step = _range(start, end, step)
+    sampling, max_gap = _sampling(sampling, step, max_gap)
     with runtime.read_budget.hold() as ticket:
         try:
             ref = point_ref(point)
             samples = None
-            if step is None or not Reader.rollups_help(ref, to_ms(begin), step):
+            if (
+                step is None
+                or sampling == "interpolated"
+                or not Reader.rollups_help(ref, to_ms(begin), step)
+            ):
                 samples = runtime.reader.samples(ref, to_ms(begin), to_ms(finish))
             ticket.take(_values_of(samples, begin, finish, step))
-            stamps, values = runtime.reader.series(ref, begin, finish, step, samples)
+            if sampling == "interpolated":
+                grid, numbers = runtime.reader.interpolated(
+                    ref, begin, finish, step, max_gap, samples
+                )
+                stamps, values = iso_ms(grid), _json_floats(numbers)
+            else:
+                stamps, values = runtime.reader.series(ref, begin, finish, step, samples)
         except ContractError as exc:
             raise HTTPException(422, str(exc)) from exc
         except SourceUnavailable as exc:
@@ -438,6 +469,65 @@ def series(
             json_bytes({"signal": signal_id, "kind": point["kind"], "t": stamps, "v": values}),
             media_type="application/json",
         )
+
+
+def _sampling(sampling: str | None, step: float | None, max_gap: float | None):
+    try:
+        return sampling_options(sampling, step, max_gap)
+    except ContractError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+def _json_floats(values: np.ndarray) -> list[float | None]:
+    return [float(value) if np.isfinite(value) else None for value in values]
+
+
+@router.get("/signals/{signal_id:path}/summary")
+@time_limited
+def summary(
+    signal_id: str,
+    runtime: RuntimeDep,
+    _caller: PlantCraft,
+    start: str | None = None,
+    end: str | None = None,
+    per: str | None = None,
+) -> dict[str, Any]:
+    """What ``[start, end]`` holds (H5): ``count``, ``covered_pct``, ``good_pct``, ``total``
+    (the time integral per ``per``: ``s``, ``min``, ``h`` or ``d``, default ``h``) and the
+    time-weighted ``mean``, ``min``, ``max`` and ``std``, as PI's and Seeq's summaries."""
+
+    point = _point(runtime, signal_id)
+    if point["kind"] == RUNS:
+        raise HTTPException(422, t("A runs point has no summary: read its runs."))
+    begin, finish, _ = _range(start, end, None)
+    try:
+        unit, seconds = total_per(per)
+    except ContractError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    with runtime.read_budget.hold() as ticket:
+        try:
+            ref = point_ref(point)
+            samples = runtime.reader.samples(ref, to_ms(begin), to_ms(finish))
+            ticket.take(len(samples[0]))
+            qualities = (
+                None
+                if point["mode"] == "source"
+                else runtime.archive.qualities(int(point["id"]), to_ms(begin), to_ms(finish))
+            )
+            found = runtime.reader.summary(ref, begin, finish, seconds, qualities, samples)
+        except ContractError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        except SourceUnavailable as exc:
+            raise HTTPException(502, str(exc)) from exc
+    return {
+        "signal": signal_id,
+        "kind": point["kind"],
+        "unit": point["unit"],
+        "start": iso_ms(np.array([to_ms(begin)]))[0],
+        "end": iso_ms(np.array([to_ms(finish)]))[0],
+        "per": unit,
+        **found,
+    }
 
 
 def _values_of(samples: Any, begin: datetime, finish: datetime, step: float | None) -> int:
@@ -544,6 +634,10 @@ class BatchIn(BaseModel):
     # With ``step``: each number series also holds every cell's lowest and highest value
     # (``low``, ``high``, beside the means), from the hourly rollups where whole hours allow.
     extremes: bool = False
+    # With ``step``: ``interpolated`` gives the value at each grid time instead of each step's
+    # mean, and ``max_gap`` (seconds) is the longest span it interpolates across (H5).
+    sampling: str | None = None
+    max_gap: float | None = None
 
 
 @router.post("/series")
@@ -575,6 +669,8 @@ def read_batch(
     if any(not isinstance(item, str) or not 1 <= len(item) <= 340 for item in body.signals):
         raise HTTPException(422, t("Signal ids are text of 1 to 340 characters."))
     begin, finish, step = _range(body.start, body.end, body.step)
+    sampling, max_gap = _sampling(body.sampling, step, body.max_gap)
+    interpolated = sampling == "interpolated"
     wanted = unique_signals(body.signals)
     points = runtime.catalog.find_many(wanted)
     begin_ms, finish_ms = to_ms(begin), to_ms(finish)
@@ -585,7 +681,9 @@ def read_batch(
     # signal is left to ``Reader.series``, which reads the hourly rollups.
     refs = [point_ref(p) for p in points.values() if p is not None and p["mode"] != "source"]
     stored = [
-        ref for ref in refs if ref.mode == "both" or not Reader.rollups_help(ref, begin_ms, step)
+        ref
+        for ref in refs
+        if interpolated or ref.mode == "both" or not Reader.rollups_help(ref, begin_ms, step)
     ]
     archived = runtime.reader.archived_many(stored, begin_ms, finish_ms) if stored else {}
     # Signals archived and read from their source before the archive began (``both``): the
@@ -662,7 +760,15 @@ def read_batch(
                 # A source that cannot answer leaves the archive alone, as for one signal.
                 if found is not None and not isinstance(found, str):
                     samples = Reader.with_older(ref, samples, runtime.reader.normalize(ref, *found))
-            stamps, values = read(ref, begin, finish, step, samples)
+            if interpolated:
+                grid, numbers = runtime.reader.interpolated(
+                    ref, begin, finish, step, max_gap, samples
+                )
+                stamps, values = (
+                    (grid, numbers) if binary else (iso_ms(grid), _json_floats(numbers))
+                )
+            else:
+                stamps, values = read(ref, begin, finish, step, samples)
         except ContractError as exc:
             builder.fail(signal_id, 422, str(exc))
             continue
@@ -682,7 +788,7 @@ def read_batch(
             marks = edit_marks(edited.get(int(point["id"]), []))
             if marks:
                 extra["edits"] = marks
-        if body.extremes and step:
+        if body.extremes and step and not interpolated:
             bounds = runtime.reader.extremes(ref, begin, finish, step)
             if bounds is not None and len(bounds[0]) == len(stamps):
                 extra = {**(extra or {}), "low": bounds[0], "high": bounds[1]}

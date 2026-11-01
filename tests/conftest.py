@@ -29,12 +29,20 @@ import asyncio.base_events  # noqa: E402
 import ipaddress  # noqa: E402
 import socket  # noqa: E402
 
+# The suite journeys (tests/e2e_suite) walk the installation PLANTCRAFT_SUITE_URL names, which
+# is the one machine they are asked to reach.
+from urllib.parse import urlsplit as _urlsplit  # noqa: E402
+
+_SUITE_HOST = _urlsplit(os.environ.get("PLANTCRAFT_SUITE_URL", "")).hostname
+
 
 def _outside(host) -> bool:
     if host is None:
         return False
     name = host.decode() if isinstance(host, bytes) else str(host)
     if name in ("", "localhost") or name.endswith(".localhost"):
+        return False
+    if _SUITE_HOST and name.strip("[]").lower() == _SUITE_HOST.lower():
         return False
     try:
         return not ipaddress.ip_address(name.strip("[]")).is_loopback

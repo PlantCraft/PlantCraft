@@ -7,7 +7,7 @@ import { api } from "./api";
 import { formatAgo, formatDate, formatNumber, t } from "./i18n";
 import { Plot } from "@plantcraft/ui/plot";
 import { checkResultLabel, RESULT_ORDER, signalLabel, signalStatus } from "./signalStatus";
-import type { CheckResult, CheckSpec, HistoryPoint, Me, QualityEvent, SignalData, SignalDetail } from "./types";
+import type { CheckResult, CheckSpec, HistoryPoint, Me, QualityEvent, SignalData, SignalDetail, SignalLab } from "./types";
 import { SUITE_OF } from "./ResultsPage";
 import { checkName, ErrorBox, Heading, Link, Loading, Pill, Quality, ResultHeadline, useCatalog } from "./ui";
 import { href, navigate } from "./nav";
@@ -211,7 +211,7 @@ function Settings({ detail, me, catalog, onChanged }: { detail: SignalDetail; me
       {detail.sampled && <label>{t("Sampling interval")}<small>{t("Minutes between samples; empty, read from the samples themselves.")}</small>
         <input inputMode="decimal" value={form.interval} disabled={!editable} placeholder={t("from the samples")} onChange={(event) => setForm({ ...form, interval: event.target.value })} />
       </label>}
-      <label>{t("Reference signal")}<small>{t("A redundant measurement of the same quantity; the drift check compares with it.")}</small>
+      <label>{t("Reference signal")}<small>{t("A redundant measurement of the same quantity, or its lab analysis (laboratory:<analysis>): the drift check compares with it, and the page shows the signal against it.")}</small>
         <span className="input-row"><input className="pc-mono" value={form.reference} disabled={!editable} placeholder={t("Signal id")} onChange={(event) => setForm({ ...form, reference: event.target.value })} />
           {editable && own.reference && <button type="button" className="icon-button" title={t("Clear")} aria-label={t("Clear {field}", { field: "reference" })} onClick={() => void change({ clear: ["reference"] })}><X size={15} /></button>}</span>
       </label>
@@ -227,6 +227,55 @@ function Settings({ detail, me, catalog, onChanged }: { detail: SignalDetail; me
     })}</ul>
     {saved && <div className="notice notice-ok">{saved}</div>}
     {error && <div className="notice notice-error" role="alert">{error}</div>}
+  </section>;
+}
+
+/** How a virtual sensor's health 0 to 100 reads (sensor_health in the SDK). */
+const healthStatus = (value: number) => (value >= 75 ? "good" : value >= 50 ? "suspect" : "bad");
+
+/** The signal against the lab results of its reference: health, bias over time, actual × predicted. */
+function AgainstLab({ detail }: { detail: SignalDetail }) {
+  const [lab, setLab] = useState<SignalLab | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    setLab(null); setError("");
+    api.signalLab(detail.id).then(setLab).catch((err: Error) => setError(err.message));
+  }, [detail.id, detail.settings?.reference]);
+  const theme = plotTheme();
+  const c = BRAND_COLORS[currentTheme()];
+  const unit = detail.unit ? ` ${detail.unit}` : "";
+  const body = () => {
+    if (error) return <ErrorBox text={error} />;
+    if (!lab) return <Loading text={t("Loading the lab results…")} />;
+    if (!lab.samples.length) return <p className="muted">{t("No result of {id} in the last 7 days.", { id: lab.reference })}</p>;
+    const counted = lab.samples.filter((item) => item.status !== "rejected");
+    const values = counted.flatMap((item) => [item.lab, item.online, item.corrected]).filter((v): v is number => v !== null);
+    const low = Math.min(...values); const high = Math.max(...values);
+    const scatter: Data[] = [
+      { type: "scatter", mode: "lines", x: [low, high], y: [low, high], name: t("Agreement"), hoverinfo: "skip", line: { color: c.text3, width: 1, dash: "dash" } },
+      { type: "scatter", mode: "markers", name: detail.id, x: counted.map((item) => item.lab), y: counted.map((item) => item.online), marker: { color: c.text2, size: 6 }, hovertemplate: `${t("Lab")} %{x}${unit}<br>${t("Signal")} %{y}${unit}<extra></extra>` },
+      { type: "scatter", mode: "markers", name: t("Corrected"), x: counted.map((item) => item.lab), y: counted.map((item) => item.corrected), marker: { color: c.series[0], size: 6 }, hovertemplate: `${t("Lab")} %{x}${unit}<br>${t("Corrected")} %{y}${unit}<extra></extra>` },
+    ];
+    const bias: Data[] = [{ type: "scatter", mode: "lines", name: t("Bias"), x: lab.bias_series.t.map(plotTime), y: lab.bias_series.v, line: { color: c.series[0], width: 1.4, shape: "hv" }, hovertemplate: `%{y}${unit}<extra></extra>` }];
+    const small: Partial<Layout> = { ...theme, height: 280, margin: { l: 52, r: 12, t: 10, b: 40 }, showlegend: false };
+    const pending = lab.samples.filter((item) => item.status === "entered").length;
+    const rejected = lab.samples.length - counted.length;
+    return <>
+      <div className="pc-grid">
+        <div className="panel kpi-card"><span className="pc-overline">{t("Health against the lab")}</span>{lab.health === null ? <b>—</b> : <Quality value={lab.health} status={healthStatus(lab.health)} />}<small>{t("0 to 100 from the error at the {count} sampling times; 100 within a quarter of the lab's spread.", { count: counted.length })}</small></div>
+        <div className="panel kpi-card"><span className="pc-overline">{t("Corrected by the lab")}</span>{lab.health_corrected === null ? <b>—</b> : <Quality value={lab.health_corrected} status={healthStatus(lab.health_corrected)} />}<small>{t("The signal minus its bias, as known at each sampling time.")}</small></div>
+        <div className="panel kpi-card"><span className="pc-overline">{t("Bias now")}</span><b className="pc-num">{lab.bias === null ? "—" : `${formatNumber(lab.bias, 4)}${unit}`}</b><small>{t("{used} results corrected it{pending}{rejected}.", { used: lab.used, pending: pending ? t(", {n} waiting for approval", { n: pending }) : "", rejected: rejected ? t(", {n} rejected", { n: rejected }) : "" })}</small></div>
+      </div>
+      <div className="pc-grid pc-grid-2">
+        <div><h3>{t("Actual × predicted")}</h3><Plot data={scatter} layout={{ ...small, xaxis: { ...theme.xaxis, title: { text: `${t("Lab")}${unit}`, font: { size: 10.5 } } }, yaxis: { ...theme.yaxis, title: { text: `${t("Signal")}${unit}`, font: { size: 10.5 } } } }} config={{ displaylogo: false, responsive: true }} useResizeHandler style={{ width: "100%" }} /></div>
+        <div><h3>{t("Bias over time")}</h3><Plot data={bias} layout={{ ...small, xaxis: { ...theme.xaxis, type: "date" }, yaxis: { ...theme.yaxis, title: { text: detail.unit, font: { size: 10.5 } } } }} config={{ displaylogo: false, responsive: true }} useResizeHandler style={{ width: "100%" }} /></div>
+      </div>
+      {!lab.timed && <p className="muted chart-note">{t("{id} has no laboratory times: each of its values counts from the moment it was taken.", { id: lab.reference })}</p>}
+    </>;
+  };
+  return <section className="panel">
+    <div className="panel-header"><div><h2>{t("Against the lab")}</h2><p>{t("This signal against {id} over the last 7 days. Each result counts at its sampling time, from its approval; a rejected one is left out.", { id: detail.settings?.reference ?? "" })}</p></div></div>
+    {body()}
   </section>;
 }
 
@@ -286,6 +335,7 @@ export function SignalPage({ signalId, me }: { signalId: string; me: Me }) {
         <ChartLegend results={verdict?.checks ?? []} colors={colors} />
       </>}
     </section>
+    {detail.settings?.reference && detail.kind !== "text" && <AgainstLab detail={detail} />}
     <div className="section-head"><h2 className="section-title">{t("Algorithm and outputs")}</h2><Link to="/algorithms/signal_quality" className="text-link">{t("Open the algorithm")}</Link></div>
     <p className="muted section-lead">{t("The checks of the Signal quality algorithm on this window, each with what it found. The worst decides the result.")}</p>
     {verdict?.checks.length ? <Checks results={verdict.checks} colors={colors} /> : <p className="muted">{t("No results yet.")}</p>}

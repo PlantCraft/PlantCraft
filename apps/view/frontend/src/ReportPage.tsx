@@ -1,9 +1,10 @@
 /** One report: the document as it reads now (its sections over its period), the PDFs it made
  * and sent, Download PDF and Send now, and the editor of its sections and settings. */
 import { Dialog, confirmAction, ApiError, MultiSelect, PageTabs, Pill, RecipientPicker, DataTable, errorMessage as message, renderMarkdown, useAssistantPage, type DataColumn, timeZoneLabel } from "@plantcraft/ui";
-import { AlertTriangle, ArrowDown, ArrowUp, CalendarClock, Check, Columns2, Download, FileText, Globe2, LayoutList, ListOrdered, ListTree, LoaderCircle, Pencil, Plus, RefreshCw, Rows3, Save, Send, Settings2, Sparkles, SquareSplitVertical, Trash2, Type, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, CalendarClock, Check, Columns2, Download, FileText, Globe2, LayoutList, ListOrdered, ListTree, LoaderCircle, Pencil, Plus, RefreshCw, Rows3, Save, Send, Settings2, Siren, Sparkles, SquareSplitVertical, Trash2, Type, X } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from "react";
 import { api, pdfUrl, type CardSource } from "./api";
+import { AlarmsDialog, AlarmsView } from "./AlarmsSection";
 import { AssistantDialog, AssistantView } from "./AssistantSection";
 import { CardEditor } from "./CardEditor";
 import { CardView } from "./CardView";
@@ -13,7 +14,7 @@ import { FolderSelect } from "./FolderDialogs";
 import { formatDate, t } from "./i18n";
 import { accessLabel, cardPixels, stateStatus, when, windowLabel } from "./model";
 import { cadenceLabel, CLOSED_LABELS, deliveredLabel, insertSection, MAX_SECTIONS, MAX_TEXT, moveSection, outlineOf, newSection, PERIOD_FOR, PERIODS, pdfSize, periodLabel, periodRange, replaceSection, reportDraftOf, runState, runStatusLabel, sectionName, SECTION_LABELS, TRIGGER_LABELS, WEEKDAY_NAMES, WEEKDAYS } from "./reportModel";
-import type { Card, CardData, Directory, EventKind, EventsData, Folder, Me, Report, ReportDraft, ReportRun, Section, SectionData, SectionKind } from "./types";
+import type { Card, CardData, Directory, EventKind, EventsData, EventTrigger, Folder, Me, Report, ReportDraft, ReportRun, Section, SectionData, SectionKind } from "./types";
 import type { OutlineEntry } from "./reportModel";
 import { ErrorBox, Link, Loading } from "./ui";
 
@@ -102,6 +103,7 @@ function SectionBody({ section, read, source, tick, editing, reportId = "", canE
   if (section.kind === "text") return <div className="tc-report-text"><div className="pc-markdown">{renderMarkdown(section.text)}</div></div>;
   if (section.kind === "break") return editing ? <div className="tc-report-break"><SquareSplitVertical size={14} aria-hidden /> {t("The PDF starts a new page here")}</div> : null;
   if (section.kind === "events") return <EventsView section={section} read={read} tick={tick} />;
+  if (section.kind === "alarms") return <AlarmsView section={section} read={read} tick={tick} />;
   if (section.kind === "assistant") return <AssistantView section={section} read={read} tick={tick} reportId={reportId} canEdit={canEdit} editing={editing} />;
   if (!section.card) return null;
   return <div className="tc-report-card" style={{ height: `${reportCardPixels(section.card)}px` } as CSSProperties}>
@@ -199,6 +201,14 @@ function ReportSettingsDialog({ draft, folders, zone, onApply, onClose }: { draf
   useEffect(() => { api.directory().then(setDirectory).catch(() => setDirectory({ people: [], groups: [] })); }, []);
   const schedule = value.schedule;
   const closed = schedule.every !== "off" && Boolean(schedule.closed);
+  const [eventKinds, setEventKinds] = useState<EventKind[]>([]);
+  useEffect(() => { api.eventKinds().then(setEventKinds).catch(() => setEventKinds([])); }, []);
+  const trigger = schedule.on_event ?? null;
+  const setTrigger = (next: EventTrigger | null) => setValue({ ...value, schedule: { ...schedule, on_event: next } });
+  const kindOptions = (selected: string) => <>
+    {selected && !eventKinds.some((kind) => kind.kind === selected) && <option value={selected}>{selected}</option>}
+    {eventKinds.map((kind) => <option key={kind.kind} value={kind.kind}>{kind.title} · {kind.app}</option>)}
+  </>;
   const setEvery = (every: ReportDraft["schedule"]["every"]) => setValue({ ...value, schedule: { ...schedule, every }, period: every === schedule.every ? value.period : PERIOD_FOR[every] });
   function submit(event: FormEvent) { event.preventDefault(); onApply({ ...value, name: value.name.trim() }); }
   return <Dialog title={t("Report settings")} onClose={onClose} onSubmit={submit}>
@@ -220,7 +230,13 @@ function ReportSettingsDialog({ draft, folders, zone, onApply, onClose }: { draf
               {PERIODS.map((period) => <option key={period} value={period}>{periodLabel(period)}</option>)}
             </select></label>}
           {schedule.every !== "off" && <label className="check tc-wide"><input type="checkbox" checked={closed} onChange={() => setValue({ ...value, schedule: { ...schedule, closed: !closed } })} /> {t("Whole calendar periods (last week, last month), not the time up to the send")}</label>}
-          <small className="muted tc-wide">{schedule.every === "off" ? t("Made only with Download PDF or Send now.") : closed ? t("{cadence}, in the installation's time zone ({zone}), over {period}.", { cadence: cadenceLabel(schedule), zone, period: t(CLOSED_LABELS[schedule.every]).toLowerCase() }) : t("{cadence}, in the installation's time zone ({zone}), over {period} up to then.", { cadence: cadenceLabel(schedule), zone, period: periodLabel(value.period).toLowerCase() })}</small>
+          <label className="check tc-wide"><input type="checkbox" checked={Boolean(trigger)} onChange={() => setTrigger(trigger ? null : { end_kind: eventKinds[0]?.kind ?? "", start_kind: "", subject: "" })} /> {t("Also when an event ends a batch or a start-up, over that batch")}</label>
+          {trigger && <>
+            <label>{t("Made when")}<select required value={trigger.end_kind} onChange={(event) => setTrigger({ ...trigger, end_kind: event.target.value })}><option value="">{t("Choose the event that ends it")}</option>{kindOptions(trigger.end_kind)}</select></label>
+            <label>{t("From")}<select value={trigger.start_kind ?? ""} onChange={(event) => setTrigger({ ...trigger, start_kind: event.target.value })}><option value="">{t("The start in the event, else the period above")}</option>{kindOptions(trigger.start_kind ?? "")}</select></label>
+            <label className="tc-wide">{t("Only about")}<input maxLength={300} placeholder={t("Any asset (or asset:<id>)")} value={trigger.subject ?? ""} onChange={(event) => setTrigger({ ...trigger, subject: event.target.value })} /></label>
+          </>}
+          <small className="muted tc-wide">{schedule.every === "off" ? (trigger ? t("Made each time the event happens, over the batch it ends.") : t("Made only with Download PDF or Send now.")) : closed ? t("{cadence}, in the installation's time zone ({zone}), over {period}.", { cadence: cadenceLabel(schedule), zone, period: t(CLOSED_LABELS[schedule.every]).toLowerCase() }) : t("{cadence}, in the installation's time zone ({zone}), over {period} up to then.", { cadence: cadenceLabel(schedule), zone, period: periodLabel(value.period).toLowerCase() })}</small>
         </fieldset>
         <div className="tc-wide tc-field"><span>{t("Sent to")}</span>
           <RecipientPicker label={t("Sent to")} value={value.recipients} onChange={(recipients) => setValue({ ...value, recipients })} people={directory?.people ?? []} groups={directory?.groups ?? []} placeholder={t("A person or a group of the platform…")} />
@@ -251,6 +267,7 @@ const ADD: Array<{ kind: SectionKind; icon: typeof Type; hint: string }> = [
   { kind: "text", icon: Type, hint: "Markdown: headings, notes, lists, tables" },
   { kind: "card", icon: LayoutList, hint: "A chart, KPIs or a table" },
   { kind: "events", icon: ListOrdered, hint: "Alarms, runs, other events" },
+  { kind: "alarms", icon: Siren, hint: "ISA-18.2 load, floods and response from Alarms" },
   { kind: "assistant", icon: Sparkles, hint: "Written by the assistant from the picked assets" },
   { kind: "break", icon: SquareSplitVertical, hint: "A new page in the PDF" },
 ];
@@ -500,6 +517,7 @@ export function ReportPage({ reportId, me }: { reportId: string; me: Me }) {
     {exporting && <ExportDialog reportId={reportId} busy={Boolean(busy)} onClose={() => setExporting(false)} onPdf={() => { setExporting(false); void makePdf(); }} />}
     {sharing && <ShareDialog target="report" dashboardId={reportId} name={saved.name} isAdmin={me.is_admin} onClose={() => setSharing(false)} />}
     {editing?.kind === "assistant" && <AssistantDialog section={editing} onClose={() => { setEditing(null); setInsertAt(null); }} onSave={applySection} />}
+    {editing?.kind === "alarms" && <AlarmsDialog section={editing} onClose={() => { setEditing(null); setInsertAt(null); }} onSave={applySection} />}
     {editing?.kind === "events" && <EventsDialog section={editing} onClose={() => { setEditing(null); setInsertAt(null); }} onSave={applySection} />}
     {editing?.kind === "card" && editing.card && draft && <CardEditor initial={editing.card} isNew={!draft.sections.some((item) => item.section_id === editing.section_id)} period={draft.period}
       onClose={() => { setEditing(null); setInsertAt(null); }} onSave={(card) => applySection({ ...editing, card })} />}

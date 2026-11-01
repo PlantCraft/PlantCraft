@@ -6,7 +6,7 @@
  */
 import { AlertTriangle, CheckCircle2, ChevronRight, Copy, Download, FilePlus2, FlaskConical, Library, Package, Play, RotateCw, Save, ShieldCheck, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError, CopyPrompt, confirmAction } from "@plantcraft/ui";
+import { ApiError, CopyPrompt, askText, confirmAction } from "@plantcraft/ui";
 import { api } from "./api";
 import { DiagramView, rotated, type DiagramChange, type Selection } from "./Diagram";
 import { Editor } from "./Editor";
@@ -344,7 +344,7 @@ export function Workbench({ projectId, me }: { projectId: string; me: Me }) {
 
   const duplicate = async () => {
     if (!project) return;
-    const name = window.prompt(t("Name of the copy"), t("{name} (copy)", { name: project.name }));
+    const name = await askText(t("Name of the copy"), { value: t("{name} (copy)", { name: project.name }), confirm: t("Copy") });
     if (!name) return;
     try { const copy = await api.duplicateProject(project.id, name); navigate(codePath(copy.id)); } catch (err) { setNotice({ kind: "error", text: message(err) }); }
   };

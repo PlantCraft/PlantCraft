@@ -21,6 +21,27 @@ def _send(client: Any, name: str, summary: str, payload: dict[str, Any]) -> None
     client.post_events([event])
 
 
+def tracking_mismatch(client: Any, changes: list[dict[str, Any]]) -> None:
+    """A tracking's variables off the plant past their limit (``start``) or back (``end``):
+    one ``tracking.mismatch`` condition each, key ``tracking:<id>:<variable>``."""
+
+    catalog = EventCatalog.from_manifest(manifest())
+    client.post_events(
+        [
+            catalog.event(
+                "tracking.mismatch",
+                SUBJECT,
+                summary=item["summary"][:300],
+                payload=item["payload"],
+                key=item["key"],
+                phase=item["phase"],
+                severity="warning" if item["phase"] == "start" else "ok",
+            )
+            for item in changes
+        ]
+    )
+
+
 def run_failed(client: Any, run: dict[str, Any], name: str, root_path: str) -> None:
     _send(
         client,

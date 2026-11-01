@@ -52,7 +52,14 @@ below still answers the `/api/v1/assistant` routes of apps on `@plantcraft/ui` 0
   person's page (`/people/<username>`). Creating an action or changing its
   status publishes an event (`action.created`, `action.status_changed`) with its references, so
   it shows in the asset's timeline. Apps open the form with a link:
-  `/actions?new=1&ref=asset:FIC-101&title=...`.
+  `/actions?new=1&ref=asset:FIC-101&title=...`, with `text=` for the description and
+  `attach=<key>` for an image the app left in the tab's sessionStorage under
+  `plantcraft.action-attachment.<key>` as `{"name", "data"}` (a PNG, JPEG or WebP data URL; read
+  once, `frontend/src/actionPrefill.ts`). Analytics opens it from a loop result that way, with the
+  loop's chart. The form attaches the image to the new action: `POST /api/actions/{id}/files`
+  (`{name, data}` in base64; the first bytes must be PNG, JPEG or WebP, up to 2 MB and 10 per
+  action) and `GET /api/actions/{id}/files/{file_id}` (only who sees the action; served with
+  `nosniff` and `default-src 'none'`). The action's page shows its images.
 
 ## Interface API (session cookie)
 

@@ -7,6 +7,12 @@ axis. Save a trend to open it again, or download what it shows as CSV.
 - **Interval**: how long each drawn value covers. "Automatic" picks it from the period (about
   600 values per line); "As recorded" draws every sample.
 - Add signals to a plot with the search under it; up to 8 lines per plot and 6 plots.
+- **Compare with**: draws up to three earlier periods over the trend's own, each line dotted
+  and lighter in its line's colour and named after its period: the **previous period** (just
+  before, as long as the trend's), **1 day earlier** (yesterday over today), **1 week earlier**
+  or **4 weeks earlier**. Each earlier period is read at the trend's interval and moved onto its
+  time axis, so the hover shows today's clock; the line's name says which period it is. States
+  (text signals) are not compared. Saved with the trend.
 
 ## Each line
 

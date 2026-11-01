@@ -311,7 +311,7 @@ fi
 
 # --- Secrets ---------------------------------------------------------------------------------
 loose="" n=0
-for f in data/initial-admin-password data/histcraft-db-password data/*-app-key data/compute-local-key data/processcraft/tokens.key data/processcraft/session.secret data/histcraft/secret.key; do
+for f in data/initial-admin-password data/histcraft-db-password data/public-demo-password data/*-app-key data/compute-local-key data/processcraft/tokens.key data/processcraft/session.secret data/histcraft/secret.key; do
     for path in "$HERE"/$f; do
         [ -e "$path" ] || continue
         n=$((n + 1))

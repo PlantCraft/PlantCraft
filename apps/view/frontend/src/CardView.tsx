@@ -11,6 +11,7 @@ import { AGG_LABELS, cardCsv, cardPixels, cardCsvName, cardTitle, formatValue, i
 import { cursorShape, useSharedCursor } from "./cursor";
 import { DiagramCardBody } from "./diagrams/DiagramCard";
 import { AnalogBar, limitsFromSteps, normalRange } from "./analog";
+import { ApcPanel } from "./apc";
 import { Plot } from "@plantcraft/ui/plot";
 import type { Card, CardData, CardOptions, FieldConfig, Line, State, ValueRow } from "./types";
 
@@ -497,6 +498,7 @@ export function CardBody({ card, data, height, texts = {} }: { card: Card; data:
   if (!height && below) height = Math.max(80, plotHeight(card.height) - below);
   if (card.kind === "text") return <div className="tc-text markdown">{renderMarkdown(interpolate(card.text ?? "", texts))}</div>;
   if (card.kind === "diagram") return <DiagramCardBody data={data} />;
+  if (card.kind === "apc") return <ApcPanel data={data.apc} />;
   return <>
     {card.kind === "stat" && <Stats card={card} rows={rows} lines={data.lines} />}
     {card.kind === "gauge" && <Gauges card={card} rows={rows} />}

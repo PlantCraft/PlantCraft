@@ -17,6 +17,47 @@ joins it into the bundle's release notes.
   `Quality` property (192 good, 64 to 191 uncertain) is kept, and the source's state counts the
   nodes, devices, sequence gaps and values whose alias no birth named yet (a node born before
   Historian connected is learnt at its next birth). Browse lists what the births described.
+- **Interpolated reads and a window's summary (gap H5).**
+  - `GET /api/v1/data/signals/{id}/series` and `POST /series` (and the same reads straight to
+    the Historian) take `sampling=interpolated` with a `step`. They answer the value at each
+    grid time from `start` to `end`, on the line between the samples around it, or steps for a
+    step signal.
+  - `max_gap` (seconds) is the maximum interpolation interval: a grid time inside a longer gap
+    between two samples, or past the last sample, is null.
+  - `GET .../signals/{id}/summary?start&end&per` gives:
+    - `count`, the values recorded in the window;
+    - `covered_pct`, the time with a value;
+    - `good_pct`, the time with good quality, from the archive's quality changes;
+    - `total`, the time integral per `s`, `min`, `h` or `d`;
+    - the time-weighted `mean`, `min`, `max` and `std`.
+- **Daily and monthly rollups, each with its own retention** (gap H9). Housekeeping sums each
+  closed UTC day's hourly rollups into a daily row and each closed month's days into a monthly
+  one (`rollups_coarse`). A trend on a grid of whole days reads them (a year: 365 rows instead of
+  8,760), and so does a window's mean, min and max. Raw values, hourly, daily and monthly
+  rollups are kept for separate retentions (Settings, Retention and collection: hourly 5 years,
+  daily and monthly forever by default; a level never goes before the raw values or a finer
+  level). The rollups now outlive the raw values, so a signal kept 90 days still trends over
+  years. The same page shows the disk each retention takes now and at full retention
+  (`GET /api/retention`). A write into the past drops the days and months from there and
+  housekeeping sums them again.
+
+- **Store and forward at the gateway** (gap H3, G7): MQTT, Modbus and SQL values read while the
+  collector is away wait in Telegraf's disk buffer (`data/histcraft/gateway-buffer`) and arrive in
+  order when it is back, also after a gateway restart (before, a restart lost them). A batch sent
+  twice is taken once: the first value at a time wins. New condition `histcraft.gateway.backlog`
+  past 64 MB waiting. `HISTCRAFT_GATEWAY_BUFFER=memory` keeps the old memory buffer for gateways
+  reading more than about 2,000 values a second.
+
+- **Sources as integrations** (gap H13): each source has **owners** (`user:`/`group:` of
+  PlantCraft), a **contact** for the team that runs it and an **expected interval** (at least a
+  minute; empty: not watched), in the source's form, its page and `GET/POST/PUT /api/sources`
+  (a client that leaves them out keeps them). A new condition `histcraft.source.late` opens when
+  the newest value of all of a source's archived signals is older than its interval (its
+  signals' *no data* conditions are then this one). `source.disconnected` and `source.late`
+  carry the owners and contact: PlantCraft tells the owners by message and email and settles it
+  when the condition ends. The collector writes each change of a source's state to its
+  **history** (`GET /api/sources/{id}/history`, kept 90 days).
+
 - **Audited edits of archived values.** An editor inserts, changes or deletes values of a signal
   with a reason (the signal's page, *Edited values*, or `POST /api/v1/edits`; all or nothing).
   Reads with `quality` give each edited time's mark in `edits` (`inserted`, `edited`,

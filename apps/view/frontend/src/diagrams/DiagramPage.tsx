@@ -3,7 +3,7 @@
  * change it. `/diagrams/new` opens the editor on an empty canvas. The same viewer serves a public
  * link (`PublicDiagramPage`, `share/diagram/<token>`), read-only and without sign-in. */
 import { PageTabs, displayTimeZone, errorMessage as message, isoOf, localOf, useAssistantPage } from "@plantcraft/ui";
-import { Clock, Globe2, Maximize2, Minimize2, Pause, Pencil, Play, Radio, Scan, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowLeft, Clock, Globe2, Maximize2, Minimize2, Pause, Pencil, Play, Radio, Scan, ZoomIn, ZoomOut } from "lucide-react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { t } from "../i18n";
 import { ShareDialog } from "../Dialogs";
@@ -150,15 +150,32 @@ function Legend({ diagram }: { diagram: DiagramDraft }) {
  * signals over the display (a value, or a "trend" link), or the panel of the asset it draws
  * (never away from the display only to come back). */
 export type Opened = { kind: "go"; to: string } | { kind: "trend"; signals: string[] } | { kind: "asset"; id: string };
-export function openOf(element: Element, data: DiagramData | null): Opened | null {
+export function openOf(element: Element, data: DiagramData | null, from?: { id: string; page?: string }): Opened | null {
   const link = element.link;
-  if (link?.kind === "diagram" && link.target) return { kind: "go", to: `/diagrams/${encodeURIComponent(link.target)}` };
+  if (link?.kind === "diagram" && link.target) return { kind: "go", to: `/diagrams/${encodeURIComponent(link.target)}${backQuery(from)}` };
   if (link?.kind === "dashboard" && link.target) return { kind: "go", to: `/d/${encodeURIComponent(link.target)}` };
   if (link?.kind === "asset" && link.target) return { kind: "asset", id: link.target };
   const signals = [...new Set((data?.bindings ?? []).filter((row) => row.element === element.id && row.signal).map((row) => row.signal as string))];
   if (link?.kind === "trend" || (!link && element.type === "value")) return signals.length ? { kind: "trend", signals } : null;
   if (element.type === "symbol" && element.asset_id) return { kind: "asset", id: element.asset_id };
   return null;
+}
+
+/** The address part that lets the display opened by a link lead back here (`?from=`, and the page). */
+export function backQuery(from?: { id: string; page?: string }): string {
+  if (!from?.id) return "";
+  const params = new URLSearchParams({ from: from.id });
+  if (from.page) params.set("from_page", from.page);
+  return `?${params.toString()}`;
+}
+
+/** Where "Back" leads: the display (and its page) whose link opened this one. */
+export function backOf(search: string): { to: string; id: string } | null {
+  const params = new URLSearchParams(search);
+  const id = params.get("from");
+  if (!id) return null;
+  const page = params.get("from_page");
+  return { id, to: `/diagrams/${encodeURIComponent(id)}${page ? `?page=${encodeURIComponent(page)}` : ""}` };
 }
 
 type Shown = DiagramDraft & { diagram_id: string; can_edit?: boolean };
@@ -269,6 +286,13 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
   const [trend, setTrend] = useState<{ title: string; signals: string[] } | null>(null);
   const [asset, setAsset] = useState<{ id: string; name: string; element: string } | null>(null);
   const [sharing, setSharing] = useState(false);
+  // Opened from another display's link: a way back to it (and to the page it was on).
+  const back = useMemo(() => (isPublic ? null : backOf(globalThis.location.search)), [diagram.diagram_id, isPublic]);
+  const [backName, setBackName] = useState("");
+  useEffect(() => {
+    setBackName("");
+    if (back) diagramsApi.get(back.id).then((found) => setBackName(found.name)).catch(() => setBackName(""));
+  }, [back]);
   const [page, setPageState] = useState(() => knownPage(diagram, new URLSearchParams(globalThis.location.search).get("page")));
   const pages = pagesOf(diagram);
   const setPage = useCallback((next: string) => {
@@ -344,6 +368,7 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
   return <>
     <Heading title={diagram.name} assistant={!isPublic}
       actions={<>
+        {back && <button className="button button-secondary" onClick={() => navigate(back.to)} title={t("Back to the process display this one was opened from")}><ArrowLeft size={16} /> {backName || t("Back")}</button>}
         <button className="button button-secondary" onClick={enterFull} title={t("The process display alone, live, for a control room screen. Esc leaves it.")}><Maximize2 size={16} /> {t("Full screen")}</button>
         {editable && me?.public_links && <button className="button button-secondary" onClick={() => setSharing(true)}><Globe2 size={16} /> {t("Share")}</button>}
         {editable && <button className="button button-primary" onClick={onEdit}><Pencil size={16} /> {t("Edit")}</button>}
@@ -367,7 +392,7 @@ function Viewer({ diagram, symbols, me, onEdit, token }: { diagram: Shown; symbo
           if (element.link?.kind === "page") { if (pages.some((item) => item.id === element.link?.target)) setPage(element.link.target); return; }
           if (element.link?.kind === "area") { const area = areaOf(element.link.target); if (area) show(area); return; }
           if (isPublic) return;
-          const opened = openOf(element, data);
+          const opened = openOf(element, data, { id: diagram.diagram_id, page: pages.length > 1 && page !== pages[0].id ? page : undefined });
           const named = "label" in element ? element.label : "";
           if (opened?.kind === "go") navigate(opened.to);
           else if (opened?.kind === "trend") setTrend({ title: (data?.bindings ?? []).find((row) => row.element === element.id && row.label)?.label || named || t("Trend"), signals: opened.signals });

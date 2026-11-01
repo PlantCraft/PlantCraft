@@ -4,11 +4,15 @@ import { api } from "./api";
 import { t } from "./i18n";
 import { href, navigate } from "./nav";
 import { forecastLine } from "./levels";
-import type { Forecast, Me, Settings } from "./types";
+import { formatBytes } from "./format";
+import type { Forecast, Me, RetentionLevel, Settings } from "./types";
 import { ErrorBox, FormFooter, FormSection, Heading, Link, Loading } from "./ui";
 
 const FIELDS: { key: keyof Settings; label: string; help: string; step: string }[] = [
-  { key: "retention_days", label: "Retention (days)", help: "Archived values older than this are deleted, unless a source or a signal sets its own.", step: "1" },
+  { key: "retention_days", label: "Raw values (days)", help: "Archived values older than this are deleted, unless a source or a signal sets its own.", step: "1" },
+  { key: "hourly_retention_days", label: "Hourly rollups (days)", help: "Each hour's mean, lowest and highest value, kept after the raw values are gone: trends of weeks and months still read. 0 keeps them forever.", step: "1" },
+  { key: "daily_retention_days", label: "Daily rollups (days)", help: "Each day's mean, lowest and highest value: trends of years. 0 keeps them forever.", step: "1" },
+  { key: "monthly_retention_days", label: "Monthly rollups (days)", help: "Each month's mean, lowest and highest value. 0 keeps them forever.", step: "1" },
   { key: "default_scan_seconds", label: "Scan period (s)", help: "How often a signal is read, unless its source or the signal sets its own.", step: "0.1" },
   { key: "default_deviation_percent", label: "Deviation (% of span)", help: "Compression of a signal with a known range, unless its source or the signal sets its own: the rebuilt signal never strays more than this from a value read.", step: "0.01" },
   { key: "default_exception_percent", label: "Exception (% of span)", help: "Before the compression, a value within this of the last one passed on is taken as that value: noise smaller than it is never archived. 0 turns it off.", step: "0.01" },
@@ -16,7 +20,7 @@ const FIELDS: { key: keyof Settings; label: string; help: string; step: string }
 ];
 
 const SECTIONS: { title: string; detail: string; keys: (keyof Settings)[] }[] = [
-  { title: "Retention", detail: "How long archived values are kept.", keys: ["retention_days"] },
+  { title: "Retention", detail: "How long archived values and their hourly, daily and monthly rollups are kept. A rollup is kept at least as long as the raw values and the finer rollups.", keys: ["retention_days", "hourly_retention_days", "daily_retention_days", "monthly_retention_days"] },
   { title: "Collection and compression", detail: "How often signals are read and how much of what is read is archived.", keys: ["default_scan_seconds", "default_exception_percent", "default_deviation_percent", "default_max_seconds"] },
 ];
 
@@ -39,7 +43,9 @@ function RetentionPage({ me }: { me: Me }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [forecast, setForecast] = useState<Forecast | null>(null);
+  const [levels, setLevels] = useState<RetentionLevel[] | null>(null);
   useEffect(() => {
+    api.retention().then(setLevels).catch(() => setLevels(null));
     api.overview().then((answer) => setForecast(answer.archive.forecast ?? null)).catch(() => setForecast(null));
     api.settings().then((answer) => { setSettings(answer); setDraft(Object.fromEntries(Object.entries(answer).map(([k, v]) => [k, String(v)]))); }).catch((err: Error) => setError(err.message));
   }, []);
@@ -50,6 +56,7 @@ function RetentionPage({ me }: { me: Me }) {
     try {
       const answer = await api.saveSettings(Object.fromEntries(Object.entries(draft).map(([k, v]) => [k, Number(v)])));
       setSettings(answer);
+      api.retention().then(setLevels).catch(() => setLevels(null));
       setMessage(t("Settings saved. The collector applies them within seconds."));
     } catch (err) { setError(err instanceof Error ? err.message : String(err)); }
   }
@@ -63,6 +70,7 @@ function RetentionPage({ me }: { me: Me }) {
     </ol>
     {forecast && <div className={forecastLine(forecast).warn ? "notice notice-warn" : "notice"} role="status">
       <b>{t("Disk")}</b> {forecastLine(forecast).text} {t("At the values archived in the last 24 h, each signal kept for its retention.")}</div>}
+    {levels && <RetentionDisk levels={levels} />}
     {message && <div className="notice notice-ok">{message}</div>}
     {error && <ErrorBox text={error} />}
     <div className="panel form-panel">
@@ -76,4 +84,23 @@ function RetentionPage({ me }: { me: Me }) {
       {me.is_admin && <FormFooter note={t("The collector applies saved settings within seconds.")}><button className="button button-primary" onClick={() => void save()}>{t("Save")}</button></FormFooter>}
     </div>
   </>;
+}
+
+const LEVEL_NAMES: Record<RetentionLevel["level"], string> = { raw: "Raw values", hour: "Hourly rollups", day: "Daily rollups", month: "Monthly rollups" };
+
+/** The disk each retention takes (H9): now, and once every signal keeps its full retention. */
+export function RetentionDisk({ levels }: { levels: RetentionLevel[] }) {
+  return <div className="panel">
+    <h2>{t("Disk by retention")}</h2>
+    <div className="table-scroll"><table className="table compact">
+      <thead><tr><th>{t("Kept")}</th><th>{t("Retention")}</th><th className="num">{t("On disk now")}</th><th className="num">{t("At full retention")}</th></tr></thead>
+      <tbody>{levels.map((item) => <tr key={item.level}>
+        <td>{t(LEVEL_NAMES[item.level])}</td>
+        <td>{item.days > 0 ? t("{days} days", { days: item.days }) : t("Forever")}</td>
+        <td className="num">{formatBytes(item.now)}</td>
+        <td className="num">{item.per_year ? t("{size} a year", { size: formatBytes(item.full) }) : formatBytes(item.full)}</td>
+      </tr>)}</tbody>
+    </table></div>
+    <small>{t("At the values archived in the last 24 h. A signal or a source with its own retention counts with it; a rollup is kept at least as long as the raw values.")}</small>
+  </div>;
 }

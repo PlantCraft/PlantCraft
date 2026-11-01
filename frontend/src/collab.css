@@ -309,6 +309,11 @@
 .act-page { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 16px; align-items: start; }
 .act-page-main { display: grid; gap: 10px; }
 .act-page-main .section-title { margin: 8px 0 0; }
+/* Images attached to an action (the chart of the verdict it was opened from). */
+.act-files { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.act-file { display: grid; gap: 4px; color: inherit; text-decoration: none; }
+.act-file img, .act-form-image img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.act-form-image { display: grid; gap: 4px; max-width: 520px; }
 .act-page-facts .act-facts { grid-template-columns: 1fr; }
 /* An action's title with the assistant's button beside it (the heading keeps its status line). */
 .page-heading > div:first-child > .page-heading-title { display: flex; align-items: center; gap: 10px; }

@@ -78,6 +78,7 @@ ROUTE_SCOPES: dict[tuple[str, str], str | None] = {
     ("GET", "/api/v1/signals/{signal_id}"): "read.signals",
     ("GET", "/api/v1/signals/{signal_id}/series"): "read.series",
     ("GET", "/api/v1/signals/{signal_id}/value"): "read.series",
+    ("GET", "/api/v1/signals/{signal_id}/summary"): "read.series",
     ("GET", "/api/v1/signals/{signal_id}/runs"): "read.series",
     ("POST", "/api/v1/series"): "read.series",
     ("PUT", "/api/v1/series"): "write.series",

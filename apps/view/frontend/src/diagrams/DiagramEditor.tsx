@@ -701,6 +701,18 @@ export function DiagramEditor({ diagramId, initial, baseUpdatedAt, symbols, libr
   }
 
   function drawn(start: DiagramStart) {
+    const drawnPages = start.diagram.pages ?? [];
+    if (drawnPages.length) {
+      // The whole plant (an overview and a page per unit) brings its own pages: it replaces the
+      // display, as the dialog says, and opens on its first page (Undo brings the old one back).
+      set((now) => ({ ...now, name: now.name.trim() && now.name !== t("New process display") ? now.name : start.diagram.name, width: start.diagram.width, height: start.diagram.height, pages: drawnPages, elements: start.diagram.elements }));
+      setPage(drawnPages[0].id);
+      setSelected(new Set());
+      setNotes(start.notes);
+      setStarting(null);
+      setZoom(0);
+      return;
+    }
     set((now) => {
       const nowPages = pagesOf(now);
       const others = now.pages?.length ? now.elements.filter((element) => (element.page || nowPages[0].id) !== current) : [];

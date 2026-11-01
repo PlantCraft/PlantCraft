@@ -632,3 +632,18 @@ def test_a_batch_read_gives_each_cells_lowest_and_highest_value(client, loaded):
     assert (
         "low" not in client.post(f"{V1}/series", json={**raw, "extremes": True}).json()["series"][0]
     )
+
+
+def test_rollup_retentions_are_settings_and_the_disk_of_each_is_shown(client, loaded):
+    saved = client.put(
+        "/hist/api/settings",
+        json={"hourly_retention_days": 730, "daily_retention_days": 0, "monthly_retention_days": 0},
+    )
+    assert saved.status_code == 200
+    assert saved.json()["hourly_retention_days"] == 730
+    assert saved.json()["daily_retention_days"] == 0
+    assert client.put("/hist/api/settings", json={"daily_retention_days": -5}).status_code == 422
+    levels = client.get("/hist/api/retention").json()
+    assert [item["level"] for item in levels] == ["raw", "hour", "day", "month"]
+    hour = next(item for item in levels if item["level"] == "hour")
+    assert hour["days"] == 730 and hour["now"] >= 0 and hour["full"] >= 0

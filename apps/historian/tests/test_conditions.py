@@ -94,6 +94,8 @@ def test_the_conditions_ride_on_the_metrics_with_the_catalog(runtime):
         assert names == [
             "collector.stalled",
             "source.disconnected",
+            "gateway.backlog",
+            "source.late",
             "point.no_data",
             "archive.disk_low",
             "annotation.added",  # an instant, posted by the signal's page
@@ -138,3 +140,80 @@ def test_signals_an_app_writes_are_never_late(runtime):
         ]
     )  # fmt: skip
     assert _keys(runtime, now) == [("point.no_data", f"point:{points['plant-a']}")]
+
+
+def _integrate(runtime, source: str, **fields) -> None:
+    current = runtime.catalog.source(source)
+    runtime.catalog.save_source(
+        SourceIn(id=source, name=current["name"], endpoint=current["endpoint"], **fields),
+        create=False,
+    )
+
+
+def test_a_source_down_names_its_owners_and_contact(runtime):
+    now = now_ms()
+    _plant(runtime, "north")
+    _integrate(runtime, "north", owners=["group:automation"], contact="Automation, ext. 4321")
+    _collector(runtime, now, north="disconnected")
+    [down] = open_conditions(runtime.catalog, runtime.archive, now=now)
+    assert down.payload["owners"] == ["group:automation"]
+    assert down.payload["contact"] == "Automation, ext. 4321"
+
+
+def test_a_source_quiet_past_its_expected_interval_is_late_once_not_per_point(runtime):
+    now = now_ms()
+    points = _plant(runtime, "north", "south")
+    _integrate(runtime, "north", heartbeat_seconds=300, owners=["user:ana"])
+    _collector(runtime, now, north="connected", south="connected")
+    runtime.archive.put_snapshots(
+        [
+            {"point": points["north-a"], "ts": now - 20 * MIN, "value": 1.0, "status": "ok"},
+            {"point": points["north-b"], "ts": now - 30 * MIN, "value": 1.0, "status": "ok"},
+            {"point": points["south-a"], "ts": now - 20 * MIN, "value": 1.0, "status": "ok"},
+        ]
+    )
+    found = open_conditions(runtime.catalog, runtime.archive, now=now)
+    assert [(item.name, item.key) for item in found] == [
+        ("source.late", "source:north"),
+        # A source without an expected interval keeps its points' own conditions.
+        ("point.no_data", f"point:{points['south-a']}"),
+    ]
+    late = found[0]
+    assert late.subject == "source:north" and late.payload["owners"] == ["user:ana"]
+    assert "20 min" in late.summary and "5 min" in late.summary  # the newest value counts
+    assert late.payload["heartbeat_seconds"] == 300
+    # One fresh value on any of its points and it is on time.
+    runtime.archive.put_snapshots(
+        [{"point": points["north-b"], "ts": now - MIN, "value": 2.0, "status": "ok"}]
+    )
+    assert ("source.late", "source:north") not in _keys(runtime, now)
+
+
+def test_a_late_source_that_never_sent_counts_from_its_connection(runtime):
+    now = now_ms()
+    _plant(runtime, "north")
+    _integrate(runtime, "north", heartbeat_seconds=600)
+    _collector(runtime, now - 15 * MIN, north="connected")
+    runtime.archive.set_state(
+        "collector",
+        {"heartbeat": now, "sources": {"north": {"status": "connected", "since": now - 15 * MIN}}},
+    )
+    assert _keys(runtime, now) == [("source.late", "source:north")]
+    _integrate(runtime, "north", heartbeat_seconds=0)  # not watched
+    assert _keys(runtime, now) == []
+
+
+def test_a_full_gateway_buffer_is_one_condition(runtime):
+    now = now_ms()
+    _plant(runtime, "plant")
+    runtime.archive.set_state(
+        "collector",
+        {"heartbeat": now, "sources": {}, "gateway_buffer_bytes": 300 * 1024 * 1024},
+    )
+    [backlog] = open_conditions(runtime.catalog, runtime.archive, now=now)
+    assert (backlog.name, backlog.key) == ("gateway.backlog", "gateway")
+    assert "300 MB" in backlog.summary
+    runtime.archive.set_state(
+        "collector", {"heartbeat": now, "sources": {}, "gateway_buffer_bytes": 1024}
+    )
+    assert _keys(runtime, now) == []

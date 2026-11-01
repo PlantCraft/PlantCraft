@@ -17,7 +17,7 @@ A report names fixed signals and assets: no variables (one report for each asset
 from __future__ import annotations
 
 import re
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -44,10 +44,37 @@ PERIOD_FOR = {
     "month": "30d",
     "quarter": "90d",
 }
-SectionKind = Literal["text", "card", "events", "break", "assistant"]
+SectionKind = Literal["text", "card", "events", "break", "assistant", "alarms"]
+ASSET_ID = r"^[^\s$]{1,200}$"
 # What an events section may count its events by, instead of listing them: who they are about,
 # their kind, their severity, or one field of their payload (``payload.method_id``).
 GROUP_BY = re.compile(r"^(subject|kind|severity|payload\.[a-z][a-z0-9_]{0,40})$")
+
+
+class EventTrigger(BaseModel):
+    """Make the report when an event ends something: a batch, a start-up, a shutdown (V5).
+
+    Each new event of ``end_kind`` (about ``subject``, or any subject) makes one report over
+    the period it closes: from the newest ``start_kind`` event about the same subject before it,
+    else from the ``start`` (or ``started_at``) in its payload, else the report's own period
+    before it. A period is at most ``MAX_EVENT_DAYS`` long."""
+
+    end_kind: str = Field(max_length=200)
+    start_kind: str = Field(default="", max_length=200)
+    subject: str = Field(default="", max_length=300)
+
+    @field_validator("end_kind", "start_kind")
+    @classmethod
+    def _kind(cls, value: str, info: Any) -> str:
+        value = (value or "").strip()
+        if (value or info.field_name == "end_kind") and not EVENT_KIND.match(value):
+            raise ValueError(t("Unknown kind of event: {kind}.", kind=value))
+        return value
+
+    @field_validator("subject")
+    @classmethod
+    def _subject(cls, value: str) -> str:
+        return (value or "").strip()
 
 
 class Schedule(BaseModel):
@@ -65,6 +92,8 @@ class Schedule(BaseModel):
     # Cover the last whole calendar period of the cadence (yesterday, last Monday to Sunday,
     # last month, last quarter) instead of the report's period ending when it is made.
     closed: bool = False
+    # Also (or only) when an event ends a batch or a start-up: a report over that period.
+    on_event: EventTrigger | None = None
 
     @field_validator("at")
     @classmethod
@@ -111,6 +140,13 @@ class EventsSpec(BaseModel):
         return cleaned
 
 
+class AlarmsSpec(BaseModel):
+    """An alarm performance section (ISA-18.2): the asset (the site or an area) whose alarms it
+    reads, from what Alarms publishes (``reports.alarm_performance``)."""
+
+    asset_id: str = Field(pattern=ASSET_ID)
+
+
 def text_with_heading(title: str, text: str) -> str:
     """A text section of before 2026-10-26 (a heading field above its Markdown) as one cell:
     the heading becomes the cell's first ``#`` line."""
@@ -132,6 +168,8 @@ class Section(BaseModel):
     events: EventsSpec | None = None
     # What an assistant section reads and how the model writes it (``reports.assistant``).
     assistant: AssistantSpec | None = None
+    # What an alarm performance section reads.
+    alarms: AlarmsSpec | None = None
     # Two half sections in a row sit side by side on the page.
     width: Literal["full", "half"] = "full"
 
@@ -152,7 +190,7 @@ class Section(BaseModel):
                 raise ValueError(t("A panel section needs its panel."))
             if self.card.kind == "text":
                 raise ValueError(t("Write notes in a text section, not in a panel."))
-            if self.card.kind == "diagram":
+            if self.card.kind in ("diagram", "apc"):
                 raise ValueError(
                     t("A report shows panels of signals; process displays stay on screens.")
                 )
@@ -175,7 +213,11 @@ class Section(BaseModel):
             raise ValueError(t("Pick the assets and analyses the assistant reads."))
         if self.kind != "assistant":
             self.assistant = None
-        if self.kind in ("text", "break", "assistant"):
+        if self.kind == "alarms" and self.alarms is None:
+            raise ValueError(t("Pick the site or the area whose alarms the section reads."))
+        if self.kind != "alarms":
+            self.alarms = None
+        if self.kind in ("text", "break", "assistant", "alarms"):
             self.width = "full"
         return self
 
@@ -254,6 +296,7 @@ __all__ = [
     "MAX_SECTIONS",
     "PERIOD_FOR",
     "WEEKDAYS",
+    "AlarmsSpec",
     "EventsSpec",
     "ReportPayload",
     "Schedule",

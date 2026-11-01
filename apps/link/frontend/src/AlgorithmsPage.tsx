@@ -15,8 +15,8 @@ import { downloadAlgorithmFile } from "./algorithmFile";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "./api";
 import { AlgorithmDiagram, AssetTestControl, blockCatalog, TestControl } from "./AlgorithmEditor";
-import { CalibrateTool, DEVIATION_BLOCK } from "./Calibrate";
-import { assetChoices, AssetPicker, AssetRuns, TimingFields } from "./AssetSettings";
+import { CALIBRATED_BLOCKS, CalibrateTool } from "./Calibrate";
+import { assetChoices, AssetPicker, AssetRuns, AssetTypePicker, TimingFields } from "./AssetSettings";
 import { announceSaved, onSaved, openEditor, SIGNAL_QUALITY, tagOptions, withTags } from "./algorithms";
 import { LinkAssistant } from "./Assistant";
 import { algorithmComparison, ComparePicker, CompareView } from "./Compare";
@@ -41,12 +41,13 @@ export function algorithmRoute(id: string): { algorithmId: string; tab: Algorith
 
 /** Saves the algorithm with a change (its texts, its diagram, its parameters, its assets): a new
  * version, with its own name and what changed when given. */
-async function saveChanged(algorithm: Algorithm, change: Partial<Pick<Algorithm, "name" | "description" | "docs" | "diagram" | "timing" | "assets" | "compute">>, note?: { name: string; description: string }): Promise<Algorithm> {
+async function saveChanged(algorithm: Algorithm, change: Partial<Pick<Algorithm, "name" | "description" | "docs" | "diagram" | "timing" | "assets" | "asset_types" | "compute">>, note?: { name: string; description: string }): Promise<Algorithm> {
   const next = { ...algorithm, ...change };
   const saved = await api.saveAlgorithm({
     algorithm_id: next.algorithm_id, name: next.name.trim(), description: next.description, subject_kind: next.subject_kind,
     diagram: next.diagram, docs: next.docs, timing: next.timing ?? DEFAULT_TIMING, assets: next.assets ?? [],
     ...(next.compute ? { compute: next.compute } : {}),
+    ...(change.asset_types ? { asset_types: change.asset_types } : {}),
     ...(note ? { version_name: note.name, version_note: note.description } : {}),
   });
   announceSaved(saved.algorithm_id);
@@ -505,7 +506,7 @@ function NewVersion({ algorithm, from, specs, me, onSaved: saved }: { algorithm:
           : <TestControl diagram={draft.diagram} onTrace={setTest} disabled={blocked} />}</span>)}
       {catalog
         ? <div className="alg-diagram alg-edit-diagram"><BlockEditor catalog={catalog} diagram={draft.diagram} onChange={setDiagram} check={check} trace={test?.trace ?? null} blockHref={(blockId) => href(`/blocks/${encodeURIComponent(blockId)}`)}
-          inspectorTools={(node) => node.block === DEVIATION_BLOCK && algorithm.subject_kind === "asset"
+          inspectorTools={(node) => CALIBRATED_BLOCKS.has(node.block) && algorithm.subject_kind === "asset"
             ? <CalibrateTool node={node} diagram={draft.diagram} timing={draft.timing} assets={algorithm.assets ?? []} readOnly={false} disabled={blocked} onCalibrated={setDiagram} />
             : null} /></div>
         : <Loading />}
@@ -566,20 +567,24 @@ function ShownVersion({ algorithm, read, editable, onUsed }: { algorithm: Algori
 function UsedByTab({ algorithm, me, onSaved }: { algorithm: Algorithm; me: Me; onSaved: (next: Algorithm) => void }) {
   const id = algorithm.algorithm_id;
   const [assets, setAssets] = useState(algorithm.assets ?? []);
+  const [types, setTypes] = useState(algorithm.asset_types ?? []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => { setAssets(algorithm.assets ?? []); }, [algorithm]);
-  const changed = JSON.stringify(assets) !== JSON.stringify(algorithm.assets ?? []);
+  useEffect(() => { setAssets(algorithm.assets ?? []); setTypes(algorithm.asset_types ?? []); }, [algorithm]);
+  const changed = JSON.stringify(assets) !== JSON.stringify(algorithm.assets ?? []) || JSON.stringify(types) !== JSON.stringify(algorithm.asset_types ?? []);
   async function save() {
     setBusy(true); setError("");
-    try { onSaved(await saveChanged(algorithm, { assets })); } catch (err) { setError(err instanceof Error ? err.message : String(err)); } finally { setBusy(false); }
+    try { onSaved(await saveChanged(algorithm, { assets, asset_types: types })); } catch (err) { setError(err instanceof Error ? err.message : String(err)); } finally { setBusy(false); }
   }
   if (algorithm.subject_kind === "signal" && id === SIGNAL_QUALITY) return <div className="panel used-by"><p>{t("Every active signal PlantCraft knows. The loop algorithms read its results before they judge a loop.")}</p><div className="row-actions"><Link to="/algorithms/signal_quality/settings" className="button button-secondary">{t("Monitor and checks")}</Link></div></div>;
   if (algorithm.subject_kind !== "asset") return <><Usage algorithmId={id} /><Schedules algorithmId={id} /></>;
   return <>
-    <AssetRuns algorithmId={id} assets={algorithm.assets ?? []} me={me} />
+    <AssetRuns algorithmId={id} assets={algorithm.assets ?? []} types={algorithm.asset_types ?? []} me={me} />
     {algorithm.editable && <section className="panel alg-docs"><div className="panel-header"><div><h2>{t("Its assets")}</h2><p>{t("The assets Run now and the monitors that follow the algorithm run it on.")}</p></div></div>
       <AssetPicker assets={assets} onChange={setAssets} />
+      <h3>{t("And every asset of a type")}</h3>
+      <p className="muted small">{t("The algorithm also runs on every asset of these PlantCraft types, subtypes included: one algorithm for every pump, every exchanger. An asset of the type added later is included at the next run of a monitor on every asset of the algorithm.")}</p>
+      <AssetTypePicker types={types} onChange={setTypes} />
       {error && <div className="notice notice-error" role="alert">{error}</div>}
       <div className="row-actions"><button type="button" className="button button-primary" disabled={!changed || busy} onClick={() => void save()}><Save size={16} />{busy ? t("Saving…") : t("Save as new version")}</button></div>
     </section>}

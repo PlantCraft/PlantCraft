@@ -121,6 +121,23 @@ def test_viewers_read_but_never_act(runtime, fake, client):
         assert anonymous.get("/api/alarms").status_code == 401
 
 
+def test_a_public_demo_visit_reads_the_editors_pickers_but_saves_nothing(runtime, fake, client):
+    # The visitor is shown the editors (plantcraft_sdk.server.demo): the Rules and Targets pages
+    # and the rule editor ask for the asset and signal pickers, which answer instead of a 403 in
+    # the console (suite journey test_11); every save stays refused. A reader still gets 403.
+    make_rule(client, high())
+    visit = {"visit": "v1", "ends": 4102444800, "queries": 4, "queries_total": 8}
+    with client_for(runtime, fake, None) as visitor:
+        visitor.headers["Authorization"] = f"Bearer {fake.token('operator', demo=visit)}"
+        assert visitor.get("/api/assets").status_code == 200
+        assert visitor.get("/api/signals?q=FIC").status_code == 200
+        refused = visitor.post("/api/rules", json=high())
+        assert refused.status_code == 403 and "nothing is saved" in refused.json()["detail"]
+    with client_for(runtime, fake, "operator") as viewer:
+        assert viewer.get("/api/assets").status_code == 403
+        assert viewer.get("/api/signals?q=FIC").status_code == 403
+
+
 def test_a_cycle_raises_records_and_publishes(runtime, fake, client):
     alarm_id = make_rule(client, high())["rule_id"]
     counts = client.post("/api/run").json()
@@ -142,6 +159,19 @@ def test_a_cycle_raises_records_and_publishes(runtime, fake, client):
     result = fake.links.results[("alarmcraft", "asset:FIC-1001", "alarm_state")]
     assert result["status"] == "alarm"
     assert fake.links.runs and fake.links.schedules["alarmcraft"]
+    # Each area's alarm performance (ISA-18.2), for View's reports: the site and the area.
+    found = {
+        key[1]: value
+        for key, value in fake.links.results.items()
+        if key[0] == "alarmcraft" and key[2] == "alarm_performance"
+    }
+    assert found, fake.links.results.keys()
+    performance = next(iter(found.values()))
+    day = performance["detail"]["periods"]["24h"]
+    assert day["total"] == 1 and day["eemua"]["level"] == "robust"
+    assert day["top"][0]["alarm_id"] == alarm_id
+    assert set(performance["detail"]["periods"]) == {"24h", "7d", "30d"}
+    assert {f["id"] for f in day["figures"]} >= {"per_hour", "flood", "fleeting", "busy"}
 
     # Acknowledged: still active; a second cycle raises nothing new.
     acked = client.post(f"/api/alarms/{alarm_id}/ack").json()

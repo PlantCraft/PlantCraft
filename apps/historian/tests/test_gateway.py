@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import gzip
+import os
 import tomllib
 
 import pytest
@@ -12,7 +13,15 @@ from histcraft.archive.store import ArchiveStore
 from histcraft.catalog.models import PointIn, SourceIn
 from histcraft.catalog.store import CatalogStore
 from histcraft.collector import line_protocol
-from histcraft.collector.gateway import INPUTS, gateway_token, render, variable, write_config
+from histcraft.collector.gateway import (
+    INPUTS,
+    buffer_bytes,
+    buffer_folder,
+    gateway_token,
+    render,
+    variable,
+    write_config,
+)
 from histcraft.collector.ingest import ingest_app
 from histcraft.collector.service import Collector
 from tests.conftest import database, make_settings
@@ -332,3 +341,55 @@ def test_a_lims_source_names_its_sampling_time_and_analysis():
         SourceIn.model_validate(
             {**SQL.model_dump(), "options": {**SQL.options, "time_column": "", "laboratory": True}}
         )
+
+
+def test_the_gateway_keeps_its_buffer_on_disk_when_it_can(tmp_path):
+    # Store and forward (H3): what the collector has not taken survives a gateway restart.
+    settings = make_settings(tmp_path, ingest_port=8186)
+    catalog = CatalogStore(database(tmp_path, "config"))
+    catalog.save_source(MQTT, create=True)
+    agent = tomllib.loads(write_config(settings, catalog.sources(), lambda _: "", ""))["agent"]
+    assert agent["buffer_strategy"] == "disk"
+    assert agent["buffer_directory"] == "/var/lib/telegraf-buffer"
+    folder = buffer_folder(tmp_path)
+    assert folder.is_dir() and (folder.stat().st_mode & 0o777) == 0o700
+    (folder / "wal").mkdir()
+    (folder / "wal" / "00001").write_bytes(b"x" * 5000)
+    assert buffer_bytes(tmp_path) == 5000
+    # Asked for memory, or a folder the gateway could not write: Telegraf would refuse to start
+    # on a disk buffer it cannot write, so the configuration keeps it in memory.
+    memory = make_settings(tmp_path, ingest_port=8186, gateway_buffer="memory")
+    assert (
+        "buffer_strategy" not in tomllib.loads(write_config(memory, [], lambda _: "", ""))["agent"]
+    )
+    if os.geteuid() != 0:  # root writes anywhere
+        folder.chmod(0o500)
+        try:
+            text = write_config(settings, [], lambda _: "", "")
+            assert "buffer_strategy" not in tomllib.loads(text)["agent"]
+        finally:
+            folder.chmod(0o700)
+
+
+def test_a_value_sent_twice_keeps_the_first_one(tmp_path):
+    # A batch the gateway sends again (the collector's answer was lost) is taken once; a second
+    # value at a time already taken is dropped: the first wins.
+    settings = make_settings(tmp_path, ingest_port=8186)
+    catalog = CatalogStore(database(tmp_path, "config"))
+    catalog.save_source(MODBUS, create=True)
+    address = line_protocol.address(
+        "modbus", {"name": "plc", "slave_id": "3", "type": "holding_register"}, "FT-101"
+    )
+    catalog.add_points([PointIn(tag="FT-101", source_id="plc", address=address, deviation=0)])
+    collector = Collector(settings, catalog, ArchiveStore(database(tmp_path)))
+    collector.reload()
+    client = TestClient(ingest_app(collector, gateway_token(tmp_path)))
+    headers = {"Authorization": f"Token {gateway_token(tmp_path)}"}
+    line = "modbus,histcraft_source=plc,name=plc,type=holding_register,slave_id=3 FT-101={v} {t}"
+    at = 1_700_000_000 * 10**9
+    state = next(iter(collector.points.values()))
+    for value in (1.0, 9.0):
+        client.post("/api/v2/write", content=line.format(v=value, t=at), headers=headers)
+    assert state.reads == 1 and state.last == (1_700_000_000_000, 1.0)
+    client.post("/api/v2/write", content=line.format(v=2.0, t=at + 10**9), headers=headers)
+    assert state.reads == 2 and state.last == (1_700_000_001_000, 2.0)

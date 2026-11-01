@@ -79,6 +79,13 @@ EXTREMES_DAYS = 7
 ROLLED_WINDOW_HOURS = 3
 
 
+def _daily(start_ms: int, step_ms: float) -> bool:
+    """Whether a grid of ``step_ms`` from ``start_ms`` is made of whole UTC days: then its cells
+    read the daily and monthly rollups (H9)."""
+
+    return start_ms % rollup.DAY_MS == 0 and step_ms % rollup.DAY_MS == 0
+
+
 class Reader:
     def __init__(self, archive: ArchiveStore, source_read: SourceRead | None = None):
         self.archive = archive
@@ -259,6 +266,95 @@ class Reader:
             )
         return grid, _averages(times, values, point.step or on_change, edges)
 
+    def interpolated(
+        self,
+        point: PointRef,
+        start: datetime,
+        end: datetime,
+        step: float,
+        max_gap: float | None = None,
+        samples: tuple[np.ndarray, Any] | None = None,
+        now: datetime | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """The value at each grid time ``start``, ``start + step``, ... up to ``end``: the
+        straight line between the samples around it, or the last sample for a step signal
+        or one recorded on change (``sampling=interpolated``, H5).
+
+        ``max_gap`` (seconds): two samples further apart than it are not interpolated across,
+        and a time past the last sample by more than it is null (a signal recorded on change
+        holds to ``end`` or now, as on an averaged grid). Only numbers interpolate."""
+
+        if point.kind != "number":
+            raise ContractError(t("Only number signals have interpolated reads."))
+        start_ms, end_ms = to_ms(start), to_ms(end)
+        step_ms = step * 1000.0
+        count = int(math.floor((end_ms - start_ms) / step_ms)) + 1
+        if count > MAX_POINTS:
+            raise ContractError(
+                t(
+                    "Too many values: at most {count} per request. Use a larger step.",
+                    count=MAX_POINTS,
+                )
+            )
+        grid = start_ms + np.arange(count, dtype=float) * step_ms
+        times, values = samples if samples is not None else self.samples(point, start_ms, end_ms)
+        on_change = recorded_on_change(point.tag, change_kind(point.kind))
+        if on_change:
+            until = min(end_ms, to_ms(now or datetime.now(timezone.utc)))
+            times, values = _hold_on_change(times, values, point.kind, until)
+        held = bool(point.step or on_change)
+        gap_ms = None if max_gap is None else max_gap * 1000.0
+        return grid.astype(np.int64), _interpolate(times, values, held, grid, gap_ms)
+
+    def summary(
+        self,
+        point: PointRef,
+        start: datetime,
+        end: datetime,
+        per_seconds: float,
+        qualities: list[tuple] | None = None,
+        samples: tuple[np.ndarray, Any] | None = None,
+    ) -> dict[str, Any]:
+        """What a window holds (``GET .../summary``, H5): ``count`` (values recorded inside
+        it), ``covered_pct`` (time the signal has a value), ``good_pct`` (time its quality was
+        good, from ``qualities``, the archive's ``(ms, quality, ...)`` changes; None for a
+        signal read from its source), ``total`` (the time integral per ``per_seconds``) and
+        the time-weighted ``mean``, ``min``, ``max`` and ``std``."""
+
+        start_ms, end_ms = to_ms(start), to_ms(end)
+        span = float(end_ms - start_ms)
+        times, values = samples if samples is not None else self.samples(point, start_ms, end_ms)
+        answer: dict[str, Any] = {
+            "count": 0,
+            "covered_pct": None,
+            "good_pct": None,
+            "total": None,
+            "mean": None,
+            "min": None,
+            "max": None,
+            "std": None,
+        }
+        inside = (times >= start_ms) & (times <= end_ms)
+        if labelled(point.kind):
+            answer["count"] = int(sum(1 for i in np.flatnonzero(inside) if values[i] is not None))
+        else:
+            numbers = np.asarray(values, dtype=float)
+            answer["count"] = int(np.count_nonzero(inside & np.isfinite(numbers)))
+            if point.kind == "number" and len(times):
+                held = bool(point.step or recorded_on_change(point.tag, change_kind(point.kind)))
+                stats = _window_stats(times, numbers, held, start_ms, end_ms)
+                if stats is not None:
+                    answer.update(stats)
+                if len(times) >= 2:
+                    cover, area = _window_integrals(times, numbers, held, start_ms, end_ms)
+                    answer["covered_pct"] = round(100.0 * cover / span, 3)
+                    answer["total"] = area / 1000.0 / per_seconds if cover > 0 else None
+                else:
+                    answer["covered_pct"] = 0.0
+        if qualities is not None and point.mode != "source":
+            answer["good_pct"] = round(100.0 * _good_time(qualities, start_ms, end_ms) / span, 3)
+        return answer
+
     def extremes(
         self, point: PointRef, start: datetime, end: datetime, step: float
     ) -> tuple[list[Any], list[Any]] | None:
@@ -279,7 +375,9 @@ class Reader:
         if self.rollups_help(point, start_ms, step):
             # Whole hours: the hourly rollups keep each hour's extremes, past EXTREMES_DAYS too.
             held = bool(point.step or recorded_on_change(point.tag, change_kind(point.kind)))
-            kept = self.archive.rollups(point.id, held, start_ms, int(edges[-1]))
+            kept = rollup.kept(
+                self.archive, point.id, held, start_ms, int(edges[-1]), _daily(start_ms, step_ms)
+            )
             low, high, whole = rollup.grid_extremes(kept, edges)
             missing = np.flatnonzero(~whole)
         if not len(missing):
@@ -326,7 +424,9 @@ class Reader:
         if count > MAX_POINTS:
             return None  # the samples path says why
         edges = start_ms + np.arange(count + 1, dtype=float) * step_ms
-        kept = self.archive.rollups(point.id, held, start_ms, int(edges[-1]))
+        kept = rollup.kept(
+            self.archive, point.id, held, start_ms, int(edges[-1]), _daily(start_ms, step_ms)
+        )
         if not kept:
             return None
         means, whole = rollup.grid_means(kept, edges)
@@ -439,24 +539,15 @@ class Reader:
             or last - first < ROLLED_WINDOW_HOURS * HOUR_MS
         ):
             return None
-        kept = self.archive.rollups(point.id, held, first, last)
-        # The longest run of hours kept with their extremes (the newest hours are not rolled
-        # up yet, nor a point's first one): the rest is read from the samples.
-        best, run = (first, first), first
-        for hour in range(first, last + HOUR_MS, HOUR_MS):
-            item = kept.get(hour) if hour < last else None
-            if item is None or item[4] is None:
-                if hour - run > best[1] - best[0]:
-                    best = (run, hour)
-                run = hour + HOUR_MS
-        if best[1] - best[0] < ROLLED_WINDOW_HOURS * HOUR_MS:
+        # Whole months and days from their rollups, the hours at either end from theirs.
+        kept = rollup.kept(self.archive, point.id, held, first, last)
+        head, middle, rows = rollup.longest_run(kept, first, last)
+        if middle - head < ROLLED_WINDOW_HOURS * HOUR_MS:
             return None
-        head, middle = best
-        hours = [kept[hour] for hour in range(head, middle, HOUR_MS)]
-        cover = sum(item[0] for item in hours)
-        area = sum(item[1] for item in hours)
-        picks = [item[2] for item in hours if item[2] is not None]
-        picks += [item[3] for item in hours if item[3] is not None]
+        cover = sum(item[1] for item in rows)
+        area = sum(item[2] for item in rows)
+        picks = [item[3] for item in rows if item[3] is not None]
+        picks += [item[4] for item in rows if item[4] is not None]
         for low, high, closed in ((start_ms, head, False), (middle, end_ms, True)):
             times, values = self.samples(point, low, high)
             numbers = np.asarray(values, dtype=float)
@@ -684,6 +775,59 @@ def _value_at(times: np.ndarray, values: np.ndarray, step: bool, x: float) -> fl
     if not math.isfinite(b):
         return float(a) if x == times[i] else math.nan
     return float(a + (b - a) * (x - times[i]) / (times[i + 1] - times[i]))
+
+
+def _interpolate(
+    times: np.ndarray, values: Any, held: bool, grid: np.ndarray, gap_ms: float | None
+) -> np.ndarray:
+    """The rebuilt signal at each ``grid`` time: linear between two known samples (the last
+    sample when ``held``), NaN before the first sample, across a gap marker or a span longer
+    than ``gap_ms``, and past the last sample (by more than ``gap_ms`` when one is given)."""
+
+    out = np.full(len(grid), np.nan)
+    if not len(times):
+        return out
+    times_f = np.asarray(times, dtype=float)
+    numbers = np.asarray(values, dtype=float)
+    index = np.searchsorted(times_f, grid, side="right") - 1
+    known = index >= 0
+    i = np.clip(index, 0, len(times_f) - 1)
+    j = np.clip(i + 1, 0, len(times_f) - 1)
+    a, b = numbers[i], numbers[j]
+    ta, tb = times_f[i], times_f[j]
+    exact = known & (grid == ta) & np.isfinite(a)
+    last = known & (index == len(times_f) - 1)
+    inner = known & ~last & np.isfinite(a)
+    if gap_ms is not None:
+        inner &= (tb - ta) <= gap_ms
+    if held:
+        out = np.where(inner, a, out)
+    else:
+        line = inner & np.isfinite(b) & (tb > ta)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            fraction = np.where(line, (grid - ta) / np.where(tb > ta, tb - ta, 1.0), 0.0)
+        out = np.where(line, a + (b - a) * fraction, out)
+    # Past the last sample: only its own instant, or within ``gap_ms`` of it when held.
+    if held and gap_ms is not None:
+        out = np.where(last & np.isfinite(a) & (grid - ta <= gap_ms), a, out)
+    return np.where(exact, a, out)
+
+
+def _good_time(qualities: list[tuple], start_ms: int, end_ms: int) -> float:
+    """Milliseconds of ``[start, end]`` whose quality was good: ``qualities`` are the changes
+    ``(ms, quality, ...)`` from the archive, the one in effect at ``start`` first when it was
+    not good (good otherwise)."""
+
+    good = 0.0
+    at, state = float(start_ms), "good"
+    for change in qualities:
+        moment = min(max(float(change[0]), float(start_ms)), float(end_ms))
+        if state == "good":
+            good += moment - at
+        at, state = moment, str(change[1])
+    if state == "good":
+        good += float(end_ms) - at
+    return good
 
 
 def _window_stats(times, values, step, start_ms, end_ms) -> dict[str, float | None] | None:

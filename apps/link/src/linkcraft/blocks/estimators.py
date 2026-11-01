@@ -3,7 +3,8 @@
 A Kalman filter gives a better value of a signal the plant measures badly: without the lag of a
 moving average when the valve (or feed) that drives it is wired, and with the sensor's drift when
 asked. A soft sensor estimates a value the plant only samples (a lab analysis) from signals it
-measures all the time. The math is the SDK's (``plantcraft_sdk.estimators``), the same Models fits
+measures all the time; the lab fusion corrects an online value (an analyzer, a soft sensor) with
+the lab results, each at its sampling time and only from when it is approved. The math is the SDK's (``plantcraft_sdk.estimators``), the same Models fits
 with, so a filter here and a fit there agree.
 
 Each block fits what it needs on the window it reads (the model's gain, time constant and dead
@@ -22,6 +23,7 @@ from plantcraft_sdk.estimators import (
     fit_fopdt,
     fit_soft_sensor,
     fopdt_model,
+    fuse_lab,
     kalman_filter,
     local_level,
     noise_variance,
@@ -45,6 +47,10 @@ HARVEY = (
 SEBORG = (
     "Seborg, D. E., Edgar, T. F., Mellichamp, D. A., Doyle, F. J. (2016). Process Dynamics and "
     "Control, 4th ed. Wiley: first order plus dead time models."
+)
+ALEXANDER = (
+    "Alexander, H. L. (1991). State estimation for distributed systems with sensing delay. "
+    "SPIE Data Structures and Target Classification 1470: the delayed measurement."
 )
 FORTUNA = (
     "Fortuna, L., Graziani, S., Rizzo, A., Xibilia, M. G. (2007). Soft Sensors for Monitoring "
@@ -123,6 +129,69 @@ class SoftSensorParameters(BaseModel):
         "the process a few minutes before).",
         json_schema_extra={"unit": "min"},
     )
+
+
+class LabFusionParameters(BaseModel):
+    approval_minutes: float = Field(
+        default=0.0,
+        ge=0,
+        le=10080,
+        title="Approval delay",
+        description="How long after its sampling a lab result is known (approved). The "
+        "correction starts then, so the history shows what an operator would have seen.",
+        json_schema_extra={"unit": "min"},
+    )
+    lab_repeatability: float = Field(
+        default=0.0,
+        ge=0,
+        title="Lab repeatability",
+        description="One standard deviation of the lab method, in the signal's unit. 0: the "
+        "lab is taken as exact next to the online value's noise.",
+    )
+    deadband: float = Field(
+        default=0.0,
+        ge=0,
+        title="Dead zone",
+        description="A result closer than this to the estimate leaves the bias as it is (the "
+        "lab's own scatter), in the signal's unit. 0: every result corrects.",
+    )
+    max_step: float = Field(
+        default=0.0,
+        ge=0,
+        title="Largest correction",
+        description="The most one result moves the bias, in the signal's unit, so one bad "
+        "sample cannot jump it. 0: no limit.",
+    )
+
+
+def _lab_fusion(
+    inputs: dict[str, Any], parameters: LabFusionParameters, _ctx: Any
+) -> dict[str, Any]:
+    found = _arrays(inputs)
+    if isinstance(found, NoData):
+        return {"value": found, "bias": found, "uncertainty": found}
+    index, (online,) = found
+    results = numeric(inputs["lab"]).dropna()
+    inside = (results.index >= index[0]) & (results.index <= index[-1])
+    if not inside.any():
+        missing = NoData(t("No laboratory result in the window."))
+        return {"value": missing, "bias": missing, "uncertainty": missing}
+    # Each result on the online grid, at the first step at or after its sampling.
+    lab = np.full(len(online), np.nan)
+    lab[index.searchsorted(results.index[inside])] = results.to_numpy(float)[inside]
+    out = fuse_lab(
+        online,
+        lab,
+        delay_steps=round(parameters.approval_minutes * 60 / _step(index)),
+        lab_noise=parameters.lab_repeatability**2,
+        deadband=parameters.deadband,
+        max_step=parameters.max_step or None,
+    )
+    return {
+        "value": clean(pd.Series(out.estimate, index=index)),
+        "bias": clean(pd.Series(out.bias, index=index)),
+        "uncertainty": clean(pd.Series(out.uncertainty, index=index)),
+    }
 
 
 def _kalman(inputs: dict[str, Any], parameters: KalmanParameters, _ctx: Any) -> dict[str, Any]:
@@ -301,5 +370,57 @@ BLOCKS = (
             group="Soft sensors",
         ),
         _soft,
+    ),
+    Block(
+        BlockSpec(
+            "estimator.lab_fusion",
+            "1.0",
+            LIBRARY,
+            "Lab fusion",
+            BlockDocs(
+                summary="An online value (an analyzer, a soft sensor) corrected by the lab, "
+                "each result at its sampling time.",
+                description=(
+                    "The online value's bias is a state that walks slowly. Each lab result "
+                    "measures it at the time the sample was taken, and corrects it when it is "
+                    "approved: a delayed measurement, with the walk since the sampling added to "
+                    "its noise. The walk is tuned by maximum likelihood of the results."
+                ),
+                reading="The estimate keeps the online value's speed and the lab's accuracy. "
+                "The bias is how far the online value reads from the lab now: one that grows "
+                "is an analyzer to calibrate or a soft sensor to fit again. Before the first "
+                "result the estimate is the online value. On a made drift of 3 units it cut "
+                "the error more than 4 times with results every 5 minutes approved 100 s late.",
+                assumptions=(
+                    "The lab is right; the online value is off by a bias that changes slowly.",
+                    "The approval delay is about the same for every result.",
+                ),
+                limitations=(
+                    "Needs at least 60 online samples and one lab result in the window.",
+                    "A result whose sample was spoiled moves the bias until the next ones "
+                    "bring it back.",
+                ),
+                formula="b(k+1) = b(k) + w(k); lab(s) = y(s) − b(s); "
+                "x̂(k) = y(k) − b̂(k | results approved by k)",
+                references=(KALMAN, ALEXANDER, HARVEY),
+            ),
+            inputs=(
+                inport("x", "series", "Online value", "The analyzer or soft sensor to correct."),
+                inport(
+                    "lab",
+                    "series",
+                    "Lab",
+                    "The lab results at their sampling times (laboratory:<analysis>).",
+                ),
+            ),
+            outputs=(
+                outport("value", "series", "Estimate", "The online value without its bias."),
+                outport("bias", "series", "Bias", "How far the online value reads from the lab."),
+                outport("uncertainty", "series", "Uncertainty", "One standard deviation of it."),
+            ),
+            parameters=LabFusionParameters,
+            group="Soft sensors",
+        ),
+        _lab_fusion,
     ),
 )

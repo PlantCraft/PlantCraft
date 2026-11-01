@@ -40,6 +40,8 @@ from plantcraft_sdk.blocks import (
 from pydantic import BaseModel, Field, create_model, model_validator
 
 from linkcraft.i18n import t
+from linkcraft.models.pca import PcaModel, judge_pca
+from linkcraft.models.regression import Regression
 from linkcraft.models.simulate import Simulation, SimulationError
 from linkcraft.models.stats import Calibration, judge
 
@@ -762,7 +764,459 @@ OPERATING = Block(
     _operating,
 )
 
-BLOCKS = (DEVIATION, OPERATING)
+# Empirical model (PCA, M4) -------------------------------------------------------------------
+
+
+class Empirical(BaseModel):
+    variance: float = Field(
+        default=0.9,
+        ge=0.5,
+        le=0.99,
+        title="Variance kept",
+        description="Calibrate keeps the principal components that explain this share of the "
+        "signals' variance in normal operation.",
+    )
+    confidence: float = Field(
+        default=0.99,
+        ge=0.9,
+        le=0.9999,
+        title="Confidence",
+        description="Confidence of the T² and SPE limits: 0.99 means about 1 sample in 100 is "
+        "beyond each in normal operation.",
+    )
+    share: float = Field(
+        default=0.2,
+        ge=0.01,
+        le=1.0,
+        title="Share beyond the limits",
+        description="A run deviates when at least this share of its samples is beyond a limit.",
+    )
+    persistence: int = Field(
+        default=3,
+        ge=1,
+        le=50,
+        title="Runs in a row",
+        description="Deviating runs in a row before attention becomes a problem.",
+    )
+    calibration: dict[str, Any] | None = Field(
+        default=None,
+        title="Calibration",
+        description="The principal components of the signals in normal operation. Filled by "
+        "Calibrate in the editor on a period you choose.",
+    )
+
+    @model_validator(mode="after")
+    def _calibration(self) -> Empirical:
+        if self.calibration is not None:
+            try:
+                PcaModel.from_dict(self.calibration)
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("a calibration made by Calibrate") from exc
+        return self
+
+
+def _empirical(inputs: dict[str, Any], parameters: Any, ctx: Any) -> dict[str, Any]:
+    state = ctx.state
+    signals = residual_frame(inputs.get("signals") or [])
+
+    def inactive(reason: str) -> dict[str, Any]:
+        state["verdict"] = "inactive"
+        missing = NoData(reason, ctx.node_id)
+        return {"result": Result.unknown(reason), "t2": missing, "spe": missing, "exceed": missing}
+
+    if signals.empty:
+        reasons = [item.reason for item in inputs.get("signals") or [] if isinstance(item, NoData)]
+        return inactive(reasons[0] if reasons else t("No signal to judge."))
+    reason = unjudgeable(signals, inputs.get("active"))
+    if reason:
+        return inactive(reason)
+    if parameters.calibration is None:
+        return inactive(
+            t("Not calibrated yet: press Calibrate in the editor on a period of normal operation.")
+        )
+    model = PcaModel.from_dict(parameters.calibration)
+    missing = [name for name in model.signals if name not in signals.columns]
+    if missing:
+        return inactive(t("The signals changed since the calibration: calibrate again."))
+    rows = signals[model.signals].ffill().to_numpy(dtype=float)
+    judgement = judge_pca(rows, model, confidence=parameters.confidence)
+    deviating = judgement.exceed_share >= parameters.share
+    streak = int(state.get("streak") or 0)
+    streak = streak + 1 if deviating else 0
+    level = _level(streak, parameters.persistence)
+    state.update(streak=streak, verdict=level)
+    score = round(100.0 * (1.0 - judgement.exceed_share), 1)
+    top = max(judgement.contributions.items(), key=lambda pair: pair[1], default=None)
+    if level == "normal":
+        message = t("The signals move together as in normal operation.")
+    else:
+        message = (
+            t("Off normal operation for {count} run(s).", count=streak)
+            if level == "attention"
+            else t("Persistently off normal operation.")
+        )
+        message += " " + (
+            t("The signals no longer move together as they did.")
+            if judgement.spe_share >= 0.5
+            else t("The signals move as usual, but farther than normal.")
+        )
+        if top and top[1] > 0:
+            message += t(" {name} explains {share}% of it.", name=top[0], share=f"{top[1]:.0f}")
+    t2 = pd.Series(judgement.t2, index=signals.index, name="T²")
+    spe = pd.Series(judgement.spe, index=signals.index, name="SPE")
+    return {
+        "result": Result(
+            SUITE_LEVEL[level],
+            score,
+            message,
+            t("Empirical model"),
+            {
+                "t2_limit": judgement.t2_limit,
+                "spe_limit": judgement.spe_limit,
+                "exceed_share": judgement.exceed_share,
+                "spe_share": judgement.spe_share,
+                "contributions": judgement.contributions,
+                "components": model.components,
+                "streak": streak,
+                "level": level,
+            },
+        ),
+        "t2": t2,
+        "spe": spe,
+        "exceed": round(judgement.exceed_share * 100.0, 1),
+    }
+
+
+EMPIRICAL = Block(
+    BlockSpec(
+        "model.empirical",
+        "1.0",
+        LIBRARY,
+        "Empirical model (PCA)",
+        BlockDocs(
+            summary="Judges a unit with no physical model by how its signals moved together in "
+            "normal operation.",
+            description=(
+                "Learns, on a period of normal operation, how the unit's signals move together: "
+                "their principal components (PCA). Each run then measures every sample two "
+                "ways. T² says how far the plant moved along its normal directions; SPE (Q) says "
+                "how far the signals left the way they moved together, which is how most faults "
+                "show. A run deviates when enough samples are beyond either limit; a deviation "
+                "that lasts several runs in a row is a problem. The share each signal explains "
+                "points at where to look."
+            ),
+            reading=(
+                "Ok: the signals move together as in normal operation. Warning (attention): off "
+                "normal operation for fewer runs than the persistence. Bad (problem): "
+                "persistently off; the sentence says whether the signals stopped moving together "
+                "(SPE) or moved farther than normal (T²) and names the signal that explains most "
+                "of it. Unknown: not calibrated, a signal not measured or the unit out of "
+                "operation. The score is the share of samples inside both limits."
+            ),
+            assumptions=(
+                "The calibration period is normal operation that covers the unit's usual "
+                "operating points.",
+                "The signals wired are the ones it was calibrated on.",
+            ),
+            limitations=(
+                "An empirical model knows only the operation it saw: a new normal operating point "
+                "reads as a deviation until it is calibrated again.",
+                "The contributions are the share of the excess each signal explains, not the "
+                "probability it failed; a fault often shows first on signals downstream of it.",
+            ),
+            formula=(
+                "z = (x - mean)/std; t = z P; T² = Σ t_a²/λ_a; SPE = ‖z - t Pᵀ‖²; "
+                "limits χ²(confidence, k) and g χ²(confidence, h)"
+            ),
+            references=(
+                "Jackson, J. E. (1991). A User's Guide to Principal Components. Wiley.",
+                "MacGregor, J. F., Kourti, T. (1995). Statistical process control of "
+                "multivariate processes.",
+                "Box, G. E. P. (1954). Some theorems on quadratic forms applied in the study of "
+                "analysis of variance problems.",
+                "Qin, S. J. (2003). Statistical process monitoring: basics and beyond. Journal of "
+                "Chemometrics 17, 480-502.",
+                "Westerhuis, J. A. et al. (2000). Generalized contribution plots in multivariate "
+                "statistical process monitoring.",
+            ),
+        ),
+        inputs=(
+            inport(
+                "signals",
+                "series",
+                "Signals",
+                "The unit's signals, one wire each.",
+                multiple=True,
+            ),
+            inport(
+                "active",
+                "intervals",
+                "In operation",
+                "When the unit runs; outside it the block does not judge. Not wired: always.",
+                required=False,
+            ),
+        ),
+        outputs=(
+            outport(
+                "result",
+                "result",
+                "Verdict",
+                "Normal, attention, problem or unknown, with the score and the sentence.",
+            ),
+            outport("t2", "series", "T²", "Hotelling's T² of every sample.", record=False),
+            outport(
+                "spe", "series", "SPE", "Squared prediction error of every sample.", record=False
+            ),
+            outport(
+                "exceed",
+                "number",
+                "Beyond the limits",
+                "Share of the samples beyond the T² or the SPE limit.",
+                unit="%",
+                low=0,
+                high=100,
+                better="lower",
+            ),
+        ),
+        parameters=Empirical,
+        runs_on_missing=True,
+        group="Judge",
+    ),
+    _empirical,
+)
+
+
+# Regression with a validity range (A4) -------------------------------------------------------
+
+
+class RegressionParameters(BaseModel):
+    method: Literal["ols", "ridge", "pls"] = Field(
+        default="ridge",
+        title="Method",
+        description="OLS: least squares. Ridge: least squares that keeps the coefficients "
+        "small, steadier with few samples. PLS: for inputs that move together.",
+    )
+    alpha: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1e6,
+        title="Ridge strength",
+        description="Ridge only: how strongly the coefficients are kept small (on standardised "
+        "inputs).",
+    )
+    components: int = Field(
+        default=2,
+        ge=1,
+        le=20,
+        title="PLS components",
+        description="PLS only: the directions of the inputs it keeps.",
+    )
+    margin: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        title="Margin outside the training range",
+        description="How far beyond each input's training range still counts as inside, as a "
+        "share of that range (0.1: 10% on each side).",
+    )
+    share: float = Field(
+        default=0.1,
+        ge=0.0,
+        le=1.0,
+        title="Share outside before a warning",
+        description="The verdict is a warning when the inputs are outside their range for more "
+        "than this share of the window.",
+    )
+    calibration: dict[str, Any] | None = Field(
+        default=None,
+        title="Calibration",
+        description="The coefficients and each input's training range. Filled by Calibrate in "
+        "the editor on a period with target samples.",
+    )
+
+    @model_validator(mode="after")
+    def _calibration(self) -> RegressionParameters:
+        if self.calibration is not None:
+            try:
+                Regression.from_dict(self.calibration)
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("a calibration made by Calibrate") from exc
+        return self
+
+
+def _regression(inputs: dict[str, Any], parameters: Any, ctx: Any) -> dict[str, Any]:
+    wired = residual_frame(inputs.get("inputs") or [])
+
+    def inactive(reason: str) -> dict[str, Any]:
+        missing = NoData(reason, ctx.node_id)
+        return {
+            "value": missing,
+            "valid": missing,
+            "result": Result.unknown(reason),
+            "outside": missing,
+        }
+
+    if wired.empty:
+        return inactive(t("No input to predict from."))
+    if parameters.calibration is None:
+        return inactive(
+            t("Not calibrated yet: press Calibrate in the editor on a period with target samples.")
+        )
+    model = Regression.from_dict(parameters.calibration)
+    if [name for name in model.inputs if name not in wired.columns]:
+        return inactive(t("The inputs changed since the calibration: calibrate again."))
+    rows = wired[model.inputs].ffill().to_numpy(dtype=float)
+    value = pd.Series(model.predict(rows), index=wired.index, name=model.target or "estimate")
+    flags = model.outside(rows, parameters.margin)
+    out_rows = np.any(flags != 0, axis=1)
+    valid = pd.Series(~out_rows, index=wired.index, name="valid")
+    share = float(out_rows.mean()) if len(out_rows) else 0.0
+    details: dict[str, Any] = {
+        "method": model.method,
+        "r2": model.r2,
+        "rmse": model.rmse,
+        "outside_share": share,
+        "inputs": {},
+    }
+    worst = None
+    for index, name in enumerate(model.inputs):
+        below = float(np.mean(flags[:, index] < 0)) if len(flags) else 0.0
+        above = float(np.mean(flags[:, index] > 0)) if len(flags) else 0.0
+        details["inputs"][name] = {
+            "low": model.low[index],
+            "high": model.high[index],
+            "below": below,
+            "above": above,
+        }
+        if below + above > 0 and (worst is None or below + above > worst[1] + worst[2]):
+            worst = (name, below, above, index)
+    target = inputs.get("target")
+    if isinstance(target, pd.Series):
+        measured = pd.to_numeric(target, errors="coerce").dropna()
+        if len(measured):
+            at = value.reindex(measured.index, method="nearest")
+            error = (measured - at).dropna()
+            if len(error):
+                details["rmse_now"] = float(np.sqrt(np.mean(error.to_numpy() ** 2)))
+                details["target_samples"] = int(len(error))
+    if worst is None:
+        status, message = "ok", t("Every input stayed inside the range it was trained on.")
+    else:
+        name, below, above, index = worst
+        side = t("below") if below >= above else t("above")
+        bound = model.low[index] if below >= above else model.high[index]
+        message = t(
+            "Outside the training range {share}% of the time: {name} went {side} {bound:.4g}, "
+            "so the estimate extrapolates there.",
+            share=f"{100 * share:.0f}",
+            name=name,
+            side=side,
+            bound=bound,
+        )
+        status = "warning" if share > parameters.share else "ok"
+    return {
+        "value": value,
+        "valid": valid,
+        "result": Result(
+            status, round(100.0 * (1.0 - share), 1), message, t("Regression"), details
+        ),
+        "outside": round(100.0 * share, 1),
+    }
+
+
+REGRESSION = Block(
+    BlockSpec(
+        "model.regression",
+        "1.0",
+        LIBRARY,
+        "Regression (OLS, Ridge, PLS)",
+        BlockDocs(
+            summary="A value the plant only samples (a lab analysis) predicted at every step "
+            "by a regression trained once, with the range it is valid in.",
+            description=(
+                "Calibrate fits the regression on a period: the target's samples (a lab or "
+                "analyzer series) against the inputs at those times, by OLS, ridge or PLS. It "
+                "keeps the coefficients, the fit (R², RMSE) and each input's range in the "
+                "training. Each run predicts at every step and marks where an input left its "
+                "range: there the regression extrapolates."
+            ),
+            reading=(
+                "Estimate: the target at every step. Valid: true where every input is inside its "
+                "training range. The verdict is a warning when the inputs were outside for more "
+                "than the share set, and names the input and the side. When the target is wired "
+                "its samples in the window give the error now, against the RMSE of the training."
+            ),
+            assumptions=(
+                "The inputs explain the target the same way as in the training period.",
+                "The target's samples are at the times the process was in that state (shift "
+                "the lab by its sampling delay before wiring it).",
+            ),
+            limitations=(
+                "Inside the range is necessary, not enough: a combination of inputs never seen "
+                "together can still extrapolate.",
+                "Linear: a process that bends inside the range is fitted by a straight line.",
+            ),
+            formula="ŷ = b₀ + Σ bᵢ xᵢ; valid when lowᵢ − m·spanᵢ ≤ xᵢ ≤ highᵢ + m·spanᵢ",
+            references=(
+                "Hoerl, A. E., Kennard, R. W. (1970). Ridge regression: biased estimation for "
+                "nonorthogonal problems. Technometrics 12(1), 55-67.",
+                "Wold, S., Sjöström, M., Eriksson, L. (2001). PLS-regression: a basic tool of "
+                "chemometrics. Chemometrics and Intelligent Laboratory Systems 58, 109-130.",
+                "Kadlec, P., Gabrys, B., Strandt, S. (2009). Data-driven soft sensors in the "
+                "process industry. Computers & Chemical Engineering 33(4), 795-814.",
+            ),
+        ),
+        inputs=(
+            inport(
+                "inputs",
+                "series",
+                "Inputs",
+                "The signals that explain the target, one wire each.",
+                multiple=True,
+            ),
+            inport(
+                "target",
+                "series",
+                "Target",
+                "The sampled value it predicts (gaps between samples). Needed to calibrate; "
+                "wired at run time it also gives the error now.",
+                required=False,
+            ),
+        ),
+        outputs=(
+            outport("value", "series", "Estimate", "The target at every step."),
+            outport(
+                "valid",
+                "intervals",
+                "Valid",
+                "True where every input is inside its training range.",
+            ),
+            outport(
+                "result",
+                "result",
+                "Verdict",
+                "Ok, or a warning when the inputs left their range, with the input named.",
+            ),
+            outport(
+                "outside",
+                "number",
+                "Outside the range",
+                "Share of the window with an input outside its training range.",
+                unit="%",
+                low=0,
+                high=100,
+                better="lower",
+            ),
+        ),
+        parameters=RegressionParameters,
+        runs_on_missing=True,
+        group="Soft sensors",
+    ),
+    _regression,
+)
+
+
+BLOCKS = (DEVIATION, OPERATING, EMPIRICAL, REGRESSION)
 
 __all__ = [
     "BLOCKS",

@@ -2,7 +2,7 @@
  * screen with the card's preview on top, its signals under it and its options on the side, in
  * groups that open and close and a search over them. "Visualization" changes the kind and keeps
  * what still applies. */
-import { BarChart3, ChevronDown, Gauge, LineChart, Plus, ScatterChart, Search, Table2, Trash2, Type, Workflow, X, Hash } from "lucide-react";
+import { BarChart3, ChevronDown, Gauge, LineChart, Plus, ScatterChart, Search, Table2, Trash2, Type, Workflow, X, Hash, SlidersHorizontal } from "lucide-react";
 import { createContext, useContext, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { api } from "./api";
 import { diagramsApi } from "./diagrams/api";
@@ -13,7 +13,7 @@ import { t } from "./i18n";
 import { AGG_LABELS, ALL_ROLES, cardPixels, cardTitle, defaultCard, HEIGHTS, itemMode, KIND_HINTS, KIND_LABELS, KINDS, maxItemsOf, minHeight, NO_ITEM_KINDS, type Mode, resultLabel, variableOf, VALUE_KINDS, WIDTHS, WINDOWS, windowLabel } from "./model";
 import type { Aggregation, AssetKind, AssetOption, Card, CardData, CardItem, CardOptions, FieldConfig, Kind, Level, Mapping, Override, Page, ResultKind, SignalOption, Step, TableColumn, Thresholds, Variable } from "./types";
 
-const KIND_ICONS: Record<Kind, typeof Gauge> = { stat: Hash, gauge: Gauge, trend: LineChart, bar: BarChart3, table: Table2, scatter: ScatterChart, text: Type, diagram: Workflow };
+const KIND_ICONS: Record<Kind, typeof Gauge> = { stat: Hash, gauge: Gauge, trend: LineChart, bar: BarChart3, table: Table2, scatter: ScatterChart, text: Type, diagram: Workflow, apc: SlidersHorizontal };
 
 function message(error: unknown) {
   return error instanceof Error ? error.message : t("Couldn't complete the operation.");
@@ -319,6 +319,7 @@ export function changeKind(current: Card, kind: Kind): Card {
     items: current.items.slice(0, maxItemsOf(kind)),
     text: kind === "text" ? current.text ?? "" : current.text,
     diagram_id: kind === "diagram" ? current.diagram_id ?? "" : current.diagram_id,
+    apc_id: kind === "apc" ? current.apc_id ?? "" : current.apc_id,
     height: current.height === old.height ? fresh.height : Math.max(minHeight(kind), current.height),
     width: current.width === old.width ? fresh.width : current.width,
   };
@@ -375,7 +376,9 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
   const text = card.kind === "text";
   // Text and diagram panels show no signal: no field, threshold, mapping or override options.
   const noItems = NO_ITEM_KINDS.includes(card.kind);
-  const complete = text ? Boolean(card.text?.trim()) : isDiagram ? Boolean(card.diagram_id) : card.items.length > 0 && (card.kind !== "scatter" || card.items.length === 2) && card.items.every((item) => (item.signal_id ? true : Boolean(item.asset_id && (item.role || item.result))));
+  const isApc = card.kind === "apc";
+  const controllers = assets.filter((option) => option.kind === "apc");
+  const complete = text ? Boolean(card.text?.trim()) : isDiagram ? Boolean(card.diagram_id) : isApc ? Boolean(card.apc_id) : card.items.length > 0 && (card.kind !== "scatter" || card.items.length === 2) && card.items.every((item) => (item.signal_id ? true : Boolean(item.asset_id && (item.role || item.result))));
   const previewKey = JSON.stringify({ ...card, x: 0, y: 0, title: "", description: "" });
   const valuesKey = JSON.stringify(values);
   useEffect(() => {
@@ -430,7 +433,7 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
                 {text ? <CardBody card={card} data={{ card_id: card.card_id, kind: "text", window: card.window, read_at: "" }} texts={texts} />
                   : previewError ? <div className="tc-card-error">{previewError}</div>
                   : preview ? <CardBody card={card} data={preview} texts={texts} />
-                  : <p className="muted">{isDiagram ? t("Choose the process display to see the panel.") : t("Choose the signals to see the panel.")}</p>}
+                  : <p className="muted">{isDiagram ? t("Choose the process display to see the panel.") : isApc ? t("Choose the controller to see the panel.") : t("Choose the signals to see the panel.")}</p>}
               </div>
             </article>
           </div>
@@ -442,6 +445,14 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
                   {(diagrams ?? []).map((item) => <option key={item.diagram_id} value={item.diagram_id}>{item.name}</option>)}
                 </select>
                 <small className="muted">{t("Shown live, scaled to the panel, with the dashboard's time window (else the panel's). Viewers who may not see the process display's folder see that it is not available.")}</small>
+              </label>
+              : isApc ? <label className="tc-text-input">{t("Multivariable controller")}
+                <select aria-label={t("Multivariable controller")} value={card.apc_id ?? ""} onChange={(event) => set("apc_id", event.target.value)}>
+                  <option value="">{controllers.length ? t("Choose a controller") : t("No controller yet: add an asset of kind apc, with its MVs (apc_mv) and CVs (apc_cv) under it.")}</option>
+                  {card.apc_id && !controllers.some((item) => item.id === card.apc_id) && <option value={card.apc_id}>{card.apc_id}</option>}
+                  {controllers.map((item) => <option key={item.id} value={item.id}>{item.parent ? `${item.parent} / ` : ""}{item.name}</option>)}
+                </select>
+                <small className="muted">{t("Read only: each MV and CV with its value, limits, target and status now, and its value and target over the time span. View never writes to the controller.")}</small>
               </label>
               : text ? <label className="tc-text-input">{t("Text (Markdown; ${variable} is replaced by its value)")}<textarea rows={8} maxLength={2000} value={card.text ?? ""} onChange={(event) => set("text", event.target.value)} placeholder={t("What this dashboard is for, what to watch, who to call.")} /></label>
               : <>
@@ -536,7 +547,7 @@ export function CardEditor({ initial, isNew = false, variables = [], values = {}
               <Opt label={t("Height")}><select value={card.height} onChange={(event) => set("height", Number(event.target.value))}>{HEIGHTS.filter((rows) => rows >= minHeight(kind)).map((rows) => <option key={rows} value={rows}>{rows === 1 ? t("1 row") : t("{n} rows", { n: rows })}</option>)}</select></Opt>
               {pages.length > 1 && <Opt label={t("Page")}><select value={card.page_id ?? pages[0].page_id} onChange={(event) => set("page_id", event.target.value)}>{pages.map((page) => <option key={page.page_id} value={page.page_id}>{page.name}</option>)}</select></Opt>}
             </Group>
-            {variables.length > 0 && !isDiagram && <Group title={t("Repeat options")} open={Boolean(card.repeat)}>
+            {variables.length > 0 && !isDiagram && !isApc && <Group title={t("Repeat options")} open={Boolean(card.repeat)}>
               <Opt label={t("Repeat for")} words="repeat variable" hint={t("One copy of the panel for each value picked.")}>
                 <select value={card.repeat?.variable ?? ""} onChange={(event) => set("repeat", event.target.value ? { variable: event.target.value, direction: card.repeat?.direction ?? "h", max_per_row: card.repeat?.max_per_row ?? 4 } : null)}>
                   <option value="">{t("Off")}</option>

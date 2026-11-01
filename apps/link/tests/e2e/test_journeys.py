@@ -94,6 +94,35 @@ def test_a_loop_gets_a_tuning_suggestion_on_demand(signed_in, app_url, screensho
         panel.screenshot(path=str(screenshots / "loop-tuning.png"))
 
 
+def test_a_loop_lists_its_setpoint_steps_on_demand(signed_in, app_url, screenshots):
+    page = signed_in
+    page.goto(f"{app_url}/link/loops/fic-101")
+    panel = page.get_by_test_id("step-response")
+    panel.get_by_role("button", name="Find steps").click()
+    expect(panel.get_by_text("Median overshoot")).to_be_visible()
+    expect(panel.locator("table.table")).to_contain_text("50 → 55")
+    if screenshots:
+        panel.screenshot(path=str(screenshots / "loop-steps.png"))
+
+
+def test_the_plant_map_colours_loops_by_a_kpi_and_sizes_them_by_criticality(
+    signed_in, app_url, screenshots
+):
+    page = signed_in
+    page.goto(f"{app_url}/link/")
+    plant = page.get_by_test_id("plant-map")
+    expect(plant.locator(".pmap-cell").first).to_be_visible()
+    plant.get_by_label("Colour by").select_option("effective_control")
+    if screenshots:
+        plant.screenshot(path=str(screenshots / "plant-map-heat.png"))
+    plant.get_by_role("button", name="Treemap by criticality").click()
+    expect(plant.locator(".pmap-tree .pmap-cell").first).to_be_visible()
+    if screenshots:
+        plant.screenshot(path=str(screenshots / "plant-map-tree.png"))
+    plant.locator(".pmap-tree .pmap-cell").first.click()
+    expect(page).to_have_url(re.compile(r"/link/loops/[^/]+$"))
+
+
 def test_an_algorithm_page_and_its_editor_window(signed_in, app_url, screenshots):
     page = signed_in
     page.goto(f"{app_url}/link/algorithms")
@@ -252,6 +281,8 @@ def test_the_overview_shows_what_is_bad_and_where(signed_in, app_url, screenshot
             "Queue",
             "Loop-hours lost, 7 days",
             "Effective control",
+            "Oscillations shared by several loops",
+            "Plant map",
         ]
     )
     # Every loop and signal a square, each opening its page.
@@ -711,8 +742,10 @@ def test_a_unit_twin_is_calibrated_in_the_editor_and_saved(signed_in, app_url, s
     expect(page).to_have_url(re.compile(r"/link/editor/unit_twin_copy$"))
     # Its assets on its page, Used by: saving them is a new version.
     page.goto(f"{app_url}/link/algorithms/unit_twin_copy/used-by")
-    page.locator(".asset-picker select").select_option("fic-101")
-    page.locator(".asset-picker").get_by_role("button", name="Add").click()
+    page.get_by_label("Asset to add").select_option("fic-101")
+    page.locator(".asset-picker").filter(has=page.get_by_label("Asset to add")).get_by_role(
+        "button", name="Add"
+    ).click()
     page.get_by_role("button", name="Save as new version").click()
     page.get_by_role("link", name="Versions", exact=True).click()
     expect(
@@ -1035,3 +1068,33 @@ def test_folders_hold_algorithms_and_schedules_and_moving_is_deliberate(
     expect(blocks.get_by_role("heading", name="Folders")).to_have_count(0)
     if screenshots:
         page.screenshot(path=str(screenshots / "folders-blocks.png"), full_page=True)
+
+
+def test_a_multivariable_controller_shows_its_health_and_costliest_limits(
+    signed_in, app_url, screenshots
+):
+    """A16/A17: the APC list gives on, MVs in service and CVs at a limit; one controller ranks
+    its active limits by what 1 % more range is worth, and lists its MVs and CVs."""
+
+    page = signed_in
+    page.goto(f"{app_url}/link/results")
+    page.get_by_role("link", name="Multivariable controllers", exact=True).click()
+    expect(page).to_have_url(re.compile(r"/link/apc$"))
+    row = page.locator(".pc-dt tbody tr", has_text="Crude preheat APC")
+    expect(row).to_be_visible()
+    expect(row).to_contain_text("75%")
+    expect(row).to_contain_text("1/2")
+    if screenshots:
+        page.screenshot(path=str(screenshots / "apc-list.png"), full_page=True)
+    row.click()
+    expect(page).to_have_url(re.compile(r"/link/apc/apc-c1$"))
+    expect(page.get_by_role("heading", name="Crude preheat APC")).to_be_visible()
+    limits = page.locator(".pc-dt").first.locator("tbody tr")
+    expect(limits.first).to_contain_text("Furnace duty")
+    expect(limits.first).to_contain_text("2 $/h")
+    expect(limits.nth(1)).to_contain_text("Column dP")
+    expect(page.locator(".pc-dt").nth(1)).to_contain_text("Out of service")
+    page.get_by_label("Window").select_option("7")
+    expect(limits.first).to_contain_text("Furnace duty")
+    if screenshots:
+        page.screenshot(path=str(screenshots / "apc-controller.png"), full_page=True)

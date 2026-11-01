@@ -53,6 +53,32 @@ def asset_choices(user: CurrentUser, rt: RuntimeDep) -> list[dict[str, Any]]:
     )
 
 
+@router.get("/api/asset-type-choices")
+def asset_type_choices(user: CurrentUser, rt: RuntimeDep) -> list[dict[str, Any]]:
+    """PlantCraft's asset types, for an algorithm on assets to run on every asset of a type
+    (A20): each type's id, name, parent type and the roles its assets' signals take."""
+
+    try:
+        items = list(rt.user_client(user).asset_types())
+    except PlantCraftError as exc:
+        raise HTTPException(status_code=502, detail=str(exc.detail or exc)) from exc
+    return sorted(
+        (
+            {
+                "id": str(item.get("id")),
+                "name": str(item.get("name") or item.get("id")),
+                "parent": item.get("parent") or item.get("parent_id"),
+                "roles": sorted(
+                    str(role.get("key")) for role in item.get("roles") or [] if role.get("key")
+                ),
+            }
+            for item in items
+            if item.get("id")
+        ),
+        key=lambda row: row["name"].casefold(),
+    )
+
+
 @router.get("/api/assets/{asset_id:path}")
 def asset_link(asset_id: str, scope: Scope, rt: RuntimeDep) -> dict[str, Any]:
     """What ``assets/<id>`` opens: the asset's page in Link, with the latest result of every

@@ -21,7 +21,7 @@ from alarmcraft.alarms.model import CREATES, PRIORITIES, kind_matches
 from alarmcraft.alarms.records import Conflict
 from alarmcraft.alarms.rules import RuleDraft, from_legacy
 from alarmcraft.alarms.simple import SimpleLogic, to_diagram
-from alarmcraft.api.deps import CurrentUser, EditorUser, RuntimeDep, guarded
+from alarmcraft.api.deps import CurrentUser, EditorUser, EditorView, RuntimeDep, guarded
 from alarmcraft.api.routers.alarms import mark_mine, summary, window_of
 from alarmcraft.api.runtime import Runtime
 from alarmcraft.api.scope import seen
@@ -427,7 +427,7 @@ def _tried(
 
 
 @router.get("/rules/from-event/{event_id}")
-def rule_from_event(event_id: int, rt: RuntimeDep, _user: EditorUser) -> dict[str, Any]:
+def rule_from_event(event_id: int, rt: RuntimeDep, _user: EditorView) -> dict[str, Any]:
     """A new Simple rule filled in from an event that came in: its kind and severity, over the
     asset it named (any asset otherwise)."""
 

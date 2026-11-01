@@ -215,12 +215,16 @@ class Partitions:
                 found.append((str(row[0]), *bounds(int(match[1]), int(match[2]))))
         return sorted(found, key=lambda item: item[1])
 
-    def drop_expired(self, cutoffs: dict[int, int], now_ms: int) -> tuple[int, set[int]]:
+    def drop_expired(
+        self, cutoffs: dict[int, int], now_ms: int, hour_cutoffs: dict[int, int] | None = None
+    ) -> tuple[int, set[int]]:
         """Drop each past month whose every row is past its point's retention.
 
         A chunk is past retention when it ends before its point's cutoff (``ArchiveStore.prune``
-        deletes those); an hourly rollup when its month ends by then. A point without a cutoff
-        (not in the catalog) keeps its month. Returns the chunks dropped and their points.
+        deletes those); an hourly rollup when its month ends by its point's hourly cutoff
+        (``hour_cutoffs``, H9; the raw cutoff when not given). A point without a cutoff (not in
+        the catalog, or kept forever) keeps its month. Returns the chunks dropped and their
+        points.
         """
 
         current = month_of(now_ms)
@@ -232,13 +236,16 @@ class Partitions:
                     break
                 with self.db.connect() as connection:
                     rows = _rows(connection, table, name)
-                if not _expired(table, rows, cutoffs, end):
+                limits = (
+                    hour_cutoffs if table == "rollups" and hour_cutoffs is not None else cutoffs
+                )
+                if not _expired(table, rows, limits, end):
                     continue
                 with self.db.lock, self.db.connect() as connection:
                     # The table first, as writes take it: a write waits, never deadlocks.
                     connection.execute(f"LOCK TABLE {table} IN ACCESS EXCLUSIVE MODE")
                     rows = _rows(connection, table, name)
-                    if not _expired(table, rows, cutoffs, end):
+                    if not _expired(table, rows, limits, end):
                         continue
                     connection.execute(f"DROP TABLE {name}")
                 if table == "chunks":

@@ -3,7 +3,7 @@
  * over the last hours or a fixed period, as means of an interval or as recorded; save the trend
  * to open it again, or download what it shows as CSV.
  */
-import { Dialog, confirmAction, BRAND_COLORS, type BrandTheme, useAssistantPage, timeChartLayout, timePlotConfig, fileStamp, isoOf, localOf, plotTheme, errorMessage as message, saveFile, useBrandTheme } from "@plantcraft/ui";
+import { Dialog, MultiSelect, askText, confirmAction, BRAND_COLORS, type BrandTheme, useAssistantPage, timeChartLayout, timePlotConfig, fileStamp, isoOf, localOf, plotTheme, errorMessage as message, saveFile, useBrandTheme } from "@plantcraft/ui";
 import { Plot } from "@plantcraft/ui/plot";
 import { Download, ExternalLink, LoaderCircle, Maximize2, Minimize2, Plus, RefreshCw, Save, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -12,8 +12,8 @@ import { SignalSearch } from "./CardEditor";
 import { formatDate, t } from "./i18n";
 import { when, windowLabel } from "./model";
 import { navigate } from "./nav";
-import { DEFAULT_STYLE, EMPTY_VIEW, MAX_LINES, MAX_PLOTS, chipText, periodLabel, readable, styleOf, TREND_AGGS, TREND_STEPS, TREND_WINDOWS, trendCsv, trendTraces, viewFromAddress } from "./trendModel";
-import type { LineStyle, Me, Trend, TrendAgg, TrendData, TrendLineSpec, TrendPeriod, TrendView } from "./types";
+import { DEFAULT_STYLE, EMPTY_VIEW, MAX_COMPARISONS, MAX_LINES, MAX_PLOTS, TREND_COMPARISONS, chipText, periodLabel, readable, styleOf, TREND_AGGS, TREND_STEPS, TREND_WINDOWS, trendCsv, trendTraces, viewFromAddress } from "./trendModel";
+import type { LineStyle, Me, Trend, TrendAgg, TrendCompare, TrendData, TrendLineSpec, TrendPeriod, TrendView } from "./types";
 import { ErrorBox, Heading, Link, Loading } from "./ui";
 
 /** The chart's own theme: "auto" follows the platform; light or dark fixes
@@ -43,7 +43,7 @@ function TrendChart({ data, height, theme: chosen, filename }: { data: TrendData
   const theme = plotTheme(shown);
   const surface = BRAND_COLORS[shown].surface;
   const plots = data.plots;
-  const { traces, axes, anchor } = trendTraces(data, theme.yaxis);
+  const { traces, axes, anchor } = trendTraces(data, theme.yaxis, (theme as { colorway?: string[] }).colorway ?? []);
   if (!traces.length) return <p className="muted tc-empty">{t("No samples in this period.")}</p>;
   const right = plots.some((plot) => plot.lines.some((line) => styleOf(line.style).axis === "right"));
   // The suite's time chart (@plantcraft/ui): the Historian's point page draws the same.
@@ -142,7 +142,7 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
   useEffect(() => {
     setNotice(""); setError("");
     if (!trendId) { setCurrent(null); setName(""); setView(viewFromAddress(window.location.search) ?? EMPTY_VIEW); return; }
-    api.trend(trendId).then((trend) => { setCurrent(trend); setName(trend.name); setView({ plots: trend.plots, period: trend.period, step_seconds: trend.step_seconds }); })
+    api.trend(trendId).then((trend) => { setCurrent(trend); setName(trend.name); setView({ plots: trend.plots, period: trend.period, step_seconds: trend.step_seconds, compare: trend.compare ?? [] }); })
       .catch((err) => setError(message(err)));
   }, [trendId]);
 
@@ -165,7 +165,7 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
   const mine = !current || me.can_edit || current.created_by === me.username;
 
   async function save(asNew: boolean) {
-    const label = name.trim() || window.prompt(t("Name of the trend"), "")?.trim();
+    const label = name.trim() || await askText(t("Name of the trend"), { confirm: t("Save") });
     if (!label) return;
     try {
       const payload = { ...asked, name: label, description: current?.description ?? "" };
@@ -221,6 +221,11 @@ export function TrendsPage({ me, trendId }: { me: Me; trendId?: string }) {
           <label>{t("Interval")}<select value={String(view.step_seconds)} onChange={(event) => setView({ ...view, step_seconds: event.target.value === "null" ? null : Number(event.target.value) })}>
             {TREND_STEPS.map((step) => <option key={String(step.seconds)} value={String(step.seconds)}>{t(step.label)}</option>)}
           </select></label>
+          <div className="tc-field tc-compare"><span>{t("Compare with")}</span>
+            <MultiSelect label={t("Compare with")} allLabel={t("None")} value={view.compare ?? []}
+              options={TREND_COMPARISONS.map((item) => ({ id: item.id, label: t(item.label) }))}
+              onChange={(value) => setView({ ...view, compare: (TREND_COMPARISONS.map((item) => item.id).filter((id) => value.includes(id)) as TrendCompare[]).slice(0, MAX_COMPARISONS) })} />
+          </div>
         </div>
         <div className="panel tc-plots">
           {view.plots.map((plot, index) => <div key={index} className="tc-plot-row">

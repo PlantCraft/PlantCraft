@@ -3,7 +3,7 @@ import { fileTime, fileTimeHeader, localOf, sharedUnit } from "@plantcraft/ui";
 import { t } from "./i18n";
 import { windowLabel } from "./model";
 import type { Data } from "plotly.js";
-import type { LabSample, LineStyle, TrendAgg, TrendData, TrendLine, TrendLineSpec, TrendView } from "./types";
+import type { LabSample, LineStyle, TrendAgg, TrendCompare, TrendData, TrendLine, TrendLineSpec, TrendView } from "./types";
 
 export const TREND_WINDOWS = ["15m", "1h", "2h", "8h", "24h", "7d", "30d"];
 /** The interval each value summarises (each line says how): null = chosen from the period, 0 = as recorded. */
@@ -23,6 +23,14 @@ export const TREND_AGGS: Array<{ id: TrendAgg; label: string; short: string }> =
   { id: "min", label: "Minimum", short: "min" },
   { id: "max", label: "Maximum", short: "max" },
 ];
+/** Earlier periods a trend can draw over its own (V11), at most three. */
+export const TREND_COMPARISONS: Array<{ id: TrendCompare; label: string }> = [
+  { id: "previous", label: "Previous period" },
+  { id: "1d", label: "1 day earlier" },
+  { id: "7d", label: "1 week earlier" },
+  { id: "28d", label: "4 weeks earlier" },
+];
+export const MAX_COMPARISONS = 3;
 export const DEFAULT_STYLE: LineStyle = { mode: "lines", shape: "linear", color: "", width: 2, dash: "solid", marker_size: 6, axis: "left" };
 
 /** A line's style with every field filled in. */
@@ -50,9 +58,11 @@ export function chipText(line: TrendLineSpec): string {
 
 /**
  * The Plotly traces and y axes of a trend: plot i draws on y axis i (left) and, for lines set
- * to the right axis, on an axis overlaying it on the right.
+ * to the right axis, on an axis overlaying it on the right. An earlier period's line (`compare`)
+ * is drawn dotted and lighter in its own line's colour: with comparisons, every line without a
+ * colour of its own takes the next of `colorway`, so the two share it.
  */
-export function trendTraces(data: TrendData, axisTheme: Record<string, unknown> = {}): { traces: Data[]; axes: Record<string, unknown>; anchor: string } {
+export function trendTraces(data: TrendData, axisTheme: Record<string, unknown> = {}, colorway: string[] = []): { traces: Data[]; axes: Record<string, unknown>; anchor: string } {
   const count = data.plots.length;
   const domains = subplotDomains(count);
   const axes: Record<string, unknown> = {};
@@ -60,7 +70,12 @@ export function trendTraces(data: TrendData, axisTheme: Record<string, unknown> 
   const stateColors = new Map<string, string>();
   // The time axis sits under the lowest plot: its band of states when it has one.
   let anchor = count > 1 ? `y${count}` : "y";
+  const comparing = colorway.length > 0 && data.plots.some((plot) => plot.lines.some((line) => line.compare));
+  let next = 0;
   data.plots.forEach((plot, index) => {
+    // Each own line's colour, by its index in the plot, for the earlier periods' lines to share.
+    const colours = new Map<number, string>();
+    if (comparing) plot.lines.forEach((line, at) => { if (!line.compare && line.kind !== "text") colours.set(at, styleOf(line.style).color || colorway[next++ % colorway.length]); });
     const left = index ? `y${index + 1}` : "y";
     const right = `y${count + index + 1}`;
     const states = plot.lines.filter((line) => line.kind === "text" && line.t.length);
@@ -83,10 +98,13 @@ export function trendTraces(data: TrendData, axisTheme: Record<string, unknown> 
     }
     for (const line of numbers) {
       if (!line.t.length) continue;
-      const style = styleOf(line.style);
+      const own = styleOf(line.style);
+      const colour = comparing ? colours.get(line.compare ? line.source ?? -1 : plot.lines.indexOf(line)) ?? own.color : own.color;
+      const style = line.compare ? { ...own, color: colour, dash: "dot" as const, width: Math.max(1, own.width - 0.5) } : { ...own, color: colour };
       if (line.samples?.length) { traces.push(labTrace(line, line.samples, style, style.axis === "right" ? right : left)); continue; }
       traces.push({
         type: "scatter", mode: style.mode, x: line.t, y: line.v, connectgaps: false, name: lineName(line),
+        ...(line.compare ? { opacity: 0.7 } : {}),
         line: { width: style.width, dash: style.dash, shape: style.shape, ...(style.color ? { color: style.color } : {}) },
         marker: { size: style.marker_size, ...(style.color ? { color: style.color } : {}) },
         xaxis: "x", yaxis: style.axis === "right" ? right : left,

@@ -1,7 +1,7 @@
 import { assistantTourStep, tt, type ShellNavItem, type TourStep } from "@plantcraft/ui";
 import { api } from "./api";
 import { blockPath, modelPath, runPath } from "./paths";
-import { FlaskConical, LayoutDashboard, ListOrdered, Puzzle, Workflow } from "lucide-react";
+import { Activity, FlaskConical, LayoutDashboard, ListOrdered, Puzzle, Workflow } from "lucide-react";
 
 /** The app's own pages in the suite frame (app standard, section 10); Help is the frame's own
  * entry. One level, no sub-items, in Link's order: Blocks are what a diagram
@@ -37,6 +37,12 @@ export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
     label: "Simulations",
     icon: <ListOrdered />,
     match: (path) => ["/executions", "/runs"].some((prefix) => path === prefix || path.startsWith(`${prefix}/`)),
+  },
+  {
+    to: "/tracking",
+    label: "Tracking",
+    icon: <Activity />,
+    match: (path) => path === "/tracking" || path.startsWith("/tracking/"),
   },
 ];
 

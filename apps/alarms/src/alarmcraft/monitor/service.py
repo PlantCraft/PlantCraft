@@ -38,6 +38,9 @@ from alarmcraft.i18n import t
 from alarmcraft.monitor import publish, suggest
 from alarmcraft.monitor.incoming import Incoming, owner_of
 from alarmcraft.monitor.notifier import Notifier
+from alarmcraft.monitor.performance_results import EVERY as PERFORMANCE_RESULTS_EVERY
+from alarmcraft.monitor.performance_results import PERIODS as PERFORMANCE_PERIODS
+from alarmcraft.monitor.performance_results import performance_results
 from alarmcraft.monitor.reader import ApiReader
 from alarmcraft.monitor.sync import RuleSync, draft_of, subject_of
 
@@ -48,6 +51,8 @@ FIRST_WINDOW = timedelta(minutes=10)
 MAX_BACKFILL = timedelta(hours=1)
 APP_LOOKBACK = timedelta(hours=6)
 RESULTS_EVERY = timedelta(minutes=5)
+PERFORMANCE_EVERY = PERFORMANCE_RESULTS_EVERY
+PERFORMANCE_SPAN = max(PERFORMANCE_PERIODS.values())
 SYNC_EVERY = timedelta(minutes=1)
 # The suite's catalog is read this often for the suggested rules marked enabled.
 SUGGEST_EVERY = timedelta(minutes=10)
@@ -142,8 +147,14 @@ class Monitor:
         rules: RuleStore | None = None,
         incoming: IncomingStore | None = None,
         sync: RuleSync | None = None,
+        tree: Any | None = None,
+        philosophy: Any | None = None,
     ):
         self.alarms = alarms
+        # The asset tree and the philosophy: the hourly ``alarm_performance`` results.
+        self.tree = tree
+        self.philosophy = philosophy
+        self._performance_at: datetime | None = None
         self.rules = rules
         self.sync = sync
         self.incoming = (
@@ -406,6 +417,7 @@ class Monitor:
             self.last_error = ""
             self._notify(noted, now)
             self._publish_results(entries, now)
+            self._publish_performance(now)
             self._publish_run(counts, now)
             return counts
 
@@ -523,6 +535,35 @@ class Monitor:
         except (PlantCraftError, ValueError) as exc:
             self.publish_error = t("results: {why}", why=exc)[:500]
             LOGGER.warning("Alarm results not published: %s", exc)
+
+    def _publish_performance(self, now: datetime) -> None:
+        """Each area's alarm performance as a result, once an hour (``performance_results``)."""
+
+        if self.tree is None or self.client is None:
+            return
+        if self._performance_at is not None and now - self._performance_at < PERFORMANCE_EVERY:
+            return
+        self._performance_at = now
+        try:
+            occurrences = self.alarms.occurrences(
+                start=(now - PERFORMANCE_SPAN).isoformat(),
+                end=now.isoformat(),
+                limit=200000,
+                creates="alarm",
+            )
+            rows = performance_results(
+                self.alarms.list(),
+                occurrences,
+                self.tree,
+                now=now,
+                targets=self.philosophy.get() if self.philosophy is not None else None,
+                url=f"{self.root_path}/performance",
+            )
+            if rows:
+                self.client.put_results(rows)
+        except (PlantCraftError, ValueError) as exc:
+            self.publish_error = t("results: {why}", why=exc)[:500]
+            LOGGER.warning("Alarm performance not published: %s", exc)
 
     def _publish_run(self, counts: dict[str, int], now: datetime) -> None:
         day = now.strftime("%Y-%m-%d")

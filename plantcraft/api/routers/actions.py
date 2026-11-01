@@ -8,10 +8,12 @@ timeline of every asset it is about. Each person reaches only the actions they s
 
 from __future__ import annotations
 
+import base64
+import binascii
 import logging
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 
 from plantcraft.actions import (
@@ -119,6 +121,7 @@ def _present(
         item["history"] = store.history(action["action_id"])
         item["items"] = store.items(action["action_id"])
         item["hours"] = _with_locks(rt, store.hours(action["action_id"]))
+        item["files"] = rt.workspace.action_files.meta(action["action_id"])
         # #asset:FIC-101 or #user:ana.lima in the description and the comments, resolved once.
         texts = [action["description"]] + [
             entry["text"] for entry in item["history"] if entry["kind"] == "comment"
@@ -498,3 +501,46 @@ def delete_hours(action_id: int, entry_id: int, user: CurrentUser, rt: Runtime) 
         user, "action.hours.deleted", f"action:{action_id}", entry, app_id="processcraft"
     )
     return _present(rt, _get(rt, action_id), user, history=True)
+
+
+class FilePayload(BaseModel):
+    name: str = Field(default="image", max_length=200)
+    # The image, base64 (a data: URL's part after the comma).
+    data: str = Field(min_length=8, max_length=3_000_000)
+
+
+@router.post("/api/actions/{action_id}/files", status_code=201)
+@open_to("viewer")
+def attach_file(
+    action_id: int, payload: FilePayload, user: CurrentUser, rt: Runtime
+) -> dict[str, Any]:
+    """An image on the action: the chart of the verdict it was opened from (PNG, JPEG, WebP)."""
+
+    action = _get(rt, action_id, user)
+    try:
+        data = base64.b64decode(payload.data.split(",", 1)[-1], validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=t("The image is not valid base64.")) from exc
+    try:
+        rt.workspace.action_files.add(action_id, payload.name, data, user)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return _present(rt, action, user, history=True)
+
+
+@router.get("/api/actions/{action_id}/files/{file_id}")
+@open_to("viewer")
+def action_file(action_id: int, file_id: int, user: CurrentUser, rt: Runtime) -> Response:
+    _get(rt, action_id, user)
+    found = rt.workspace.action_files.read(action_id, file_id)
+    if found is None:
+        raise HTTPException(status_code=404, detail=t("Image not found."))
+    return Response(
+        content=found["data"],
+        media_type=found["content_type"],
+        headers={
+            "Cache-Control": "private, max-age=86400",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'",
+        },
+    )

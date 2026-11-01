@@ -187,6 +187,8 @@ export interface Algorithm {
   diagram: Diagram; check: DiagramCheck; docs: AlgorithmDocs; docs_generated: AlgorithmDocs;
   method_ids: string[]; aliases?: string[]; created_at?: string | null; updated_at?: string | null; docs_problems?: string[];
   timing?: AssetTiming; assets?: string[];
+  /** PlantCraft equipment types whose every asset it also runs on, subtypes included (A20). */
+  asset_types?: string[];
   /** Where its runs go on the suite's compute workers: the environment (image) and the size. */
   compute?: ComputePlacement;
   /** Who wrote it ("PlantCraft" for the ones that ship), who answers for it, its tags and the
@@ -198,8 +200,10 @@ export interface Algorithm {
 export type UserGroup = { id: string; name: string };
 
 /** An asset an algorithm on assets may name (``GET /api/asset-choices``). */
-/** A Deviation (T²) block's calibration: the residuals' mean and covariance in normal operation. */
-export type Calibration = { outputs: string[]; mean: number[]; cov: number[][]; std?: number[]; samples: number; warnings?: string[]; asset?: string; start?: string; end?: string };
+/** A Deviation block's calibration (mean, covariance) or an Empirical model's (kind "pca": its principal components, M4). */
+export type Calibration = { outputs: string[]; mean: number[]; cov?: number[][]; std?: number[]; samples: number; warnings?: string[]; asset?: string; start?: string; end?: string; kind?: "pca" | "regression"; eigenvalues?: number[]; explained?: number;
+  /** A Regression's (A4): its method, fit and each input's coefficient and training range. */
+  method?: string; r2?: number; rmse?: number; coefficients?: number[]; low?: number[]; high?: number[] };
 export type CalibrationAnswer = { node_id: string; asset_id: string; calibration: Calibration; outputs: string[]; std: number[]; samples: number; warnings: string[]; runs: number; used: number; skipped: number; skipped_reason: string; period: { start: string; end: string; every: number } };
 export type AssetChoice = { id: string; name: string; kind: string; path: string; roles: string[] };
 
@@ -330,6 +334,15 @@ export interface SignalDetail extends SignalRow {
 
 export interface Points { t: string[]; v: Array<number | string | null> }
 export interface SignalData { signal: string; start: string; end: string; resampled: boolean; series: Points; reference: Points | null }
+/** A signal against the lab results of its reference (GET /api/signals/{id}/lab). */
+export interface LabSample { t: string; lab: number; online: number | null; corrected: number | null; status: "approved" | "entered" | "rejected" | string; approved_at: string | null }
+export interface SignalLab {
+  signal: string; reference: string; start: string; end: string;
+  /** False: the reference has no laboratory times, each value counts as known when taken. */
+  timed: boolean;
+  samples: LabSample[]; used: number; health: number | null; health_corrected: number | null; bias: number | null;
+  bias_series: { t: string[]; v: number[] }; corrected: { t: string[]; v: number[] };
+}
 export interface HistoryPoint { checked_at: string; status: SignalStatus; quality: number | null }
 
 /** One run of the Signal quality algorithm. */
@@ -498,3 +511,89 @@ export interface TuningSuggestion {
   settings?: Array<{ choice: "tight" | "moderate" | "robust"; lambda_seconds: number; kc: number; ti_seconds: number }>;
   source_start?: string | null; source_end?: string | null;
 }
+
+/** One setpoint step of the loop's last window and how the PV answered it (A10). */
+export interface SetpointStep {
+  at: string | null; sp_before: number; sp_after: number; size: number; pv_before: number; hold_seconds: number;
+  overshoot_pct: number; rise_seconds: number | null; settling_seconds: number | null;
+  reached: boolean; settled: boolean; iae: number; iae_seconds: number;
+}
+
+/** The setpoint steps found in the loop's last window, with their medians (A10). */
+export interface StepResponses {
+  available: boolean; reason?: string; steps?: SetpointStep[];
+  skipped?: { small: number; short: number; manual: number };
+  summary?: { steps: number; overshoot_pct: number | null; rise_seconds: number | null; settling_seconds: number | null; iae_seconds: number | null; settled_pct: number };
+  source_start?: string | null; source_end?: string | null;
+}
+
+/** A third-party multivariable controller, read from its own signals (`GET /api/apc`, A16/A17). */
+export interface ApcSummary {
+  on_now: boolean;
+  on_pct: number | null;
+  mvs: number;
+  mvs_in_service: number;
+  mv_in_service_pct: number | null;
+  cvs: number;
+  cvs_at_limit: number;
+  cv_at_limit_pct: number | null;
+  constraints_active: number;
+  state: "ok" | "warning" | "alarm" | null;
+}
+
+export interface ApcVariable {
+  id: string;
+  name: string;
+  kind: "mv" | "cv";
+  signals: Record<string, string>;
+  value: number | null;
+  lo: number | null;
+  hi: number | null;
+  target: number | null;
+  shadow_price: number | null;
+  in_service: boolean;
+  at: "lo" | "hi" | null;
+  in_service_pct: number | null;
+  at_limit_pct: number | null;
+  at_lo_pct: number | null;
+  at_hi_pct: number | null;
+}
+
+export interface ApcConstraint {
+  variable_id: string;
+  name: string;
+  kind: "mv" | "cv";
+  side: "lo" | "hi";
+  hours: number;
+  share_pct: number | null;
+  active_now: boolean;
+  shadow_price: number | null;
+  worth_1pct: number | null;
+}
+
+export interface ApcController {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  vendor: string;
+  cost_unit: string;
+  summary: ApcSummary;
+  variables?: ApcVariable[];
+  constraints: ApcConstraint[];
+  failed: string[];
+  since?: string;
+  until?: string;
+}
+
+export interface ApcList { since: string | null; until: string | null; controllers: ApcController[] }
+
+/** The plant map (A6): each loop's KPIs, banded on one scale (higher is better). */
+export type PlantMapBand = "good" | "fair" | "poor" | "bad" | "none";
+export interface PlantMapLoop {
+  loop_id: string; name: string; area: string; criticality: string; weight: number; status: string | null;
+  values: Record<string, number | null>; bands: Record<string, PlantMapBand>;
+}
+export interface PlantMap { kpis: Array<{ key: string; label: string }>; bands: Array<{ band: PlantMapBand; from: number }>; loops: PlantMapLoop[] }
+
+/** A PlantCraft asset type an algorithm on assets can run on every asset of (A20). */
+export interface AssetTypeChoice { id: string; name: string; parent?: string | null; roles: string[] }

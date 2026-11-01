@@ -150,3 +150,13 @@ def test_the_widgets(client, analysed):
     # The fake plant's rounds are a month old: nothing in the last 7 days.
     losses = client.get("/link/api/widgets/loop-losses").json()
     assert losses["kind"] == "list" and losses["empty"]
+
+
+def test_a_loop_result_reference_names_the_loop(client, analysed):
+    loop_id = client.get("/link/api/loops").json()[0]["loop_id"]
+    found = client.get(f"/link/api/refs/loop_result/{loop_id}@2026-10-01T12:00:00Z")
+    assert found.status_code == 200, found.text
+    body = found.json()
+    assert body["url"].endswith(f"/loops/{loop_id}") and "2026-10-01 12:00 UTC" in body["title"]
+    assert body["status"] in {"ok", "warning", "alarm", None}
+    assert client.get("/link/api/refs/loop_result/nope@2026-10-01T12:00:00Z").status_code == 404

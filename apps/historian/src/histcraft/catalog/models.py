@@ -98,6 +98,11 @@ ONLY_ARCHIVED = (
 DEFAULT_SETTINGS: dict[str, Any] = {
     # Archived values older than this are deleted (per point, unless it sets its own).
     "retention_days": 400,
+    # The rollups of each level outlive the raw values (H9): hourly 5 years, daily and monthly
+    # forever (0). A level is kept at least as long as the finer ones and the raw values.
+    "hourly_retention_days": 1825,
+    "daily_retention_days": 0,
+    "monthly_retention_days": 0,
     # New points: scan period, compression deviation as % of span (of the value when no range
     # is known), max interval. A steady signal is still archived every 10 min: the apps' data
     # checks (Link's availability: an interval above 10 min is a gap) see a constant setpoint as
@@ -116,12 +121,24 @@ SOURCE_SETTINGS = (
     "default_deviation_percent",
     "default_max_seconds",
 )
+# The integration around a source (H13): who answers for it (``user:``/``group:`` references,
+# told by PlantCraft with an email when it fails), how to reach the team that runs it, and how
+# often a value must arrive (0: not watched). On an update, a field left out keeps its value.
+INTEGRATION_FIELDS = ("owners", "contact", "heartbeat_seconds")
+MAX_OWNERS = 20
+_OWNER = re.compile(r"^(user|group):[a-z0-9][a-z0-9._@-]{0,99}$")
 # Named compression profiles (D1): (exception %, deviation %) of the span. The standard one
 # ("") is the general settings (or the source's); a point's own deviation is "custom".
 PROFILES: dict[str, tuple[float, float]] = {"fine": (0.05, 0.1), "none": (0.0, 0.0)}
 PROFILE_NAMES = ("", *PROFILES)
 # Settings that may be 0 (0 % keeps every change); the others must be positive.
-ZERO_SETTINGS = ("default_deviation_percent", "default_exception_percent")
+ZERO_SETTINGS = (
+    "default_deviation_percent",
+    "default_exception_percent",
+    "hourly_retention_days",
+    "daily_retention_days",
+    "monthly_retention_days",
+)
 # A point's own setting -> the source and general setting it falls back to.
 POINT_SETTINGS = {
     "retention_days": "retention_days",
@@ -249,6 +266,35 @@ class SourceIn(BaseModel):
     default_scan_seconds: float | None = Field(default=None, ge=0.1, le=86400)
     default_deviation_percent: float | None = Field(default=None, ge=0, le=100)
     default_max_seconds: float | None = Field(default=None, ge=1, le=7 * 86400)
+    # The integration (``INTEGRATION_FIELDS``): owners, contact and the expected interval.
+    owners: list[str] = Field(default_factory=list, max_length=MAX_OWNERS)
+    contact: str = Field(default="", max_length=300)
+    heartbeat_seconds: int = Field(default=0, ge=0, le=7 * 86400)
+
+    @field_validator("owners")
+    @classmethod
+    def valid_owners(cls, value: list[str]) -> list[str]:
+        found: list[str] = []
+        for item in value:
+            ref = str(item).strip().lower()
+            if not _OWNER.match(ref):
+                raise ValueError(t("An owner is user:<name> or group:<name>."))
+            if ref not in found:
+                found.append(ref)
+        return found
+
+    @field_validator("heartbeat_seconds")
+    @classmethod
+    def watched_by_the_minute(cls, value: int) -> int:
+        # PlantCraft reads the conditions once a minute: a shorter interval says nothing more.
+        if 0 < value < 60:
+            raise ValueError(t("The expected interval is 0 (not watched) or at least 60 s."))
+        return value
+
+    @field_validator("contact")
+    @classmethod
+    def one_line_contact(cls, value: str) -> str:
+        return " ".join(value.split())
 
     @field_validator("id")
     @classmethod

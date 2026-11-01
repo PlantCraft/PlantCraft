@@ -514,3 +514,27 @@ def test_a_permissive_that_does_not_hold_suppresses_the_alarm_by_design(client):
                          json={**rule, "base_updated_at": made.json()["updated_at"]})  # fmt: skip
     assert changed.status_code == 200, changed.text
     assert client.post("/api/run").json()["raised"] == 1
+
+
+def test_limits_by_grade_follow_the_grade_event(client, fake):
+    # L8: FIC-1001's PV (about 55) is under the fixed limit (100), but over grade HD-5's 50;
+    # the grade comes from the MES's grade change event.
+    rule = high(100.0)
+    rule["simple"]["conditions"][0]["grade_limits"] = [{"grade": "HD-5", "limit": 50.0},
+                                                      {"grade": "LD-2", "limit": 90.0}]  # fmt: skip
+    rule["simple"]["grade"] = {"source": "event", "kinds": ["mes.grade.changed"]}
+    made = client.post("/api/rules", json=rule)
+    assert made.status_code == 201, made.text
+    assert "HD-5: 50, LD-2: 90 by grade" in made.json()["sentence"]
+    assert client.post("/api/run").json()["raised"] == 0  # no grade yet: the fixed limit
+    fake.links.events.append({
+        "id": len(fake.links.events) + 1, "at": fake.now.isoformat(), "app": "mes",
+        "kind": "mes.grade.changed", "subject": "line:L1", "actor": "user:system",
+        "summary": "Grade HD-5", "refs": [], "payload": {"grade": "HD-5"},
+        "severity": "info", "phase": "instant", "category": "process",
+    })  # fmt: skip
+    assert client.post("/api/run").json()["raised"] == 1
+    [alarm] = client.get("/api/alarms").json()
+    assert (
+        "Grade HD-5: limit 50" in client.get(f"/api/alarms/{alarm['alarm_id']}").json()["message"]
+    )

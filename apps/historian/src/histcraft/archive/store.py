@@ -76,9 +76,17 @@ _DROP_ROLLUPS = (
     " ORDER BY t0 DESC LIMIT 1), ?) - 3600000"
 )
 
+# The daily and monthly rollups (H9) holding an hour the statement above drops: those ending
+# after the bound (their last hour starts past ``bound - 1 h``). Same parameters.
+_DROP_COARSE = (
+    "DELETE FROM rollups_coarse WHERE point = ? AND t1 > COALESCE("
+    "(SELECT CASE WHEN t1 >= ? THEN t0 ELSE t1 END FROM chunks WHERE point = ? AND t0 < ?"
+    " ORDER BY t0 DESC LIMIT 1), ?)"
+)
+
 
 # The same for many points in one statement (PostgreSQL): the bound of each point first, then
-# its rollups past it, through the primary key.
+# its rollups past it, through the primary key, the daily and monthly ones with them.
 _DROP_ROLLUPS_MANY = """
     WITH f AS (
         SELECT p.point, COALESCE((
@@ -87,7 +95,8 @@ _DROP_ROLLUPS_MANY = """
         ), p.first) - 3600000 AS low
         FROM unnest(?::bigint[], ?::bigint[]) AS p(point, first)
     )
-    DELETE FROM rollups r USING f WHERE r.point = f.point AND r.hour > f.low
+    , hourly AS (DELETE FROM rollups r USING f WHERE r.point = f.point AND r.hour > f.low)
+    DELETE FROM rollups_coarse c USING f WHERE c.point = f.point AND c.t1 > f.low + 3600000
 """
 _PUT_CHUNK = (
     "INSERT INTO chunks VALUES (?, ?, ?, ?, ?) ON CONFLICT(point, t0) DO UPDATE"
@@ -128,6 +137,23 @@ class ArchiveStore(Store):
     SCHEMA = (
         f"{_CHUNKS} WITHOUT ROWID;\n{_ROLLUPS} WITHOUT ROWID;\n"
         + """
+
+    -- Daily (level 1) and monthly (level 2) rollups (H9): a day's hourly rows and a month's
+    -- daily rows summed, ``[t0, t1)`` the UTC day or month. Each level has its own retention,
+    -- longer than the raw values' (``archive.rollup``).
+    CREATE TABLE IF NOT EXISTS rollups_coarse (
+        point INTEGER NOT NULL,
+        level INTEGER NOT NULL,
+        t0 INTEGER NOT NULL,
+        t1 INTEGER NOT NULL,
+        step INTEGER NOT NULL,
+        cover REAL NOT NULL,
+        area REAL NOT NULL,
+        low REAL,
+        high REAL,
+        n INTEGER NOT NULL,
+        PRIMARY KEY(point, level, t0)
+    );
 
     CREATE TABLE IF NOT EXISTS snapshots (
         point INTEGER PRIMARY KEY,
@@ -331,10 +357,9 @@ class ArchiveStore(Store):
             if counts:
                 connection.execute(_COUNT_MANY, tuple(_ints(column) for column in zip(*counts)))
             return written
-        connection.executemany(
-            _DROP_ROLLUPS,
-            [(point, first, point, first, first) for point, first in firsts.items()],
-        )
+        drops = [(point, first, point, first, first) for point, first in firsts.items()]
+        connection.executemany(_DROP_ROLLUPS, drops)
+        connection.executemany(_DROP_COARSE, drops)
         connection.executemany(_PUT_CHUNK, chunks)
         connection.executemany(_COUNT, counts)
         return written
@@ -482,9 +507,15 @@ class ArchiveStore(Store):
                     after = min(int(later[0]), int(after if after is not None else later[0]))
                 times, values = _merge(old_times, list(old_values), times, values)
             low = int(before if before is not None else first)
+            high = int(after) if after is not None else 2**62
             connection.execute(
                 "DELETE FROM rollups WHERE point = ? AND hour > ? AND hour <= ?",
-                (point, low - HOUR_MS, int(after) if after is not None else 2**62),
+                (point, low - HOUR_MS, high),
+            )
+            # Days and months go from there on, as after an append: they are summed in order
+            # from the newest one kept (``rollup.build_coarse``).
+            connection.execute(
+                "DELETE FROM rollups_coarse WHERE point = ? AND t1 > ?", (point, low)
             )
             if rows:
                 connection.executemany(
@@ -893,15 +924,25 @@ class ArchiveStore(Store):
                 return None
         return None
 
-    def prune(self, cutoffs: dict[int, int]) -> int:
+    def prune(
+        self, cutoffs: dict[int, int], rollup_cutoffs: dict[str, dict[int, int]] | None = None
+    ) -> int:
         """Delete each point's chunks that end before its cutoff (ms); chunks deleted.
+
+        ``rollup_cutoffs`` (H9) gives each rollup level its own: ``{"hour": {point: ms},
+        "day": ..., "month": ...}``; a rollup goes once it ends by its level's cutoff, and a
+        point missing from a level keeps that level. Without it the hourly rollups go with the
+        raw values (up to the first value left) and the daily and monthly ones are kept.
 
         In PostgreSQL a past month whose every chunk is past retention is dropped first, as one
         table. Then one short transaction per point, like ``compact``."""
 
         deleted, dropped_points = 0, set()
+        levels = rollup_cutoffs or {}
         if self.partitions is not None:
-            deleted, dropped_points = self.partitions.drop_expired(cutoffs, now_ms())
+            deleted, dropped_points = self.partitions.drop_expired(
+                cutoffs, now_ms(), levels.get("hour") if rollup_cutoffs is not None else None
+            )
         for point, cutoff in cutoffs.items():
             with self._lock, self._connect() as connection:
                 removed = connection.execute(
@@ -911,7 +952,7 @@ class ArchiveStore(Store):
                 connection.execute(
                     "DELETE FROM run_series WHERE point = ? AND run_at < ?", (point, cutoff)
                 )
-                if removed or point in dropped_points:
+                if rollup_cutoffs is None and (removed or point in dropped_points):
                     # Hours up to the first value left lose the segment that led to it.
                     connection.execute(
                         "DELETE FROM rollups WHERE point = ? AND hour <= COALESCE("
@@ -925,6 +966,17 @@ class ArchiveStore(Store):
                     " FROM qualities WHERE point = ? AND t <= ?), ?)",
                     (point, point, cutoff, cutoff),
                 )
+        # Each rollup level past its own retention: the hourly rows kept past the raw values
+        # stay true (they were summed when the values were there) until then.
+        statements = (
+            ("hour", "DELETE FROM rollups WHERE point = ? AND hour <= ?", HOUR_MS),
+            ("day", "DELETE FROM rollups_coarse WHERE point = ? AND level = 1 AND t1 <= ?", 0),
+            ("month", "DELETE FROM rollups_coarse WHERE point = ? AND level = 2 AND t1 <= ?", 0),
+        )
+        for level, statement, shift in statements:
+            for point, cutoff in levels.get(level, {}).items():
+                with self._lock, self._connect() as connection:
+                    connection.execute(statement, (point, cutoff - shift))
         return deleted
 
     def delete_points(self, points: Iterable[int]) -> None:
@@ -1000,6 +1052,9 @@ class ArchiveStore(Store):
             connection.execute(
                 "DELETE FROM rollups WHERE point = ? AND step <> ?", (point, int(step))
             )
+            connection.execute(
+                "DELETE FROM rollups_coarse WHERE point = ? AND step <> ?", (point, int(step))
+            )
             self._ensure("rollups", (row[0] for row in rows))
             connection.executemany(
                 "INSERT INTO rollups (point, hour, step, cover, area, low, high, n)"
@@ -1008,6 +1063,96 @@ class ArchiveStore(Store):
                 " low = excluded.low, high = excluded.high, n = excluded.n",
                 [(point, row[0], int(step), *row[1:3], *_extremes(row)) for row in rows],
             )
+
+    # Daily and monthly rollups (H9) ------------------------------------------------------
+
+    def coarse(
+        self, point: int, step: bool, level: int, start_ms: int, end_ms: int
+    ) -> dict[int, tuple[int, float, float, float | None, float | None, int]]:
+        """``{t0: (t1, cover, area, low, high, n)}`` of the days (``level`` 1) or months (2)
+        starting in ``[start, end)`` kept for ``step``."""
+
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT t0, t1, cover, area, low, high, n FROM rollups_coarse WHERE point = ?"
+                " AND level = ? AND step = ? AND t0 >= ? AND t0 < ?",
+                (point, level, int(step), start_ms, end_ms),
+            ).fetchall()
+        return {
+            int(row["t0"]): (
+                int(row["t1"]),
+                float(row["cover"]),
+                float(row["area"]),
+                _real(row["low"]),
+                _real(row["high"]),
+                int(row["n"]),
+            )
+            for row in rows
+        }
+
+    def coarse_end(self, point: int, step: bool, level: int) -> int | None:
+        """The end of the newest day or month kept for ``point`` (ms), or None."""
+
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT MAX(t1) AS t1 FROM rollups_coarse WHERE point = ? AND level = ?"
+                " AND step = ?",
+                (point, level, int(step)),
+            ).fetchone()
+        return None if row is None or row["t1"] is None else int(row["t1"])
+
+    def first_rollup(self, point: int, step: bool) -> int | None:
+        """The first hour kept in the hourly rollups of ``point`` (ms), or None."""
+
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT MIN(hour) AS hour FROM rollups WHERE point = ? AND step = ?",
+                (point, int(step)),
+            ).fetchone()
+        return None if row is None or row["hour"] is None else int(row["hour"])
+
+    def put_coarse(self, point: int, step: bool, level: int, rows: list[tuple[Any, ...]]) -> None:
+        """Keep ``(t0, t1, cover, area, low, high, n)`` days (``level`` 1) or months (2)."""
+
+        def write() -> None:
+            with self._lock, self._connect() as connection:
+                connection.executemany(
+                    "INSERT INTO rollups_coarse (point, level, t0, t1, step, cover, area, low,"
+                    " high, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(point, level, t0)"
+                    " DO UPDATE SET t1 = excluded.t1, step = excluded.step, cover = excluded.cover,"
+                    " area = excluded.area, low = excluded.low, high = excluded.high, n = excluded.n",
+                    [
+                        (
+                            point,
+                            level,
+                            int(r[0]),
+                            int(r[1]),
+                            int(step),
+                            float(r[2]),
+                            float(r[3]),
+                            _real(r[4]),
+                            _real(r[5]),
+                            int(r[6]),
+                        )
+                        for r in rows
+                    ],
+                )
+
+        self._writing(write)
+
+    def rollup_rows(self) -> dict[str, int]:
+        """How many rollup rows each level keeps: ``{"hour", "day", "month"}`` (the Settings
+        page's disk per retention)."""
+
+        with self._connect() as connection:
+            hours = connection.execute("SELECT COUNT(*) AS n FROM rollups").fetchone()["n"]
+            levels = {
+                int(row["level"]): int(row["n"])
+                for row in connection.execute(
+                    "SELECT level, COUNT(*) AS n FROM rollups_coarse GROUP BY level"
+                ).fetchall()
+            }
+        return {"hour": int(hours or 0), "day": levels.get(1, 0), "month": levels.get(2, 0)}
 
     # Reads ----------------------------------------------------------------------
 
@@ -1355,6 +1500,7 @@ def _hour_counts(point: int, times: list[int]) -> list[tuple[int, int, int]]:
 # Every table keyed by point, in the order writes take them (``delete_points``).
 _POINT_TABLES = (
     "rollups",
+    "rollups_coarse",
     "chunks",
     "point_hours",
     "snapshots",

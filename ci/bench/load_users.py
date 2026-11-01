@@ -278,7 +278,13 @@ def sign_in(suite: Suite, visitor: bool) -> None:
         suite.login()
         return
     user = suite.env.get("PLANTCRAFT_PUBLIC_DEMO_USER") or "demo"
-    password = suite.env.get("PLANTCRAFT_PUBLIC_DEMO_PASSWORD") or "plantcraft-demo"
+    # install.sh keeps the visitor's password in data/public-demo-password, not in .env.
+    secret = suite.prefix / "data" / "public-demo-password"
+    password = (
+        suite.env.get("PLANTCRAFT_PUBLIC_DEMO_PASSWORD")
+        or (secret.read_text(encoding="utf-8").strip() if secret.is_file() else "")
+        or "plantcraft-demo"
+    )
     suite.call("POST", "/api/login", {"username": user, "password": password})
     # The Suite signs in again on a 401 as the administrator: keep the visitor instead.
     suite.login = lambda: suite.call("POST", "/api/login", {"username": user, "password": password})

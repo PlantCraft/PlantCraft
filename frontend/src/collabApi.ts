@@ -57,6 +57,8 @@ export interface ActionHistory { kind: "created" | "changed" | "status" | "comme
 /** One line of an action's checklist: what, who and by when, ticked when done. */
 export interface ActionItem { item_id: number; text: string; done: boolean; owner: string | null; owner_name: string | null; due_at: string | null; overdue: boolean; done_by: string | null; done_by_name: string | null; done_at: string | null }
 export interface ItemChange { text?: string; owner?: string | null; due_at?: string | null; done?: boolean }
+export interface ActionFile { file_id: number; name: string; content_type: string; size: number; created_by: string; created_at: string }
+
 export interface Action {
   action_id: Id; title: string; description: string; status: ActionStatus; status_label: string; priority: string; priority_label: string;
   owner: string | null; owner_name: string | null; due_at: string | null; overdue: boolean; refs: ResolvedRef[];
@@ -65,6 +67,8 @@ export interface Action {
   created_by: string; created_by_name: string; created_at: string; updated_at: string; completed_at: string | null; history?: ActionHistory[];
   /** When it took its current status (its last status change, else its creation). */
   status_since?: string;
+  /** Images attached to it (the chart of the verdict it was opened from), on its page. */
+  files?: ActionFile[];
   kind?: ActionKind; kind_label?: string;
   /** A request's category, and when someone other than who asked first answered. */
   category?: string | null; category_label?: string | null; first_response_at?: string | null;
@@ -158,6 +162,8 @@ export const collabApi = {
   action: (id: Id) => requestJson<Action>(`/api/actions/${seg(id)}`),
   createAction: (draft: ActionDraft) => requestJson<Action>("/api/actions", json("POST", draft)),
   updateAction: (id: Id, draft: ActionDraft & { status: ActionStatus }) => requestJson<Action>(`/api/actions/${seg(id)}`, json("PUT", draft)),
+  attachFile: (id: Id, name: string, data: string) => requestJson<Action>(`/api/actions/${seg(id)}/files`, json("POST", { name, data })),
+  fileUrl: (id: Id, fileId: number) => `/api/actions/${seg(id)}/files/${fileId}`,
   comment: (id: Id, text: string) => requestJson<Action>(`/api/actions/${seg(id)}/comments`, json("POST", { text })),
   addItem: (id: Id, item: { text: string; owner: string | null; due_at: string | null }) => requestJson<Action>(`/api/actions/${seg(id)}/items`, json("POST", item)),
   changeItem: (id: Id, itemId: number, change: ItemChange) => requestJson<Action>(`/api/actions/${seg(id)}/items/${itemId}`, json("PATCH", change)),

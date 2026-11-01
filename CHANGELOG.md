@@ -9,6 +9,55 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **API v1: interpolated reads and summaries (gap H5, `plantcraft-sdk` 0.95.0).**
+  - Series reads (`GET .../series`, `POST /api/v1/series`) take `sampling=interpolated` and
+    `max_gap`. They give the value at each grid time, as PI's and Seeq's interpolated reads
+    do, with a maximum interpolation interval.
+  - `GET /api/v1/signals/{id}/summary?start&end&per` gives a window's count, time covered,
+    % good, total (per `s`, `min`, `h` or `d`) and time-weighted mean, min, max and std.
+  - Both need the Historian; without it, API v1 answers 422.
+  - The SDK has `client.series(..., sampling=, max_gap=)`, the same options on `series_many`,
+    and `client.summary()`. The contract has `SAMPLINGS`, `TOTAL_PER`, `sampling_options` and
+    `total_per`.
+- `@plantcraft/ui`: **`askText(question, { value, confirm, type })`**, the suite's dialog for one
+  short text (a name, a number of hours), resolving the trimmed text or null; its button stays off
+  while the answer is empty or, with `type: "number"`, not above zero. It replaces `window.prompt`
+  in Models (name of a project copy), Historian (hours to backfill), View (name of a new trend), the
+  assistant (group of a chat; `optional: true` lets an empty answer take it out) and Desk (rename a
+  to-do list);
+  `tests/test_visual_rules.py` keeps `window.prompt` out.
+- `@plantcraft/ui`: **`showToast(text, { tone })`**, a short message in the page's corner that
+  closes on its own (6 s, errors 10 s), with its × or Escape; screen readers read it. It replaces
+  `window.alert`: Models shows a run that would not cancel or delete with it, and asks before
+  deleting a tracking with `confirmAction`. `tests/test_visual_rules.py` keeps `window.alert` out.
+- **An action keeps the chart it was opened from.** An app's link to the action form can carry the
+  description (`text=`) and an image left in the tab (`attach=`); the new action keeps the image
+  (PNG, JPEG or WebP, up to 2 MB) and its page shows it. Analytics uses it to open an action from a
+  loop's result with the loop's chart (docs/collaboration.md).
+- `plantcraft-sdk`: **lab fusion** (`plantcraft_sdk.estimators.fuse_lab`). It corrects an online
+  value (an analyzer or a soft sensor) with the lab results. Each result counts at its sampling
+  time and only from its approval: a Kalman filter with a delayed measurement. The fusion returns
+  the corrected value, the bias and the uncertainty. A dead zone and a largest correction per
+  result keep the lab's scatter and a bad sample from moving the bias. `sensor_health` grades a virtual sensor
+  from 0 to 100 against the lab. Analytics runs it as the block `estimator.lab_fusion` (library
+  Estimators, group Soft sensors).
+
+- `plantcraft-sdk`: starter asset types for a third-party multivariable controller:
+  *Multivariable controller* (`apc`, role `on`, attributes `vendor` and `cost_unit`) and inside it
+  *Manipulated variable* (`apc_mv`) and *Controlled variable* (`apc_cv`), both from *Controller
+  variable* (`apc_variable`: roles `value`, `lo`, `hi`, `target`, `status`, `shadow_price`,
+  attribute `limit_band`). An existing installation gets them at its next start. Analytics' APC
+  health and View's MV/CV widget read them.
+- The Historian's gateway writes its buffer to `data/histcraft/gateway-buffer` (made by
+  `install.sh`; mounted read-write in `histcraft-gateway`, its only writable folder), so values
+  read while the collector is away survive a gateway restart.
+
+- **The owners of a failing source hear of it** (gap H13): a condition the Historian reports
+  with `owners` in its payload (`source.disconnected`, `source.late`) is told to them as a
+  Historian notification, in Messages and by email, with the team's contact and a link to the
+  source; when the condition ends the notification is settled ("Back to normal at …"). No alarm
+  rule is needed for it.
+
 - **Windows without Docker Desktop: Rancher Desktop.** `./install.sh --check` in WSL now accepts
   Rancher Desktop's Linux `docker`, which reaches Ubuntu through Windows' PATH. It refused that
   path before, as if it were Docker Desktop's. `docs/install.md` gives the Rancher Desktop
@@ -113,6 +162,15 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Customizing an overview shows that it is on.** A tinted bar that stays in view says
+  "Customizing this page", explains the moves and keeps **Done** at hand; each widget gets a
+  stronger outline (ui 0.97.0, interface pass of 2026-10-31).
+- **Plotly and the fonts download once for the whole suite, not once per app (ui 0.96.0).**
+  The platform serves them at `/static/vendor/` under names that carry a hash of their bytes
+  (kept a year by the proxy), and every app asks there first: `@plantcraft/ui/plot` loads
+  Plotly from the platform and `fonts.css` lists the platform's copy before the app's own. An
+  app run on its own, or a platform with another Plotly build, answers 404 and the app uses its
+  own copy as before. `node ui/scripts/shared-vendor-names.mjs` prints the names after an upgrade.
 - **Analytics › Algorithms opens without the diagram editor.** The list moved to its own module
   (`AlgorithmList.tsx`), so opening it no longer loads React Flow and the test tools: 724 KB to
   443 KB of script. The algorithm's page still loads them.
@@ -254,6 +312,18 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **SDK 0.96.0: an app without an app key no longer warns that its contributions were not
+  sent.** An app's stand-in client for a missing key (Analytics) has no `put_contributions`: the
+  SDK now treats it as no client and lets `GET /api/ops/metrics` carry the contributions, instead
+  of retrying in the background and logging a warning half a minute later.
+
+- Tests: the network guard of `tests/conftest.py` lets the suite journeys reach the installation `PLANTCRAFT_SUITE_URL` names. Since the visitor fixture asks `/api/session` from Python, `make e2e-suite` against a host name was refused before any journey ran.
+- **The suite's journeys on an installation without the public demo.** `tests/e2e_suite` walked
+  the visitor's journeys only through "Enter the demo", so on a `--demo` install 13 of 15 failed.
+  They now read `GET /api/session` first and skip, saying to install with `--public-demo`.
+- **The release bundle carries the setup wizard.** `deploy/bundle.sh` left `wizard/` out, so the
+  documented `sudo python3 wizard/wizard.py` found nothing in a bundle.
+
 - **Interface pass, second round** (every page clicked like a person, light, dark and phone):
   the platform's windows (new action, calendar event, messages, people, asset forms) close with
   Escape, keep Tab inside and give focus back, like the ui's `Dialog`; Installed apps is a section
@@ -344,6 +414,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- **The public demo's visitor password is no longer in `.env`** (security check `PC-SEC-02`).
+  `install.sh` keeps it in `data/public-demo-password` (mode 600, owned by PlantCraft), handed to
+  PlantCraft as a Compose secret (`PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE`). An older installation's
+  value moves there unchanged; a new installation gets a random one instead of `plantcraft-demo`,
+  since visitors enter with the sign-in page's button. `PC-SEC-01` checks the file's mode.
 - **The security check includes Lynis and OpenSCAP when the host has them** (`PC-HOST-05`,
   `PC-HOST-06`). As root it runs `lynis audit system --quick` and the SCAP Security Guide's CIS
   level 1 (or standard) profile. Otherwise it reads their last report. A host without them reports
@@ -1768,7 +1843,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - The soak (`ci/bench/soak.py`, `make soak`): days on one build with the Mac mini's automatic
   deploys held (`data/deploy-hold`, read by `ci/macmini/suite-deploy`), a person's probes every
-  minute and the suite's own `system` signals read back into a verdict: no restart, up 99.5 %,
+  minute and the suite's own `system` signals read back into a loop_result: no restart, up 99.5 %,
   memory flat, queues that drain, disk, probes and fresh live values (docs/bench/README.md).
   `suite_bench.py --cleanup` removes what a `--keep` run left.
 

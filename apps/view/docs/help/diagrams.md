@@ -12,11 +12,19 @@ the name. In the editor, **Add page** makes one; the page's name, its place and 
 sit beside the tabs. A symbol, value or text can open another page (A click opens › Another
 page), like an off-page connector.
 
+A display drawn for the whole plant opens on its **Plant overview** (Level 1): a block per unit
+with its equipment and loop count and its loops' health bubbles; a click opens the unit's page,
+and **‹ Plant overview** on each unit page leads back.
+
 ## Watch a diagram
 
 - **Live** shows the values now, refreshed every few seconds (the diagram's own cadence).
 - **Colours**: green is normal, amber a warning, red an alarm (it blinks), grey no data. Grey also
   means a value has not changed for 15 minutes: an old number is never shown as a healthy plant.
+- A symbol bound to an alarm state of Alarms gets a mark in its corner while an alarm is active,
+  by its most urgent priority (ISA-101): a square with 1 for critical, a triangle with 2 for
+  high, a diamond with 3 for medium and a circle with 4 for low. Shape and number read without
+  colour.
 - Point at an element to read its values, their unit and why one cannot be read. The list under
   the diagram names every value that cannot be read.
 - A large drawing can name its **parts** (Edit › Process display › Parts): tabs over it,
@@ -26,7 +34,8 @@ page), like an off-page connector.
   and each line's look as in Trends; **Open in Trends** goes on with it there.
 - A click on a piece of equipment opens its panel beside the diagram: its values on the drawing,
   its signals (each a trend away), the dashboards that show it and **Asset page**. An element
-  its editor linked elsewhere opens that instead: another diagram or a dashboard.
+  its editor linked elsewhere opens that instead: another diagram or a dashboard. A diagram it
+  opens shows **Back** with the first one's name, which returns to the page you left.
 - **Full screen** is the browser's own: the diagram alone, live, for a control room screen, with
   the trend and the asset panel opening inside it; Esc leaves.
 - A vessel's level fills the vessel's own shape, with the liquid's surface drawn as a line.
@@ -88,7 +97,7 @@ Editors draw diagrams: **New diagram**, or **Edit** on a diagram.
 4. **Save**. Nothing is saved before; Cancel leaves the diagram as it was.
 
 Or start from a draft: **From assets** lays out a unit from its equipment, loops and relations
-(each with its bindings), and **Draft with assistant** drafts one from what you describe (when
+(each with its bindings), or **the whole plant**: an overview and a page per unit, and **Draft with assistant** drafts one from what you describe (when
 the language model use *diagram-draft* is on in Setup). Both replace the canvas, Undo brings it
 back, and a note says what was left out. Move things where you want them, then save.
 

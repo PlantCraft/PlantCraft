@@ -86,12 +86,26 @@ class TrendPeriod(BaseModel):
         return self
 
 
+# Earlier periods drawn over the trend's own, each line dotted in its colour (V11, dataPARC's
+# period comparison): the period just before, the same period a day, a week or four weeks back.
+COMPARISONS = ("previous", "1d", "7d", "28d")
+MAX_COMPARISONS = 3
+
+
 class TrendView(BaseModel):
-    """What a trend shows: the plots, the period and the step."""
+    """What a trend shows: the plots, the period, the step and the earlier periods it compares."""
 
     plots: list[TrendPlot] = Field(min_length=1, max_length=MAX_PLOTS)
     period: TrendPeriod = Field(default_factory=TrendPeriod)
     step_seconds: int | None = Field(default=None, ge=0, le=MAX_STEP_SECONDS)
+    compare: list[Literal["previous", "1d", "7d", "28d"]] = Field(
+        default_factory=list, max_length=MAX_COMPARISONS
+    )
+
+    @field_validator("compare")
+    @classmethod
+    def _compare(cls, value: list[str]) -> list[str]:
+        return [item for item in COMPARISONS if item in value]
 
 
 class TrendPayload(TrendView):
@@ -144,7 +158,9 @@ class TrendStore(Store):
 
     @staticmethod
     def _view(payload: TrendPayload) -> dict[str, Any]:
-        return payload.model_dump(mode="json", include={"plots", "period", "step_seconds"})
+        return payload.model_dump(
+            mode="json", include={"plots", "period", "step_seconds", "compare"}
+        )
 
     def create(self, payload: TrendPayload, user: str | None) -> dict[str, Any]:
         trend_id = uuid.uuid4().hex[:12]

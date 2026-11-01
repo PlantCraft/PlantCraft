@@ -26,7 +26,7 @@ image = "histcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.92.0"
+sdk = "0.96.0"
 asset_types = []
 roles = {}
 
@@ -59,8 +59,28 @@ description = "The collector cannot read a live source (OPC UA, CSV, gateway). K
 severity = "critical"
 category = "data"
 phase = "interval"
-payload = { source = "Source id", detail = "Why, as the source answered", since_ms = "Since (ms since 1970, UTC)" }
+payload = { source = "Source id", detail = "Why, as the source answered", since_ms = "Since (ms since 1970, UTC)", owners = "Who answers for the source (user:/group:), told with an email", contact = "How to reach the team that runs it" }
 rule = { when = "open", minutes = 10, priority = "high", notify = "admins" }
+
+[[publishes.events]]
+name = "gateway.backlog"
+title = "Gateway backlog"
+description = "The gateway's disk buffer (store and forward) holds more than 64 MB: values wait at the edge that the collector has not taken. Not lost, not archived yet. Key: gateway."
+severity = "warning"
+category = "data"
+phase = "interval"
+payload = { bytes = "What the buffer holds (bytes)" }
+rule = { when = "open", minutes = 15, priority = "medium", notify = "admins" }
+
+[[publishes.events]]
+name = "source.late"
+title = "Source late"
+description = "A source with an expected interval sent no value for longer than it (the integration stopped delivering). Key: source:<id>. Its signals' alarms of no data are this one condition."
+severity = "warning"
+category = "data"
+phase = "interval"
+payload = { source = "Source id", last_ms = "Newest value (ms since 1970, UTC)", heartbeat_seconds = "The expected interval (s)", owners = "Who answers for the source (user:/group:), told with an email", contact = "How to reach the team that runs it" }
+rule = { when = "open", minutes = 5, priority = "medium", notify = "admins" }
 
 [[publishes.events]]
 name = "point.no_data"

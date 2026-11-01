@@ -821,7 +821,11 @@ copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
   takes the focus and keeps Tab inside, gives it back on close, and closes on Escape, the × or a
   click outside until a field is changed. Asking before an action is `await confirmAction(text,
   { confirm: t("Delete"), danger: true })`, never the browser's `window.confirm`, which ignores
-  the theme and the frame. An app draws no `dialog-backdrop` of its own.
+  the theme and the frame. Asking for one short text is `await askText(question, { value,
+  confirm: t("Copy") })` (`type: "number"` for a number above zero), resolving the trimmed text or
+  null, never `window.prompt`. A message after an action is `showToast(text, { tone: "error" })`
+  (`"ok"`, `"info"`): it closes on its own, with its × or Escape, and never blocks the page as
+  `window.alert` does. An app draws no `dialog-backdrop` of its own.
 
 Rules: no app draws its own top menu or user menu; page order follows D7; the app's own pages
 are the only entries above **Apps**. An app that needs something the frame lacks asks for it in a
