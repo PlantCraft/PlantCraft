@@ -9,7 +9,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
-- **One translation mechanism for the whole suite (SDK 0.101.0, ui 0.106.0).** Every app now
+- **One translation mechanism for the whole suite (SDK 0.102.0, ui 0.106.0).** Every app now
   translates the same way as the platform: `createI18n` in `@plantcraft/ui` for the screens and
   `use_catalogs` with `LanguageMiddleware` in `plantcraft_sdk.i18n` for the servers, each module
   with its own `locales/pt-BR.json` next to its code (the shared components and the SDK carry
