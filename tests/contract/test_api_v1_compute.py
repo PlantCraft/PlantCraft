@@ -335,6 +335,28 @@ def test_a_paused_worker_takes_nothing_and_a_revoked_one_is_refused(central):
             "compute.worker.revoke"} <= set(actions)  # fmt: skip
 
 
+def test_a_revoked_worker_enrolls_again_with_a_new_code(central):
+    _enroll(central, LINK)
+    worker_id = _rt(central).compute.workers()[0]["id"]
+    _admin(central)
+    central.post(f"/api/compute/workers/{worker_id}/revoke")
+    reply = central.post(f"/api/compute/workers/{worker_id}/code")
+    assert reply.status_code == 200, reply.text
+    assert reply.json()["worker"]["state"] == "pending"
+    central.cookies.clear()
+    again = central.post(
+        f"{WORKER}/enroll", json={"code": reply.json()["code"], "host": "box", "executors": LINK}
+    )
+    assert again.status_code == 200, again.text
+    assert _rt(central).compute.worker(worker_id)["state"] == "active"
+    # An active worker gets no new code, and a revoked one whose name was taken meanwhile neither.
+    _admin(central)
+    assert central.post(f"/api/compute/workers/{worker_id}/code").status_code == 409
+    central.post(f"/api/compute/workers/{worker_id}/revoke")
+    assert central.post("/api/compute/workers", json={"name": "calc-1"}).status_code == 201
+    assert central.post(f"/api/compute/workers/{worker_id}/code").status_code == 409
+
+
 def test_limits_per_app_cap_what_a_task_asks(central):
     _admin(central)
     reply = central.put(

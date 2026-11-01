@@ -1511,5 +1511,6 @@
   "Holidays": "Feriados",
   "Days off for every queue with working hours. One per line: the date, then a name.": "Dias de folga de todas as filas com expediente. Um por linha: a data e depois um nome.",
   "Save holidays": "Salvar feriados",
-  "No holidays.": "Nenhum feriado."
+  "No holidays.": "Nenhum feriado.",
+  "Enroll again": "Registrar de novo"
 }
