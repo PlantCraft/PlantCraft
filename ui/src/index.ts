@@ -48,8 +48,8 @@ export { PhoneFold, useNarrowScreen, type PhoneFoldProps } from "./PhoneFold.js"
 export { CardGrid, bottom, fitCell, freePlace, packCells, readingOrder, GRID_COLUMNS, GRID_GAP, GRID_MAX_H, GRID_NARROW, GRID_ROW, gridGap, gridRow, type CardGridProps, type CellFold, type GridCell, type GridLimits } from "./Grid.js";
 export { WidgetBoard, WidgetCard, WidgetGallery, WidgetPicker, WidgetSettings, addToBoard, boardOf, bodyPixels, cardPixels, cardWidth, columnPixels, listRows, nearestSize, placedItems, sizeName, sizesOf, widgetSize, BOARD_MAX, STANDARD_SIZES, WIDGET_MAX_H, defaultLayout, fetchAppWidgets, fetchSuiteWidgets, moveWidget, placedWidgets, widgetDataUrl, WIDGETS_VERSION, WIDGET_POLL_MS, type BoardItem, type WidgetBoardProps, type WidgetConfig, type WidgetContext, type WidgetData, type WidgetDef, type WidgetFact, type WidgetItem, type WidgetPart, type WidgetSize, type WidgetSizeChoice } from "./Widgets.js";
 export { FactsBody, ListBody, NumberBody, SeriesBody, SplitBody, WidgetBody, WIDGET_KINDS, factCount, nearestPoint, seriesPaths } from "./WidgetKinds.js";
-export { hideTip, showTip, tipProps, type WidgetTipContent } from "./WidgetTip.js";
-export { PLOT_BUTTONS_OFF, TIME_WINDOWS, bandShapes, choosePeriod, isoOf, localOf, periodRange, qualityBands, sharedUnit, timeChartLayout, timeHover, timePlotConfig, windowLabel, windowSeconds, timeFigure, type QualityBand, type QualityChange, type TimeChartOptions, type TimeFigureOptions, type TimeLine, type TimePeriod } from "./timeChart.js";
+export { cutCellTipProps, hideTip, showTip, tipProps, type WidgetTipContent } from "./WidgetTip.js";
+export { PLOT_BUTTONS_OFF, TIME_WINDOWS, bandShapes, markStrip, choosePeriod, isoOf, localOf, periodRange, qualityBands, sharedUnit, timeChartLayout, timeHover, timePlotConfig, windowLabel, windowSeconds, timeFigure, type QualityBand, type QualityChange, type TimeChartOptions, type TimeFigureOptions, type TimeLine, type TimePeriod } from "./timeChart.js";
 export { PeriodPicker, type PeriodPickerProps } from "./PeriodPicker.js";
 export { useBrandTheme } from "./useBrandTheme.js";
 export { useDisplaySize } from "./useDisplaySize.js";

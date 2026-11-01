@@ -495,7 +495,10 @@ def history_for_model(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """The chat as the model reads it: alternating turns that start with the person's.
 
     An answer that failed is left out; two turns of the same side in a row are joined. A chart
-    the assistant drew is named in its turn, so the model knows it was shown.
+    the assistant drew is named in its turn, so the model knows it was shown. A chat longer than
+    ``HISTORY`` turns keeps its opening exchange and its newest turns: the opening often says
+    what the chat is about (a limit, a campaign, a unit), and without it a long chat forgets it
+    (2026-11-01: the battery's 32-turn chat lost the limit given in its first answer).
     """
 
     turns: list[dict[str, Any]] = []
@@ -514,10 +517,14 @@ def history_for_model(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
             turns[-1]["content"] += f"\n\n{text}"
         else:
             turns.append({"role": item["role"], "content": text})
-    turns = turns[-HISTORY:]
     while turns and turns[0]["role"] != "user":
         turns.pop(0)
-    return turns
+    if len(turns) <= HISTORY:
+        return turns
+    opening, newest = turns[:2], turns[-(HISTORY - 2) :]
+    while newest and newest[0]["role"] != "user":
+        newest.pop(0)
+    return opening + newest
 
 
 def reads_of(name: str, arguments: dict[str, Any]) -> int:
@@ -633,6 +640,8 @@ class ChatEngine:
         self.executor = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="assistant")
         self._futures: set[Future] = set()
         self._lock = threading.Lock()
+        # Held while a question is checked against the limits and its answer's row is added.
+        self._asking = threading.Lock()
         # The works of every page (assistant_works): the runtime sets the suite's registry.
         self.works: WorkRegistry = WorkRegistry()
         # The tools the installed apps add (assistant_access.app_tools): the runtime sets them.
@@ -760,16 +769,22 @@ class ChatEngine:
         # Whose answers these are: the person's, or a public demo visit's own (its chats belong to
         # ``<visitor>#visit:<id>``, assistant_chat.demo), so one visit never waits for another.
         owner = chat.get("username") or username
-        if self.store.working(owner):
-            raise Refused(t("Wait for the answer being written to finish."), 409)
-        # The day is the plant's (PLANTCRAFT_TIMEZONE); stored times are UTC text.
-        since = datetime.now(plant_timezone()).replace(hour=0, minute=0, second=0, microsecond=0)
-        if self.store.answers_since(owner, utc_text(since)) >= self.daily:
-            raise Refused(
-                t("You reached today's {count} answers. Ask again tomorrow.", count=self.daily), 429
+        # The checks and the answer's row in one step: twenty questions sent at once were three
+        # answers written at once (test battery, 2026-11-01).
+        with self._asking:
+            if self.store.working(owner):
+                raise Refused(t("Wait for the answer being written to finish."), 409)
+            # The day is the plant's (PLANTCRAFT_TIMEZONE); stored times are UTC text.
+            since = datetime.now(plant_timezone()).replace(
+                hour=0, minute=0, second=0, microsecond=0
             )
-        question = self.store.add(chat["chat_id"], "user", clean)
-        return question, self._start(chat, username, reader, apps, level)
+            if self.store.answers_since(owner, utc_text(since)) >= self.daily:
+                raise Refused(
+                    t("You reached today's {count} answers. Ask again tomorrow.", count=self.daily),
+                    429,
+                )
+            question = self.store.add(chat["chat_id"], "user", clean)
+            return question, self._start(chat, username, reader, apps, level)
 
     def retry(
         self,
@@ -785,10 +800,11 @@ class ChatEngine:
         messages = self.store.messages(chat["chat_id"])
         if not messages or messages[-1]["role"] != "assistant" or messages[-1]["state"] != "failed":
             raise Refused(t("Only an answer that failed is asked again."), 409)
-        if self.store.working(chat.get("username") or username):
-            raise Refused(t("Wait for the answer being written to finish."), 409)
-        self.store.remove_message(messages[-1]["message_id"])
-        return self._start(chat, username, reader, apps, level)
+        with self._asking:
+            if self.store.working(chat.get("username") or username):
+                raise Refused(t("Wait for the answer being written to finish."), 409)
+            self.store.remove_message(messages[-1]["message_id"])
+            return self._start(chat, username, reader, apps, level)
 
     def _start(
         self,

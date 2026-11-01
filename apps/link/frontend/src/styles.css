@@ -48,7 +48,7 @@ td small + small { margin-top: calc(3px * var(--pc-space-scale, 1)); }
 .chart-note { margin: var(--pc-space-2) 0 0; font-size: var(--pc-fs-sm); }
 .event-legend { margin: calc(10px * var(--pc-space-scale, 1)) 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--pc-space-2) calc(18px * var(--pc-space-scale, 1)); font-size: var(--pc-fs-sm); }
 .event-legend li { display: inline-flex; align-items: center; gap: calc(7px * var(--pc-space-scale, 1)); }
-.event-legend i { width: 18px; height: 12px; border-radius: 3px; opacity: .55; }
+.event-legend i { width: 18px; height: 5px; border-radius: 2px; opacity: .9; } /* the strip on top of the chart (markStrip) */
 .event-legend b { color: var(--pc-text); }
 .check-list { padding: 0; }
 .check-item + .check-item { border-top: 1px solid var(--pc-border-subtle); }
@@ -234,7 +234,7 @@ td small + small { margin-top: calc(3px * var(--pc-space-scale, 1)); }
 .blk-contract .blk-col-value { width: 16%; }
 .blk-contract td { vertical-align: top; overflow-wrap: anywhere; }
 .blk-contract td small { display: block; color: var(--pc-text-3); }
-.blk-contract .blk-group th { background: var(--pc-surface-2); color: var(--pc-text-2); font-size: var(--pc-fs-xs); text-transform: uppercase; letter-spacing: .04em; text-align: left; }
+.blk-contract .blk-group th { background: var(--pc-surface-2); color: var(--pc-text-2); font-size: var(--pc-fs-xs); text-align: left; }
 .blkf { display: grid; gap: var(--pc-space-4); }
 .blkf-set { border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); padding: var(--pc-space-4); margin: 0; min-width: 0; display: grid; gap: var(--pc-space-3); background: var(--pc-surface); }
 .blkf-set > legend { padding: 0 calc(6px * var(--pc-space-scale, 1)); font-weight: var(--pc-fw-semibold); }
@@ -309,7 +309,7 @@ td small + small { margin-top: calc(3px * var(--pc-space-scale, 1)); }
 .schedule-preview p { margin: 0; }
 .schedule-preview-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--pc-space-2) var(--pc-space-6); }
 .schedule-preview-grid > div { display: grid; gap: calc(6px * var(--pc-space-scale, 1)); align-content: start; min-width: 0; }
-.schedule-preview .label { font-size: var(--pc-fs-xs, 12px); font-weight: 600; color: var(--pc-text-3); text-transform: uppercase; letter-spacing: .04em; }
+.schedule-preview .label { font-size: var(--pc-fs-xs, 12px); font-weight: 600; color: var(--pc-text-3); }
 .schedule-preview ul { margin: 0; padding-left: calc(18px * var(--pc-space-scale, 1)); }
 .schedule-preview-warning { grid-column: 1 / -1; margin: 0; }
 .schedule-replay { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--pc-space-3) var(--pc-space-6); }
@@ -335,7 +335,7 @@ td small + small { margin-top: calc(3px * var(--pc-space-scale, 1)); }
 .schedule-when small { color: var(--pc-text-3); }
 .schedule-stats { display: flex; flex-wrap: wrap; gap: calc(28px * var(--pc-space-scale, 1)); align-items: flex-end; margin-bottom: var(--pc-space-4); }
 .schedule-stats > div { display: grid; gap: 2px; min-width: 90px; }
-.schedule-stats .label { font-size: var(--pc-fs-xs, 12px); font-weight: 600; color: var(--pc-text-3); text-transform: uppercase; letter-spacing: .04em; }
+.schedule-stats .label { font-size: var(--pc-fs-xs, 12px); font-weight: 600; color: var(--pc-text-3); }
 .schedule-stats b { font-size: var(--pc-fs-lg, 18px); }
 .schedule-stats small { color: var(--pc-text-3); }
 .schedule-stats-link { margin-left: auto; }
@@ -359,7 +359,7 @@ td small + small { margin-top: calc(3px * var(--pc-space-scale, 1)); }
 .subject-place { align-self: center; font-size: .9em; }
 .run-view { display: flex; flex-direction: column; gap: var(--pc-space-4); }
 .run-facts { display: flex; flex-wrap: wrap; gap: var(--pc-space-3) var(--pc-space-8); margin: 0; }
-.run-facts dt { color: var(--pc-text-3); font-size: .8em; text-transform: uppercase; letter-spacing: .04em; }
+.run-facts dt { color: var(--pc-text-3); font-size: .8em; }
 .run-facts dd { margin: 2px 0 0; }
 .run-facts dd small { color: var(--pc-text-3); }
 .run-back { margin: 0 0 var(--pc-space-2); }

@@ -519,8 +519,18 @@ def list_models(rt: RuntimeDep, _user: CurrentUser) -> list[dict[str, Any]]:
 
     blocks = catalog(rt)
     found = []
+    compiled: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for run in rt.runs.list(kind="fmu", limit=5000):
+        if (run.get("options") or {}).get("compile"):
+            compiled.setdefault((run["project_id"], run["model"]), []).append(run)
     for project in rt.projects.list():
-        found += _models_of(project, rt.projects.files(project["id"]), blocks)
+        models = _models_of(project, rt.projects.files(project["id"]), blocks)
+        files = rt.workbench.compile_files(project["id"]) if models else {}
+        for item in models:
+            builds = compiled.get((project["id"], item["model"]), [])
+            source = rt.workbench.source_of(project["id"], item["model"], files=files)
+            item["build"] = rt.workbench.build_state(builds, source)[0]
+        found += models
     return sorted(found, key=lambda m: (not m["example"], m["name"].lower()))
 
 
@@ -864,4 +874,81 @@ def run_model(
     except WorkbenchError as exc:
         raise _workbench_error(exc) from exc
     rt.audit(user, "run.started", f"project:{project_id}", {"run": run["id"], "model": model})
+    return run
+
+
+# Compiled models (2026-11-01) ------------------------------------------------------------
+
+
+def _build(run: dict[str, Any], source: str, versions: dict[str, int]) -> dict[str, Any]:
+    """One compilation as the model page shows it: when, who, how long, its FMU and messages,
+    and the version of the model it was compiled from (None when no kept version matches)."""
+
+    made_from = (run.get("options") or {}).get("source", "")
+    messages = run.get("messages") or []
+    result = run.get("result") or {}
+    return {
+        "id": run["id"],
+        "status": run["status"],
+        "created_at": run["created_at"],
+        "created_by": run["created_by"],
+        "finished_at": run.get("finished_at"),
+        "seconds": run.get("seconds"),
+        "summary": run.get("summary") or "",
+        "current": made_from == source,
+        "version": versions.get(made_from),
+        "fmi_version": result.get("fmi_version", ""),
+        "fmu_type": result.get("fmu_type", ""),
+        "size": result.get("size"),
+        "sha256": result.get("sha256", ""),
+        "variables": result.get("variables"),
+        "errors": sum(1 for item in messages if item.get("level") == "error"),
+        "warnings": sum(1 for item in messages if item.get("level") == "warning"),
+        "messages": [item for item in messages if item.get("level") in ("error", "warning")][:20],
+    }
+
+
+def _versions_by_source(rt, project_id: str, model: str, path: str, source: str) -> dict[str, int]:
+    """Each kept version's compile source -> its number (the version in use is the last)."""
+
+    files = rt.workbench.compile_files(project_id)
+    revisions = rt.projects.revisions(project_id, path)
+    count = len(revisions) + 1
+    found = {source: count}
+    for index, item in enumerate(revisions):
+        revision = rt.projects.revision(project_id, item["id"]) or {}
+        then = rt.workbench.source_of(
+            project_id, model, {path: revision.get("content", "")}, files=files
+        )
+        found.setdefault(then, count - 1 - index)
+    return found
+
+
+@router.get("/models/{project_id}/{model}/build")
+def model_build(project_id: str, model: str, rt: RuntimeDep, _user: CurrentUser) -> dict[str, Any]:
+    """Whether the model is compiled, its compiled version and its last compilations."""
+
+    _project, item, _text, _classes = _model_or_404(rt, project_id, model)
+    source = rt.workbench.source_of(project_id, model)
+    builds = rt.workbench.builds(project_id, model)
+    state, built = rt.workbench.build_state(builds, source)
+    versions = _versions_by_source(rt, project_id, model, item["file"], source)
+    shown = [_build(run, source, versions) for run in builds]
+    return {
+        "state": state,
+        "compiled": next((b for b in shown if built and b["id"] == built["id"]), None),
+        "builds": shown,
+    }
+
+
+@router.post("/models/{project_id}/{model}/compile", status_code=201)
+def compile_model(project_id: str, model: str, rt: RuntimeDep, user: EditorUser) -> dict[str, Any]:
+    """Compile the model as it is now; the compiled version is kept with it (an FMU)."""
+
+    _model_or_404(rt, project_id, model)
+    try:
+        run = rt.workbench.compile(project_id, model, by=user.username)
+    except WorkbenchError as exc:
+        raise _workbench_error(exc) from exc
+    rt.audit(user, "model.compiled", f"project:{project_id}", {"run": run["id"], "model": model})
     return run

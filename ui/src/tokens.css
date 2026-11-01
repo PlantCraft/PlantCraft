@@ -7,10 +7,13 @@
  * override with <html data-theme="light|dark">. Any subtree can also force a
  * theme with data-theme (the wall-screen dashboard uses .ac-screen-dark).
  *
- * Colour philosophy (ISA-101 "high performance HMI"): surfaces stay calm
- * neutral greys (near-black in dark); PlantCraft Blue marks what is
- * interactive; the status hues are reserved for state and never used as
- * decoration. The navigation rail is graphite in both themes.
+ * Colour philosophy (ISA-101 "high performance HMI"): three levels, the page,
+ * the card and the text. Card and text sit at the most contrast (white card
+ * and near-black text in light, near-black card and near-white text in dark);
+ * the page is a calm grey between them, mirrored across the themes. Anything
+ * that holds text (fields, buttons, search, notes) takes the card colour.
+ * PlantCraft Blue marks what is interactive; the status hues are reserved for
+ * state and never used as decoration. The navigation rail floats as a card.
  */
 
 /* ---------------------------------------------------------------- light */
@@ -52,12 +55,12 @@
   --pc-surface-2: #fafafc;     /* table heads, row hover, insets */
   --pc-surface-3: #f0f0f3;     /* tracks, chips, quiet fills */
   --pc-surface-4: #e3e3e8;     /* strong fills: toggles off, counters */
-  --pc-border-subtle: #e8e8ed; /* row dividers, card outlines */
-  --pc-border: #d2d2d7;        /* inputs, controls */
+  --pc-border-subtle: #ededf0; /* row dividers */
+  --pc-border: #dedee3;        /* inputs, controls */
   --pc-border-strong: #b8b8bf; /* hover outlines, dashed drop zones */
-  --pc-text: #1d1d1f;          /* headings, key values */
-  --pc-text-2: #424245;        /* body text */
-  --pc-text-3: #636368;        /* secondary text, captions (5.6:1 on the canvas) */
+  --pc-text: #111113;          /* headings, key values: the most contrast on a card */
+  --pc-text-2: #2c2c2e;        /* body text */
+  --pc-text-3: #55555a;        /* secondary text, captions (6.9:1 on the canvas) */
   --pc-text-4: #6e6e73;        /* quiet text, placeholders, icons (4.5:1 on every surface but tracks) */
   --pc-on-accent: #ffffff;     /* text on primary / status fills */
 
@@ -105,16 +108,16 @@
   --pc-violet-soft: #f1eefb;
   --pc-violet-border: #d4cbf1;
 
-  /* Chart series: 8 hues, validated for colour-vision deficiency in this
-     order (adjacent CVD dE >= 10.7, normal-vision dE >= 18.9). */
-  --pc-series-1: #1762b6; /* blue    */
-  --pc-series-2: #e06d00; /* orange  */
-  --pc-series-3: #00958f; /* teal    */
-  --pc-series-4: #654db6; /* violet  */
-  --pc-series-5: #cfa529; /* gold    */
-  --pc-series-6: #913e20; /* rust    */
-  --pc-series-7: #ca488f; /* magenta */
-  --pc-series-8: #438f31; /* green   */
+  /* Chart series: 8 hues in a fixed order, a step darker in light and a step
+     lighter in dark so a line has the same weight on a white or a black card. */
+  --pc-series-1: #0f55a3; /* blue    */
+  --pc-series-2: #c25e00; /* orange  */
+  --pc-series-3: #007f7a; /* teal    */
+  --pc-series-4: #523c9e; /* violet  */
+  --pc-series-5: #a8851c; /* gold    */
+  --pc-series-6: #7d3319; /* rust    */
+  --pc-series-7: #b03a7b; /* magenta */
+  --pc-series-8: #357a26; /* green   */
   --pc-chart-grid: #e8e8ed;
   --pc-chart-axis: #d2d2d7;
 
@@ -134,24 +137,25 @@
   /* Elevation */
   --pc-shadow-color: #000000;
   --pc-scrim: #000000;
+  --pc-hair: rgba(0, 0, 0, .07); /* the card's hairline edge */
 }
 
 /* ----------------------------------------------------------------- dark */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --pc-bg: #000000;
-    --pc-surface: #1c1c1e;
-    --pc-surface-2: #232326;
-    --pc-surface-3: #2c2c2e;
-    --pc-surface-4: #3a3a3c;
-    --pc-border-subtle: #2c2c2e;
-    --pc-border: #38383a;
-    --pc-border-strong: #48484a;
-    --pc-text: #f5f5f7;
-    --pc-text-2: #d2d2d7;
-    --pc-text-3: #98989d;
-    --pc-text-4: #8e8e93;
+    --pc-bg: #1c1c1e;
+    --pc-surface: #0b0b0c;
+    --pc-surface-2: #111113;
+    --pc-surface-3: #18181a;
+    --pc-surface-4: #2a2a2d;
+    --pc-border-subtle: #2a2a2d;
+    --pc-border: #3a3a3d;
+    --pc-border-strong: #4a4a4e;
+    --pc-text: #fafafa;
+    --pc-text-2: #e5e5ea;
+    --pc-text-3: #b0b0b5;
+    --pc-text-4: #9a9a9f;
     --pc-on-accent: #ffffff;
     --pc-primary: #3d78b6;
     --pc-primary-hover: #4f88c2;
@@ -192,16 +196,16 @@
     --pc-violet-text: #b3a5f0;
     --pc-violet-soft: #221d3a;
     --pc-violet-border: #463a7a;
-    --pc-series-1: #4087de;
-    --pc-series-2: #e06d00;
-    --pc-series-3: #04a19b;
-    --pc-series-4: #8a74e2;
-    --pc-series-5: #b48a00;
-    --pc-series-6: #a95436;
-    --pc-series-7: #d14e95;
-    --pc-series-8: #499537;
-    --pc-chart-grid: #2c2c2e;
-    --pc-chart-axis: #38383a;
+    --pc-series-1: #6aa8f2;
+    --pc-series-2: #ff9b40;
+    --pc-series-3: #33d1c9;
+    --pc-series-4: #ad9cf5;
+    --pc-series-5: #e6c04a;
+    --pc-series-6: #e0805a;
+    --pc-series-7: #f07ab6;
+    --pc-series-8: #74c95c;
+    --pc-chart-grid: #2a2a2d;
+    --pc-chart-axis: #3a3a3d;
     --pc-app-processcraft: #3d78b6;
     --pc-app-desk: #8b62b7;
     --pc-app-linkcraft: #28807a;
@@ -215,24 +219,25 @@
     --pc-app-operations: #6b727c;
     --pc-shadow-color: #000000;
     --pc-scrim: #000000;
+    --pc-hair: rgba(255, 255, 255, .07);
   }
 }
 
 [data-theme="dark"],
 .ac-screen-dark {
   color-scheme: dark;
-  --pc-bg: #000000;
-  --pc-surface: #1c1c1e;
-  --pc-surface-2: #232326;
-  --pc-surface-3: #2c2c2e;
-  --pc-surface-4: #3a3a3c;
-  --pc-border-subtle: #2c2c2e;
-  --pc-border: #38383a;
-  --pc-border-strong: #48484a;
-  --pc-text: #f5f5f7;
-  --pc-text-2: #d2d2d7;
-  --pc-text-3: #98989d;
-  --pc-text-4: #8e8e93;
+  --pc-bg: #1c1c1e;
+  --pc-surface: #0b0b0c;
+  --pc-surface-2: #111113;
+  --pc-surface-3: #18181a;
+  --pc-surface-4: #2a2a2d;
+  --pc-border-subtle: #2a2a2d;
+  --pc-border: #3a3a3d;
+  --pc-border-strong: #4a4a4e;
+  --pc-text: #fafafa;
+  --pc-text-2: #e5e5ea;
+  --pc-text-3: #b0b0b5;
+  --pc-text-4: #9a9a9f;
   --pc-on-accent: #ffffff;
   --pc-primary: #3d78b6;
   --pc-primary-hover: #4f88c2;
@@ -273,16 +278,16 @@
   --pc-violet-text: #b3a5f0;
   --pc-violet-soft: #221d3a;
   --pc-violet-border: #463a7a;
-  --pc-series-1: #4087de;
-  --pc-series-2: #e06d00;
-  --pc-series-3: #04a19b;
-  --pc-series-4: #8a74e2;
-  --pc-series-5: #b48a00;
-  --pc-series-6: #a95436;
-  --pc-series-7: #d14e95;
-  --pc-series-8: #499537;
-  --pc-chart-grid: #2c2c2e;
-  --pc-chart-axis: #38383a;
+  --pc-series-1: #6aa8f2;
+  --pc-series-2: #ff9b40;
+  --pc-series-3: #33d1c9;
+  --pc-series-4: #ad9cf5;
+  --pc-series-5: #e6c04a;
+  --pc-series-6: #e0805a;
+  --pc-series-7: #f07ab6;
+  --pc-series-8: #74c95c;
+  --pc-chart-grid: #2a2a2d;
+  --pc-chart-axis: #3a3a3d;
   --pc-app-processcraft: #3d78b6;
   --pc-app-linkcraft: #28807a;
   --pc-app-dashcraft: #636ec3;
@@ -293,6 +298,7 @@
   --pc-app-desk: #8b62b7;
   --pc-shadow-color: #000000;
   --pc-scrim: #000000;
+  --pc-hair: rgba(255, 255, 255, .07);
 }
 
 /* --------------------------------------------------------- display size
@@ -348,16 +354,16 @@
   --pc-lh-tight: 1.2;
   --pc-lh-normal: 1.5;
   --pc-lh-relaxed: 1.7;
-  --pc-tracking-title: -.022em;  /* page titles and KPI values */
-  --pc-tracking-heading: -.012em; /* section titles */
+  --pc-tracking-title: -.028em;  /* page titles and KPI values */
+  --pc-tracking-heading: -.02em; /* section titles */
   --pc-tracking-overline: 0;      /* labels are sentence case: no uppercase tracking */
 
   /* Shape: calm, slightly rounder corners; flat surfaces, no gloss. */
   --pc-radius-xs: 4px;
-  --pc-radius-sm: 6px;
+  --pc-radius-sm: 7px;
   --pc-radius-md: 8px;
-  --pc-radius-lg: 10px;
-  --pc-radius-xl: 14px;
+  --pc-radius-lg: 12px;
+  --pc-radius-xl: 20px;
   --pc-radius-pill: 999px;
 
   /* Spacing: 4px grid */
@@ -372,8 +378,13 @@
   --pc-space-10: calc(40px * var(--pc-space-scale));
   --pc-space-12: calc(48px * var(--pc-space-scale));
 
+  /* Vertical rhythm (2026-11-01): one gap between cards everywhere, the View dashboard's; a
+     heading that opens a new group of cards gets more room above it. */
+  --pc-gap-card: calc(14px * var(--pc-space-scale));
+  --pc-gap-group: calc(24px * var(--pc-space-scale));
+
   /* Motion: short and functional. */
-  --pc-ease: cubic-bezier(.2, 0, 0, 1);
+  --pc-ease: cubic-bezier(.32, .72, 0, 1);
   --pc-duration-fast: 120ms;
   --pc-duration: 180ms;
   --pc-duration-slow: 260ms;
@@ -390,8 +401,9 @@
 :root,
 [data-theme],
 .ac-screen-dark {
-  --pc-shadow-1: 0 1px 2px color-mix(in srgb, var(--pc-shadow-color) 6%, transparent), 0 1px 3px color-mix(in srgb, var(--pc-shadow-color) 4%, transparent);
-  --pc-shadow-2: 0 2px 4px color-mix(in srgb, var(--pc-shadow-color) 6%, transparent), 0 6px 16px color-mix(in srgb, var(--pc-shadow-color) 8%, transparent);
+  /* Cards: a hairline edge and a long soft shadow instead of an outline. */
+  --pc-shadow-1: 0 0 0 .5px var(--pc-hair), 0 1px 2px color-mix(in srgb, var(--pc-shadow-color) 3%, transparent), 0 8px 24px color-mix(in srgb, var(--pc-shadow-color) 4%, transparent);
+  --pc-shadow-2: 0 0 0 .5px var(--pc-hair), 0 6px 14px color-mix(in srgb, var(--pc-shadow-color) 6%, transparent), 0 18px 44px color-mix(in srgb, var(--pc-shadow-color) 9%, transparent);
   --pc-shadow-3: 0 12px 32px color-mix(in srgb, var(--pc-shadow-color) 16%, transparent);
   --pc-shadow-4: 0 24px 64px color-mix(in srgb, var(--pc-shadow-color) 26%, transparent);
   --pc-focus-ring: 0 0 0 3px color-mix(in srgb, var(--pc-focus) 30%, transparent);

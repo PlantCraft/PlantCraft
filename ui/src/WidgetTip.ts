@@ -118,3 +118,28 @@ export function tipProps(content: WidgetTipContent | (() => WidgetTipContent), o
     onBlur: hideTip,
   };
 }
+
+/** A table row's second line is cut to one line (base.css `.table td small`): hovering a cut one
+ * shows the whole text in the same note, under the cell's first line. Spread on the <table>. */
+export function cutCellTipProps() {
+  const cutCell = (target: EventTarget | null): HTMLElement | null => {
+    const small = target instanceof Element ? target.closest("td small") : null;
+    return small instanceof HTMLElement && small.scrollHeight > small.clientHeight + 1 ? small : null;
+  };
+  const titleOf = (small: HTMLElement) => {
+    const cell = small.closest("td");
+    const first = cell ? Array.from(cell.childNodes).find((child) => child !== small && (child.textContent ?? "").trim()) : null;
+    return (first?.textContent ?? "").trim();
+  };
+  return {
+    onMouseOver: (event: { target: EventTarget | null; clientX: number; clientY: number }) => {
+      const small = cutCell(event.target);
+      if (!small) return;
+      const title = titleOf(small);
+      showTip({ title: title || (small.textContent ?? ""), rows: title ? [["", small.textContent ?? ""]] : [] }, event.clientX, event.clientY);
+    },
+    onMouseOut: (event: { target: EventTarget | null }) => {
+      if (cutCell(event.target)) hideTip();
+    },
+  };
+}

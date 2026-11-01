@@ -435,7 +435,7 @@ export function TilesBody({ data, h }: { data: Extract<WidgetData, { kind: "tile
   }, []);
   const label = Math.round(16 * displayScales().text);
   const side = room && h > 1
-    ? fitTileSide(groups.map((group) => ({ count: group.tiles.length, named: Boolean(group.label) })), room.width, room.height, label, 3, Math.round(10 * displayScales().space))
+    ? fitTileSide(groups.map((group) => ({ count: group.tiles.length, named: Boolean(group.label) })), room.width, room.height, label, 4, Math.round(10 * displayScales().space))
     : tileSide(count, h, groups.length);
   const states = new Map<string, number>();
   groups.forEach((group) => group.tiles.forEach((tile) => states.set(tile.state ?? "unknown", (states.get(tile.state ?? "unknown") ?? 0) + 1)));

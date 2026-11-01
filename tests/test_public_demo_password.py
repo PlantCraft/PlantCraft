@@ -75,6 +75,8 @@ def test_install_sh_compose_and_the_examples_keep_it_out_of_env():
     assert "data/public-demo-password" in SCRIPT.split("chmod 0600 data/initial-admin-password")[1]
     compose = (DEPLOY / "compose.yaml").read_text(encoding="utf-8")
     assert "PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE: /run/secrets/public_demo_password" in compose
+    # The demo's assistant switch reaches the container, off unless the .env turns it on.
+    assert 'PLANTCRAFT_PUBLIC_DEMO_LLM: "${PLANTCRAFT_PUBLIC_DEMO_LLM:-off}"' in compose
     assert "public_demo_password:\n    file: ./data/public-demo-password" in compose
     example = (DEPLOY / ".env.example").read_text(encoding="utf-8")
     assert "PLANTCRAFT_PUBLIC_DEMO_PASSWORD=" not in example

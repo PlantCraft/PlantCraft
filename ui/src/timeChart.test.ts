@@ -52,7 +52,8 @@ describe("time chart", () => {
     expect(dark.layout.yaxis.title.text).toBe("");
     expect(dark.layout.yaxis.type).toBe("linear");
     expect(dark.layout.showlegend).toBe(true);
-    expect(dark.layout.shapes).toHaveLength(1);
+    expect(dark.layout.shapes).toHaveLength(1); // one band: its strip on top (markStrip)
+    expect(dark.layout.shapes[0].y0).toBeGreaterThan(1);
     expect(dark.config.toImageButtonOptions.filename).toBe("FT-1");
     const one = timeFigure({ lines: [lines[0]] }, "light");
     expect(one.layout.yaxis.title.text).toBe("m³/h");

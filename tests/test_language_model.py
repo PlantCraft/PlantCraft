@@ -543,3 +543,34 @@ def test_the_start_of_each_request_is_kept_for_the_next_by_the_provider(monkeypa
     assert "cache_control" not in anthropic["tools"][0]
     assert anthropic["tools"][-1]["cache_control"] == {"type": "ephemeral"}
     assert "cache_control" not in tools[-1]
+
+
+def test_the_llm_command_sets_the_default_model_with_a_key_from_stdin(tmp_path, monkeypatch, capsys):  # fmt: skip
+    import sys
+    from pathlib import Path
+
+    from plantcraft.cli import main
+
+    root = Path(__file__).resolve().parents[1]
+    scenario = json.loads((root / "scenarios" / "generic_demo.json").read_text())
+    scenario["storage"]["sqlite_path"] = str(tmp_path / "workspace.sqlite3")
+    scenario["source"]["path"] = str(root / scenario["source"]["path"])
+    (tmp_path / "scenario.json").write_text(json.dumps(scenario))
+    monkeypatch.setenv("PLANTCRAFT_SCENARIO", str(tmp_path / "scenario.json"))
+    allow = tmp_path / "egress" / "allow.json"
+    allow.parent.mkdir()
+    monkeypatch.setenv("PLANTCRAFT_EGRESS_ALLOWLIST", str(allow))
+    monkeypatch.setattr(sys, "stdin", io.StringIO("OPENAI_API_KEY=sk-demo-abcd1234\n"))
+    command = ["llm", "set", "--name", "OpenAI demo", "--kind", "openai", "--model", "gpt-5-mini"]
+    assert main([*command, "--key-stdin"]) == 0
+    # Again with another model: the same provider, the key kept, the new default.
+    assert main([*command[:-1], "gpt-6-luna"]) == 0
+    assert main(["llm", "show"]) == 0
+    out = capsys.readouterr().out
+    assert "default: gpt-6-luna" in out and "sk-demo-abcd1234" not in out
+    keys = json.loads((tmp_path / "specialist-keys.json").read_text())
+    assert "sk-demo-abcd1234" in json.dumps(keys)
+    assert "api.openai.com" in allow.read_text()
+    key_file = tmp_path / "empty.key"
+    key_file.write_text("\n")
+    assert main([*command, "--key-file", str(key_file)]) == 2

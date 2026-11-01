@@ -7,6 +7,21 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Changed
+
+- **A new look for the whole suite (ui 0.103.0).** Three levels, page, card and text, with
+  card and text at the most contrast: white cards and near-black text in light, near-black cards
+  on a grey page and near-white text in dark. Fields, buttons, search and filters take the card's
+  colour. Cards lose their outline for a hairline edge and a soft shadow, with 12 px corners. The
+  sidebar floats as a card in the theme's colours (it was graphite in both themes). One vertical
+  rhythm: 14 px between cards, 8 px between a toolbar and its table, 24 px above a new group.
+  Tables are denser, cut the description to one line and show the whole text on hover; a status
+  in a table is a dot and a word. Labels are no longer in capitals. Charts drop the vertical grid,
+  take series a step darker in light and lighter in dark, and mark a stretch (a check's event, a
+  bad-quality period, an alarm) with a strip on top of the plot instead of tinting it
+  (`markStrip()`); a scatter coloured by time uses `timeScale()`. The page title and its size
+  are unchanged; page tabs keep their underline.
+
 ### Added
 
 - `@plantcraft/ui`: **display size**, five steps from Larger text to More space, in the person's
@@ -21,6 +36,17 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - `plantcraft-sdk`: **`displayfit`**, the check that every page fits at every display size, on a
   small laptop and a large screen: no text cut, out of its card or over other text, no page wider
   than the screen. PlantCraft and every app run it in `tests/e2e/test_display_sizes.py`.
+- The assistant's period statistics (`signal_stats`) give the standard deviation, and with `minus` a signal minus another point by point with its mean absolute value: a loop's error (PV minus setpoint) in one call, for up to ten loops. Found by the battery's hard questions, where both luna and terra could not rank loops by error from averaged history.
+
+- The assistant's test battery has hard questions: eleven analyses over a nine-loop plant of its own (rank loops by error, a sticky valve, an oscillation's period, a manual period, a level excursion, a drift, long notes, a fact from early in a long chat), and the works as their pages ask them, with the cost per group, to choose a model per use (docs/llm-battery.md).
+
+- **Public demo: an isolated visit saves in Alarms, Analytics and View (`plantcraft-sdk` 0.98.0).**
+  `Access(label, demo_copy=True)` lets an isolated visit (`PLANTCRAFT_PUBLIC_DEMO_ISOLATED`) use
+  the editors' routes, saving into its own copy of the app's data. Writes to PlantCraft with the
+  app's key during such a visit are refused (`plantcraft_sdk.client.DemoVisitWrite`), so nothing
+  of the visit reaches the shared demo. Administrator-only actions (Python code, models,
+  settings, sources) stay locked.
+
 - **Public demo: a copy of every app's database for each visit (`plantcraft-sdk` 0.97.0).**
   With `PLANTCRAFT_PUBLIC_DEMO_ISOLATED=true` (off by default), a visit's token is marked
   isolated. Each app then sends the visit's reads and writes to the visit's own copy of its
@@ -30,6 +56,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   until the editors are unlocked.
 
 ### Changed
+
+- A chat longer than the assistant's 30 turns keeps its opening exchange beside its newest turns, so a long chat no longer forgets what it started with (a limit, a unit, a campaign). The battery's hard questions now fail an answer that lists every loop instead of choosing one, and give each works case its tokens.
 
 - **Public demo: a visible 30-minute clock and a 5-minute idle end.** A visit lasts
   `PLANTCRAFT_PUBLIC_DEMO_MINUTES` (30) from its start, whatever its use, with its clock always
@@ -53,6 +81,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
     copy of the canvas's own, is gone; the keys F (fit), + and - zoom.
   - The legend folds into a "Legend" button; open, it also names the libraries the blocks'
     colours stand for.
+- **The assistant's test battery** (`tests/llm_battery/`, docs/llm-battery.md): 45 attacks,
+  refusals and limits in ten groups, asked as visits of a public demo with the assistant on. They run against a fake model that obeys every
+  instruction it reads (in CI, `tests/test_llm_battery.py`) and against a real model
+  (`python -m tests.llm_battery --model ...`), with a report per case. The report includes
+  tokens and time per answer.
 - **Public demo: updates announced to the visits.** `plantcraft demo update-notice --in 2`
   shows every visit a countdown strip, stops new visits, then ends them and sends them to the
   site's `/demo-updating` page (`PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL`), which opens the demo
@@ -370,6 +403,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - `@plantcraft/ui`, the block diagram editor: blocks of a library past the eighth (Outputs, in
   Analytics) had no colour; there are eleven now, taken in turn.
+- The assistant takes one question at a time per person even when many arrive at once: twenty
+  questions sent together were three answers written at once.
 - **The Zabbix template imports and reads.** Zabbix 7.0 refused it ("UUIDv4 is expected": its
   uuids were version 5), and a Zabbix agent could not reach `metrics.json` because the install
   folder was 0750. The uuids are now version 4 (the test checks it) and `install.sh` lets others
@@ -481,6 +516,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- `@plantcraft/ui`: the side panel shows links to other sites in the assistant's answers as text
+  with their address, as Desk already did. A link planted in the plant's data is never one click
+  away.
 - **The public demo's visitor password is no longer in `.env`** (security check `PC-SEC-02`).
   `install.sh` keeps it in `data/public-demo-password` (mode 600, owned by PlantCraft), handed to
   PlantCraft as a Compose secret (`PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE`). An older installation's

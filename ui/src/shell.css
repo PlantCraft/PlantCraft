@@ -4,8 +4,14 @@
 .pcs-shell { --pcs-sidebar: calc(248px * min(1, var(--pc-text-scale, 1))); min-height: 100vh; display: flex; color: var(--pc-text); background: var(--pc-bg); }
 .pcs-collapsed { --pcs-sidebar: 68px; }
 
-/* Sidebar */
-.pcs-sidebar { width: var(--pcs-sidebar); position: fixed; inset: 0 auto 0 0; z-index: var(--pc-z-nav); padding: calc(18px * var(--pc-space-scale, 1)) var(--pc-space-3) var(--pc-space-3); display: flex; flex-direction: column; gap: calc(6px * var(--pc-space-scale, 1)); overflow-y: auto; overscroll-behavior: contain; color: var(--pc-chrome-text); background: var(--pc-chrome-bg); border-right: 1px solid var(--pc-chrome-border); transition: width var(--pc-duration-fast, .15s) ease; }
+/* Sidebar: a card floating on the page, in the theme's card colour (2026-11-01). Its rules are
+   written with the chrome tokens; here they take the theme's values, so the rail, its menus and
+   its badges follow light and dark like the rest of the page. */
+.pcs-sidebar {
+  --pc-chrome-bg: var(--pc-surface); --pc-chrome-bg-2: var(--pc-surface-2); --pc-chrome-surface: var(--pc-surface); --pc-chrome-surface-2: var(--pc-surface-3);
+  --pc-chrome-border: var(--pc-border-subtle); --pc-chrome-text-4: var(--pc-text-4); --pc-chrome-text-3: var(--pc-text-3); --pc-chrome-text-2: var(--pc-text-2);
+  --pc-chrome-text: var(--pc-text); --pc-chrome-text-strong: var(--pc-text); --pc-chrome-accent: var(--pc-primary); --pc-chrome-accent-strong: var(--pc-primary); --pc-chrome-accent-text: var(--pc-primary-text);
+  width: calc(var(--pcs-sidebar) - 10px); position: fixed; inset: 10px auto 10px 10px; z-index: var(--pc-z-nav); padding: calc(18px * var(--pc-space-scale, 1)) var(--pc-space-3) var(--pc-space-3); display: flex; flex-direction: column; gap: calc(6px * var(--pc-space-scale, 1)); overflow-y: auto; overscroll-behavior: contain; color: var(--pc-chrome-text); background: var(--pc-chrome-bg); border-radius: 16px; box-shadow: 0 0 0 .5px var(--pc-hair), 0 8px 28px color-mix(in srgb, var(--pc-shadow-color) 6%, transparent); transition: width var(--pc-duration-fast, .15s) ease; }
 .pcs-sidebar > * { flex-shrink: 0; }
 .pcs-sidebar-top { padding: 0 0 calc(14px * var(--pc-space-scale, 1)); display: flex; align-items: center; justify-content: space-between; gap: var(--pc-space-2); }
 /* The app's name opens the app switcher. */
@@ -28,10 +34,11 @@
 .pcs-brand .brand strong > span { font-weight: 400; }
 .pcs-brand .brand small { display: block; margin-top: calc(5px * var(--pc-space-scale, 1)); color: var(--pc-chrome-text-3); font-size: var(--pc-fs-xs); font-weight: 500; }
 .pcs-nav { display: flex; flex-direction: column; gap: calc(3px * var(--pc-space-scale, 1)); }
-.pcs-nav-item { min-height: 40px; padding: 0 calc(11px * var(--pc-space-scale, 1)); border-radius: var(--pc-radius-md); display: flex; align-items: center; gap: var(--pc-space-3); color: var(--pc-chrome-text-2); font-size: var(--pc-fs-md); font-weight: 600; text-decoration: none; white-space: nowrap; transition: background .15s ease, color .15s ease; }
-.pcs-nav-item > svg { width: 18px; height: 18px; flex: none; }
+.pcs-nav-item { min-height: 34px; padding: 0 calc(11px * var(--pc-space-scale, 1)); border-radius: var(--pc-radius-md); display: flex; align-items: center; gap: calc(11px * var(--pc-space-scale, 1)); color: var(--pc-chrome-text-2); font-size: var(--pc-fs-sm); font-weight: 500; text-decoration: none; white-space: nowrap; transition: background .15s ease, color .15s ease; }
+.pcs-nav-item > svg { width: 17px; height: 17px; flex: none; }
 .pcs-nav-item:hover { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-text-strong) 5%, transparent); }
-.pcs-nav-item.pcs-active { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-accent) 22%, transparent); box-shadow: inset 3px 0 var(--pc-chrome-accent); }
+.pcs-nav-item.pcs-active { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-text-strong) 8%, transparent); }
+.pcs-nav-item.pcs-active > svg { color: var(--pc-chrome-accent); }
 .pcs-nav-children { margin: 0 0 var(--pc-space-1) calc(41px * var(--pc-space-scale, 1)); padding: 0 0 0 calc(10px * var(--pc-space-scale, 1)); list-style: none; border-left: 1px solid color-mix(in srgb, var(--pc-chrome-text-strong) 12%, transparent); display: flex; flex-direction: column; gap: 1px; }
 .pcs-nav-child { display: block; min-height: 28px; padding: calc(5px * var(--pc-space-scale, 1)) var(--pc-space-2); border-radius: var(--pc-radius-sm, 6px); color: var(--pc-chrome-text-2); font-size: var(--pc-fs-sm); font-weight: 500; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pcs-nav-child:hover { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-text-strong) 5%, transparent); }
@@ -84,7 +91,6 @@
 .pcs-theme button { padding: calc(7px * var(--pc-space-scale, 1)) var(--pc-space-1); border: 0; border-radius: var(--pc-radius-sm); display: flex; flex-direction: column; align-items: center; gap: calc(3px * var(--pc-space-scale, 1)); color: var(--pc-chrome-text-3); background: transparent; font-size: var(--pc-fs-xs); cursor: pointer; }
 .pcs-theme button:hover { color: var(--pc-chrome-text-strong); }
 .pcs-theme button.pcs-on { color: var(--pc-chrome-text-strong); background: var(--pc-chrome-surface-2); }
-/* Display size: five screens from Larger text to More space (DisplaySizePicker.tsx). */
 .pcs-size { display: grid; gap: var(--pc-space-1); padding: calc(3px * var(--pc-space-scale, 1)); border-radius: var(--pc-radius-md); background: var(--pc-chrome-bg); }
 .pcs-size-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: calc(3px * var(--pc-space-scale, 1)); }
 .pcs-size-steps button { padding: calc(6px * var(--pc-space-scale, 1)) 2px var(--pc-space-1); border: 0; border-radius: var(--pc-radius-sm); display: grid; place-items: center; color: var(--pc-chrome-text-3); background: transparent; cursor: pointer; }
@@ -123,7 +129,7 @@
 .pcs-assistant-top:hover, .pcs-assistant-top.pcs-on { border-color: color-mix(in srgb, var(--pc-primary) 45%, var(--pc-border)); background: color-mix(in srgb, var(--pc-primary) 8%, var(--pc-surface)); }
 .pcs-assistant-top:focus-visible { outline: 2px solid var(--pc-primary); outline-offset: 2px; }
 .pcs-top-actions { margin-left: auto; display: flex; align-items: center; gap: calc(10px * var(--pc-space-scale, 1)); }
-.pcs-content { max-width: calc(1560px / var(--pc-space-scale, 1)); margin: 0 auto; padding: var(--pc-space-8); }
+.pcs-content { max-width: calc(1560px / var(--pc-space-scale, 1)); margin: 0 auto; padding: calc(18px * var(--pc-space-scale, 1)) calc(28px * var(--pc-space-scale, 1)) calc(28px * var(--pc-space-scale, 1)); }
 .pcs-icon-button { width: 38px; height: 38px; padding: 0; border: 0; border-radius: var(--pc-radius-md); display: grid; place-items: center; color: inherit; background: transparent; cursor: pointer; }
 .pcs-mobile-only { display: none; }
 /* On a phone the top bar names the app the menu belongs to. */
@@ -136,7 +142,7 @@
 
 @media (max-width: 820px) {
   .pcs-shell, .pcs-collapsed { --pcs-sidebar: 270px; }
-  .pcs-sidebar { transform: translateX(-100%); transition: transform .22s ease, box-shadow .22s ease; }
+  .pcs-sidebar { width: var(--pcs-sidebar); inset: 0 auto 0 0; border-radius: 0; transform: translateX(-100%); transition: transform .22s ease, box-shadow .22s ease; }
   .pcs-drawer-open { transform: none; box-shadow: 20px 0 50px color-mix(in srgb, var(--pc-shadow-color) 25%, transparent); }
   .pcs-main { margin-left: 0; }
   .pcs-mobile-only { display: grid; }
@@ -155,8 +161,8 @@
 /* Help: folder tree on the left, the guide on the right */
 .pcs-help { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: var(--pc-space-4); align-items: start; }
 .pcs-help-index { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; padding: var(--pc-space-2); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); background: var(--pc-surface); }
-.pcs-help-filter { margin: 2px 2px var(--pc-space-2); padding: 0 calc(9px * var(--pc-space-scale, 1)); display: flex; align-items: center; gap: calc(7px * var(--pc-space-scale, 1)); height: 34px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); color: var(--pc-text-3); background: var(--pc-surface-2); }
-.pcs-help-filter input { flex: 1; min-width: 0; border: 0; outline: 0; color: var(--pc-text); background: transparent; font: inherit; font-size: var(--pc-fs-sm); }
+.pcs-help-filter { margin: 2px 2px var(--pc-space-2); padding: 0 calc(9px * var(--pc-space-scale, 1)); display: flex; align-items: center; gap: calc(7px * var(--pc-space-scale, 1)); height: 34px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); color: var(--pc-text-3); background: var(--pc-surface); }
+.pcs-help-filter input { flex: 1; min-width: 0; border: 0; outline: 0; color: var(--pc-text); background: transparent; font: inherit; font-size: var(--pc-fs-sm); min-height: 0; padding: 0; }
 .pcs-help-list { margin: 0; padding: 0; list-style: none; }
 .pcs-help-folder, .pcs-help-doc { width: 100%; min-height: 32px; padding: calc(5px * var(--pc-space-scale, 1)) var(--pc-space-2); border: 0; border-radius: var(--pc-radius-sm); display: flex; align-items: center; gap: calc(7px * var(--pc-space-scale, 1)); color: var(--pc-text-2); background: transparent; font: inherit; font-size: var(--pc-fs-sm); text-align: left; cursor: pointer; }
 .pcs-help-folder { font-weight: 650; }
@@ -214,8 +220,8 @@
 /* Page tabs */
 /* The line under the tabs is drawn inside the band (not a border the active tab overlaps by 1px), so
    the band scrolls sideways only and never shows a vertical scroll bar. */
-.pcs-tabs { margin: calc(-1 * calc(6px * var(--pc-space-scale, 1))) 0 var(--pc-space-5); display: flex; gap: var(--pc-space-1); box-shadow: inset 0 -1px 0 var(--pc-border); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
-.pcs-tabs a { padding: calc(10px * var(--pc-space-scale, 1)) calc(14px * var(--pc-space-scale, 1)); border-bottom: 2px solid transparent; color: var(--pc-text-3); font-size: var(--pc-fs-md); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.pcs-tabs { margin: calc(-1 * var(--pc-space-1)) 0 var(--pc-space-4); display: flex; gap: var(--pc-space-1); box-shadow: inset 0 -1px 0 var(--pc-border); overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.pcs-tabs a { padding: var(--pc-space-2) var(--pc-space-3); border-bottom: 2px solid transparent; color: var(--pc-text-3); font-size: var(--pc-fs-md); font-weight: 600; text-decoration: none; white-space: nowrap; }
 .pcs-tabs a:hover { color: var(--pc-text); }
 .pcs-tabs a.pcs-active { color: var(--pc-primary-text); border-bottom-color: var(--pc-primary); }
 /* More tabs past an edge (PageTabs.tsx, a phone): that edge fades out. */
@@ -325,7 +331,7 @@
 .pcs-collapsed .pcs-quick { grid-auto-flow: row; }
 .pcs-quick .pcs-quick-button { position: relative; width: 100%; height: 38px; padding: 0; flex: none; border: 0; border-radius: var(--pc-radius-md); display: grid; place-items: center; color: var(--pc-chrome-text-2); background: transparent; text-decoration: none; cursor: pointer; transition: background var(--pc-duration-fast, .15s) ease, color var(--pc-duration-fast, .15s) ease; }
 .pcs-quick .pcs-quick-button:hover { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-text-strong) 6%, transparent); }
-.pcs-quick .pcs-quick-button.pcs-active { color: var(--pc-chrome-text-strong); background: color-mix(in srgb, var(--pc-chrome-accent) 22%, transparent); }
+.pcs-quick .pcs-quick-button.pcs-active { color: var(--pc-chrome-accent); background: color-mix(in srgb, var(--pc-chrome-text-strong) 8%, transparent); }
 .pcs-quick .pcs-quick-button:focus-visible { outline: 2px solid var(--pc-chrome-accent); outline-offset: 1px; }
 .pcs-quick .pcs-quick-button.pcs-quick-off, .pcs-assistant-top.pcs-quick-off { opacity: .45; }
 .pcs-quick .pcs-badge, .pcs-collapsed .pcs-quick .pcs-badge { position: absolute; top: 2px; left: calc(50% + 4px); min-width: 17px; height: 17px; padding: 0 var(--pc-space-1); display: grid; color: #fff; background: var(--pc-chrome-problem); font-size: calc(10.5px * var(--pc-text-scale, 1)); font-weight: 700; line-height: 1; box-shadow: 0 0 0 2px var(--pc-chrome-bg); }

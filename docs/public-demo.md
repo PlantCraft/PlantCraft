@@ -119,6 +119,21 @@ guide away, take **Another role**, or close it. While a guide is on, the apps' o
   answered, failed, input, cached, output and reasoning tokens). Give the demo its own provider
   key with a monthly spending cap at the provider: it is the limit that holds whatever happens
   here. `PLANTCRAFT_PUBLIC_DEMO_LLM=off` and a restart turn it off.
+
+  Turning it on in a deployed demo:
+
+  1. At the provider, create a project for the demo with its own key and a monthly spending cap.
+  2. Signed in as the administrator, Setup › Language models: add the provider with that key and
+     pick the model (this also opens llm-egress to the provider's host). Ask a question to check.
+     Or from the server's shell, with the key in a file that never reaches the command line:
+     `docker compose exec -T processcraft plantcraft llm set --name "OpenAI demo" --kind openai
+     --model <model> --key-stdin < demo-openai.key` (`plantcraft llm show` lists what is set).
+     `PLANTCRAFT_LLM` must not be `off` in `.env`.
+  3. In `.env`: `PLANTCRAFT_PUBLIC_DEMO_LLM=on` (and `_QUESTIONS`, `_PER_ADDRESS`, `_DAILY` when
+     the defaults do not fit; `deploy/compose.yaml` passes these four), then
+     `docker compose up -d plantcraft`.
+  4. Open the demo as a visitor: the panel says "10 of 10 questions left". Ask one; the day's
+     count and tokens appear in `GET /api/demo/stats` (`assistant`).
 - **Nothing a visitor does reaches another visitor**: no messages, no actions, no audit entries.
 
 ## A copy of the demo for each visit
@@ -138,8 +153,17 @@ it was taken, since a visit lasts 30 at most. Nothing has to tell the apps that 
   its visits on the shared data.
 - Work that leaves the request (a queue item, a thread) carries `demo_slots.visit_key()` and runs
   inside `demo_slots.using(key)`. Without that it runs on the app's own file.
-- Not yet: the visitor is still refused when saving (the editors are unlocked app by app, with
-  their limits, in a later step), and PlantCraft's own database and the Historian are not copied.
+- **Saving in a copy.** An app that declares `Access(label, demo_copy=True)` lets an isolated
+  visit save (its editors' routes), once every database the app opened can be copied: Alarms,
+  Analytics and View do. What such a save would send to PlantCraft with the app's own key
+  (events, notifications, schedules, knowledge, results) is refused (`DemoVisitWrite`), so a
+  visit's play never reaches what everyone else sees; reads that are a POST (series, a model's
+  answer) still go. What stays locked: everything only an administrator may do (a block's or a
+  rule's Python code, published models, settings, sources), PlantCraft's own pages, the
+  Historian and Documents (their files are not copied yet).
+- Work an app queues for later (an algorithm's run, a scheduled report) runs on the app's own
+  data, so a visit's new objects are not run by the workers; what runs during the request
+  (testing a rule or a block, a diagram's values) works.
 
 The code is in `plantcraft_sdk.server.demo_slots`.
 

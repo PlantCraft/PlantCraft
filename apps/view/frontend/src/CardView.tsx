@@ -1,6 +1,6 @@
 /** One card on the grid: reads its data and draws it as a stat, gauge, time series, bar chart,
  * table, scatter or note, with its options (round 7, after Grafana's panels). */
-import { timePlotConfig, renderMarkdown, errorMessage as message, saveFile, BRAND_COLORS, currentTheme, plotTheme, statusVar } from "@plantcraft/ui";
+import { timePlotConfig, renderMarkdown, errorMessage as message, saveFile, BRAND_COLORS, currentTheme, plotTheme, statusVar, timeScale } from "@plantcraft/ui";
 import { AlertTriangle, Download, GripVertical, LoaderCircle, Maximize2, Repeat2, X } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { Data, PlotHoverEvent, Shape } from "plotly.js";
@@ -482,7 +482,7 @@ function Scatter({ card, lines, height }: { card: Card; lines: Line[]; height?: 
   const fixedColor = config.color_mode === "fixed" || config.color ? colorOf(config.color ?? "blue") : null;
   const data: Data[] = [{
     type: "scatter", mode: "markers", x: pairs.map((pair) => pair[0] as number), y: pairs.map((pair) => pair[1] as number), text: pairs.map((pair) => formatDate(pair[2])),
-    marker: fixedColor ? { size: options.point_size, opacity: 0.7, color: fixedColor } : { size: options.point_size, opacity: 0.7, color: pairs.map((_, index) => index), colorscale: "Blues", showscale: false },
+    marker: fixedColor ? { size: options.point_size, opacity: 0.7, color: fixedColor } : { size: options.point_size, opacity: 0.7, color: pairs.map((_, index) => index), colorscale: timeScale(), showscale: false },
     hovertemplate: `${x.label} %{x:.4~g}<br>${y.label} %{y:.4~g}<br>%{text}<extra></extra>`,
   }];
   const yRange = config.min !== undefined && config.min !== null && config.max !== undefined && config.max !== null ? [config.min, config.max] : undefined;

@@ -52,7 +52,7 @@ function Chart({ detail, data, colors }: { detail: SignalDetail; data: SignalDat
     }
   }
   const layout: Partial<Layout> = {
-    ...theme, height: 340, margin: { l: 52, r: 12, t: 10, b: 36 }, shapes, annotations, hovermode: "x unified",
+    ...theme, height: 340, margin: { l: 52, r: 12, t: 18, b: 36 }, shapes, annotations, hovermode: "x unified",
     showlegend: traces.length > 1, legend: { ...theme.legend, orientation: "h", y: 1.12, x: 0 },
     xaxis: { ...theme.xaxis, type: "date", title: { text: t("Time"), font: { size: 10.5 } } },
     yaxis: { ...theme.yaxis, ...(text ? { type: "category" as const } : {}), title: { text: detail.unit, font: { size: 10.5 } } },
@@ -115,7 +115,7 @@ const eventColumns: DataColumn<QualityEvent>[] = [
 
 function Checks({ results, colors }: { results: CheckResult[]; colors: ReturnType<typeof useCheckColors> }) {
   const sorted = [...results].sort((a, b) => RESULT_ORDER.indexOf(a.status) - RESULT_ORDER.indexOf(b.status));
-  return <div className="panel check-list">{sorted.map((item) => {
+  return <div className="check-list">{sorted.map((item) => {
     const metrics = Object.entries(item.metrics ?? {}).filter(([key]) => key !== "apt");
     const events = item.events ?? [];
     const failing = item.status === "warning" || item.status === "bad";
@@ -329,16 +329,17 @@ export function SignalPage({ signalId, me }: { signalId: string; me: Me }) {
       <div className="panel kpi-card"><span className="pc-overline">{t("Limits")}</span><b className="pc-num">{limits}</b><small>{overridden("low") || overridden("high") ? t("Set in Analytics (PlantCraft: {low} … {high})", { low: formatNumber(detail.processcraft_limits.low, 6), high: formatNumber(detail.processcraft_limits.high, 6) }) : t("From PlantCraft")}{detail.roles.length ? ` · ${t("Role {roles}", { roles: detail.roles.join(", ").toUpperCase() })}` : ""}</small></div>
     </div>
     <section className="panel">
-      <div className="panel-header"><div><h2>{t("Input signals")}</h2><p>{data ? t("{count} samples{resampled}. Shaded: stretches a check marked.", { count: formatNumber(data.series.t.length, 0), resampled: data.resampled ? t(", resampled") : "" }) : t("The data the last check read, from PlantCraft.")}</p></div></div>
+      <div className="panel-header"><div><h2>{t("Input signals")}</h2><p>{data ? t("{count} samples{resampled}. The strip on top: stretches a check marked.", { count: formatNumber(data.series.t.length, 0), resampled: data.resampled ? t(", resampled") : "" }) : t("The data the last check read, from PlantCraft.")}</p></div></div>
       {dataError ? <ErrorBox text={dataError} /> : !data ? <Loading text={t("Loading data…")} /> : data.series.t.length === 0 ? <p className="muted">{t("No samples in this window.")}</p> : <>
         <Chart detail={detail} data={data} colors={colors} />
         <ChartLegend results={verdict?.checks ?? []} colors={colors} />
       </>}
     </section>
     {detail.settings?.reference && detail.kind !== "text" && <AgainstLab detail={detail} />}
-    <div className="section-head"><h2 className="section-title">{t("Algorithm and outputs")}</h2><Link to="/algorithms/signal_quality" className="text-link">{t("Open the algorithm")}</Link></div>
-    <p className="muted section-lead">{t("The checks of the Signal quality algorithm on this window, each with what it found. The worst decides the result.")}</p>
-    {verdict?.checks.length ? <Checks results={verdict.checks} colors={colors} /> : <p className="muted">{t("No results yet.")}</p>}
+    <section className="panel">
+      <div className="panel-header"><div><h2>{t("Algorithm and outputs")}</h2><p>{t("The checks of the Signal quality algorithm on this window, each with what it found. The worst decides the result.")}</p></div><Link to="/algorithms/signal_quality">{t("Open the algorithm")}</Link></div>
+      {verdict?.checks.length ? <Checks results={verdict.checks} colors={colors} /> : <p className="muted">{t("No results yet.")}</p>}
+    </section>
     <div className="pc-grid pc-grid-2">
       <section className="panel"><div className="panel-header"><div><h2>{t("Derived signals")}</h2><p>{t("The signal's quality over 30 days, one value per check, coloured by its result.")}</p></div></div><History points={history} /></section>
       <Settings detail={detail} me={me} catalog={catalog} onChanged={() => void loadDetail()} />

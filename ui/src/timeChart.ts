@@ -59,9 +59,9 @@ export function timeChartLayout(theme: Record<string, any>, options: TimeChartOp
     ...theme,
     autosize: true,
     height: options.height ?? 320,
-    margin: { l: 56, r: options.rightAxis ? 56 : 16, t: legend ? 8 : 10, b: 32 },
+    margin: { l: 56, r: options.rightAxis ? 56 : 16, t: legend ? 8 : 16, b: 32 },
     showlegend: legend,
-    legend: { ...(theme.legend ?? {}), orientation: "h" as const, y: 1.02, yanchor: "bottom" as const, x: 0 },
+    legend: { ...(theme.legend ?? {}), orientation: "h" as const, y: 1.05, yanchor: "bottom" as const, x: 0 },
     xaxis: { ...(theme.xaxis ?? {}), type: "date" as const, ...(options.start && options.end ? { range: [options.start, options.end] } : {}) },
     hovermode: "x unified" as const,
   };
@@ -74,7 +74,7 @@ export function timeHover(name: string, unit = "", text = false): string {
 
 /** A change of quality in a series: from `t` on, its values have `quality`. */
 export type QualityChange = { t: string; quality: string };
-/** A period whose values were not good, shaded behind the line. */
+/** A period whose values were not good, marked over the line (`markStrip()`). */
 export type QualityBand = { from: string; to: string; quality: string };
 
 /** The periods whose values were not good: from each change to the next (or `end`). */
@@ -87,12 +87,21 @@ export function qualityBands(changes: QualityChange[] | undefined, end: string):
   return out;
 }
 
-/** Plotly shapes that shade the bands in their status colour (`statusColors()`), behind the lines. */
+/**
+ * A marked stretch of a time chart (a bad-quality period, a check's event, an alarm): a strip in
+ * its colour along the top edge of the plot. The plot itself
+ * stays on the card's white or black, the same in every chart of the suite (2026-11-01: a tinted
+ * fill over the whole plot read as a different chart). Needs a top margin of 14 px or more.
+ */
+export function markStrip(x0: string | number, x1: string | number, color: string) {
+  return [
+    { type: "rect" as const, xref: "x" as const, yref: "paper" as const, x0, x1, y0: 1.004, y1: 1.034, fillcolor: color, opacity: 0.9, line: { width: 0 }, layer: "above" as const },
+  ];
+}
+
+/** Plotly shapes that mark the bands in their status colour (`statusColors()`, `markStrip()`). */
 export function bandShapes(bands: QualityBand[], tones: Record<string, string>) {
-  return bands.map((band) => ({
-    type: "rect" as const, xref: "x" as const, yref: "paper" as const, x0: band.from, x1: band.to, y0: 0, y1: 1,
-    fillcolor: tones[band.quality] ?? tones.warning ?? tones.attention, opacity: 0.14, line: { width: 0 }, layer: "below" as const,
-  }));
+  return bands.flatMap((band) => markStrip(band.from, band.to, tones[band.quality] ?? tones.warning ?? tones.attention));
 }
 
 /** The y axis's unit: the lines' one unit, or nothing when they differ (each hover keeps its own). */
@@ -153,7 +162,7 @@ export type TimeLine = {
 
 export type TimeFigureOptions = {
   lines: TimeLine[];
-  /** Periods whose values were not good, shaded behind the lines (`qualityBands()`). */
+  /** Periods whose values were not good, marked on the chart (`qualityBands()`). */
   bands?: QualityBand[];
   height?: number;
   /** The time axis's range (ISO); left out, the data's. */
