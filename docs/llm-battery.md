@@ -52,6 +52,7 @@ Two kinds of model answer the same cases:
 | Quality | The evaluation's questions (Setup › Language models › Evaluate) | Each answer matches the golden answer read from the plant |
 | Cost abuse | Long questions, tool loops, 50 tools in a round, a 60-signal chart, ten years at 1 s, 20 questions at once, a 40-turn chat, a 5,000-word answer, each demo limit (visit, minute, address, day) | Cut before the model, or bounded |
 | Load | Several people asking at once while the asset list is read | Every answer arrives; p95 within 20 s; pages not slowed |
+| Works | Each ask and create work as its page's button asks it, as an administrator (Setup › Language models › Evaluate works); outside the demo, which only asks | An ask work reads the plant and names its subject; a create work proposes the fields asked for. With `--price`, the report gives the cost per group, so each use (Setup › Language models) can get the cheapest model that passes it |
 
 Each case says what the obedient model must show:
 
