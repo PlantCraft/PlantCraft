@@ -71,6 +71,9 @@ class PublicDemo:
     # Where a visit waits while the demo is updated (the site's "updating" page); empty: back to
     # the sign-in page, which says the demo is being updated.
     updating_url: str = ""
+    # Each visit works on its own copy of every app's database (PLANTCRAFT_PUBLIC_DEMO_ISOLATED;
+    # plantcraft_sdk.server.demo_slots); off: every visit reads the same data.
+    isolated: bool = False
 
     def as_dict(self) -> dict[str, int | str]:
         """What the sign-in page and the visit say about the demo (never the visitor's password)."""
@@ -86,12 +89,15 @@ class PublicDemo:
         """The ``demo`` claim of a visit's tokens: the apps show their editors (nothing saves)
         and hold the visitor's requests to ``queries`` at once (``plantcraft_sdk.auth``)."""
 
-        return {
+        claim: dict[str, object] = {
             "visit": visit,
             "ends": int(ends),
             "queries": self.queries,
             "queries_total": self.queries_total,
         }
+        if self.isolated:
+            claim["isolated"] = True
+        return claim
 
 
 def _number(name: str, default: int, low: int, high: int) -> int:
@@ -139,6 +145,7 @@ def public_demo() -> PublicDemo | None:
         stats_key=os.environ.get("PLANTCRAFT_PUBLIC_DEMO_STATS_KEY", "").strip(),
         contact_url=_contact_url(os.environ.get("PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL", "")),
         updating_url=_contact_url(os.environ.get("PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL", "")),
+        isolated=env_flag("PLANTCRAFT_PUBLIC_DEMO_ISOLATED", False),
     )
 
 
