@@ -67,6 +67,9 @@ class ChatModel:
         # Set by the chat: the answer's text so far, as the model writes it (streamed; each
         # call starts again from ""). Left None, each call waits for the whole answer.
         self.on_text: Callable[[str], None] | None = None
+        # The tokens of the latest ``answer``, all its calls together (``usage_of``): what the
+        # chat keeps with each answer, to know what an answer costs.
+        self.usage: dict[str, int] = empty_usage()
         if provider == "openai":
             if not model:
                 raise ValueError("Name the model to use.")
@@ -91,6 +94,7 @@ class ChatModel:
         tools: list[dict[str, Any]] | None = None,
     ) -> str:
         conversation = list(messages)
+        self.usage = empty_usage()
         for _ in range(self.rounds + 1):
             payload = self._call(system, conversation, tools if tool else None)
             content = payload.get("content") or []
@@ -196,9 +200,12 @@ class ChatModel:
             with _open(request, self.timeout, proxy) as response:
                 kind = (getattr(response, "headers", None) or {}).get("content-type") or ""
                 if streaming and stream is not None and "event-stream" in kind:
-                    return stream(self.on_text or (lambda _text: None)).read(response)
-                # A server that does not stream answers the whole answer at once.
-                return json.loads(response.read().decode("utf-8"))
+                    found = stream(self.on_text or (lambda _text: None)).read(response)
+                else:
+                    # A server that does not stream answers the whole answer at once.
+                    found = json.loads(response.read().decode("utf-8"))
+                add_usage(self.usage, usage_of(found))
+                return found
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", "replace")[:300]
             if exc.code == 400 and self.provider == "openai" and _names_token_param(detail, body):
@@ -283,8 +290,11 @@ class _CompletionStream(_Stream):
         super().__init__(shown)
         self.calls: dict[int, dict[str, Any]] = {}
         self.reason: str | None = None
+        self.usage: dict[str, Any] | None = None
 
     def event(self, event: dict[str, Any]) -> None:
+        if isinstance(event.get("usage"), dict):
+            self.usage = event["usage"]
         for choice in event.get("choices") or []:
             delta = choice.get("delta") or {}
             self.write(delta.get("content"))
@@ -310,7 +320,10 @@ class _CompletionStream(_Stream):
         message: dict[str, Any] = {"content": self.text or None}
         if calls:
             message["tool_calls"] = calls
-        return {"choices": [{"message": message, "finish_reason": self.reason}]}
+        found: dict[str, Any] = {"choices": [{"message": message, "finish_reason": self.reason}]}
+        if self.usage:
+            found["usage"] = self.usage
+        return found
 
 
 class _MessagesStream(_Stream):
@@ -320,10 +333,15 @@ class _MessagesStream(_Stream):
         super().__init__(shown)
         self.blocks: dict[int, dict[str, Any]] = {}
         self.reason: str | None = None
+        self.usage: dict[str, Any] = {}
 
     def event(self, event: dict[str, Any]) -> None:
         kind = event.get("type")
         index = int(event.get("index") or 0)
+        if kind == "message_start":
+            self.usage.update(((event.get("message") or {}).get("usage")) or {})
+        if kind == "message_delta" and isinstance(event.get("usage"), dict):
+            self.usage.update(event["usage"])
         if kind == "content_block_start":
             block = dict(event.get("content_block") or {})
             if block.get("type") == "tool_use":
@@ -355,7 +373,49 @@ class _MessagesStream(_Stream):
                     arguments = {}
                 block["input"] = arguments if isinstance(arguments, dict) else {}
             content.append(block)
-        return {"content": content, "stop_reason": self.reason}
+        return {"content": content, "stop_reason": self.reason, "usage": self.usage}
+
+
+def empty_usage() -> dict[str, int]:
+    return {"calls": 0, "input": 0, "cached": 0, "output": 0, "reasoning": 0}
+
+
+def _count(value: Any) -> int:
+    return value if isinstance(value, int) and value > 0 else 0
+
+
+def usage_of(payload: Any) -> dict[str, int]:
+    """One call's tokens, whichever service answered: OpenAI's Responses API
+    (``input_tokens``, ``output_tokens`` and their details), chat completions (``prompt_tokens``,
+    ``completion_tokens``) or Anthropic's Messages API (``input_tokens``,
+    ``cache_read_input_tokens``). ``input`` counts the cached tokens too."""
+
+    found = empty_usage()
+    found["calls"] = 1
+    usage = payload.get("usage") if isinstance(payload, dict) else None
+    if not isinstance(usage, dict):
+        return found
+    details_in = usage.get("input_tokens_details") or usage.get("prompt_tokens_details") or {}
+    details_out = usage.get("output_tokens_details") or usage.get("completion_tokens_details") or {}
+    cache_read = _count(usage.get("cache_read_input_tokens"))
+    found["input"] = (
+        _count(usage.get("input_tokens") or usage.get("prompt_tokens"))
+        + cache_read
+        + _count(usage.get("cache_creation_input_tokens"))
+    )
+    found["cached"] = cache_read or _count(
+        details_in.get("cached_tokens") if isinstance(details_in, dict) else 0
+    )
+    found["output"] = _count(usage.get("output_tokens") or usage.get("completion_tokens"))
+    found["reasoning"] = _count(
+        details_out.get("reasoning_tokens") if isinstance(details_out, dict) else 0
+    )
+    return found
+
+
+def add_usage(total: dict[str, int], more: dict[str, int]) -> None:
+    for key, value in more.items():
+        total[key] = total.get(key, 0) + value
 
 
 class _OtherTokenParam(RuntimeError):

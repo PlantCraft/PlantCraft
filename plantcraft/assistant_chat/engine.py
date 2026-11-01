@@ -31,6 +31,13 @@ from urllib.parse import quote
 from plantcraft.assistant_access import mcp
 from plantcraft.assistant_access.app_tools import AppTool, AppTools, refs_in, refs_named
 from plantcraft.assistant_chat import MAX_TEXT, ChatStore
+from plantcraft.assistant_chat.demo import (
+    DemoLimits,
+    DemoQuestions,
+    clean_answer,
+    demo_assistant,
+    is_visit,
+)
 from plantcraft.assistant_chat.evals import Case, EvalStore, build_cases, run_case
 from plantcraft.assistant_chat.work_evals import build_work_cases
 from plantcraft.assistant_works import CREATE, PROPOSE, Work, WorkRegistry, create_tools
@@ -58,6 +65,13 @@ HELP = "read_help"
 # A raw read of this process's own API v1 as the person: (method, path, query or body) to
 # (status, JSON answer). The HTTP layer makes it (``api/routers/assistant_chat.py``).
 Reader = Callable[[str, str, dict[str, Any]], tuple[int, Any]]
+
+
+def _usage(model: Any) -> dict[str, int]:
+    """The tokens the model's latest answer spent (``ChatModel.usage``), when it counts them."""
+
+    found = getattr(model, "usage", None)
+    return {key: int(value) for key, value in found.items()} if isinstance(found, dict) else {}
 
 
 class Refused(ValueError):
@@ -551,18 +565,20 @@ class ReadBudget:
             used += reads_of(name, arguments if isinstance(arguments, dict) else {})
         return used
 
-    def spend(self, username: str, amount: int) -> bool:
-        """Counts ``amount`` reads for ``username``; False (nothing counted) past the limit."""
+    def spend(self, username: str, amount: int, limit: int | None = None) -> bool:
+        """Counts ``amount`` reads for ``username``; False (nothing counted) past the limit
+        (``limit``: another than the daily one, a public demo visit's)."""
 
         if amount <= 0:
             return True
+        daily = self.daily if limit is None else limit
         since = self._today()
         key = (username, since.date().isoformat())
         with self._lock:
             if key not in self._used:
                 self._used = {k: v for k, v in self._used.items() if k[1] == key[1]}
                 self._used[key] = self._seed(username, since)
-            if self._used[key] + amount > self.daily:
+            if self._used[key] + amount > daily:
                 first = key not in self._warned
                 self._warned.add(key)
                 used = self._used[key]
@@ -574,7 +590,7 @@ class ReadBudget:
                 username,
                 "assistant.read_limit",
                 f"user:{username}",
-                {"read_today": used, "asked": amount, "daily_limit": self.daily},
+                {"read_today": used, "asked": amount, "daily_limit": daily},
                 app_id="processcraft",
             )
         return False
@@ -596,6 +612,9 @@ class ChatEngine:
         help_docs: tuple[HelpIndex, HelpRead] | None = None,
     ):
         self.store = store
+        # A public demo's visits' questions and what each answer spent (assistant_chat.demo).
+        self.demo_questions = DemoQuestions(store.db)
+        self.demo_limits = DemoLimits()
         self.evals = evals
         self.help_docs = help_docs
         # The specialists' store and how a profile's model is made (``model_factory``, which
@@ -738,11 +757,14 @@ class ChatEngine:
             raise Refused(
                 self.status()["reason"] or t("This chat's specialist has no model now."), 409
             )
-        if self.store.working(username):
+        # Whose answers these are: the person's, or a public demo visit's own (its chats belong to
+        # ``<visitor>#visit:<id>``, assistant_chat.demo), so one visit never waits for another.
+        owner = chat.get("username") or username
+        if self.store.working(owner):
             raise Refused(t("Wait for the answer being written to finish."), 409)
         # The day is the plant's (PLANTCRAFT_TIMEZONE); stored times are UTC text.
         since = datetime.now(plant_timezone()).replace(hour=0, minute=0, second=0, microsecond=0)
-        if self.store.answers_since(username, utc_text(since)) >= self.daily:
+        if self.store.answers_since(owner, utc_text(since)) >= self.daily:
             raise Refused(
                 t("You reached today's {count} answers. Ask again tomorrow.", count=self.daily), 429
             )
@@ -763,7 +785,7 @@ class ChatEngine:
         messages = self.store.messages(chat["chat_id"])
         if not messages or messages[-1]["role"] != "assistant" or messages[-1]["state"] != "failed":
             raise Refused(t("Only an answer that failed is asked again."), 409)
-        if self.store.working(username):
+        if self.store.working(chat.get("username") or username):
             raise Refused(t("Wait for the answer being written to finish."), 409)
         self.store.remove_message(messages[-1]["message_id"])
         return self._start(chat, username, reader, apps, level)
@@ -811,6 +833,16 @@ class ChatEngine:
         # The passages the apps' tools numbered ("cite": 1, "url": ...): the answer's [1] opens it.
         cited: dict[int, str] = {}
         work = self.work_of(chat)
+        # A public demo visit's chat only asks: no card that creates, fewer rounds of reads.
+        demo = demo_assistant() if is_visit(chat.get("username")) else None
+        if demo is not None:
+            level = None
+            if work is not None and work.spec.kind == "create":
+                work = None
+            # The chat's last turns only, starting with a question.
+            history = history[-demo.history :]
+            while history and history[0].get("role") != "user":
+                history = history[1:]
         offered = tools(self.help_docs is not None)
         # The apps' own read-only tools (documents, ...), for the apps this person may open.
         added = {tool.name: tool for tool in self.app_tools.for_apps(apps)}
@@ -834,11 +866,15 @@ class ChatEngine:
         if model is None:
             raise RuntimeError(t("This chat's specialist has no model now."))
         if hasattr(model, "rounds"):
-            model.rounds = ROUNDS
+            model.rounds = ROUNDS if demo is None else demo.rounds
         if on_text is not None and hasattr(model, "on_text"):
             model.on_text = on_text
 
         def tool(name: str, arguments: dict[str, Any]) -> Any:
+            if demo is not None and len(steps) >= demo.tool_calls:
+                raise RuntimeError(
+                    t("No more reads in this answer: answer with what was already read.")
+                )
             # Every kind's create tool is one step for the person: "Prepare the card".
             shown_name = CREATE if name in creatable else name
             title = added[name].title if name in added else tool_title(shown_name)
@@ -905,6 +941,8 @@ class ChatEngine:
                 offered,
             )
             text = linked_citations(without_tool_text(text), cited)
+            if demo is not None:
+                text = clean_answer(text, demo.max_answer)
             if proposals:
                 text = prepared_not_created(text)
             # What was read before the model answered is a source when the answer used it.
@@ -916,6 +954,7 @@ class ChatEngine:
                 raise RuntimeError(t("The model did not finish this answer. Try again."))
         except Exception as exc:
             exc.steps, exc.charts, exc.refs = steps, charts, refs  # type: ignore[attr-defined]
+            exc.usage = _usage(model)  # type: ignore[attr-defined]
             raise
         return {
             "text": text,
@@ -924,6 +963,7 @@ class ChatEngine:
             "refs": refs[:MAX_REFS],
             "model": getattr(model, "label", ""),
             "proposals": proposals,
+            "usage": _usage(model),
         }
 
     def _answer(
@@ -969,8 +1009,15 @@ class ChatEngine:
                 steps=done["steps"],
                 charts=done["charts"],
                 refs=done["refs"],
-                meta={"model": done["model"], "queued": False, "proposals": done["proposals"]},
+                meta={
+                    "model": done["model"],
+                    "queued": False,
+                    "proposals": done["proposals"],
+                    "usage": done["usage"],
+                },
             )
+            if is_visit(chat.get("username")):
+                self.demo_questions.answered(chat["username"], "done", done["usage"])
         except Exception as exc:
             LOGGER.warning("The assistant could not answer in chat %s: %s", chat["chat_id"], exc)
             self.store.update(
@@ -980,8 +1027,12 @@ class ChatEngine:
                 steps=getattr(exc, "steps", None),
                 charts=getattr(exc, "charts", None),
                 refs=(getattr(exc, "refs", None) or [])[:MAX_REFS] or None,
-                meta={"queued": False},
+                meta={"queued": False, "usage": getattr(exc, "usage", None) or {}},
             )
+            if is_visit(chat.get("username")):
+                self.demo_questions.answered(
+                    chat["username"], "failed", getattr(exc, "usage", None) or {}
+                )
         finally:
             reset_language(token)
 
@@ -1105,13 +1156,17 @@ class ChatEngine:
                 raise ValueError(f"Unknown tool: {name}")
             checked = mcp.check_arguments(found, arguments)
         step["summary"] = summary(checked)
-        if not self.reads.spend(username, reads_of(name, checked)):
+        # A public demo visit reads for itself, a few signals a visit (assistant_chat.demo).
+        owner = chat.get("username") or username
+        demo = demo_assistant() if is_visit(owner) else None
+        limit = demo.reads if demo is not None else None
+        if not self.reads.spend(owner if demo else username, reads_of(name, checked), limit):
             raise RuntimeError(
                 t(
                     "Today's limit of {count} signal reads by the assistant for this person is "
                     "reached. Answer from what was already read and say so; it starts again "
                     "tomorrow.",
-                    count=self.reads.daily,
+                    count=self.reads.daily if limit is None else limit,
                 )
             )
 

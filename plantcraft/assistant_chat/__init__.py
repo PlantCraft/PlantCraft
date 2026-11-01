@@ -23,6 +23,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from plantcraft.auth.public_demo import VISIT_OWNER
 from plantcraft.db import Migration, Store, add_columns, utc_text
 from plantcraft.i18n import t
 
@@ -465,6 +466,25 @@ class ChatStore(Store):
                 (username,),
             ).fetchone()
         return int(count)
+
+    def forget_visits(self, days: int) -> int:
+        """Delete a public demo's visits' chats ``days`` after their last message."""
+
+        cutoff = utc_text(datetime.now(timezone.utc) - timedelta(days=days))
+        with self._lock, self._write() as connection:
+            ids = [
+                row[0]
+                for row in connection.execute(
+                    "SELECT chat_id FROM assistant_chats WHERE username LIKE ? AND updated_at < ?",
+                    (f"%{VISIT_OWNER}%", cutoff),
+                )
+            ]
+            for chat_id in ids:
+                connection.execute(
+                    "DELETE FROM assistant_chat_messages WHERE chat_id = ?", (chat_id,)
+                )
+                connection.execute("DELETE FROM assistant_chats WHERE chat_id = ?", (chat_id,))
+        return len(ids)
 
     def answers_since(self, username: str, since: str) -> int:
         """Answers written for ``username`` since ``since`` (the daily limit)."""

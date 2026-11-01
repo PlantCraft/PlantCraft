@@ -13,9 +13,9 @@ from fastapi import Depends, HTTPException, Request, status
 
 from plantcraft.actions import Visibility
 from plantcraft.api.runtime import ApiRuntime
+from plantcraft.assistant_chat.demo import demo_assistant
 from plantcraft.auth.access import OPERATIONS_APP, Access
-from plantcraft.auth.public_demo import public_demo
-from plantcraft.desk import VISIT_OWNER
+from plantcraft.auth.public_demo import VISIT_OWNER, public_demo
 from plantcraft.i18n import t
 from plantcraft.platform.asset_scope import AssetScope, check_roots
 
@@ -231,6 +231,8 @@ _READS = {"GET", "HEAD", "OPTIONS"}
 _VISITOR_WRITES = re.compile(
     r"^/api/(logout|demo/(enter|heartbeat)|messages/conversations/\d+/read|notifications/marks|me/marks|desk/triage)$"
 )
+# With the demo's assistant on (assistant_chat.demo), a visit also asks it, in chats of its own.
+_VISITOR_ASKS = re.compile(r"^/api/assistant/chats(/\d+/(messages|retry))?$")
 _DENIED = {
     "dashboards": "Your access is limited to dashboards.",
     "viewer": "Your access is read-only.",
@@ -259,6 +261,7 @@ def access_guard(
             request.method not in _READS
             and not access.at_least("editor")
             and not _VISITOR_WRITES.match(request.url.path)
+            and not (_VISITOR_ASKS.match(request.url.path) and demo_assistant() is not None)
             and public_demo()
         ):
             raise HTTPException(

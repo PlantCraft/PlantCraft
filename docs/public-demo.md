@@ -67,10 +67,39 @@ guide away, take **Another role**, or close it. While a guide is on, the apps' o
   (`/api/me` says `can_edit`), but the visitor is still a viewer: saving, running a test or any
   other change answers 403 "This is a public demo: you can try everything, but nothing is saved."
   In PlantCraft's own pages a visitor reads; they may only sign out and mark what they read.
-- **Read the team's assistant chats**, never ask one: language models are only for the people an
-  administrator created (editors and administrators). With the model off, the assistant's panel
+- **Read the team's assistant chats**; by default never ask one: language models are only for the
+  people an administrator created (editors and administrators). With the model off, the assistant's panel
   still lists the visitor's chats and those shared with them, and opens each one with its steps
   and sources: that is how a visitor learns what the assistant does.
+- **Ask the assistant, when the owner turns it on** (`PLANTCRAFT_PUBLIC_DEMO_LLM=on`, off by
+  default; `plantcraft/assistant_chat/demo.py`). Each visit then asks the installation's assistant
+  model, in chats of its own (owned by `demo#visit:<id>`, never shown to another visit, deleted
+  7 days after their last message), and it only asks: no card that creates, no specialists, no
+  works that create, 4 rounds of tool calls and 200 signal reads per visit. The limits, each a
+  `PLANTCRAFT_PUBLIC_DEMO_LLM_*` setting:
+
+  | Setting | Default | What |
+  |---|---|---|
+  | `_QUESTIONS` | 10 | Questions per visit (`GET /api/assistant` says how many are left: `visit.left`) |
+  | `_PER_MINUTE` | 6 | Questions per client address per minute |
+  | `_PER_ADDRESS` | 30 | Questions per client address per plant day |
+  | `_DAILY` | 600 | Questions of all visits per plant day |
+  | `_MAX_TEXT` | 1200 | Characters of one question |
+  | `_ROUNDS` | 4 | Rounds of tool calls before the model answers |
+  | `_READS` | 200 | Signal reads per visit |
+  | `_KEEP_DAYS` | 7 | Days a visit's chats are kept, to read what visitors asked |
+  | `_HISTORY` | 12 | Last turns of the chat sent with a question |
+  | `_TOOL_CALLS` | 16 | Tool calls in one answer |
+  | `_MAX_ANSWER` | 4000 | Characters of one answer |
+
+  A visit's answer never points outside the suite: images, raw HTML and links or addresses of
+  other sites are taken out on the server, whatever the model was led to write.
+
+  The counts are kept in `assistant_demo_questions`, with the tokens each answer spent, so a
+  restart does not reset them; `GET /api/demo/stats` adds today's (`assistant`: questions,
+  answered, failed, input, cached, output and reasoning tokens). Give the demo its own provider
+  key with a monthly spending cap at the provider: it is the limit that holds whatever happens
+  here. `PLANTCRAFT_PUBLIC_DEMO_LLM=off` and a restart turn it off.
 - **Nothing a visitor does reaches another visitor**: no messages, no actions, no audit entries.
 
 ## Keeping the demo fast
