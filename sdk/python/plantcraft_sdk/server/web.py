@@ -34,6 +34,7 @@ from plantcraft_sdk.i18n import t
 from plantcraft_sdk.server import logread
 from plantcraft_sdk.server.access import CurrentUser
 from plantcraft_sdk.server.demo import DemoVisitLimit
+from plantcraft_sdk.server.demo_slots import DemoSlots
 from plantcraft_sdk.server.files import AppFiles
 from plantcraft_sdk.server.logs import current_file
 from plantcraft_sdk.server.memory import Releaser
@@ -314,6 +315,8 @@ def mount(
         app.mount("/", api)
     # A public demo visit's requests, a few at once (plantcraft_sdk.server.demo).
     app.add_middleware(DemoVisitLimit)
+    # An isolated demo visit works on its own copy of the app's database (server.demo_slots).
+    app.add_middleware(DemoSlots, runtime=runtime)
     # A write with the cookie from another site of the domain is refused (server.origin).
     app.add_middleware(SameSiteWrites)
     app.add_middleware(RequestLog)

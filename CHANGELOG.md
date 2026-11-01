@@ -7,6 +7,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Added
+
+- **Public demo: a copy of every app's database for each visit (`plantcraft-sdk` 0.97.0).**
+  With `PLANTCRAFT_PUBLIC_DEMO_ISOLATED=true` (off by default), a visit's token is marked
+  isolated. Each app then sends the visit's reads and writes to the visit's own copy of its
+  SQLite file (`plantcraft_sdk.server.demo_slots`), taken on first use and deleted 45 minutes later.
+  The token's signature is checked first, stores with `DEMO_SHARED = True` stay shared, and
+  databases over `PLANTCRAFT_DEMO_SLOT_MAX_MB` are not copied. Visitors still save nothing
+  until the editors are unlocked.
+
 ### Changed
 
 - **Public demo: a visible 30-minute clock and a 5-minute idle end.** A visit lasts

@@ -86,7 +86,7 @@ a.asst-ref:hover { border-color: var(--pc-primary-border); color: var(--pc-prima
 .asst-composer textarea, .asst-composer textarea:focus, .asst-composer textarea:focus-visible { border: 0; box-shadow: none; outline: 0; }
 .asst-composer:focus-within { border-color: var(--pc-primary-border); }
 .asst-composer:has(.asst-composer-note) { flex-wrap: wrap; }
-.asst-composer-note { flex-basis: 100%; order: 3; color: var(--pc-muted); font-size: 12px; padding: 0 0 2px; }
+.asst-composer-note { flex-basis: 100%; order: 3; color: var(--pc-text-3); font-size: 12px; padding: 0 0 2px; }
 .asst-composer textarea { flex: 1; min-height: 24px; max-height: 220px; padding: 5px 0; border: 0; outline: 0; background: transparent; color: var(--pc-text); font: inherit; font-size: var(--pc-fs-sm); line-height: 1.5; resize: none; }
 .asst-send { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--pc-primary); color: var(--pc-on-accent); cursor: pointer; }
 .asst-send:disabled { opacity: .4; cursor: default; }
