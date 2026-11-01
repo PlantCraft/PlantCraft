@@ -9,20 +9,20 @@ version, and `dev/revendor` puts the new file here with its hash.
 
 `pip install --no-index --find-links vendor plantcraft-sdk==0.97.0` (Makefile, CI and the
 Dockerfile). The wheel is PlantCraft's reproducible build (`make sdk-wheel`, PlantCraft
-b67ecb4): every app on SDK 0.97.0 vendors these same bytes.
+02776b8): every app on SDK 0.97.0 vendors these same bytes.
 
-## @plantcraft/ui 0.101.0
+## @plantcraft/ui 0.102.0
 
 The suite's frame and shared interface parts (PlantCraft `docs/app-standard.md`, section 10).
-`frontend/package.json` names it as `"@plantcraft/ui": "file:../vendor/plantcraft-ui-0.101.0.tgz"`;
+`frontend/package.json` names it as `"@plantcraft/ui": "file:../vendor/plantcraft-ui-0.102.0.tgz"`;
 `npm ci` checks it against the integrity hash in `frontend/package-lock.json`. Built by
-PlantCraft's `make ui-package` (every app on ui 0.101.0 vendors the same bytes).
+PlantCraft's `make ui-package` (every app on ui 0.102.0 vendors the same bytes).
 
 ## Checks
 
 The same in `sha256sum -c` format (the Docker build and `plantcraft-app check` check both):
 
 ```text
-94f3db7b1791a02546b3ff0bb9529e6d190ddc60c32cdfe9b3073c058aa50d71  plantcraft_sdk-0.97.0-py3-none-any.whl
-227d2ac56c13261242a6248ac32e520085cb2a342045d89793e75cf814e3eb95  plantcraft-ui-0.101.0.tgz
+3962d573c3b0b03195fef2ff70f63192b45686dea9773db538bb4a17bfa0dfd3  plantcraft_sdk-0.97.0-py3-none-any.whl
+bd7d34139bd69b2ec810c3a865e5837e8b3e7a36fe6a433238d107f2e98ec5e8  plantcraft-ui-0.102.0.tgz
 ```
