@@ -45,6 +45,12 @@ EXAMPLES = {
         "Process models drawn as block diagrams: a tank's level control, a heat exchanger and a "
         "loop with dead time.",
     ),
+    "PlantCraftProcess": (
+        "Process library examples",
+        "process",
+        "A methanol and water flash drum on OMChemSim, the open chemical process library "
+        "(FOSSEE, IIT Bombay, BSD-3-Clause): components, Raoult's law and the flash come from it.",
+    ),
     "PlantCraftTwin": (
         "Analytics models",
         "",

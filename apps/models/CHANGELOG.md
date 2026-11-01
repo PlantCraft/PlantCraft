@@ -17,6 +17,19 @@ joins it into the bundle's release notes.
   same. Its runs are ordinary simulations labelled with the tracking, shown as scheduled in
   Executions; the last 20 of each are kept. Models now asks for write access to series and events.
 
+- **An open chemical process library: OMChemSim, with a flash drum example** (gap M1).
+  - The runner image now holds OMChemSim (FOSSEE, IIT Bombay, BSD-3-Clause, package
+    `Simulator`), pinned by commit. It has components with their constants, thermodynamic
+    packages, streams and unit operations from mixers to distillation.
+  - A job loads it only when the project's files use it.
+  - The new example project "Process library examples" (`PlantCraftProcess.MethanolWaterFlash`)
+    splits a methanol and water feed into vapour and liquid with Raoult's law while the feed
+    heats from 355 K to 362 K. The feed stays in the two-phase region (below about 351 K
+    there is no vapour); the example was run in OpenModelica 1.24.4.
+  - ThermoSysPro is not shipped, because its Modelica License 2 binds modified copies and the
+    built executables. `docs/process-libraries.md` explains this and how a site can add it to
+    its own image.
+  - Runner protocol 4: the runner's heartbeat lists each library with its version.
 - **An example optimization comes ready: tune a PI for the least IAE.** Next to the example
   study, Models queues "Example: tune the PI for the least IAE" once. It is an optimization on
   `FirstOrderDeadTimeLoop` that changes the controller's gain and integral time, from a sluggish
