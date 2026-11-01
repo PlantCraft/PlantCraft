@@ -128,12 +128,13 @@ class PlatformRuntime:
             {key: value for key, value in spec.items() if value is not None}
             for spec in body.get("events", [])
         ]
-        if self.service_client is None:
-            # No app key: PlantCraft's monitor reads them with the metrics instead.
+        client = self.service_client
+        if client is None or not callable(getattr(client, "put_contributions", None)):
+            # No app key (or an app's stand-in client without one): PlantCraft's monitor
+            # reads them with the metrics instead.
             ops.report_catalog(events)
             ops.report_contributions(body)
             return None
-        client = self.service_client
 
         def send() -> None:
             for attempt in range(tries):
