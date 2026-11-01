@@ -9,7 +9,7 @@ import { ErrorBox, Heading, Loading, message } from "./ui";
 export const CONFIDENCE_PILL: Record<string, string> = { high: "good", medium: "warning", low: "failed" };
 export const CONFIDENCE_WORDS: Record<string, string> = { high: "Sure", medium: "Check", low: "Unsure" };
 const FAMILY_COLOR: Record<string, string> = {
-  equipment: "var(--pc-app-pidcraft, #2f7d6b)", instrument: "var(--pc-primary, #2563eb)",
+  equipment: "var(--pc-app-doccraft, #2f7d6b)", instrument: "var(--pc-primary, #2563eb)",
   connector: "var(--pc-text-3, #888)", terminal: "var(--pc-text-3, #888)",
 };
 

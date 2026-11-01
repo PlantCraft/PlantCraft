@@ -66,9 +66,7 @@ def index_file(
     texts = [" > ".join([heading, *p.heading]) + "\n" + p.text for p in passages]
     vectors = embedder.passages(texts)
     assets = [known(" ".join(p.heading) + " " + p.text, tag_ids) for p in passages]
-    return Indexed(
-        extracted.format, extracted.pages, extracted.title, passages, assets, vectors
-    )
+    return Indexed(extracted.format, extracted.pages, extracted.title, passages, assets, vectors)
 
 
 def index_revision(

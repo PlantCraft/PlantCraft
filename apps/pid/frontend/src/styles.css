@@ -34,14 +34,14 @@
 .map-tile-title { font-size: calc(16px * var(--pc-text-scale, 1)); font-weight: 600; fill: var(--pc-text-2, var(--pc-text)); }
 .map-line { stroke: var(--pc-text-3); stroke-width: 1; fill: none; }
 .map-feeds { stroke: var(--pc-text); stroke-width: 1.6; }
-.map-across { stroke: var(--pc-app-pidcraft, #2f7d6b); stroke-width: 2; stroke-dasharray: 6 4; }
+.map-across { stroke: var(--pc-app-doccraft, #2f7d6b); stroke-width: 2; stroke-dasharray: 6 4; }
 .map-controls, .map-signal { stroke-dasharray: 3 3; }
 .map-unsure { stroke: var(--pc-problem-text); }
 .map-near { stroke: var(--pc-primary); stroke-width: 2.4; }
 .map-arrowhead { fill: var(--pc-text); }
 .map-node { cursor: pointer; }
 .map-node text { font-size: calc(8px * var(--pc-text-scale, 1)); fill: var(--pc-text); pointer-events: none; }
-.map-equipment rect { fill: var(--pc-app-pidcraft, #2f7d6b); }
+.map-equipment rect { fill: var(--pc-app-doccraft, #2f7d6b); }
 .map-equipment text { font-size: calc(12px * var(--pc-text-scale, 1)); font-weight: 600; }
 .map-instrument circle { fill: var(--pc-primary); }
 .map-connector circle, .map-terminal circle { fill: var(--pc-text-3); }
@@ -51,7 +51,7 @@
 .map-item h2 { margin: 0 0 var(--pc-space-1); }
 .map-item h3 { font-size: calc(14px * var(--pc-text-scale, 1)); margin: calc(14px * var(--pc-space-scale, 1)) 0 var(--pc-space-1); }
 .map-doubts { margin: 0; padding-left: calc(18px * var(--pc-space-scale, 1)); display: grid; gap: var(--pc-space-1); }
-.map-equipment rect { fill: var(--pc-surface); stroke: var(--pc-app-pidcraft, #2f7d6b); stroke-width: 1.5; }
+.map-equipment rect { fill: var(--pc-surface); stroke: var(--pc-app-doccraft, #2f7d6b); stroke-width: 1.5; }
 .map-card-tag { font-size: calc(14px * var(--pc-text-scale, 1)) !important; font-weight: 700; fill: var(--pc-text) !important; }
 .map-card-kind { font-size: calc(11px * var(--pc-text-scale, 1)) !important; fill: var(--pc-text-3) !important; }
 .link-button { background: none; border: 0; padding: 0; color: var(--pc-primary-text); cursor: pointer; font: inherit; display: inline-flex; gap: var(--pc-space-1); align-items: center; }

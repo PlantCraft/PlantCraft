@@ -9,6 +9,7 @@ never edited by hand. The rules, the shapes and examples are in `docs/api-v1.md`
 |---|---|---|---|---|
 | GET | `/api/v1/actions` | people only | `ref`, `status`, `limit` | Actions |
 | GET | `/api/v1/apps` | any app |  | Apps |
+| GET | `/api/v1/apps/self/license` | any app |  | Own License |
 | GET | `/api/v1/apps/{app}/notebooks/runtime` | people only | `app`* | Runtime File |
 | GET | `/api/v1/apps/{app}/objects/{kind}` | people only | `app`*, `kind`* | Objects |
 | POST | `/api/v1/apps/{app}/objects/{kind}/run` | people only | `app`*, `kind`*, JSON body | Run Object |

@@ -1,3 +1,4 @@
+# ruff: noqa: F811 (the fixture "world" of tests/test_apps_api.py, imported to share it)
 """Which PlantCraft versions an app runs on, and closed apps' licences (docs/app-package.md §7-8).
 
 The manifest's new keys ([requires] platform, [tested], [app] source and languages, [license]),

@@ -19,6 +19,8 @@ publisher = "Dev Publisher"
 license = "Apache-2.0"
 homepage = ""
 mark = "starter"
+source = "open"                     # "closed": compiled image and a licence (PlantCraft docs/app-package.md §8)
+languages = ["en"]                  # each other language needs its locales/<lang>.json catalogs
 
 [runtime]
 # An app outside the suite table takes a prefix, port and container user that no suite app
@@ -30,7 +32,8 @@ health = "/healthz"
 image = "starter"
 
 [requires]
-processcraft_api = ">=1.0"
+platform = ">=0.6,<0.8"             # PlantCraft versions it installs on (docs/app-package.md §7)
+processcraft_api = ">=1.0,<2"
 sdk = "0.102.0"
 asset_types = []
 roles = {}

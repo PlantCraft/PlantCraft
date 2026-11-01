@@ -1,4 +1,4 @@
-import { DataTable, Pill } from "@plantcraft/ui";
+import { DataTable, Pill, confirmAction } from "@plantcraft/ui";
 import { Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "./api";
@@ -82,8 +82,8 @@ export function DrawingView({ drawingId, me }: { drawingId: string; me: Me }) {
   useEffect(() => { api.drawing(drawingId).then(setDrawing).catch((err) => setError(message(err))); }, [drawingId]);
   if (error) return <ErrorBox text={error} />;
   if (!drawing) return <Loading />;
-  const remove = () => {
-    if (!window.confirm(t("Remove {number} and what was read on it?", { number: drawing.number }))) return;
+  const remove = async () => {
+    if (!(await confirmAction(t("The drawing, its revisions and what was read on it are deleted. The audit log keeps the record."), { title: t("Remove {number}?", { number: drawing.number }), confirm: t("Remove"), danger: true }))) return;
     api.remove(drawingId).then(() => navigate("/drawings")).catch((err) => setError(message(err)));
   };
   const again = () => api.readAgain(drawingId).then(() => api.drawing(drawingId)).then(setDrawing).catch((err) => setError(message(err)));
