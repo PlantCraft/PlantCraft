@@ -15,7 +15,7 @@ const HEARTBEAT_MS = 30_000;
 /** The public demo's way in, its only one (one short line and one button, nothing
  * that scares a first visitor): enter, or wait in line until a place frees. The platform's tour
  * opens inside; the guides by role are in the menu under the visitor's name. */
-export function DemoEntry({ ended, contactUrl, onEntered }: { ended: boolean; contactUrl?: string; onEntered: (username: string) => void }) {
+export function DemoEntry({ ended, contactUrl, updating, onEntered }: { ended: boolean; contactUrl?: string; updating?: boolean; onEntered: (username: string) => void }) {
   const [waiting, setWaiting] = useState<Waiting | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -45,7 +45,10 @@ export function DemoEntry({ ended, contactUrl, onEntered }: { ended: boolean; co
     {ended && <span className="demo-ended">{t("Your demo visit ended. Thank you for trying PlantCraft!")}</span>}
     {ended && contactUrl && <a className="demo-ended-contact" href={contactUrl} target="_blank" rel="noopener">{t("Questions about your plant? Talk to us")} <ArrowRight size={14} aria-hidden="true" /></a>}
     <span>{t("A live demo of PlantCraft on a simulated refinery. Look around and try anything: nothing you change is saved.")}</span>
-    {waiting ? <div className="demo-line" role="status" aria-live="polite">
+    {updating ? <div className="demo-line" role="status">
+      <LoaderCircle className="spin" size={16} />
+      <span>{t("The demo is being updated with a new version. It will be back in a few minutes: nothing is broken.")}</span>
+    </div> : waiting ? <div className="demo-line" role="status" aria-live="polite">
       <LoaderCircle className="spin" size={16} />
       <span>{t("Every place is taken. You are number {position} in line: {wait}. Keep this page open.", { position: waiting.position, wait: waitText(waiting.wait_seconds) })}</span>
     </div>
@@ -54,24 +57,43 @@ export function DemoEntry({ ended, contactUrl, onEntered }: { ended: boolean; co
   </div>;
 }
 
-/** When the visit's place is given back unless the visitor comes back: nothing shows while they use
- * the demo (no clock); a visit left unused for its minutes (30) ends, so a tab
- * forgotten for days does not hold a place, and the last 5 of them say so. Says it is alive every
- * 30 s (with whether the visitor used the page), which also renews the apps' token. */
-export const WARN_SECONDS = 5 * 60;
+/** The visit's clock, always on screen: a visit lasts its minutes (30) from the moment it starts,
+ * and ends sooner when the visitor leaves it unused for its idle minutes (5); the last of those
+ * asks "Still there?". Either way what the visitor did is not kept. Says it is alive every 30 s
+ * (with whether the visitor used the page), which also renews the apps' token. */
+export const WARN_SECONDS = 2 * 60;
+/** The last stretch of an unused visit that asks whether the visitor is still there. */
+export const IDLE_WARN_SECONDS = 60;
 
-export function DemoVisitBar({ visit, onEnded, onLeave }: { visit: DemoVisitInfo; onEnded: () => void; onLeave: () => void }) {
+export function DemoVisitBar({ visit, updatingUrl, onEnded, onLeave }: { visit: DemoVisitInfo; updatingUrl?: string; onEnded: () => void; onLeave: () => void }) {
+  const updateAt = useRef(visit.update_seconds == null ? null : Date.now() + visit.update_seconds * 1000);
+  const [update, setUpdate] = useState<number | null>(visit.update_seconds ?? null);
+  // The update is here: wait for it on the site's page (it opens the demo again once it is back),
+  // else on the sign-in page, which says the demo is being updated.
+  const updating = useCallback(() => {
+    if (updatingUrl) window.location.assign(updatingUrl);
+    else onEnded();
+  }, [updatingUrl, onEnded]);
+  const clockEnds = useRef(Date.now() + visit.clock_seconds * 1000);
   const ends = useRef(Date.now() + visit.seconds_left * 1000);
+  const [clock, setClock] = useState(visit.clock_seconds);
   const [left, setLeft] = useState(visit.seconds_left);
   const used = useRef(true);
   // The pages the visitor had in front since the last sign of life (the demo's stats: which pages
   // people open; no clicks, nothing typed).
   const pages = useRef(new Set<string>());
   const beat = useCallback((active: boolean, seen: string[] = []) => demoApi.heartbeat(active, seen.slice(0, 20)).then((answer) => {
+    clockEnds.current = Date.now() + answer.clock_seconds * 1000;
     ends.current = Date.now() + answer.seconds_left * 1000;
+    updateAt.current = answer.update_seconds == null ? null : Date.now() + answer.update_seconds * 1000;
+    setUpdate(answer.update_seconds ?? null);
+    setClock(answer.clock_seconds);
     setLeft(answer.seconds_left);
     return suiteApi.renewToken();
-  }).catch(() => undefined), []);
+  }).catch(() => {
+    // The visit ended while an update was announced (or the server is already down for it).
+    if (updateAt.current !== null && updateAt.current - Date.now() < 15_000) updating();
+  }), [updating]);
   useEffect(() => {
     // Any use of the page, the apps' frames included (same origin: listened to as they appear).
     const mark = () => { used.current = true; };
@@ -94,8 +116,12 @@ export function DemoVisitBar({ visit, onEnded, onLeave }: { visit: DemoVisitInfo
         } catch { /* another origin */ }
       });
       const seconds = Math.round((ends.current - Date.now()) / 1000);
+      setClock(Math.round((clockEnds.current - Date.now()) / 1000));
       setLeft(seconds);
-      if (seconds <= 0) onEnded();
+      const toUpdate = updateAt.current === null ? null : Math.round((updateAt.current - Date.now()) / 1000);
+      setUpdate(toUpdate);
+      if (toUpdate !== null && toUpdate <= 0) updating();
+      else if (seconds <= 0) onEnded();
     }, 1000);
     const timer = window.setInterval(() => {
       const active = used.current;
@@ -109,14 +135,23 @@ export function DemoVisitBar({ visit, onEnded, onLeave }: { visit: DemoVisitInfo
       window.clearInterval(tick);
       window.clearInterval(timer);
     };
-  }, [onEnded, beat]);
-  if (left > WARN_SECONDS) return null;
-  return <div className="demo-visit-bar demo-visit-late" role="alert">
+  }, [onEnded, beat, updating]);
+  // Unused: the visit ends before its clock does, and the last minute asks.
+  const idle = left < clock - 1 && left <= IDLE_WARN_SECONDS;
+  const late = idle || clock <= WARN_SECONDS;
+  return <>{update !== null && <div className="demo-update-banner" role="alert">
+    <LoaderCircle size={15} aria-hidden="true" />
+    <span>{t("The demo will be updated to a new version in {time}. Your visit ends then and your changes are discarded; it will be back in a few minutes.", { time: clockText(Math.max(update, 0)) })}</span>
+  </div>}
+  <div className={`demo-visit-bar${late ? " demo-visit-late" : ""}`} role={late ? "alert" : "status"}>
     <Clock3 size={14} aria-hidden="true" />
-    <span className="demo-visit-note">{t("Still there? This demo visit closes in {time} without use.", { time: clockText(left) })}</span>
-    <button type="button" className="demo-visit-leave" onClick={() => { used.current = false; void beat(true); }}>{t("Keep exploring")}</button>
+    <span className="demo-visit-clock" title={t("Each demo visit lasts {minutes} minutes and ends after {idle} minutes without use. Nothing you change is kept.", { minutes: visit.minutes, idle: visit.idle_minutes })}>{clockText(idle ? left : clock)}</span>
+    <span className="demo-visit-note">{idle
+      ? t("Still there? Without use, this visit ends and its changes are discarded.")
+      : clock <= WARN_SECONDS ? t("Your visit is ending; its changes are discarded.") : t("left in your demo visit")}</span>
+    {idle && <button type="button" className="demo-visit-leave" onClick={() => { used.current = false; void beat(true); }}>{t("Keep exploring")}</button>}
     <button type="button" className="demo-visit-leave" onClick={onLeave}><LogOut size={13} aria-hidden="true" />{t("Leave")}</button>
-  </div>;
+  </div></>;
 }
 
 /** The visit's way to the team: a small button at the bottom right on every page, the apps

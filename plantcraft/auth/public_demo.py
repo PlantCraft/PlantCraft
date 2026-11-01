@@ -38,9 +38,10 @@ DEFAULT_USER = "demo"
 # (Desk's marks, the assistant's chats). The next visitor starts from the demo as seeded.
 VISIT_OWNER = "#visit:"
 DEFAULT_RATE = 600
-DEFAULT_SEATS = 10
-# A visit unused this long ends (no clock while it is used; a tab forgotten for
-# days must not hold a place).
+# 30 places (2026-11-01): the load test kept 50 people at a p95 of 1.6 s.
+DEFAULT_SEATS = 30
+# A visit lasts this long from its start (its clock, on screen), and ends sooner when unused
+# for the idle minutes.
 DEFAULT_MINUTES = 30
 DEFAULT_IDLE_MINUTES = 5
 # Requests a visitor's browser has in flight in each app at once, and all visitors together.
@@ -67,6 +68,9 @@ class PublicDemo:
     stats_key: str = ""
     # Where a visitor reaches the team (the site's contact form); empty: no "Talk to us" button.
     contact_url: str = ""
+    # Where a visit waits while the demo is updated (the site's "updating" page); empty: back to
+    # the sign-in page, which says the demo is being updated.
+    updating_url: str = ""
 
     def as_dict(self) -> dict[str, int | str]:
         """What the sign-in page and the visit say about the demo (never the visitor's password)."""
@@ -74,6 +78,8 @@ class PublicDemo:
         settings: dict[str, int | str] = {"seats": self.seats, "minutes": self.minutes}
         if self.contact_url:
             settings["contact_url"] = self.contact_url
+        if self.updating_url:
+            settings["updating_url"] = self.updating_url
         return settings
 
     def token_claim(self, visit: str, ends: float) -> dict[str, object]:
@@ -132,6 +138,7 @@ def public_demo() -> PublicDemo | None:
         ),
         stats_key=os.environ.get("PLANTCRAFT_PUBLIC_DEMO_STATS_KEY", "").strip(),
         contact_url=_contact_url(os.environ.get("PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL", "")),
+        updating_url=_contact_url(os.environ.get("PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL", "")),
     )
 
 

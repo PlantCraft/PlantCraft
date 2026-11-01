@@ -85,6 +85,9 @@
 .demo-visit-note { overflow: hidden; text-overflow: ellipsis; }
 .demo-visit-leave { padding: 3px 10px; border: 0; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-text); display: inline-flex; align-items: center; gap: 4px; font: inherit; font-weight: 600; cursor: pointer; }
 .demo-visit-leave:hover { filter: brightness(0.96); }
+/* An announced update (plantcraft demo update-notice): a strip across the top, above every app. */
+.demo-update-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 1001; padding: 8px 16px; background: var(--pc-attention-soft); color: var(--pc-attention-text); border-bottom: 1px solid var(--pc-attention-border); display: flex; justify-content: center; align-items: center; gap: 8px; font-size: var(--pc-fs-sm); font-weight: 600; text-align: center; }
+.demo-update-banner > svg { flex: none; }
 .demo-visit-late { border-color: var(--pc-problem-border); background: var(--pc-problem-soft); }
 .demo-visit-late .demo-visit-clock { color: var(--pc-problem-text); }
 /* On a phone the header is the app's name and menu: the clock waits at the bottom instead. */

@@ -2,10 +2,10 @@
 
 "Enter the demo" (``POST /api/demo/enter``) takes a free place, or puts the browser in line with
 a ticket it shows again every few seconds; whoever is first in line takes the next place that
-frees. A visit lasts while it is used: each sign of use (``POST /api/demo/heartbeat`` with
-``active``) moves its end ``minutes`` ahead, so it ends ``minutes`` after its last use, or when its
-visitor signs out. A visitor unused for ``idle_minutes`` gives up their place, but only to someone
-waiting. No cap per address: behind the demo's proxy and tunnel, every visitor can seem to come
+frees. A visit lasts ``minutes`` at most from its start (the clock the visitor sees), and ends
+sooner when its visitor leaves it unused for ``idle_minutes``: each sign of use
+(``POST /api/demo/heartbeat`` with ``active``) moves that idle end ahead, never past the clock.
+``ends`` in the table is the earlier of the two. No cap per address: behind the demo's proxy and tunnel, every visitor can seem to come
 from one (that locked visitors out).
 
 In the database, not in memory, so every server process sees the same places. Every visit is
@@ -30,6 +30,8 @@ from dataclasses import dataclass
 
 from plantcraft.db import Database, Store
 
+# An update notice nobody cleared is forgotten this long after the update was due.
+NOTICE_STALE_SECONDS = 30 * 60
 # A ticket whose browser stopped asking for this long has left the line.
 LINE_GONE_SECONDS = 30.0
 # Days the log of past visits keeps.
@@ -42,10 +44,16 @@ ID_SEGMENT = re.compile(r"^(\d+|[0-9a-f-]{8,}|[A-Za-z0-9_-]{20,})$")
 class Visit:
     visit: str
     started: float
+    # The earlier of the visit's clock and its idle end.
     ends: float
 
     def seconds_left(self, now: float | None = None) -> int:
         return max(int(self.ends - (time.time() if now is None else now)), 0)
+
+    def clock_left(self, minutes: float, now: float | None = None) -> int:
+        """Seconds left on the visit's clock (``minutes`` from its start), use or not."""
+
+        return max(int(self.started + minutes * 60 - (time.time() if now is None else now)), 0)
 
 
 @dataclass(frozen=True)
@@ -87,6 +95,11 @@ class DemoVisits(Store):
         page TEXT NOT NULL,
         at REAL NOT NULL,
         PRIMARY KEY (visit, page)
+    );
+
+    CREATE TABLE IF NOT EXISTS demo_update_notice (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        at REAL NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS demo_guide_links (
@@ -149,7 +162,7 @@ class DemoVisits(Store):
                 free += len(taken)
                 visits = [row for row in visits if row["visit"] not in taken]
             if position < free:
-                visit = Visit(secrets.token_urlsafe(18), now, now + minutes * 60)
+                visit = Visit(secrets.token_urlsafe(18), now, now + min(minutes, idle_minutes) * 60)
                 joined = connection.execute(
                     "SELECT joined FROM demo_line WHERE ticket = ?", (ticket,)
                 ).fetchone()
@@ -196,17 +209,25 @@ class DemoVisits(Store):
         return Visit(row["visit"], row["started"], row["ends"]) if row else None
 
     def seen(
-        self, visit: str, *, active: bool, minutes: float, now: float | None = None
+        self,
+        visit: str,
+        *,
+        active: bool,
+        minutes: float,
+        idle_minutes: float,
+        now: float | None = None,
     ) -> Visit | None:
         """A sign of life from the visit's browser; ``active`` when the visitor used it, which
-        moves the visit's end ``minutes`` ahead."""
+        moves the visit's end ``idle_minutes`` ahead, never past its clock (``minutes`` from its
+        start)."""
 
         now = time.time() if now is None else now
         if active:
             with self._lock, self._write() as connection:
                 connection.execute(
-                    "UPDATE demo_visits SET active = ?, ends = ? WHERE visit = ? AND ends > ?",
-                    (now, now + minutes * 60, visit, now),
+                    "UPDATE demo_visits SET active = ?, ends = MIN(started + ?, ?) "
+                    "WHERE visit = ? AND ends > ?",
+                    (now, minutes * 60, now + idle_minutes * 60, visit, now),
                 )
                 connection.execute(
                     "UPDATE demo_visit_log SET last_used = ? WHERE visit = ? AND last_used < ?",
@@ -322,6 +343,32 @@ class DemoVisits(Store):
             }
             for v in visits
         ]
+
+    def announce_update(self, at: float) -> None:
+        """The demo will be updated (and stopped a while) at ``at``: visits see a countdown, no new
+        visit starts, and when it comes every visit ends (``plantcraft demo update-notice``)."""
+
+        with self._lock, self._write() as connection:
+            connection.execute(
+                "INSERT INTO demo_update_notice (id, at) VALUES (1, ?) "
+                "ON CONFLICT (id) DO UPDATE SET at = excluded.at",
+                (at,),
+            )
+
+    def clear_update(self) -> None:
+        with self._lock, self._write() as connection:
+            connection.execute("DELETE FROM demo_update_notice")
+
+    def update_at(self, now: float | None = None) -> float | None:
+        """When the announced update stops the demo, or None (none announced, or one long past
+        that nobody cleared)."""
+
+        now = time.time() if now is None else now
+        with self._lock, self._connect() as connection:
+            row = connection.execute("SELECT at FROM demo_update_notice WHERE id = 1").fetchone()
+        if row is None or row["at"] + NOTICE_STALE_SECONDS < now:
+            return None
+        return float(row["at"])
 
     def set_guide_links(self, links: dict[str, str]) -> None:
         """The pages the demo story's names open now (all of them: the old ones are dropped)."""
