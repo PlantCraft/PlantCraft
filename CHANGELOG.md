@@ -42,6 +42,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **Operations: the plant's holidays.** Requests › Targets takes a list of holidays (a date and a
   name per line, `PUT /api/operations/holidays`, audited). Queues with working hours stop their
   clocks on them; a queue that works day and night ignores them.
+- **Compute: a revoked worker enrolls again.** Settings › Compute gives a revoked worker a new
+  one-time code ("Enroll again"); it keeps its name and labels and needs no removing and adding.
 
 - `@plantcraft/ui`: **display size**, five steps from Larger text to More space, in the person's
   menu under the theme, for every app of the suite. Larger text helps people who see less well;
