@@ -9,7 +9,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
-- **A new look for the whole suite (ui 0.102.0).** Three levels, page, card and text, with
+- **A new look for the whole suite (ui 0.103.0).** Three levels, page, card and text, with
   card and text at the most contrast: white cards and near-black text in light, near-black cards
   on a grey page and near-white text in dark. Fields, buttons, search and filters take the card's
   colour. Cards lose their outline for a hairline edge and a soft shadow, with 12 px corners. The
