@@ -147,3 +147,6 @@
 .pcs-sidebar-bottom, .pcs-account { border-top-color: var(--pc-hair) !important; }
 .pcs-sidebar hr, .pcs-sidebar-bottom::before { border-color: var(--pc-hair) !important; background: var(--pc-hair) !important; }
 .pcs-quick { border-top-color: var(--pc-hair) !important; } .pcs-quick button { color: var(--pc-text-3) !important; }
+/* Hover note on a cut description (prototype of ui WidgetTip on table cells). */
+.proto-tip { position: fixed; z-index: 1000; max-width: 340px; padding: 10px 12px; border-radius: 12px; background: var(--pc-surface); color: var(--pc-text-2); box-shadow: 0 0 0 .5px var(--pc-hair), 0 10px 30px rgba(0,0,0,.16); font-size: 13px; line-height: 1.45; }
+.proto-tip strong { display: block; margin-bottom: 3px; color: var(--pc-text); font-size: 13px; }
