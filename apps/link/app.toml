@@ -30,7 +30,7 @@ image = "linkcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.102.0"
+sdk = "0.103.0"
 asset_types = ["loop"]
 roles = { loop = ["pv", "op"] }
 
