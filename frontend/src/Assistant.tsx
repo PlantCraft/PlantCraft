@@ -13,7 +13,7 @@ import { AlertTriangle, Archive, ArchiveRestore, Bot, Check, ChevronRight, Copy,
 import { AnswerProgress, AssistantChart, Dialog, formatAgo, ProposalCard, renderMarkdown, askText, confirmAction } from "@plantcraft/ui";
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { errorText, Go, StarButton } from "./collab";
-import { assistantApi, chatMention, chatSections, mergeMessages, settledUpTo, type AssistantStatus, type Chat, type ChatMessage, type ChatRef } from "./assistantApi";
+import { assistantApi, chatMention, chatSections, mergeMessages, settledUpTo, type AssistantStatus, type AssistantVisit, type Chat, type ChatMessage, type ChatRef } from "./assistantApi";
 import { collabApi, type Contacts } from "./collabApi";
 import { t } from "./i18n";
 import { navigate } from "./nav";
@@ -39,7 +39,7 @@ function fromAddress(): { ref: string; question: string; starters: string[] } {
   return { ref: params.get("ref") ?? "", question: params.get("q") ?? "", starters: params.getAll("s").slice(0, 6) };
 }
 
-function Composer({ busy, onSend, placeholder, autoFocus, initial = "" }: { busy: boolean; onSend: (text: string) => Promise<boolean>; placeholder: string; autoFocus?: boolean; initial?: string }) {
+function Composer({ busy, onSend, placeholder, autoFocus, initial = "", maxLength = 8000, note }: { busy: boolean; onSend: (text: string) => Promise<boolean>; placeholder: string; autoFocus?: boolean; initial?: string; maxLength?: number; note?: string }) {
   const [text, setText] = useState(initial);
   const area = useRef<HTMLTextAreaElement>(null);
   useEffect(() => { setText(initial); if (initial) area.current?.focus(); }, [initial]);
@@ -58,9 +58,18 @@ function Composer({ busy, onSend, placeholder, autoFocus, initial = "" }: { busy
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void submit(); }
   }
   return <div className="asst-composer">
-    <textarea ref={area} rows={1} value={text} autoFocus={autoFocus} onChange={(event) => setText(event.target.value)} onKeyDown={keys} placeholder={placeholder} aria-label={t("Your question")} maxLength={8000} />
+    <textarea ref={area} rows={1} value={text} autoFocus={autoFocus} onChange={(event) => setText(event.target.value)} onKeyDown={keys} placeholder={placeholder} aria-label={t("Your question")} maxLength={maxLength} />
     <button type="button" className="asst-send" disabled={busy || !text.trim()} onClick={() => void submit()} aria-label={t("Send")}>{busy ? <LoaderCircle className="spin" /> : <SendHorizontal />}</button>
+    {note && <small className="asst-composer-note" role="status">{note}</small>}
   </div>;
+}
+
+/** A public demo visit's questions left, under the box (none: the box takes no more). */
+function visitNote(visit?: AssistantVisit): string | undefined {
+  if (!visit) return undefined;
+  return visit.left > 0
+    ? t("{left} of {count} questions left in this demo visit. The assistant reads and explains here; it creates nothing.", { left: visit.left, count: visit.questions })
+    : t("This visit used its {count} questions. Install PlantCraft to use the assistant with your own model.", { count: visit.questions });
 }
 
 function RefChip({ item }: { item: ChatRef }) {
@@ -191,7 +200,7 @@ function ChatMenu({ chat, folders, onChanged, onRename, onDelete }: { chat: Chat
   </div>;
 }
 
-function ChatPane({ chatId, onChanged }: { chatId: number; onChanged: () => void }) {
+function ChatPane({ chatId, onChanged, visit }: { chatId: number; onChanged: () => void; visit?: AssistantVisit }) {
   const [chat, setChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [error, setError] = useState("");
@@ -270,7 +279,9 @@ function ChatPane({ chatId, onChanged }: { chatId: number; onChanged: () => void
     {chat.mine === false
       ? <div className="asst-readonly"><span>{t("You are reading a chat {name} shared. To ask more, continue it as your own.", { name: chat.owner_name ?? chat.owner ?? "" })}</span>
         <button type="button" className="button button-primary" disabled={busy} onClick={() => void continueCopy()}><CopyPlus size={15} />{t("Continue in a copy")}</button></div>
-      : <Composer busy={busy || working} onSend={send} placeholder={working ? t("Wait for the answer…") : t("Ask a follow-up")} autoFocus />}
+      : chat.can_ask === false
+        ? <div className="asst-readonly"><span>{t("This is one of the team's chats, to read. Start a new chat to ask your own question.")}</span></div>
+        : <Composer busy={busy || working || visit?.left === 0} onSend={send} placeholder={working ? t("Wait for the answer…") : t("Ask a follow-up")} autoFocus maxLength={visit?.max_text} note={visitNote(visit)} />}
   </section>;
 }
 
@@ -304,7 +315,7 @@ function NewChat({ status, onStarted }: { status: AssistantStatus; onStarted: ()
     <div className="asst-hero">
       <span className="asst-avatar asst-avatar-lg"><Sparkles /></span>
       <h2>{t("How can I help?")}</h2>
-      <p>{t("Ask about the plant and the platform, or ask it to prepare a block, an action or a rule. The assistant reads only what you may see, and creates nothing until you confirm.")}</p>
+      <p>{status.visit ? t("Ask about the demo plant and the platform. The assistant reads only what this visit may see, and changes nothing.") : t("Ask about the plant and the platform, or ask it to prepare a block, an action or a rule. The assistant reads only what you may see, and creates nothing until you confirm.")}</p>
       {ready.length > 1 && <label className="asst-profile">{t("Answer as")}
         <select value={profile} onChange={(event) => setProfile(event.target.value)}>{ready.map((item) => <option key={item.id} value={item.id}>{item.name}{item.subject ? ` · ${item.subject}` : ""}</option>)}</select>
       </label>}
@@ -312,7 +323,7 @@ function NewChat({ status, onStarted }: { status: AssistantStatus; onStarted: ()
       <div className="asst-starters">{starters.map((text) => <button type="button" key={text} onClick={() => setDraft(text)}>{text}</button>)}</div>
     </div>
     {error && <div className="form-error asst-error"><AlertTriangle size={15} /> {error}</div>}
-    <Composer busy={busy} onSend={start} placeholder={t("Ask the assistant")} autoFocus initial={draft} />
+    <Composer busy={busy || status.visit?.left === 0} onSend={start} placeholder={t("Ask the assistant")} autoFocus initial={draft} maxLength={status.visit?.max_text} note={visitNote(status.visit)} />
   </section>;
 }
 
@@ -368,6 +379,6 @@ export default function AssistantPage({ chatId }: { chatId: number | "new" | nul
         </li>)}</ul>
       </section>)}
     </aside>
-    {typeof chatId === "number" ? <ChatPane key={chatId} chatId={chatId} onChanged={load} /> : <NewChat status={status} onStarted={load} />}
+    {typeof chatId === "number" ? <ChatPane key={chatId} chatId={chatId} onChanged={load} visit={status.visit} /> : <NewChat status={status} onStarted={load} />}
   </div>;
 }
