@@ -126,6 +126,21 @@ def plant_day_start() -> str:
     )
 
 
+# Seconds visits stop asking after the model service refused the installation (429, 401, 403).
+PAUSE_SECONDS = 600
+# The service codes that pause the visits: no credit or limited (429), key refused (401, 403).
+PAUSING_CODES = (401, 403, 429)
+
+
+def unavailable() -> str:
+    """What a visit reads when the assistant cannot answer: never the service's own error."""
+
+    return t(
+        "The assistant cannot answer right now. Try again later; the rest of the demo works as "
+        "usual."
+    )
+
+
 # The model's tokens one answer spent (``specialists.model.ChatModel.usage``).
 USAGE_KEYS = ("calls", "input", "cached", "output", "reasoning")
 
@@ -163,10 +178,15 @@ class DemoQuestions(Store):
             )
         return int(cursor.lastrowid or 0)
 
-    def count(self, *, owner: str = "", address: str = "", since: str = "") -> int:
-        """Questions of one visit, or from one address, or all of them, since ``since``."""
+    def count(
+        self, *, owner: str = "", address: str = "", since: str = "", answered: bool = False
+    ) -> int:
+        """Questions of one visit, or from one address, or all of them, since ``since``;
+        ``answered`` leaves out those the assistant could not answer (a visit keeps them)."""
 
         where, values = ["asked_at >= ?"], [since]
+        if answered:
+            where.append("state != 'failed'")
         if owner:
             where.append("owner = ?")
             values.append(owner)
@@ -238,9 +258,20 @@ class DemoLimits:
     def __init__(self) -> None:
         self._minute: dict[str, deque[float]] = defaultdict(deque)
         self._lock = threading.Lock()
+        self._paused_until = 0.0
+
+    def pause(self, seconds: float = PAUSE_SECONDS, now: float | None = None) -> None:
+        """The model service refused the installation (no credit, key refused, limited): visits
+        stop asking for a while instead of each one failing."""
+
+        now = time.monotonic() if now is None else now
+        self._paused_until = max(self._paused_until, now + seconds)
+
+    def paused(self, now: float | None = None) -> bool:
+        return (time.monotonic() if now is None else now) < self._paused_until
 
     def left(self, settings: DemoAssistant, questions: DemoQuestions, owner: str) -> int:
-        return max(0, settings.questions - questions.count(owner=owner))
+        return max(0, settings.questions - questions.count(owner=owner, answered=True))
 
     def take(
         self,
@@ -254,7 +285,9 @@ class DemoLimits:
         the visitor."""
 
         with self._lock:
-            if questions.count(owner=owner) >= settings.questions:
+            if self.paused(now):
+                return unavailable()
+            if questions.count(owner=owner, answered=True) >= settings.questions:
                 return t(
                     "This visit used its {count} questions to the assistant. Thank you for "
                     "trying it! Install PlantCraft to use it without limits, with your own model.",

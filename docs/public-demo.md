@@ -111,6 +111,11 @@ guide away, take **Another role**, or close it. While a guide is on, the apps' o
   | `_TOOL_CALLS` | 16 | Tool calls in one answer |
   | `_MAX_ANSWER` | 4000 | Characters of one answer |
 
+  When the model service refuses the installation (no credit left, key refused or limited:
+  429, 401, 403), the visitor reads "The assistant cannot answer right now" instead of the
+  service's error, that question is not one of the visit's, and visits stop asking for 10
+  minutes instead of each one failing (the error stays in the server's log).
+
   A visit's answer never points outside the suite: images, raw HTML and links or addresses of
   other sites are taken out on the server, whatever the model was led to write.
 

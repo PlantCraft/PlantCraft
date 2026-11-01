@@ -32,11 +32,13 @@ from plantcraft.assistant_access import mcp
 from plantcraft.assistant_access.app_tools import AppTool, AppTools, refs_in, refs_named
 from plantcraft.assistant_chat import MAX_TEXT, ChatStore
 from plantcraft.assistant_chat.demo import (
+    PAUSING_CODES,
     DemoLimits,
     DemoQuestions,
     clean_answer,
     demo_assistant,
     is_visit,
+    unavailable,
 )
 from plantcraft.assistant_chat.evals import Case, EvalStore, build_cases, run_case
 from plantcraft.assistant_chat.work_evals import build_work_cases
@@ -1037,16 +1039,23 @@ class ChatEngine:
                 self.demo_questions.answered(chat["username"], "done", done["usage"])
         except Exception as exc:
             LOGGER.warning("The assistant could not answer in chat %s: %s", chat["chat_id"], exc)
+            visit = is_visit(chat.get("username"))
+            if visit and getattr(exc, "code", None) in PAUSING_CODES:
+                self.demo_limits.pause()
             self.store.update(
                 message_id,
-                text=t("The assistant could not answer: {error}", error=str(exc)[:300]),
+                # A visitor reads a plain sentence, never the service's error (it names keys
+                # and settings only the installation's administrator can change).
+                text=unavailable()
+                if visit
+                else t("The assistant could not answer: {error}", error=str(exc)[:300]),
                 state="failed",
                 steps=getattr(exc, "steps", None),
                 charts=getattr(exc, "charts", None),
                 refs=(getattr(exc, "refs", None) or [])[:MAX_REFS] or None,
                 meta={"queued": False, "usage": getattr(exc, "usage", None) or {}},
             )
-            if is_visit(chat.get("username")):
+            if visit:
                 self.demo_questions.answered(
                     chat["username"], "failed", getattr(exc, "usage", None) or {}
                 )
