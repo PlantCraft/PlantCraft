@@ -31,6 +31,15 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Under load with three months of plant-scale history (pc-carga, 2026-11-01).** Alarms' summary
+  read each alarm's rule with its own database connection: with 2,194 alarms and 30 people it
+  answered 500 ("unable to open database file"). Every list of alarms now reads the rules once,
+  and Alarms gets 768 MB on the `medium` profile (384 MB died for lack of memory). A Historian
+  worker turning a 240 h read into JSON (~29 MB) missed uvicorn's 5 s ping and was killed
+  mid-answer, a 502 for the reader: the ping now waits a minute. Operations' Status page showed
+  two different free disks (the installer's from its last backup index, and the live one); it
+  now shows the live one.
+
 - **The guided tour goes to the end on a phone (SDK 0.103.0, ui 0.107.0).** On a 390 px phone the
   platform tour stopped on its Apps step: the installed-apps table widened the page to about
   600 px, the phone widened its frame to match, and the tour's card slid below the screen, under

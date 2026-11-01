@@ -538,3 +538,17 @@ def test_limits_by_grade_follow_the_grade_event(client, fake):
     assert (
         "Grade HD-5: limit 50" in client.get(f"/api/alarms/{alarm['alarm_id']}").json()["message"]
     )
+
+
+def test_the_summary_reads_the_rules_once_not_once_per_alarm(client, runtime, fake, monkeypatch):
+    make_rule(client, critical_three_times(count=1))
+    client.post("/api/run")
+    report(fake, "linkcraft.output.status")
+    assert client.post("/api/run").json()["raised"] == 1
+
+    def one_by_one(_rule_id):
+        raise AssertionError("one database read per alarm (pc-carga, 2026-11-01)")
+
+    monkeypatch.setattr(runtime.rules, "get", one_by_one)
+    rows = client.get("/api/summary").json()["alarms"]
+    assert rows and all(row["rule_name"] for row in rows)

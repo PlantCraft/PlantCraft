@@ -22,7 +22,7 @@ from alarmcraft.alarms.records import Conflict
 from alarmcraft.alarms.rules import RuleDraft, from_legacy
 from alarmcraft.alarms.simple import SimpleLogic, to_diagram
 from alarmcraft.api.deps import CurrentUser, EditorUser, EditorView, RuntimeDep, guarded
-from alarmcraft.api.routers.alarms import mark_mine, summary, window_of
+from alarmcraft.api.routers.alarms import mark_mine, rule_names, summary, window_of
 from alarmcraft.api.runtime import Runtime
 from alarmcraft.api.scope import seen
 from alarmcraft.engine import python as python_block
@@ -122,7 +122,8 @@ def rule_row(rt: Runtime, rule: dict[str, Any], alarms: list[dict[str, Any]]) ->
     """A rule as the pages show it, with how many alarms it has and how many are active."""
 
     now = rt.clock()
-    rows = [summary(rt, alarm) for alarm in alarms]
+    names = rule_names(rt)
+    rows = [summary(rt, alarm, names) for alarm in alarms]
     notify = rule.get("notify") or {}
     draft = draft_of(rule)
     return {
@@ -470,7 +471,8 @@ def rule_from_event(event_id: int, rt: RuntimeDep, _user: EditorView) -> dict[st
 def get_rule(rule_id: str, rt: RuntimeDep, user: CurrentUser) -> dict[str, Any]:
     rule = rule_or_404(rt, rule_id)
     alarms = rt.alarms.of_rule(rule_id)
-    rows = mark_mine(rt, [summary(rt, alarm) for alarm in alarms], user.username)
+    names = rule_names(rt)
+    rows = mark_mine(rt, [summary(rt, alarm, names) for alarm in alarms], user.username)
     return {**rule_row(rt, rule, alarms), "alarm_rows": rows}
 
 
