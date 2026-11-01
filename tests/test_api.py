@@ -23,6 +23,10 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("PLANTCRAFT_SCENARIO", str(path))
     monkeypatch.setenv("PLANTCRAFT_PREWARM_HISTORY", "false")
     monkeypatch.delenv("PLANTCRAFT_BASIC_AUTH_ENABLED", raising=False)
+    # The browser journeys' server (tests/e2e) sets these for the whole session: its installer
+    # state lists the apps those journeys installed ("hello"), which are not this installation's.
+    for name in ("PLANTCRAFT_INSTALLER_STATE", "PLANTCRAFT_APP_REQUESTS", "PLANTCRAFT_APPS"):
+        monkeypatch.delenv(name, raising=False)
     with TestClient(create_app()) as test_client:
         yield test_client
 

@@ -312,6 +312,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Documents no longer restarts forever on a medium machine.** Its memory ceiling was 1 GB on
+  the small and medium profiles, and it needs about 950 MB just to start (1.3 GB idle), so on an
+  8 GB VM it was killed for memory in a loop and the demo story stopped there. The ceilings are now
+  1.5, 2, 3 and 4 GB (small to extra large).
 - **SDK 0.96.0: an app without an app key no longer warns that its contributions were not
   sent.** An app's stand-in client for a missing key (Analytics) has no `put_contributions`: the
   SDK now treats it as no client and lets `GET /api/ops/metrics` carry the contributions, instead
