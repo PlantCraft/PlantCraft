@@ -136,6 +136,12 @@ services:
       PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL: "${PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL:-}"
       # Each visit gets its own copy of every app's database (plantcraft_sdk.server.demo_slots).
       PLANTCRAFT_PUBLIC_DEMO_ISOLATED: "${PLANTCRAFT_PUBLIC_DEMO_ISOLATED:-false}"
+      # Visits ask the installation's assistant model, under limits (docs/public-demo.md):
+      # questions per visit, per address a day and for all visits a day. Off by default.
+      PLANTCRAFT_PUBLIC_DEMO_LLM: "${PLANTCRAFT_PUBLIC_DEMO_LLM:-off}"
+      PLANTCRAFT_PUBLIC_DEMO_LLM_QUESTIONS: "${PLANTCRAFT_PUBLIC_DEMO_LLM_QUESTIONS:-10}"
+      PLANTCRAFT_PUBLIC_DEMO_LLM_PER_ADDRESS: "${PLANTCRAFT_PUBLIC_DEMO_LLM_PER_ADDRESS:-30}"
+      PLANTCRAFT_PUBLIC_DEMO_LLM_DAILY: "${PLANTCRAFT_PUBLIC_DEMO_LLM_DAILY:-600}"
       PLANTCRAFT_LANGUAGE: "${PLANTCRAFT_LANGUAGE:-en}"
       PLANTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
       # The apps of the suite run by this file (the launcher, access and API v1 list them);
