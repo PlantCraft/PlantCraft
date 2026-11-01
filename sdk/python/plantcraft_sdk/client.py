@@ -158,6 +158,32 @@ class NotFound(PlantCraftError):
     """404: no such asset or signal."""
 
 
+class DemoVisitWrite(Forbidden):
+    """A write to PlantCraft with the app's own key during an isolated demo visit
+    (``plantcraft_sdk.server.demo_slots``): refused here, so a visit's play never reaches what
+    everyone else sees."""
+
+
+# Requests that only read although they are not a GET (a series read with its list of signals,
+# a model asked a question): a demo visit may still send them.
+DEMO_READS = (("POST", "/api/v1/series"), ("POST", "/api/v1/llm/"))
+
+
+def _demo_visit_write(method: str, path: str) -> bool:
+    """A write with the app's key during an isolated demo visit."""
+
+    from plantcraft_sdk.server import demo_slots
+
+    if demo_slots.visit_key() is None:
+        return False
+    for read_method, prefix in DEMO_READS:
+        if method == read_method and (
+            path == prefix or (prefix.endswith("/") and path.startswith(prefix))
+        ):
+            return False
+    return True
+
+
 class Unavailable(PlantCraftError):
     """PlantCraft or its data source could not answer (connection error, timeout, 5xx)."""
 
@@ -349,6 +375,11 @@ class PlantCraftClient:
         """The answer and its headers. A GET sends the ETag of the answer kept for it, and a
         304 gives that answer back."""
 
+        if method != "GET" and auth and self._key is not None and _demo_visit_write(method, path):
+            raise DemoVisitWrite(
+                "A public demo visit's changes stay in the visit: not sent to PlantCraft.",
+                status_code=403,
+            )
         params = {key: value for key, value in (params or {}).items() if value is not None}
         cache_key = (base, path, tuple(sorted((k, str(v)) for k, v in params.items())))
         kept = self._etags.get(cache_key) if method == "GET" else None
@@ -1475,6 +1506,7 @@ class PlantCraftClient:
 __all__ = [
     "BadRequest",
     "error_for",
+    "DemoVisitWrite",
     "Forbidden",
     "NotFound",
     "PlantCraftClient",

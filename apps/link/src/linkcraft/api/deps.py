@@ -18,7 +18,7 @@ from plantcraft_sdk.server.access import Access, CurrentUser, runtime
 from linkcraft.api.runtime import Runtime
 from linkcraft.i18n import t
 
-ACCESS = Access("Link")
+ACCESS = Access("Link", demo_copy=True)
 RuntimeDep = Annotated[Runtime, Depends(runtime)]
 EditorUser = ACCESS.EditorUser
 
