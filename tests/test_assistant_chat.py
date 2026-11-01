@@ -295,6 +295,21 @@ def test_history_alternates_and_names_the_charts():
     assert json.dumps(turns)
 
 
+def test_a_long_chat_keeps_its_opening_exchange_and_its_newest_turns():
+    from plantcraft.assistant_chat.engine import HISTORY
+
+    messages = []
+    for index in range(40):
+        messages.append({"role": "user", "state": "done", "text": f"q{index}"})
+        messages.append({"role": "assistant", "state": "done", "text": f"a{index}"})
+    turns = history_for_model(messages)
+    assert len(turns) == HISTORY
+    assert [turn["content"] for turn in turns[:3]] == ["q0", "a0", f"q{40 - (HISTORY - 2) // 2}"]
+    assert turns[-1]["content"] == "a39"
+    roles = [turn["role"] for turn in turns]
+    assert roles == ["user", "assistant"] * (HISTORY // 2)
+
+
 def test_only_apps_keeps_what_the_person_may_open():
     from plantcraft.assistant_access.mcp import only_apps
 

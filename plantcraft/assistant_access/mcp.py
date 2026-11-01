@@ -319,38 +319,83 @@ def _finest_step(args: dict[str, Any]) -> int:
     return max(1, math.ceil(signals * max(1.0, (end - start).total_seconds()) / MAX_READ_POINTS))
 
 
-def _series_stats(payload: Any) -> Any:
-    """Each series as its statistics (the min and max with the time they were reached)."""
+def _numbers(item: dict[str, Any]) -> list[tuple[Any, float]]:
+    return [
+        (stamp, float(value))
+        for stamp, value in zip(item.get("t") or [], item.get("v") or [], strict=False)
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    ]
+
+
+def _stats_of(pairs: list[tuple[Any, float]]) -> dict[str, Any]:
+    if not pairs:
+        return {"count": 0}
+    values = [value for _, value in pairs]
+    mean = sum(values) / len(values)
+    low = min(pairs, key=lambda pair: pair[1])
+    high = max(pairs, key=lambda pair: pair[1])
+    return {
+        "count": len(pairs),
+        "mean": round(mean, 6),
+        "std": round(math.sqrt(sum((value - mean) ** 2 for value in values) / len(values)), 6),
+        "min": low[1],
+        "min_at": low[0],
+        "max": high[1],
+        "max_at": high[0],
+        "first": pairs[0][1],
+        "last": pairs[-1][1],
+    }
+
+
+def _series_stats(payload: Any, args: dict[str, Any] | None = None) -> Any:
+    """Each series as its statistics (the min and max with the time they were reached). With
+    ``minus``, each asked signal minus the signal at the same place of ``minus``, point by
+    point at the same times, as its statistics plus its mean absolute value: a loop's error is
+    its PV minus its setpoint, which neither series' own statistics give."""
 
     if not isinstance(payload, dict):
         return payload
-    stats = []
-    for item in payload.get("series") or []:
-        pairs = [
-            (stamp, float(value))
-            for stamp, value in zip(item.get("t") or [], item.get("v") or [], strict=False)
-            if isinstance(value, (int, float))
-            and not isinstance(value, bool)
-            and math.isfinite(value)
-        ]
-        entry: dict[str, Any] = {"signal": item.get("signal"), "unit": item.get("unit") or ""}
-        if pairs:
-            low = min(pairs, key=lambda pair: pair[1])
-            high = max(pairs, key=lambda pair: pair[1])
-            entry |= {
-                "count": len(pairs),
-                "mean": round(sum(value for _, value in pairs) / len(pairs), 6),
-                "min": low[1],
-                "min_at": low[0],
-                "max": high[1],
-                "max_at": high[0],
-                "first": pairs[0][1],
-                "last": pairs[-1][1],
-            }
-        else:
-            entry["count"] = 0
-        stats.append(entry)
-    return {**{k: v for k, v in payload.items() if k != "series"}, "series": stats}
+    series = payload.get("series") or []
+    asked = set((args or {}).get("signal_ids") or [item.get("signal") for item in series])
+    stats = [
+        {"signal": item.get("signal"), "unit": item.get("unit") or ""} | _stats_of(_numbers(item))
+        for item in series
+        if item.get("signal") in asked
+    ]
+    shaped = {**{k: v for k, v in payload.items() if k != "series"}, "series": stats}
+    minus = (args or {}).get("minus") or []
+    if minus:
+        by_signal = {item.get("signal"): dict(_numbers(item)) for item in series}
+        found = []
+        for signal, other in zip((args or {}).get("signal_ids") or [], minus, strict=False):
+            left = by_signal.get(signal) or {}
+            right = by_signal.get(other) or {}
+            pairs = [
+                (stamp, value - right[stamp]) for stamp, value in left.items() if stamp in right
+            ]
+            entry = {"signal": signal, "minus": other} | _stats_of(pairs)
+            if pairs:
+                entry["mean_abs"] = round(sum(abs(v) for _, v in pairs) / len(pairs), 6)
+            found.append(entry)
+        shaped["differences"] = found
+    return shaped
+
+
+def _stats_body(args: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
+    """The read signal_stats makes: the signals asked and those ``minus`` names, at the finest
+    step the read allows."""
+
+    asked, minus = list(args["signal_ids"]), list(args.get("minus") or [])
+    if minus and len(minus) != len(asked):
+        raise ValueError("minus must name one signal for each of signal_ids")
+    signals = list(dict.fromkeys(asked + minus))
+    if len(signals) > MAX_SERIES:
+        raise ValueError(
+            f"these statistics need {len(signals)} different signals (at most {MAX_SERIES}): "
+            "split them over several calls"
+        )
+    full = {**args, "signal_ids": signals}
+    return _series_body({**full, "step_seconds": _finest_step(full)})
 
 
 def _series_body(args: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
@@ -482,9 +527,12 @@ TOOLS: tuple[Tool, ...] = (
         "signal_stats",
         "Statistics of a period",
         f"Exact statistics of up to {MAX_SERIES} signals between two times (ISO 8601; default: "
-        "the last 24 h): count, mean, min and max with their times, first and last value. Use "
-        "it for a period's mean, min or max (yesterday, last week): it reads every point the "
-        "history keeps, where read_series averages them.",
+        "the last 24 h): count, mean, standard deviation, min and max with their times, first "
+        "and last value. Use it for a period's mean, min or max (yesterday, last week): it reads "
+        "every point the history keeps, where read_series averages them. With minus (one signal "
+        "for each of signal_ids) it also gives each signal minus its minus point by point, with "
+        "the mean absolute value: a loop's error is its PV minus its setpoint (both lists "
+        f"together at most {MAX_SERIES} different signals).",
         {
             "signal_ids": {
                 "type": "array",
@@ -492,12 +540,17 @@ TOOLS: tuple[Tool, ...] = (
                 "minItems": 1,
                 "maxItems": MAX_SERIES,
             },
+            "minus": {
+                "type": "array",
+                "items": {"type": "string", "maxLength": 400},
+                "maxItems": MAX_SERIES,
+            },
             "start": _text("Start time, ISO 8601.", 40),
             "end": _text("End time, ISO 8601.", 40),
         },
         ("signal_ids",),
-        request=lambda a: _series_body({**a, "step_seconds": _finest_step(a)}),
-        shape=lambda payload, _a: _series_stats(payload),
+        request=_stats_body,
+        shape=lambda payload, a: _series_stats(payload, a),
     ),
     Tool(
         "read_series",

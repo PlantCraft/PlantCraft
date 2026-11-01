@@ -9,6 +9,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- The assistant's period statistics (`signal_stats`) give the standard deviation, and with `minus` a signal minus another point by point with its mean absolute value: a loop's error (PV minus setpoint) in one call, for up to ten loops. Found by the battery's hard questions, where both luna and terra could not rank loops by error from averaged history.
+
 - The assistant's test battery has hard questions: eleven analyses over a nine-loop plant of its own (rank loops by error, a sticky valve, an oscillation's period, a manual period, a level excursion, a drift, long notes, a fact from early in a long chat), and the works as their pages ask them, with the cost per group, to choose a model per use (docs/llm-battery.md).
 
 - **Public demo: an isolated visit saves in Alarms, Analytics and View (`plantcraft-sdk` 0.98.0).**
@@ -27,6 +29,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   until the editors are unlocked.
 
 ### Changed
+
+- A chat longer than the assistant's 30 turns keeps its opening exchange beside its newest turns, so a long chat no longer forgets what it started with (a limit, a unit, a campaign). The battery's hard questions now fail an answer that lists every loop instead of choosing one, and give each works case its tokens.
 
 - **Public demo: a visible 30-minute clock and a 5-minute idle end.** A visit lasts
   `PLANTCRAFT_PUBLIC_DEMO_MINUTES` (30) from its start, whatever its use, with its clock always
