@@ -15,6 +15,7 @@
  * Every shape draws what fits its card: `h` is the card's height in rows (1 to 3).
  */
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { displayScales } from "./displaySize.js";
 import { formatDate, formatNumber } from "./format.js";
 import { seriesVar, statusVar } from "./brandTheme.js";
 import { t } from "./i18n.js";
@@ -393,6 +394,24 @@ export function tileSide(count: number, h: number, groups = 1): number {
   return per > 600 ? 7 : per > 300 ? 9 : per > 120 ? 12 : 16;
 }
 
+/**
+ * The largest square side (8 to 32 px) at which every group fits in a box `width` x `height`:
+ * each group is its name (`label` px tall, none when it has no name) over rows of squares that
+ * fill the width. The squares use the card's room instead of a fixed count per row.
+ */
+export function fitTileSide(groups: Array<{ count: number; named: boolean }>, width: number, height: number, label: number, gap = 3, groupGap = 10): number {
+  if (width <= 0 || height <= 0) return 8;
+  for (let side = 32; side > 8; side -= 1) {
+    const perRow = Math.max(1, Math.floor((width + gap) / (side + gap)));
+    const needed = groups.reduce((total, group, index) => {
+      const rows = Math.ceil(group.count / perRow);
+      return total + (index ? groupGap : 0) + (group.named ? label + 4 : 0) + rows * side + Math.max(0, rows - 1) * gap;
+    }, 0);
+    if (needed <= height) return side;
+  }
+  return 8;
+}
+
 /** A square's detail in the note, one line per part ("Collecting · Feed flow" is two). */
 function tileRows(detail: string): Array<[string, string]> {
   return detail.split(" · ").filter(Boolean).map((part) => ["", part]);
@@ -401,7 +420,23 @@ function tileRows(detail: string): Array<[string, string]> {
 export function TilesBody({ data, h }: { data: Extract<WidgetData, { kind: "tiles" }>; h: number }) {
   const groups = (Array.isArray(data.groups) ? data.groups : []).filter((group) => group && Array.isArray(group.tiles) && group.tiles.length);
   const count = groups.reduce((total, group) => total + group.tiles.length, 0);
-  const side = tileSide(count, h, groups.length);
+  // Measured: the squares grow to fill the room the card has, at every display size.
+  const box = useRef<HTMLDivElement | null>(null);
+  const [room, setRoom] = useState<{ width: number; height: number } | null>(null);
+  useLayoutEffect(() => {
+    const element = box.current;
+    if (!element) return;
+    const measure = () => setRoom((old) => (old && old.width === element.clientWidth && old.height === element.clientHeight ? old : { width: element.clientWidth, height: element.clientHeight }));
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const label = Math.round(16 * displayScales().text);
+  const side = room && h > 1
+    ? fitTileSide(groups.map((group) => ({ count: group.tiles.length, named: Boolean(group.label) })), room.width, room.height, label, 3, Math.round(10 * displayScales().space))
+    : tileSide(count, h, groups.length);
   const states = new Map<string, number>();
   groups.forEach((group) => group.tiles.forEach((tile) => states.set(tile.state ?? "unknown", (states.get(tile.state ?? "unknown") ?? 0) + 1)));
   return <div className="pc-wg-tiles" style={{ ["--pc-wg-tile" as string]: `${side}px` }}>
@@ -410,7 +445,7 @@ export function TilesBody({ data, h }: { data: Extract<WidgetData, { kind: "tile
       {data.label && <span className="pc-wg-label">{data.label}</span>}
     </Linked>}
     {!count && <p className="muted small">{data.empty ?? t("Nothing to show.")}</p>}
-    {count > 0 && <div className="pc-wg-tile-groups">
+    {count > 0 && <div className="pc-wg-tile-groups" ref={box}>
       {groups.map((group, index) => <div key={index} className="pc-wg-tile-group">
         {group.label && <Linked href={group.href} className="pc-wg-tile-name">{group.label}</Linked>}
         <div className="pc-wg-tile-set">

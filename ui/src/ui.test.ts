@@ -10,6 +10,7 @@ import { applyTheme, setTheme, THEME_KEY, themeChoice } from "./theme";
 import { applyDisplaySize, DISPLAY_SIZE_KEY, displaySize, setDisplaySize, textScale } from "./displaySize";
 import { plotFontSize } from "./brandTheme";
 import { gridGap, gridRow } from "./Grid";
+import { fitTileSide } from "./WidgetKinds";
 import { BRAND_COLORS, plotTheme } from "./brandTheme";
 
 /** WCAG contrast of two "#rrggbb" colours. */
@@ -81,10 +82,17 @@ describe("display size", () => {
     expect(textScale()).toBe(1);
   });
 
-  it("grows the card grid's rows with the text and its gaps with the spacing", () => {
+  it("grows the card grid's rows with larger text and keeps them at smaller sizes", () => {
     expect([gridRow(3), gridGap(3)]).toEqual([91, 14]);
     expect([gridRow(1), gridGap(1)]).toEqual([114, 16]);
-    expect([gridRow(5), gridGap(5)]).toEqual([78, 10]);
+    expect([gridRow(5), gridGap(5)]).toEqual([91, 10]);
+  });
+
+  it("fills a card with squares, as big as the room allows", () => {
+    expect(fitTileSide([{ count: 47, named: false }], 600, 200, 16)).toBe(32);
+    expect(fitTileSide([{ count: 47, named: true }, { count: 30, named: true }], 640, 120, 16)).toBeLessThan(32);
+    const side = fitTileSide([{ count: 400, named: false }], 300, 100, 16);
+    expect(side).toBe(8);
   });
 });
 

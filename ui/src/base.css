@@ -559,11 +559,12 @@ a.pc-wg-barrow:hover b { color: var(--pc-primary-text); }
 .pc-wg-columns-keys > span { display: inline-flex; align-items: center; gap: calc(5px * var(--pc-space-scale, 1)); white-space: nowrap; }
 .pc-wg-columns-keys > span > i:not(.pc-wg-key-target) { width: 9px; height: 9px; border-radius: 2px; }
 .pc-wg-tiles { display: flex; flex-direction: column; gap: var(--pc-space-2); height: 100%; min-height: 0; }
-.pc-wg-tile-groups { display: flex; flex-wrap: wrap; gap: calc(10px * var(--pc-space-scale, 1)) calc(18px * var(--pc-space-scale, 1)); align-content: flex-start; min-height: 0; overflow: auto; }
+.pc-wg-tile-groups { flex: 1; display: flex; flex-direction: column; gap: calc(10px * var(--pc-space-scale, 1)); min-height: 0; overflow: auto; }
+.pc-wg-h1 .pc-wg-tile-groups { flex-direction: row; flex-wrap: wrap; }
 .pc-wg-tile-group { display: flex; flex-direction: column; gap: var(--pc-space-1); min-width: 0; max-width: 100%; }
 .pc-wg-tile-name { color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 600; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 a.pc-wg-tile-name:hover { color: var(--pc-primary-text); }
-.pc-wg-tile-set { display: flex; flex-wrap: wrap; gap: calc(3px * var(--pc-space-scale, 1)); max-width: calc(20 * (var(--pc-wg-tile) + 3px)); }
+.pc-wg-tile-set { display: flex; flex-wrap: wrap; gap: 3px; }
 .pc-wg-square { display: block; width: var(--pc-wg-tile); height: var(--pc-wg-tile); border-radius: 2px; }
 a.pc-wg-square:hover, a.pc-wg-square:focus-visible, span.pc-wg-square:hover, span.pc-wg-square:focus-visible { outline: 2px solid var(--pc-text); outline-offset: 1px; }
 /* A mark's hover note (WidgetTip.ts): one for the page, beside the pointer, never clipped by a card. */

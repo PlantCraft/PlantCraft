@@ -4,9 +4,9 @@
  * 2026-10-23: "uma coisa para fazer várias"). Twelve columns of 91 px rows with 14 px gaps (the
  * sizes View's dashboards already used); a cell is { i, x, y, w, h } in those units.
  *
- * A row and a gap are those sizes at the default display size; at another size (user menu) they
- * grow and shrink with the text and the spacing (`gridRow`, `gridGap`), so a card holds what it
- * held at the default instead of cutting it.
+ * A row and a gap are those sizes at the default display size. Larger text grows the rows with
+ * the text (a card never cuts what it held); smaller sizes keep the rows, so cards show more
+ * (`gridRow`, `gridGap`).
  *
  * Dragging and resizing are react-grid-layout's (MIT). On a narrow screen the cells are drawn one
  * under the other, in reading order, and do not move.
@@ -20,9 +20,13 @@ export const GRID_COLUMNS = 12;
 export const GRID_ROW = 91;
 export const GRID_GAP = 14;
 export const GRID_MAX_H = 12;
-/** A row's height in pixels at a display size: it follows the text, which fills the cards. */
+/**
+ * A row's height in pixels at a display size. Larger text grows the rows with the text, so a
+ * card holds what it holds at the default. Smaller text keeps the default's rows: the cards stay
+ * as tall and show more (more list rows, bigger squares), which is what More space is for.
+ */
 export function gridRow(size?: DisplaySize): number {
-  return Math.round(GRID_ROW * displayScales(size).text);
+  return Math.round(GRID_ROW * Math.max(1, displayScales(size).text));
 }
 
 /** The gap between cards in pixels at a display size: it follows the spacing. */
