@@ -7,10 +7,12 @@
 .tc-toolbar { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
 .tc-context { display: flex; flex-direction: column; gap: 3px; }
 .tc-context select { min-width: 160px; max-width: 320px; }
+.tc-variable-picker .pc-overline { display: block; }
+.tc-variable-picker .pc-overline::first-letter { text-transform: uppercase; } /* a variable named "loop" reads as a label */
 
 /* The suite's grid (@plantcraft/ui CardGrid, round 7): 12 columns of 91 px rows; each card has
    its place (x, y) and size, is dragged by its title and resized from its lower right corner. */
-.tc-card { height: 100%; min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; padding: 14px 16px 12px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: var(--pc-shadow-1); }
+.tc-card { height: 100%; min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; padding: 14px 16px 12px; border: 1px solid transparent; border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: var(--pc-shadow-1); }
 .tc-card-editing { border-style: dashed; border-color: var(--pc-border); }
 .tc-card-editing > header.pc-cards-handle { cursor: grab; user-select: none; }
 .tc-card-editing > header.pc-cards-handle:active { cursor: grabbing; }
@@ -330,7 +332,7 @@ body.tc-screen .pcs-content, body.tc-screen .content { max-width: none; padding:
 .tc-report-cover h2 { margin: 6px 0 4px; font: 700 var(--pc-fs-xl, 20px)/1.2 var(--pc-font-display); }
 .tc-report-cover p { margin: 0 0 10px; color: var(--pc-text-2); max-width: 80ch; }
 .tc-report-cover dl { display: flex; flex-wrap: wrap; gap: 6px 28px; margin: 0; }
-.tc-report-cover dt { font-size: var(--pc-fs-xs); color: var(--pc-text-3); text-transform: uppercase; letter-spacing: .04em; }
+.tc-report-cover dt { font-size: var(--pc-fs-xs); color: var(--pc-text-3); }
 .tc-report-cover dd { margin: 2px 0 0; font-size: var(--pc-fs-sm); font-weight: 600; }
 .tc-report-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .tc-report-section { grid-column: 1 / -1; min-width: 0; position: relative; }

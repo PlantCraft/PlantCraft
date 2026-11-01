@@ -161,6 +161,12 @@ neutral greys; **Steel Blue** marks what you can act on; the status hues
 are **reserved for state** and never used for decoration, so an operator's eye
 goes straight to the abnormal.
 
+Three levels (2026-11-01): the **page**, the **card** and the **text**. Card and
+text sit at the most contrast, a white card with near-black text in light and a
+near-black card with near-white text in dark. The page is a calm grey between
+them, mirrored across the themes. Anything that holds text (fields, buttons,
+search, filters, notes) takes the card's colour, never the page's.
+
 ### Brand
 
 | Token | Light | Dark | Use |
@@ -168,10 +174,10 @@ goes straight to the abnormal.
 | `--pc-primary` | `#2E5A88` | `#3D78B6` | Buttons, selection, links |
 | `--pc-primary-hover` | `#264B71` | `#4F88C2` | Hover and pressed |
 | `--pc-primary-text` | `#2B5582` | `#7FA6D1` | Links and accents as text |
-| `--pc-primary-soft` | `#E8EEF5` | `#1C2A3B` | Selected rows, active tabs |
+| `--pc-primary-soft` | `#E8EEF5` | `#1C2A3B` | Selected rows, tags |
 | `--pc-focus` | `#44729F` | `#7FA6D1` | Focus outline |
-| `--pc-chrome-bg` | `#1C1C1E` | `#1C1C1E` | Sidebar (graphite in both themes) |
-| `--pc-chrome-accent` | `#7FA6D1` | `#7FA6D1` | Current page and app in the sidebar |
+| `--pc-chrome-bg` | `#1C1C1E` | `#1C1C1E` | Dark islands: tooltips, toasts, code (the sidebar maps the chrome tokens to the card colours) |
+| `--pc-chrome-accent` | `#7FA6D1` | `#7FA6D1` | Accent on those islands |
 
 Blue is the one hue a control system does not spend on alarms (red, amber,
 yellow) or running state (green), so the brand never competes with a process
@@ -181,16 +187,17 @@ signal.
 
 | Token | Light | Dark |
 | --- | --- | --- |
-| `--pc-bg` (canvas) | `#F5F5F7` | `#000000` |
-| `--pc-surface` (cards, inputs) | `#FFFFFF` | `#1C1C1E` |
-| `--pc-surface-2` (table heads, hover) | `#FAFAFC` | `#232326` |
-| `--pc-surface-3` (tracks, chips) | `#F0F0F3` | `#2C2C2E` |
-| `--pc-border-subtle` | `#E8E8ED` | `#2C2C2E` |
-| `--pc-border` | `#D2D2D7` | `#38383A` |
-| `--pc-text` (headings, values) | `#1D1D1F` | `#F5F5F7` |
-| `--pc-text-2` (body) | `#424245` | `#D2D2D7` |
-| `--pc-text-3` (secondary, AA) | `#636368` | `#98989D` |
-| `--pc-text-4` (quiet text, placeholder, icons; AA since ui 0.52.0) | `#6E6E73` | `#8E8E93` |
+| `--pc-bg` (the page) | `#F5F5F7` | `#1C1C1E` |
+| `--pc-surface` (cards, sidebar, fields, buttons) | `#FFFFFF` | `#0B0B0C` |
+| `--pc-surface-2` (table heads, hover) | `#FAFAFC` | `#111113` |
+| `--pc-surface-3` (tracks, chips) | `#F0F0F3` | `#18181A` |
+| `--pc-border-subtle` | `#EDEDF0` | `#2A2A2D` |
+| `--pc-border` | `#DEDEE3` | `#3A3A3D` |
+| `--pc-hair` (a card's edge) | `rgba(0,0,0,.07)` | `rgba(255,255,255,.07)` |
+| `--pc-text` (headings, values) | `#111113` | `#FAFAFA` |
+| `--pc-text-2` (body) | `#2C2C2E` | `#E5E5EA` |
+| `--pc-text-3` (secondary, AA) | `#55555A` | `#B0B0B5` |
+| `--pc-text-4` (quiet text, placeholder, icons; AA since ui 0.52.0) | `#636368` | `#9A9A9F` |
 
 ### Status
 
@@ -277,8 +284,21 @@ JetBrains Mono for tags and code.
 
 - Radii: 4 · **6 (controls)** · **8 (cards)** · 10 · 14 (dialogs) px.
 - Spacing follows a 4 px grid (`--pc-space-1` … `--pc-space-12`).
-- Screens are flat: cards use a hairline border; only menus and dialogs float
+- Cards have no outline: a hairline edge (`--pc-hair`) and a long soft shadow
+  (`--pc-shadow-1`), 12 px corners. Menus and dialogs float higher
   (`--pc-shadow-3`, `--pc-shadow-4`). No gradients, gloss or relief.
+- One vertical rhythm: 14 px between cards in every direction (`--pc-gap-card`),
+  24 px above a heading that opens a new group (`--pc-gap-group`), 16 px under
+  the title and under the tabs, 8 px between a toolbar and the table it filters.
+- Page tabs are words with a blue underline (not buttons). A choice inside a page
+  (views, periods) is a segmented control (`.segmented`).
+- Tables: a row is two lines, the name and its description cut to one line; the
+  whole text shows on hover. A status in a table is its dot and its word.
+- Labels are sentence case; nothing is written in capitals by CSS.
+- Charts sit on the card's white or black: a quiet horizontal grid, no vertical
+  one, series a step darker in light and lighter in dark. A marked stretch (a
+  check's event, a bad-quality period, an alarm) is a strip in its colour along
+  the top of the plot (`markStrip()`), never a tint over the whole plot.
 - Motion is short and functional (120–260 ms, `--pc-ease`), and is removed
   under `prefers-reduced-motion`.
 - Focus is always visible: a 2 px `--pc-focus` outline or `--pc-focus-ring`.
@@ -287,7 +307,7 @@ JetBrains Mono for tags and code.
 
 Every app draws the same frame (`SuiteShell`, `docs/app-standard.md` section 10):
 
-- **Sidebar**, graphite in both themes. At the top, the app's name opens the
+- **Sidebar**, a card floating on the page, in the card colour of the theme. At the top, the app's name opens the
   **app switcher** (Desk first, the apps in the order they are used, PlantCraft
   last, set apart). Then the app's pages, Help last.
 - At the bottom: the person (their menu), **Messages** (an icon with a red
@@ -301,7 +321,7 @@ Every app draws the same frame (`SuiteShell`, `docs/app-standard.md` section 10)
 Light is the default. Dark follows the operating system, and
 `<html data-theme="dark">` (or `"light"`) overrides it. A subtree can force a
 theme with `data-theme`; the wall-screen dashboard does this with
-`.ac-screen-dark`. The sidebar is graphite in both themes.
+`.ac-screen-dark`. The sidebar follows the theme, like the cards.
 
 ## Voice
 

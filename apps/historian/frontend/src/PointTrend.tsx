@@ -141,7 +141,7 @@ export function PointTrend({ point, signal, tag, period, onPeriod }: { point: Po
   return <div className="panel" data-tour="point-trend">
     <div className="panel-header"><div><h2>{t("Trend")}</h2><p>{what}{" "}
       {!recorded && series?.low ? t("Band: lowest and highest value in each average.") : ""}{" "}
-      {bands.length ? t("Shaded: values whose quality was not good ({count} periods).", { count: bands.length }) : ""}</p></div>
+      {bands.length ? t("The strip on top: values whose quality was not good ({count} periods).", { count: bands.length }) : ""}</p></div>
       <PeriodPicker value={period} onChange={onPeriod} /></div>
     <div className="trend-options">
       <div className="segmented" role="group" aria-label={t("Values")}>

@@ -159,3 +159,20 @@ def test_asking_for_a_text_is_the_suites_dialog():
         if "window.prompt(" in line
     ]
     assert not offenders, "window.prompt in place of askText: " + ", ".join(offenders)
+
+
+def test_labels_are_never_set_in_capitals():
+    """Labels are sentence case (docs/brand.md, 2026-11-01): CSS never turns a label into capitals.
+
+    Capitals read as shouting next to the rest of the page and are slower to read; a word that
+    must start with a capital uses ``::first-letter`` instead.
+    """
+
+    found = [
+        f"{path.relative_to(ROOT)}:{number}"
+        for path in _styles("ui/src", "frontend/src", "apps/*/frontend/src")
+        if path.suffix == ".css"
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if "text-transform: uppercase" in line and "::first-letter" not in line
+    ]
+    assert not found, "labels in capitals: " + ", ".join(found)

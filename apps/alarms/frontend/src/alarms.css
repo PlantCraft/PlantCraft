@@ -83,7 +83,7 @@
 /* Facts of one alarm or rule (owner's review, 2026-10-26): label at the left, the value beside it. */
 .al-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px 24px; margin: 0; }
 .al-facts > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.al-facts dt { font-size: var(--pc-fs-xs); color: var(--pc-text-3); text-transform: uppercase; letter-spacing: .04em; }
+.al-facts dt { font-size: var(--pc-fs-xs); color: var(--pc-text-3); }
 .al-facts dd { margin: 0; overflow-wrap: anywhere; }
 /* Long ids (a signal an app writes) wrap inside their column: the row's buttons stay on screen. */
 .al-wrap { overflow-wrap: anywhere; min-width: 10rem; }

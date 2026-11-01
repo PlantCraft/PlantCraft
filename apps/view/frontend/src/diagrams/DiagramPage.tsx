@@ -71,14 +71,14 @@ function TimeBar({ data, window, onWindow, cursor, onCursor, end, onEnd, playbac
   return <div className="dg-timebar" role="group" aria-label={t("Time")}>
     <div className="dg-timebar-row">
       <span className="dg-timebar-label">{t("Period")}</span>
-      <div className="dg-segmented" role="radiogroup" aria-label={t("Period")}>
-        {WINDOWS.map((item) => <button key={item} type="button" role="radio" aria-checked={window === item} className={window === item ? "dg-on" : ""}
+      <div className="segmented" role="radiogroup" aria-label={t("Period")}>
+        {WINDOWS.map((item) => <button key={item} type="button" role="radio" aria-checked={window === item} className={window === item ? "on" : ""}
           onClick={() => onWindow(item)} title={t("The values of the last {span}", { span: windowLabel(item) })}>{windowLabel(item)}</button>)}
       </div>
       <span className="dg-timebar-label">{t("ending")}</span>
-      <div className="dg-segmented" role="radiogroup" aria-label={t("Ending")}>
-        <button type="button" role="radio" aria-checked={end === null} className={end === null ? "dg-on" : ""} onClick={() => { setPlaying(false); onCursor(null); onEnd(null); }}>{t("Now")}</button>
-        <button type="button" role="radio" aria-checked={end !== null} className={end !== null ? "dg-on" : ""}
+      <div className="segmented" role="radiogroup" aria-label={t("Ending")}>
+        <button type="button" role="radio" aria-checked={end === null} className={end === null ? "on" : ""} onClick={() => { setPlaying(false); onCursor(null); onEnd(null); }}>{t("Now")}</button>
+        <button type="button" role="radio" aria-checked={end !== null} className={end !== null ? "on" : ""}
           onClick={() => { if (end === null) { setPlaying(false); onCursor(null); onEnd(new Date(Date.now() - 86_400_000).toISOString()); } }}>{t("At a date")}</button>
       </div>
       {end !== null && <input type="datetime-local" aria-label={t("Period ends")} value={localOf(end)}
