@@ -39,8 +39,26 @@ def window_of(text: str | None, default: str = "24h") -> timedelta:
         raise HTTPException(422, str(exc)) from exc
 
 
-def summary(rt: Runtime, alarm: dict[str, Any]) -> dict[str, Any]:
-    """An alarm as the pages show it: its configuration, its state and its status."""
+def rule_names(rt: Runtime) -> dict[str, str | None]:
+    """Every rule's name by id, read once for a list of alarms (one read per alarm opened a
+    database connection each: 2,194 alarms and 30 people ran out of them, pc-carga 2026-11-01)."""
+
+    return {rule["rule_id"]: rule.get("name") for rule in rt.rules.list()}
+
+
+def summary(
+    rt: Runtime, alarm: dict[str, Any], names: dict[str, str | None] | None = None
+) -> dict[str, Any]:
+    """An alarm as the pages show it: its configuration, its state and its status. ``names``:
+    the rules' names (``rule_names``) when summing up many alarms."""
+
+    rule_id = alarm.get("rule_id")
+    if not rule_id:
+        rule_name = None
+    elif names is not None:
+        rule_name = names.get(rule_id)
+    else:
+        rule_name = (rt.rules.get(rule_id) or {}).get("name")
 
     state = alarm.get("state") or {}
     draft = None
@@ -74,9 +92,7 @@ def summary(rt: Runtime, alarm: dict[str, Any]) -> dict[str, Any]:
         "unit": state.get("unit") or "",
         "message": state.get("message") or "",
         "members_active": list(state.get("members_active") or []),
-        "rule_name": (rt.rules.get(alarm["rule_id"]) or {}).get("name")
-        if alarm.get("rule_id")
-        else None,
+        "rule_name": rule_name,
         "last_summary": state.get("last_summary") or "",
         "severity": state.get("severity"),
         "schedule_id": state.get("schedule_id"),
@@ -118,7 +134,8 @@ def _close_open(rt: Runtime, alarm: dict[str, Any], why: str, by: str) -> None:
 @router.get("/alarms")
 def list_alarms(rt: RuntimeDep, user: CurrentUser) -> list[dict[str, Any]]:
     alarms = seen(rt.asset_scope(user), rt.alarms.list())
-    return mark_mine(rt, [summary(rt, alarm) for alarm in alarms], user.username)
+    names = rule_names(rt)
+    return mark_mine(rt, [summary(rt, alarm, names) for alarm in alarms], user.username)
 
 
 @router.get("/alarms/{alarm_id}")
