@@ -19,7 +19,7 @@
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.8",
     "@lezer/highlight": "^1.2.5",
-    "@plantcraft/ui": "file:../vendor/plantcraft-ui-0.108.0.tgz",
+    "@plantcraft/ui": "file:../vendor/plantcraft-ui-0.109.0.tgz",
     "@xyflow/react": "^12.12.0",
     "lucide-react": "^0.468.0",
     "plotly.js-cartesian-dist-min": "^3.7.0",

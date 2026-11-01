@@ -26,7 +26,7 @@ image = "histcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.104.0"
+sdk = "0.105.0"
 asset_types = []
 roles = {}
 

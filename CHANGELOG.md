@@ -9,7 +9,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
-- **Spanish (SDK 0.104.0, ui 0.108.0).** The whole suite in Spanish (`es`) next to Brazilian
+- **Spanish (SDK 0.105.0, ui 0.109.0).** The whole suite in Spanish (`es`) next to Brazilian
   Portuguese: every catalog of the platform, the shared components, the SDK, the six apps and the
   template, the help of every app, Analytics' method pages and guides, and the platform's guides
   (`docs/es/`). Its words follow docs/translations-glossary-es.md. The language picker offers
