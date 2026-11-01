@@ -36,6 +36,7 @@ GROUPS = {
     "quality": "8. Quality",
     "cost": "9. Cost abuse",
     "load": "10. Load",
+    "works": "11. Works as their pages ask them (ask and create, as an administrator)",
 }
 
 # What the demo plan sets (docs/llm-battery.md); front A puts them in code.

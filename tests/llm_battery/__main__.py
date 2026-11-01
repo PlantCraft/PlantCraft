@@ -108,6 +108,8 @@ def main(argv: list[str] | None = None) -> int:
         results = run_cases(battery, groups or None, log)
         if not groups or "quality" in groups:
             results += run_quality(battery, log)
+        if not groups or "works" in groups:
+            results += run_quality(battery, log, suite="works")
         load = None
         if not groups or "load" in groups:
             before = ObedientModel.latency
