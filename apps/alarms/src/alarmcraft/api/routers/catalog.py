@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 
 from alarmcraft.alarms.philosophy import PhilosophyDraft
-from alarmcraft.api.deps import CurrentUser, EditorUser, RuntimeDep
+from alarmcraft.api.deps import CurrentUser, EditorUser, EditorView, RuntimeDep
 from alarmcraft.api.runtime import Runtime
 from alarmcraft.i18n import t
 from alarmcraft.monitor.suggest import counting_rules, suggested_rule
@@ -36,7 +36,7 @@ def event_catalog(rt: RuntimeDep, _user: CurrentUser) -> dict[str, Any]:
 
 @router.get("/rules/from-catalog")
 def rule_from_catalog(
-    rt: RuntimeDep, _user: EditorUser, kind: str = Query(min_length=3, max_length=200)
+    rt: RuntimeDep, _user: EditorView, kind: str = Query(min_length=3, max_length=200)
 ) -> dict[str, Any]:
     """A new rule filled in from a declared event and the rule its app suggests."""
 

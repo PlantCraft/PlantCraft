@@ -71,7 +71,7 @@ export function AlarmsView({ section, read, tick }: { section: Section; read: ()
       </table>
       <h4>{t("Most frequent alarms")}</h4>
       {reading.top.length ? <table className="tc-report-table">
-        <thead><tr><th className="pc-num">#</th><th>{t("Alarm")}</th><th>{t("Priority")}</th><th className="pc-num">{t("Raised")}</th><th className="pc-num">{t("Share")}</th></tr></thead>
+        <thead><tr><th className="pc-num">#</th><th>{t("Alarm name")}</th><th>{t("Priority")}</th><th className="pc-num">{t("Raised")}</th><th className="pc-num">{t("Share")}</th></tr></thead>
         <tbody>{reading.top.map((row, index) => <tr key={row.alarm_id}>
           <td className="pc-num">{index + 1}</td>
           <td>{row.name}{row.chattering && <small className="muted"> ({t("chattering")})</small>}</td>
@@ -100,7 +100,7 @@ export function AlarmsView({ section, read, tick }: { section: Section; read: ()
       {reading.unacked > 0 && <small className="muted">{t("{n} alarms of the period are not acknowledged yet.", { n: reading.unacked })}</small>}
       <h4>{t("Fleeting alarms")}</h4>
       {reading.fleeting.length ? <table className="tc-report-table">
-        <thead><tr><th>{t("Alarm")}</th><th className="pc-num">{t("Times")}</th></tr></thead>
+        <thead><tr><th>{t("Alarm name")}</th><th className="pc-num">{t("Times")}</th></tr></thead>
         <tbody>{reading.fleeting.map((row) => <tr key={row.alarm_id}><td>{row.name}</td><td className="pc-num">{row.count}</td></tr>)}</tbody>
       </table> : <p className="muted">{t("None: every alarm stayed long enough to be read.")}</p>}
       {data.at && <small className="muted">{t("Published by Alarms {when}.", { when: short(data.at) })}</small>}

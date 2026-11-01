@@ -121,6 +121,23 @@ def test_viewers_read_but_never_act(runtime, fake, client):
         assert anonymous.get("/api/alarms").status_code == 401
 
 
+def test_a_public_demo_visit_reads_the_editors_pickers_but_saves_nothing(runtime, fake, client):
+    # The visitor is shown the editors (plantcraft_sdk.server.demo): the Rules and Targets pages
+    # and the rule editor ask for the asset and signal pickers, which answer instead of a 403 in
+    # the console (suite journey test_11); every save stays refused. A reader still gets 403.
+    make_rule(client, high())
+    visit = {"visit": "v1", "ends": 4102444800, "queries": 4, "queries_total": 8}
+    with client_for(runtime, fake, None) as visitor:
+        visitor.headers["Authorization"] = f"Bearer {fake.token('operator', demo=visit)}"
+        assert visitor.get("/api/assets").status_code == 200
+        assert visitor.get("/api/signals?q=FIC").status_code == 200
+        refused = visitor.post("/api/rules", json=high())
+        assert refused.status_code == 403 and "nothing is saved" in refused.json()["detail"]
+    with client_for(runtime, fake, "operator") as viewer:
+        assert viewer.get("/api/assets").status_code == 403
+        assert viewer.get("/api/signals?q=FIC").status_code == 403
+
+
 def test_a_cycle_raises_records_and_publishes(runtime, fake, client):
     alarm_id = make_rule(client, high())["rule_id"]
     counts = client.post("/api/run").json()

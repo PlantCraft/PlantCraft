@@ -312,6 +312,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- Tests: the network guard of `tests/conftest.py` lets the suite journeys reach the installation `PLANTCRAFT_SUITE_URL` names. Since the visitor fixture asks `/api/session` from Python, `make e2e-suite` against a host name was refused before any journey ran.
 - **The suite's journeys on an installation without the public demo.** `tests/e2e_suite` walked
   the visitor's journeys only through "Enter the demo", so on a `--demo` install 13 of 15 failed.
   They now read `GET /api/session` first and skip, saying to install with `--public-demo`.

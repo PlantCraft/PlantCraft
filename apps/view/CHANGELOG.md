@@ -69,6 +69,7 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- The report's alarm performance tables head their first column "Alarm name": "Alarm" alone is a retired level word in View (docs/glossary.md).
 - A report's event tables scroll inside their section on a phone instead of pushing the page sideways.
 - Colours and shadows named after tokens that do not exist use the suite's tokens, so they follow
   the dark theme.

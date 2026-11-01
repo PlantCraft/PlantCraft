@@ -31,6 +31,7 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- A public demo visit opening Rules, Targets or a rule's editor no longer gets a 403 in the console: the asset and signal pickers and a rule filled in from an event or the catalogue answer the visitor, as View's editors do, while every save stays refused (suite journey `test_11`).
 - **A read-only visitor opening a rule no longer gets a 403 in the console.** The rule editor shows the read-only notice without asking for the assets, types and monitors that only editors may read.
 - The flood count reads only the last minutes of the outbox (index on its time): 0.08 ms a person instead of 4 to 15 ms with 30 days and 300,000 notices, on every notifier cycle during a flood.
 - A new rule no longer asks the server for its sentence before its first condition is complete

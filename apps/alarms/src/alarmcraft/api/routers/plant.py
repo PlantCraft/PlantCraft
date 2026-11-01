@@ -8,7 +8,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from plantcraft_sdk.server.picker import signal_choices
 
-from alarmcraft.api.deps import CurrentUser, EditorUser, RuntimeDep, guarded
+from alarmcraft.api.deps import CurrentUser, EditorView, RuntimeDep, guarded
 from alarmcraft.api.routers.alarms import summary
 from alarmcraft.api.scope import seen
 from alarmcraft.i18n import t
@@ -20,7 +20,7 @@ MAX_ASSETS = 500
 @router.get("/assets")
 def list_assets(
     rt: RuntimeDep,
-    user: EditorUser,
+    user: EditorView,
     kind: str | None = Query(default=None, max_length=60),
     q: str = Query(default="", max_length=120),
 ) -> list[dict[str, Any]]:
@@ -51,7 +51,7 @@ def list_assets(
 @router.get("/signals")
 def list_signals(
     rt: RuntimeDep,
-    user: EditorUser,
+    user: EditorView,
     q: str = Query(default="", max_length=120),
     limit: int = Query(default=30, ge=1, le=200),
 ) -> list[dict[str, Any]]:
