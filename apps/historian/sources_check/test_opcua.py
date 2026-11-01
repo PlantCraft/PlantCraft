@@ -55,3 +55,46 @@ def test_the_simulator_is_browsed_collected_and_read_back(historian, tmp_path):
         times, values = next(iter(history.values()))
         assert len(times) >= 2 and list(times) == sorted(times)
         assert all(0 <= value <= 1000 for value in values)
+
+
+def test_the_simulator_reports_changes_to_a_subscribed_source(historian, tmp_path):
+    """H4: the same loops with ``subscribe`` on: the Simulator reports each change, nothing is
+    read on a scan, and the values are the plant's."""
+
+    endpoint = f"opc.tcp://127.0.0.1:{free_port()}/plantcraft/"
+    server = OpcUaPlantServer(
+        endpoint=endpoint,
+        history_db=tmp_path / "history.sqlite3",
+        history_hours=0.05,
+        sample_seconds=1.0,
+    )
+    with Background(server.start, server.stop, timeout=60):
+        source = SourceIn(
+            id="sim",
+            name="Simulator",
+            endpoint=endpoint,
+            namespace_uri=NAMESPACE_URI,
+            options={"subscribe": True},
+        )
+        points = [
+            PointIn(
+                tag=tag,
+                source_id="sim",
+                address=f"ns=2;s=Plant.ControlLoops.{tag}",
+                scan_seconds=0.5,
+            )
+            for tag in [*TAGS, "FIC-101.MODE"]
+        ]
+        historian.add(source, points)
+        historian.thread.start()
+        wait(lambda: historian.status("sim").get("reading") == "subscription", what="subscribed")
+        assert historian.status("sim")["monitored"] == len(points)
+        for tag, (low, high) in TAGS.items():
+            value = wait(lambda t=tag: historian.snapshot(f"sim:{t}"), what=f"sim:{tag}")
+            assert low <= value <= high, (tag, value)
+        # Changes and held values keep coming (a held value is taken every scan period).
+        point = historian.point("sim:FIC-101.PV")
+        reads = lambda: (historian.archive.snapshots([point]).get(point) or {}).get("reads", 0)  # noqa: E731
+        before = reads()
+        time.sleep(3)
+        assert reads() >= before + 4

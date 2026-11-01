@@ -337,6 +337,8 @@ function SourceForm({ initial, create, onClose, onSaved }: { initial: Source; cr
         {draft.kind === "opcua" && <>
           <label>{t("Endpoint")}<input {...field("endpoint")} /><small>{t("opc.tcp://host:port/path")}</small></label>
           <label>{t("Namespace URI (optional)")}<input {...field("namespace_uri")} /><small>{t("Browse only this namespace.")}</small></label>
+          <label className="check field-span"><input type="checkbox" checked={draft.options.subscribe === true} onChange={(event) => setDraft({ ...draft, options: { ...draft.options, subscribe: event.target.checked } })} />{t("Subscribe to changes")}
+            <small>{t("The server reports each change, sampled at the signal's scan period, instead of a Read every scan. Historian only monitors values; it changes nothing on the server. Off: a Read every scan.")}</small></label>
           {passwordFields}
           <label>{t("Security")}<select value={secureMode} onChange={(event) => setDraft({ ...draft, options: { ...draft.options, security_mode: event.target.value } })}>
             {Object.entries(SECURITY_MODES).map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}

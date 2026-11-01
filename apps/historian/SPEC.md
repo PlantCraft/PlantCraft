@@ -28,7 +28,7 @@ SCADA and IIoT platforms. Sources are public only (clean room, see AGENTS.md).
 | Collection | Per signal: read from the source, archive here, or both | | done (archive for OPC UA only, G15) | `tests/test_api.py` |
 | Archive | Series computed by apps stored as derived signals, with subject and result | app standard | done | `tests/test_api.py` |
 | Collection | Browse a server and pick points, with units and ranges | Part 4, Part 8 | done | `tests/test_collector.py` |
-| Collection | Subscriptions (report by exception from the server) | Part 4 | missing (polling only) | |
+| Collection | Subscriptions (report by exception from the server), opt-in per source (`subscribe`); a Read every scan by default | Part 4 | done | `tests/test_collector.py`, `sources_check/test_opcua.py` |
 | Collection | Bad quality and lost connections recorded, never bridged | | done | `tests/test_collector.py`, `tests/test_compression.py` |
 | Collection | Store and forward when the archive is unreachable (edge buffering) | | missing | |
 | Collection | Other protocols through the gateway (Telegraf): MQTT, Modbus TCP, SQL | | done (OPC DA still missing) | `tests/test_gateway.py` |

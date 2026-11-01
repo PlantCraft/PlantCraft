@@ -187,6 +187,9 @@ SOURCE_OPTIONS: dict[str, dict[str, Any]] = {
         "security_mode": "None",
         "security_policy": "Basic256Sha256",
         "server_thumbprint": "",
+        # Subscriptions instead of a Read every scan (H4, the maintainer's decision of
+        # 2026-11-01): the server reports changes. Off by default; the scan stays the default.
+        "subscribe": False,
     },
     # A file or a pattern in one folder (/csv/lims/*.csv), checked every check_minutes.
     "csv": {"timezone": "UTC", "check_minutes": 5.0},
@@ -347,6 +350,7 @@ class SourceIn(BaseModel):
             if pinned and not _THUMBPRINT.match(pinned):
                 raise ValueError(t("server_thumbprint is a SHA-256 in AB:CD:... form."))
             self.options["server_thumbprint"] = pinned
+            self.options["subscribe"] = bool(self.options["subscribe"])
         elif self.kind == "pi_web_api":
             if not self.endpoint.startswith("https://"):
                 raise ValueError(t("A PI Web API address starts with https://"))

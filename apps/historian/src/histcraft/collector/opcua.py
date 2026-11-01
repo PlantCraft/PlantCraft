@@ -1,9 +1,13 @@
 """Reading an OPC UA server: values, browsing and a connection test. Nothing else.
 
 This is the only module of HistCraft that talks to a plant server. It uses the
-OPC UA services Read, Browse and the namespace array lookup only;
-``tests/test_read_only.py`` fails if any write service (Write, Call,
-HistoryUpdate, AddNodes, DeleteNodes...) appears in the code.
+OPC UA services Read, Browse and the namespace array lookup, and, for a source that opts in
+(option ``subscribe``, the maintainer's decision of 2026-11-01, H4), a subscription with
+monitored items on the Value attribute: the server then reports changes instead of being read
+every scan. A subscription lives in Historian's own session and goes with it; it changes no
+value, node or setting of the plant. ``tests/test_read_only.py`` fails if any write service
+(Write, Call, HistoryUpdate, AddNodes, DeleteNodes...) appears in the code, and if a
+subscription appears anywhere but here.
 """
 
 from __future__ import annotations
@@ -11,6 +15,7 @@ from __future__ import annotations
 import math
 import re
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +33,8 @@ _NODE_ID = re.compile(r"^(ns=\d+;|nsu=[^;]+;)?[isgb]=")
 # Browsing stops after this many variables (a large DCS server has hundreds of thousands).
 BROWSE_LIMIT = 20_000
 BROWSE_DEPTH = 8
+# Monitored items created per request (a server limits a request's size).
+MONITOR_BATCH = 500
 
 
 def _plain(value: Any) -> Any:
@@ -67,6 +74,9 @@ class OpcUaReader:
         self.client: Client | None = None
         self._nodes: dict[str, Any] = {}
         self._last_source_ms: dict[str, int] = {}
+        # Subscribed addresses by node id (``subscribe``), and where their changes go.
+        self._monitored: dict[Any, list[str]] = {}
+        self._on_change: Callable[[str, Reading], None] | None = None
 
     async def connect(self) -> None:
         client = Client(url=self.source["endpoint"], timeout=self.timeout)
@@ -99,7 +109,66 @@ class OpcUaReader:
             self.timeout,
         )
 
+    async def subscribe(
+        self, groups: dict[float, list[str]], on_change: Callable[[str, Reading], None]
+    ) -> dict[str, Reading]:
+        """Monitor each address's value, sampled and published every ``period`` seconds (its
+        group); each change goes to ``on_change``. Returns the addresses the server refused (or
+        that are malformed), with why, for the caller to read on a scan instead."""
+
+        assert self.client is not None
+        self._on_change = on_change
+        refused: dict[str, Reading] = {}
+        for period, addresses in sorted(groups.items()):
+            valid = []
+            for address in addresses:
+                try:
+                    self._node(address)
+                    valid.append(address)
+                except Exception as exc:  # noqa: BLE001 - the point's problem, not the source's
+                    refused[address] = Reading(
+                        _now_ms(), None, False, t("Invalid address: {e}", e=exc)
+                    )
+            if not valid:
+                continue
+            interval = max(float(period), 0.05) * 1000
+            subscription = await self.client.create_subscription(interval, _Changes(self))
+            for offset in range(0, len(valid), MONITOR_BATCH):
+                part = valid[offset : offset + MONITOR_BATCH]
+                nodes = [self._node(address) for address in part]
+                for address, node in zip(part, nodes, strict=True):
+                    self._monitored.setdefault(node.nodeid, []).append(address)
+                results = await subscription.subscribe_data_change(
+                    nodes, queuesize=1, sampling_interval=interval
+                )
+                results = results if isinstance(results, list) else [results]
+                for address, result in zip(part, results, strict=True):
+                    if isinstance(result, ua.StatusCode):
+                        name = getattr(result, "name", "") or "Bad"
+                        refused[address] = Reading(_now_ms(), None, False, name, "bad")
+        return refused
+
+    def changed(self, node: Any, data: Any) -> None:
+        """A monitored value changed (``_Changes``): a reading at each of its addresses."""
+
+        value = getattr(getattr(data, "monitored_item", None), "Value", None)
+        if value is None or self._on_change is None:
+            return
+        read_ms = _now_ms()
+        for address in self._monitored.get(node.nodeid, []):
+            self._on_change(address, self._reading(address, value, read_ms))
+
+    async def alive(self) -> None:
+        """Raise when the server stopped answering (a subscription alone says nothing)."""
+
+        assert self.client is not None
+        await self.client.check_connection()
+        # The server's state (ServerStatus.State, i=2259): one Read, as any scan makes.
+        await self.client.get_node(ua.NodeId(ua.ObjectIds.Server_ServerStatus_State)).read_value()
+
     async def close(self) -> None:
+        self._monitored.clear()
+        self._on_change = None
         client, self.client = self.client, None
         if client is not None:
             try:
@@ -314,3 +383,16 @@ def _subcode_name(code: int | None) -> str:
         return str(ua.StatusCode(subcode(code)).name)
     except Exception:  # noqa: BLE001 - a code the library does not name
         return f"0x{subcode(code):08X}"
+
+
+class _Changes:
+    """asyncua's handler of a subscription's data changes."""
+
+    def __init__(self, reader: OpcUaReader):
+        self.reader = reader
+
+    def datachange_notification(self, node: Any, _value: Any, data: Any) -> None:
+        self.reader.changed(node, data)
+
+    def status_change_notification(self, _status: Any) -> None:
+        return None

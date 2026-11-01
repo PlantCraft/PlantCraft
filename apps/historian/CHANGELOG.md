@@ -8,6 +8,12 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **OPC UA subscriptions, opt-in per source** (gap H4): with *Subscribe to changes* on (option
+  `subscribe`), the collector creates a subscription in its own session and the server reports
+  each change of a signal's value, sampled at its scan period, instead of a Read every scan. A
+  value that holds is taken again every scan period, so compression and the longest interval
+  work as before; a node the server will not monitor is read on its scan. The source's state says
+  how many signals are monitored and scanned. Off by default: a Read every scan stays the default.
 - **Sparkplug B sources**, read only. The collector subscribes to an MQTT broker as a host that
   only listens (births, data and deaths of one group or all) and never publishes: no STATE, no
   commands, never a rebirth request. Each metric a birth (NBIRTH, DBIRTH) describes is added as a

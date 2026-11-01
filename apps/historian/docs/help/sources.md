@@ -49,6 +49,11 @@ change or remove sources.
   a folder**: it is listed here too, marked **Repeats**.
 - An app merged into another (Twin, CPMCraft and DataCraft into Analytics) shows "App retired":
   nothing writes its series any more, and an admin may remove it with its signals.
+- **Subscribe to changes** (OPC UA, off by default): the server reports each change, sampled
+  at the signal's scan period, instead of Historian reading every scan. A value that holds is
+  taken again every scan period, so compression works as with a scan. A node the server will
+  not monitor is read every scan instead. Historian only monitors values; it changes nothing on
+  the server.
 - **Browse** lists the server's variables with their units and ranges, so you can add many
   signals at once. Signals already archived are marked. Leave scan and deviation empty to use
   the source's or the general settings; a variable the server gives no range for is then
