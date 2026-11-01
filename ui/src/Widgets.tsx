@@ -20,7 +20,9 @@ import { Check, ChevronDown, GripVertical, LoaderCircle, Plus, RotateCcw, Settin
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { AppMark } from "./Brand.js";
 import { appIdFor, appLabel } from "./appMarks.js";
-import { bottom, CardGrid, fitCell, freePlace, GRID_COLUMNS, GRID_GAP, GRID_ROW, packCells, readingOrder, type GridCell } from "./Grid.js";
+import { bottom, CardGrid, fitCell, freePlace, GRID_COLUMNS, gridGap, gridRow, packCells, readingOrder, type GridCell } from "./Grid.js";
+import { displayScales } from "./displaySize.js";
+import { useDisplaySize } from "./useDisplaySize.js";
 import { t } from "./i18n.js";
 import type { SuiteApp } from "./SuiteShell.js";
 import { WidgetBody, type WidgetData } from "./WidgetKinds.js";
@@ -93,22 +95,24 @@ export const STANDARD_SIZES: Record<WidgetSize, WidgetSizeChoice[]> = {
 const STANDARD_DEFAULT: Record<WidgetSize, WidgetSizeChoice> = { s: { w: 3, h: 2 }, m: { w: 6, h: 3 }, l: { w: 12, h: 3 } };
 const SIZE_NAMES = ["Small", "Medium", "Large"];
 
-/** A card's height in pixels, `h` rows high. */
+/** A card's height in pixels, `h` rows high, at the display size in effect. */
 export function cardPixels(h: number): number {
-  return h * GRID_ROW + (h - 1) * GRID_GAP;
+  return h * gridRow() + (h - 1) * gridGap();
 }
 
 /** The height in pixels a widget draws in, in a card `h` rows high (the card less its padding
  * and its title). */
 export function bodyPixels(h: number): number {
-  return h <= 1 ? cardPixels(1) - 42 : cardPixels(h) - 66;
+  const text = displayScales().text;
+  return h <= 1 ? cardPixels(1) - Math.round(42 * text) : cardPixels(h) - Math.round(66 * text);
 }
 
 /** How many list rows fit in a card `h` rows high (a row is a name and a line below it, with
  * "See all" under them). A one-row card holds a number, not a list. */
 export function listRows(h: number): number {
   if (h <= 1) return 1;
-  return Math.max(1, Math.floor((bodyPixels(h) - 26) / 44));
+  const text = displayScales().text;
+  return Math.max(1, Math.floor((bodyPixels(h) - 26 * text) / (44 * text)));
 }
 
 function validSize(raw: unknown): WidgetSizeChoice | null {
@@ -322,6 +326,7 @@ function PickField({ url, label, config, onChange }: { url: string; label: strin
 }
 
 function RemoteWidget({ item, w, h, config }: { item: WidgetDef; w: number; h: number; config?: WidgetConfig }) {
+  useDisplaySize(); // how many rows fit follows the display size
   const [data, setData] = useState<WidgetData | null>(null);
   const [failed, setFailed] = useState(false);
   const url = widgetDataUrl(item, config);
@@ -361,12 +366,12 @@ export type WidgetBoardProps = {
 
 /** A column's width in pixels on a board `width` wide (the 12 columns and their gaps). */
 export function columnPixels(width: number): number {
-  return Math.max(40, (width - (GRID_COLUMNS - 1) * GRID_GAP) / GRID_COLUMNS);
+  return Math.max(40, (width - (GRID_COLUMNS - 1) * gridGap()) / GRID_COLUMNS);
 }
 
 /** A card's width in pixels, `w` columns wide, on a board whose columns are `column` wide. */
 export function cardWidth(w: number, column: number): number {
-  return w * column + (w - 1) * GRID_GAP;
+  return w * column + (w - 1) * gridGap();
 }
 
 /** A board's width the previews assume (a laptop's page beside the menu). */
@@ -394,6 +399,7 @@ export function WidgetCard({ def, title, config, w, h, editing = false, setConfi
   /** The title's own element (a board's drag handle). */
   head?: (title: ReactNode) => ReactNode; tools?: ReactNode; mark?: ReactNode; fold?: { folded: boolean; toggle: () => void };
 }) {
+  useDisplaySize(); // the rows a list shows (listRows) follow the display size
   const settings = config ?? def.defaultConfig ?? {};
   // A widget about one picked thing is titled by it, unless the person named the card.
   const name = title || (def.pick && typeof settings.label === "string" && settings.label ? settings.label : def.title);

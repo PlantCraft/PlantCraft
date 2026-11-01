@@ -14,7 +14,7 @@
  *
  * Every shape draws what fits its card: `h` is the card's height in rows (1 to 3).
  */
-import { useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { formatDate, formatNumber } from "./format.js";
 import { seriesVar, statusVar } from "./brandTheme.js";
 import { t } from "./i18n.js";
@@ -80,9 +80,41 @@ export function NumberBody({ data }: { data: Extract<WidgetData, { kind: "number
   </Linked>;
 }
 
+/**
+ * How many of `rows` list rows fit in the card body around `list`, measured as drawn: the rows are
+ * estimated from the card's height (`listRows`), then the last ones are dropped while the body
+ * still overflows. A row is never cut, at any display size; a resize measures again.
+ */
+function useRowsThatFit(list: RefObject<HTMLDivElement | null>, rows: number): number {
+  const [shown, setShown] = useState(rows);
+  useEffect(() => setShown(rows), [rows]);
+  useLayoutEffect(() => {
+    const body = list.current?.closest(".pc-wg-body") ?? list.current?.parentElement;
+    if (!body || shown <= 1) return;
+    if (body.scrollHeight > body.clientHeight + 1) setShown(shown - 1);
+  });
+  useEffect(() => {
+    const body = list.current?.closest(".pc-wg-body");
+    if (!body || typeof ResizeObserver === "undefined") return;
+    let width = body.clientWidth;
+    let height = body.clientHeight;
+    const observer = new ResizeObserver(() => {
+      if (body.clientWidth === width && body.clientHeight === height) return;
+      width = body.clientWidth;
+      height = body.clientHeight;
+      setShown(rows); // measure again from the estimate
+    });
+    observer.observe(body);
+    return () => observer.disconnect();
+  }, [list, rows]);
+  return Math.min(shown, rows);
+}
+
 export function ListBody({ data, rows }: { data: Extract<WidgetData, { kind: "list" }>; rows: number }) {
-  const items = Array.isArray(data.items) ? data.items.slice(0, rows) : [];
-  return <div className="pc-wg-list">
+  const list = useRef<HTMLDivElement | null>(null);
+  const fit = useRowsThatFit(list, rows);
+  const items = Array.isArray(data.items) ? data.items.slice(0, fit) : [];
+  return <div className="pc-wg-list" ref={list}>
     {!items.length && <p className="muted small">{data.empty ?? t("Nothing to show.")}</p>}
     {items.map((row, index) => <Linked key={index} href={row.href} className="pc-wg-row"
       tip={tipProps({ title: row.label, group: row.detail, color: row.state ? statusVar(row.state) : null, rows: row.value !== null && row.value !== undefined ? [["", shown(row.value)]] : [] }, true)}>

@@ -59,12 +59,29 @@ export function setDisplaySize(size: DisplaySize) {
   }
   applyDisplaySize(size);
   window.dispatchEvent(new CustomEvent("plantcraft-ui:display-size", { detail: size }));
+  // Widgets that measure themselves (calendars, charts, the card grid) do it again on a resize.
+  window.dispatchEvent(new Event("resize"));
 }
 
 /** Apply now and follow changes made in another tab or app. */
 export function initDisplaySize() {
   applyDisplaySize();
   window.addEventListener("storage", (event) => {
-    if (event.key === DISPLAY_SIZE_KEY) applyDisplaySize();
+    if (event.key !== DISPLAY_SIZE_KEY) return;
+    applyDisplaySize();
+    window.dispatchEvent(new Event("resize"));
   });
+}
+
+/** The step in effect now (from <html data-size>), for code that sizes things in pixels. */
+export function currentDisplaySize(): DisplaySize {
+  if (typeof document === "undefined") return DEFAULT_DISPLAY_SIZE;
+  const step = Number(document.documentElement.dataset.size);
+  return isSize(step) ? step : DEFAULT_DISPLAY_SIZE;
+}
+
+/** The scales of the step in effect: `text` for type, `space` for padding and gaps. */
+export function displayScales(size: DisplaySize = currentDisplaySize()): { text: number; space: number } {
+  const found = DISPLAY_SIZES.find((item) => item.value === size) ?? DISPLAY_SIZES[2];
+  return { text: found.text, space: found.space };
 }

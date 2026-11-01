@@ -1,6 +1,6 @@
 /** Pure helpers of the dashboard page: card defaults, labels, formatting, layout moves. */
 import { APP_NAMES, appIdFor } from "@plantcraft/ui/appMarks";
-import { fileStamp, fileTime, fileTimeHeader, fitCell, freePlace, packCells, type GridCell } from "@plantcraft/ui";
+import { fileStamp, fileTime, fileTimeHeader, fitCell, freePlace, gridGap, gridRow, packCells, type GridCell } from "@plantcraft/ui";
 import { locale, t } from "./i18n";
 import type { Aggregation, Card, CardData, CardItem, Dashboard, DashboardDraft, Kind, Page, State, Variable } from "./types";
 
@@ -45,9 +45,10 @@ export const GAP_PX = 14;
 export function minHeight(kind: Kind): number {
   return kind === "stat" || kind === "text" ? 1 : 2;
 }
-/** The height in pixels of a card `rows` rows high (on a wide screen). */
+/** The height in pixels of a card `rows` rows high (on a wide screen), at the display size in
+ * effect: the suite's grid rows follow the text (ROW_PX and GAP_PX are the default's). */
 export function cardPixels(rows: number): number {
-  return rows * ROW_PX + (rows - 1) * GAP_PX;
+  return rows * gridRow() + (rows - 1) * gridGap();
 }
 export const REFRESH = [0, 15, 30, 60, 300];
 export const PAGE_SECONDS = [0, 30, 60, 300];

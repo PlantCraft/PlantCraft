@@ -15,7 +15,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   (`--pc-text-scale`, `--pc-space-scale`) set by `<html data-size>`; charts follow through
   `plotTheme()`. New exports: `setDisplaySize`, `displaySize`, `textScale`,
   `plotFontSize`, `DISPLAY_SIZES`. The CSS of the platform and the apps now writes its
-  padding, margins and gaps with the spacing tokens (`dev/space-tokens`). See docs/brand.md.
+  padding, margins and gaps with the spacing tokens (`dev/space-tokens`). The card grid's rows
+  follow the text (`gridRow`, `gridGap`, `useDisplaySize`) and a widget list shows only the rows
+  that fit. See docs/brand.md.
+- `plantcraft-sdk`: **`displayfit`**, the check that every page fits at every display size, on a
+  small laptop and a large screen: no text cut, out of its card or over other text, no page wider
+  than the screen. PlantCraft and every app run it in `tests/e2e/test_display_sizes.py`.
 - `@plantcraft/ui`, the block diagram editor (Analytics' algorithms, Models): **a wire is
   followed and read**.
   - Pointing at a wire, at a port of a block or at a kind of wire in the legend lights those wires

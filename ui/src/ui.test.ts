@@ -9,6 +9,7 @@ import { helpTree } from "./HelpBrowser";
 import { applyTheme, setTheme, THEME_KEY, themeChoice } from "./theme";
 import { applyDisplaySize, DISPLAY_SIZE_KEY, displaySize, setDisplaySize, textScale } from "./displaySize";
 import { plotFontSize } from "./brandTheme";
+import { gridGap, gridRow } from "./Grid";
 import { BRAND_COLORS, plotTheme } from "./brandTheme";
 
 /** WCAG contrast of two "#rrggbb" colours. */
@@ -78,6 +79,12 @@ describe("display size", () => {
     applyDisplaySize();
     expect(document.documentElement.dataset.size).toBeUndefined();
     expect(textScale()).toBe(1);
+  });
+
+  it("grows the card grid's rows with the text and its gaps with the spacing", () => {
+    expect([gridRow(3), gridGap(3)]).toEqual([91, 14]);
+    expect([gridRow(1), gridGap(1)]).toEqual([114, 16]);
+    expect([gridRow(5), gridGap(5)]).toEqual([78, 10]);
   });
 });
 
