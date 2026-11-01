@@ -21,6 +21,12 @@ Work that leaves the request (a queue, a thread) runs on the app's own file unle
 
 A database larger than ``PLANTCRAFT_DEMO_SLOT_MAX_MB`` (200) is never copied: the app then keeps
 its visits read-only, as without isolation.
+
+An app that declares ``Access(label, demo_copy=True)`` lets an isolated visit save (its
+``EditorUser`` routes), once every database it opened can be copied. What the visit would send
+to PlantCraft with the app's own key (audit, events, notifications, schedules, knowledge) is
+refused instead (``plantcraft_sdk.client.DemoVisitWrite``): a visit's play never reaches what
+everyone else sees.
 """
 
 from __future__ import annotations
@@ -51,6 +57,8 @@ _KEY = re.compile(r"^[0-9a-f]{16,64}$")
 _VISIT: ContextVar[str | None] = ContextVar("plantcraft_sdk_demo_slot", default=None)
 _LOCK = threading.Lock()
 _SWEEPER: dict[str, Any] = {"thread": None, "roots": set()}
+# The app's databases (``Database`` registers each): a visit edits only when all can be copied.
+_DATABASES: set[Path] = set()
 
 
 def key_of(visit: str) -> str:
@@ -99,6 +107,17 @@ def copyable(path: Path) -> bool:
     """Whether a visit may get its own copy of this database (not too large to copy)."""
 
     return _size(path) <= max_bytes()
+
+
+def register(path: Path) -> None:
+    _DATABASES.add(path)
+
+
+def editable() -> bool:
+    """Whether the current request is an isolated visit whose every database of this app gets
+    its own copy: then the visit may save (``Access(..., demo_copy=True)``)."""
+
+    return _VISIT.get() is not None and all(copyable(path) for path in _DATABASES)
 
 
 def slot_path(path: Path, key: str) -> Path:
@@ -248,6 +267,8 @@ class DemoSlots:
 __all__ = [
     "DemoSlots",
     "copyable",
+    "editable",
+    "register",
     "isolated_claim",
     "key_of",
     "prepare",

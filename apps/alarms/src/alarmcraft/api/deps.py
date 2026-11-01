@@ -16,7 +16,7 @@ from plantcraft_sdk.server.access import Access, CurrentUser, runtime
 from alarmcraft.api.runtime import Runtime
 from alarmcraft.i18n import t
 
-ACCESS = Access("Alarms")
+ACCESS = Access("Alarms", demo_copy=True)
 RuntimeDep = Annotated[Runtime, Depends(runtime)]
 EditorUser = ACCESS.EditorUser
 guarded = ACCESS.guarded

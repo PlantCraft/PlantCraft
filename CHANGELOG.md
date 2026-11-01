@@ -9,6 +9,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **Public demo: an isolated visit saves in Alarms, Analytics and View (`plantcraft-sdk` 0.98.0).**
+  `Access(label, demo_copy=True)` lets an isolated visit (`PLANTCRAFT_PUBLIC_DEMO_ISOLATED`) use
+  the editors' routes, saving into its own copy of the app's data. Writes to PlantCraft with the
+  app's key during such a visit are refused (`plantcraft_sdk.client.DemoVisitWrite`), so nothing
+  of the visit reaches the shared demo. Administrator-only actions (Python code, models,
+  settings, sources) stay locked.
+
 - **Public demo: a copy of every app's database for each visit (`plantcraft-sdk` 0.97.0).**
   With `PLANTCRAFT_PUBLIC_DEMO_ISOLATED=true` (off by default), a visit's token is marked
   isolated. Each app then sends the visit's reads and writes to the visit's own copy of its
