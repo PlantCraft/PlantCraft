@@ -152,6 +152,10 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Changed
 
+- The algorithm's diagram (its page and the editor) takes `@plantcraft/ui`'s new editor: wires in
+  distinct colours and dashes, lit when pointed at, a wire's inspector, values above the wires,
+  "Expand" to the whole window, the libraries named in the legend and an "Arrange" with no
+  overlaps.
 - **Runs with many signals keep their wires faster.** A run kept each wire's thinned series
   and then cut it to its last point; it now keeps the last point directly, and it formats the
   times without a Python loop. On 52 signals that was about three quarters of a run's time.
@@ -185,6 +189,12 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Fixed
 
+- **New algorithm: "Continue in the diagram" no longer loads forever.** The editor's window
+  opened inside the suite's frame, which waits for an app's sidebar (the editor draws none)
+  before it gives the page alone; in the public demo it was left loading. The editor now opens on
+  its own page (`pc-frame=off`), and an editor found inside the frame moves to its own page.
+- PlantCraft's own algorithms are drawn with no block over another (each column stacked by the
+  blocks' heights).
 - A round or the signal checks that could not reach the plant's data (the Historian restarting,
   for one) are tried again in 30 s, then 2 min, as one loop's run already was, instead of ending
   in an error until the next occurrence (0.6.0 load test C6, 2026-10-31).

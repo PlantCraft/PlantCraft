@@ -1,4 +1,4 @@
-import { SuiteShell, signOut, useSuiteSession } from "@plantcraft/ui";
+import { frameOff, isFramed, SuiteShell, signOut, useSuiteSession } from "@plantcraft/ui";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { api, UNAUTHORIZED_EVENT } from "./api";
 import { t } from "./i18n";
@@ -125,6 +125,12 @@ export function App() {
     api.meta().then((meta) => { if (meta?.app?.version) setVersion(meta.app.version); }).catch(() => undefined);
   }, []);
   const editor = /^\/editor\/(.+)$/.exec(path);
+  const editorId = editor?.[1];
+  // The editor is a window of its own: opened inside the suite's frame (an old link, a bookmark),
+  // it takes the whole tab instead of waiting there for a sidebar it never draws.
+  useEffect(() => {
+    if (editorId && isFramed()) window.top?.location.replace(frameOff(`${window.location.pathname}${window.location.search}${window.location.hash}`));
+  }, [editorId]);
   // The tour opens a block, an algorithm and a result: found before it starts.
   const [examples, setExamples] = useState<TourExamples | undefined>(undefined);
   useEffect(() => { if (me) void tourExamples().then(setExamples); }, [me]);

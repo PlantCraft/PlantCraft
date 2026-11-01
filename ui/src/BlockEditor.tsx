@@ -7,13 +7,17 @@
  *
  * What people get, the same in every app:
  * - a palette of the catalog's libraries, searchable, dragged or clicked onto the canvas;
- * - ports coloured by what they carry; while a wire is drawn the inputs it can enter light up
- *   and the others fade; a wire that does not fit is refused with the reason;
+ * - ports coloured by what they carry (and drawn solid, dashed or dash-dotted); while a wire is
+ *   drawn the inputs it can enter light up and the others fade; a wire that does not fit is
+ *   refused with the reason; pointing at a wire, a port or a legend entry lights its wires up and
+ *   fades the rest, and a wire clicked shows what it carries, from where to where;
+ * - blocks coloured by their library, named in the legend;
  * - an inspector written from the block's own descriptions: its parameters (with units,
  *   defaults and limits), its inputs and outputs, the toggle that records an output in the
  *   historian, and what the block does, how to read it and its limits;
  * - the check's problems on the blocks they concern, and a test run's values on the wires;
- * - undo and redo, copy and paste, delete, "Arrange" and fit to screen, with the usual keys.
+ * - undo and redo, copy and paste, delete, "Arrange" (no block over another) and fit to screen,
+ *   with the usual keys; "Expand" gives the diagram the whole window (Esc leaves).
  *
  * Exported from `@plantcraft/ui/blockEditor` (it needs `@xyflow/react`, which apps without
  * diagrams do not install). Styles: `@plantcraft/ui/blockEditor.css`.
@@ -21,16 +25,20 @@
 import {
   Background,
   BackgroundVariant,
+  BaseEdge,
   Controls,
+  EdgeLabelRenderer,
   Handle,
   MiniMap,
   Position,
   ReactFlow,
   ReactFlowProvider,
   applyNodeChanges,
+  getBezierPath,
   useReactFlow,
   type Connection,
   type Edge,
+  type EdgeProps,
   type Node,
   type NodeChange,
   type NodeProps,
@@ -45,7 +53,8 @@ import {
   Database,
   Eye,
   EyeOff,
-  Maximize,
+  Maximize2,
+  Minimize2,
   Plus,
   Redo2,
   RotateCcw,
@@ -88,6 +97,7 @@ import {
   type Clip,
   type Diagram,
   type DiagramCheck,
+  type DiagramEdge,
   type DiagramNode,
   type DiagramTrace,
   type History,
@@ -131,6 +141,9 @@ export type BlockEditorProps = {
 };
 
 type Connecting = { node: string; port: string; side: "source" | "target" } | null;
+/** What the pointer is on: a wire, a port of a block, or a kind of wire in the legend. Its wires
+ * light up and the others fade, so a wire is followed through a crowded diagram. */
+type Pointed = { kind: "edge"; id: string } | { kind: "port"; node: string; port: string; side: "source" | "target" } | { kind: "type"; type: string } | null;
 
 type EditorContextValue = {
   blocks: Record<string, BlockSpec>;
@@ -139,12 +152,17 @@ type EditorContextValue = {
   trace?: DiagramTrace | null;
   compatible: Set<string> | null;
   libraryIndex: Record<string, number>;
+  point: (pointed: Pointed) => void;
+  hotPorts: Set<string>;
 };
 
 const EditorContext = createContext<EditorContextValue | null>(null);
 const useEditor = () => useContext(EditorContext) as EditorContextValue;
 
 const RECORDABLE = new Set(["number", "result", "series"]);
+/** Library colours (blockEditor.css `--be-lib-N`): the catalog's libraries take them in turn. */
+const LIBRARY_COLOURS = 11;
+const libraryClass = (index: number | undefined) => `be-lib-${(index ?? 0) % LIBRARY_COLOURS}`;
 
 // --- the block on the canvas -----------------------------------------------------------------
 
@@ -152,19 +170,59 @@ type BlockData = { node: DiagramNode };
 type BlockFlowNode = Node<BlockData, "block">;
 
 function PortHandle({ nodeId, port, side }: { nodeId: string; port: PortSpec; side: "source" | "target" }) {
-  const { compatible } = useEditor();
+  const { compatible, point, hotPorts } = useEditor();
   const key = `${nodeId}:${port.port}`;
   const state = compatible ? (compatible.has(key) ? " be-compatible" : " be-dim") : "";
+  const hot = hotPorts.has(`${side}:${key}`) ? " be-handle-hot" : "";
   return (
     <Handle
       type={side}
       id={port.port}
       position={side === "source" ? Position.Right : Position.Left}
-      className={`be-handle be-type-${port.type}${state}${side === "target" && !port.required ? " be-optional" : ""}`}
+      className={`be-handle be-type-${port.type}${state}${hot}${side === "target" && !port.required ? " be-optional" : ""}`}
       title={`${port.label} · ${typeLabel(port.type)}${port.unit ? ` (${port.unit})` : ""}\n${port.description}`}
+      onMouseEnter={() => point({ kind: "port", node: nodeId, port: port.port, side })}
+      onMouseLeave={() => point(null)}
     />
   );
 }
+
+/** The port's name in the block: pointing at it lights its wires up, as the handle does. */
+function PortName({ nodeId, port, side, children }: { nodeId: string; port: PortSpec; side: "source" | "target"; children: ReactNode }) {
+  const { point } = useEditor();
+  return <span className="be-port-name" onMouseEnter={() => point({ kind: "port", node: nodeId, port: port.port, side })} onMouseLeave={() => point(null)}>{children}</span>;
+}
+
+// --- a wire ----------------------------------------------------------------------------------
+
+type WireData = { type: string; value?: string; hot?: boolean };
+type WireFlowEdge = Edge<WireData, "wire">;
+
+/**
+ * A wire: a curve in its kind's colour and dash, and the value it carried in the last test (when
+ * values are shown, or while the wire is lit). The value is drawn once per output, at the output,
+ * in the layer above every wire, so another wire never covers it.
+ */
+function WireEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: EdgeProps<WireFlowEdge>) {
+  const [path] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
+  return (
+    <>
+      <BaseEdge id={id} path={path} interactionWidth={16} />
+      {data?.value && (
+        <EdgeLabelRenderer>
+          <div
+            className={`be-wire-value be-type-${data.type}${data.hot ? " be-wire-value-hot" : ""}`}
+            style={{ transform: `translate(${sourceX + 9}px, ${sourceY}px) translateY(-50%)` }}
+          >
+            {data.value}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+}
+
+const EDGE_TYPES = { wire: WireEdge };
 
 function BlockNodeView({ id, data, selected }: NodeProps<BlockFlowNode>) {
   const { blocks, check, trace, libraryIndex } = useEditor();
@@ -188,7 +246,7 @@ function BlockNodeView({ id, data, selected }: NodeProps<BlockFlowNode>) {
   const notes = [...issues, ...warnings];
   return (
     <div
-      className={`be-node be-lib-${libraryIndex[spec.library] ?? 0}${issues.length ? " be-has-issue" : ""}`}
+      className={`be-node ${libraryClass(libraryIndex[spec.library])}${issues.length ? " be-has-issue" : ""}`}
       data-selected={selected || undefined}
       data-block={spec.block_id}
     >
@@ -209,11 +267,11 @@ function BlockNodeView({ id, data, selected }: NodeProps<BlockFlowNode>) {
             <div className="be-port-row" key={index}>
               <span className="be-port be-port-in">
                 {input && <PortHandle nodeId={id} port={input} side="target" />}
-                {input && <span>{input.label}{input.multiple ? " …" : ""}</span>}
+                {input && <PortName nodeId={id} port={input} side="target">{input.label}{input.multiple ? " …" : ""}</PortName>}
               </span>
               <span className="be-port be-port-out">
                 {output && recorded.has(output.port) && <Database size={10} className="be-recorded" aria-label={t("Recorded in the historian")} />}
-                {output && <span>{output.label}</span>}
+                {output && <PortName nodeId={id} port={output} side="source">{output.label}</PortName>}
                 {output && <PortHandle nodeId={id} port={output} side="source" />}
               </span>
             </div>
@@ -495,6 +553,63 @@ function Inspector({
   );
 }
 
+/** The inspector for one wire: what it carries, the output it leaves and the input it enters
+ * (each a link to its block), and what it carried in the last test. */
+function WireInspector({ wire, onSelect }: { wire: DiagramEdge; onSelect: (id: string) => void }) {
+  const { blocks, diagram, trace, libraryIndex } = useEditor();
+  const nodes = Object.fromEntries(diagram.nodes.map((node) => [node.id, node]));
+  const from = nodes[wire.source];
+  const to = nodes[wire.target];
+  const out = from && blocks[from.block]?.outputs.find((port) => port.port === wire.source_port);
+  const into = to && blocks[to.block]?.inputs.find((port) => port.port === wire.target_port);
+  const type = out?.type ?? into?.type ?? "series";
+  const value = trace?.[wire.source]?.[wire.source_port];
+  const siblings = diagram.edges.filter((edge) => edge.source === wire.source && edge.source_port === wire.source_port && edgeKey(edge) !== edgeKey(wire));
+  const end = (node: DiagramNode | undefined, port: PortSpec | undefined, portId: string, nodeId: string, word: string) => {
+    const spec = node ? blocks[node.block] : undefined;
+    return (
+      <div className="be-wire-end">
+        <span className="be-eyebrow">{word}</span>
+        <button type="button" className={`be-wire-block ${libraryClass(spec ? libraryIndex[spec.library] : 0)}`} onClick={() => onSelect(nodeId)} title={t("Select this block")}>
+          <strong>{node ? nodeLabel(node, blocks) : nodeId}</strong>
+          <span>›</span>
+          <span className="be-wire-port"><i className={`be-swatch be-type-${port?.type ?? type}`} />{port?.label ?? portId}</span>
+        </button>
+        {port?.description && <p>{port.description}</p>}
+      </div>
+    );
+  };
+  return (
+    <div className="be-inspector-body">
+      <div className="be-inspector-head">
+        <span className="be-eyebrow">{t("Wire")}</span>
+        <h3 className="be-wire-title"><i className={`be-swatch be-swatch-wide be-type-${type}`} />{out?.label ?? wire.source_port}</h3>
+        <p>{t("Carries a {type}", { type: typeLabel(type).toLowerCase() })}{out?.unit ? ` (${out.unit})` : ""}.</p>
+      </div>
+      {end(from, out, wire.source_port, wire.source, t("From"))}
+      {end(to, into, wire.target_port, wire.target, t("To"))}
+      {value && (
+        <section className="be-test-run">
+          <h4>{t("Last test")}</h4>
+          <TraceView value={value} unit={out?.unit ?? ""} />
+        </section>
+      )}
+      {siblings.length > 0 && (
+        <section>
+          <h4>{t("The same output also feeds")}</h4>
+          <ul className="be-wire-siblings">
+            {siblings.map((edge) => {
+              const target = nodes[edge.target];
+              const port = target && blocks[target.block]?.inputs.find((item) => item.port === edge.target_port);
+              return <li key={edgeKey(edge)}><button type="button" onClick={() => onSelect(edge.target)}>{target ? nodeLabel(target, blocks) : edge.target}</button> › {port?.label ?? edge.target_port}</li>;
+            })}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+
 function CheckSummary({ onSelect }: { onSelect: (id: string) => void }) {
   const { check, diagram, blocks } = useEditor();
   // A valid diagram says so in the toolbar's small mark; the panel speaks only of problems and
@@ -557,7 +672,7 @@ function Palette({ catalog, onAdd, readOnly, searchRef }: { catalog: BlockCatalo
               onClick={() => setOpen((current) => (current === library.library ? null : library.library))}
             >
               <ChevronRight size={14} className="be-chevron" />
-              <i className={`be-lib-dot be-lib-${libraryIndex[library.library] ?? 0}`} />
+              <i className={`be-lib-dot ${libraryClass(libraryIndex[library.library])}`} />
               <span>{library.name}</span>
               <small>{blocks.length}</small>
             </button>
@@ -567,7 +682,7 @@ function Palette({ catalog, onAdd, readOnly, searchRef }: { catalog: BlockCatalo
                   <button
                     type="button"
                     key={block.block_id}
-                    className={`be-palette-item be-lib-${libraryIndex[library.library] ?? 0}`}
+                    className={`be-palette-item ${libraryClass(libraryIndex[library.library])}`}
                     draggable={!readOnly}
                     disabled={readOnly}
                     title={`${block.summary}\n${t("Drag onto the diagram, or click to add it.")}`}
@@ -618,6 +733,9 @@ function Editor(props: BlockEditorProps) {
   const [refusal, setRefusal] = useState("");
   // A test run's values on the wires: off at first, since on a full diagram they crowd it.
   const [showValues, setShowValues] = useState(false);
+  const [pointed, setPointed] = useState<Pointed>(null);
+  // "Expand": the diagram over the whole window, until Esc or the button again.
+  const [expanded, setExpanded] = useState(false);
   const clip = useRef<Clip | null>(null);
   const paletteSearch = useRef<HTMLInputElement | null>(null);
   const flow = useReactFlow();
@@ -661,28 +779,74 @@ function Editor(props: BlockEditorProps) {
     );
   }, [diagram, selected, readOnly]);
 
-  const edges: Edge[] = useMemo(() => {
+  // The wires lit: those the pointer is on (a wire, a port, a kind in the legend), else the
+  // selected wire's and the selected block's. While the pointer or a selected wire lights some,
+  // the others fade.
+  const lit = useMemo(() => {
+    const keys = new Set<string>();
+    const byNode = Object.fromEntries(diagram.nodes.map((node) => [node.id, node]));
+    const typeOf = (edge: DiagramEdge) => blocks[byNode[edge.source]?.block ?? ""]?.outputs.find((port) => port.port === edge.source_port)?.type ?? "series";
+    if (pointed?.kind === "edge") keys.add(pointed.id);
+    else if (pointed?.kind === "port") {
+      for (const edge of diagram.edges) {
+        if (pointed.side === "source" ? edge.source === pointed.node && edge.source_port === pointed.port : edge.target === pointed.node && edge.target_port === pointed.port) keys.add(edgeKey(edge));
+      }
+    } else if (pointed?.kind === "type") {
+      for (const edge of diagram.edges) if (typeOf(edge) === pointed.type) keys.add(edgeKey(edge));
+    }
+    const fading = keys.size > 0 || selectedEdges.length > 0;
+    if (!pointed) {
+      for (const key of selectedEdges) keys.add(key);
+      if (selected.length === 1) for (const edge of diagram.edges) if (edge.source === selected[0] || edge.target === selected[0]) keys.add(edgeKey(edge));
+    }
+    return { keys, fading };
+  }, [pointed, diagram, blocks, selected, selectedEdges]);
+  // The ports at the ends of the lit wires.
+  const hotPorts = useMemo(() => {
+    const ports = new Set<string>();
+    for (const edge of diagram.edges) {
+      if (!lit.keys.has(edgeKey(edge))) continue;
+      ports.add(`source:${edge.source}:${edge.source_port}`);
+      ports.add(`target:${edge.target}:${edge.target_port}`);
+    }
+    return ports;
+  }, [diagram, lit]);
+
+  const edges: WireFlowEdge[] = useMemo(() => {
     const byNode = Object.fromEntries(diagram.nodes.map((node) => [node.id, node]));
     const chosen = new Set(selectedEdges);
+    // An output's value is written once, on its first wire (or on the lit one).
+    const labelled = new Set<string>();
+    const ordered = [...diagram.edges].sort((a, b) => Number(lit.keys.has(edgeKey(b))) - Number(lit.keys.has(edgeKey(a))));
+    const valueOn = new Map<string, string>();
+    for (const edge of ordered) {
+      const output = `${edge.source}:${edge.source_port}`;
+      const key = edgeKey(edge);
+      const value = trace?.[edge.source]?.[edge.source_port];
+      if (!value || labelled.has(output) || (!showValues && !lit.keys.has(key))) continue;
+      labelled.add(output);
+      valueOn.set(key, traceText(value, uiLocale()));
+    }
     return diagram.edges.map((edge) => {
       const source = blocks[byNode[edge.source]?.block ?? ""]?.outputs.find((port) => port.port === edge.source_port);
       const type = source?.type ?? "series";
       const key = edgeKey(edge);
       const value = trace?.[edge.source]?.[edge.source_port];
+      const hot = lit.keys.has(key);
       return {
         id: key,
+        type: "wire" as const,
         source: edge.source,
         sourceHandle: edge.source_port,
         target: edge.target,
         targetHandle: edge.target_port,
-        className: `be-edge be-type-${type}${value?.type === "missing" ? " be-edge-missing" : ""}`,
+        className: `be-edge be-type-${type}${value?.type === "missing" ? " be-edge-missing" : ""}${hot ? " be-edge-hot" : lit.fading ? " be-edge-faded" : ""}`,
         selected: chosen.has(key),
-        label: showValues && value ? traceText(value, uiLocale()) : undefined,
-        labelBgPadding: [4, 2] as [number, number],
-        labelBgBorderRadius: 3,
+        zIndex: hot ? 1 : 0,
+        data: { type, value: valueOn.get(key), hot },
       };
     });
-  }, [diagram, blocks, trace, selectedEdges, showValues]);
+  }, [diagram, blocks, trace, selectedEdges, showValues, lit]);
 
   const rules = useMemo(() => ({ loops: Boolean(props.allowLoops) }), [props.allowLoops]);
   const compatible = useMemo(() => (connecting ? compatiblePorts(diagram, blocks, connecting, rules) : null), [connecting, diagram, blocks, rules]);
@@ -736,9 +900,27 @@ function Editor(props: BlockEditorProps) {
   }, [commit, diagram, readOnly]);
 
   const arrangeAll = useCallback(() => {
-    commit(arrange(diagram));
+    // The blocks' drawn sizes, so no block lands on another whatever its height.
+    const sizes = Object.fromEntries(flow.getNodes().map((node) => [node.id, { width: node.measured?.width ?? 0, height: node.measured?.height ?? 0 }]));
+    commit(arrange(diagram, { blocks, sizes }));
     window.setTimeout(() => flow.fitView({ padding: 0.15, duration: 250 }), 30);
-  }, [commit, diagram, flow]);
+  }, [blocks, commit, diagram, flow]);
+
+  const fit = useCallback(() => flow.fitView({ padding: 0.15, duration: 250 }), [flow]);
+  // The canvas changed size (expanded or back): the diagram is fitted to it again.
+  const firstFit = useRef(true);
+  useEffect(() => {
+    if (firstFit.current) { firstFit.current = false; return; }
+    const timer = window.setTimeout(fit, 60);
+    return () => window.clearTimeout(timer);
+  }, [expanded, fit]);
+  useEffect(() => {
+    if (!expanded) return;
+    const leave = (event: globalThis.KeyboardEvent) => { if (event.key === "Escape") setExpanded(false); };
+    window.addEventListener("keydown", leave);
+    document.body.classList.add("be-body-expanded");
+    return () => { window.removeEventListener("keydown", leave); document.body.classList.remove("be-body-expanded"); };
+  }, [expanded]);
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (isTyping(event.target)) return;
@@ -750,6 +932,10 @@ function Editor(props: BlockEditorProps) {
     else if (mod && key === "v") { event.preventDefault(); pasteClip(); }
     else if (mod && key === "d") { event.preventDefault(); copySelection(); pasteClip(); }
     else if (key === "delete" || key === "backspace") { event.preventDefault(); deleteSelection(); }
+    else if (!mod && key === "f") { event.preventDefault(); fit(); }
+    else if (!mod && (key === "+" || key === "=")) { event.preventDefault(); void flow.zoomIn({ duration: 150 }); }
+    else if (!mod && key === "-") { event.preventDefault(); void flow.zoomOut({ duration: 150 }); }
+    else if (key === "escape") { setSelected([]); setSelectedEdges([]); }
   };
 
   const onConnect = useCallback(
@@ -777,11 +963,15 @@ function Editor(props: BlockEditorProps) {
   }, [refusal]);
 
   const one = selected.length === 1 ? diagram.nodes.find((node) => node.id === selected[0]) : undefined;
-  const context: EditorContextValue = { blocks, diagram, check, trace, compatible, libraryIndex };
+  const wire = !selected.length && selectedEdges.length === 1 ? diagram.edges.find((edge) => edgeKey(edge) === selectedEdges[0]) : undefined;
+  const selectBlock = (id: string) => { setSelectedEdges([]); setSelected([id]); };
+  // The libraries the diagram's blocks come from: the legend says what each colour is.
+  const usedLibraries = catalog.libraries.filter((library) => diagram.nodes.some((node) => blocks[node.block]?.library === library.library));
+  const context: EditorContextValue = { blocks, diagram, check, trace, compatible, libraryIndex, point: setPointed, hotPorts };
 
   return (
     <EditorContext.Provider value={context}>
-      <div className={`be-editor${readOnly ? " be-readonly" : ""}${props.className ? ` ${props.className}` : ""}`} onKeyDown={onKeyDown} tabIndex={-1}>
+      <div className={`be-editor${readOnly ? " be-readonly" : ""}${expanded ? " be-expanded" : ""}${props.className ? ` ${props.className}` : ""}`} onKeyDown={onKeyDown} tabIndex={-1}>
         <div className="be-toolbar">
           <div className="be-title">{title ?? <><Workflow size={16} /> {t("Diagram")}</>}</div>
           <div className="be-tools" role="toolbar" aria-label={t("Diagram tools")}>
@@ -805,7 +995,11 @@ function Editor(props: BlockEditorProps) {
                 <button type="button" className="be-tool be-tool-text" title={t("Lay the blocks out from inputs to outputs")} disabled={!diagram.nodes.length} onClick={arrangeAll}><Workflow size={15} /> {t("Arrange")}</button>
               </>
             )}
-            <button type="button" className="be-tool" title={t("Fit to screen")} onClick={() => flow.fitView({ padding: 0.15, duration: 250 })}><Maximize size={15} /></button>
+            {/* Zoom and fit are the canvas's own buttons (bottom left) and keys (+, -, F); the
+                toolbar gives the diagram the whole window instead. */}
+            <button type="button" className="be-tool be-tool-text" aria-pressed={expanded} title={expanded ? t("Back to the page (Esc)") : t("Give the diagram the whole window")} onClick={() => setExpanded((now) => !now)}>
+              {expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />} {expanded ? t("Exit full screen") : t("Expand")}
+            </button>
             {trace && (
               <>
                 <span className="be-sep" />
@@ -832,10 +1026,14 @@ function Editor(props: BlockEditorProps) {
         <div className="be-body">
           {!readOnly && <Palette catalog={catalog} onAdd={(block) => addAt(block)} readOnly={readOnly} searchRef={paletteSearch} />}
           <div className="be-canvas" onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }} onDrop={onDrop}>
-            <ReactFlow<BlockFlowNode, Edge>
+            <ReactFlow<BlockFlowNode, WireFlowEdge>
               nodes={nodes}
               edges={edges}
               nodeTypes={NODE_TYPES}
+              edgeTypes={EDGE_TYPES}
+              onEdgeMouseEnter={(_event, edge) => setPointed({ kind: "edge", id: edge.id })}
+              onEdgeMouseLeave={() => setPointed(null)}
+              onEdgeClick={(_event, edge) => { setSelected([]); setSelectedEdges([edge.id]); }}
               onNodesChange={onNodesChange}
               onEdgesChange={(changes) => {
                 const selection = changes.filter((change) => change.type === "select");
@@ -869,17 +1067,32 @@ function Editor(props: BlockEditorProps) {
             >
               <Background variant={BackgroundVariant.Dots} gap={18} size={1.2} />
               <Controls showInteractive={false} />
-              <MiniMap pannable zoomable nodeClassName={(node) => `be-mini be-lib-${libraryIndex[blocks[(node.data as BlockData).node.block]?.library ?? ""] ?? 0}`} />
+              <MiniMap pannable zoomable nodeClassName={(node) => `be-mini ${libraryClass(libraryIndex[blocks[(node.data as BlockData).node.block]?.library ?? ""])}`} />
             </ReactFlow>
             {refusal && <div className="be-refusal" role="status"><AlertTriangle size={14} /> {refusal}</div>}
             {!diagram.nodes.length && !readOnly && <div className="be-empty-canvas">{t("Drag blocks from the left, then wire an output to an input.")}</div>}
-            <div className="be-legend" aria-label={t("What the wires carry")}>
-              {legend.map((type) => <span key={type}><i className={`be-swatch be-type-${type}`} />{typeLabel(type)}</span>)}
+            <div className="be-legend">
+              <div className="be-legend-row" aria-label={t("What the wires carry")}>
+                <b>{t("Wires")}</b>
+                {legend.map((type) => (
+                  <span key={type} className="be-legend-type" onMouseEnter={() => setPointed({ kind: "type", type })} onMouseLeave={() => setPointed(null)} title={t("Point here to light up these wires")}>
+                    <i className={`be-swatch be-type-${type}`} />{typeLabel(type)}
+                  </span>
+                ))}
+              </div>
+              {usedLibraries.length > 0 && (
+                <div className="be-legend-row" aria-label={t("Block colours: the library each block comes from")}>
+                  <b title={t("A block's colour is the library it comes from, as in the list of blocks.")}>{t("Blocks")}</b>
+                  {usedLibraries.map((library) => <span key={library.library} title={library.description}><i className={`be-lib-dot ${libraryClass(libraryIndex[library.library])}`} />{library.name}</span>)}
+                </div>
+              )}
             </div>
           </div>
           <aside className="be-inspector" aria-label={t("Inspector")}>
             {one ? (
               <Inspector key={one.id} node={one} readOnly={readOnly} onChange={commit} blockHref={blockHref} tools={inspectorTools} />
+            ) : wire ? (
+              <WireInspector wire={wire} onSelect={selectBlock} />
             ) : selected.length > 1 ? (
               <div className="be-inspector-body">
                 <p className="be-multi">{t("{count} blocks selected", { count: selected.length })}</p>
@@ -887,8 +1100,9 @@ function Editor(props: BlockEditorProps) {
               </div>
             ) : (
               <div className="be-inspector-body">
-                <CheckSummary onSelect={(id) => setSelected([id])} />
+                <CheckSummary onSelect={selectBlock} />
                 {aside}
+                <p className="be-hint">{t("Click a block to see what it does, or a wire to see what it carries, from where to where. Point at a wire, a port or a kind of wire in the legend to light it up.")}</p>
               </div>
             )}
           </aside>

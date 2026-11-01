@@ -36,6 +36,20 @@ VIRTUAL_SENSOR = "virtual sensor"
 
 COLUMNS = {"input": 40, "gate": 330, "method": 640, "logic": 960, "output": 1260}
 ROW = 130
+# A block's drawn height, near enough (the editor's node: header, picture, one row per port), so
+# the blocks of a column are stacked without one over the next whatever their number of ports.
+_HEADER, _IMAGE, _PORT_ROW, _GAP = 44, 70, 20, 30
+
+
+def _drawn_height(block: str) -> int:
+    from linkcraft.blocks.catalog import CATALOG
+
+    found = CATALOG.get(block)
+    if found is None:
+        return ROW - _GAP
+    spec = found.spec
+    rows = max(len(spec.inputs), len(spec.outputs), 1)
+    return _HEADER + (_IMAGE if spec.image else 0) + rows * _PORT_ROW
 
 
 class _Diagram:
@@ -44,7 +58,7 @@ class _Diagram:
     def __init__(self) -> None:
         self.nodes: list[dict[str, Any]] = []
         self.edges: list[dict[str, Any]] = []
-        self.rows: dict[str, int] = {}
+        self.bottom: dict[str, int] = {}
 
     def node(
         self,
@@ -56,14 +70,14 @@ class _Diagram:
         record: list[str] | None = None,
         label: str = "",
     ) -> str:
-        row = self.rows.get(column, 0)
-        self.rows[column] = row + 1
+        y = self.bottom.get(column, 40)
+        self.bottom[column] = y + max(ROW, _drawn_height(block) + _GAP)
         node: dict[str, Any] = {
             "id": node_id,
             "block": block,
             "parameters": dict(parameters or {}),
             "x": COLUMNS[column],
-            "y": 40 + ROW * row,
+            "y": y,
         }
         if record:
             node["record"] = list(record)

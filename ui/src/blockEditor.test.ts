@@ -77,7 +77,8 @@ describe("BlockEditor", () => {
   it("read-only, shows only the tools that work there and no banner for a valid diagram (round 9)", async () => {
     const { host, root } = await mount({ check: { valid: true, errors: [], warnings: [], node_errors: {} } });
     const titles = [...host.querySelectorAll<HTMLButtonElement>(".be-tools .be-tool")].map((item) => item.title);
-    expect(titles).toEqual(["Fit to screen"]);
+    // Zoom and fit are the canvas's own controls; the toolbar only expands (2026-11-01).
+    expect(titles).toEqual(["Give the diagram the whole window"]);
     expect(host.textContent).not.toContain("The diagram is valid");
     expect(host.querySelector(".be-status")).toBeNull();
     await act(async () => root.unmount());
@@ -101,7 +102,9 @@ describe("BlockEditor", () => {
     expect(host.querySelector(".be-node .be-light.be-status-bad")).not.toBeNull();
     expect(host.querySelector('.be-node[data-block="logic.worst"] .be-tip')?.textContent).toContain("Frozen.");
     // The wires carry no values until asked.
-    expect(host.querySelector(".react-flow__edge-text")).toBeNull();
+    expect(host.querySelector(".be-wire-value")).toBeNull();
+    // The legend names the wires' kinds and the libraries the blocks come from.
+    expect(host.querySelector(".be-legend")?.textContent).toContain("Blocks");
     // Libraries start folded; opening one folds the other.
     expect(host.querySelectorAll(".be-palette-item")).toHaveLength(0);
     const toggles = [...host.querySelectorAll<HTMLButtonElement>(".be-lib-toggle")];
@@ -127,6 +130,16 @@ describe("BlockEditor", () => {
     await act(async () => node?.click());
     expect(host.querySelector(".be-inspector-tools .calibrate")?.textContent).toBe("Calibrate");
     expect(tools).toHaveBeenCalledWith(expect.objectContaining({ id: "worst" }));
+    await act(async () => root.unmount());
+  });
+
+  it("expands over the whole window and leaves with Esc", async () => {
+    const { host, root } = await mount();
+    const expand = host.querySelector<HTMLButtonElement>('.be-tools .be-tool[aria-pressed]');
+    await act(async () => expand?.click());
+    expect(host.querySelector(".be-editor.be-expanded")).not.toBeNull();
+    await act(async () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); });
+    expect(host.querySelector(".be-editor.be-expanded")).toBeNull();
     await act(async () => root.unmount());
   });
 

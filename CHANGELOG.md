@@ -9,6 +9,18 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- `@plantcraft/ui`, the block diagram editor (Analytics' algorithms, Models): **a wire is
+  followed and read**.
+  - Pointing at a wire, at a port of a block or at a kind of wire in the legend lights those wires
+    up and fades the others; a selected block lights its own.
+  - A wire clicked shows in the inspector what it carries, the output it leaves and the input it
+    enters (each selects its block), the other inputs the same output feeds and its value in the
+    last test.
+  - "Values on wires" writes each output's value once, at the output, above every wire (another
+    wire no longer covers it); a lit wire shows its value even with the values off.
+  - "Expand" gives the diagram the whole window (Esc leaves). The toolbar's fit button, a copy of
+    the canvas's own, is gone; the keys F (fit), + and - zoom.
+  - The legend also names the libraries the blocks' colours stand for.
 - **API v1: interpolated reads and summaries (gap H5, `plantcraft-sdk` 0.95.0).**
   - Series reads (`GET .../series`, `POST /api/v1/series`) take `sampling=interpolated` and
     `max_gap`. They give the value at each grid time, as PI's and Seeq's interpolated reads
@@ -162,6 +174,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- `@plantcraft/ui`, the block diagram editor: wires told apart by colour and dash. Signal blue,
+  mode magenta (it was a violet close to the signal's blue), number amber, verdict green dashed,
+  intervals rust dash-dotted (they were teal, a third blue).
+- `@plantcraft/ui`, the block diagram editor: "Arrange" stacks each column by the blocks' drawn
+  heights (no block over another), orders the columns with a few sweeps to cross fewer wires, and
+  puts each block level with the ports that feed it.
 - **Customizing an overview shows that it is on.** A tinted bar that stays in view says
   "Customizing this page", explains the moves and keeps **Done** at hand; each widget gets a
   stronger outline (ui 0.97.0, interface pass of 2026-10-31).
@@ -312,6 +330,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- `@plantcraft/ui`, the block diagram editor: blocks of a library past the eighth (Outputs, in
+  Analytics) had no colour; there are eleven now, taken in turn.
 - **Documents no longer restarts forever on a medium machine.** Its memory ceiling was 1 GB on
   the small and medium profiles, and it needs about 950 MB just to start (1.3 GB idle), so on an
   8 GB VM it was killed for memory in a loop and the demo story stopped there. The ceilings are now

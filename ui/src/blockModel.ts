@@ -307,16 +307,30 @@ export function paste(diagram: Diagram, clip: Clip, offset = 40): { diagram: Dia
   return { diagram: { ...diagram, nodes: [...diagram.nodes, ...nodes], edges: [...diagram.edges, ...edges] }, ids: nodes.map((node) => node.id) };
 }
 
+/** What "Arrange" may know of the drawn diagram: each block's spec (where its ports sit) and its
+ * drawn size (React Flow measures it); without them blocks are taken as NODE_W x NODE_H. */
+export type ArrangeOptions = { blocks?: Record<string, BlockSpec>; sizes?: Record<string, { width: number; height: number }> };
+
+/** Blank space between two columns and between two blocks of a column. */
+const COLUMN_GAP = 110;
+const ROW_GAP = 36;
+/** Where a block's port rows start, under its header (and its picture), and how tall one is. */
+const PORTS_TOP = 38;
+const IMAGE_H = 70;
+const PORT_ROW = 20;
+
 /**
- * "Arrange": blocks in columns by how far they are from the inputs (the longest path), each
- * column ordered to follow the blocks that feed it, so wires run left to right with few
- * crossings. Blocks that feed nothing and are fed by nothing go to the first column. A wire
- * that closes a loop (feedback) is left out of the ranking, so the loop's blocks still run
- * left to right from where the loop is entered.
+ * "Arrange": columns from inputs to outputs, each block one column after the last block that
+ * feeds it; inside a column the blocks follow the order of what feeds them and what they feed
+ * (a few barycentre sweeps, the usual way to cross fewer wires), and each block is moved level
+ * with the ports its wires come from, as far as the blocks above it allow: no two blocks overlap,
+ * whatever their height. Wires that close a loop (allowed in Models) are left out of the columns.
  */
-export function arrange(diagram: Diagram): Diagram {
+export function arrange(diagram: Diagram, options: ArrangeOptions = {}): Diagram {
+  const { blocks = {}, sizes = {} } = options;
   const ids = diagram.nodes.map((node) => node.id);
   const known = new Set(ids);
+  const byNode = Object.fromEntries(diagram.nodes.map((node) => [node.id, node]));
   const wires = diagram.edges.filter((edge) => known.has(edge.source) && known.has(edge.target) && edge.source !== edge.target);
   // Wires back into a block still being walked close a loop: found walking from the blocks no
   // wire enters, then from the rest.
@@ -334,31 +348,112 @@ export function arrange(diagram: Diagram): Diagram {
     state[id] = 2;
   };
   for (const id of [...ids.filter((id) => !fed.has(id)), ...ids]) if (!state[id]) walk(id);
-  const incoming: Record<string, string[]> = Object.fromEntries(ids.map((id) => [id, []]));
-  for (const edge of wires) if (!back.has(edge)) incoming[edge.target].push(edge.source);
+  const forward = wires.filter((edge) => !back.has(edge));
+  const incoming: Record<string, DiagramEdge[]> = Object.fromEntries(ids.map((id) => [id, []]));
+  for (const edge of forward) incoming[edge.target].push(edge);
+  const leaving: Record<string, DiagramEdge[]> = Object.fromEntries(ids.map((id) => [id, []]));
+  for (const edge of forward) leaving[edge.source].push(edge);
   const rank: Record<string, number> = {};
   const rankOf = (id: string): number => {
-    if (rank[id] === undefined) rank[id] = incoming[id].length ? Math.max(...incoming[id].map(rankOf)) + 1 : 0;
+    if (rank[id] === undefined) rank[id] = incoming[id].length ? Math.max(...incoming[id].map((edge) => rankOf(edge.source))) + 1 : 0;
     return rank[id];
   };
   ids.forEach(rankOf);
-  const columns: string[][] = [];
-  for (const id of ids) (columns[rank[id]] ??= []).push(id);
-  const row: Record<string, number> = {};
-  columns.forEach((column, index) => {
-    if (index > 0) {
-      const mean = (id: string) => {
-        const rows = incoming[id].map((source) => row[source]).filter((value) => value !== undefined);
-        return rows.length ? rows.reduce((sum, value) => sum + value, 0) / rows.length : 0;
-      };
-      column.sort((a, b) => mean(a) - mean(b));
+  // A block with nothing feeding it sits one column before the first block it feeds (an input
+  // read only by the last block is not left far to the left).
+  for (const id of ids) {
+    if (incoming[id].length || !leaving[id].length) continue;
+    rank[id] = Math.max(rank[id], Math.min(...leaving[id].map((edge) => rank[edge.target])) - 1);
+  }
+  const ranked: string[][] = [];
+  for (const id of ids) (ranked[rank[id]] ??= []).push(id);
+  // Columns an input left behind close up.
+  const columns = ranked.filter((column) => column?.length);
+
+  const spec = (id: string) => blocks[byNode[id]?.block ?? ""];
+  const size = (id: string) => {
+    const measured = sizes[id];
+    if (measured && measured.width > 0 && measured.height > 0) return measured;
+    const block = spec(id);
+    if (!block) return { width: NODE_W, height: NODE_H };
+    const rows = Math.max(block.inputs.length, block.outputs.length, 1);
+    return { width: NODE_W, height: PORTS_TOP + (block.image ? IMAGE_H : 0) + rows * PORT_ROW + 10 };
+  };
+  const portTop = (id: string) => {
+    const measured = sizes[id];
+    const block = spec(id);
+    const rows = block ? Math.max(block.inputs.length, block.outputs.length, 1) : 1;
+    // A measured block: its port rows are its bottom ones.
+    if (measured && measured.height > 0) return measured.height - 5 - rows * PORT_ROW;
+    return PORTS_TOP + (block?.image ? IMAGE_H : 0);
+  };
+  const portIndex = (id: string, port: string, side: "in" | "out") => {
+    const block = spec(id);
+    const list = side === "in" ? block?.inputs : block?.outputs;
+    const found = list?.findIndex((item) => item.port === port) ?? -1;
+    return found < 0 ? 0 : found;
+  };
+  const portY = (id: string, port: string, side: "in" | "out") => portTop(id) + portIndex(id, port, side) * PORT_ROW + PORT_ROW / 2;
+
+  // The order inside each column: sweeps down (by what feeds a block) and up (by what it feeds).
+  const order: Record<string, number> = {};
+  columns.forEach((column) => column.forEach((id, position) => (order[id] = position)));
+  const centre = (edges: DiagramEdge[], other: (edge: DiagramEdge) => string, port: (edge: DiagramEdge) => [string, string, "in" | "out"]) => {
+    if (!edges.length) return null;
+    return edges.reduce((sum, edge) => sum + order[other(edge)] + portIndex(...port(edge)) / 100, 0) / edges.length;
+  };
+  const sortColumn = (column: string[], key: (id: string) => number | null) => {
+    const keyed = column.map((id, position) => ({ id, key: key(id) ?? order[id] ?? position, position }));
+    keyed.sort((a, b) => a.key - b.key || a.position - b.position);
+    keyed.forEach((item, position) => (order[item.id] = position));
+    return keyed.map((item) => item.id);
+  };
+  for (let sweep = 0; sweep < 4; sweep += 1) {
+    for (let index = 1; index < columns.length; index += 1) {
+      columns[index] = sortColumn(columns[index], (id) => centre(incoming[id], (edge) => edge.source, (edge) => [edge.source, edge.source_port, "out"]));
     }
-    column.forEach((id, position) => (row[id] = position));
-  });
+    for (let index = columns.length - 2; index >= 0; index -= 1) {
+      columns[index] = sortColumn(columns[index], (id) => centre(leaving[id], (edge) => edge.target, (edge) => [edge.target, edge.target_port, "in"]));
+    }
+  }
+
+  // Where: x by column (as wide as its widest block), y level with the wires' other ends.
   const positions: Record<string, { x: number; y: number }> = {};
-  columns.forEach((column, index) =>
-    column.forEach((id, position) => (positions[id] = { x: 40 + COLUMN * index, y: 40 + ROW * position })),
-  );
+  let x = 40;
+  const xs: number[] = [];
+  for (const column of columns) {
+    xs.push(x);
+    const width = Math.max(0, ...column.map((id) => size(id).width));
+    x += Math.max(COLUMN, width + COLUMN_GAP);
+  }
+  const place = (column: string[], index: number, wanted: (id: string) => number | null) => {
+    let bottom = -Infinity;
+    for (const id of column) {
+      const want = wanted(id);
+      const y = Math.max(want ?? (Number.isFinite(bottom) ? bottom : 40), Number.isFinite(bottom) ? bottom : -Infinity);
+      positions[id] = { x: xs[index], y: Math.round(y) };
+      bottom = y + size(id).height + ROW_GAP;
+    }
+  };
+  const fromSources = (id: string) => {
+    const edges = incoming[id].filter((edge) => positions[edge.source]);
+    if (!edges.length) return null;
+    return edges.reduce((sum, edge) => sum + positions[edge.source].y + portY(edge.source, edge.source_port, "out") - portY(id, edge.target_port, "in"), 0) / edges.length;
+  };
+  const fromTargets = (id: string) => {
+    const edges = leaving[id].filter((edge) => positions[edge.target]);
+    if (!edges.length) return null;
+    return edges.reduce((sum, edge) => sum + positions[edge.target].y + portY(edge.target, edge.target_port, "in") - portY(id, edge.source_port, "out"), 0) / edges.length;
+  };
+  columns.forEach((column, index) => place(column, index, (id) => (index === 0 ? null : fromSources(id))));
+  // Then the blocks nothing feeds move level with what they feed (the inputs on the left).
+  columns.forEach((column, index) => {
+    if (column.some((id) => incoming[id].length)) return;
+    place(column, index, fromTargets);
+  });
+  // Nothing above the top margin.
+  const top = Math.min(...Object.values(positions).map((item) => item.y));
+  if (Number.isFinite(top) && top !== 40) for (const item of Object.values(positions)) item.y += 40 - top;
   return moveNodes(diagram, positions);
 }
 
