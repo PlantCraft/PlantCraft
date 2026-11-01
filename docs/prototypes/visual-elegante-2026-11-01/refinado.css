@@ -1,0 +1,26 @@
+/* Variant A, "Refinado": tokens only. Same components, same palette; only the values of
+   shape, elevation, lines, type and motion change. Cost: one tokens.css edit. */
+:root, [data-theme="light"] {
+  --pc-border-subtle: #ececf0;
+  --pc-border: #dcdce1;
+  --pc-text-2: #3a3a3d;
+}
+:root {
+  --pc-radius-sm: 7px;
+  --pc-radius-md: 10px;
+  --pc-radius-lg: 14px;
+  --pc-radius-xl: 18px;
+  --pc-tracking-title: -.028em;
+  --pc-tracking-heading: -.018em;
+  --pc-ease: cubic-bezier(.32, .72, 0, 1);
+  --pc-duration: 240ms;
+}
+:root, [data-theme] {
+  --pc-shadow-1: 0 0 0 .5px color-mix(in srgb, var(--pc-shadow-color) 5%, transparent), 0 1px 2px color-mix(in srgb, var(--pc-shadow-color) 4%, transparent), 0 4px 12px color-mix(in srgb, var(--pc-shadow-color) 3%, transparent);
+  --pc-shadow-2: 0 0 0 .5px color-mix(in srgb, var(--pc-shadow-color) 6%, transparent), 0 4px 10px color-mix(in srgb, var(--pc-shadow-color) 5%, transparent), 0 12px 32px color-mix(in srgb, var(--pc-shadow-color) 7%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --pc-border-subtle: #262628; --pc-surface: #18181a; --pc-bg: #050505; }
+}
+.page-heading h1 { font-weight: 650; }
+.panel, .pc-dt .table-panel { border-color: transparent; }
