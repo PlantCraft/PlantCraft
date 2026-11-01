@@ -154,3 +154,60 @@ def test_work_carried_out_of_the_request_uses_the_visits_copy(app):
     with pytest.raises(ValueError):
         with demo_slots.using("../../etc"):
             pass
+
+
+def test_an_isolated_visit_saves_only_in_an_app_that_copies(tmp_path):
+    from plantcraft_sdk.server.access import Access
+
+    db = Database(tmp_path / "data" / "app.sqlite3")
+    notes = Notes(db)
+    copying, keeping = Access("Copies", demo_copy=True), Access("Keeps")
+    router = APIRouter()
+
+    @router.post("/api/copies")
+    def save_copy(_user: copying.EditorUser) -> dict:
+        notes.add("saved")
+        return {"notes": notes.texts()}
+
+    @router.post("/api/keeps")
+    def save_keep(_user: keeping.EditorUser) -> dict:
+        return {"ok": True}
+
+    fake = FakePlantCraft()
+    (tmp_path / "app.toml").write_text('[app]\nid = "demoapp"\nname = "Demo"\n')
+    runtime = SimpleNamespace(
+        settings=SimpleNamespace(root_path="/demo", processcraft_public_url="/"),
+        verifier=fake.verifier("linkcraft"),
+        shutdown=lambda: None,
+    )
+    api = suite_api(
+        runtime,
+        title="Demo",
+        version="0.1.0",
+        files=AppFiles("demoapp", tmp_path),
+        routers=[router],
+        status_route=False,
+    )
+    http = TestClient(mount(api, runtime, version="0.1.0"))
+    isolated = {"Authorization": f"Bearer {fake.token('operator', demo=_visit('v1'))}"}
+    shared = {"Authorization": f"Bearer {fake.token('operator', demo=_visit('v2', False))}"}
+    saved = http.post("/demo/api/copies", headers=isolated)
+    assert saved.status_code == 200 and saved.json()["notes"] == ["saved"]
+    assert notes.texts() == []
+    # An app that did not say it copies, or a visit not isolated: nothing is saved, as before.
+    assert http.post("/demo/api/keeps", headers=isolated).status_code == 403
+    assert http.post("/demo/api/copies", headers=shared).status_code == 403
+
+
+def test_a_visits_writes_to_plantcraft_with_the_apps_key_are_refused():
+    from plantcraft_sdk.client import DemoVisitWrite, _demo_visit_write
+
+    assert not _demo_visit_write("POST", "/api/v1/events")
+    with demo_slots.using(demo_slots.key_of("v1")):
+        assert _demo_visit_write("POST", "/api/v1/events")
+        assert _demo_visit_write("PUT", "/api/v1/schedules")
+        assert _demo_visit_write("PUT", "/api/v1/series")
+        # Reads that are not a GET still go.
+        assert not _demo_visit_write("POST", "/api/v1/series")
+        assert not _demo_visit_write("POST", "/api/v1/llm/assistant")
+    assert issubclass(DemoVisitWrite, Exception)

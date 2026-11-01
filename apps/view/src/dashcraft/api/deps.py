@@ -19,7 +19,7 @@ from dashcraft.api.runtime import Runtime
 from dashcraft.dashboards.folders import may_edit, may_see
 from dashcraft.i18n import t
 
-ACCESS = Access("Dashboards")
+ACCESS = Access("Dashboards", demo_copy=True)
 RuntimeDep = Annotated[Runtime, Depends(runtime)]
 EditorUser = ACCESS.EditorUser
 guarded = ACCESS.guarded

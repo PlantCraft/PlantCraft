@@ -138,8 +138,17 @@ it was taken, since a visit lasts 30 at most. Nothing has to tell the apps that 
   its visits on the shared data.
 - Work that leaves the request (a queue item, a thread) carries `demo_slots.visit_key()` and runs
   inside `demo_slots.using(key)`. Without that it runs on the app's own file.
-- Not yet: the visitor is still refused when saving (the editors are unlocked app by app, with
-  their limits, in a later step), and PlantCraft's own database and the Historian are not copied.
+- **Saving in a copy.** An app that declares `Access(label, demo_copy=True)` lets an isolated
+  visit save (its editors' routes), once every database the app opened can be copied: Alarms,
+  Analytics and View do. What such a save would send to PlantCraft with the app's own key
+  (events, notifications, schedules, knowledge, results) is refused (`DemoVisitWrite`), so a
+  visit's play never reaches what everyone else sees; reads that are a POST (series, a model's
+  answer) still go. What stays locked: everything only an administrator may do (a block's or a
+  rule's Python code, published models, settings, sources), PlantCraft's own pages, the
+  Historian and Documents (their files are not copied yet).
+- Work an app queues for later (an algorithm's run, a scheduled report) runs on the app's own
+  data, so a visit's new objects are not run by the workers; what runs during the request
+  (testing a rule or a block, a diagram's values) works.
 
 The code is in `plantcraft_sdk.server.demo_slots`.
 
