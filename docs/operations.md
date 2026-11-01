@@ -444,7 +444,8 @@ kept 24 h in `data/installer/status/diagnostics/`, both steps audited.
 **Zabbix.** `deploy/monitoring/zabbix/plantcraft_zabbix_agent.yaml` (in the bundle at
 `monitoring/`) is PlantCraft's official template for Zabbix 7.0 and later, "PlantCraft by Zabbix
 agent". A Zabbix agent on the PlantCraft machine reads `metrics.json` once a minute
-(`vfs.file.contents`, no token and no PlantCraft account: `data/` is 0711,
+(`vfs.file.contents`, no token and no PlantCraft account: the install folder and `data/` can be
+crossed by others (0711),
 `data/installer/status/` 0755, the file 0644), and dependent items take from it the machine's CPU,
 memory, load and free disk, the age of the file and, by low-level discovery of `services`, each
 service's state, health, restarts, killed-for-memory, CPU and memory as a share of its own limit.
