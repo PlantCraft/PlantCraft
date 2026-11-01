@@ -1,0 +1,149 @@
+/* Variant B, "Elegante": the tokens of A plus new templates for the shared components
+   (sidebar, cards, numbers, status, tabs, filters, tables, forms). Palette unchanged. */
+:root, [data-theme="light"] {
+  --pc-border-subtle: #ededf0;
+  --pc-border: #dedee3;
+  --pc-text-2: #3a3a3d;
+  --pc-field: #f2f2f5;           /* filled fields instead of outlined ones */
+  --pc-hair: rgba(0,0,0,.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --pc-border-subtle: #262628; --pc-surface: #161618; --pc-bg: #000; --pc-field: #232326; --pc-hair: rgba(255,255,255,.08); }
+}
+:root {
+  --pc-radius-sm: 7px; --pc-radius-md: 10px; --pc-radius-lg: 16px; --pc-radius-xl: 20px;
+  --pc-tracking-title: -.03em; --pc-tracking-heading: -.02em;
+  --pc-ease: cubic-bezier(.32, .72, 0, 1); --pc-duration: 240ms;
+}
+:root, [data-theme] {
+  --pc-shadow-1: 0 0 0 .5px var(--pc-hair), 0 1px 2px color-mix(in srgb, var(--pc-shadow-color) 3%, transparent), 0 8px 24px color-mix(in srgb, var(--pc-shadow-color) 4%, transparent);
+  --pc-shadow-2: 0 0 0 .5px var(--pc-hair), 0 6px 14px color-mix(in srgb, var(--pc-shadow-color) 6%, transparent), 0 18px 44px color-mix(in srgb, var(--pc-shadow-color) 9%, transparent);
+}
+
+/* Page rhythm: more air above sections, quieter heading. */
+.pcs-content { padding: 40px 48px; }
+.page-heading { margin-bottom: 28px; }
+.page-heading h1 { font-size: 32px; font-weight: 650; letter-spacing: -.032em; }
+.section-title { font-weight: 600; letter-spacing: -.02em; margin-top: 36px; }
+
+/* Sidebar: graphite, softer; the active item is a quiet filled shape, no stripe. */
+.pcs-sidebar { background: linear-gradient(180deg, #1d1d20 0%, #18181a 100%); box-shadow: inset -.5px 0 0 rgba(255,255,255,.06); }
+.pcs-nav-item { min-height: 36px; font-weight: 500; color: #b9b9be; gap: 11px; }
+.pcs-nav-item > svg { width: 17px; height: 17px; opacity: .85; }
+.pcs-nav-item.pcs-active { box-shadow: none; background: rgba(255,255,255,.09); color: #fff; }
+.pcs-nav-item.pcs-active > svg { color: var(--pc-chrome-accent); opacity: 1; }
+.pcs-brand .brand strong { font-weight: 600; letter-spacing: -.02em; font-size: 19px; }
+.pcs-sidebar .pc-search, .pcs-sidebar [class*="search"] { border-color: transparent !important; background: rgba(255,255,255,.06) !important; }
+
+/* Cards: no outline, a hairline + a long soft shadow; bigger radius. */
+.panel, .pc-dt .table-panel, .pc-wg-card { border-color: transparent; border-radius: var(--pc-radius-lg); box-shadow: var(--pc-shadow-1); }
+.panel { padding: 24px; }
+.pc-wg-card { padding: 16px 20px; }
+.pc-wg-card-head h2 { font-weight: 500; color: var(--pc-text-3); letter-spacing: -.005em; }
+:is(a, button).card:hover { transform: translateY(-1px); box-shadow: var(--pc-shadow-2); transition: transform var(--pc-duration) var(--pc-ease), box-shadow var(--pc-duration) var(--pc-ease); }
+
+/* Numbers: the hero of each card, lighter weight, tight tracking. */
+.pc-wg-number { font-size: 44px; font-weight: 600; letter-spacing: -.035em; }
+.pc-wg-number small { font-weight: 500; letter-spacing: 0; }
+.kpi-value, .result-headline-main b { font-weight: 600 !important; letter-spacing: -.03em; }
+.pc-overline { font-weight: 500; }
+
+/* Status: hues kept, large areas calmer (rounded, separated, a touch less saturated). */
+.pc-wg-bar { height: 8px !important; gap: 3px; background: transparent !important; }
+.pc-wg-bar > * { border-radius: 4px; }
+.pc-wg-square { border-radius: 4px; filter: saturate(.82); }
+.pc-wg-tile-set { gap: 4px; }
+.pc-wg-bar > span { filter: saturate(.82); }
+.pill { padding: 3px 10px 3px 8px; font-weight: 500; }
+.pill i { width: 6px; height: 6px; }
+
+/* Tabs: a segmented control in place of the underline. */
+.pcs-tabs { box-shadow: none; display: inline-flex; padding: 3px; gap: 2px; border-radius: 11px; background: color-mix(in srgb, var(--pc-text) 6%, transparent); margin-bottom: 24px; }
+.pcs-tabs a { padding: 6px 16px; border: 0; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--pc-text-2); }
+.pcs-tabs a.pcs-active { color: var(--pc-text); background: var(--pc-surface); box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 0 0 .5px rgba(0,0,0,.04); }
+.segmented { border: 0; background: color-mix(in srgb, var(--pc-text) 6%, transparent); border-radius: 10px; }
+.segmented button:is(.on, .active) { color: var(--pc-text); background: var(--pc-surface); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+/* Filters and search: filled, borderless, pill-like. */
+.pc-multi-button, .pc-dt-search, .search, .toolbar label.search { border-color: transparent; background: var(--pc-field); border-radius: 10px; }
+.pc-multi-button:hover { border-color: transparent; background: color-mix(in srgb, var(--pc-text) 9%, transparent); }
+
+/* Tables: quiet head, hairline rows inset from the edges, tags without wrapping. */
+.table th { color: var(--pc-text-4); font-weight: 500; padding: 12px 16px; border-bottom-color: var(--pc-border-subtle); }
+.table td { padding: 14px 16px; border-bottom: 0; box-shadow: inset 0 -.5px 0 var(--pc-border-subtle); }
+.table td:first-child, .table th:first-child { padding-left: 22px; }
+.table td:last-child, .table th:last-child { padding-right: 22px; }
+.tag { white-space: nowrap; font-weight: 500; background: color-mix(in srgb, var(--pc-primary) 8%, transparent); }
+.pc-dt-clickable:hover td { background: color-mix(in srgb, var(--pc-primary) 3%, var(--pc-surface)); }
+
+/* Buttons: softer secondary, same blue primary. */
+.button { border-radius: 10px; font-weight: 500; }
+.button-secondary { border-color: transparent; background: var(--pc-field); }
+.button-secondary:hover { border-color: transparent; background: color-mix(in srgb, var(--pc-text) 9%, transparent); }
+.button-primary { box-shadow: 0 1px 2px rgba(0,0,0,.12), inset 0 .5px 0 rgba(255,255,255,.15); }
+
+/* Forms: filled fields, label lighter, focus ring instead of border. */
+:where(input, select, textarea) { border-color: transparent; background-color: var(--pc-field); border-radius: 10px; min-height: 38px; transition: box-shadow var(--pc-duration) var(--pc-ease), background var(--pc-duration) var(--pc-ease); }
+:where(input, select, textarea):focus { outline: none; background-color: var(--pc-surface); box-shadow: 0 0 0 1px var(--pc-primary), 0 0 0 4px color-mix(in srgb, var(--pc-primary) 18%, transparent); }
+.schedule-section { border: 0; }
+.schedule-field > span, .schedule-field > .label, label.schedule-field { font-weight: 500; }
+.schedule-day { border-color: transparent; background: var(--pc-field); font-weight: 500; }
+.blkf-part-number { background: var(--pc-primary) !important; color: #fff !important; }
+.blkf-bar, .schedule-bar { border: 0 !important; backdrop-filter: saturate(180%) blur(20px); background: color-mix(in srgb, var(--pc-surface) 90%, transparent) !important; box-shadow: 0 -.5px 0 var(--pc-hair) !important; }
+/* Status in tables: a dot and the word, no filled capsule (the colour is the dot). */
+.table .pill { background: transparent !important; border: 0 !important; padding-left: 0; }
+.pc-wg-number { font-size: 48px; }
+.pcs-content { max-width: 1480px; }
+/* Variant C, "Estúdio": B plus a light sidebar of the canvas colour (the app chrome becomes
+   part of the page, like desktop apps of the last few years). Shown for comparison; the
+   owner chose the graphite sidebar on 2026-10-23. */
+.pcs-sidebar { background: color-mix(in srgb, var(--pc-bg) 70%, var(--pc-surface)) !important; box-shadow: inset -.5px 0 0 var(--pc-hair); color: var(--pc-text); }
+.pcs-sidebar .brand strong, .pcs-profile-text strong { color: var(--pc-text) !important; }
+.pcs-sidebar .brand small, .pcs-profile-text small { color: var(--pc-text-3) !important; }
+.pcs-nav-item { color: var(--pc-text-2); }
+.pcs-nav-item:hover { color: var(--pc-text); background: color-mix(in srgb, var(--pc-text) 5%, transparent); }
+.pcs-nav-item.pcs-active { color: var(--pc-text); background: color-mix(in srgb, var(--pc-text) 8%, transparent); }
+.pcs-nav-item.pcs-active > svg { color: var(--pc-primary); }
+.pcs-sidebar [class*="search"] { background: color-mix(in srgb, var(--pc-text) 6%, transparent) !important; color: var(--pc-text-3) !important; }
+.pcs-sidebar kbd { color: var(--pc-text-3) !important; border-color: var(--pc-border) !important; background: transparent !important; }
+.pcs-account { border-top-color: var(--pc-hair); }
+.pcs-sidebar-bottom button, .pcs-sidebar-bottom svg { color: var(--pc-text-3); }
+.pcs-avatar { color: var(--pc-primary-text); background: var(--pc-primary-soft); }
+.pcs-main { background: var(--pc-bg); }
+.pcs-switcher-chevron { color: var(--pc-text-3); }
+.pcs-sidebar { border-right: 0 !important; }
+/* Charts (Plotly SVG): no vertical grid, lighter titles, a slightly thicker line, calmer bars.
+   The real change belongs in ui's Plot layout, not in CSS. */
+.js-plotly-plot .xgrid { display: none; }
+.js-plotly-plot .ygrid { stroke-opacity: .6 !important; }
+.js-plotly-plot text.gtitle { font-size: 13px !important; font-weight: 600 !important; fill: var(--pc-text-2) !important; }
+.js-plotly-plot .js-line { stroke-width: 1.75px !important; }
+.js-plotly-plot .bars path { opacity: .82; }
+
+/* Round 2 (2026-11-01): flatter top, more rows on screen. */
+.pcs-content { padding: 24px 40px 40px; }
+.page-heading { --pc-heading-height: 36px; margin-bottom: 14px; }
+.page-heading h1 { font-size: 26px; letter-spacing: -.028em; }
+.pcs-tabs { margin: 0 0 14px; padding: 2px; }
+.pcs-tabs a { padding: 5px 14px; }
+.toolbar, .pc-dt-bar, .results-filters { margin-bottom: 10px; gap: 8px; }
+.pc-multi-button, .pc-dt-search, .search { min-height: 32px; }
+:where(.toolbar, .results-filters, .pc-dt-bar) :where(input) { min-height: 32px; }
+.table th { padding: 9px 14px; }
+.table td { padding: 9px 14px; }
+.table td small.clamp, .table td small { -webkit-line-clamp: 1; line-clamp: 1; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.table td { white-space: normal; }
+.table td:nth-child(3) { white-space: nowrap; }
+/* Overview: Customize on the title's line, not under it. */
+.pc-overview-heading { margin-bottom: 0; }
+.pc-overview-heading + * .pc-wg-head:not(.pc-wg-head-editing), .pc-overview-heading ~ .pc-wg > .pc-wg-head:not(.pc-wg-head-editing) { margin-top: -36px; margin-bottom: 14px; min-height: 36px; }
+.pc-wg-number { font-size: 40px; }
+.panel { padding: 20px; }
+/* C2 "Flutuante": the sidebar is a panel floating on the canvas, inset with round corners. */
+.pcs-sidebar { inset: 10px auto 10px 10px !important; width: calc(var(--pcs-sidebar) - 10px) !important; border-radius: 16px; background: var(--pc-surface) !important; box-shadow: 0 0 0 .5px var(--pc-hair), 0 8px 28px rgba(0,0,0,.06) !important; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pcs-sidebar { background: #1c1c1e !important; } }
+.pc-wg-card { padding: 14px 18px; }
+.table td:last-child { white-space: nowrap; }
+.pcs-sidebar-bottom, .pcs-account { border-top-color: var(--pc-hair) !important; }
+.pcs-sidebar hr, .pcs-sidebar-bottom::before { border-color: var(--pc-hair) !important; background: var(--pc-hair) !important; }
+.pcs-quick { border-top-color: var(--pc-hair) !important; } .pcs-quick button { color: var(--pc-text-3) !important; }
