@@ -16,12 +16,12 @@ is the read-only visitor account `demo`, in one of a few places at once:
 - a free place is taken at once; when every place is taken, the page shows the visitor's number
   in line and about how long until a place frees, and asks again every 5 s (a browser silent for
   30 s leaves the line; the first in line takes the next place);
-- a visit lasts while it is used, with no clock on screen: it ends `PLANTCRAFT_PUBLIC_DEMO_MINUTES`
-  (30) after its last use (a click, a key, a scroll, in the apps too), so a tab forgotten for days
-  does not hold a place. Only the last 5 minutes show a note, with **Keep exploring** and
-  **Leave** (which frees the place);
-- a visitor who has not used the page for `PLANTCRAFT_PUBLIC_DEMO_IDLE_MINUTES` (5) gives up
-  their place, but only to someone waiting;
+- a visit lasts `PLANTCRAFT_PUBLIC_DEMO_MINUTES` (30) from the moment it starts, with its clock
+  always on screen (bottom center, with **Leave**); the last 2 minutes say the visit is ending
+  and its changes are discarded;
+- a visit left unused (no click, key, scroll or touch, in the apps too) for
+  `PLANTCRAFT_PUBLIC_DEMO_IDLE_MINUTES` (5) ends, someone waiting or not, so a tab forgotten for
+  days never holds a place; its last minute asks "Still there?" with **Keep exploring**;
 - no cap per address: behind the proxy and the tunnel every visitor can seem to come from one
   (the per-visit request limits still hold);
 - from outside (through the proxy) the visitor account signs in only this way, never with its
@@ -38,6 +38,25 @@ its visitor waited in line; no address) and the pages it had in front in `demo_v
 only, an object's id as `:id`), kept 400 days. `GET /api/demo/stats` gives them, with the places
 taken now, to whoever holds `PLANTCRAFT_PUBLIC_DEMO_STATS_KEY` as a bearer token (unset: a 404);
 the site's private `/stats` page reads it (`site/README.md`).
+
+## Updating the demo
+
+An update stops the suite for a few minutes, and a visitor who meets an error page thinks the
+product is broken. So the visits are told first:
+
+- `plantcraft demo update-notice --in 2` (inside the PlantCraft container; `vm.sh demo` runs it
+  before it updates, `UPDATE_NOTICE_MINUTES`) puts a strip across the top of every visit: "The
+  demo will be updated to a new version in 1:59...". No new visit starts; the sign-in page says
+  the demo is being updated and that nothing is broken.
+- When the time comes every visit ends, and its browser goes to
+  `PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL` (the site's `/demo-updating`; without it, the sign-in
+  page). The site does not restart with the demo: its page says the demo is being updated, asks
+  the site's `/api/demo/ready` every 10 s (the demo's stats, with no update under way), and opens
+  the demo again once it is back.
+- `plantcraft demo update-notice --clear` (`vm.sh demo` runs it after the update) lets visits
+  start again; a notice nobody cleared is forgotten 30 minutes after it was due.
+- A page of PlantCraft asked for while it restarts gets the proxy's short "PlantCraft is
+  restarting" page, which opens again by itself, instead of a bare 502 (any installation).
 
 ## Guides by role
 
@@ -102,15 +121,37 @@ guide away, take **Another role**, or close it. While a guide is on, the apps' o
   here. `PLANTCRAFT_PUBLIC_DEMO_LLM=off` and a restart turn it off.
 - **Nothing a visitor does reaches another visitor**: no messages, no actions, no audit entries.
 
+## A copy of the demo for each visit
+
+With `PLANTCRAFT_PUBLIC_DEMO_ISOLATED=true`, each visit's tokens carry `"isolated": true` and
+every app gives the visit its own copy of the app's database, taken the first time the visit
+touches it (SQLite's backup, in `data/<app>/demo-slots/<visit hash>/`). Every read and write of
+the visit goes to that copy, so one visitor never sees what another changed, and the app's own
+file, which no visitor writes, stays the demo's starting point. A copy is deleted 45 minutes after
+it was taken, since a visit lasts 30 at most. Nothing has to tell the apps that a visit ended.
+
+- The app checks the token's signature before it picks a copy (`DemoSlots`, added by
+  `web.mount`); a forged claim never makes or picks one.
+- A store whose rows a copy must not reset (counters, such as the assistant's questions) sets
+  `DEMO_SHARED = True` and stays on the app's file.
+- A database larger than `PLANTCRAFT_DEMO_SLOT_MAX_MB` (200) is never copied, and that app keeps
+  its visits on the shared data.
+- Work that leaves the request (a queue item, a thread) carries `demo_slots.visit_key()` and runs
+  inside `demo_slots.using(key)`. Without that it runs on the app's own file.
+- Not yet: the visitor is still refused when saving (the editors are unlocked app by app, with
+  their limits, in a later step), and PlantCraft's own database and the Historian are not copied.
+
+The code is in `plantcraft_sdk.server.demo_slots`.
+
 ## Keeping the demo fast
 
 A demo is only convincing when it answers quickly, so a visit is held to a share of the suite:
 
 | Setting | Default | What it limits |
 |---|---|---|
-| `PLANTCRAFT_PUBLIC_DEMO_SEATS` | 10 | Visits at once |
-| `PLANTCRAFT_PUBLIC_DEMO_MINUTES` | 30 | A visit ends this long after it was last used |
-| `PLANTCRAFT_PUBLIC_DEMO_IDLE_MINUTES` | 5 | Unused this long, a visit gives way to someone waiting |
+| `PLANTCRAFT_PUBLIC_DEMO_SEATS` | 30 | Visits at once |
+| `PLANTCRAFT_PUBLIC_DEMO_MINUTES` | 30 | A visit lasts this long from its start (its clock) |
+| `PLANTCRAFT_PUBLIC_DEMO_IDLE_MINUTES` | 5 | Unused this long, a visit ends |
 | `PLANTCRAFT_PUBLIC_DEMO_QUERIES` | 4 | A visit's requests in flight in each app |
 | `PLANTCRAFT_PUBLIC_DEMO_QUERIES_TOTAL` | 8 | All visits' requests in flight in each app (per process) |
 | `PLANTCRAFT_PUBLIC_DEMO_RATE` | 600 | Requests a minute to PlantCraft, per visit (per address before a visit) |
@@ -123,8 +164,9 @@ two minutes even in a tab left open. The series reads of a visit through API v1 
 the visit's own budget (`plantcraft.api.usage`), not one shared by every visitor.
 
 The defaults come from the multi-user load test (`ci/bench/load_users.py`, 2026-10-27, 4 vCPU and
-16 GB, the whole suite, with that day's speed fixes): 10 people kept a screen's p95 at 1.0 s and 50 at 1.6 s, so 10 places are
-comfortably safe on such a machine. A screen fires about 15 calls at once, so 4 in flight per
+16 GB, the whole suite, with that day's speed fixes): 10 people kept a screen's p95 at 1.0 s and 50 at 1.6 s, so 10 places were
+comfortably safe on such a machine; 30 (the default since 2026-11-01) stay well under the 50
+measured. A screen fires about 15 calls at once, so 4 in flight per
 visit keeps it quick; with 10 places, 8 per app process holds the heaviest reads (dashboards and
 reports over 30 days) from piling up. Details in [requirements.md](requirements.md).
 

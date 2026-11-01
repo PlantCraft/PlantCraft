@@ -85,6 +85,8 @@ a.asst-ref:hover { border-color: var(--pc-primary-border); color: var(--pc-prima
 .asst-composer { display: flex; align-items: flex-end; gap: var(--pc-space-2); max-width: 900px; width: calc(100% - 32px); margin: var(--pc-space-2) auto var(--pc-space-4); padding: var(--pc-space-2) var(--pc-space-2) var(--pc-space-2) calc(14px * var(--pc-space-scale, 1)); border: 1px solid var(--pc-border-strong, var(--pc-border)); border-radius: var(--pc-radius-xl); background: var(--pc-surface); box-shadow: 0 2px 8px color-mix(in srgb, var(--pc-shadow-color) 8%, transparent); }
 .asst-composer textarea, .asst-composer textarea:focus, .asst-composer textarea:focus-visible { border: 0; box-shadow: none; outline: 0; }
 .asst-composer:focus-within { border-color: var(--pc-primary-border); }
+.asst-composer:has(.asst-composer-note) { flex-wrap: wrap; }
+.asst-composer-note { flex-basis: 100%; order: 3; color: var(--pc-text-3); font-size: calc(12px * var(--pc-text-scale, 1)); padding: 0 0 2px; }
 .asst-composer textarea { flex: 1; min-height: 24px; max-height: 220px; padding: calc(5px * var(--pc-space-scale, 1)) 0; border: 0; outline: 0; background: transparent; color: var(--pc-text); font: inherit; font-size: var(--pc-fs-sm); line-height: 1.5; resize: none; }
 .asst-send { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--pc-primary); color: var(--pc-on-accent); cursor: pointer; }
 .asst-send:disabled { opacity: .4; cursor: default; }

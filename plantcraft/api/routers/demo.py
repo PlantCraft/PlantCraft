@@ -77,6 +77,11 @@ def enter(
             status_code=503, detail=t("The demo is being prepared. Try again in a few minutes.")
         )
     current = demo_visit(request, rt)
+    if current is None and rt.workspace.demo_visits.update_at() is not None:
+        raise HTTPException(
+            status_code=503,
+            detail=t("The demo is being updated. It will be back in a few minutes."),
+        )
     if current is None:
         found = rt.workspace.demo_visits.enter(
             seats=demo.seats,
@@ -108,15 +113,40 @@ def heartbeat(payload: HeartbeatPayload, request: Request, rt: Runtime) -> dict[
     demo = _demo()
     visit = request.session.get("demo_visit")
     found = (
-        rt.workspace.demo_visits.seen(str(visit), active=payload.active, minutes=demo.minutes)
+        rt.workspace.demo_visits.seen(
+            str(visit),
+            active=payload.active,
+            minutes=demo.minutes,
+            idle_minutes=demo.idle_minutes,
+        )
         if visit
         else None
     )
+    now = time.time()
+    update_at = rt.workspace.demo_visits.update_at(now)
+    if found is not None and update_at is not None and update_at <= now:
+        # The update is here: the visit ends, and the frame shows where to wait.
+        rt.workspace.demo_visits.leave(found.visit)
+        found = None
     if found is None:
-        raise HTTPException(status_code=401, detail=t("Your demo visit ended."))
+        raise HTTPException(
+            status_code=401,
+            detail=t("The demo is being updated. It will be back in a few minutes.")
+            if update_at is not None
+            else t("Your demo visit ended."),
+        )
     if payload.pages:
         rt.workspace.demo_visits.opened(str(visit), payload.pages)
-    return {"seconds_left": found.seconds_left(), "minutes": demo.minutes}
+    return {
+        # Seconds until an announced update ends every visit (None: none announced).
+        "update_seconds": max(int(update_at - now), 0) if update_at is not None else None,
+        # The visit's clock, shown all the time.
+        "clock_seconds": found.clock_left(demo.minutes, now),
+        # When it ends: the clock, or sooner when the visitor stops using it.
+        "seconds_left": found.seconds_left(now),
+        "minutes": demo.minutes,
+        "idle_minutes": demo.idle_minutes,
+    }
 
 
 @router.get("/api/demo/stats")
@@ -133,7 +163,12 @@ def stats(
         raise HTTPException(status_code=404, detail=t("Not found."))
     now = time.time()
     return {
-        "now": {**rt.workspace.demo_visits.counts(now), "seats": demo.seats},
+        "now": {
+            **rt.workspace.demo_visits.counts(now),
+            "seats": demo.seats,
+            # An update announced or under way: the site's "updating" page waits for it to end.
+            "updating": rt.workspace.demo_visits.update_at(now) is not None,
+        },
         "visits": rt.workspace.demo_visits.history(now - days * 86400, now),
         "pages": rt.workspace.demo_visits.pages(now - days * 86400),
         "journeys": rt.workspace.demo_visits.journeys(now - days * 86400, now=now),

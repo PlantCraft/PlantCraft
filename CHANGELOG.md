@@ -21,6 +21,25 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - `plantcraft-sdk`: **`displayfit`**, the check that every page fits at every display size, on a
   small laptop and a large screen: no text cut, out of its card or over other text, no page wider
   than the screen. PlantCraft and every app run it in `tests/e2e/test_display_sizes.py`.
+- **Public demo: a copy of every app's database for each visit (`plantcraft-sdk` 0.97.0).**
+  With `PLANTCRAFT_PUBLIC_DEMO_ISOLATED=true` (off by default), a visit's token is marked
+  isolated. Each app then sends the visit's reads and writes to the visit's own copy of its
+  SQLite file (`plantcraft_sdk.server.demo_slots`), taken on first use and deleted 45 minutes later.
+  The token's signature is checked first, stores with `DEMO_SHARED = True` stay shared, and
+  databases over `PLANTCRAFT_DEMO_SLOT_MAX_MB` are not copied. Visitors still save nothing
+  until the editors are unlocked.
+
+### Changed
+
+- **Public demo: a visible 30-minute clock and a 5-minute idle end.** A visit lasts
+  `PLANTCRAFT_PUBLIC_DEMO_MINUTES` (30) from its start, whatever its use, with its clock always
+  on screen; unused for `PLANTCRAFT_PUBLIC_DEMO_IDLE_MINUTES` (5) it ends even with nobody
+  waiting, after a "Still there?" minute. The heartbeat answers `clock_seconds` and
+  `idle_minutes` too (docs/public-demo.md).
+- **Public demo: 30 places by default** (`PLANTCRAFT_PUBLIC_DEMO_SEATS`, was 10).
+
+### Added
+
 - `@plantcraft/ui`, the block diagram editor (Analytics' algorithms, Models): **a wire is
   followed and read**.
   - Pointing at a wire, at a port of a block or at a kind of wire in the legend lights those wires
@@ -34,6 +53,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
     copy of the canvas's own, is gone; the keys F (fit), + and - zoom.
   - The legend folds into a "Legend" button; open, it also names the libraries the blocks'
     colours stand for.
+- **Public demo: updates announced to the visits.** `plantcraft demo update-notice --in 2`
+  shows every visit a countdown strip, stops new visits, then ends them and sends them to the
+  site's `/demo-updating` page (`PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL`), which opens the demo
+  again once it is back; `--clear` after the update. `vm.sh demo` does both around an update.
+  The proxy answers a PlantCraft page asked for while it restarts with a short "PlantCraft is
+  restarting" page instead of a bare 502.
 - **API v1: interpolated reads and summaries (gap H5, `plantcraft-sdk` 0.95.0).**
   - Series reads (`GET .../series`, `POST /api/v1/series`) take `sampling=interpolated` and
     `max_gap`. They give the value at each grid time, as PI's and Seeq's interpolated reads

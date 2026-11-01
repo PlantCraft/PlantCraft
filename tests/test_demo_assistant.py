@@ -32,6 +32,7 @@ class VisitModel:
     tools: list[str] = []
     rounds: list[int] = []
     obeyed: list[str] = []
+    systems: list[str] = []
 
     def __init__(self, api_key, *, provider, model, endpoint, reasoning=""):
         self.label = f"Local · {model}"
@@ -40,6 +41,7 @@ class VisitModel:
 
     def answer(self, system, messages, tool=None, tools=None):
         VisitModel.tools = [item["name"] for item in tools or []]
+        VisitModel.systems.append(system)
         VisitModel.rounds.append(self.rounds)
         tool("search_signals", {"query": "pv"})
         self.usage = {"calls": 2, "input": 3000, "cached": 1000, "output": 200, "reasoning": 50}
@@ -178,6 +180,17 @@ def test_a_visit_only_asks_with_few_rounds(demo):
     # No card that creates, four rounds of reads.
     assert not [name for name in VisitModel.tools if name.startswith("propose")]
     assert VisitModel.rounds == [4]
+    # Told it is the demo, to be short, and that it creates nothing; the rules come before who
+    # asks and when, so the provider reuses them from one question to the next.
+    told = VisitModel.systems[-1]
+    assert told.startswith("You are PlantCraft's assistant, in Desk.")
+    assert "public demo" in told and "You cannot create anything here" in told
+    assert "propose_create" not in told
+    assert (
+        told.index("Be brief.")
+        < told.index("You are talking with")
+        < told.index("Times are ISO 8601")
+    )
     works = visitor.get("/api/assistant/works", params={"page": "processcraft:actions"}).json()
     assert works["works"] and all(item.get("kind") != "create" for item in works["works"])
     assert _ask(visitor, work="processcraft:new-action").status_code == 404
@@ -191,6 +204,9 @@ def test_a_visit_only_asks_with_few_rounds(demo):
     assert _ask(admin).status_code == 201
     assert [name for name in VisitModel.tools if name.startswith("propose")]
     assert VisitModel.rounds[-1] == 8
+    assert (
+        "propose_create" in VisitModel.systems[-1] and "public demo" not in VisitModel.systems[-1]
+    )
 
 
 def test_questions_per_visit_per_address_and_per_day(demo):
@@ -341,3 +357,50 @@ def test_a_visits_answer_reads_at_most_its_tool_calls_and_last_turns(demo):
     assert seen["turns"] == 1
     answer = visitor.get(f"/api/assistant/chats/{chat_id}").json()["messages"][-1]
     assert answer["text"] == "Done. x"
+
+
+def test_a_visit_reads_the_teams_chats_but_asks_only_in_its_own(demo):
+    app = demo(PLANTCRAFT_PUBLIC_DEMO_LLM="on")
+    store = app.state.runtime.assistant.store
+    team = store.create("demo", "Which valves stick?")
+    store.add(team["chat_id"], "user", "Which valves stick?")
+    visitor = _visit(app)
+    listed = [item["chat_id"] for item in visitor.get("/api/assistant").json()["chats"]]
+    assert team["chat_id"] in listed
+    read = visitor.get(f"/api/assistant/chats/{team['chat_id']}").json()
+    assert read["chat"]["can_ask"] is False
+    assert (
+        visitor.post(
+            f"/api/assistant/chats/{team['chat_id']}/messages", json={"text": "and?"}
+        ).status_code
+        == 404
+    )
+    own = _ask(visitor).json()["chat"]["chat_id"]
+    assert visitor.get(f"/api/assistant/chats/{own}").json()["chat"]["can_ask"] is True
+
+
+def test_another_viewer_of_the_demo_reads_but_never_asks(demo):
+    app = demo(PLANTCRAFT_PUBLIC_DEMO_LLM="on")
+    admin = TestClient(app)
+    assert admin.post(
+        "/api/login", json={"username": "admin", "password": "admin-secret"}
+    ).is_success
+    assert (
+        admin.post(
+            "/api/users",
+            json={
+                "username": "reader",
+                "display_name": "Reader",
+                "role": "Engineer",
+                "password": "reader-password-1",
+                "access_level": "viewer",
+            },
+        ).status_code
+        == 201
+    )
+    reader = TestClient(app)
+    assert reader.post(
+        "/api/login", json={"username": "reader", "password": "reader-password-1"}
+    ).is_success
+    assert reader.get("/api/assistant").json()["available"] is False
+    assert _ask(reader).status_code == 403

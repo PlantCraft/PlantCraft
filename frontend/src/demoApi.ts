@@ -3,8 +3,13 @@ import { requestJson } from "./api";
 import { t } from "./i18n";
 import type { SessionInfo } from "./types";
 
-export interface PublicDemoInfo { seats: number; minutes: number; contact_url?: string }
-export interface DemoVisitInfo { seconds_left: number; minutes: number }
+/** `updating`: an update is announced or under way (no new visit starts); `updating_url`: where a
+ * visit waits for it (the site's page). */
+export interface PublicDemoInfo { seats: number; minutes: number; contact_url?: string; updating_url?: string; updating?: boolean }
+/** `clock_seconds`: the visit's clock, shown all the time; `seconds_left`: when it ends (the clock,
+ * or sooner once the visitor stops using it for `idle_minutes`); `update_seconds`: until an
+ * announced update ends every visit (null: none). */
+export interface DemoVisitInfo { update_seconds?: number | null; clock_seconds: number; seconds_left: number; minutes: number; idle_minutes: number }
 export type Entered = SessionInfo & { entered: true };
 export type Waiting = { entered: false; ticket: string | null; position: number; wait_seconds: number; seats: number };
 

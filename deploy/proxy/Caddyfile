@@ -186,8 +186,25 @@
 	}
 
 	handle_errors 502 503 504 {
-		header Content-Type "text/plain; charset=utf-8"
-		respond "This application is not installed on this server, or it is not running. Ask the administrator: PlantCraft lists the installed apps in its launcher." {err.status_code}
+		# A page of PlantCraft itself while it restarts (an update, a restart): a short page that
+		# says so and opens again by itself, never a bare error that reads as a broken product
+		# (docs/public-demo.md, "Updating the demo"). Its own policy: no script, no image; no brace
+		# in the page (Caddy reads one as a placeholder).
+		@suite_page {
+			not path /link/* /dash/* /hist/* /alarm/* /model/* /doc/* /api/* /static/*
+			header Accept *text/html*
+		}
+		handle @suite_page {
+			header Content-Type "text/html; charset=utf-8"
+			header Cache-Control "no-store"
+			header Retry-After "15"
+			header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'"
+			respond `<!doctype html><html lang="en" style="color-scheme: light dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="refresh" content="15"><title>PlantCraft is restarting</title></head><body style="margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; font: 16px/1.5 system-ui, sans-serif; background: Canvas; color: CanvasText"><main style="max-width: 440px; text-align: center"><h1>PlantCraft is restarting</h1><p style="opacity: 0.75">It is being updated or restarted and will be back in a minute or two. Nothing is lost: this page opens again by itself.</p></main></body></html>` 503
+		}
+		handle {
+			header Content-Type "text/plain; charset=utf-8"
+			respond "This application is not installed on this server, or it is not running. Ask the administrator: PlantCraft lists the installed apps in its launcher." {err.status_code}
+		}
 	}
 }
 
