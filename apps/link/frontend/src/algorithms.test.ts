@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { algorithmOf, contents, copyName, editorPath, newAlgorithmId, tagOptions, traceOfBlocks, withTags } from "./algorithms";
+import { describe, expect, it, vi } from "vitest";
+import { algorithmOf, contents, copyName, editorPath, newAlgorithmId, openEditor, tagOptions, traceOfBlocks, withTags } from "./algorithms";
 
 const CATALOG = {
   libraries: [
@@ -47,6 +47,13 @@ describe("algorithms", () => {
     expect(editorPath(null)).toBe("/editor/new");
     expect(editorPath(null, "control_valve")).toBe("/editor/new?from=control_valve");
     expect(editorPath(null, undefined, "reactor-loop")).toBe("/editor/new?model=reactor-loop");
+  });
+
+  it("opens the editor on its own page, not inside the suite's frame (it never opened in the demo)", () => {
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    openEditor(null, "flow_loop");
+    expect(open.mock.calls[0][0]).toMatch(/\/editor\/new\?from=flow_loop&pc-frame=off$/);
+    open.mockRestore();
   });
 
   it("draws what each block said in a run on its verdict output", () => {

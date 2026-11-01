@@ -204,6 +204,26 @@ describe("arrange", () => {
     expect(placed.pv.y).not.toBe(placed.op.y);
   });
 
+  it("never lays a block over another, whatever their heights", () => {
+    const tall = (id: string) => ({ id, block: "logic.worst" });
+    const wire = (source: string, target: string) => ({ source, source_port: "result", target, target_port: "in" });
+    const fan: Diagram = {
+      nodes: [{ id: "pv", block: "logic.worst" }, ...["a", "b", "c", "d"].map(tall), { id: "out", block: "output.result" }],
+      edges: [wire("pv", "a"), wire("pv", "b"), wire("pv", "c"), wire("pv", "d"), wire("a", "out"), wire("d", "out")],
+    };
+    const sizes = Object.fromEntries(fan.nodes.map((node) => [node.id, { width: 220, height: node.id === "b" ? 400 : 120 }]));
+    const placed = arrange(fan, { blocks: BLOCKS, sizes }).nodes;
+    for (const one of placed) {
+      for (const other of placed) {
+        if (one === other || one.x !== other.x) continue;
+        const [top, bottom] = one.y! < other.y! ? [one, other] : [other, one];
+        expect(bottom.y!).toBeGreaterThanOrEqual(top.y! + sizes[top.id].height);
+      }
+    }
+    // An input sits level with what it feeds, not above it all.
+    expect(Math.min(...placed.map((node) => node.y!))).toBe(40);
+  });
+
   it("keeps a feedback loop left to right from where it is entered", () => {
     // setpoint -> controller -> plant -> sensor -> back into the controller.
     const block = (id: string) => ({ id, block: "logic.worst" });

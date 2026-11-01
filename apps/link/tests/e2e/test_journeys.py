@@ -149,7 +149,10 @@ def test_an_algorithm_page_and_its_editor_window(signed_in, app_url, screenshots
     expect(page.locator(".alg-diagram .react-flow__node").first).to_be_visible()
     # Read-only, the diagram's toolbar keeps only what works there (round 9).
     tools = page.locator(".alg-diagram .be-tools")
-    expect(tools.get_by_role("button", name="Fit to screen")).to_be_visible()
+    expect(tools.get_by_role("button", name="Full screen")).to_be_visible()
+    # The legend, folded into its button, says what a block's colour is: its library (2026-11-01).
+    page.locator(".alg-diagram .be-legend-toggle").click()
+    expect(page.locator(".alg-diagram .be-legend")).to_contain_text("Control loop performance")
     expect(tools.locator(".be-tool", has_text="Arrange")).to_have_count(0)
     expect(tools.locator('[title^="Delete"]')).to_have_count(0)
     expect(page.get_by_text("The diagram is valid")).to_have_count(0)
@@ -690,9 +693,18 @@ def test_an_algorithm_duplicated_on_screen_is_tested_saved_and_scheduled(
     page.locator(".be-lib-toggle", has_text="Inputs").click()
     expect(page.locator(".be-palette-item", has_text="Frozen value")).to_have_count(0)
     # Values on the wires only when asked.
-    expect(page.locator(".react-flow__edge-text")).to_have_count(0)
+    expect(page.locator(".be-wire-value")).to_have_count(0)
     page.get_by_role("button", name="Values on wires").click()
-    expect(page.locator(".react-flow__edge-text").first).to_be_visible()
+    expect(page.locator(".be-wire-value").first).to_be_visible()
+    # A wire clicked: what it carries, from which block to which, and its last test.
+    page.locator(".react-flow__edge").first.click(force=True)
+    expect(page.locator(".be-inspector .be-wire-end")).to_have_count(2)
+    expect(page.locator(".be-inspector")).to_contain_text("From")
+    # Full screen gives the diagram the whole window; Esc leaves.
+    page.get_by_role("button", name="Full screen").click()
+    expect(page.locator(".be-editor.be-expanded")).to_be_visible()
+    page.keyboard.press("Escape")
+    expect(page.locator(".be-editor.be-expanded")).to_have_count(0)
     if screenshots:
         page.screenshot(path=str(screenshots / "algorithm-editor-test.png"))
     # A block's own page in the inspector: what entered it and what left it, over time.

@@ -1,5 +1,6 @@
 /** What the Algorithms pages and the editor window share: finding an algorithm, naming a copy,
  * the editor's own window and what a run's blocks said, as the editor draws it. */
+import { frameOff } from "@plantcraft/ui";
 import type { BlockCatalog, DiagramTrace } from "@plantcraft/ui/blockEditor";
 import { t } from "./i18n";
 import { href } from "./nav";
@@ -45,7 +46,9 @@ export function editorPath(id: string | null, from?: string, model?: string): st
  */
 export function openEditor(id: string | null, from?: string, model?: string): void {
   const name = id ? `linkcraft-editor-${id}` : `linkcraft-editor-new-${Date.now()}`;
-  const opened = window.open(href(editorPath(id, from, model)), name);
+  // Straight to the editor's own page: through the suite's frame it waited for an app that never
+  // says it is ready (the editor has no sidebar), and in the public demo it never opened.
+  const opened = window.open(frameOff(href(editorPath(id, from, model))), name);
   opened?.focus();
 }
 
