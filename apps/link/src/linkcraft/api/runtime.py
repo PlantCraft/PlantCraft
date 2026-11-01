@@ -956,6 +956,12 @@ class Runtime(PlatformRuntime):
             self._engine_process = EngineProcess(self.settings)
             self._engine_process.start()
 
+    def health_problem(self) -> str | None:
+        """What makes ``/healthz`` fail although the web server answers (plantcraft_sdk.server.web)."""
+
+        process = self._engine_process
+        return process.crash_loop() if process is not None else None
+
     def start_engine(self) -> None:
         """The schedules and the queue's workers, in this process (``engine.service``)."""
 

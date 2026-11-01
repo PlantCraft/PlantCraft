@@ -7,6 +7,16 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Fixed
+
+- **Analytics on an 8 GB machine: 2 GB of memory, and health that sees a crash loop (SDK 0.101.0).**
+  The `medium` machine profile gave Analytics 1 GB (`LINKCRAFT_MEMORY`). With a plant of 2,050
+  loops and three months of history, its engine died for lack of memory 56 times in four hours
+  on a 4 CPU, 8 GB test machine while the container still said "healthy". The profile now gives
+  it 2 GB (the engine settled at 1.2 GB), and `/healthz` answers 503 when the engine stopped 3
+  times in 10 minutes, so System health, Operations and monitoring show the problem. Any app's
+  runtime can name such a problem (`health_problem()`, `plantcraft_sdk.server.web`).
+
 ### Changed
 
 - **Public demo: the visitor is told the visit's limits (SDK 0.100.0, ui 0.105.0).** The sign-in page says a visit lasts
