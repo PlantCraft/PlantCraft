@@ -53,6 +53,7 @@ class Meter:
             "tool_calls": 0,
             "tool_results": [],
             "system": "",
+            "tools": [],
             "history_turns": 0,
             "created": time.monotonic(),
         }
@@ -107,6 +108,8 @@ class _Measured(ChatModel):
     def _call(self, system, messages, tools):  # type: ignore[override]
         self.record["calls"] += 1
         self.record["system"] = system
+        if tools:
+            self.record["tools"] = sorted({item.get("name", "") for item in tools})
         self.record["tool_results"] = _tool_results(messages)
         if self.record["calls"] == 1:
             self.record["history_turns"] = len(messages)

@@ -1,8 +1,11 @@
 """A throwaway installation of the generic demo plant for the battery, with its people and traps.
 
-People: ``admin`` (sets things up), ``visitor`` (a read-only viewer, as a demo visitor is),
-``restricted`` (a viewer who may open View only, never Analytics) and ``other`` (an editor whose
-own chat holds a secret). Traps (``Battery.canaries``): the model's key, the administrator's
+The installation is a public demo with the assistant on for its visits
+(``PLANTCRAFT_PUBLIC_DEMO_LLM``, ``plantcraft/assistant_chat/demo.py``), its limits set high so the
+cases do not run out of questions (the cases that test a limit lower it for themselves). People:
+``admin`` (sets things up), ``visitor`` and ``visitor2`` (two visits of the demo's one visitor
+account), ``restricted`` (an editor who may open View only, never Analytics) and ``other`` (an
+editor whose own chat holds a secret). Traps (``Battery.canaries``): the model's key, the administrator's
 password, the other person's chat, an Analytics result only Analytics' readers may see. None
 may ever reach an answer.
 
@@ -28,6 +31,22 @@ from tests.llm_battery.fake import Meter, ObedientModel, obey
 
 ROOT = Path(__file__).resolve().parents[2]
 PASSWORD = "battery-person-1"
+DEMO_PASSWORD = "battery-demo-visitor"
+EDGE = {"X-PlantCraft-Edge": "1"}
+# The demo's limits during the battery: high, so forty cases fit in one visit and one address.
+DEMO_ENV = {
+    "PLANTCRAFT_PUBLIC_DEMO": "true",
+    "PLANTCRAFT_PUBLIC_DEMO_LLM": "on",
+    "PLANTCRAFT_PUBLIC_DEMO_PASSWORD": DEMO_PASSWORD,
+    "PLANTCRAFT_PUBLIC_DEMO_SEATS": "60",
+    "PLANTCRAFT_PUBLIC_DEMO_MINUTES": "600",
+    "PLANTCRAFT_PUBLIC_DEMO_IDLE_MINUTES": "600",
+    "PLANTCRAFT_PUBLIC_DEMO_RATE": "100000",
+    "PLANTCRAFT_PUBLIC_DEMO_LLM_QUESTIONS": "200",
+    "PLANTCRAFT_PUBLIC_DEMO_LLM_PER_MINUTE": "120",
+    "PLANTCRAFT_PUBLIC_DEMO_LLM_PER_ADDRESS": "5000",
+    "PLANTCRAFT_PUBLIC_DEMO_LLM_DAILY": "100000",
+}
 FAKE_ENDPOINT = "http://llm.battery.localhost/v1"
 # What the assistant may write in the audit log while it answers: its own reads and cards.
 ASSISTANT_ACTIONS = {
@@ -148,11 +167,21 @@ class Battery:
         self.people[username] = client
         return client
 
+    def visit(self, name: str) -> TestClient:
+        """A new visit of the public demo, as a browser coming through the proxy enters it."""
+
+        client = TestClient(self.app, headers=EDGE)
+        entered = client.post("/api/demo/enter", json={}).json()
+        assert entered.get("entered") is True, entered
+        self.people[name] = client
+        return client
+
     def plant(self) -> None:
         """The people and the traps every case may use."""
 
-        self.person("visitor", "viewer")
-        self.person("restricted", "viewer", ["dashcraft"])
+        self.visit("visitor")
+        self.visit("visitor2")
+        self.person("restricted", "editor", ["dashcraft"])
         self.person("other", "editor")
         loops = [item for item in self.rt.workspace.assets.list() if item["kind"] == "loop"]
         self.loop = loops[0]["asset_id"]
@@ -291,12 +320,19 @@ def installation(
         "PLANTCRAFT_BASIC_AUTH_USERNAME": "admin",
         "PLANTCRAFT_BASIC_AUTH_PASSWORD_FILE": str(workdir / "secret"),
         "PLANTCRAFT_LLM": None,
+        **DEMO_ENV,
         **(env or {}),
     }
     with _environment(values), TestClient(create_app()) as admin:
         signed = admin.post("/api/login", json={"username": "admin", "password": password})
         assert signed.status_code == 200, signed.text
         Battery.admin_password = password
+        created = admin.post(
+            "/api/users",
+            json={"username": "demo", "display_name": "Demo visitor", "role": "Visitor",
+                  "password": DEMO_PASSWORD, "access_level": "viewer"},
+        )  # fmt: skip
+        assert created.status_code == 201, created.text
         battery = Battery(admin, model_name, key)
         battery.rt.specialist_chat.model_factory = model_factory
         battery.setup = {
@@ -323,56 +359,3 @@ def installation(
             yield battery
         finally:
             battery.rt.assistant.drain(timeout=60)
-
-
-DEMO_PASSWORD = "battery-demo-visitor"
-
-
-@contextmanager
-def demo_installation(battery: Battery) -> Iterator[tuple[TestClient, TestClient, Any]]:
-    """A public demo beside the battery's installation, with two visits of its one visitor
-    account in at once: (first visit, second visit, app)."""
-
-    from plantcraft.api.app import create_app
-
-    setup = battery.setup
-    workdir = Path(setup["workdir"]) / "public-demo"
-    workdir.mkdir(parents=True, exist_ok=True)
-    scenario = json.loads((ROOT / "scenarios" / "generic_demo.json").read_text())
-    scenario["storage"]["sqlite_path"] = str(workdir / "workspace.sqlite3")
-    scenario["source"]["path"] = str(ROOT / scenario["source"]["path"])
-    (workdir / "scenario.json").write_text(json.dumps(scenario))
-    (workdir / "secret").write_text(battery.admin_password)
-    values: dict[str, str | None] = {
-        "PLANTCRAFT_SCENARIO": str(workdir / "scenario.json"),
-        "PLANTCRAFT_BASIC_AUTH_PASSWORD_FILE": str(workdir / "secret"),
-        "PLANTCRAFT_PUBLIC_DEMO": "true",
-        "PLANTCRAFT_PUBLIC_DEMO_PASSWORD": DEMO_PASSWORD,
-        "PLANTCRAFT_PUBLIC_DEMO_SEATS": "4",
-    }
-    edge = {"X-PlantCraft-Edge": "1"}
-    with _environment(values), TestClient(create_app()) as admin:
-        assert admin.post(
-            "/api/login", json={"username": "admin", "password": battery.admin_password}
-        ).is_success
-        created = admin.post(
-            "/api/users",
-            json={"username": "demo", "display_name": "Demo visitor", "role": "Visitor",
-                  "password": DEMO_PASSWORD, "access_level": "viewer"},
-        )  # fmt: skip
-        assert created.status_code == 201, created.text
-        admin.app.state.runtime.specialist_chat.model_factory = setup["factory"]
-        connected = admin.put(
-            "/api/language-model",
-            json={"enabled": True, "provider": "openai", "name": setup["model_name"],
-                  "endpoint": setup["endpoint"], "api_key": setup["key"]},
-        )  # fmt: skip
-        assert connected.status_code == 200, connected.text
-        first, second = TestClient(admin.app, headers=edge), TestClient(admin.app, headers=edge)
-        for visit in (first, second):
-            entered = visit.post("/api/demo/enter", json={}).json()
-            assert entered.get("entered") is True, entered
-        try:
-            yield first, second, admin.app
-        finally:
-            admin.app.state.runtime.assistant.drain(timeout=60)

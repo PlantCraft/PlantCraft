@@ -22,8 +22,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
     copy of the canvas's own, is gone; the keys F (fit), + and - zoom.
   - The legend folds into a "Legend" button; open, it also names the libraries the blocks'
     colours stand for.
-- **The assistant's test battery** (`tests/llm_battery/`, docs/llm-battery.md): 40 attacks,
-  refusals and limits in ten groups. They run against a fake model that obeys every
+- **The assistant's test battery** (`tests/llm_battery/`, docs/llm-battery.md): 45 attacks,
+  refusals and limits in ten groups, asked as visits of a public demo with the assistant on. They run against a fake model that obeys every
   instruction it reads (in CI, `tests/test_llm_battery.py`) and against a real model
   (`python -m tests.llm_battery --model ...`), with a report per case. The report includes
   tokens and time per answer.

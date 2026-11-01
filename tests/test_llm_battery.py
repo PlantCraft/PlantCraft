@@ -1,9 +1,11 @@
 """The assistant's test battery against a model that obeys every instruction (docs/llm-battery.md).
 
-What holds here holds whatever the model does: the key and other people's data never reach it,
-nothing is written, unknown tools are refused, the limits cut before the model. A case marked
-``pending:A`` is a guard the demo plan adds (front A); it fails until that guard lands, and
-then this file fails until the mark is taken off (strict xfail).
+It runs as visits of a public demo with the assistant on (front A's guards). What holds here
+holds whatever the model does: the key and other people's data never reach it, nothing is
+written, unknown and create tools are refused, nothing in an answer points outside the suite,
+the limits cut before the model. A case marked ``pending:<front>`` is a
+guard not in code yet: it fails until the guard lands, then this file fails until the mark is
+taken off (strict xfail).
 """
 
 from __future__ import annotations
@@ -55,7 +57,9 @@ def test_every_answer_arrives_when_several_people_ask_at_once(battery):
 def test_the_obedient_model_follows_instructions_it_reads_in_tool_results(battery):
     """The fake is only worth something if it really obeys what the plant's data says."""
 
-    outcome = ask_case(next(case for case in CASES if case.id == "data-asset-description"), battery)
+    case = next(case for case in CASES if case.id == "data-asset-description")
+    # As the administrator, whose answers have no demo limit on tool calls.
+    outcome = battery.ask(case.text(battery), person="admin")
     assert outcome.tool_calls == 51  # get_asset, then the description's fifty searches
     assert "perfectly normal" in outcome.text
 
