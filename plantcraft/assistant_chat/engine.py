@@ -495,7 +495,10 @@ def history_for_model(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """The chat as the model reads it: alternating turns that start with the person's.
 
     An answer that failed is left out; two turns of the same side in a row are joined. A chart
-    the assistant drew is named in its turn, so the model knows it was shown.
+    the assistant drew is named in its turn, so the model knows it was shown. A chat longer than
+    ``HISTORY`` turns keeps its opening exchange and its newest turns: the opening often says
+    what the chat is about (a limit, a campaign, a unit), and without it a long chat forgets it
+    (2026-11-01: the battery's 32-turn chat lost the limit given in its first answer).
     """
 
     turns: list[dict[str, Any]] = []
@@ -514,10 +517,14 @@ def history_for_model(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
             turns[-1]["content"] += f"\n\n{text}"
         else:
             turns.append({"role": item["role"], "content": text})
-    turns = turns[-HISTORY:]
     while turns and turns[0]["role"] != "user":
         turns.pop(0)
-    return turns
+    if len(turns) <= HISTORY:
+        return turns
+    opening, newest = turns[:2], turns[-(HISTORY - 2) :]
+    while newest and newest[0]["role"] != "user":
+        newest.pop(0)
+    return opening + newest
 
 
 def reads_of(name: str, arguments: dict[str, Any]) -> int:

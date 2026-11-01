@@ -122,6 +122,33 @@ def run_hard(battery: Battery, log=print) -> list[Result]:
     return results
 
 
+def _records_by_case(records: list[dict[str, Any]], items: list[dict[str, Any]]) -> list[Any]:
+    """Each evaluation case's model use, summed: one record per case when they match, else by
+    time (a works case may make several model objects, one for each turn it asks), each case
+    taking the records made while it ran (its seconds, the cases run one after the other)."""
+
+    keys = ("calls", "input_tokens", "cached_tokens", "output_tokens", "reasoning_tokens")
+    if len(records) == len(items):
+        return records
+    if not records:
+        return [None] * len(items)
+    ordered = sorted(records, key=lambda item: item["created"])
+    moment, edges = ordered[0]["created"], []
+    for item in items:
+        moment += float(item.get("seconds") or 0.0)
+        edges.append(moment)
+    sums: list[Any] = [None] * len(items)
+    for record in ordered:
+        index = next(
+            (i for i, edge in enumerate(edges) if record["created"] <= edge + 0.5), len(items) - 1
+        )
+        if sums[index] is None:
+            sums[index] = dict.fromkeys(keys, 0)
+        for key in keys:
+            sums[index][key] += int(record.get(key) or 0)
+    return sums
+
+
 # Quality: the assistant's own evaluation (Setup › Language models › Evaluate) --------------------
 
 
@@ -161,14 +188,14 @@ def run_quality(
     run_id = response.json()["run_id"]
     battery.rt.assistant.drain(timeout=timeout)
     run = battery.admin.get(f"/api/assistant/evals/{run_id}").json()
-    records = Meter.since(started)
-    results = []
     items = run.get("results") or []
+    mine = _records_by_case(Meter.since(started), items)
+    results = []
     for index, item in enumerate(items):
         note = "; ".join(
             part for part in (str(item.get("why") or ""), str(item.get("error") or "")) if part
         )
-        record = records[index] if len(records) == len(items) else None
+        record = mine[index] if index < len(mine) else None
         keys = ("input_tokens", "cached_tokens", "output_tokens", "reasoning_tokens")
         results.append(
             Result(

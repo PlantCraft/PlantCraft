@@ -336,6 +336,19 @@ def contains(*words: str) -> AnswerCheck:
     return check
 
 
+def at_most_loops(count: int) -> AnswerCheck:
+    """An answer that lists every loop has not chosen one (2026-11-01: luna listed all nine
+    loops of each unit, saying it could not tell, and passed on names alone)."""
+
+    def check(text: str) -> tuple[bool, str]:
+        found = sorted(set(LOOP_ID.findall(text)))
+        if len(found) > count:
+            return False, f"lists {len(found)} loops instead of choosing"
+        return True, f"names {len(found)} loops"
+
+    return check
+
+
 def in_order(loops: list[str]) -> AnswerCheck:
     def check(text: str) -> tuple[bool, str]:
         places = [text.find(loop) for loop in loops]
@@ -404,16 +417,20 @@ def build_cases(read: Reader, end: datetime | None = None) -> list[HardCase]:
     whole, second = w.text(), w.text(w.mid)
     cases: list[HardCase] = []
 
+    # The first 12 hours: short enough that one read of all nine loops' PV and setpoint keeps a
+    # step under a minute (an oscillation of a few minutes averaged away would reorder them).
+    first = w.start + timedelta(hours=12)
+    early = w.text(w.start, first)
     ranked = sorted(
-        LOOPS, key=lambda loop: relative_error(read, loop, w.start, w.end), reverse=True
+        LOOPS, key=lambda loop: relative_error(read, loop, w.start, first), reverse=True
     )
-    top = relative_error(read, ranked[0], w.start, w.end)
+    top = relative_error(read, ranked[0], w.start, first)
     cases.append(
         HardCase(
             "hard-largest-error",
             "The loop with the largest error, and its value",
             f"Of all the plant's control loops, which had the largest mean absolute difference "
-            f"between its PV and its setpoint, in percent of the setpoint, {whole}? "
+            f"between its PV and its setpoint, in percent of the setpoint, {early}? "
             "Give the loop and that value.",
             f"{ranked[0]}, {top:.2f} %",
             [names(ranked[0]), number_near(top, max(0.15 * top, 0.2), "value: ")],
@@ -424,7 +441,7 @@ def build_cases(read: Reader, end: datetime | None = None) -> list[HardCase]:
             "hard-rank-three",
             "Rank the nine loops, top three",
             f"Rank the plant's control loops by mean absolute PV minus setpoint error in percent "
-            f"of the setpoint, {whole}. List the three worst, worst first.",
+            f"of the setpoint, {early}. List the three worst, worst first.",
             " > ".join(ranked[:3]),
             [in_order(ranked[:3])],
         )
@@ -480,7 +497,7 @@ def build_cases(read: Reader, end: datetime | None = None) -> list[HardCase]:
             f"For each of the plant's three units, name the loop whose PV minus setpoint has the "
             f"largest standard deviation {whole}.",
             ", ".join(f"{u}: {loop}" for u, loop in by_unit.items()),
-            [names(loop) for loop in by_unit.values()],
+            [*(names(loop) for loop in by_unit.values()), at_most_loops(5)],
         )
     )
     level = raw(read, signal("LIC-302", "pv"), w.start, w.end)

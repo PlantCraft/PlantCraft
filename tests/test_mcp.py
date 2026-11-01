@@ -317,8 +317,41 @@ def test_a_periods_statistics_read_every_point_with_the_times_of_min_and_max():
         ]
     }
     [stats] = mcp._series_stats(payload)["series"]
-    assert stats == {"signal": "s:a", "unit": "m3/h", "count": 2, "mean": 57.06, "min": 56.0,
-                     "min_at": "t0", "max": 58.12, "max_at": "t1", "first": 56.0, "last": 58.12}  # fmt: skip
+    assert stats == {"signal": "s:a", "unit": "m3/h", "count": 2, "mean": 57.06, "std": 1.06,
+                     "min": 56.0, "min_at": "t0", "max": 58.12, "max_at": "t1", "first": 56.0,
+                     "last": 58.12}  # fmt: skip
+
+
+def test_a_periods_statistics_give_a_loops_error_point_by_point():
+    """PV minus setpoint, paired by time: its mean absolute value is not |mean PV - mean SP|."""
+
+    import pytest
+
+    tool = mcp.BY_NAME["signal_stats"]
+    args = {"signal_ids": ["s:pv"], "minus": ["s:sp"], "start": "2026-10-25T03:00:00Z",
+            "end": "2026-10-26T03:00:00Z"}  # fmt: skip
+    method, path, body = tool.request(args)
+    assert body["signals"] == ["s:pv", "s:sp"]
+    payload = {
+        "series": [
+            {"signal": "s:pv", "unit": "", "t": ["t0", "t1", "t2"], "v": [11.0, 9.0, 12.0]},
+            {"signal": "s:sp", "unit": "", "t": ["t0", "t1", "t2"], "v": [10.0, 10.0, None]},
+        ]
+    }
+    shaped = mcp._series_stats(payload, args)
+    assert [item["signal"] for item in shaped["series"]] == ["s:pv"]
+    [error] = shaped["differences"]
+    assert (error["minus"], error["count"], error["mean"], error["mean_abs"]) == (
+        "s:sp",
+        2,
+        0.0,
+        1.0,
+    )
+    with pytest.raises(ValueError, match="one signal for each"):
+        tool.request({**args, "minus": ["s:sp", "s:x"]})
+    with pytest.raises(ValueError, match="at most"):
+        tool.request({"signal_ids": [f"s:{i}" for i in range(15)],
+                      "minus": [f"s:sp{i}" for i in range(15)]})  # fmt: skip
 
 
 def test_a_list_in_pages_is_read_whole_or_says_it_goes_on(monkeypatch):
