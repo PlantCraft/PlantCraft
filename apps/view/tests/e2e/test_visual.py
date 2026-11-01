@@ -477,7 +477,7 @@ def test_the_editor_picks_the_kind_first_and_changes_it_keeping_the_signals(
     ).click()
     page.get_by_role("button", name="Add panel").first.click()
     picker = page.get_by_role("radiogroup", name="Panel type")
-    expect(picker.get_by_role("radio")).to_have_count(8)
+    expect(picker.get_by_role("radio")).to_have_count(9)  # with the multivariable controller (V10)
     picker.get_by_role("radio", name=re.compile("^Time series")).click()
     editor = page.get_by_role("dialog", name="New panel")
     traces = editor.locator(".tc-preview .js-plotly-plot .scatterlayer .trace")
