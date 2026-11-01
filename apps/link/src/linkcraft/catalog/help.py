@@ -31,9 +31,10 @@ SECTIONS = (
     ("reading", "How to read the finding"),
     ("limits", "Limits"),
 )
-# A translated page writes "(padrão X)" for "(default X)" (methods/help/<language>/, docs/translations.md).
+# A translated page writes "(padrão X)" or "(por defecto X)" for "(default X)"
+# (methods/help/<language>/, docs/translations.md).
 PARAMETER = re.compile(
-    r"^`(?P<key>\w+)` \((?:default|padrão) (?P<default>[^)]*)\): (?P<meaning>.+)$", re.S
+    r"^`(?P<key>\w+)` \((?:default|padrão|por defecto) (?P<default>[^)]*)\): (?P<meaning>.+)$", re.S
 )
 
 

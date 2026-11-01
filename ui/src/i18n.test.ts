@@ -39,7 +39,7 @@ describe("createI18n", () => {
     const [english, portuguese] = Object.entries(uiPtBR as Record<string, string>)[0];
     expect(t(english)).toBe(fillText(portuguese));
     expect(uiLocale()).toBe("pt-BR");
-    expect(i18n.languages.map((item) => item.code)).toEqual(["en", "pt-BR"]);
+    expect(i18n.languages.map((item) => item.code)).toEqual(["en", "pt-BR", "es"]);
     expect(document.documentElement.lang).toBe("pt-BR");
   });
 

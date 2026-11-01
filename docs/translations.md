@@ -2,7 +2,7 @@
 
 The suite is written in English. Every text a person reads is English in the code, wrapped in
 `t()`, and is its own catalog key; a translation is a catalog file next to the code that uses it.
-A text missing from a catalog shows in English. Brazilian Portuguese (`pt-BR`) is complete
+A text missing from a catalog shows in English. Brazilian Portuguese (`pt-BR`) and Spanish (`es`) are complete
 (screens, servers and help); another one is a new catalog file per module plus its line in the language lists below.
 
 ## Switched off by default
@@ -33,7 +33,7 @@ screens over the shared components', an app's server over the SDK's.
 
 ## How a module uses them
 
-- Screens: `i18n.ts` calls `createI18n({ "pt-BR": catalog })` from `@plantcraft/ui` and exports
+- Screens: `i18n.ts` calls `createI18n({ "pt-BR": ptBR, es })` from `@plantcraft/ui` and exports
   its `t` and `locale` (`Intl` and `localeCompare` use `locale`). The shared components take the
   same translator.
 - Server: the app's `i18n.py` calls `use_catalogs(Path(__file__).with_name("locales"))` and
@@ -45,20 +45,22 @@ screens over the shared components', an app's server over the SDK's.
 
 A translated document sits in a folder named after its language next to the English one, and a
 page without a translation shows in English (`plantcraft_sdk.i18n.localized`): an app's
-`docs/help/pt-BR/<page>.md`, Analytics' `methods/help/pt-BR/` and `methods/help/guides/pt-BR/`,
-the platform's guides in `docs/pt-BR/`. An Analytics method page keeps its sections in order,
-titled with their catalog translation, and each parameter as ``- `name` (padrão X): meaning``.
+`docs/help/<language>/<page>.md`, Analytics' `methods/help/<language>/` and
+`methods/help/guides/<language>/`, the platform's guides in `docs/<language>/` (`pt-BR`, `es`). An Analytics method page keeps its sections in order,
+titled with their catalog translation, and each parameter as ``- `name` (padrão X): meaning``
+(``por defecto`` in Spanish).
 
 ## Words
 
-Every translation follows [translations-glossary-pt-BR.md](translations-glossary-pt-BR.md): one
-word, one meaning, product names never translated.
+Every translation follows its glossary, [translations-glossary-pt-BR.md](translations-glossary-pt-BR.md)
+or [translations-glossary-es.md](translations-glossary-es.md): one word, one meaning, product names
+never translated.
 
 ## The check
 
 `python -m plantcraft_sdk.i18n_check <folder>` finds every `locales` folder under the folder and
 counts the English texts its code passes to `t()` against each catalog. It fails on a broken
 catalog (not flat, an empty translation, `{fields}` that differ). `--missing` lists what is not
-translated; `--strict` also fails on it. pt-BR is complete (2026-11-01), so `make ci` runs it with
+translated; `--strict` also fails on it. pt-BR and es are complete (2026-11-01), so `make ci` runs it with
 `--strict` for the platform (`make i18n`) and in every app (`make standard`): a new text in `t()`
-needs its pt-BR entry in the same change.
+needs its pt-BR and es entries in the same change.

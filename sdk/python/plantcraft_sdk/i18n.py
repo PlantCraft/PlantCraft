@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_LANGUAGE = "en"
-LANGUAGES = {"en": "English", "pt-BR": "Português (Brasil)"}
+LANGUAGES = {"en": "English", "pt-BR": "Português (Brasil)", "es": "Español"}
 COOKIE = "processcraft_language"
 HEADER = "x-language"
 LOCALES = Path(__file__).with_name("locales")

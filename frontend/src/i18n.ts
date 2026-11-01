@@ -1,3 +1,4 @@
+import es from "./locales/es.json";
 import ptBR from "./locales/pt-BR.json";
 import { createI18n, setLanguage, type Language } from "@plantcraft/ui";
 
@@ -5,7 +6,7 @@ import { createI18n, setLanguage, type Language } from "@plantcraft/ui";
  * translations live in locales/<code>.json, the shared components' in @plantcraft/ui
  * (docs/translations.md). Other languages are offered only while the server's
  * PLANTCRAFT_TRANSLATIONS is on; changing language reloads the page. */
-const i18n = createI18n({ "pt-BR": ptBR as Record<string, string> });
+const i18n = createI18n({ "pt-BR": ptBR as Record<string, string>, es: es as Record<string, string> });
 
 export type { Language };
 export { setLanguage };

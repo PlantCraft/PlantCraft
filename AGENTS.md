@@ -150,11 +150,12 @@ Our clients are industrial plants: nothing gets installed unless IT and OT secur
   `locale` for `Intl` and `localeCompare`.
 - Each module keeps its catalogs next to its code (`locales/pt-BR.json`); never copy a shared
   component's or the SDK's text into a module's catalog.
-- Translations are off until an installation sets `PLANTCRAFT_TRANSLATIONS=1`, but pt-BR is complete:
-  every new string in `t()` needs its pt-BR entry, following
-  [docs/translations-glossary-pt-BR.md](docs/translations-glossary-pt-BR.md);
+- Translations are off until an installation sets `PLANTCRAFT_TRANSLATIONS=1`, but pt-BR and es are
+  complete: every new string in `t()` needs its pt-BR and es entries, following
+  [docs/translations-glossary-pt-BR.md](docs/translations-glossary-pt-BR.md) and
+  [docs/translations-glossary-es.md](docs/translations-glossary-es.md);
   `python -m plantcraft_sdk.i18n_check --strict` (in `make ci`) fails otherwise. A changed help page
-  updates its `pt-BR/` translation too.
+  updates its `pt-BR/` and `es/` translations too.
 - Help pages live in `docs/en/` and `docs/pt-BR/` under the same file name.
 
 ### Clean room

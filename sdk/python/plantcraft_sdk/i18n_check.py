@@ -27,7 +27,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-LANGUAGES = ("pt-BR",)
+LANGUAGES = ("pt-BR", "es")
 SKIP = {"node_modules", "dist", "build", "tests", "__pycache__", ".venv", "vendor", "e2e"}
 FIELD = re.compile(r"\{(\w*)\}")
 TS_CALL = re.compile(r"""(?<![\w.$])t\(\s*(?:"((?:[^"\\\n]|\\.)*)"|'((?:[^'\\\n]|\\.)*)')\s*[,)]""")
