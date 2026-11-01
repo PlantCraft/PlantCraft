@@ -1,0 +1,14 @@
+{
+  "Dashboard": "Dashboard",
+  "Every change to code comes with a test that shows it works.": "Toda mudança de código vem com um teste que mostra que ela funciona.",
+  "Left out for length: {parts}.": "Ficou de fora por tamanho: {parts}.",
+  "Methods choose their inputs by signal role (PV, SP, OP...), never by tag.": "Os métodos escolhem as entradas pelo papel do sinal (PV, SP, OP...), nunca pela tag.",
+  "PlantCraft only reads the plant: never suggest writing to the control system.": "O PlantCraft só lê a planta: nunca sugira escrever no sistema de controle.",
+  "Question": "Pergunta",
+  "Rules for your answer:": "Regras para a sua resposta:",
+  "This is a public demo: for security, this part is locked, and nothing is saved.": "Esta é uma demonstração pública: por segurança, esta parte fica bloqueada, e nada é salvo.",
+  "[cut here: {count} more characters left out]": "[cortado aqui: mais {count} caracteres ficaram de fora]",
+  "just now": "agora mesmo",
+  "optional": "opcional",
+  "required": "obrigatória"
+}

@@ -2,7 +2,7 @@
 .PHONY: ci deps standard lint format test test-fast frontend e2e serve dev image package dev-package lock
 
 PYTHON ?= $(shell command -v python >/dev/null 2>&1 && echo python || echo python3)
-SDK := plantcraft-sdk==0.101.0
+SDK := plantcraft-sdk==0.102.0
 
 ci: deps standard lint frontend test
 
@@ -10,6 +10,7 @@ ci: deps standard lint frontend test
 # targets, vendored SDK hash; run as a module so $(PYTHON) finds it.
 standard:
 	$(PYTHON) -m plantcraft_sdk.app_cli check .
+	$(PYTHON) -m plantcraft_sdk.i18n_check .
 
 # plantcraft-sdk is not on any index: it is installed from the wheel in vendor/ only, always
 # reinstalled so another copy in the same Python never stands in for it.

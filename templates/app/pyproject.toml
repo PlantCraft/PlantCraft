@@ -11,8 +11,8 @@ license = {text = "Apache-2.0"}
 requires-python = ">=3.11"
 dependencies = [
     # Not on any index: install it from vendor/ first
-    # (pip install --no-index --find-links vendor plantcraft-sdk==0.101.0).
-    "plantcraft-sdk==0.101.0",
+    # (pip install --no-index --find-links vendor plantcraft-sdk==0.102.0).
+    "plantcraft-sdk==0.102.0",
     "fastapi>=0.116,<1",
     "httpx>=0.27,<1",
     "pydantic>=2.7,<3",
@@ -35,6 +35,10 @@ starter = "starter.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["starter*"]
+
+[tool.setuptools.package-data]
+# Interface translations (plantcraft_sdk.i18n).
+starter = ["locales/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

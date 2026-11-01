@@ -25,6 +25,8 @@ from plantcraft_sdk import i18n as _sdk_i18n
 DEFAULT_LANGUAGE = "en"
 LANGUAGES = {"en": "English", "pt-BR": "Português (Brasil)"}
 COOKIE = "processcraft_language"
+# Tells every page of the suite whether to offer other languages (@plantcraft/ui i18n.ts).
+TRANSLATIONS_COOKIE = "plantcraft_translations"
 LOCALES = Path(__file__).with_name("locales")
 
 _language: ContextVar[str | None] = ContextVar("processcraft_language", default=None)
@@ -74,10 +76,15 @@ def reset_language(token: Token) -> None:
 
 @lru_cache(maxsize=None)
 def catalog(language: str) -> dict[str, str]:
+    """PlantCraft's catalog over the SDK's (text worded inside the SDK)."""
+
     path = LOCALES / f"{language}.json"
-    if language == DEFAULT_LANGUAGE or not path.is_file():
+    if language == DEFAULT_LANGUAGE:
         return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    merged = dict(_sdk_i18n.catalog(language))
+    if path.is_file():
+        merged.update(json.loads(path.read_text(encoding="utf-8")))
+    return merged
 
 
 def t(text: str, /, **values: object) -> str:

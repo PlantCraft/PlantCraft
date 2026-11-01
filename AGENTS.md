@@ -141,13 +141,18 @@ Our clients are industrial plants: nothing gets installed unless IT and OT secur
 
 ### One language source
 
-- English is the source of every user-facing string; Brazilian Portuguese (pt-BR) is a translation.
-- Backend: `from plantcraft.i18n import t` and `t("Loop {loop} not found.", loop=loop_id)`, called
-  when the text is produced (not at import). Keys live in `plantcraft/i18n/locales/pt-BR.json`.
-- Frontend: `import { t, locale } from "./i18n"`, `t("Save")`; keys in
-  `frontend/src/locales/pt-BR.json`. Use `locale` for `Intl` and `localeCompare`.
-- Until the MVP ships the product is English only: wrap new strings
-  in `t()`, but a pt-BR entry is optional. `tests/test_i18n.py` checks the entries that exist.
+- English is the source of every user-facing string, wrapped in `t()`, and is its catalog key;
+  Brazilian Portuguese (pt-BR) is a translation. The whole mechanism is
+  [docs/translations.md](docs/translations.md); it is written once, in `@plantcraft/ui`
+  (`createI18n`) and `plantcraft_sdk.i18n` (`use_catalogs`, `LanguageMiddleware`).
+- Backend: `t("Loop {loop} not found.", loop=loop_id)` from the module's own `i18n` module, called
+  when the text is produced (not at import). Screens: `import { t, locale } from "./i18n"`; use
+  `locale` for `Intl` and `localeCompare`.
+- Each module keeps its catalogs next to its code (`locales/pt-BR.json`); never copy a shared
+  component's or the SDK's text into a module's catalog.
+- Translations are off until an installation sets `PLANTCRAFT_TRANSLATIONS=1`: wrap new strings in
+  `t()`; a pt-BR entry is optional until the language is complete. `python -m
+  plantcraft_sdk.i18n_check` (in `make ci`) fails on a broken catalog and counts what is missing.
 - Help pages live in `docs/en/` and `docs/pt-BR/` under the same file name.
 
 ### Clean room
