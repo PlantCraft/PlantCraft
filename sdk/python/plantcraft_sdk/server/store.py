@@ -308,7 +308,9 @@ class Store:
 
     def _connect(self) -> sqlite3.Connection:
         if self.DEMO_SHARED:
-            return self.db.connect(shared=True)
+            # Opened outside the visit: the path is chosen when the connection opens.
+            with demo_slots.using(None):
+                return self.db.connect()
         return self.db.connect()
 
     @classmethod
