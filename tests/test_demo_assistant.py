@@ -361,3 +361,30 @@ def test_a_visit_reads_the_teams_chats_but_asks_only_in_its_own(demo):
     )
     own = _ask(visitor).json()["chat"]["chat_id"]
     assert visitor.get(f"/api/assistant/chats/{own}").json()["chat"]["can_ask"] is True
+
+
+def test_another_viewer_of_the_demo_reads_but_never_asks(demo):
+    app = demo(PLANTCRAFT_PUBLIC_DEMO_LLM="on")
+    admin = TestClient(app)
+    assert admin.post(
+        "/api/login", json={"username": "admin", "password": "admin-secret"}
+    ).is_success
+    assert (
+        admin.post(
+            "/api/users",
+            json={
+                "username": "reader",
+                "display_name": "Reader",
+                "role": "Engineer",
+                "password": "reader-password-1",
+                "access_level": "viewer",
+            },
+        ).status_code
+        == 201
+    )
+    reader = TestClient(app)
+    assert reader.post(
+        "/api/login", json={"username": "reader", "password": "reader-password-1"}
+    ).is_success
+    assert reader.get("/api/assistant").json()["available"] is False
+    assert _ask(reader).status_code == 403
