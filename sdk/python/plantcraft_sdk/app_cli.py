@@ -243,6 +243,64 @@ def _operations(root: Path, manifest: AppManifest, report: Report) -> None:
         report.errors.append("src: uvicorn.run needs log_config=None (the suite's JSON logs)")
 
 
+# Licences an app with closed code cannot carry: open-source licences (SPDX ids).
+OPEN_LICENSES = re.compile(
+    r"^(Apache-2\.0|MIT|BSD-[0-9]-Clause|MPL-2\.0|[AL]?GPL-[0-9.]+(-only|-or-later)?|ISC|EPL-2\.0)$"
+)
+
+
+def _languages(root: Path, manifest: AppManifest, report: Report) -> None:
+    """Each language besides English has its two catalogs (plantcraft_sdk.i18n)."""
+
+    app_id = manifest.app.id
+    for language in manifest.app.languages:
+        if language == "en":
+            continue
+        for place in (
+            f"frontend/src/locales/{language}.json",
+            f"src/{app_id}/locales/{language}.json",
+        ):
+            path = root / place
+            if not path.is_file():
+                report.errors.append(f"{place}: missing for language {language} in [app] languages")
+                continue
+            try:
+                catalog = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                report.errors.append(f"{place}: not valid JSON ({exc})")
+                continue
+            if not isinstance(catalog, dict) or not all(
+                isinstance(key, str) and isinstance(value, str) for key, value in catalog.items()
+            ):
+                report.errors.append(f"{place}: a flat table of English text = translation")
+    try:  # the catalogs' own check (placeholders, strict), where the SDK has it
+        from plantcraft_sdk import i18n_check  # type: ignore[attr-defined]
+    except ImportError:
+        return
+    if len(manifest.app.languages) > 1:
+        for problem in i18n_check.check(root):  # pragma: no cover - present from SDK 0.101
+            report.errors.append(f"i18n: {problem}")
+
+
+def _closed(root: Path, manifest: AppManifest, report: Report) -> None:
+    """A closed app says so consistently (docs/app-package.md §8)."""
+
+    app = manifest.app
+    if app.source == "closed" and OPEN_LICENSES.match(app.license):
+        report.errors.append(
+            f'app.toml: [app] source is "closed" but the licence {app.license!r} is open source; '
+            'name the publisher\'s licence (e.g. "LicenseRef-Acme-EULA" or "Proprietary")'
+        )
+    if app.source == "open" and manifest.license.required:
+        report.warnings.append(
+            "app.toml: [license] required on an open-source app: anyone can remove the check"
+        )
+    if manifest.requires.platform is None:
+        report.warnings.append(
+            'app.toml: [requires] platform names the PlantCraft versions it runs on (">=0.6,<0.8")'
+        )
+
+
 def check(path: str | Path = ".") -> Report:
     """Every problem of the app repository at ``path``."""
 
@@ -266,6 +324,8 @@ def check(path: str | Path = ".") -> Report:
     _frontend(root, report)
     _frame(root, report)
     _operations(root, manifest, report)
+    _languages(root, manifest, report)
+    _closed(root, manifest, report)
     return report
 
 
@@ -280,7 +340,12 @@ def main(argv: list[str] | None = None) -> int:
     sbom = commands.add_parser("sbom", help="write the SPDX SBOM of an app's image to stdout")
     sbom.add_argument("image", help="name:version of the built image")
     sbom.add_argument("--here", action="store_true", help="read this Python (inside the image)")
+    from plantcraft_sdk import compat as compat_cli
+
+    compat_cli.add_commands(commands)
     args = parser.parse_args(argv)
+    if args.command in compat_cli.COMMANDS:
+        return compat_cli.run(args)
     if args.command == "sbom":
         from plantcraft_sdk.sbom import main as write_sbom
 

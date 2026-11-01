@@ -1,0 +1,2 @@
+# The compiler of the closed image (Dockerfile, stage "compiled"; never shipped). Nuitka: Apache-2.0.
+nuitka==4.3.3

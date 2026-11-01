@@ -107,6 +107,63 @@ def overview(_admin: AdminView, rt: Runtime) -> dict[str, Any]:
     return {**rt.apps.settings_view(), "apps": apps}
 
 
+# Closed apps' licences and compatibility (docs/app-package.md, sections 7 and 8) ----------
+
+LICENSE_MAX_BYTES = 16 * 1024
+
+
+@router.get("/licenses")
+def licenses(_admin: AdminView, rt: Runtime) -> dict[str, Any]:
+    """The licences kept for closed apps, each checked again now, and this installation's id
+    (what a publisher needs to issue one)."""
+
+    return rt.apps.licenses()
+
+
+@router.post("/licenses", status_code=201)
+async def add_license(request: Request, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    """A ``.pclicense`` as the request body: checked against the trusted publishers and this
+    installation, then kept for its app."""
+
+    body = await request.body()
+    if len(body) > LICENSE_MAX_BYTES:
+        raise HTTPException(status_code=413, detail=t("A licence file is at most 16 KB."))
+    try:
+        added = rt.apps.add_license(body, admin)
+    except AppError as exc:
+        _audit(rt, admin, "app.license.rejected", "unknown", {"reason": exc.message[:300]})
+        raise _http(exc) from exc
+    _audit(
+        rt,
+        admin,
+        "app.license.add",
+        added["app"],
+        {"customer": added.get("customer"), "expires": added.get("expires"), "id": added.get("id")},
+    )
+    return added
+
+
+@router.delete("/licenses/{app_id}")
+def remove_license(app_id: str, admin: AdminUser, rt: Runtime) -> dict[str, bool]:
+    try:
+        rt.apps.remove_license(app_id)
+    except AppError as exc:
+        raise _http(exc) from exc
+    _audit(rt, admin, "app.license.remove", app_id)
+    return {"removed": True}
+
+
+@router.get("/upgrade-check")
+def upgrade_check(to: str, _admin: AdminView, rt: Runtime) -> dict[str, Any]:
+    """Before updating PlantCraft: which installed apps' ``[requires] platform`` hold ``to``."""
+
+    try:
+        apps = rt.apps.upgrade_report(to)
+    except AppError as exc:
+        raise _http(exc) from exc
+    return {"target": to, "apps": apps, "blocked": [app["id"] for app in apps if not app["ok"]]}
+
+
 @router.post("/packages", status_code=201)
 async def upload_package(request: Request, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
     """The package file as the request body; answers what it holds, for the admin to confirm."""

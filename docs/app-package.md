@@ -30,10 +30,14 @@ so what is loaded is exactly what was checked.
   "format": 1,
   "app": {"id": "linkcraft", "name": "PlantCraft Analytics", "version": "0.1.0", "category": "...",
           "summary": "...", "description": "...", "publisher": "PlantCraft",
-          "license": "Apache-2.0", "homepage": "", "mark": "linkcraft"},
+          "license": "Apache-2.0", "homepage": "", "mark": "linkcraft",
+          "source": "open", "languages": ["en", "pt-BR"]},
+  "tested": {"platform": ["0.6.0", "0.6.1"]},
+  "license": {"required": false, "grace_days": 14},
   "runtime": {"prefix": "/link/", "port": 8140, "uid": 10012, "health": "/healthz",
               "image": "linkcraft"},
-  "requires": {"processcraft_api": ">=1.0", "sdk": "0.2.0", "asset_types": ["loop"],
+  "requires": {"platform": ">=0.6,<0.8", "processcraft_api": ">=1.0,<2", "sdk": "0.2.0",
+               "asset_types": ["loop"],
                "roles": {"loop": ["pv", "op"]}},
   "permissions": {"read": ["assets", "signals", "series", "results"],
                   "write": ["audit", "results", "events", "runs", "schedules"],
@@ -65,6 +69,10 @@ package (there is no `environment`, `volumes` or `ports`: the installer sets tho
   `permissions.write` from `audit`, `results`, `events`, `runs`, `schedules`.
   `plant_write` must be `false` and `outbound` must be `[]`.
 - Text has no control characters and stays within its length.
+- `app.source`: `open` (the default) or `closed`; `app.languages`: BCP 47 tags (`en`, `pt-BR`),
+  `en` first and always there. `requires.platform`, `tested.platform` and `license`: sections 7
+  and 8. An installer older than these keys refuses the package (unknown keys), which is the
+  safe side.
 - `backup` (optional): `sqlite`, `files` and `skip`, paths inside the app's data folder.
 - `contributes` (optional) and `publishes.series`: what the app adds to PlantCraft
   ([app-standard.md](app-standard.md), section 4b). Here only their shape is checked (tables of
@@ -164,3 +172,83 @@ From the command line on the server (same checks, same code, through the install
 
 To switch installs off: `PLANTCRAFT_APP_INSTALL=off` and leave out the `installer` service
 (see security-guide.md, section 6).
+
+## 7. Compatibility and tests
+
+Each app says which PlantCraft versions it installs on, and the package carries the versions it
+was tested on. PlantCraft keeps the version it was installed on.
+
+| Field | Who writes it | What PlantCraft does with it |
+|---|---|---|
+| `[requires] platform` (`">=0.6,<0.8"`) | the developer, in `app.toml` | refuses the install, and warns before a PlantCraft upgrade, outside the range |
+| `[requires] processcraft_api` (`">=1.0,<2"`) | the developer | refuses the install outside the range (API v1 is `1.0` today) |
+| `[tested] platform` (`["0.6.0"]`) | the package build, from `compat/<version>.json` | warns, never refuses, when this PlantCraft is not in the list |
+| `platform_version` | PlantCraft, at install | shown on the Apps page as "installed on" |
+
+Ranges use `==`, `>=`, `<=`, `>`, `<`, `!=`, `~=` and `.*`, joined by commas; a pre-release counts
+as its release (`0.6.0-rc.1` is in `>=0.6`). A development PlantCraft (version `0.0.0`, or
+`PLANTCRAFT_PLATFORM_VERSION` empty) checks nothing.
+
+The tests behind `[tested]` are one command, run against a real PlantCraft of the version to
+mark:
+
+```bash
+plantcraft-app compat --url https://plantcraft.local --key-file app.key   # writes compat/0.6.0.json
+plantcraft-app tested                                                    # lists what compat/ holds
+```
+
+`compat` checks, against that PlantCraft: the platform and API ranges (`GET /api/v1/installation`
+now answers `version`, `api` and `scopes`), that each `[contributes]` table is a feature that
+PlantCraft has, that each permission is a scope it knows, that the app key works (`/me`), and then
+runs the app's own `tests/compat/` with pytest (`PLANTCRAFT_URL`, `PLANTCRAFT_COMPAT_KEY_FILE`).
+Only a report whose checks all passed counts. `deploy/package.sh --compat <dir>` (default: the
+app's `compat/` folder) stamps the passed versions into `[tested] platform`.
+
+Before a PlantCraft upgrade, `GET /api/apps/upgrade-check?to=0.7.0` lists the installed apps the
+new version would leave outside their range or untested.
+
+## 8. Closed apps and licences
+
+A closed app (`source = "closed"`) is an app whose source the client does not receive. Two
+things make it closed, and a third makes it paid:
+
+1. **The image carries compiled code only.** PlantCraft PID (`apps/pid`) is the first one: its
+   Dockerfile compiles the Python package with Nuitka (Apache-2.0, free) into one native module
+   (`--mode=module`, docstrings removed), copies only that into the image, and fails the build if
+   any `.py` or `.pyc` of the app is left. The frontend is minified with no source maps.
+2. **The licence is not open source.** `license = "LicenseRef-<Publisher>-EULA"`;
+   `plantcraft-app check` refuses a closed app with an open-source licence.
+3. **A licence file (`.pclicense`) when `[license] required = true`.** The publisher signs it
+   with the same Ed25519 key that signs its packages:
+
+```bash
+plantcraft-app license issue --key keys/acme.key --app pidcraft --publisher "Acme Tools" \
+    --customer "Refinery North" --installation <installation id> --expires 2027-12-31 \
+    --limit sheets=200 --out refinery-north.pclicense
+plantcraft-app license show --public-key acme.pub --app pidcraft refinery-north.pclicense
+```
+
+The file is JSON (`format`, `license`, `signature`), the signature covering the licence's
+canonical JSON. The licence names the app, the customer, the installation (or `*`), the end day,
+limits (`sheets = 200`) and features. The administrator adds it in Apps › Licences
+(`POST /api/apps/licenses`): PlantCraft checks the signature against its trusted publishers and
+the installation id, keeps it, refuses to install an app whose licence is missing or ended, and
+serves it to that app only (`GET /api/v1/apps/self/license`). The app checks it again with the
+publisher's public key compiled into its own code (`plantcraft_sdk.licensing.LicenseGuard`), at
+start and every hour; after the end day it keeps working `grace_days` days with a banner, then
+answers 402 except for its meta, help and licence routes. It needs no internet.
+
+How much each way of closing protects, plainly:
+
+| Way | Protects against | Does not protect against |
+|---|---|---|
+| Python `.pyc` only | nobody: decompilers give the source back in seconds | |
+| Obfuscation (PyArmor and similar) | casual reading | a determined reader; paid tools, runtime hooks that break with Python upgrades |
+| **Nuitka (chosen)** | reading and changing the code: no source, no bytecode, a native module | strings and constants stay visible; a skilled reverse engineer with time can still patch the licence check |
+| Encrypted image or package | nothing more: the key must be on the client's machine to run it | |
+| **Signed licence (chosen)** | copying an install to another site, running past the end day, going past the limits | someone who patches the compiled check (see Nuitka) |
+| Contract (EULA) | what the technical means do not | |
+
+So: Nuitka plus the signed licence keep honest clients honest and make copying fail loudly; the
+contract is the real protection. Nothing here sends data anywhere, needs a server of the
+publisher or costs money.

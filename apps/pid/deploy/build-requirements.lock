@@ -1,0 +1,5 @@
+# Pinned, hashed compiler of the closed image (Dockerfile, stage "compiled"; never shipped).
+# Regenerate with `make lock`.
+nuitka==4.3.3 \
+    --hash=sha256:3bed65735d5cfc53dc13070f9f17c52dbe584c0f03de32b6ef011f5db674add9
+    # via -r deploy/build-requirements.in

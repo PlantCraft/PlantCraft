@@ -117,6 +117,7 @@ class ApiRuntime:
             InstalledAppStore(self.workspace.db),
             AppSettings.from_environment(scenario.storage.sqlite_path),
         )
+        self.apps.installation_id = self.workspace.installation.installation_id
         # Backups, restores and updates: requests to the installer (docs/operations.md).
         self.operations = OperationsDesk(self.apps.settings)
         # Specialists (docs/collaboration.md): model keys live beside the database, not in it.

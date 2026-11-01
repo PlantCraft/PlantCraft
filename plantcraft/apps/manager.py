@@ -61,9 +61,7 @@ class AppSettings:
         return cls(
             install_enabled=install not in {"off", "false", "0", "no"},
             requests_dir=Path(os.environ.get("PLANTCRAFT_APP_REQUESTS") or base / "app-requests"),
-            installer_dir=Path(
-                os.environ.get("PLANTCRAFT_INSTALLER_STATE") or base / "installer"
-            ),
+            installer_dir=Path(os.environ.get("PLANTCRAFT_INSTALLER_STATE") or base / "installer"),
             trusted_dir=Path(
                 os.environ.get("PLANTCRAFT_TRUSTED_PUBLISHERS")
                 or root / "deploy" / "trusted-publishers"
@@ -90,12 +88,138 @@ def _prefix_of(url: str) -> str | None:
 EXTERNAL_PERMISSIONS = ["read.assets", "read.signals", "read.series", "write.audit"]
 
 
+def platform_version() -> str:
+    """This PlantCraft's version, the one apps' ``[requires] platform`` is held to.
+
+    ``PLANTCRAFT_PLATFORM_VERSION`` overrides it (tests, a development checkout).
+    """
+
+    forced = os.environ.get("PLANTCRAFT_PLATFORM_VERSION", "").strip()
+    if forced:
+        return forced
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        return version("plantcraft")
+    except PackageNotFoundError:
+        return ""
+
+
+# The API v1 this PlantCraft serves (docs/api-v1.md): apps' [requires] processcraft_api.
+API_VERSION = "1.0"
+
+
 class AppManager:
     def __init__(self, store: InstalledAppStore, settings: AppSettings):
         self.store = store
         self.settings = settings
         self._synced = 0.0
         self.uploads_dir = settings.requests_dir / "uploads"
+        # Which installation this is (the runtime sets it): closed apps' licences name it.
+        self.installation_id: Callable[[], str] = lambda: ""
+
+    # Compatibility and licences (docs/app-package.md, sections 7 and 8) -------------------
+
+    def compatibility(self, summary: dict[str, Any]) -> dict[str, Any]:
+        return pkg.compatibility(summary, platform_version(), API_VERSION)
+
+    def upgrade_report(self, target: str) -> list[dict[str, Any]]:
+        """The installed apps and whether each one's range holds ``target`` (before an update)."""
+
+        if not pkg.VERSION.match(target):
+            raise AppError(422, t("Not a version: {version}", version=target))
+        out = []
+        for row in self.store.list():
+            manifest = row.get("manifest") or {}
+            view = {
+                "requires": {"platform": manifest.get("requires_platform") or ""},
+                "tested": {"platform": manifest.get("tested") or []},
+            }
+            found = pkg.compatibility(view, target, API_VERSION)
+            out.append(
+                {
+                    "id": row["app_id"],
+                    "name": row["name"],
+                    "version": row.get("version"),
+                    "range": found["range"],
+                    "ok": found["ok"],
+                    "tested": found["tested"],
+                    "problems": found["problems"],
+                }
+            )
+        return out
+
+    def _trusted_for_licenses(self) -> dict[str, Any]:
+        return pkg.load_trusted(self.settings.trusted_dir)
+
+    def license_state(self, app_id: str, grace_days: int = 0) -> dict[str, Any]:
+        """The licence PlantCraft keeps for an app, checked again now (signature, app,
+        installation, dates), as the Apps page shows it."""
+
+        from plantcraft_sdk import licensing
+
+        stored = self.store.license(app_id)
+        if stored is None:
+            return licensing.LicenseState(
+                "missing", t("No licence: add the file its publisher sent (Apps › Licences).")
+            ).to_json()
+        raw = json.dumps(stored["file"]).encode()
+        try:
+            body = licensing.read(raw, self._trusted_for_licenses())
+        except licensing.LicenseError as exc:
+            return licensing.LicenseState("invalid", str(exc)).to_json()
+        key = self._trusted_for_licenses()[licensing.publisher_file(body["publisher"])]
+        return licensing.state(
+            raw, key, app_id=app_id, installation=self.installation_id(), grace_days=grace_days
+        ).to_json()
+
+    def add_license(self, data: bytes, actor: str) -> dict[str, Any]:
+        """Checks a ``.pclicense`` against the trusted publishers and this installation, and
+        keeps it for its app (which reads it through ``GET /api/v1/apps/self/license``)."""
+
+        from plantcraft_sdk import licensing
+
+        try:
+            body = licensing.read(data, self._trusted_for_licenses())
+            document = json.loads(data.decode("utf-8"))
+        except licensing.LicenseError as exc:
+            raise AppError(422, t("The licence was refused: {reason}", reason=str(exc))) from exc
+        mine = self.installation_id()
+        if body["installation"] not in (licensing.ANY_INSTALLATION, mine):
+            raise AppError(
+                422,
+                t(
+                    "The licence is for another installation ({theirs}); this one is {mine}.",
+                    theirs=body["installation"],
+                    mine=mine,
+                ),
+            )
+        self.store.save_license(body["app"], body, document, actor)
+        return {"app": body["app"], **self.license_state(body["app"])}
+
+    def licenses(self) -> dict[str, Any]:
+        rows = []
+        for stored in self.store.licenses():
+            app = self.store.get(stored["app_id"]) or {}
+            grace = int((app.get("manifest") or {}).get("license_grace_days") or 0)
+            rows.append(
+                {
+                    "app": stored["app_id"],
+                    "added_by": stored.get("added_by"),
+                    "added_at": stored.get("added_at"),
+                    **self.license_state(stored["app_id"], grace),
+                }
+            )
+        return {"installation": self.installation_id(), "licenses": rows}
+
+    def remove_license(self, app_id: str) -> None:
+        if self.store.license(app_id) is None:
+            raise AppError(404, t("No licence is kept for this app."))
+        self.store.delete_license(app_id)
+
+    def license_file(self, app_id: str) -> dict[str, Any] | None:
+        stored = self.store.license(app_id)
+        return stored["file"] if stored else None
 
     # What the page shows -------------------------------------------------------------------
 
@@ -170,6 +294,13 @@ class AppManager:
             "previous_version": row.get("previous_version"),
             "has_sbom": bool(row.get("version") and self.sbom(row["app_id"], row["version"])),
             "needs_key": row["origin"] in {"package", "catalog"} and not row.get("key_id"),
+            "source": manifest.get("source", "open"),
+            "languages": manifest.get("languages") or ["en"],
+            "license": manifest.get("license") or "",
+            "license_required": bool(manifest.get("license_required")),
+            "installed_on": manifest.get("platform_version") or "",
+            "requires_platform": manifest.get("requires_platform") or "",
+            "tested_on": manifest.get("tested") or [],
             "health": row.get("health"),
             "installed_by": row.get("installed_by"),
             "installed_at": row.get("installed_at"),
@@ -325,6 +456,31 @@ class AppManager:
             )
         if not (current and current.get("key_id")):
             warnings.append(t("An app key is issued for this app when you confirm."))
+        compatibility = self.compatibility(summary)
+        if not compatibility["ok"]:
+            warnings.extend(compatibility["problems"])
+        elif not compatibility["tested"] and compatibility["platform"]:
+            tested = ", ".join(compatibility["tested_on"]) or t("none")
+            warnings.append(
+                t(
+                    "Its publisher has not tested it on PlantCraft {version} (tested on: {tested}).",
+                    version=compatibility["platform"],
+                    tested=tested,
+                )
+            )
+        terms = summary.get("license_terms") or {}
+        license_state = (
+            self.license_state(summary["id"], int(terms.get("grace_days") or 0))
+            if terms.get("required")
+            else None
+        )
+        if license_state is not None and not license_state["usable"]:
+            warnings.append(
+                t(
+                    "It needs a licence from its publisher: {message}",
+                    message=license_state["message"],
+                )
+            )
         return {
             "upload_id": upload_id,
             "origin": upload["origin"],
@@ -337,6 +493,10 @@ class AppManager:
             "sbom": upload["sbom_summary"],
             "replaces": replaces,
             "warnings": warnings,
+            "compatibility": compatibility,
+            "license": license_state,
+            "installable": compatibility["ok"]
+            and (license_state is None or license_state["usable"]),
             "installer": self.installer(),
             "uploaded_by": upload.get("created_by"),
             "uploaded_at": upload.get("created_at"),
@@ -383,6 +543,26 @@ class AppManager:
         current = self._check_free(
             app_id, summary["prefix"], configured, package=True, summary=summary
         )
+        compatibility = self.compatibility(summary)
+        if not compatibility["ok"]:
+            raise AppError(
+                409,
+                t(
+                    "This app does not run on this PlantCraft: {problems}",
+                    problems="; ".join(compatibility["problems"]),
+                ),
+            )
+        terms = summary.get("license_terms") or {}
+        if terms.get("required"):
+            state = self.license_state(app_id, int(terms.get("grace_days") or 0))
+            if not state["usable"]:
+                raise AppError(
+                    409,
+                    t(
+                        "Add its licence first (Apps › Licences): {message}",
+                        message=state["message"],
+                    ),
+                )
         permissions = [item["id"] for item in summary["permissions"]]
         key_id = current.get("key_id") if current else None
         key = None
@@ -413,6 +593,15 @@ class AppManager:
                 "uid": summary["uid"],
                 "package_sha256": summary["sha256"],
                 "asset_types": list((summary.get("requires") or {}).get("asset_types") or []),
+                # docs/app-package.md, sections 7 and 8: where and how it was installed.
+                "platform_version": compatibility["platform"],
+                "requires_platform": compatibility["range"],
+                "tested": compatibility["tested_on"],
+                "source": summary.get("source", "open"),
+                "languages": summary.get("languages") or ["en"],
+                "license": summary.get("license") or "",
+                "license_required": bool(terms.get("required")),
+                "license_grace_days": int(terms.get("grace_days") or 0),
             },
             request_id=request_id,
             request_action="install",

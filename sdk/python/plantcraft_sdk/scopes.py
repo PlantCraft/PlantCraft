@@ -55,6 +55,8 @@ ROUTE_SCOPES: dict[tuple[str, str], str | None] = {
     ("GET", "/api/v1/me"): None,
     ("GET", "/api/v1/installation"): None,
     ("GET", "/api/v1/apps"): None,
+    # A closed app reads its own licence (docs/app-package.md, section 8).
+    ("GET", "/api/v1/apps/self/license"): None,
     # What the app adds, declared in [contributes] and checked there.
     ("PUT", "/api/v1/contributions"): None,
     ("GET", "/api/v1/contributions"): None,

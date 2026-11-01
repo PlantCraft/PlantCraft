@@ -1,6 +1,6 @@
 import { createApiClient, jsonBody, query, type HelpEntry, type HelpPage } from "@plantcraft/ui";
 import { href } from "./nav";
-import type { Diagram, DiagramRow, Doc, DocRow, Folder, Hit, LinkToCheck, Me, Passage, PlantMap, SendFields, Verdict } from "./types";
+import type { Doc, DocRow, Folder, Hit, LinkToCheck, Me, Passage, SendFields } from "./types";
 
 const client = createApiClient({ app: "doccraft", href });
 export const UNAUTHORIZED_EVENT = client.UNAUTHORIZED_EVENT;
@@ -40,21 +40,6 @@ export const api = {
     href(`/api/documents/${id(docId)}/file${query({ revision: options.revision, inline: options.inline ? "true" : undefined })}`) + (options.inline && options.page ? `#page=${options.page}` : ""),
   search: (body: { query: string; asset?: string; kind?: string; folder?: string; limit?: number }) =>
     request<{ query: string; passages: Hit[] }>("/api/search", jsonBody("POST", body)),
-  diagrams: () => request<DiagramRow[]>("/api/diagrams"),
-  diagram: (revId: string, page: number) => request<Diagram>(`/api/diagrams/${id(revId)}/${page}`),
-  /** The page read again by the language model of "diagram-read" (an editor; 409 with no model). */
-  readWithModel: (revId: string, page: number) => request<Diagram>(`/api/diagrams/${id(revId)}/${page}/read-with-model`, { method: "POST" }),
-  /** The page drawn as a picture by the server (never the file itself in the page). */
-  diagramImage: (revId: string, page: number) => href(`/api/diagrams/${id(revId)}/${page}/image`),
-  plantMap: () => request<PlantMap>("/api/plant-map"),
-  assetFileUrl: () => href("/api/plant-map/asset-file"),
-  dexpiUrl: () => href("/api/plant-map/dexpi.xml"),
-  /** The map written out as a document of the library (a new revision each time), so the assistant cites it. */
-  summaryDocument: () => request<Doc>("/api/plant-map/summary-document", { method: "POST" }),
-  /** Approve, reject or uncheck an item (its tag) or a relation (`from|type|to`) of the map. */
-  review: (key: string, kind: "item" | "relation", verdict: Verdict) =>
-    request<{ key: string; verdict: Verdict }>("/api/plant-map/reviews", jsonBody("PUT", { key, kind, verdict })),
-  listUrl: (kind: "equipment" | "instruments" | "lines" | "loops") => href(`/api/plant-map/lists/${kind}.csv`),
   help: () => request<HelpEntry[]>("/api/help"),
   helpPage: (pageId: string) => request<HelpPage>(`/api/help/${id(pageId)}`),
 };

@@ -1,0 +1,96 @@
+# PlantCraft PID' manifest: the single source of its metadata (the suite's app standard,
+# section 4, and the package rules of docs/app-package.md, sections 7 and 8).
+# The launcher card, the Apps page, the package manifest, the image labels and /api/meta read it.
+#
+# PID is the suite's first closed app (2026-11-01): its image carries compiled code only
+# (Dockerfile, Nuitka) and it works where PlantCraft holds a licence its publisher signed.
+
+[app]
+id = "pidcraft"
+name = "PlantCraft PID"
+version = "0.1.0"
+category = "Engineering"
+summary = "The plant's P&IDs read into a plant map: units, equipment, lines and control loops."
+description = """\
+Send the plant's P&IDs (PDF, SVG, DEXPI or a scan) and PID reads each sheet: the tags, the \
+equipment and instruments they name, and the lines and signals that join them. The sheets join \
+into one plant map, where an engineer checks what was read (Correct / Wrong) and exports it as \
+PlantCraft's asset file, as DEXPI, as equipment, instrument, line and loop lists, or as a \
+written summary. A language model can read a scanned sheet again when an administrator gives \
+it one. Closed source: it needs a licence from its publisher."""
+publisher = "PlantCraft"
+license = "LicenseRef-PlantCraft-EULA"
+homepage = ""
+mark = "pidcraft"
+source = "closed"
+languages = ["en"]
+
+[runtime]
+prefix = "/pid/"
+port = 8160
+uid = 10016
+health = "/healthz"
+image = "pidcraft"
+
+[requires]
+platform = ">=0.6,<0.8"
+processcraft_api = ">=1.0,<2"
+sdk = "0.100.0"
+asset_types = []
+roles = {}
+
+[license]
+required = true
+grace_days = 14
+
+[permissions]
+read = ["assets"]
+write = ["audit", "llm"]
+plant_write = false
+outbound = []
+
+[publishes]
+results = []
+
+[consumes]
+results = []
+
+[contributes]
+queue = false
+
+[contributes.search]                # Ctrl+K: api/routers/search.py
+types = ["Drawing", "Tag on a drawing"]
+
+[[contributes.refs]]                # #pid:<id> in messages: api/routers/refs.py
+kind = "pid"
+title = "Drawing"
+url = "/pid/drawings/{id}"
+
+[[contributes.llm]]                 # Setup > Language models: plantmap/llm.py
+id = "diagram-read"
+title = "Read a scanned diagram again"
+description = "Reads a scanned P&ID page again when an editor asks, adding the tags and lines the drawing reader missed; people check what it adds on the plant map."
+reads = "The page's image and the tags and lines the drawing reader found on it; nothing from the plant's signals."
+default = "off"
+
+[[contributes.widgets]]             # Overview and Desk's Today: api/routers/widgets.py
+id = "count"
+title = "PID: drawings"
+description = "How many P&IDs the plant map is built from."
+size = "s"
+kind = "number"
+default = true
+
+[[contributes.widgets]]
+id = "latest"
+title = "PID: latest drawings"
+description = "The drawings sent last, each one click away."
+size = "m"
+kind = "list"
+
+[backup]                            # its data folder in the suite's backup (PlantCraft docs/operations.md)
+sqlite = ["pidcraft.sqlite3"]       # drawings, revisions, diagrams and the map's reviews
+skip = ["logs/"]                    # files/ (the originals) is kept with the rest of the folder
+
+[suggests]
+asset_types = []

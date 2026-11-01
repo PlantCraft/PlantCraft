@@ -22,7 +22,7 @@ import re
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
 from pydantic import (
@@ -63,6 +63,8 @@ SUITE: dict[str, SuiteRow] = {
     "modelcraft": SuiteRow("PlantCraft Models", "/model/", 8130, 10011),
     "linkcraft": SuiteRow("PlantCraft Analytics", "/link/", 8140, 10012),
     "doccraft": SuiteRow("PlantCraft Documents", "/doc/", 8150, 10015),
+    # The suite's first closed app (docs/app-package.md, section 8): not in the open bundle.
+    "pidcraft": SuiteRow("PlantCraft PID", "/pid/", 8160, 10016),
 }
 # Rows of the table that are not apps: (port or None, uid).
 SERVICES: dict[str, tuple[int | None, int]] = {
@@ -98,6 +100,10 @@ SEMVER = (
 )
 # ">=1.0", ">=1.0,<2", "==1.2.0"
 VERSION_RANGE = r"^\s*(==|>=|<=|>|<|~=|!=)\s*\d+(\.\d+){0,2}(\s*,\s*(==|>=|<=|>|<|~=|!=)\s*\d+(\.\d+){0,2})*\s*$"
+# A PlantCraft range: ">=0.6,<0.8", "==0.6.*", "~=0.6".
+PLATFORM_RANGE = r"^\s*(==|>=|<=|>|<|~=|!=)?\s*\d+(\.\d+){0,3}(\.\*)?(\s*,\s*(==|>=|<=|>|<|~=|!=)?\s*\d+(\.\d+){0,3}(\.\*)?)*\s*$"
+# A language tag (BCP 47, the forms the suite uses): en, pt-BR, es, zh-Hant.
+LANGUAGE = r"^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$"
 # What [permissions] may name: one list for the suite (plantcraft_sdk.scopes, held to every
 # API v1 route).
 READS = tuple(READ_SCOPES)
@@ -135,6 +141,21 @@ class AppTable(_Table):
     license: Text
     homepage: str = ""
     mark: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9-]{0,40}$")]
+    # "closed": the code is not published; the Apps page marks it (docs/app-package.md §8).
+    source: Literal["open", "closed"] = "open"
+    # The languages its screens and messages come in: "en" (the text in the code) and one
+    # catalog pair per other language (frontend/src/locales/<lang>.json and
+    # src/<id>/locales/<lang>.json, plantcraft_sdk.i18n), checked by ``plantcraft-app check``.
+    languages: list[Annotated[str, StringConstraints(pattern=LANGUAGE)]] = ["en"]
+
+    @field_validator("languages")
+    @classmethod
+    def _english_first(cls, value: list[str]) -> list[str]:
+        if "en" not in value:
+            raise ValueError('"en" is always one of the languages (the text in the code)')
+        if len(set(value)) != len(value):
+            raise ValueError("a language is named twice")
+        return value
 
     @field_validator("summary")
     @classmethod
@@ -169,6 +190,8 @@ class RuntimeTable(_Table):
 
 
 class RequiresTable(_Table):
+    # The PlantCraft versions the app runs on (">=0.6,<0.8"); the installer refuses others.
+    platform: Annotated[str, StringConstraints(pattern=PLATFORM_RANGE)] | None = None
     processcraft_api: Annotated[str, StringConstraints(pattern=VERSION_RANGE)]
     sdk: Annotated[str, StringConstraints(pattern=SEMVER)]
     asset_types: list[Annotated[str, StringConstraints(pattern=TYPE.pattern)]] = []
@@ -219,6 +242,21 @@ class PermissionsTable(_Table):
         if value:
             raise ValueError("outbound is [] for every app (no outbound network by default)")
         return value
+
+
+class TestedTable(_Table):
+    """The PlantCraft versions the app's tests passed on: ``plantcraft-app compat`` writes
+    ``compat/<version>.json`` and the package build stamps them here, never by hand."""
+
+    platform: list[Annotated[str, StringConstraints(pattern=SEMVER)]] = []
+
+
+class LicenseTable(_Table):
+    """A closed app's licence: a ``.pclicense`` its publisher signs (``plantcraft_sdk.licensing``)."""
+
+    required: bool = False
+    # How long the app keeps working (and warning) after its licence ends.
+    grace_days: Annotated[int, Field(ge=0, le=90)] = 14
 
 
 class ResultPort(_Table):
@@ -333,6 +371,8 @@ class AppManifest(_Table):
     consumes: ConsumesTable = ConsumesTable()
     suggests: SuggestsTable = SuggestsTable()
     backup: BackupTable = BackupTable()
+    tested: TestedTable = TestedTable()
+    license: LicenseTable = LicenseTable()
     # What PlantCraft draws for the app (``plantcraft_sdk.contributes``, section 4b).
     contributes: ContributesTable = ContributesTable()
 

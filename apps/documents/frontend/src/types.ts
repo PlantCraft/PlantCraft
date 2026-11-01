@@ -49,46 +49,8 @@ export interface Hit {
   score: number; found_by: string[]; url: string;
 }
 
-
 /** What a person sets for the files they send. */
 export interface SendFields {
   folder: string; number: string; title: string; description: string; kind: string; unit: string; language: string; revision: string; issued: string;
 }
 
-/** A page of a document that is a diagram (P&ID), and what the drawing reader found on it. */
-export interface DiagramRow {
-  rev_id: string; doc_id: string; page: number; sheet: string; title: string; unit: string; source: string;
-  items: number; relations: number; doc_title: string; doc_number: string; format: string; filename: string;
-}
-export interface DrawnItem {
-  id: string; tag: string; family: string; cls: string; label: string; box: [number, number, number, number];
-  confidence: "high" | "medium" | "low"; why: string; ref_sheet?: string; ref_tag?: string;
-}
-export interface DrawnRelation { from: string; type: string; to: string; confidence: "high" | "medium" | "low"; why: string }
-export interface Diagram extends Omit<DiagramRow, "items" | "relations"> {
-  items: number; relations: number;
-  /** The page's tags that PlantCraft has (null: PlantCraft not read). */
-  in_plantcraft?: string[] | null;
-  result: { sheet: string; unit: string; title: string; items: DrawnItem[]; relations: DrawnRelation[]; notes: string[]; width: number; height: number; source: string };
-}
-export interface MapPlace { doc_id: string; rev_id: string; page: number; sheet: string; doc_title: string; box: [number, number, number, number] }
-export interface MapItem {
-  tag: string; family: string; cls: string; unit: string; area: string; sheet: string;
-  confidence: "high" | "medium" | "low"; why: string; places: MapPlace[]; in_plantcraft: boolean | null; review?: Verdict;
-}
-export type Verdict = "" | "approved" | "rejected";
-export interface MapRelation { from: string; type: string; to: string; confidence: "high" | "medium" | "low"; why: string; sheets: string[]; review?: Verdict }
-export interface MapSheet {
-  doc_id: string; rev_id: string; page: number; sheet: string; doc_title: string; title: string; unit: string; source: string;
-  width: number; height: number; items: Array<{ tag: string; family: string; cls: string; box: [number, number, number, number] }>;
-}
-export interface MapLoop { loop: string; transmitters: string[]; valves: string[]; equipment: string[]; unit: string; area: string; complete: boolean }
-export interface PlantMap {
-  items: MapItem[]; relations: MapRelation[]; loops: MapLoop[]; sheets: MapSheet[];
-  rejected: Array<{ key: string; kind: "item" | "relation"; by: string }>;
-  summary: {
-    sheets: number; equipment: number; instruments: number; loops: number; loops_complete: number; feeds: number; relations: number;
-    units: Array<{ unit: string; areas: string[]; equipment: Record<string, number>; loops: number; instruments: number }>;
-    doubts: Array<{ tag: string; why: string }>; doubt_count: number; in_plantcraft: number | null; new: number | null;
-  };
-}

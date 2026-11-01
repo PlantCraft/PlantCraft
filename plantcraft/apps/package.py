@@ -65,6 +65,11 @@ HEALTH = re.compile(r"^/[A-Za-z0-9/_.-]{0,100}$")
 WORD = re.compile(r"^[a-z][a-z0-9_.:-]{0,60}$")
 RANGE = re.compile(r"^[<>=!~^ .,0-9*]{1,40}$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
+# A language tag (BCP 47, the forms the suite uses): en, pt-BR, es, zh-Hant.
+LANGUAGE = re.compile(r"^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2}|-[0-9]{3})?$")
+SOURCES = ("open", "closed")
+MAX_GRACE_DAYS = 90
+DEFAULT_GRACE_DAYS = 14
 
 # The suite table of docs/app-standard.md (section 7): id -> (prefix, port, uid). An app listed
 # here must use exactly its row; any other app may use none of these values.
@@ -80,6 +85,7 @@ SUITE = {
     "modelcraft": ("/model/", 8130, 10011),
     "linkcraft": ("/link/", 8140, 10012),
     "doccraft": ("/doc/", 8150, 10015),
+    "pidcraft": ("/pid/", 8160, 10016),
 }
 # The rest of the table: the services of the stack itself (PlantCraft, proxy, the Simulator, installer).
 STACK_PORTS = {8060, 8443, 4840, 3128}
@@ -100,7 +106,16 @@ def default_uid(app_id: str) -> int:
 
 # Ids and first path segments that belong to PlantCraft itself (its services, its pages and
 # its API); an app may not take them.
-RESERVED_IDS = {"processcraft", "proxy", "installer", "plantcraft", "simcraft", "api", "app", "apps"}
+RESERVED_IDS = {
+    "processcraft",
+    "proxy",
+    "installer",
+    "plantcraft",
+    "simcraft",
+    "api",
+    "app",
+    "apps",
+}
 RESERVED_SEGMENTS = {
     "api", "assets", "apps", "login", "logout", "plant", "data", "settings", "help", "healthz",
     "docs", "static", "favicon.ico", "robots.txt", "index.html",
@@ -141,9 +156,14 @@ PERMISSIONS = {
 }
 SECTIONS = {
     "app": {"id", "name", "version", "category", "summary", "description", "publisher",
-            "license", "homepage", "mark"},
+            "license", "homepage", "mark", "source", "languages"},
     "runtime": {"prefix", "port", "uid", "health", "image"},
-    "requires": {"processcraft_api", "sdk", "asset_types", "roles"},
+    "requires": {"platform", "processcraft_api", "sdk", "asset_types", "roles"},
+    # The PlantCraft versions the app's tests passed on: written by `plantcraft-app compat`
+    # (compat/<version>.json) and stamped at build time, never by hand (docs/app-package.md §7).
+    "tested": {"platform"},
+    # A closed app's licence (docs/app-package.md §8): a .pclicense its publisher signs.
+    "license": {"required", "grace_days"},
     "permissions": {"read", "write", "plant_write", "outbound"},
     "publishes": {"results", "events", "series"},
     "consumes": {"results", "events"},
@@ -476,6 +496,130 @@ def _links(section: dict[str, Any], name: str) -> dict[str, Any]:
     return out
 
 
+def _languages(value: Any) -> list[str]:
+    if not isinstance(value, list) or not 1 <= len(value) <= 40:
+        raise PackageError("[app] languages: a list of 1 to 40 language tags, like en, pt-BR")
+    if any(not isinstance(tag, str) or not LANGUAGE.match(tag) for tag in value):
+        raise PackageError("[app] languages: language tags like en, pt-BR, es")
+    if len(set(value)) != len(value):
+        raise PackageError("[app] languages: a language is named twice")
+    if "en" not in value:
+        raise PackageError('[app] languages: "en" is always one (the text in the code is English)')
+    return list(value)
+
+
+def _tested(section: dict[str, Any]) -> dict[str, Any]:
+    versions = section.get("platform", [])
+    if not isinstance(versions, list) or len(versions) > 50:
+        raise PackageError("[tested] platform: a list of at most 50 PlantCraft versions")
+    for item in versions:
+        if not isinstance(item, str) or not VERSION.match(item):
+            raise PackageError("[tested] platform: versions like 0.6.0")
+    return {"platform": sorted(set(versions), key=version_key)}
+
+
+def _license_section(section: dict[str, Any]) -> dict[str, Any]:
+    required = section.get("required", False)
+    if not isinstance(required, bool):
+        raise PackageError("[license] required: true or false")
+    grace = _int(
+        section.get("grace_days", DEFAULT_GRACE_DAYS), "[license] grace_days", 0, MAX_GRACE_DAYS
+    )
+    return {"required": required, "grace_days": grace}
+
+
+# Versions and ranges ------------------------------------------------------------------------
+
+_CLAUSE = re.compile(r"^\s*(==|>=|<=|>|<|!=|~=)?\s*([0-9]{1,6}(?:\.[0-9]{1,6}){0,3})(\.\*)?\s*$")
+
+
+def version_key(version: str) -> tuple[tuple[int, ...], int, str]:
+    """A version as something to compare: 0.6.0-rc.1 < 0.6.0 < 0.6.1 < 0.10.0."""
+
+    core, _, pre = version.strip().partition("-")
+    numbers = tuple(int(part) for part in core.split("+")[0].split(".") if part.isdigit())
+    numbers = numbers + (0,) * (4 - len(numbers))
+    return numbers, 0 if pre else 1, pre
+
+
+def satisfies(version: str, spec: str) -> bool:
+    """Whether ``version`` is inside ``spec`` (">=0.6,<0.8", "==0.6.*", "0.6.0", "~=0.6").
+
+    A pre-release (0.7.0-rc.1) counts as its release for the ranges, so a release candidate is
+    checked against the range it will ship in. Raises PackageError for a spec it cannot read.
+    """
+
+    if not VERSION.match(version.strip()):
+        raise PackageError(f"not a version: {version!r}")
+    have = version_key(version.split("-")[0])[0]
+    for clause in spec.split(","):
+        match = _CLAUSE.match(clause)
+        if not match:
+            raise PackageError(f"cannot read the range {spec!r}")
+        op, text, star = match.group(1) or "==", match.group(2), bool(match.group(3))
+        want_parts = tuple(int(part) for part in text.split("."))
+        want = want_parts + (0,) * (4 - len(want_parts))
+        if star or op == "~=":
+            if op not in ("==", "!=", "~="):
+                raise PackageError(f"cannot read the range {spec!r}")
+            # ==0.6.* and ~=0.6.0 hold the first parts; ~=0.6 holds the major (as in PEP 440).
+            size = len(want_parts) if star else max(1, len(want_parts) - 1)
+            inside = have[:size] == want_parts[:size] and (star or have >= want)
+            if (op == "!=") == inside:
+                return False
+            continue
+        ok = {
+            "==": have == want, "!=": have != want, ">=": have >= want,
+            "<=": have <= want, ">": have > want, "<": have < want,
+        }[op]  # fmt: skip
+        if not ok:
+            return False
+    return True
+
+
+def compatibility(
+    manifest: dict[str, Any], platform_version: str, api_version: str = "1.0"
+) -> dict[str, Any]:
+    """Whether a validated manifest may run on this PlantCraft (docs/app-package.md, section 7).
+
+    ``ok`` False refuses the install: the version is outside ``[requires] platform`` or the API
+    range. ``tested`` False only warns: the app's tests never ran on this version. A development
+    PlantCraft (no version, or 0.0.0) checks nothing.
+    """
+
+    requires = manifest.get("requires") or {}
+    tested = (manifest.get("tested") or {}).get("platform") or []
+    out: dict[str, Any] = {
+        "platform": platform_version or "",
+        "range": requires.get("platform", ""),
+        "api_range": requires.get("processcraft_api", ""),
+        "tested_on": list(tested),
+        "ok": True,
+        "tested": True,
+        "problems": [],
+    }
+    if (
+        not platform_version
+        or not VERSION.match(platform_version)
+        or platform_version.startswith("0.0.0")
+    ):
+        out["tested"] = bool(tested)
+        return out
+    if out["range"] and not satisfies(platform_version, out["range"]):
+        out["ok"] = False
+        out["problems"].append(
+            f"made for PlantCraft {out['range']}; this installation runs {platform_version}"
+        )
+    if out["api_range"] and not satisfies(api_version, out["api_range"]):
+        out["ok"] = False
+        out["problems"].append(
+            f"needs API {out['api_range']}; this PlantCraft serves {api_version}"
+        )
+    release = platform_version.split("-")[0]
+    out["tested"] = any(item.split("-")[0] == release for item in tested)
+    return out
+
+
 def validate_manifest(manifest: Any, *, with_files: bool = True) -> dict[str, Any]:
     """The manifest (``app.toml`` plus ``files``), checked key by key; raises PackageError."""
 
@@ -544,11 +688,16 @@ def validate_manifest(manifest: Any, *, with_files: bool = True) -> dict[str, An
         raise PackageError("[permissions] outbound must be []: apps contact no outside host")
     requires = _section(manifest, "requires")
     clean_requires: dict[str, Any] = {}
-    for key in ("processcraft_api", "sdk"):
+    for key in ("platform", "processcraft_api", "sdk"):
         if key in requires:
             value = requires[key]
             if not isinstance(value, str) or not RANGE.match(value):
                 raise PackageError(f"[requires] {key}: a version or range like >=1.0")
+            if key == "platform":
+                try:
+                    satisfies("0.0.0", value)
+                except PackageError as exc:
+                    raise PackageError(f"[requires] platform: {exc}") from None
             clean_requires[key] = value
     if "asset_types" in requires:
         clean_requires["asset_types"] = _words(requires["asset_types"], "[requires] asset_types")
@@ -562,6 +711,10 @@ def validate_manifest(manifest: Any, *, with_files: bool = True) -> dict[str, An
             _words(names, f"[requires] roles.{kind}")
         clean_requires["roles"] = {kind: list(names) for kind, names in roles.items()}
     suggests = _section(manifest, "suggests")
+    source = app.get("source", "open")
+    if source not in SOURCES:
+        raise PackageError('[app] source: "open" or "closed"')
+    languages = _languages(app.get("languages", ["en"]))
     clean = {
         "format": FORMAT,
         "app": {
@@ -575,6 +728,8 @@ def validate_manifest(manifest: Any, *, with_files: bool = True) -> dict[str, An
             "license": _text(app.get("license"), "[app] license", 80, required=False),
             "homepage": homepage,
             "mark": mark or "",
+            "source": source,
+            "languages": languages,
         },
         "runtime": {"prefix": prefix, "port": port, "uid": uid, "health": health, "image": app_id},
         "requires": clean_requires,
@@ -590,6 +745,10 @@ def validate_manifest(manifest: Any, *, with_files: bool = True) -> dict[str, An
         if "asset_types" in suggests
         else {},
     }
+    if "tested" in manifest:
+        clean["tested"] = _tested(_section(manifest, "tested"))
+    if "license" in manifest:
+        clean["license"] = _license_section(_section(manifest, "license"))
     if "backup" in manifest:
         clean["backup"] = _backup(_section(manifest, "backup"))
     if "contributes" in manifest:
@@ -643,6 +802,8 @@ def flat(manifest: dict[str, Any]) -> dict[str, Any]:
         "summary": app["summary"],
         "description": app["description"],
         "license": app["license"],
+        "source": app.get("source", "open"),
+        "languages": list(app.get("languages") or ["en"]),
         "homepage": app["homepage"],
         "publisher": {"id": publisher_id(app["publisher"]), "name": app["publisher"]},
         "prefix": runtime["prefix"],
@@ -654,6 +815,8 @@ def flat(manifest: dict[str, Any]) -> dict[str, Any]:
         "plant_write": False,
         "outbound": [],
         "requires": manifest["requires"],
+        "tested": manifest.get("tested", {"platform": []}),
+        "license_terms": manifest.get("license", {"required": False, "grace_days": 0}),
         "publishes": manifest["publishes"],
         "consumes": manifest["consumes"],
         "suggests": manifest["suggests"],
@@ -1088,6 +1251,28 @@ def build_package(
     return manifest
 
 
+def tested_from_reports(folder: str | Path, app_id: str, version: str) -> list[str]:
+    """The PlantCraft versions whose ``compat/<version>.json`` (``plantcraft-app compat``)
+    passed for this app and version: what a build stamps into ``[tested]``."""
+
+    found = []
+    for path in sorted(Path(folder).glob("*.json")):
+        try:
+            report = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        platform = report.get("platform") if isinstance(report, dict) else None
+        if (
+            isinstance(platform, str)
+            and VERSION.match(platform)
+            and report.get("passed") is True
+            and report.get("app") == app_id
+            and report.get("app_version") == version
+        ):
+            found.append(platform)
+    return sorted(set(found), key=version_key)
+
+
 def _info(name: str, size: int) -> tarfile.TarInfo:
     info = tarfile.TarInfo(name)
     info.size, info.mode, info.mtime = size, 0o644, 0
@@ -1222,6 +1407,10 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--key", required=True, help="publisher private key (PEM), never committed")
     build.add_argument("--out", required=True)
     build.add_argument("--gzip", action="store_true", help="compress the package")
+    build.add_argument(
+        "--compat-dir",
+        help="the app's compat/ reports (plantcraft-app compat): stamped into [tested]",
+    )
     check = commands.add_parser("verify", help="verify a package against trusted publisher keys")
     check.add_argument("--trusted", required=True, help="folder of <publisher>.pub files")
     check.add_argument("package")
@@ -1244,6 +1433,12 @@ def main(argv: list[str] | None = None) -> int:
                 template = strict_json(source, args.manifest)
             if not isinstance(template, dict):
                 raise PackageError("the manifest must be a JSON object")
+            if args.compat_dir:
+                app = template.get("app") if isinstance(template.get("app"), dict) else {}
+                versions = tested_from_reports(
+                    args.compat_dir, str(app.get("id", "")), str(app.get("version", ""))
+                )
+                template["tested"] = {"platform": versions}
             manifest = build_package(
                 template, args.image_tar, args.sbom, args.key, args.out, compress=args.gzip
             )

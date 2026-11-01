@@ -65,6 +65,15 @@ class InstalledAppStore(Store):
         created_at TEXT NOT NULL
     );
 
+    -- Closed apps' licences (.pclicense, docs/app-package.md section 8): one per app.
+    CREATE TABLE IF NOT EXISTS app_licenses (
+        app_id TEXT PRIMARY KEY,
+        license_json TEXT NOT NULL,
+        file_json TEXT NOT NULL,
+        added_by TEXT,
+        added_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS app_install_settings (
         name TEXT PRIMARY KEY,
         value TEXT NOT NULL,
@@ -198,6 +207,41 @@ class InstalledAppStore(Store):
     def delete_upload(self, upload_id: str) -> None:
         with self._lock, self._write() as connection:
             connection.execute("DELETE FROM app_uploads WHERE upload_id = ?", (upload_id,))
+
+    # Licences of closed apps ---------------------------------------------------------------
+
+    def save_license(
+        self, app_id: str, body: dict[str, Any], document: dict[str, Any], actor: str
+    ) -> None:
+        with self._lock, self._write() as connection:
+            connection.execute(
+                "INSERT OR REPLACE INTO app_licenses (app_id, license_json, file_json, added_by, "
+                "added_at) VALUES (?, ?, ?, ?, ?)",
+                (app_id, self._json(body), self._json(document), actor, self._now()),
+            )
+
+    def licenses(self) -> list[dict[str, Any]]:
+        with self._lock, self._connect() as connection:
+            rows = connection.execute("SELECT * FROM app_licenses ORDER BY app_id").fetchall()
+        return [
+            self._row_with_json(row, {"license": ("license_json", {}), "file": ("file_json", {})})
+            for row in rows
+        ]
+
+    def license(self, app_id: str) -> dict[str, Any] | None:
+        with self._lock, self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM app_licenses WHERE app_id = ?", (app_id,)
+            ).fetchone()
+        if not row:
+            return None
+        return self._row_with_json(
+            row, {"license": ("license_json", {}), "file": ("file_json", {})}
+        )
+
+    def delete_license(self, app_id: str) -> None:
+        with self._lock, self._write() as connection:
+            connection.execute("DELETE FROM app_licenses WHERE app_id = ?", (app_id,))
 
     # Switches set by an administrator on the Apps page ---------------------------------------
 

@@ -7,6 +7,24 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Added
+
+- **App packages say what they run on, what they were tested on, their languages and whether they
+  are closed (SDK 0.100.0).** `app.toml` gains `[app] source` (`open` or `closed`) and
+  `languages`, `[requires] platform` (the PlantCraft versions it installs on), `[tested] platform`
+  (stamped by the package build from `compat/<version>.json`) and `[license]`. PlantCraft refuses
+  an install outside the ranges, warns when the version is untested, keeps the version an app was
+  installed on and answers `GET /api/apps/upgrade-check?to=` before an upgrade
+  (docs/app-package.md, section 7). `plantcraft-app compat` runs the compatibility checks and the
+  app's `tests/compat` against a real PlantCraft and writes the report.
+- **Licences for closed apps.** A publisher signs a `.pclicense` for one installation with its
+  package key (`plantcraft-app license issue`); the administrator adds it in Apps › Licences
+  (`/api/apps/licenses`), PlantCraft checks the signature and the installation and serves it to
+  that app only (`GET /api/v1/apps/self/license`). `plantcraft_sdk.licensing` gives apps the
+  same check, offline (docs/app-package.md, section 8).
+- **PlantCraft PID (`apps/pid`, `/pid/`, port 8160, uid 10016)**, the first closed app: the P&ID
+  reader and plant map, moved out of Documents, compiled with Nuitka and licensed.
+
 ### Changed
 
 - **Public demo: the visitor is told the visit's limits (SDK 0.100.0, ui 0.105.0).** The sign-in page says a visit lasts

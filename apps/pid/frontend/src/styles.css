@@ -1,0 +1,63 @@
+/* PlantCraft PID's styles on the suite's fonts, tokens and frame (@plantcraft/ui). */
+@import "@plantcraft/ui/fonts.css";
+@import "@plantcraft/ui/tokens.css";
+@import "@plantcraft/ui/shell.css";
+@import "@plantcraft/ui/base.css";
+
+
+/* The note form: the text takes the whole row, the button sits under the fields. */
+.form-wide { grid-column: 1 / -1; }
+.form-actions { margin-top: calc(14px * var(--pc-space-scale, 1)); }
+.diagram-columns, .map-columns { display: grid; grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr); gap: var(--pc-space-4); align-items: start; }
+@media (max-width: 960px) { .diagram-columns, .map-columns { grid-template-columns: minmax(0, 1fr); } }
+.diagram-canvas { padding: var(--pc-space-2); overflow: auto; }
+.diagram-frame { position: relative; width: 100%; min-width: 640px; background: #fff; }
+.diagram-frame img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.diagram-box { position: absolute; border: 1.5px solid; border-radius: 3px; background: transparent; padding: 0; cursor: pointer; }
+.diagram-box:hover, .diagram-box.picked { background: color-mix(in srgb, var(--pc-primary) 18%, transparent); }
+.diagram-box.low { border-style: dashed; border-color: var(--pc-problem-text) !important; }
+.diagram-box.linked { box-shadow: 0 0 0 2px var(--pc-attention-fill); }
+/* The list scrolls inside the panel (the panel itself keeps its text). */
+.diagram-list { overflow-wrap: anywhere; }
+.diagram-items { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--pc-space-2); max-height: 70vh; overflow: auto; }
+.diagram-items li.picked { background: var(--pc-surface-2); border-radius: 6px; }
+.diagram-picked { border: 1px solid var(--pc-border); border-radius: 8px; padding: var(--pc-space-2) calc(10px * var(--pc-space-scale, 1)); margin-bottom: var(--pc-space-3); }
+.diagram-picked ul, .map-item ul { padding-left: calc(18px * var(--pc-space-scale, 1)); margin: var(--pc-space-1) 0; }
+.small { font-size: calc(12px * var(--pc-text-scale, 1)); }
+
+/* The plant map: each sheet a tile in its drawing's layout, units in rows. */
+.map-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--pc-space-3); }
+.map-kpis .panel { margin-bottom: 0; }
+.map-panel { padding: 0; overflow: hidden; }
+.plant-map { width: 100%; height: 72vh; display: block; cursor: grab; touch-action: none; background: var(--pc-surface-2); }
+.map-tile { fill: var(--pc-surface); stroke: var(--pc-border); }
+.map-tile-title { font-size: calc(16px * var(--pc-text-scale, 1)); font-weight: 600; fill: var(--pc-text-2, var(--pc-text)); }
+.map-line { stroke: var(--pc-text-3); stroke-width: 1; fill: none; }
+.map-feeds { stroke: var(--pc-text); stroke-width: 1.6; }
+.map-across { stroke: var(--pc-app-pidcraft, #2f7d6b); stroke-width: 2; stroke-dasharray: 6 4; }
+.map-controls, .map-signal { stroke-dasharray: 3 3; }
+.map-unsure { stroke: var(--pc-problem-text); }
+.map-near { stroke: var(--pc-primary); stroke-width: 2.4; }
+.map-arrowhead { fill: var(--pc-text); }
+.map-node { cursor: pointer; }
+.map-node text { font-size: calc(8px * var(--pc-text-scale, 1)); fill: var(--pc-text); pointer-events: none; }
+.map-equipment rect { fill: var(--pc-app-pidcraft, #2f7d6b); }
+.map-equipment text { font-size: calc(12px * var(--pc-text-scale, 1)); font-weight: 600; }
+.map-instrument circle { fill: var(--pc-primary); }
+.map-connector circle, .map-terminal circle { fill: var(--pc-text-3); }
+.map-picked rect, .map-picked circle { stroke: var(--pc-attention-fill); stroke-width: 3; }
+.map-dim { opacity: .25; }
+.map-side { max-height: 72vh; overflow: auto; }
+.map-item h2 { margin: 0 0 var(--pc-space-1); }
+.map-item h3 { font-size: calc(14px * var(--pc-text-scale, 1)); margin: calc(14px * var(--pc-space-scale, 1)) 0 var(--pc-space-1); }
+.map-doubts { margin: 0; padding-left: calc(18px * var(--pc-space-scale, 1)); display: grid; gap: var(--pc-space-1); }
+.map-equipment rect { fill: var(--pc-surface); stroke: var(--pc-app-pidcraft, #2f7d6b); stroke-width: 1.5; }
+.map-card-tag { font-size: calc(14px * var(--pc-text-scale, 1)) !important; font-weight: 700; fill: var(--pc-text) !important; }
+.map-card-kind { font-size: calc(11px * var(--pc-text-scale, 1)) !important; fill: var(--pc-text-3) !important; }
+.link-button { background: none; border: 0; padding: 0; color: var(--pc-primary-text); cursor: pointer; font: inherit; display: inline-flex; gap: var(--pc-space-1); align-items: center; }
+.link-button.danger { color: var(--pc-problem-text); }
+.small { font-size: calc(12px * var(--pc-text-scale, 1)); }
+.map-lists { display: flex; flex-wrap: wrap; gap: var(--pc-space-2); }
+.drawing-send { display: flex; flex-wrap: wrap; gap: var(--pc-space-3); align-items: end; }
+.drawing-send .field { display: grid; gap: var(--pc-space-1); }
+.licence-banner { margin-bottom: var(--pc-space-3); }

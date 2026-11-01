@@ -182,6 +182,8 @@ publisher = "PlantCraft"          # matches a key in deploy/trusted-publishers/
 license = "Apache-2.0"              # the code licence; the client's right to use it is PlantCraft's licence
 homepage = ""                       # optional; never a vendor or client address
 mark = "linkcraft"                  # app mark in the PlantCraft brand family (frontend appMarks)
+source = "open"                     # open | closed: a closed app ships compiled code only (app-package.md §8)
+languages = ["en"]                  # BCP 47 tags it is translated to; "en" always, each one with its catalogs
 
 [runtime]
 prefix = "/link/"                   # URL prefix behind the proxy (table in section 7)
@@ -191,10 +193,18 @@ health = "/healthz"                 # 200 when ready
 image = "linkcraft"                 # image name; tag = version
 
 [requires]
-processcraft_api = ">=1.0"          # API v1 version range
+platform = ">=0.6,<0.8"             # PlantCraft versions it installs on (app-package.md §7)
+processcraft_api = ">=1.0,<2"       # API v1 version range
 sdk = "0.2.0"                       # plantcraft-sdk version vendored
 asset_types = ["loop"]              # types it works on (subtypes included); [] if none
 roles = { loop = ["pv", "op"] }     # signal roles it needs per type
+
+[tested]                            # stamped by the package build from compat/<version>.json, never by hand
+platform = []                       # the PlantCraft versions its compatibility tests passed on
+
+[license]                           # optional; a closed app that needs a licence (app-package.md §8)
+required = false                    # true: it works only with a .pclicense its publisher signed
+grace_days = 14                     # days it keeps working after the licence ends (0 to 90)
 
 [permissions]                       # shown to the admin before install; held to every API v1 route
 read = ["assets", "signals", "series", "results"]   # also: events runs schedules people knowledge
@@ -579,6 +589,7 @@ prefix or a uid of the table below.
 | PlantCraft Models | `modelcraft` | `/model/` | 8130 | 10011 |
 | PlantCraft Analytics | `linkcraft` | `/link/` | 8140 | 10012 |
 | PlantCraft Documents | `doccraft` | `/doc/` | 8150 | 10015 |
+| PlantCraft PID (closed, its own package, not in the bundle) | `pidcraft` | `/pid/` | 8160 | 10016 |
 | llm-egress | | | 3128 | 10014 |
 | compute | | | | 10020 |
 
