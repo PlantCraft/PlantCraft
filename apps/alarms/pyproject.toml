@@ -40,6 +40,10 @@ alarmcraft = "alarmcraft.cli:main"
 where = ["src"]
 include = ["alarmcraft*"]
 
+[tool.setuptools.package-data]
+# Interface translations (plantcraft_sdk.i18n).
+alarmcraft = ["locales/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

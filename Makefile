@@ -1,10 +1,10 @@
 # Same checks as CI. `make ci` must be green before every push (AGENTS.md, section 4).
-.PHONY: ci ci-all api-contract lint test test-fast frontend notebooks notebook-kits notebook-kit-lock e2e e2e-suite e2e-bundle e2e-upgrade bench-suite soak format image simcraft-image bundle isolation lock apps-images release-bundle
+.PHONY: ci ci-all api-contract lint i18n test test-fast frontend notebooks notebook-kits notebook-kit-lock e2e e2e-suite e2e-bundle e2e-upgrade bench-suite soak format image simcraft-image bundle isolation lock apps-images release-bundle
 
 # macOS ships python3 only; a virtual environment gives both names.
 PYTHON ?= $(shell command -v python >/dev/null 2>&1 && echo python || echo python3)
 
-ci: sdk lint test frontend
+ci: sdk lint i18n test frontend
 
 # The platform's checks, then every app's and the Simulator's own `make ci`, one after the other
 # (in CI each folder's workflow runs its own). `dev/ship` runs only the parts a change touches.
@@ -19,6 +19,11 @@ api-contract:
 lint:
 	ruff check .
 	ruff format --check .
+
+# Translations of the platform, the SDK and the shared ui (docs/translations.md): fails on a broken
+# catalog; prints how much is translated (add --strict once a language is complete).
+i18n:
+	$(PYTHON) -m plantcraft_sdk.i18n_check frontend ui plantcraft sdk/python
 
 format:
 	ruff format .

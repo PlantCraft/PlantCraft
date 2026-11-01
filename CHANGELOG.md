@@ -7,6 +7,17 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Added
+
+- **One translation mechanism for the whole suite (SDK 0.100.0, ui 0.105.0).** Every app now
+  translates the same way as the platform: `createI18n` in `@plantcraft/ui` for the screens and
+  `use_catalogs` with `LanguageMiddleware` in `plantcraft_sdk.i18n` for the servers, each module
+  with its own `locales/pt-BR.json` next to its code (the shared components and the SDK carry
+  their own). One language choice covers every app. `python -m plantcraft_sdk.i18n_check` (in
+  `make ci`) fails on a broken catalog and counts what is still missing. Translations stay off
+  until an installation sets `PLANTCRAFT_TRANSLATIONS=1`, which PlantCraft now tells every page
+  of the suite (the `plantcraft_translations` cookie). See docs/translations.md.
+
 ### Changed
 
 - **Public demo: the visitor is told the visit's limits (SDK 0.100.0, ui 0.105.0).** The sign-in page says a visit lasts

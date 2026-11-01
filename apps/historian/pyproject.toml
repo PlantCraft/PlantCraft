@@ -55,6 +55,10 @@ histcraft = "histcraft.cli:main"
 where = ["src"]
 include = ["histcraft*"]
 
+[tool.setuptools.package-data]
+# Interface translations (plantcraft_sdk.i18n).
+histcraft = ["locales/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

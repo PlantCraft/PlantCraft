@@ -16,6 +16,7 @@ deps:
 # targets, vendored SDK hash; run as a module so $(PYTHON) finds it.
 standard:
 	$(PYTHON) -m plantcraft_sdk.app_cli check .
+	$(PYTHON) -m plantcraft_sdk.i18n_check .
 
 lint:
 	ruff check .

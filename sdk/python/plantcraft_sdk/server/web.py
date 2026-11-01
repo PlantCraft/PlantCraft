@@ -30,7 +30,7 @@ from pydantic import ValidationError
 
 from plantcraft_sdk.auth import AuthError, User, wants_html
 from plantcraft_sdk.client import PlantCraftError
-from plantcraft_sdk.i18n import t
+from plantcraft_sdk.i18n import LanguageMiddleware, t
 from plantcraft_sdk.server import logread
 from plantcraft_sdk.server.access import CurrentUser
 from plantcraft_sdk.server.demo import DemoVisitLimit
@@ -319,5 +319,7 @@ def mount(
     app.add_middleware(DemoSlots, runtime=runtime)
     # A write with the cookie from another site of the domain is refused (server.origin).
     app.add_middleware(SameSiteWrites)
+    # Text in the language the page chose (plantcraft_sdk.i18n).
+    app.add_middleware(LanguageMiddleware)
     app.add_middleware(RequestLog)
     return app

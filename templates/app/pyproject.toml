@@ -36,6 +36,10 @@ starter = "starter.cli:main"
 where = ["src"]
 include = ["starter*"]
 
+[tool.setuptools.package-data]
+# Interface translations (plantcraft_sdk.i18n).
+starter = ["locales/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

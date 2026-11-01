@@ -44,7 +44,7 @@ include = ["modelcraft*"]
 
 # The example projects (Modelica files) ship inside the package.
 [tool.setuptools.package-data]
-modelcraft = ["examples/*/*.mo", "examples/*/package.order", "examples/*/*/*.mo", "examples/*/*/package.order"]
+modelcraft = ["locales/*.json", "examples/*/*.mo", "examples/*/package.order", "examples/*/*/*.mo", "examples/*/*/package.order"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

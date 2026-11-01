@@ -45,7 +45,7 @@ include = ["dashcraft*"]
 
 # The symbol library of diagrams: one JSON file per symbol.
 [tool.setuptools.package-data]
-dashcraft = ["diagrams/symbols/*/*.json"]
+dashcraft = ["locales/*.json", "diagrams/symbols/*/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

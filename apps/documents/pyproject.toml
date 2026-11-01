@@ -52,6 +52,10 @@ doccraft = "doccraft.cli:main"
 where = ["src"]
 include = ["doccraft*"]
 
+[tool.setuptools.package-data]
+# Interface translations (plantcraft_sdk.i18n).
+doccraft = ["locales/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

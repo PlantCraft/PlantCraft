@@ -44,5 +44,9 @@ Repository = "https://github.com/PlantCraft/PlantCraft"
 [tool.setuptools.packages.find]
 include = ["plantcraft_sdk*", "processcraft_sdk*"]  # the former import
 
+[tool.setuptools.package-data]
+# Interface translations (plantcraft_sdk.i18n).
+plantcraft_sdk = ["locales/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

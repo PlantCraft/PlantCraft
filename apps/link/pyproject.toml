@@ -50,7 +50,7 @@ include = ["linkcraft*"]
 
 [tool.setuptools.package-data]
 # Method help pages (catalog/help.py).
-linkcraft = ["methods/help/*.md", "methods/help/guides/*.md"]
+linkcraft = ["locales/*.json", "methods/help/*.md", "methods/help/guides/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
