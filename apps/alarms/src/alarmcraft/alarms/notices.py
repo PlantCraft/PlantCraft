@@ -146,7 +146,7 @@ def valid_zone(value: str) -> str:
     try:
         ZoneInfo(value)
     except (ZoneInfoNotFoundError, ValueError) as exc:
-        raise ValueError(t("a time zone like America/Sao_Paulo, UTC or local")) from exc
+        raise ValueError(t("a time zone like America/Sao_Paulo, or local")) from exc
     return value
 
 
