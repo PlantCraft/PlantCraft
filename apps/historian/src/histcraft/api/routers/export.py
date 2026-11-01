@@ -91,7 +91,8 @@ def _saves(user: User) -> None:
     _person(user)
     if user.demo is not None:
         raise HTTPException(
-            403, t("This is a public demo: you can try everything, but nothing is saved.")
+            403,
+            t("This is a public demo: for security, this part is locked, and nothing is saved."),
         )
 
 

@@ -9,6 +9,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **Public demo: the visitor is told the visit's limits (SDK 0.100.0, ui 0.105.0).** The sign-in page says a visit lasts
+  up to its minutes (30), that nothing changed is saved and that, as a public demo, some parts are
+  locked for security; the platform tour's first step and the visit clock's hint say the same.
+  A locked action answers "This is a public demo: for security, this part is locked, and nothing
+  is saved." (it said "you can try everything").
 - **A new look for the whole suite (ui 0.103.0).** Three levels, page, card and text, with
   card and text at the most contrast: white cards and near-black text in light, near-black cards
   on a grey page and near-white text in dark. Fields, buttons, search and filters take the card's

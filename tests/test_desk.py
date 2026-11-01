@@ -774,7 +774,7 @@ def test_the_demo_seed_writes_the_visitors_desk_into_the_store(signed):
     class Refused(demo_seed.Http):
         def call(self, method, path, body=None, *, ok=(), raw=None, content_type=""):
             raise demo_seed.SeedError(
-                f"{method} {path}: This is a public demo: you can try everything, but nothing is saved."
+                f"{method} {path}: This is a public demo: for security, this part is locked, and nothing is saved."
             )
 
     store = signed.app.state.runtime.desk

@@ -356,7 +356,7 @@
   "process engineering": "engenharia de processos",
   "{ref} does not exist in the platform.": "{ref} não existe na plataforma.",
   "{title}: {status}": "{title}: {status}",
-  "This is a public demo: you can try everything, but nothing is saved.": "Esta é uma demonstração pública: você pode experimentar tudo, mas nada é salvo.",
+  "This is a public demo: for security, this part is locked, and nothing is saved.": "Esta é uma demonstração pública: por segurança, esta parte fica bloqueada, e nada é salvo.",
   "The assistant does not answer in this public demo. Open the team's chats below to see what it does; in your own installation, an administrator connects a model in Setup › Language models.": "O assistente não responde nesta demonstração pública. Abra abaixo as conversas da equipe para ver o que ele faz; na sua instalação, um administrador conecta um modelo em Configuração › Modelos de linguagem.",
   "Too many requests. Wait a minute and try again.": "Muitas requisições. Aguarde um minuto e tente de novo.",
   "Invalid schedule.": "Agenda inválida.",

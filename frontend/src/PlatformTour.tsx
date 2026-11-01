@@ -22,7 +22,7 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
       title: tt("Welcome to PlantCraft"),
       body: <>
         <p>{data.public_demo && readOnly
-          ? tt("A live demo on a simulated refinery with 50 control loops. Nothing you change is saved.")
+          ? tt("A live demo on a simulated refinery with 50 control loops. Your visit has a time limit, shown at the bottom of the screen, and nothing you change is saved. As a public demo, some parts are locked for security.")
           : tt("One place for your plant's data, and a family of apps that work on it.")}</p>
         <p>{tt("Two minutes around the suite: use Next, or the arrow keys.")}</p>
       </>,
