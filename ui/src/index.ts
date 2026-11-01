@@ -8,6 +8,7 @@ export { fetchInbox, inboxBadge, INBOX_POLL_MS, messagesUrl, platformUrl, unread
 export { markUrgentSeen, runNoticeAction, urgentDue, UrgentToast, type NoticeAction, type UrgentNotice } from "./UrgentNotice.js";
 export { renderMarkdown, type MarkdownOptions } from "./Markdown.js";
 export { SuiteShell, startTour, appsWithPlatform, SUITE_ORDER, initials, PLATFORM_APP, useSuiteApps, type ShellNavChild, type ShellNavItem, type ShellUser, type SuiteApp, type SuiteShellProps } from "./SuiteShell.js";
+export { DEFAULT_DISPLAY_SIZE, DISPLAY_SIZES, DISPLAY_SIZE_KEY, applyDisplaySize, displaySize, initDisplaySize, setDisplaySize, textScale, type DisplaySize } from "./displaySize.js";
 export { THEME_KEY, applyTheme, initTheme, setTheme, themeChoice, type ThemeChoice } from "./theme.js";
 export { PageTabs, type PageTab } from "./PageTabs.js";
 export { GuidedTour, assistantTourStep, openPanel, tourClosing, tourPageFor, markTourSeen, resetTour, tourDue, TOURS_OFF_KEY, useTour, type GuidedTourProps, type TourStep } from "./Tour.js";

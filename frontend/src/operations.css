@@ -2,8 +2,8 @@
 
 /* Status: the machine's line and each service's load against its limit. */
 .ops-host { display: flex; flex-wrap: wrap; gap: var(--pc-space-2); margin: var(--pc-space-2) 0; }
-.ops-host .apps-chip { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
-.ops-load { display: grid; gap: 4px; min-width: 96px; font-variant-numeric: tabular-nums; }
+.ops-host .apps-chip { display: inline-flex; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); font-variant-numeric: tabular-nums; }
+.ops-load { display: grid; gap: var(--pc-space-1); min-width: 96px; font-variant-numeric: tabular-nums; }
 .ops-meter { height: 5px; border-radius: var(--pc-radius-pill); background: var(--pc-surface-3); overflow: hidden; }
 .ops-meter i { display: block; height: 100%; border-radius: inherit; background: var(--pc-primary); }
 .ops-meter i.ops-meter-warning { background: var(--pc-attention-text); }
@@ -13,13 +13,13 @@
 
 /* Logs */
 .ops-log-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--pc-space-3); padding: var(--pc-space-4); margin-bottom: var(--pc-space-3); }
-.ops-log-filters > label { display: grid; gap: 4px; min-width: 0; font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
+.ops-log-filters > label { display: grid; gap: var(--pc-space-1); min-width: 0; font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
 .ops-log-filters > label > select, .ops-log-filters > label > input { min-width: 150px; }
 .ops-log-text { flex: 1 1 240px; }
 .ops-log-text input { width: 100%; }
-.ops-log-services { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 0; margin: 0; padding: 0; flex: 1 1 100%; }
+.ops-log-services { display: flex; flex-wrap: wrap; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); border: 0; margin: 0; padding: 0; flex: 1 1 100%; }
 .ops-log-services legend { float: left; margin-right: var(--pc-space-2); font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
-.ops-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-pill); font-size: var(--pc-fs-xs); color: var(--pc-text-2); background: var(--pc-surface); cursor: pointer; }
+.ops-chip { display: inline-flex; align-items: center; gap: calc(5px * var(--pc-space-scale, 1)); padding: calc(3px * var(--pc-space-scale, 1)) calc(10px * var(--pc-space-scale, 1)); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-pill); font-size: var(--pc-fs-xs); color: var(--pc-text-2); background: var(--pc-surface); cursor: pointer; }
 .ops-chip input { position: absolute; opacity: 0; pointer-events: none; }
 .ops-chip:focus-within { outline: 2px solid var(--pc-primary); outline-offset: 1px; }
 .ops-chip-on { border-color: var(--pc-primary); color: var(--pc-text); background: var(--pc-primary-soft); }
@@ -31,7 +31,7 @@
 .ops-missing { margin-bottom: var(--pc-space-3); }
 .ops-top { padding: var(--pc-space-3) var(--pc-space-4); margin-bottom: var(--pc-space-3); }
 .ops-top h2 { font-size: var(--pc-fs-sm); margin: 0 0 var(--pc-space-2); }
-.ops-top ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ops-top ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--pc-space-1); }
 .ops-top li { display: grid; grid-template-columns: 3.5em 6.5em 7em minmax(0, 1fr); gap: var(--pc-space-2); align-items: baseline; font-size: var(--pc-fs-sm); }
 .ops-top-count { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
 .ops-top-app { color: var(--pc-text-3); }
@@ -46,7 +46,7 @@
   .ops-top li { grid-template-columns: 3em minmax(0, 1fr); }
   .ops-top li .ops-level, .ops-top li .ops-top-app { display: none; }
 }
-.ops-record { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px var(--pc-space-3); margin: 0 0 var(--pc-space-3); font-size: var(--pc-fs-sm); }
+.ops-record { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--pc-space-1) var(--pc-space-3); margin: 0 0 var(--pc-space-3); font-size: var(--pc-fs-sm); }
 .ops-record dt { color: var(--pc-text-3); }
 .ops-record dd { margin: 0; overflow-wrap: anywhere; }
 .ops-record-pair { display: contents; }
@@ -60,11 +60,11 @@
 .ops-limits-head span { font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 700; }
 .ops-limits-row > span strong { display: block; }
 .ops-limits-row > span small { color: var(--pc-text-3); }
-.ops-limits-cell, .ops-limits-minutes { display: inline-flex; align-items: center; gap: 6px; }
+.ops-limits-cell, .ops-limits-minutes { display: inline-flex; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); }
 .ops-limits-cell input, .ops-limits-minutes input { width: 5.5em; text-align: right; font-variant-numeric: tabular-nums; }
-.ops-limits-minutes > span:first-child { font-weight: 600; margin-right: 4px; }
+.ops-limits-minutes > span:first-child { font-weight: 600; margin-right: var(--pc-space-1); }
 .ops-limits-footer { display: flex; justify-content: flex-end; align-items: center; gap: var(--pc-space-2); flex-wrap: wrap; }
-.ops-saved { display: inline-flex; align-items: center; gap: 5px; color: var(--pc-good-text); margin-right: auto; }
+.ops-saved { display: inline-flex; align-items: center; gap: calc(5px * var(--pc-space-scale, 1)); color: var(--pc-good-text); margin-right: auto; }
 @media (max-width: 640px) {
   .ops-limits-head, .ops-limits-row { grid-template-columns: minmax(0, 1fr) 1fr 1fr; gap: var(--pc-space-2); }
   .ops-limits-cell input { width: 4.5em; }
@@ -74,14 +74,14 @@
 .ops-request-title { display: block; font-weight: 600; }
 .ops-waiting { color: var(--pc-attention-text); font-weight: 700; }
 .ops-ask { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pc-space-3); }
-.ops-ask > label { display: grid; gap: 4px; font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; min-width: 0; }
+.ops-ask > label { display: grid; gap: var(--pc-space-1); font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; min-width: 0; }
 .ops-ask > label:first-child, .ops-ask-text { grid-column: 1 / -1; }
 .ops-ask textarea { resize: vertical; font: inherit; font-size: var(--pc-fs-md); }
-.ops-month { display: inline-flex; align-items: center; gap: 6px; font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
+.ops-month { display: inline-flex; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
 .ops-month input { height: 36px; }
 .ops-empty { display: flex; gap: var(--pc-space-3); align-items: flex-start; padding: var(--pc-space-4); margin-bottom: var(--pc-space-3); }
 .ops-empty svg { color: var(--pc-primary-text); flex: none; }
-.ops-empty p { margin: 4px 0 8px; }
+.ops-empty p { margin: var(--pc-space-1) 0 var(--pc-space-2); }
 .ops-companies { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--pc-space-3); margin-bottom: var(--pc-space-3); }
 .ops-company { padding: var(--pc-space-4); display: grid; gap: var(--pc-space-2); align-content: start; }
 .ops-company header { display: flex; align-items: center; justify-content: space-between; gap: var(--pc-space-2); flex-wrap: wrap; }
@@ -91,17 +91,17 @@
 .ops-company-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pc-space-2) var(--pc-space-3); margin: 0; }
 .ops-company-facts dt { font-size: var(--pc-fs-xs); color: var(--pc-text-3); font-weight: 600; }
 .ops-company-facts dd { margin: 2px 0 0; font-variant-numeric: tabular-nums; }
-.ops-company-people { list-style: none; margin: 0; padding: var(--pc-space-2) 0 0; border-top: 1px solid var(--pc-border); display: grid; gap: 4px; font-size: var(--pc-fs-sm); }
-.ops-company-people li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.ops-company-people .apps-chip { padding: 1px 7px; }
+.ops-company-people { list-style: none; margin: 0; padding: var(--pc-space-2) 0 0; border-top: 1px solid var(--pc-border); display: grid; gap: var(--pc-space-1); font-size: var(--pc-fs-sm); }
+.ops-company-people li { display: flex; flex-wrap: wrap; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); }
+.ops-company-people .apps-chip { padding: 1px calc(7px * var(--pc-space-scale, 1)); }
 .ops-hours { padding: var(--pc-space-3) var(--pc-space-4); }
 .ops-hours h2 { font-size: var(--pc-fs-md); margin: 0 0 var(--pc-space-2); }
-.ops-hours h2 small { font-weight: 500; margin-left: 6px; }
+.ops-hours h2 small { font-weight: 500; margin-left: calc(6px * var(--pc-space-scale, 1)); }
 @media (max-width: 640px) {
   .ops-ask { grid-template-columns: minmax(0, 1fr); }
   .ops-companies { grid-template-columns: minmax(0, 1fr); }
 }
-.ops-incident-ask { margin-left: 6px; font-size: var(--pc-fs-xs); font-weight: 600; }
+.ops-incident-ask { margin-left: calc(6px * var(--pc-space-scale, 1)); font-size: var(--pc-fs-xs); font-weight: 600; }
 
 /* Requests' targets (plantcraft/actions/sla.py) */
 .ops-sla { font-variant-numeric: tabular-nums; }
@@ -110,34 +110,34 @@
 .ops-sla-good, .apps-chip-good { border-color: var(--pc-good-border); color: var(--pc-good-text); background: var(--pc-good-soft); }
 .apps-chip-good svg { vertical-align: -2px; }
 .ops-targets-open { margin-left: auto; }
-.ops-targets { width: 100%; border-collapse: collapse; margin-top: 12px; }
-.ops-targets th, .ops-targets td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--pc-border); }
+.ops-targets { width: 100%; border-collapse: collapse; margin-top: var(--pc-space-3); }
+.ops-targets th, .ops-targets td { padding: calc(6px * var(--pc-space-scale, 1)) var(--pc-space-2); text-align: left; border-bottom: 1px solid var(--pc-border); }
 .ops-targets input { width: 100%; max-width: 120px; }
 
 /* The month's approval of the hours */
-.ops-company-approval { margin: 10px 0 4px; }
-.ops-approval { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.ops-plant-hours { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 12px; }
+.ops-company-approval { margin: calc(10px * var(--pc-space-scale, 1)) 0 var(--pc-space-1); }
+.ops-approval { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--pc-space-2); }
+.ops-plant-hours { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--pc-space-2); margin: var(--pc-space-2) 0 var(--pc-space-3); }
 
 /* Temporary support access */
-.ops-support-note { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--pc-attention-border); border-radius: 8px; background: var(--pc-attention-soft); color: var(--pc-attention-text); }
-.act-time-locked { color: var(--pc-text-3); display: inline-flex; padding: 4px; }
+.ops-support-note { display: flex; align-items: center; gap: var(--pc-space-2); padding: calc(10px * var(--pc-space-scale, 1)) var(--pc-space-3); margin-bottom: var(--pc-space-3); border: 1px solid var(--pc-attention-border); border-radius: 8px; background: var(--pc-attention-soft); color: var(--pc-attention-text); }
+.act-time-locked { color: var(--pc-text-3); display: inline-flex; padding: var(--pc-space-1); }
 
 /* Uptime and maintenance windows (plantcraft/watch/uptime.py) */
-.ops-uptime { margin-top: 16px; }
+.ops-uptime { margin-top: var(--pc-space-4); }
 .ops-uptime-warn { color: var(--pc-attention-text); font-weight: 600; }
 .ops-uptime-bad { color: var(--pc-problem-text); font-weight: 600; }
-.ops-windows { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
-.ops-window { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ops-windows { list-style: none; margin: 0 0 var(--pc-space-3); padding: 0; display: grid; gap: calc(6px * var(--pc-space-scale, 1)); }
+.ops-window { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pc-space-2); }
 .ops-window-ended { opacity: 0.7; }
-.ops-window-apps { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
-.ops-window-apps legend { font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: 4px; }
+.ops-window-apps { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--pc-space-1) var(--pc-space-3); }
+.ops-window-apps legend { font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: var(--pc-space-1); }
 /* Queues' working hours (Requests › Targets) */
-.ops-service-hours { margin-top: 16px; border-top: 1px solid var(--pc-border); padding-top: 12px; }
-.ops-service-hours h3 { font-size: 0.95rem; margin: 0 0 6px; display: flex; gap: 8px; align-items: baseline; }
-.ops-service-hours ul { margin: 0 0 10px; padding-left: 18px; }
-.ops-service-hours-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; align-items: end; }
-.ops-service-hours-form label > span { display: block; font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: 4px; }
-.ops-service-hours-form fieldset { grid-column: 1 / -1; border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
-.ops-service-hours-form legend { font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: 4px; }
-.ops-service-hours-actions { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+.ops-service-hours { margin-top: var(--pc-space-4); border-top: 1px solid var(--pc-border); padding-top: var(--pc-space-3); }
+.ops-service-hours h3 { font-size: 0.95rem; margin: 0 0 calc(6px * var(--pc-space-scale, 1)); display: flex; gap: var(--pc-space-2); align-items: baseline; }
+.ops-service-hours ul { margin: 0 0 calc(10px * var(--pc-space-scale, 1)); padding-left: calc(18px * var(--pc-space-scale, 1)); }
+.ops-service-hours-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: calc(10px * var(--pc-space-scale, 1)); align-items: end; }
+.ops-service-hours-form label > span { display: block; font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: var(--pc-space-1); }
+.ops-service-hours-form fieldset { grid-column: 1 / -1; border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--pc-space-1) var(--pc-space-3); }
+.ops-service-hours-form legend { font-size: 0.85rem; color: var(--pc-text-2); margin-bottom: var(--pc-space-1); }
+.ops-service-hours-actions { grid-column: 1 / -1; display: flex; gap: var(--pc-space-2); flex-wrap: wrap; }

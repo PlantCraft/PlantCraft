@@ -295,6 +295,16 @@
   --pc-scrim: #000000;
 }
 
+/* --------------------------------------------------------- display size
+   Five steps chosen in the user menu (displaySize.ts), from Larger text (1) to More space (5);
+   no attribute is the default (3). The type and spacing tokens below are multiplied by these
+   two scales, so a page that uses the tokens follows. Kept in step with DISPLAY_SIZES. */
+:root { --pc-text-scale: 1; --pc-space-scale: 1; }
+:root[data-size="1"] { --pc-text-scale: 1.25; --pc-space-scale: 1.15; }
+:root[data-size="2"] { --pc-text-scale: 1.12; --pc-space-scale: 1.07; }
+:root[data-size="4"] { --pc-text-scale: .93; --pc-space-scale: .85; }
+:root[data-size="5"] { --pc-text-scale: .86; --pc-space-scale: .72; }
+
 /* ------------------------------------------- theme-independent tokens */
 :root {
   /* Chrome: the navigation rail and other dark "control room" islands
@@ -321,16 +331,16 @@
   --pc-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --pc-font-display: var(--pc-font-sans);
   --pc-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
-  --pc-fs-2xs: 11px;    /* micro labels, axis ticks */
-  --pc-fs-xs: 12px;     /* captions, table heads and meta */
-  --pc-fs-sm: 13px;     /* dense UI text, buttons, card labels */
-  --pc-fs-md: 14px;     /* body */
-  --pc-fs-base: 15px;   /* panel titles, comfortable body */
-  --pc-fs-lg: 16px;     /* highlight */
-  --pc-fs-xl: 20px;     /* section titles */
-  --pc-fs-2xl: 22px;
-  --pc-fs-3xl: 28px;    /* KPI values */
-  --pc-fs-4xl: 28px;    /* page titles */
+  --pc-fs-2xs: max(10px, calc(11px * var(--pc-text-scale)));    /* micro labels, axis ticks */
+  --pc-fs-xs: calc(12px * var(--pc-text-scale));     /* captions, table heads and meta */
+  --pc-fs-sm: calc(13px * var(--pc-text-scale));     /* dense UI text, buttons, card labels */
+  --pc-fs-md: calc(14px * var(--pc-text-scale));     /* body */
+  --pc-fs-base: calc(15px * var(--pc-text-scale));   /* panel titles, comfortable body */
+  --pc-fs-lg: calc(16px * var(--pc-text-scale));     /* highlight */
+  --pc-fs-xl: calc(20px * var(--pc-text-scale));     /* section titles */
+  --pc-fs-2xl: calc(22px * var(--pc-text-scale));
+  --pc-fs-3xl: calc(28px * var(--pc-text-scale));    /* KPI values */
+  --pc-fs-4xl: calc(28px * var(--pc-text-scale));    /* page titles */
   --pc-fw-regular: 400;
   --pc-fw-medium: 500;
   --pc-fw-semibold: 600;
@@ -351,16 +361,16 @@
   --pc-radius-pill: 999px;
 
   /* Spacing: 4px grid */
-  --pc-space-0-5: 2px;
-  --pc-space-1: 4px;
-  --pc-space-2: 8px;
-  --pc-space-3: 12px;
-  --pc-space-4: 16px;
-  --pc-space-5: 20px;
-  --pc-space-6: 24px;
-  --pc-space-8: 32px;
-  --pc-space-10: 40px;
-  --pc-space-12: 48px;
+  --pc-space-0-5: calc(2px * var(--pc-space-scale));
+  --pc-space-1: calc(4px * var(--pc-space-scale));
+  --pc-space-2: calc(8px * var(--pc-space-scale));
+  --pc-space-3: calc(12px * var(--pc-space-scale));
+  --pc-space-4: calc(16px * var(--pc-space-scale));
+  --pc-space-5: calc(20px * var(--pc-space-scale));
+  --pc-space-6: calc(24px * var(--pc-space-scale));
+  --pc-space-8: calc(32px * var(--pc-space-scale));
+  --pc-space-10: calc(40px * var(--pc-space-scale));
+  --pc-space-12: calc(48px * var(--pc-space-scale));
 
   /* Motion: short and functional. */
   --pc-ease: cubic-bezier(.2, 0, 0, 1);

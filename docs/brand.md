@@ -303,6 +303,34 @@ Light is the default. Dark follows the operating system, and
 theme with `data-theme`; the wall-screen dashboard does this with
 `.ac-screen-dark`. The sidebar is graphite in both themes.
 
+## Display size
+
+Beside the theme, the person's menu has a **display size** with five steps, from **Larger text**
+to **More space** (`displaySize.ts`, `DisplaySizePicker`). Larger text is for people who read
+the screen from further away or see less well; More space fits more of a page on a small laptop.
+One choice covers every app (like the theme, it is kept in the browser).
+
+The step goes on `<html data-size="1..5">` (none = the default, 3) and sets two scales in
+`tokens.css`: `--pc-text-scale` multiplies the type tokens (`--pc-fs-*`, never under 10 px) and
+`--pc-space-scale` the spacing tokens (`--pc-space-*`). Nothing is zoomed, so pop-up positions,
+viewport units, drag and chart hover stay exact. So that a page follows:
+
+- Type uses `--pc-fs-*`. A size the scale has no token for is written
+  `calc(13.5px * var(--pc-text-scale, 1))`.
+- Padding, margin and gap use `--pc-space-*`, or `calc(Npx * var(--pc-space-scale, 1))`.
+  `dev/space-tokens <css files>` rewrites plain pixel values that way (1 and 2 px stay as they are).
+- Plotly charts take their type sizes from `plotTheme()` and `plotFontSize()`; `useBrandTheme()`
+  re-renders a chart when the size changes.
+- Drawings with their own geometry (block diagrams, process diagrams) keep fixed sizes.
+
+| Step | Name | Text | Space |
+|---|---|---|---|
+| 1 | Larger text | 125 % | 115 % |
+| 2 | Large | 112 % | 107 % |
+| 3 | Default | 100 % | 100 % |
+| 4 | Compact | 93 % | 85 % |
+| 5 | More space | 86 % | 72 % |
+
 ## Voice
 
 - Write like a senior process engineer talking to a colleague: direct,

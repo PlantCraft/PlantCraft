@@ -9,6 +9,13 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- `@plantcraft/ui`: **display size**, five steps from Larger text to More space, in the person's
+  menu under the theme, for every app of the suite. Larger text helps people who see less well;
+  More space fits more on a small laptop. The type and spacing tokens follow two scales
+  (`--pc-text-scale`, `--pc-space-scale`) set by `<html data-size>`; charts follow through
+  `plotTheme()`. New exports: `setDisplaySize`, `displaySize`, `textScale`,
+  `plotFontSize`, `DISPLAY_SIZES`. The CSS of the platform and the apps now writes its
+  padding, margins and gaps with the spacing tokens (`dev/space-tokens`). See docs/brand.md.
 - **API v1: interpolated reads and summaries (gap H5, `plantcraft-sdk` 0.95.0).**
   - Series reads (`GET .../series`, `POST /api/v1/series`) take `sampling=interpolated` and
     `max_gap`. They give the value at each grid time, as PI's and Seeq's interpolated reads

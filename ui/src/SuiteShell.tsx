@@ -23,6 +23,7 @@ import { SearchButton, SuiteSearch, useSearchKey } from "./Search.js";
 import { SuiteQueueButton, SuiteQueueHost, useQueuesOpen, useSuiteJobs, useSuiteQueues } from "./SuiteQueue.js";
 import { t } from "./i18n.js";
 import { setTheme, themeChoice, type ThemeChoice } from "./theme.js";
+import { DisplaySizePicker } from "./DisplaySizePicker.js";
 import { GuidedTour, useTour, type TourStep } from "./Tour.js";
 import { FramedShell } from "./FramedShell.js";
 import { useClosePanelsOnMove } from "./SidePanel.js";
@@ -352,6 +353,8 @@ function UserMenu({ user, version, extra, profileHref, onProfile, preferencesHre
               </button>
             ))}
           </div>
+          <span className="pcs-pop-label">{t("Display size")}</span>
+          <DisplaySizePicker />
           <hr />
           {profileHref && user && (
             <a role="menuitem" className="pcs-menu-link" href={profileHref} onClick={(event) => { if (!onProfile) return; event.preventDefault(); setOpen(false); onProfile(); }}>

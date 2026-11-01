@@ -5,7 +5,7 @@
  * passes its own Plotly component, as with the time chart: this package draws no chart itself.
  */
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
-import { BRAND_COLORS, currentTheme, plotTheme, type BrandTheme } from "./brandTheme.js";
+import { BRAND_COLORS, currentTheme, plotFontSize, plotTheme, type BrandTheme } from "./brandTheme.js";
 import { formatAgo, formatDuration, formatNumber } from "./format.js";
 import { t } from "./i18n.js";
 import { timeChartLayout, timePlotConfig, windowLabel } from "./timeChart.js";
@@ -81,8 +81,8 @@ export function queueChart(history: QueuePoint[], options: { height?: number; th
   const base = plotTheme(theme);
   const layout = {
     ...timeChartLayout(base, { height: options.height ?? 260, rightAxis: delay, ...queueRange(options.window, options.end) }),
-    yaxis: { ...base.yaxis, rangemode: "tozero", title: { text: t("Items"), font: { size: 10.5 } } },
-    ...(delay ? { yaxis2: { ...base.yaxis, overlaying: "y", side: "right", rangemode: "tozero", showgrid: false, title: { text: t("Wait (min)"), font: { size: 10.5 } } } } : {}),
+    yaxis: { ...base.yaxis, rangemode: "tozero", title: { text: t("Items"), font: { size: plotFontSize(10.5) } } },
+    ...(delay ? { yaxis2: { ...base.yaxis, overlaying: "y", side: "right", rangemode: "tozero", showgrid: false, title: { text: t("Wait (min)"), font: { size: plotFontSize(10.5) } } } } : {}),
   };
   return { data, layout };
 }

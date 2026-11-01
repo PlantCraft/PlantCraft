@@ -1,12 +1,12 @@
 /* Executions: the apps' runs and schedules, read-only. */
-.ex-page { display: grid; gap: 18px; }
-.ex-panel { padding-bottom: 8px; }
+.ex-page { display: grid; gap: calc(18px * var(--pc-space-scale, 1)); }
+.ex-panel { padding-bottom: var(--pc-space-2); }
 .ex-panel h2 svg { vertical-align: -3px; }
-.ex-empty { margin: 0 0 14px; }
+.ex-empty { margin: 0 0 calc(14px * var(--pc-space-scale, 1)); }
 .ex-summary { max-width: 340px; }
-.ex-link { color: var(--pc-primary-text); display: inline-flex; align-items: center; gap: 4px; }
+.ex-link { color: var(--pc-primary-text); display: inline-flex; align-items: center; gap: var(--pc-space-1); }
 .ex-link:hover { text-decoration: underline; }
-.ex-status { padding: 3px 8px; border: 1px solid var(--pc-inactive-border); border-radius: var(--pc-radius-sm); color: var(--pc-inactive-text); background: var(--pc-inactive-soft); font-size: var(--pc-fs-sm); font-weight: 700; white-space: nowrap; }
+.ex-status { padding: calc(3px * var(--pc-space-scale, 1)) var(--pc-space-2); border: 1px solid var(--pc-inactive-border); border-radius: var(--pc-radius-sm); color: var(--pc-inactive-text); background: var(--pc-inactive-soft); font-size: var(--pc-fs-sm); font-weight: 700; white-space: nowrap; }
 .ex-status-running { border-color: var(--pc-info-border); color: var(--pc-info-text); background: var(--pc-info-soft); }
 .ex-status-done { border-color: var(--pc-good-border); color: var(--pc-good-text); background: var(--pc-good-soft); }
 .ex-status-failed { border-color: var(--pc-problem-border); color: var(--pc-problem-text); background: var(--pc-problem-soft); }

@@ -3,6 +3,7 @@
  * tones and the Plotly base layout: one copy for every app. Mirrors tokens.css; change both
  * together. See PlantCraft docs/brand.md.
  */
+import { textScale } from "./displaySize.js";
 import { APP_COLORS as APP_TILE_COLORS, type AppId as AppFamilyId } from "./appMarks.js";
 
 /* ------------------------------------------------------------------ colours */
@@ -109,6 +110,11 @@ export function magnitudeScale(theme: BrandTheme = currentTheme()): Array<[numbe
   return theme === "dark" ? [[0, "#10243f"], [1, "#86b6f3"]] : [[0, "#eef5fe"], [1, "#0a4285"]];
 }
 
+/** A chart's type size at the display size in effect (user menu); never under 9 px. */
+export function plotFontSize(size: number): number {
+  return Math.max(9, Math.round(size * textScale() * 2) / 2);
+}
+
 /**
  * Base Plotly layout in the brand: Inter, the validated colourway, quiet
  * grid. Spread it first, then the chart's own settings:
@@ -116,24 +122,26 @@ export function magnitudeScale(theme: BrandTheme = currentTheme()): Array<[numbe
  */
 export function plotTheme(theme: BrandTheme = currentTheme()) {
   const c = BRAND_COLORS[theme];
+  // The display size's text scale (user menu): Plotly draws its own type, outside the CSS tokens.
+  const fs = (size: number) => plotFontSize(size);
   const axis = {
     gridcolor: c.grid,
     linecolor: c.axis,
     zerolinecolor: c.axis,
     zeroline: false,
-    tickfont: { family: "Inter, system-ui, sans-serif", size: 10.5, color: c.text3 },
+    tickfont: { family: "Inter, system-ui, sans-serif", size: fs(10.5), color: c.text3 },
     automargin: true,
   };
   return {
     colorway: [...c.series],
-    font: { family: "Inter, system-ui, sans-serif", size: 11, color: c.text2 },
+    font: { family: "Inter, system-ui, sans-serif", size: fs(11), color: c.text2 },
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
     // The tooltip on the theme's surface with its text colour: unset, Plotly paints a unified
     // tooltip (hovermode "x unified") from the transparent paper, white, and the dark theme's
     // light text was unreadable on it (View round 7).
-    hoverlabel: { bgcolor: c.surface, bordercolor: c.axis, font: { family: "JetBrains Mono, ui-monospace, monospace", size: 11, color: c.text } },
-    legend: { font: { size: 11, color: c.text2 } },
+    hoverlabel: { bgcolor: c.surface, bordercolor: c.axis, font: { family: "JetBrains Mono, ui-monospace, monospace", size: fs(11), color: c.text } },
+    legend: { font: { size: fs(11), color: c.text2 } },
     xaxis: { ...axis },
     yaxis: { ...axis },
     modebar: { color: c.text3, activecolor: c.primary, bgcolor: "rgba(0,0,0,0)" },

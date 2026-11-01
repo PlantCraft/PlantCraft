@@ -105,7 +105,9 @@ export type TimeChartProps = TimeFigureOptions & {
 export function TimeChart(props: TimeChartProps) {
   const userTheme = useBrandTheme();
   const theme = !props.theme || props.theme === "auto" ? userTheme : props.theme;
-  const figure = useMemo(() => timeFigure(props, theme), [props, theme]);
+  // The display size changes the chart's type size (plotTheme reads it): part of the key.
+  const size = typeof document === "undefined" ? undefined : document.documentElement.dataset.size;
+  const figure = useMemo(() => timeFigure(props, theme), [props, theme, size]); // eslint-disable-line react-hooks/exhaustive-deps
   const hasValues = props.lines.some((line) => line.t.length > 0);
   return <div className={["pc-time-chart", props.className].filter(Boolean).join(" ")}>
     {props.toolbar && <div className="pc-time-chart-toolbar">{props.toolbar}</div>}

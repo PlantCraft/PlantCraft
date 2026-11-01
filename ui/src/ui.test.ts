@@ -7,6 +7,8 @@ import { appEntryUrl, appsWithPlatform, SuiteShell } from "./SuiteShell";
 import { appIdFor, APP_GLYPHS, APP_IDS } from "./appMarks";
 import { helpTree } from "./HelpBrowser";
 import { applyTheme, setTheme, THEME_KEY, themeChoice } from "./theme";
+import { applyDisplaySize, DISPLAY_SIZE_KEY, displaySize, setDisplaySize, textScale } from "./displaySize";
+import { plotFontSize } from "./brandTheme";
 import { BRAND_COLORS, plotTheme } from "./brandTheme";
 
 /** WCAG contrast of two "#rrggbb" colours. */
@@ -55,6 +57,27 @@ describe("theme", () => {
     window.localStorage.setItem(THEME_KEY, "neon");
     applyTheme();
     expect(document.documentElement.dataset.theme).toBeUndefined();
+  });
+});
+
+describe("display size", () => {
+  it("defaults to the middle step and keeps a choice on <html>", () => {
+    window.localStorage.removeItem(DISPLAY_SIZE_KEY);
+    expect(displaySize()).toBe(3);
+    setDisplaySize(1);
+    expect(document.documentElement.dataset.size).toBe("1");
+    expect(displaySize()).toBe(1);
+    expect(textScale()).toBe(1.25);
+    expect(plotFontSize(11)).toBe(14);
+    setDisplaySize(5);
+    expect(plotFontSize(11)).toBe(9.5);
+    setDisplaySize(3);
+    expect(document.documentElement.dataset.size).toBeUndefined();
+    expect(window.localStorage.getItem(DISPLAY_SIZE_KEY)).toBeNull();
+    window.localStorage.setItem(DISPLAY_SIZE_KEY, "9");
+    applyDisplaySize();
+    expect(document.documentElement.dataset.size).toBeUndefined();
+    expect(textScale()).toBe(1);
   });
 });
 
@@ -235,6 +258,14 @@ describe("sidebar", () => {
     // Theme on top, then the person's pages, Help and Sign out; no About.
     const menu = host.querySelector(".pcs-user-pop")!;
     expect(menu.firstElementChild?.textContent).toBe("Theme");
+    // The display size under the theme: five steps, the middle one chosen.
+    const sizes = [...menu.querySelectorAll<HTMLButtonElement>(".pcs-size-steps [role=radio]")];
+    expect(sizes.map((node) => node.getAttribute("aria-label"))).toEqual(["Larger text", "Large", "Default", "Compact", "More space"]);
+    expect(sizes[2].getAttribute("aria-checked")).toBe("true");
+    await act(async () => sizes[0].click());
+    expect(document.documentElement.dataset.size).toBe("1");
+    expect(sizes[0].getAttribute("aria-checked")).toBe("true");
+    await act(async () => sizes[2].click());
     const items = [...menu.querySelectorAll("[role=menuitem]")].map((node) => node.textContent);
     expect(items.indexOf("Help")).toBeLessThan(items.indexOf("Sign out"));
     expect(items).not.toContain("About");
