@@ -341,3 +341,23 @@ def test_a_visits_answer_reads_at_most_its_tool_calls_and_last_turns(demo):
     assert seen["turns"] == 1
     answer = visitor.get(f"/api/assistant/chats/{chat_id}").json()["messages"][-1]
     assert answer["text"] == "Done. x"
+
+
+def test_a_visit_reads_the_teams_chats_but_asks_only_in_its_own(demo):
+    app = demo(PLANTCRAFT_PUBLIC_DEMO_LLM="on")
+    store = app.state.runtime.assistant.store
+    team = store.create("demo", "Which valves stick?")
+    store.add(team["chat_id"], "user", "Which valves stick?")
+    visitor = _visit(app)
+    listed = [item["chat_id"] for item in visitor.get("/api/assistant").json()["chats"]]
+    assert team["chat_id"] in listed
+    read = visitor.get(f"/api/assistant/chats/{team['chat_id']}").json()
+    assert read["chat"]["can_ask"] is False
+    assert (
+        visitor.post(
+            f"/api/assistant/chats/{team['chat_id']}/messages", json={"text": "and?"}
+        ).status_code
+        == 404
+    )
+    own = _ask(visitor).json()["chat"]["chat_id"]
+    assert visitor.get(f"/api/assistant/chats/{own}").json()["chat"]["can_ask"] is True

@@ -740,6 +740,7 @@ a.pc-drawer-keep { text-decoration: none; }
 .pc-drawer-failed { margin: 0; display: flex; align-items: flex-start; gap: 6px; color: var(--pc-problem-text); font-size: var(--pc-fs-sm); }
 .pc-drawer-composer { padding: 10px 12px; border-top: 1px solid var(--pc-border-subtle); display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
 .pc-drawer-composer textarea { flex: 1 1 180px; resize: none; min-height: 40px; max-height: 160px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); padding: 8px 10px; font: inherit; font-size: var(--pc-fs-sm); background: var(--pc-surface); color: var(--pc-text); }
+.pc-drawer-composer > .pc-drawer-note { flex-basis: 100%; margin: 0; }
 .pc-drawer-send { width: 36px; height: 36px; border: 0; border-radius: 10px; display: grid; place-items: center; background: var(--pc-primary); color: var(--pc-on-accent); cursor: pointer; }
 .pc-drawer-send:disabled { opacity: .45; cursor: default; }
 .pc-drawer-head > svg { flex: none; color: var(--pc-text-2); }

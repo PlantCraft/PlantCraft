@@ -185,7 +185,8 @@ type Step = { tool: string; title: string; summary: string; state: "running" | "
 type Message = { message_id: number; role: "user" | "assistant"; text: string; state: "working" | "done" | "failed"; steps: Step[]; charts: Chart[]; created_at?: string; meta: { model?: string; queued?: boolean; proposals?: AssistantProposal[] } };
 /** `can_set_up`: the person is an administrator, who connects the model in Setup. */
 /** `demo`: a public demo's visitor, who reads what the assistant does but never asks it. */
-type Status = { available: boolean; allowed?: boolean; reason: string; can_set_up?: boolean; demo?: boolean };
+/** `visit`: a public demo visit that may ask: its questions, characters a question, and left. */
+type Status = { available: boolean; allowed?: boolean; reason: string; can_set_up?: boolean; demo?: boolean; visit?: { questions: number; max_text: number; left: number } };
 /** One of the person's earlier chats, as `GET /api/assistant` lists them. */
 export type AssistantChatSummary = { chat_id: number; title: string; place?: string; updated_at?: string; working?: boolean };
 
@@ -487,6 +488,11 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
   const input = useRef<HTMLTextAreaElement>(null);
   const prepared = useRef(request.prepare);
   const working = messages.some((item) => item.state === "working");
+  // A demo visit: the questions it has left (counted down here as it asks), and whether the open
+  // chat is one of the team's, read only.
+  const [left, setLeft] = useState<number | null>(null);
+  const [readOnly, setReadOnly] = useState(false);
+  useEffect(() => { setLeft(status?.visit ? status.visit.left : null); }, [status]);
 
   useEffect(() => { void Promise.resolve(prepared.current?.()).catch(() => undefined); }, []);
   useEffect(() => { let alive = true; void assistantStatus(base).then((value) => alive && setStatus(value)); return () => { alive = false; }; }, [base]);
@@ -538,9 +544,11 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
         setMessages((value) => merge(value, asked.messages));
       }
       setDraft(""); setTask(null);
+      setLeft((value) => (value === null ? null : Math.max(0, value - 1)));
+      if (status?.visit) forgetAssistantStatus();
     } catch (err) { setError(err instanceof Error ? err.message : String(err)); }
     finally { setBusy(false); }
-  }, [base, busy, chatId, request]);
+  }, [base, busy, chatId, request, status]);
 
   /** The last question asked again after its answer failed. */
   async function retry() {
@@ -576,14 +584,15 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
   async function resume(id: number) {
     setOpening(true); setError("");
     try {
-      const view = await call<{ messages: Message[] }>(base, `api/assistant/chats/${id}`);
+      const view = await call<{ chat?: { can_ask?: boolean }; messages: Message[] }>(base, `api/assistant/chats/${id}`);
       setChatId(id); setMessages(view.messages); setSent(null); setTask(null);
+      setReadOnly(view.chat?.can_ask === false);
     } catch (err) { setError(err instanceof Error ? err.message : String(err)); }
     finally { setOpening(false); }
   }
   /** Back to the start: the earlier chats and a new one about this page. */
   function fresh() {
-    setChatId(null); setMessages([]); setSent(null); setTask(null); setDraft(""); setError(""); setEarlier(null);
+    setChatId(null); setMessages([]); setSent(null); setTask(null); setDraft(""); setError(""); setEarlier(null); setReadOnly(false);
     void readChats(base, Boolean(status?.available)).then(setEarlier);
   }
   function submit(event: FormEvent) { event.preventDefault(); send(); }
@@ -618,7 +627,7 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
             <strong>{item.label}{item.creates && <span className="pc-work-creates">{t("Creates")}</span>}</strong>{item.hint && <small>{item.hint}</small>}
           </button>
         </li>)}</ul>
-        <p className="pc-drawer-note">{t("Or write what you want below. The assistant reads only what you may see, and changes nothing. Your chats are kept, only for you, in Desk's Assistant.")}</p>
+        <p className="pc-drawer-note">{status.visit ? t("Or write what you want below. In this demo visit the assistant reads and explains; it changes nothing, and your chats are only this visit's.") : t("Or write what you want below. The assistant reads only what you may see, and changes nothing. Your chats are kept, only for you, in Desk's Assistant.")}</p>
         {earlier && earlier.length > 0 && <EarlierChats chats={earlier} base={base} opening={opening} onOpen={resume} />}
       </div>}
       {inChat && <button type="button" className="pc-drawer-back" onClick={fresh}><ArrowLeft size={13} aria-hidden="true" />{t("Your chats")}</button>}
@@ -627,10 +636,12 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
       </li>)}</ol>}
       {error && <p className="pc-drawer-failed"><AlertTriangle size={14} /> {error}</p>}
     </div>
-    {status?.available && <form className="pc-drawer-composer" onSubmit={submit}>
+    {status?.available && readOnly && <p className="pc-drawer-note">{t("This is one of the team's chats, to read. Go back to your chats to ask your own question.")}</p>}
+    {status?.available && !readOnly && <form className="pc-drawer-composer" onSubmit={submit}>
       {task && <span className="pc-drawer-task">{task.label}<button type="button" onClick={() => setTask(null)} aria-label={t("Not this")}><X size={12} /></button></span>}
-      <textarea ref={input} value={draft} rows={2} maxLength={8000} onChange={(event) => setDraft(event.target.value)} onKeyDown={keys} placeholder={task?.ask ?? (messages.length ? t("Ask a follow-up") : t("Write what you want"))} aria-label={t("Your question")} />
-      <button type="submit" className="pc-drawer-send" disabled={busy || working || !draft.trim()} aria-label={t("Send")}>{busy ? <LoaderCircle className="spin" size={16} /> : <ArrowUp size={16} />}</button>
+      {left !== null && status.visit && <small className="pc-drawer-note" role="status">{left > 0 ? t("{left} of {count} questions left in this demo visit.", { left, count: status.visit.questions }) : t("This visit used its {count} questions. Install PlantCraft to use the assistant with your own model.", { count: status.visit.questions })}</small>}
+      <textarea ref={input} value={draft} rows={2} maxLength={status.visit?.max_text ?? 8000} onChange={(event) => setDraft(event.target.value)} onKeyDown={keys} placeholder={task?.ask ?? (messages.length ? t("Ask a follow-up") : t("Write what you want"))} aria-label={t("Your question")} />
+      <button type="submit" className="pc-drawer-send" disabled={busy || working || !draft.trim() || left === 0} aria-label={t("Send")}>{busy ? <LoaderCircle className="spin" size={16} /> : <ArrowUp size={16} />}</button>
     </form>}
   </SidePanel>;
 }

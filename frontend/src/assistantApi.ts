@@ -10,6 +10,8 @@ export type Chat = {
   folder?: string; archived?: boolean; shared?: string[];
   /** false: someone else's chat shared with this person (read-only), with its owner. */
   mine?: boolean; owner?: string; owner_name?: string;
+  /** False on a chat the person reads but may not ask in (a demo visit reading the team's chats). */
+  can_ask?: boolean;
   /** The person's own marks: a favorite, and unread until opened. */
   starred?: boolean; unread?: boolean;
 };
@@ -21,7 +23,9 @@ export type ChatMessage = {
   message_id: number; chat_id: number; role: "user" | "assistant"; text: string; state: "working" | "done" | "failed";
   steps: ChatStep[]; charts: ChatChart[]; refs: ChatRef[]; meta: { model?: string; queued?: boolean; proposals?: AssistantProposal[] }; created_at: string; updated_at: string;
 };
-export type AssistantStatus = { available: boolean; reason: string; profiles: AssistantProfile[]; daily_limit: number; chats: Chat[]; archived?: Chat[]; shared?: Chat[] };
+/** `visit`: a public demo visit that may ask (questions it has, characters a question, left). */
+export type AssistantVisit = { questions: number; max_text: number; left: number };
+export type AssistantStatus = { available: boolean; reason: string; profiles: AssistantProfile[]; daily_limit: number; chats: Chat[]; archived?: Chat[]; shared?: Chat[]; visit?: AssistantVisit };
 export type ChatView = { chat: Chat; messages: ChatMessage[]; working: boolean };
 export type EvalResult = { id: string; title: string; question: string; golden: string; answer: string; passed: boolean; why: string; error: string; tools: string[]; charts: number; seconds: number;
   /** A work's case (Evaluate works): the work, its page and subject, the context sent and the card proposed. */
