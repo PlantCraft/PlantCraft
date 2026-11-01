@@ -13,7 +13,6 @@ export const api = {
   note: (noteId: string) => request<Note>(`/api/notes/${id(noteId)}`),
   create: (draft: NoteDraft) => request<Note>("/api/notes", jsonBody("POST", draft)),
   save: (noteId: string, draft: NoteDraft) => request<Note>(`/api/notes/${id(noteId)}`, jsonBody("PUT", draft)),
-  summary: (noteId: string) => request<{ note_id: string; summary: string }>(`/api/notes/${id(noteId)}/summary`, { method: "POST" }),
   remove: (noteId: string) => request<void>(`/api/notes/${id(noteId)}`, { method: "DELETE" }),
   help: () => request<HelpEntry[]>("/api/help"),
   helpPage: (pageId: string) => request<HelpPage>(`/api/help/${id(pageId)}`),

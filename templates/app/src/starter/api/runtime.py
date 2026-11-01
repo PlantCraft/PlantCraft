@@ -20,7 +20,6 @@ from starter import APP_ID, __version__
 from starter.config import Settings
 from starter.notes.service import NoteService
 from starter.notes.store import NoteStore
-from starter.suite import Suite
 
 
 class Runtime(PlatformRuntime):
@@ -35,9 +34,7 @@ class Runtime(PlatformRuntime):
         self.settings = settings
         settings.data_dir.mkdir(parents=True, exist_ok=True)
         self.db = Database(settings.database_path, version=__version__)
-        # What the app sends to PlantCraft on its own goes through suite/ only.
-        self.suite = Suite(lambda: self.service_client)
-        self.notes = NoteService(NoteStore(self.db), self.suite)
+        self.notes = NoteService(NoteStore(self.db))
         self.connect(
             APP_ID,
             settings,

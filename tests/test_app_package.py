@@ -414,16 +414,8 @@ def test_every_app_of_the_suite_packs_with_its_backup_and_what_it_adds():
         publishes={"series": [{"name": "{asset}.notes", "title": "Notes", "type": "integer"}]},
     )
     manifest = pkg.validate_manifest(adds, with_files=False)
-    # The template's own (calendar, to-do, model use, reference kind) and the two added here.
-    assert pkg.flat(manifest)["adds"] == {
-        "widgets": 1,
-        "search": 1,
-        "series": 1,
-        "calendar": 1,
-        "todo": 1,
-        "llm": 1,
-        "refs": 1,
-    }
+    # The template adds nothing of its own (docs/recipes/ there); only the three added here.
+    assert pkg.flat(manifest)["adds"] == {"widgets": 1, "search": 1, "series": 1}
     for bad, message in (
         ({"contributes": {"queue": "yes"}}, "true or false"),
         ({"contributes": {"widgets": ["notes"]}}, "each item is a table"),

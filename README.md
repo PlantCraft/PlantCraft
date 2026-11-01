@@ -51,7 +51,7 @@ plant assets, signals and look; an installation picks the apps it needs.
 | PlantCraft Models | [`apps/models`](apps/models) | Block-diagram models (Modelica underneath): draw or write them, simulate them on plant data, run studies and export FMUs |
 | PlantCraft Documents | [`apps/documents`](apps/documents) | The plant's documents in one library (manuals, P&IDs, procedures, maintenance records), linked to the assets and searched by words and meaning; the assistant cites document, revision and page |
 | PlantCraft Simulator | [`simulator`](simulator) | The simulated plant (OPC UA) behind the demo and the benchmarks |
-| App template | [`templates/app`](templates/app) | StarterCraft, the starting point for an app of your own: rules, tests and prompts for Claude Code, tried inside PlantCraft with `make dev` |
+| App template | [`templates/app`](templates/app), published as [plantcraft-app-template](https://github.com/PlantCraft/plantcraft-app-template) | StarterCraft, the starting point for an app of your own: only the basics, full guides and recipes, tests and prompts for Claude Code, tried inside PlantCraft with `make dev` |
 
 Desk (each person's day) and Notebooks (JupyterLab with the plant's data) are part of the
 platform itself, at the root of this repository with the SDK ([`sdk/python`](sdk/python)) and the
