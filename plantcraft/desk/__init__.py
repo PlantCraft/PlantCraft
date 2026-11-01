@@ -26,6 +26,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from typing import Any
 from urllib.parse import urlsplit
 
+from plantcraft.auth.public_demo import VISIT_OWNER
 from plantcraft.config import plant_clock, plant_timezone, plant_today
 from plantcraft.db import Store, utc_text
 from plantcraft.i18n import t
@@ -59,7 +60,6 @@ TRIAGE_STATES = ("done", "snoozed", "read", "unread")
 # (``read``, ``conversation:<id>@<message id>``): the account's own read marks are every visitor's.
 MARKS = ("star", "unread", "read")
 # A public demo visit's marks (``<account>#visit:<id>``) go a day later.
-VISIT_OWNER = "#visit:"
 # A suggestion about an action untouched this long.
 STALE_DAYS = 14
 

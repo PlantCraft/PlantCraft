@@ -59,7 +59,7 @@ export function AssistantView({ section, read, tick, reportId, canEdit, editing 
     {state.error && <div className="tc-card-error" role="alert"><AlertTriangle size={15} /> {state.error}</div>}
     {!data && !state.error && <div className="tc-card-loading"><LoaderCircle className="spin" /></div>}
     {data && (written
-      ? <><div className="pc-markdown">{renderMarkdown(written.text)}</div>
+      ? <><div className="pc-markdown">{renderMarkdown(written.text, { plainExternalLinks: true })}</div>
         <small className="muted">{t("Written {when} with requirements v{n}. The PDF keeps what was sent.", { when: formatDate(written.written_at, { dateStyle: "medium", timeStyle: "short" }), n: written.version })}</small></>
       : <p className="muted">{t("Not written yet: the model writes it when the report is made (Download PDF, Send now or the schedule).")}</p>)}
     {canEdit && !editing && written && <div className="tc-report-feedback">

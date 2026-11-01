@@ -34,6 +34,9 @@ from pathlib import Path
 from plantcraft_sdk.server.settings import env_flag
 
 DEFAULT_USER = "demo"
+# What a visit owns on its own, apart from the visitor account's: ``<account>#visit:<id>``
+# (Desk's marks, the assistant's chats). The next visitor starts from the demo as seeded.
+VISIT_OWNER = "#visit:"
 DEFAULT_RATE = 600
 DEFAULT_SEATS = 10
 # A visit unused this long ends (no clock while it is used; a tab forgotten for

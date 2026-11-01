@@ -18,8 +18,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from plantcraft.api.deps import action_visibility
+from plantcraft.auth.public_demo import VISIT_OWNER
 from plantcraft.db import utc_text
-from plantcraft.desk import VISIT_OWNER, hidden
+from plantcraft.desk import hidden
 from plantcraft.i18n import t
 
 FEED_DAYS = 30
