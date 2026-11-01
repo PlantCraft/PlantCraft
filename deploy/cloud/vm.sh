@@ -21,7 +21,8 @@
 # Settings (environment, or /etc/plantcraft-site/vm.env): SITE_HOST (plantcraft.io), DEMO_HOST
 # (demo.plantcraft.io), CONTACT (the team's e-mail, for the privacy page and security.txt),
 # LAUNCHED (1 lets search engines in; until then the site says noindex), TIMEZONE
-# (America/Sao_Paulo), UPDATE_NOTICE_MINUTES (2: how long visits are warned before vm.sh demo
+# (America/Sao_Paulo), DEMO_ISOLATED (true: each visit plays in its own copy of the apps' data;
+# false turns it off), UPDATE_NOTICE_MINUTES (2: how long visits are warned before vm.sh demo
 # updates the suite; 0 updates at once). Nothing here opens a port: the tunnel is the only way in.
 #
 # This VM holds simulated data only. A plant's installation never connects to it.
@@ -321,6 +322,8 @@ demo() {
     set_env PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL "https://$SITE_HOST/#talk"
     # When an update comes, a visit waits on the site's page, which opens the demo again after.
     set_env PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL "https://$SITE_HOST/demo-updating"
+    # Each visit plays in its own copy of the apps' data, deleted after it (docs/public-demo.md).
+    set_env PLANTCRAFT_PUBLIC_DEMO_ISOLATED "${DEMO_ISOLATED:-true}"
     "$SUITE/install.sh" --yes
     suite_cli demo update-notice --clear || log "could not clear the update notice: run vm.sh demo again"
     log "demo at https://127.0.0.1/ (https://$DEMO_HOST through the tunnel)"
