@@ -1045,6 +1045,9 @@ prepare_data() {
     mkdir -p "$data/processcraft" "$data/proxy" "$data/simcraft" "$PREFIX/certs" "$PREFIX/backups" \
         "$data/installer/routes" "$data/installer/status" "$data/app-requests" "$data/apps" "$data/egress" \
         "$data/histcraft-db" "$data/histcraft-csv" "$data/compute-jobs"
+    # The install folder can be crossed (not listed) by others, as data/ can: a monitoring agent
+    # (Zabbix, docs/operations.md) reads data/installer/status/metrics.json without root.
+    chmod go+x "$PREFIX"
     chmod 0711 "$data"
     chmod 0700 "$PREFIX/backups"
     if [ ! -e "$data/initial-admin-password" ]; then
