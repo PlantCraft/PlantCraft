@@ -30,7 +30,7 @@ image = "modelcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.103.0"
+sdk = "0.104.0"
 asset_types = []        # any signal can feed a simulation
 roles = {}
 

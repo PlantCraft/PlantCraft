@@ -9,7 +9,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
-- **The whole suite in Brazilian Portuguese (SDK 0.103.0, ui 0.107.0).** Every catalog is complete:
+- **The whole suite in Brazilian Portuguese (SDK 0.104.0, ui 0.108.0).** Every catalog is complete:
   the platform, the shared components, the SDK and the six apps, screens and servers (about
   9,000 texts), the help of every app, Analytics' method pages and guides, and the platform's
   guides (`docs/pt-BR/`). Text a person reads that was still bare now goes through `t()`. Help
