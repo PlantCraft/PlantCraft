@@ -34,17 +34,17 @@ HEADER = "x-language"
 LOCALES = Path(__file__).with_name("locales")
 
 _translate: Callable[..., str] | None = None
-_installed_language: Callable[[], str] | None = None
+_language: Callable[[], str] | None = None
 _folders: list[Path] = [LOCALES]
-_language: ContextVar[str | None] = ContextVar("plantcraft_sdk_language", default=None)
+_request_language: ContextVar[str | None] = ContextVar("plantcraft_sdk_language", default=None)
 
 
 def install(translate: Callable[..., str], language: Callable[[], str] | None = None) -> None:
     """Route ``t`` (and ``current_language``) through the host's own functions."""
 
-    global _translate, _installed_language
+    global _translate, _language
     _translate = translate
-    _installed_language = language
+    _language = language
 
 
 def use_catalogs(*folders: Path) -> None:
@@ -84,17 +84,17 @@ def catalog(language: str) -> dict[str, str]:
 
 
 def set_language(value: str | None) -> Token:
-    return _language.set(normalize(value))
+    return _request_language.set(normalize(value))
 
 
 def reset_language(token: Token) -> None:
-    _language.reset(token)
+    _request_language.reset(token)
 
 
 def current_language() -> str:
-    if _installed_language is not None:
-        return _installed_language()
-    return _language.get() or DEFAULT_LANGUAGE
+    if _language is not None:
+        return _language()
+    return _request_language.get() or DEFAULT_LANGUAGE
 
 
 def t(text: str, /, **values: object) -> str:
@@ -133,8 +133,8 @@ class LanguageMiddleware:
                 for part in value.decode("latin-1").split(";"):
                     cookie_name, _, cookie_value = part.strip().partition("=")
                     cookies.setdefault(cookie_name, cookie_value)
-        token = _language.set(request_language(headers, cookies))
+        token = _request_language.set(request_language(headers, cookies))
         try:
             await self.app(scope, receive, send)
         finally:
-            _language.reset(token)
+            _request_language.reset(token)

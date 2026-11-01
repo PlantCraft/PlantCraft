@@ -20,7 +20,7 @@ def app_catalog(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(i18n, "_folders", [i18n.LOCALES])
     monkeypatch.setattr(i18n, "_translate", None)
-    monkeypatch.setattr(i18n, "_installed_language", None)
+    monkeypatch.setattr(i18n, "_language", None)
     i18n.catalog.cache_clear()
     i18n.use_catalogs(folder)
     yield folder
