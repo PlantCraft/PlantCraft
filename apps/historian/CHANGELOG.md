@@ -8,6 +8,15 @@ joins it into the bundle's release notes.
 
 ### Added
 
+- **Sparkplug B sources**, read only. The collector subscribes to an MQTT broker as a host that
+  only listens (births, data and deaths of one group or all) and never publishes: no STATE, no
+  commands, never a rebirth request. Each metric a birth (NBIRTH, DBIRTH) describes is added as a
+  signal by itself, with its kind (number, integer, boolean, text, instant) and unit (`engUnit`),
+  tagged `<group>.<edge node>.<device>.<metric>`; template instances become one signal per member.
+  Data by alias is archived at its metric, a death (NDEATH, DDEATH) marks the values bad, a
+  `Quality` property (192 good, 64 to 191 uncertain) is kept, and the source's state counts the
+  nodes, devices, sequence gaps and values whose alias no birth named yet (a node born before
+  Historian connected is learnt at its next birth). Browse lists what the births described.
 - **Interpolated reads and a window's summary (gap H5).**
   - `GET /api/v1/data/signals/{id}/series` and `POST /series` (and the same reads straight to
     the Historian) take `sampling=interpolated` with a `step`. They answer the value at each

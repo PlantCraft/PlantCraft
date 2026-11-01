@@ -103,6 +103,24 @@ def _mqtt(endpoint: str, options: dict[str, Any]) -> dict[str, Any]:
     return {"topics": topics, "qos": qos, "data_format": data_format}
 
 
+SPARKPLUG_SCHEMES = ("tcp://", "ssl://", "mqtt://", "mqtts://")
+_GROUP = re.compile(r"^[^+#/\s]{1,100}$")
+
+
+def check_sparkplug(endpoint: str, options: dict[str, Any]) -> dict[str, Any]:
+    """A Sparkplug B source's options, checked (the collector subscribes, never publishes)."""
+
+    if not endpoint.startswith(SPARKPLUG_SCHEMES):
+        raise ValueError(t("A Sparkplug B broker address starts with tcp:// or ssl://"))
+    group = str(options.get("group_id") or "").strip()
+    if group and not _GROUP.match(group):
+        raise ValueError(t("A group id has no /, + or # (empty: every group)."))
+    qos = int(options.get("qos") if options.get("qos") is not None else 1)
+    if qos not in (0, 1):
+        raise ValueError(t("QoS is 0 or 1."))
+    return {"group_id": group, "qos": qos, "add_on_birth": bool(options.get("add_on_birth"))}
+
+
 def register_words(data_type: str, byte_order: str) -> int:
     words = DATA_TYPES[data_type]
     return words or max(1, len(byte_order) // 2)  # FIXED: as wide as its byte order

@@ -1,7 +1,8 @@
 # Sources
 
 A source is one plant system Historian reads: an OPC UA server, a PI Web API, CSV files, or,
-through the gateway, an MQTT broker, a Modbus TCP device or an SQL database.
+through the gateway, an MQTT broker, a Modbus TCP device or an SQL database, or the edge nodes
+of a Sparkplug B broker.
 Calculated signals (see Signals) have a source of their own, `calc`, created with the first one.
 Apps' derived signals have a source of their own, which only the app writes. Only admins add,
 change or remove sources.
@@ -64,6 +65,14 @@ change or remove sources.
   Store and forward: values the gateway reads while the collector is away wait in its disk buffer and arrive in
   order when the collector is back, also after a gateway restart; a batch sent twice is taken
   once. The suite's health raises a warning when more than 64 MB waits.
+- **Sparkplug B** is read by the collector, which subscribes to the broker (`tcp://` or
+  `ssl://`) as a host that only listens: births, data and deaths of one group, or of all when
+  the group is empty. It never publishes, so it is not a primary host and never asks a node to
+  be born again. With *Add signals from births* on, each metric a birth describes becomes a
+  signal by itself (tag `<group>.<node>.<device>.<metric>`, with its kind and unit); otherwise
+  **Browse** lists them to add. A death marks the node's or device's values bad. A node born
+  before Historian connected sends data by alias that no birth named: its state counts them,
+  and they are read from the node's next birth (restart it to have them now).
 - **Laboratory results (LIMS)**: an SQL source marked so writes each row as a laboratory result
   at its sampling time, with its status (uncertain until approved, bad when rejected) and the
   times it reached the laboratory and was approved. A row read again unchanged is not rewritten.

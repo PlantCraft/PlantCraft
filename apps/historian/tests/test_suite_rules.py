@@ -30,6 +30,7 @@ LAYERS = {
     "notebook_examples": 0,
     "kinds": 0,
     "opc_status": 0,
+    "sparkplug": 0,
     "vault": 0,
     "archive": 1,
     "catalog": 1,
@@ -45,6 +46,7 @@ LAYERS = {
 NETWORK_MODULES = (
     "api/runtime.py",  # the httpx client every PlantCraftClient shares
     "collector/opcua.py",  # the OPC UA client of the configured sources
+    "collector/sparkplug.py",  # Sparkplug B sources: an MQTT client that only subscribes
     "sources/pi_web_api.py",  # PI Web API sources (GET only)
     "sources/pi_check.py",  # the PI connection check (DNS, TCP, HTTPS)
     "sources/opcua_history.py",  # OPC UA Historical Access sources
@@ -53,6 +55,7 @@ NETWORK_MODULES = (
 )
 PLANT_MODULES = {
     "src/histcraft/collector/opcua.py",
+    "src/histcraft/collector/sparkplug.py",
     "src/histcraft/sources/opcua_history.py",
     "src/histcraft/sources/certificates.py",
 }

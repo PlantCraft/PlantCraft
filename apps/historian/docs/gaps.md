@@ -16,7 +16,7 @@ Every known shortfall of PlantCraft Historian, ranked by user impact. `B` marks 
 | G8 | Retention deletes whole chunks (up to 10,000 values), so a point keeps up to one chunk past its retention | low | |
 | G18 | No migration of an existing SQLite archive into PostgreSQL (`histcraft migrate`): only matters for installs made before 2026-10-19 (none in a plant) | low | |
 | G19 | Kerberos to PI Web API needs the `kerberos` extra (`requests-kerberos`, which needs the system's krb5 libraries to build): the default image speaks basic auth only (NTLM needs `requests-ntlm`, not in the image either); a `HISTCRAFT_KERBEROS=1` image variant with krb5 and a keytab mount is still to write | high | B |
-| G10 | Sparkplug B and OPC DA: not offered by the gateway yet (MQTT, Modbus TCP and SQL are); the gateway holds no store and forward of its own beyond its memory buffer | low | |
+| G10 | OPC DA: not offered (Sparkplug B is, read by the collector, since H10; MQTT, Modbus TCP and SQL through the gateway, buffered on disk since H3). A Sparkplug B node born before Historian connected is learnt only at its next birth: asking for a rebirth (NCMD) would publish to the plant | low | |
 | G12 | No `tests/test_isolation.py` here (the suite's isolation test lives in PlantCraft); no pip-audit, npm audit or SBOM in this repository's CI; no e2e browser journeys | medium | |
 | G13 | Text values stored as JSON lists in each chunk; long repetitive labels are left to zstd | low | |
 | G14 | Interface in English only; the `t()` hook is in place, no Portuguese catalog | low | |

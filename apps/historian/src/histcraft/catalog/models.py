@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from histcraft.catalog.gateway import OPTIONS as GATEWAY_OPTIONS
 from histcraft.catalog.gateway import check as check_gateway
+from histcraft.catalog.gateway import check_sparkplug
 from histcraft.config import csv_pattern_allowed, outside_csv_folders
 from histcraft.i18n import t
 from histcraft.kinds import KINDS, RUNS
@@ -23,6 +24,7 @@ SOURCE_KINDS = (
     "mqtt",
     "modbus",
     "sql",
+    "sparkplug",
     "derived",
     "system",
     "calc",
@@ -32,6 +34,11 @@ SOURCE_KINDS = (
 # Sources read by the gateway (Telegraf, ``collector.gateway``): it pushes their values to the
 # collector, which archives them like any read value. They have no history to read back.
 GATEWAY_KINDS = ("mqtt", "modbus", "sql")
+# Sparkplug B (``histcraft.sparkplug``): the collector subscribes itself, as a host that only
+# listens; the births name the metrics, which may be added as points as they are born.
+SPARKPLUG_KIND = "sparkplug"
+# Kinds whose values arrive pushed (no scan): archived only, at the point of their address.
+PUSHED_KINDS = (*GATEWAY_KINDS, SPARKPLUG_KIND)
 # Kinds an administrator adds on the Sources page; derived sources appear on an app's first write,
 # the system source on PlantCraft's.
 PLANT_KINDS = ("pi_web_api", "opcua", "csv")
@@ -56,7 +63,7 @@ RETIRED_APPS = {"twincraft": "linkcraft", "cpmcraft": "linkcraft", "datacraft": 
 DROPPED_APPS = ("twincraft",)
 # Sources whose values come with a quality (OPC UA status, PI's questionable and substituted).
 # A calculated point's quality is the worst of its inputs'.
-QUALITY_KINDS = ("opcua", "pi_web_api", "calc")
+QUALITY_KINDS = ("opcua", "pi_web_api", "calc", SPARKPLUG_KIND)
 MODES = ("source", "archive", "both")
 DEFAULT_MODES = {
     "pi_web_api": "source",
@@ -70,11 +77,12 @@ DEFAULT_MODES = {
     "mqtt": "archive",
     "modbus": "archive",
     "sql": "archive",
+    "sparkplug": "archive",
 }
 # Kinds the collector reads live (archive and both modes); CSV files are checked for new rows.
-LIVE_KINDS = ("opcua", "calc", "csv", *GATEWAY_KINDS)
+LIVE_KINDS = ("opcua", "calc", "csv", *PUSHED_KINDS)
 # Kinds that exist only in the archive: no history to read back (mode archive only).
-ARCHIVE_ONLY_KINDS = ("calc", "csv", IMPORT_KIND, *GATEWAY_KINDS)
+ARCHIVE_ONLY_KINDS = ("calc", "csv", IMPORT_KIND, *PUSHED_KINDS)
 # Kinds whose history can be read back from the source.
 HISTORY_KINDS = ("pi_web_api", "opcua")
 # ``runs``: one series per execution of an app (H2), written by ``/derived/runs`` only.
@@ -83,7 +91,8 @@ POINT_KINDS = (*KINDS, RUNS)
 COLLECTED = ("archive", "both")
 NOT_COLLECTED = "PI Web API points are read from the source (mode source)."
 ONLY_ARCHIVED = (
-    "Calculated, CSV, imported, MQTT, Modbus and SQL points exist only in the archive"
+    "Calculated, CSV, imported, MQTT, Sparkplug B, Modbus and SQL points exist only in the"
+    " archive"
     " (mode archive)."
 )
 DEFAULT_SETTINGS: dict[str, Any] = {
@@ -207,6 +216,9 @@ SOURCE_OPTIONS: dict[str, dict[str, Any]] = {
     "system": {},
     "calc": {},
     "lab": {},
+    # Sparkplug B: one group or all (empty), QoS of the subscriptions, and whether each metric a
+    # birth describes becomes a point by itself.
+    SPARKPLUG_KIND: {"group_id": "", "qos": 1, "add_on_birth": True},
     **GATEWAY_OPTIONS,
 }
 
@@ -344,6 +356,10 @@ class SourceIn(BaseModel):
                 raise ValueError(t("PI Web API authentication is kerberos, ntlm or basic."))
             if self.options["read_mode"] not in ("recorded", "interpolated"):
                 raise ValueError(t("read_mode is recorded or interpolated."))
+        elif self.kind == SPARKPLUG_KIND:
+            self.options = check_sparkplug(self.endpoint, self.options)
+            self.namespace_uri = ""
+            self.mode = "archive"
         elif self.kind in GATEWAY_KINDS:
             self.options = check_gateway(self.kind, self.endpoint, self.options)
             self.namespace_uri = ""

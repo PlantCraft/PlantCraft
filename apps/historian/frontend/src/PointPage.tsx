@@ -189,7 +189,7 @@ export function PointPage({ signal, me }: { signal: string; me: Me }) {
 
 /** A CSV file is read where it is, a calculated point only archived: neither picks a mode. */
 /** Calculated, CSV, imported and gateway points exist only in the archive (catalog ARCHIVE_ONLY_KINDS). */
-const ARCHIVE_ONLY = new Set(["calc", "csv", "import", "mqtt", "modbus", "sql"]);
+const ARCHIVE_ONLY = new Set(["calc", "csv", "import", "mqtt", "sparkplug", "modbus", "sql"]);
 const fixedMode = (point: Point) => ARCHIVE_ONLY.has(point.source_kind);
 /** The shortest window, from an hour up, that holds the point's newest value twice over. */
 function windowFor(at: number | null): string {
@@ -199,11 +199,12 @@ function windowFor(at: number | null): string {
 
 /** Kinds whose values arrive without a scan of the point: a file checked by its source, a file
  * loaded once, the gateway (its interval is the source's). A point's scan period does not apply. */
-const PUSHED = new Set(["csv", "import", "mqtt", "modbus", "sql"]);
+const PUSHED = new Set(["csv", "import", "mqtt", "sparkplug", "modbus", "sql"]);
 
 function readBy(point: Point): string {
   if (point.source_kind === "import") return t("Loaded once from a CSV file");
   if (point.source_kind === "csv") return t("Archived from the source's CSV files when they are checked");
+  if (point.source_kind === "sparkplug") return t("Published by its edge node at {address}", { address: point.address });
   if (PUSHED.has(point.source_kind)) return t("Read by the gateway from {address}", { address: point.address });
   return t("Read every {scan} s from {address}", { scan: point.scan_seconds, address: point.address });
 }

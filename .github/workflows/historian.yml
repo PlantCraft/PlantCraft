@@ -110,6 +110,8 @@ jobs:
           cache: pip
       - run: rm -rf "$RUNNER_TEMP/venv" && python -m venv "$RUNNER_TEMP/venv" && echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
       - run: make deps
+      # Sparkplug B runs on Eclipse Mosquitto when it can be installed (else amqtt's broker).
+      - run: if command -v apt-get >/dev/null; then sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends mosquitto; fi
       - run: make sources-check
         env:
           HISTCRAFT_SOURCES_STRICT: "1"

@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Sparkplug B in the source test kit** (`simcraft.testkit.sparkplug`): an edge node with a
+  device publishes NBIRTH, DBIRTH with aliases and units, DDATA by alias and NDEATH on Eclipse
+  Mosquitto when installed (else amqtt's broker), and a spy lists every topic published, so
+  Historian's check shows it only listened.
 - **Training: scheduled faults with a separate answer key.** `simcraft loops serve --faults FILE`
   (or `SIMCRAFT_FAULTS`) applies a schedule of faults to the loop portfolio. Each fault is one of
   sensor bias, frozen sensor, bad quality (status `BadSensorFailure`), stuck valve, load step or

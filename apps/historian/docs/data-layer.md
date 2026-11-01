@@ -164,8 +164,8 @@ Shapes, limits and error codes are those of PlantCraft's `docs/api-v1.md`
 `mode` is `source` (history read from the source on each request; nothing kept), `archive`
 (collected on a scan, compressed, kept here) or `both` (archived, and what the archive lacks is
 read from the source). A source has a default mode; a signal may override it. Defaults: PI Web
-API `source`, OPC UA `archive`, derived `archive`. Calculated, CSV, import, MQTT, Modbus and SQL
-points are always `archive`.
+API `source`, OPC UA `archive`, derived `archive`. Calculated, CSV, import, MQTT, Sparkplug B, Modbus and
+SQL points are always `archive`.
 
 `both` reads the source's part of a batch in one request per source. To stop reading the source
 at all, an administrator backfills it (Sources page, `POST /api/sources/{id}/backfill`,

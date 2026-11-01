@@ -31,7 +31,8 @@ SCADA and IIoT platforms. Sources are public only (clean room, see AGENTS.md).
 | Collection | Subscriptions (report by exception from the server) | Part 4 | missing (polling only) | |
 | Collection | Bad quality and lost connections recorded, never bridged | | done | `tests/test_collector.py`, `tests/test_compression.py` |
 | Collection | Store and forward when the archive is unreachable (edge buffering) | | missing | |
-| Collection | Other protocols through the gateway (Telegraf): MQTT, Modbus TCP, SQL | | done (Sparkplug B and OPC DA still missing) | `tests/test_gateway.py` |
+| Collection | Other protocols through the gateway (Telegraf): MQTT, Modbus TCP, SQL | | done (OPC DA still missing) | `tests/test_gateway.py` |
+| Collection | Sparkplug B, read by the collector: births name the metrics (added as signals), data by alias, deaths mark values bad; subscribes only | | done | `tests/test_sparkplug.py`, `sources_check/test_sparkplug.py` |
 | Collection | Secure OPC UA (Sign, SignAndEncrypt, certificates) | Part 4 | done (client certificate made once; server trusted by SHA-256) | `tests/test_secure_opcua.py` |
 | Compression | Swinging-door compression with a deviation per point | Bristol 1990 | done | `tests/test_compression.py` |
 | Compression | Maximum time between archived values | | done | `tests/test_compression.py` |

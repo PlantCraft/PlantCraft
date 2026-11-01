@@ -16,6 +16,7 @@ computed again by the check from the same seed.
 | PI Web API | `testkit.piwebapi` | Basic auth, paging, digital states, 503 bursts, slow answers, wrong password | recorded values and states equal the plant; a burst is retried; a slow server is an error for the tag, not a crash |
 | OPC UA | the Simulator itself | live, Browse, Historical Access | values arrive in range, MODE as text, history reads back |
 | MQTT | `testkit.mqtt` (amqtt) | number alone, flat JSON, nested JSON, QoS 1, `+` and `#` | through the pinned Telegraf: Browse lists every series, the points added archive the published values |
+| Sparkplug B | `testkit.sparkplug` (Mosquitto when installed, else amqtt) | NBIRTH and DBIRTH with aliases and units, DDATA by alias only, NDEATH, text and number metrics | the collector itself: every metric born becomes a signal of its kind and unit, data by alias reaches it, the death marks it bad, and nothing but the edge node published on the broker |
 | Modbus TCP | `testkit.modbus` (pymodbus) | FLOAT32 in 4 byte orders, FLOAT64 and INT64 with 8-byte orders, INT16/UINT16/INT32/UINT32 scaled, input registers, coils, discrete inputs | through Telegraf: every register reads back its value |
 | SQL | `testkit.sql` (PostgreSQL) | wide table, long table with a tag column, `timestamp without time zone` | through Telegraf: the archive rebuilds the table's rows |
 
