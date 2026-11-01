@@ -166,7 +166,7 @@ def tables(data: dict[str, Any], clock: Any) -> list[dict[str, Any]]:
     out.append(
         {
             "title": t("Most frequent alarms"),
-            "head": ["#", t("Alarm"), t("Priority"), t("Raised"), t("Share")],
+            "head": ["#", t("Alarm name"), t("Priority"), t("Raised"), t("Share")],
             "rows": [
                 [
                     str(index),
@@ -239,7 +239,7 @@ def tables(data: dict[str, Any], clock: Any) -> list[dict[str, Any]]:
     out.append(
         {
             "title": t("Fleeting alarms"),
-            "head": [t("Alarm"), t("Times")],
+            "head": [t("Alarm name"), t("Times")],
             "rows": [
                 [str(row.get("name") or row.get("alarm_id")), str(row.get("count", 0))]
                 for row in fleeting
