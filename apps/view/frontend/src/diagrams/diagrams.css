@@ -88,7 +88,7 @@
 .dg-asset-panel { position: absolute; top: 8px; right: 8px; max-height: calc(100% - 64px); z-index: 2; width: min(340px, calc(100% - 16px)); display: flex; flex-direction: column; gap: var(--pc-space-3, 12px); padding: 14px 16px; overflow: auto; background: var(--pc-surface); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); box-shadow: var(--pc-shadow-4, 0 8px 24px rgb(0 0 0 / 0.18)); }
 .dg-asset-panel header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .dg-asset-panel h2 { margin: 2px 0 0; font-size: var(--pc-fs-lg, 1.05rem); }
-.dg-asset-panel h3 { margin: 0 0 4px; font-size: var(--pc-fs-xs); font-weight: 600; color: var(--pc-text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.dg-asset-panel h3 { margin: 0 0 4px; font-size: var(--pc-fs-xs); font-weight: 600; color: var(--pc-text-2); }
 .dg-asset-kind { font-size: var(--pc-fs-xs); color: var(--pc-text-2); }
 .dg-asset-description { margin: 0; color: var(--pc-text-2); font-size: var(--pc-fs-sm); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .dg-asset-rows, .dg-asset-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
