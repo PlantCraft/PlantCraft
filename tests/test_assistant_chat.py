@@ -459,6 +459,14 @@ def test_numbers_are_read_in_both_formats():
     assert 1234.5 in numbers_in("1,234.5") and 1234.5 in numbers_in("1.234,5")
     assert 12.5 in numbers_in("média de 12,5 kg/h") and -3.0 in numbers_in("caiu para -3")
     assert says_not_found("Não encontrei esse sinal.") and not says_not_found("It is 4.2 bar.")
+    # Right answers the real-model battery read as failures (2026-11-01).
+    for right in (
+        "I searched for the signal and found no matching signals in the plant.",
+        "There's no recorded data for scenario:mode on March 15, 1999.",
+        "I queried the latest results for app linkcraft, but none were returned (empty set).",
+        "PlantCraft Analytics has no latest published results visible to you.",
+    ):
+        assert says_not_found(right), right
 
 
 def test_the_model_reads_the_suites_help():

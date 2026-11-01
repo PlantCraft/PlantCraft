@@ -48,6 +48,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
     copy of the canvas's own, is gone; the keys F (fit), + and - zoom.
   - The legend folds into a "Legend" button; open, it also names the libraries the blocks'
     colours stand for.
+- **The assistant's test battery** (`tests/llm_battery/`, docs/llm-battery.md): 45 attacks,
+  refusals and limits in ten groups, asked as visits of a public demo with the assistant on. They run against a fake model that obeys every
+  instruction it reads (in CI, `tests/test_llm_battery.py`) and against a real model
+  (`python -m tests.llm_battery --model ...`), with a report per case. The report includes
+  tokens and time per answer.
 - **Public demo: updates announced to the visits.** `plantcraft demo update-notice --in 2`
   shows every visit a countdown strip, stops new visits, then ends them and sends them to the
   site's `/demo-updating` page (`PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL`), which opens the demo
@@ -365,6 +370,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - `@plantcraft/ui`, the block diagram editor: blocks of a library past the eighth (Outputs, in
   Analytics) had no colour; there are eleven now, taken in turn.
+- The assistant takes one question at a time per person even when many arrive at once: twenty
+  questions sent together were three answers written at once.
 - **The Zabbix template imports and reads.** Zabbix 7.0 refused it ("UUIDv4 is expected": its
   uuids were version 5), and a Zabbix agent could not reach `metrics.json` because the install
   folder was 0750. The uuids are now version 4 (the test checks it) and `install.sh` lets others
@@ -476,6 +483,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Security
 
+- `@plantcraft/ui`: the side panel shows links to other sites in the assistant's answers as text
+  with their address, as Desk already did. A link planted in the plant's data is never one click
+  away.
 - **The public demo's visitor password is no longer in `.env`** (security check `PC-SEC-02`).
   `install.sh` keeps it in `data/public-demo-password` (mode 600, owned by PlantCraft), handed to
   PlantCraft as a Compose secret (`PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE`). An older installation's
