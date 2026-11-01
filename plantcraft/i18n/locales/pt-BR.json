@@ -627,6 +627,7 @@
   "The suite's way out refused {host}: only the providers added in Settings › Language models can be reached.": "A saída da suíte recusou {host}: só os provedores cadastrados em Setup › Language models podem ser alcançados.",
   "This group limits the assets its members see: an administrator changes its members.": "Este grupo limita os ativos que os membros veem: um administrador muda os membros.",
   "Use Enter the demo to visit the public demo.": "Use Entrar na demo para visitar a demo pública.",
+  "The demo is being updated. It will be back in a few minutes.": "A demo está sendo atualizada. Ela volta em alguns minutos.",
   "The demo is being prepared. Try again in a few minutes.": "A demo está sendo preparada. Tente de novo em alguns minutos.",
   "Your demo visit ended.": "Sua visita à demo terminou.",
   "The installation file fixed the time zone. Change it on the server: edit /etc/plantcraft/installation.conf and run install.sh again.": "O arquivo da instalação fixou o fuso horário. Mude no servidor: edite /etc/plantcraft/installation.conf e rode o install.sh de novo.",

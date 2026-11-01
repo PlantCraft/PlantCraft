@@ -132,6 +132,8 @@ services:
       PLANTCRAFT_PUBLIC_DEMO_STATS_KEY: "${PLANTCRAFT_PUBLIC_DEMO_STATS_KEY:-}"
       # The visit's "Talk to us" button opens this (the site's contact form); empty: no button.
       PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL: "${PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL:-}"
+      # Where a visit waits while the demo is updated (the site's page); empty: the sign-in page.
+      PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL: "${PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL:-}"
       PLANTCRAFT_LANGUAGE: "${PLANTCRAFT_LANGUAGE:-en}"
       PLANTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
       # The apps of the suite run by this file (the launcher, access and API v1 list them);

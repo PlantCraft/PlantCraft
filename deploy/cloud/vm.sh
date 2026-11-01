@@ -21,7 +21,8 @@
 # Settings (environment, or /etc/plantcraft-site/vm.env): SITE_HOST (plantcraft.io), DEMO_HOST
 # (demo.plantcraft.io), CONTACT (the team's e-mail, for the privacy page and security.txt),
 # LAUNCHED (1 lets search engines in; until then the site says noindex), TIMEZONE
-# (America/Sao_Paulo). Nothing here opens a port: the tunnel is the only way in.
+# (America/Sao_Paulo), UPDATE_NOTICE_MINUTES (2: how long visits are warned before vm.sh demo
+# updates the suite; 0 updates at once). Nothing here opens a port: the tunnel is the only way in.
 #
 # This VM holds simulated data only. A plant's installation never connects to it.
 set -Eeuo pipefail
@@ -237,6 +238,7 @@ SITE_STATS_PASSWORD_FILE=$CONF/stats-password
 SITE_STATS_TIMEZONE=$TIMEZONE
 SITE_DEMO_STATS_URL=https://$DEMO_HOST/api/demo/stats
 SITE_DEMO_STATS_KEY_FILE=$CONF/demo-stats-key
+SITE_DEMO_URL=https://$DEMO_HOST
 EOF
     # Empty until vm.sh chat-key: the site starts with its chat off rather than not at all.
     [ -f "$CONF/chat-key" ] || install -m 0640 /dev/null "$CONF/chat-key"
@@ -258,6 +260,31 @@ set_env() { # set_env KEY VALUE: in the installation's .env
     fi
 }
 
+# The suite's own command inside its PlantCraft container, tried for up to 3 minutes while the
+# container (re)starts.
+suite_cli() {
+    local try
+    for try in $(seq 1 36); do
+        docker compose --project-directory "$SUITE" --env-file "$SUITE/.env" exec -T processcraft \
+            plantcraft "$@" && return 0
+        sleep 5
+    done
+    return 1
+}
+
+# Visits see "updated in N min" (docs/public-demo.md, "Updating the demo"), no new visit starts,
+# and when the time comes every visit ends and waits on the site's page.
+update_notice() {
+    local minutes="${UPDATE_NOTICE_MINUTES:-2}"
+    [ "$minutes" != 0 ] || return 0
+    if suite_cli demo update-notice --in "$minutes"; then
+        log "visits warned: the update starts in $minutes min"
+        sleep "$((minutes * 60))"
+    else
+        log "could not warn the visits (is the suite running?); updating now"
+    fi
+}
+
 demo() {
     local version arch archive bundle sign=() gateways
     command -v docker >/dev/null || die "run vm.sh setup first"
@@ -271,6 +298,7 @@ demo() {
     bundle="$SRC/dist/vm-bundle/plantcraft-$version-linux-$arch-bundle"
     [ -f "$bundle/SHA256SUMS.sig" ] || sign=(--allow-unsigned)
     if [ -x "$SUITE/install.sh" ]; then
+        update_notice
         log "updating the suite in $SUITE"
         "$bundle/install.sh" --prefix "$SUITE" --yes "${sign[@]}"
     else
@@ -291,7 +319,10 @@ demo() {
     set_env PLANTCRAFT_PUBLIC_DEMO_STATS_KEY "$(cat "$CONF/demo-stats-key")"
     # The visit's "Talk to us" button opens the site's contact form.
     set_env PLANTCRAFT_PUBLIC_DEMO_CONTACT_URL "https://$SITE_HOST/#talk"
+    # When an update comes, a visit waits on the site's page, which opens the demo again after.
+    set_env PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL "https://$SITE_HOST/demo-updating"
     "$SUITE/install.sh" --yes
+    suite_cli demo update-notice --clear || log "could not clear the update notice: run vm.sh demo again"
     log "demo at https://127.0.0.1/ (https://$DEMO_HOST through the tunnel)"
 }
 

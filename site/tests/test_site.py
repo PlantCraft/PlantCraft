@@ -689,3 +689,45 @@ def test_stats_page_says_when_the_watch_stopped(tmp_path, knowledge):
     (tmp_path / "health.jsonl").write_text(json.dumps(_sample(1000.0)) + "\n")
     c = client(tmp_path, knowledge, stats_password="s3cret")
     assert "the watch (plantcraft-watch) stopped" in _stats(c).text
+
+
+def test_demo_updating_page_waits_for_the_demo(tmp_path):
+    from sitechat.stats import DemoSource
+
+    answers: list[object] = [{"now": {"updating": True}}]
+
+    class Demo(DemoSource):
+        def read(self, days: int = 31):
+            return answers[0]
+
+    app = create_app(
+        Settings(data_dir=tmp_path, demo_stats=Demo(), demo_url="https://demo.example.org")
+    )
+    client = TestClient(app)
+    page = client.get("/demo-updating")
+    assert page.status_code == 200 and "being updated" in page.text
+    assert 'href="https://demo.example.org"' in page.text and "<script>" not in page.text
+    assert client.get("/demo-updating.js").headers["content-type"].startswith("text/javascript")
+    assert client.get("/api/demo/ready").json() == {"ready": False}
+
+
+def test_demo_ready_once_it_answers_with_no_update(tmp_path):
+    from sitechat.stats import DemoSource
+
+    class Demo(DemoSource):
+        def read(self, days: int = 31):
+            return {"now": {"updating": False, "taken": 0}}
+
+    client = TestClient(create_app(Settings(data_dir=tmp_path, demo_stats=Demo())))
+    assert client.get("/api/demo/ready").json() == {"ready": True}
+
+
+def test_demo_not_ready_while_it_does_not_answer(tmp_path):
+    from sitechat.stats import DemoSource
+
+    class Demo(DemoSource):
+        def read(self, days: int = 31):
+            return "not reachable (HTTP 502)"
+
+    client = TestClient(create_app(Settings(data_dir=tmp_path, demo_stats=Demo())))
+    assert client.get("/api/demo/ready").json() == {"ready": False}

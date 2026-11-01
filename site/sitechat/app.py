@@ -19,6 +19,8 @@ SITE_STATS_PASSWORD    the password of /stats, the owner's stats page (or SITE_S
 SITE_STATS_TIMEZONE    the time zone /stats counts days in (default UTC)
 SITE_DEMO_STATS_URL    the public demo's GET /api/demo/stats, shown on /stats (optional), with
 SITE_DEMO_STATS_KEY_FILE  a file holding the demo's PLANTCRAFT_PUBLIC_DEMO_STATS_KEY
+SITE_DEMO_URL          the public demo, which /demo-updating opens again once its update is over
+                       (default https://demo.plantcraft.io)
 
 /stats also shows the host's health ("Server now") from SITE_DATA_DIR/health.jsonl, which
 `python -m sitechat watch` writes (health.py; WATCH_* settings there).
@@ -42,7 +44,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ValidationError
 
-from . import chat, health
+from . import chat, health, updating
 from .contacts import Contact, Inbox
 from .guard import MAX_HISTORY, MAX_MESSAGE, MAX_TURNS, Limits, Window
 from .knowledge import Knowledge
@@ -74,6 +76,7 @@ class Settings:
     stats_password: str = ""
     stats_timezone: str = "UTC"
     demo_stats: DemoSource = field(default_factory=DemoSource)
+    demo_url: str = "https://demo.plantcraft.io"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -108,6 +111,7 @@ class Settings:
             stats_password=_secret(env, "SITE_STATS_PASSWORD"),
             stats_timezone=env.get("SITE_STATS_TIMEZONE", "UTC").strip() or "UTC",
             demo_stats=DemoSource(env.get("SITE_DEMO_STATS_URL", "").strip(), demo_key),
+            demo_url=env.get("SITE_DEMO_URL", "").strip() or "https://demo.plantcraft.io",
         )
 
 
@@ -164,6 +168,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         zone = ZoneInfo("UTC")
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.state.settings = settings
+    updating.install(app, demo_url=settings.demo_url, read_demo=settings.demo_stats.read)
 
     def address(request: Request) -> str:
         if settings.trust_proxy == "cloudflare":
