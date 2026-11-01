@@ -125,6 +125,10 @@ guide away, take **Another role**, or close it. While a guide is on, the apps' o
   1. At the provider, create a project for the demo with its own key and a monthly spending cap.
   2. Signed in as the administrator, Setup › Language models: add the provider with that key and
      pick the model (this also opens llm-egress to the provider's host). Ask a question to check.
+     Or from the server's shell, with the key in a file that never reaches the command line:
+     `docker compose exec -T processcraft plantcraft llm set --name "OpenAI demo" --kind openai
+     --model <model> --key-stdin < demo-openai.key` (`plantcraft llm show` lists what is set).
+     `PLANTCRAFT_LLM` must not be `off` in `.env`.
   3. In `.env`: `PLANTCRAFT_PUBLIC_DEMO_LLM=on` (and `_QUESTIONS`, `_PER_ADDRESS`, `_DAILY` when
      the defaults do not fit; `deploy/compose.yaml` passes these four), then
      `docker compose up -d plantcraft`.
