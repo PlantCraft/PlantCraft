@@ -119,6 +119,17 @@ guide away, take **Another role**, or close it. While a guide is on, the apps' o
   answered, failed, input, cached, output and reasoning tokens). Give the demo its own provider
   key with a monthly spending cap at the provider: it is the limit that holds whatever happens
   here. `PLANTCRAFT_PUBLIC_DEMO_LLM=off` and a restart turn it off.
+
+  Turning it on in a deployed demo:
+
+  1. At the provider, create a project for the demo with its own key and a monthly spending cap.
+  2. Signed in as the administrator, Setup › Language models: add the provider with that key and
+     pick the model (this also opens llm-egress to the provider's host). Ask a question to check.
+  3. In `.env`: `PLANTCRAFT_PUBLIC_DEMO_LLM=on` (and `_QUESTIONS`, `_PER_ADDRESS`, `_DAILY` when
+     the defaults do not fit; `deploy/compose.yaml` passes these four), then
+     `docker compose up -d plantcraft`.
+  4. Open the demo as a visitor: the panel says "10 of 10 questions left". Ask one; the day's
+     count and tokens appear in `GET /api/demo/stats` (`assistant`).
 - **Nothing a visitor does reaches another visitor**: no messages, no actions, no audit entries.
 
 ## A copy of the demo for each visit
