@@ -38,6 +38,7 @@ from plantcraft_sdk.contract import (
     TOKEN_COOKIE,
     subject_digest,
 )
+from plantcraft_sdk.i18n import t
 
 KEYS_PATH = "/api/v1/auth/keys"
 KEYS_TTL_SECONDS = 600
@@ -147,7 +148,8 @@ class TokenVerifier:
                 except (httpx.HTTPError, ValueError) as exc:
                     if self._keys is None:
                         raise AuthError(
-                            503, f"PlantCraft's signing keys could not be read: {exc}"
+                            503,
+                            t("PlantCraft's signing keys could not be read: {error}", error=exc),
                         ) from exc
                     # Keep verifying with the keys we have while PlantCraft is away.
                     return self._keys
@@ -193,14 +195,14 @@ class TokenVerifier:
         subject = str(claims.get("sub") or "")
         if subject.startswith("app:"):
             if str(claims.get("key_id") or "") in keys:
-                raise AuthError(401, "This app key was revoked.")
+                raise AuthError(401, t("This app key was revoked."))
             return
         not_before = users.get(subject_digest(subject))
         if not_before is not None and int(claims.get("iat") or 0) < not_before:
-            raise AuthError(401, "Your access changed. Sign in again.")
+            raise AuthError(401, t("Your access changed. Sign in again."))
         sid = claims.get("sid")
         if isinstance(sid, str) and sid and sid in sessions:
-            raise AuthError(401, "You signed out. Sign in again.")
+            raise AuthError(401, t("You signed out. Sign in again."))
 
     # Verification -----------------------------------------------------------
 
@@ -208,7 +210,7 @@ class TokenVerifier:
         """The verified claims; raises ``AuthError(401)`` with the reason."""
 
         if not token:
-            raise AuthError(401, "Sign in to continue: no PlantCraft token was sent.")
+            raise AuthError(401, t("Sign in to continue: no PlantCraft token was sent."))
         hit = self._verified.get(token)
         if hit is not None:
             claims, expires, kid = hit
@@ -225,9 +227,11 @@ class TokenVerifier:
                     token, self.keys(refresh=True), self.audiences, leeway=self.leeway
                 )
         except jwt.ExpiredToken as exc:
-            raise AuthError(401, "Your session expired. Sign in again.") from exc
+            raise AuthError(401, t("Your session expired. Sign in again.")) from exc
         except jwt.TokenError as exc:
-            raise AuthError(401, f"The PlantCraft token was not accepted: {exc}") from exc
+            raise AuthError(
+                401, t("The PlantCraft token was not accepted: {error}", error=exc)
+            ) from exc
         if len(self._verified) >= VERIFIED_CACHE_SIZE:
             try:
                 self._verified.pop(next(iter(self._verified)))
@@ -245,7 +249,7 @@ class TokenVerifier:
         apps = claims.get("apps") if isinstance(claims.get("apps"), dict) else {}
         access = apps.get(self.app_id)
         if access not in ("editor", "viewer"):
-            raise AuthError(403, "You do not have access to this application.")
+            raise AuthError(403, t("You do not have access to this application."))
         username = str(claims.get("sub") or "")
         return User(
             username=username,

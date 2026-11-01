@@ -34,6 +34,7 @@ from collections import defaultdict
 from html import escape
 from typing import Any
 
+from doccraft.i18n import t
 from doccraft.plantmap.reader import tags as isa
 from doccraft.plantmap.reader.svg import DrawingError
 
@@ -69,13 +70,13 @@ def is_dexpi(data: bytes) -> bool:
 def _root(data: bytes) -> ET.Element:
     head = data[:4096].upper()
     if b"<!DOCTYPE" in head or b"<!ENTITY" in data.upper():
-        raise DrawingError("A DEXPI file with a DOCTYPE or entities is not read.")
+        raise DrawingError(t("A DEXPI file with a DOCTYPE or entities is not read."))
     try:
         root = ET.fromstring(data)  # noqa: S314 - no DOCTYPE, so no entity can expand
     except ET.ParseError as error:
-        raise DrawingError(f"The DEXPI file is not valid XML: {error}.") from error
+        raise DrawingError(t("The DEXPI file is not valid XML: {error}.", error=error)) from error
     if root.tag != "PlantModel":
-        raise DrawingError("The XML file is not DEXPI (no PlantModel).")
+        raise DrawingError(t("The XML file is not DEXPI (no PlantModel)."))
     return root
 
 

@@ -22,6 +22,8 @@ import re
 import xml.etree.ElementTree as ET
 from typing import Any
 
+from plantcraft_sdk.i18n import t
+
 MAX_IMAGE_BYTES = 256 * 1024
 IMAGE_TYPES = ("image/png", "image/jpeg", "image/webp", "image/svg+xml")
 
@@ -209,16 +211,16 @@ def clean_svg(data: bytes) -> bytes:
 
     head = data[:4096].lower()
     if b"<!doctype" in head or b"<!entity" in data.lower():
-        raise ImageError("An SVG with a DOCTYPE or entities is not taken: save it plainly.")
+        raise ImageError(t("An SVG with a DOCTYPE or entities is not taken: save it plainly."))
     try:
         root = ET.fromstring(data)
     except ET.ParseError as exc:
-        raise ImageError(f"The SVG cannot be read: {exc}.") from exc
+        raise ImageError(t("The SVG cannot be read: {error}.", error=exc)) from exc
     if _name(root.tag)[1] != "svg":
-        raise ImageError("The file is not an SVG picture.")
+        raise ImageError(t("The file is not an SVG picture."))
     cleaned = _clean(root)
     if cleaned is None:
-        raise ImageError("The file is not an SVG picture.")
+        raise ImageError(t("The file is not an SVG picture."))
     ET.register_namespace("", SVG_NS)
     return ET.tostring(cleaned, encoding="utf-8", xml_declaration=False)
 
@@ -228,11 +230,11 @@ def image_bytes(data_url: str) -> tuple[str, bytes]:
 
     match = _DATA_URL.match(data_url.strip())
     if not match:
-        raise ImageError("The image is not a base64 data URL.")
+        raise ImageError(t("The image is not a base64 data URL."))
     try:
         data = base64.b64decode(re.sub(r"\s+", "", match.group(2)), validate=True)
     except (binascii.Error, ValueError) as exc:
-        raise ImageError("The image's base64 cannot be read.") from exc
+        raise ImageError(t("The image's base64 cannot be read.")) from exc
     return match.group(1).lower(), data
 
 
@@ -248,8 +250,11 @@ def block_image(value: str | None) -> str:
     declared, data = image_bytes(value)
     if len(data) > MAX_IMAGE_BYTES:
         raise ImageError(
-            f"The image is {len(data) // 1024} KB: a block's image is at most "
-            f"{MAX_IMAGE_BYTES // 1024} KB."
+            t(
+                "The image is {size} KB: a block's image is at most {limit} KB.",
+                size=len(data) // 1024,
+                limit=MAX_IMAGE_BYTES // 1024,
+            )
         )
     found = _sniff(data)
     if found:
@@ -257,9 +262,9 @@ def block_image(value: str | None) -> str:
     if declared == "image/svg+xml" or data.lstrip()[:5].lower() in (b"<?xml", b"<svg "):
         cleaned = clean_svg(data)
         if len(cleaned) > MAX_IMAGE_BYTES:
-            raise ImageError("The SVG is too large once cleaned.")
+            raise ImageError(t("The SVG is too large once cleaned."))
         return _as_url("image/svg+xml", cleaned)
-    raise ImageError("A block's image is a PNG, JPEG, WebP or SVG file.")
+    raise ImageError(t("A block's image is a PNG, JPEG, WebP or SVG file."))
 
 
 def raw_image(data: bytes) -> str:
@@ -289,7 +294,7 @@ def image_response(data_url: str) -> Any:
 
     kind, data = image_bytes(data_url)
     if kind not in IMAGE_TYPES:
-        raise ImageError("Not a block image.")
+        raise ImageError(t("Not a block image."))
     return Response(
         data,
         media_type=kind,

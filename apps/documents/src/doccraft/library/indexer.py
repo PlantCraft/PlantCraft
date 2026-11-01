@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from doccraft.i18n import t
 from doccraft.library import extract as reader
 from doccraft.library.embed import Embedder
 from doccraft.library.passages import Passage, cut
@@ -66,10 +67,12 @@ def index_file(
     passages = cut(extracted.sections)
     if not passages:
         raise reader.Unreadable(
-            "No text was found in the file. A scanned document needs text recognition (OCR), "
-            "which is not switched on."
+            t(
+                "No text was found in the file. A scanned document needs text recognition (OCR), "
+                "which is not switched on."
+            )
             if kind not in reader.DRAWING_ONLY
-            else "No diagram was recognised in this drawing (no tags joined by lines)."
+            else t("No diagram was recognised in this drawing (no tags joined by lines).")
         )
     heading = title or extracted.title
     # Each passage is embedded with its document's title and headings, so "the manual of U-200,
@@ -98,7 +101,9 @@ def index_revision(
         return False
     except Exception as error:  # never leave a revision "indexing" after a crash
         log.exception("indexing %s failed", rev_id)
-        store.set_status(rev_id, "failed", f"Indexing failed: {type(error).__name__}.")
+        store.set_status(
+            rev_id, "failed", t("Indexing failed: {error}.", error=type(error).__name__)
+        )
         return False
     store.store_passages(
         rev_id,

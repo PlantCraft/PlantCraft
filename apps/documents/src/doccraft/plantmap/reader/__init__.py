@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from doccraft.i18n import t
 from doccraft.plantmap.reader.graph import recognise
 from doccraft.plantmap.reader.svg import DrawingError
 
@@ -32,12 +33,12 @@ def kind_of(data: bytes, filename: str = "") -> str:
     text = data[:2048].lstrip().lower()
     if text.startswith(b"<?xml") or text.startswith(b"<svg") or b"<svg" in text:
         return "svg"
-    raise DrawingError("Send a P&ID as PDF, SVG, DEXPI (XML), PNG, JPEG or TIFF.")
+    raise DrawingError(t("Send a P&ID as PDF, SVG, DEXPI (XML), PNG, JPEG or TIFF."))
 
 
 def read_drawing(data: bytes, filename: str = "") -> list[dict[str, Any]]:
     if len(data) > MAX_BYTES:
-        raise DrawingError("The file is larger than 40 MB.")
+        raise DrawingError(t("The file is larger than 40 MB."))
     kind = kind_of(data, filename)
     if kind == "dexpi":
         from doccraft.plantmap.reader.dexpi import read_dexpi

@@ -9,6 +9,17 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **The whole suite in Brazilian Portuguese (SDK 0.102.0, ui 0.106.0).** Every catalog is complete:
+  the platform, the shared components, the SDK and the six apps, screens and servers (about
+  9,000 texts), the help of every app, Analytics' method pages and guides, and the platform's
+  guides (`docs/pt-BR/`). Text a person reads that was still bare now goes through `t()`. Help
+  pages read their translation from a `pt-BR/` folder next to the English page
+  (`plantcraft_sdk.i18n.localized`). Words follow one glossary (docs/translations-glossary-pt-BR.md).
+  `make ci` now fails on a text missing from a catalog (`i18n_check --strict`). Still off by
+  default: an installation turns it on with `PLANTCRAFT_TRANSLATIONS=1`.
+
+### Added
+
 - **One translation mechanism for the whole suite (SDK 0.102.0, ui 0.106.0).** Every app now
   translates the same way as the platform: `createI18n` in `@plantcraft/ui` for the screens and
   `use_catalogs` with `LanguageMiddleware` in `plantcraft_sdk.i18n` for the servers, each module

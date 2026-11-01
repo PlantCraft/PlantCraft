@@ -253,11 +253,12 @@ def start_draft_rules(body: StartIn, rt: RuntimeDep, user: EditorUser) -> dict[s
     created = kept = 0
     for unit in body.units:
         for starter in STARTER_RULES:
-            name = starter["name"].format(unit=names.get(unit, unit))[:120]
+            name = t(starter["name"], unit=names.get(unit, unit))[:120]
             if name in taken:
                 kept += 1
                 continue
-            legacy = {**starter, "name": name, "enabled": False, "under": [unit]}
+            words = {"cause": t(starter["cause"]), "action": t(starter["action"])}
+            legacy = {**starter, **words, "name": name, "enabled": False, "under": [unit]}
             draft = RuleDraft.model_validate(from_legacy(legacy))
             create_rule(draft, rt, user)
             taken.add(name)

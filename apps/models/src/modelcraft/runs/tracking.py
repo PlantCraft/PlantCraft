@@ -30,6 +30,8 @@ from typing import Any
 import numpy as np
 from plantcraft_sdk.server.store import Store
 
+from modelcraft.i18n import t
+
 LOGGER = logging.getLogger(__name__)
 KEEP_RUNS = 20
 TICK_SECONDS = 30.0
@@ -313,7 +315,7 @@ class Tracker:
             try:
                 written = int(client.put_series(items).get("written") or 0)
             except Exception as exc:  # noqa: BLE001 - kept on the tracking; the next run writes
-                detail = f"The error signals were not written: {exc}"[:300]
+                detail = t("The error signals were not written: {error}", error=exc)[:300]
                 LOGGER.warning("Tracking %s: %s", tracking["id"], detail)
         opened = self._judge(client, tracking, metrics)
         last = {"status": "done", "run_id": run["id"], "at": at, "metrics": metrics,
@@ -339,11 +341,17 @@ class Tracker:
         changes = []
         for name in sorted(now - before):
             mae = metrics[name]["mae"]
-            changes.append(("start", name, f"{tracking['name']}: {name} off the plant by "
-                            f"{mae:.4g} on average (limit {float(limits[name]):.4g})", mae))  # fmt: skip
+            text = t(
+                "{tracking}: {name} off the plant by {mae} on average (limit {limit})",
+                tracking=tracking["name"],
+                name=name,
+                mae=f"{mae:.4g}",
+                limit=f"{float(limits[name]):.4g}",
+            )
+            changes.append(("start", name, text, mae))
         for name in sorted(before - now):
-            changes.append(("end", name, f"{tracking['name']}: {name} back with the plant",
-                            (metrics.get(name) or {}).get("mae")))  # fmt: skip
+            text = t("{tracking}: {name} back with the plant", tracking=tracking["name"], name=name)
+            changes.append(("end", name, text, (metrics.get(name) or {}).get("mae")))
         if client is not None and changes:
             try:
                 self._events(

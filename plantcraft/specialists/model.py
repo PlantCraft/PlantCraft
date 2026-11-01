@@ -75,7 +75,7 @@ class ChatModel:
         self.usage: dict[str, int] = empty_usage()
         if provider == "openai":
             if not model:
-                raise ValueError("Name the model to use.")
+                raise ValueError(t("Name the model to use."))
             base = (endpoint or OPENAI_ENDPOINT).rstrip("/")
             openai = urllib.parse.urlsplit(base).hostname == "api.openai.com"
             # OpenAI's reasoning models refuse tools in chat completions ("Function tools with
@@ -102,12 +102,12 @@ class ChatModel:
             payload = self._call(system, conversation, tools if tool else None)
             content = payload.get("content") or []
             if payload.get("stop_reason") == "refusal":
-                raise RuntimeError("The model refused to answer.")
+                raise RuntimeError(t("The model refused to answer."))
             calls = [block for block in content if block.get("type") == "tool_use"]
             text = _text(content)
             if payload.get("stop_reason") != "tool_use" or not calls or tool is None:
                 if not text:
-                    raise RuntimeError("Empty answer from the model.")
+                    raise RuntimeError(t("Empty answer from the model."))
                 return text
             conversation.append({"role": "assistant", "content": content})
             results = []
@@ -134,7 +134,7 @@ class ChatModel:
         # Out of tool rounds: an answer with what it has.
         text = _text(self._call(system, conversation, None).get("content") or [])
         if not text:
-            raise RuntimeError("Empty answer from the model.")
+            raise RuntimeError(t("Empty answer from the model."))
         return text
 
     def _call(
@@ -704,7 +704,7 @@ def _from_openai(payload: dict[str, Any]) -> dict[str, Any]:
 
     choices = payload.get("choices") or []
     if not choices:
-        raise RuntimeError("Empty answer from the model.")
+        raise RuntimeError(t("Empty answer from the model."))
     message = choices[0].get("message") or {}
     content: list[dict[str, Any]] = []
     if message.get("content"):

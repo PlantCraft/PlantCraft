@@ -10,7 +10,7 @@ ci: deps standard lint frontend test
 # targets, vendored SDK hash; run as a module so $(PYTHON) finds it.
 standard:
 	$(PYTHON) -m plantcraft_sdk.app_cli check .
-	$(PYTHON) -m plantcraft_sdk.i18n_check .
+	$(PYTHON) -m plantcraft_sdk.i18n_check --strict .
 
 # plantcraft-sdk is not on any index: it is installed from the wheel in vendor/ only, always
 # reinstalled so a copy left by another folder's job on a shared runner never stands in for it.

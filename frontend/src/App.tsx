@@ -371,7 +371,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const apps: SuiteApp[] = [
     { id: "desk", name: "Desk", url: "/" },
     { id: "processcraft", name: "PlantCraft", url: "/" },
-    ...(operate || sponsorOnly ? [{ id: "operations", name: "Operations", url: sponsorOnly ? "/ops/partners" : "/health" }] : []),
+    ...(operate || sponsorOnly ? [{ id: "operations", name: t("Operations"), url: sponsorOnly ? "/ops/partners" : "/health" }] : []),
     ...data.apps.filter((app) => app.access).map((app) => ({ id: app.id, name: app.name, url: app.url, version: app.version })),
   ];
   // Only the apps in frames have an address prefix: Desk, PlantCraft and Operations are pages of

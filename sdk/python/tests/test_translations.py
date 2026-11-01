@@ -114,3 +114,20 @@ def test_check_counts_missing_texts_and_fails_only_when_strict(tmp_path, capsys)
 def test_check_fails_on_a_broken_catalog(tmp_path):
     _module(tmp_path, {"Open {name}": "Abrir {nome}"})
     assert i18n_check.main([str(tmp_path / "app")]) == 1
+
+
+def test_a_document_is_read_in_the_current_language_when_translated(app_catalog, tmp_path):
+    english = tmp_path / "help" / "alarms.md"
+    english.parent.mkdir()
+    english.write_text("# Alarms\n")
+    other = tmp_path / "help" / "rules.md"
+    other.write_text("# Rules\n")
+    (tmp_path / "help" / "pt-BR").mkdir()
+    (tmp_path / "help" / "pt-BR" / "alarms.md").write_text("# Alarmes\n")
+    assert i18n.localized(english) == english
+    token = i18n.set_language("pt-BR")
+    try:
+        assert i18n.localized(english).read_text() == "# Alarmes\n"
+        assert i18n.localized(other) == other
+    finally:
+        i18n.reset_language(token)

@@ -18,6 +18,7 @@ from urllib.parse import urljoin, urlsplit
 import requests
 
 from plantcraft.apps import package as pkg
+from plantcraft.i18n import t
 
 TIMEOUT = (5, 30)
 HEALTH_TIMEOUT = 4
@@ -110,7 +111,7 @@ def check_health(url: str) -> dict[str, Any]:
         return {
             "ok": None,
             "status": None,
-            "detail": "Served through this server's proxy; not checked from PlantCraft.",
+            "detail": t("Served through this server's proxy; not checked from PlantCraft."),
             "checked_at": checked,
         }
     try:
@@ -122,7 +123,9 @@ def check_health(url: str) -> dict[str, Any]:
         return {
             "ok": False,
             "status": None,
-            "detail": f"No answer from {_safe(url)} ({type(exc).__name__}).",
+            "detail": t(
+                "No answer from {url} ({error}).", url=_safe(url), error=type(exc).__name__
+            ),
             "checked_at": checked,
         }
     return {

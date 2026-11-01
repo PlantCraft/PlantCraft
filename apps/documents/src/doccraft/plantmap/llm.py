@@ -17,6 +17,7 @@ from typing import Any
 
 from plantcraft_sdk.client import PlantCraftError
 
+from doccraft.i18n import t
 from doccraft.plantmap.reader import tags as isa
 
 USE = "diagram-read"
@@ -58,7 +59,7 @@ def ask(client: Any, png: bytes, result: dict[str, Any]) -> dict[str, Any]:
     not the JSON asked for)."""
 
     if client is None:
-        raise NoModel("This installation gave Documents no app key, so it cannot ask a model.")
+        raise NoModel(t("This installation gave Documents no app key, so it cannot ask a model."))
     found = {
         "items": [{"tag": i["tag"], "cls": i["cls"]} for i in result["items"] if i.get("tag")],
         "relations": [{k: r[k] for k in ("from", "type", "to")} for r in result["relations"]],
@@ -76,7 +77,7 @@ def ask(client: Any, png: bytes, result: dict[str, Any]) -> dict[str, Any]:
     text = str((answer or {}).get("text") or "")
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if not match:
-        raise ValueError("The model's answer is not JSON.")
+        raise ValueError(t("The model's answer is not JSON."))
     return json.loads(match.group(0))
 
 

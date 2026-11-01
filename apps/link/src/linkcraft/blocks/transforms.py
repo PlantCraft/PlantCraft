@@ -13,6 +13,7 @@ from plantcraft_sdk.blocks import Block, BlockDocs, BlockSpec, NoParameters, inp
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from linkcraft.blocks.base import clean, condition, numeric, seconds
+from linkcraft.i18n import t
 
 
 class MovingAverage(BaseModel):
@@ -135,7 +136,10 @@ def _parsed(text: str) -> ast.expr:
                 check(argument)
         else:
             raise ValueError(
-                "use a, b, c, d, numbers, + - * / ** and " + ", ".join(sorted(FUNCTIONS))
+                t(
+                    "Use a, b, c, d, numbers, + - * / ** and {functions}.",
+                    functions=", ".join(sorted(FUNCTIONS)),
+                )
             )
 
     check(tree)
@@ -160,7 +164,7 @@ class Expression(BaseModel):
         try:
             _parsed(value)
         except SyntaxError as exc:
-            raise ValueError(f"not a formula: {exc.msg}") from exc
+            raise ValueError(t("Not a formula: {error}", error=exc.msg)) from exc
         return value.strip()
 
 
@@ -178,7 +182,7 @@ def _expression(inputs: dict[str, Any], parameters: Any, _ctx: Any) -> pd.Series
             return float(node.value)
         if isinstance(node, ast.Name):
             if node.id not in values:
-                raise ValueError(f"the expression uses {node.id}, which is not wired")
+                raise ValueError(t("The expression uses {name}, which is not wired.", name=node.id))
             return values[node.id]
         call = node  # checked by _parsed: a call of FUNCTIONS
         return FUNCTIONS[call.func.id](*(evaluate(item) for item in call.args))  # type: ignore[attr-defined]
@@ -188,7 +192,7 @@ def _expression(inputs: dict[str, Any], parameters: Any, _ctx: Any) -> pd.Series
     if not isinstance(found, pd.Series):
         first = next(iter(values.values()), None)
         if first is None:
-            raise ValueError("wire at least one input")
+            raise ValueError(t("Wire at least one input."))
         found = pd.Series(float(found), index=first.index)
     return found.replace([np.inf, -np.inf], np.nan)
 
@@ -249,8 +253,13 @@ class EngineeringUnit(BaseModel):
     def _same_quantity(self) -> EngineeringUnit:
         if QUANTITY[self.from_unit] != QUANTITY[self.to_unit]:
             raise ValueError(
-                f"{self.from_unit} is a {QUANTITY[self.from_unit]}, "
-                f"{self.to_unit} a {QUANTITY[self.to_unit]}"
+                t(
+                    "{source} is a {quantity}, {target} a {other}.",
+                    source=self.from_unit,
+                    quantity=QUANTITY[self.from_unit],
+                    target=self.to_unit,
+                    other=QUANTITY[self.to_unit],
+                )
             )
         return self
 

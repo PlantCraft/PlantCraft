@@ -35,6 +35,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from alarmcraft.alarms.model import Priority
 from alarmcraft.alarms.notices import CLOCK, LIMIT_PER_HOUR, LOCAL, minutes_of, valid_zone, zone_of
+from alarmcraft.i18n import t
 
 CONSOLE_ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 
@@ -58,7 +59,9 @@ class Console(BaseModel):
     def _id(cls, value: str) -> str:
         value = (value or "").strip().lower()
         if not CONSOLE_ID.match(value):
-            raise ValueError("a console id is lowercase letters, digits and dashes, like board-1")
+            raise ValueError(
+                t("a console id is lowercase letters, digits and dashes, like board-1")
+            )
         return value
 
     @field_validator("name")
@@ -66,7 +69,7 @@ class Console(BaseModel):
     def _name(cls, value: str) -> str:
         value = " ".join((value or "").split())
         if not value:
-            raise ValueError("a console has a name")
+            raise ValueError(t("a console has a name"))
         return value
 
     @field_validator("areas", "operators")
@@ -120,7 +123,7 @@ class PhilosophyDraft(BaseModel):
         for item in value:
             item = (item or "").strip()
             if not CLOCK.match(item) or item == "24:00":
-                raise ValueError("times of day as HH:MM, like 07:00")
+                raise ValueError(t("times of day as HH:MM, like 07:00"))
             if item not in found:
                 found.append(item)
         return sorted(found, key=minutes_of)
@@ -140,19 +143,19 @@ class PhilosophyDraft(BaseModel):
         self.immediate = list(dict.fromkeys(self.immediate))
         self.digest = list(dict.fromkeys(self.digest))
         if set(self.immediate) & set(self.digest):
-            raise ValueError("a priority goes at once or waits for the summary, not both")
+            raise ValueError(t("a priority goes at once or waits for the summary, not both"))
         if "critical" in self.digest:
-            raise ValueError("critical alarms never wait for the summary")
+            raise ValueError(t("critical alarms never wait for the summary"))
         if abs(self.target_high + self.target_medium + self.target_low - 100.0) > 0.5:
-            raise ValueError("the target shares of the priorities add up to 100 %")
+            raise ValueError(t("the target shares of the priorities add up to 100 %"))
         if self.chatter_hour < self.chatter_minute:
-            raise ValueError("chattering in an hour counts at least as many as in a minute")
+            raise ValueError(t("chattering in an hour counts at least as many as in a minute"))
         ids = [console.id for console in self.consoles]
         if len(set(ids)) != len(ids):
-            raise ValueError("each console has its own id")
+            raise ValueError(t("each console has its own id"))
         names = [console.name.casefold() for console in self.consoles]
         if len(set(names)) != len(names):
-            raise ValueError("each console has its own name")
+            raise ValueError(t("each console has its own name"))
         return self
 
     def console(self, console_id: str) -> Console | None:

@@ -50,7 +50,7 @@ Cada pessoa pode abrir todos os apps ou só alguns.
 
 ### Nível de acesso
 
-Administrador, editor, leitor ou só painéis: o que uma pessoa pode alterar,
+Administrador, editor, leitor ou só dashboards: o que uma pessoa pode alterar,
 aqui e nos apps.
 
 ### Token e chave de app

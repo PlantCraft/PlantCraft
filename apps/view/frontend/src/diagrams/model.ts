@@ -3,6 +3,8 @@
  * path of a line, and what a binding's value means at any instant of the window (the same rules
  * as `diagrams/read.py` on the server, so playback colours the plant as live view does). */
 
+import { t } from "../i18n";
+
 export type State = "ok" | "warning" | "alarm" | "unknown";
 export type Dir = "n" | "s" | "e" | "w";
 export type Point = [number, number];
@@ -90,7 +92,7 @@ export interface DiagramData {
 
 export const STALE_SECONDS = 900;
 
-export function emptyDiagram(name = "New diagram"): DiagramDraft {
+export function emptyDiagram(name = t("New process display")): DiagramDraft {
   return { name, description: "", folder_id: "", tags: [], width: 1200, height: 700, grid: 10, refresh_seconds: 15, default_window: "1h", elements: [] };
 }
 
@@ -122,7 +124,7 @@ export function onPage<T extends DiagramDraft>(diagram: T, page: string): T {
 /** A diagram that has pages: a one-page diagram first gets its page (named "Page 1"), then a new
  * one is added after it. Returns the diagram and the new page's id. */
 export function withPage<T extends DiagramDraft>(diagram: T, name: string): [T, string] {
-  const pages = diagram.pages?.length ? diagram.pages : [{ id: "p1", name: "Page 1" }];
+  const pages = diagram.pages?.length ? diagram.pages : [{ id: "p1", name: t("Page {n}", { n: 1 }) }];
   const first = pages[0].id;
   const elements = diagram.pages?.length ? diagram.elements : diagram.elements.map((element) => ({ ...element, page: first }));
   let n = pages.length + 1;

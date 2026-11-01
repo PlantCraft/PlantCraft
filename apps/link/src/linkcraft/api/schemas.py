@@ -280,7 +280,7 @@ class CalibratePayload(BaseModel):
     @model_validator(mode="after")
     def _period(self) -> CalibratePayload:
         if self.end <= self.start:
-            raise ValueError("the period ends after it starts")
+            raise ValueError(t("The period ends after it starts."))
         return self
 
 

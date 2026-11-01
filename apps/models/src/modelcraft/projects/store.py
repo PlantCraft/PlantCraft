@@ -237,14 +237,12 @@ class ProjectStore(Store):
     def _writable(self, project_id: str, by: str) -> dict[str, Any]:
         project = self._existing(project_id)
         if project["example"] and by != SYSTEM:
-            what = "block library" if project.get("kind") == "library" else "example"
-            raise ReadOnly(
-                t(
-                    "{name} is an {what} Models keeps as it ships it: duplicate it to change it.",
-                    name=project["name"],
-                    what=what,
-                )
+            text = (
+                "{name} is a block library Models keeps as it ships it: duplicate it to change it."
+                if project.get("kind") == "library"
+                else "{name} is an example Models keeps as it ships it: duplicate it to change it."
             )
+            raise ReadOnly(t(text, name=project["name"]))
         return project
 
     def examples(self, kind: str = "project") -> list[dict[str, Any]]:

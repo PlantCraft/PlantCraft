@@ -48,6 +48,7 @@ from alarmcraft.alarms.model import (
 from alarmcraft.alarms.notices import NotifyDraft
 from alarmcraft.alarms.records import ALARM_ID, Conflict, slug
 from alarmcraft.alarms.simple import SimpleLogic, to_diagram
+from alarmcraft.i18n import t
 
 RULE_ID = ALARM_ID
 MAX_ASSETS = 500
@@ -61,7 +62,7 @@ def _ids(values: list[str], limit: int = 300) -> list[str]:
     for value in values:
         value = str(value or "").strip()
         if not value or len(value) > limit or any(ord(ch) < 32 for ch in value):
-            raise ValueError("ids of 1 to 300 characters")
+            raise ValueError(t("ids of 1 to 300 characters"))
         if value not in found:
             found.append(value)
     return found
@@ -93,15 +94,15 @@ class Where(BaseModel):
     def _executions(cls, value: list[str]) -> list[str]:
         found = _ids(value)
         if any(not EXECUTION.match(item) for item in found):
-            raise ValueError("an execution is <app>:<id>, like linkcraft:valve-health")
+            raise ValueError(t("an execution is <app>:<id>, like linkcraft:valve-health"))
         return found
 
     @model_validator(mode="after")
     def _per(self) -> Where:
         if self.per == "execution" and not self.executions:
-            raise ValueError("one alarm per execution needs the executions")
+            raise ValueError(t("one alarm per execution needs the executions"))
         if self.anywhere and (self.assets or self.under or self.types or self.executions):
-            raise ValueError("any asset, or the assets chosen, not both")
+            raise ValueError(t("any asset, or the assets chosen, not both"))
         return self
 
     @property
@@ -144,7 +145,7 @@ class RuleDraft(BaseModel):
     def _name(cls, value: str) -> str:
         value = (value or "").strip()
         if not NAME.match(value):
-            raise ValueError("a name of 1 to 120 characters")
+            raise ValueError(t("a name of 1 to 120 characters"))
         return value
 
     @field_validator("owner")
@@ -152,7 +153,7 @@ class RuleDraft(BaseModel):
     def _owner(cls, value: str | None) -> str | None:
         value = (value or "").strip()
         if value and not OWNER.match(value):
-            raise ValueError("an owner is user:<username> or group:<id>")
+            raise ValueError(t("an owner is user:<username> or group:<id>"))
         return value or None
 
     @field_validator("cause", "consequence", "action")
@@ -165,7 +166,7 @@ class RuleDraft(BaseModel):
         self.area = (self.area or "").strip() or None
         if self.editor == "simple":
             if self.simple is None:
-                raise ValueError("the Simple form needs at least one condition")
+                raise ValueError(t("the Simple form needs at least one condition"))
             self.diagram = to_diagram(self.simple)
         else:
             self.simple = None
@@ -173,9 +174,9 @@ class RuleDraft(BaseModel):
         if not plan.valid:
             raise ValueError(" ".join(plan.errors[:3]))
         if self.editor == "python" and not nodes(self.diagram, PYTHON_BLOCK):
-            raise ValueError("a Python rule has a Python block")
+            raise ValueError(t("a Python rule has a Python block"))
         if relative(self.diagram) and self.where.empty:
-            raise ValueError("this asset's values and events need a rule over assets")
+            raise ValueError(t("this asset's values and events need a rule over assets"))
         return self
 
     @property
@@ -245,9 +246,11 @@ def diagram_words(diagram: dict[str, Any]) -> str:
         for node in nodes(diagram, VALUE_BLOCK)
     ]
     if nodes(diagram, PYTHON_BLOCK):
-        return "Python: " + (", ".join(values) if values else "no value wired")
+        return t("Python: {values}", values=", ".join(values) if values else t("no value wired"))
     count = len([node for node in diagram.get("nodes") or [] if node.get("block") != ALARM_BLOCK])
-    return f"Diagram of {count} blocks" + (f" on {', '.join(values[:4])}" if values else "")
+    if values:
+        return t("Diagram of {count} blocks on {values}", count=count, values=", ".join(values[:4]))
+    return t("Diagram of {count} blocks", count=count)
 
 
 def alarm_id_for(rule_id: str, key: str, *, single: bool) -> str:

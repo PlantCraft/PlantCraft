@@ -13,6 +13,8 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from typing import Any
 
+from doccraft.i18n import t
+
 NUMBER = "PLANT-MAP-SUMMARY"
 
 
@@ -39,7 +41,7 @@ def _flow_order(tags: list[str], feeds: list[tuple[str, str]]) -> list[str]:
 
 
 def _join(values: list[str]) -> str:
-    return ", ".join(values) if values else "none found"
+    return ", ".join(values) if values else t("none found")
 
 
 def summary_markdown(plant: dict[str, Any], scope: str, now: datetime | None = None) -> str:
@@ -52,7 +54,7 @@ def summary_markdown(plant: dict[str, Any], scope: str, now: datetime | None = N
     by: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
     for r in rel:
         a, kind, b = r["from"], r["type"], r["to"]
-        note = "" if r["confidence"] != "low" else " (unsure)"
+        note = "" if r["confidence"] != "low" else t(" (unsure)")
         by[a][kind].append(b + note)
         by[b]["by " + kind].append(a + note)
     sheets = {s["sheet"]: s for s in plant["sheets"]}
@@ -60,91 +62,132 @@ def summary_markdown(plant: dict[str, Any], scope: str, now: datetime | None = N
     def drawn_on(item: dict[str, Any]) -> str:
         seen = []
         for p in item["places"]:
-            name = f"{p['sheet']} ({p['doc_title'] or 'untitled'}, page {p['page']})"
+            name = t(
+                "{sheet} ({title}, page {page})",
+                sheet=p["sheet"],
+                title=p["doc_title"] or t("untitled"),
+                page=p["page"],
+            )
             if name not in seen:
                 seen.append(name)
         return _join(seen)
 
     s = plant["summary"]
     out = [
-        f"# Plant summary from the P&IDs ({scope})",
+        t("# Plant summary from the P&IDs ({scope})", scope=scope),
         "",
-        f"Made by PlantCraft Documents on {now.strftime('%Y-%m-%d %H:%M')} UTC from the plant map: "
-        f"{s['sheets']} sheets, {s['equipment']} pieces of equipment, {s['instruments']} "
-        f"instruments, {s['loops']} control loops ({s['loops_complete']} complete) and "
-        f"{s['feeds']} process lines between equipment. The drawings were read by the drawing "
-        "reader with no language model; what people marked Wrong on the map is left out, and "
-        "what the reader was unsure of is marked (unsure). Check a line on its sheet before "
-        "acting on it.",
+        t(
+            "Made by PlantCraft Documents on {when} UTC from the plant map: {sheets} sheets, "
+            "{equipment} pieces of equipment, {instruments} instruments, {loops} control loops "
+            "({complete} complete) and {feeds} process lines between equipment. The drawings "
+            "were read by the drawing reader with no language model; what people marked Wrong on "
+            "the map is left out, and what the reader was unsure of is marked (unsure). Check a "
+            "line on its sheet before acting on it.",
+            when=now.strftime("%Y-%m-%d %H:%M"),
+            sheets=s["sheets"],
+            equipment=s["equipment"],
+            instruments=s["instruments"],
+            loops=s["loops"],
+            complete=s["loops_complete"],
+            feeds=s["feeds"],
+        ),
         "",
     ]
+    no_unit = t("No unit")
     units: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for item in plant["items"]:
-        units[item["unit"] or "No unit"].append(item)
+        units[item["unit"] or no_unit].append(item)
     loops_by_unit: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for loop in plant["loops"]:
-        loops_by_unit[loop["unit"] or "No unit"].append(loop)
+        loops_by_unit[loop["unit"] or no_unit].append(loop)
     feeds = [(r["from"], r["to"]) for r in rel if r["type"] == "feeds"]
     for unit in sorted(units):
         members = units[unit]
         areas = sorted({i["area"] for i in members if i["area"]})
         equipment = [i["tag"] for i in members if i["family"] == "equipment"]
         order = _flow_order(equipment, feeds)
-        out += [f"## Unit {unit}", ""]
+        out += [t("## Unit {unit}", unit=unit), ""]
         if areas:
-            out += [f"Areas: {', '.join(areas)}.", ""]
-        out += [f"Equipment in flow order: {_join(order)}.", ""]
+            out += [t("Areas: {areas}.", areas=", ".join(areas)), ""]
+        out += [t("Equipment in flow order: {order}.", order=_join(order)), ""]
         for tag in order:
             item = items[tag]
             links = by[tag]
             out += [
-                f"### {tag} ({item['cls'].replace('_', ' ')}, unit {unit})",
+                t(
+                    "### {tag} ({cls}, unit {unit})",
+                    tag=tag,
+                    cls=item["cls"].replace("_", " "),
+                    unit=unit,
+                ),
                 "",
-                f"- Feeds: {_join(links['feeds'])}.",
-                f"- Fed by: {_join(links['by feeds'])}.",
-                f"- Measured by: {_join(links['by measures'])}.",
-                f"- Valves on its lines: {_join(links['by on'])}.",
-                f"- Drawn on: {drawn_on(item)}.",
+                t("- Feeds: {tags}.", tags=_join(links["feeds"])),
+                t("- Fed by: {tags}.", tags=_join(links["by feeds"])),
+                t("- Measured by: {tags}.", tags=_join(links["by measures"])),
+                t("- Valves on its lines: {tags}.", tags=_join(links["by on"])),
+                t("- Drawn on: {sheets}.", sheets=drawn_on(item)),
             ]
             if item["confidence"] == "low":
-                out.append(f"- Unsure: {item['why']}.")
+                out.append(t("- Unsure: {why}.", why=item["why"]))
             out.append("")
         loops = loops_by_unit.get(unit, [])
         if loops:
-            out += [f"### Control loops of unit {unit}", ""]
+            out += [t("### Control loops of unit {unit}", unit=unit), ""]
             for loop in loops:
+                text = (
+                    "- {loop}: measures with {transmitters}, moves {valves}, on {equipment}."
+                    if loop["complete"]
+                    else "- {loop}: measures with {transmitters}, moves {valves}, on {equipment} "
+                    "(incomplete on the drawings)."
+                )
                 out.append(
-                    f"- {loop['loop']}: measures with {_join(loop['transmitters'])}, moves "
-                    f"{_join(loop['valves'])}, on {_join(loop['equipment'])}"
-                    + ("." if loop["complete"] else " (incomplete on the drawings).")
+                    t(
+                        text,
+                        loop=loop["loop"],
+                        transmitters=_join(loop["transmitters"]),
+                        valves=_join(loop["valves"]),
+                        equipment=_join(loop["equipment"]),
+                    )
                 )
             out.append("")
         instruments = [i for i in members if i["family"] == "instrument"]
         if instruments:
-            out += [f"### Instruments of unit {unit}", ""]
+            out += [t("### Instruments of unit {unit}", unit=unit), ""]
             for i in sorted(instruments, key=lambda i: i["tag"]):
                 parts = [
                     f"{k} {_join(v)}" for k, v in by[i["tag"]].items() if not k.startswith("by ")
                 ]
                 out.append(
-                    f"- {i['tag']} ({i['cls'].replace('_', ' ')}): "
-                    + ("; ".join(parts) if parts else "no line found")
-                    + f". Drawn on {drawn_on(i)}."
+                    t(
+                        "- {tag} ({cls}): {lines}. Drawn on {sheets}.",
+                        tag=i["tag"],
+                        cls=i["cls"].replace("_", " "),
+                        lines="; ".join(parts) if parts else t("no line found"),
+                        sheets=drawn_on(i),
+                    )
                 )
             out.append("")
     if sheets:
-        out += ["## Sheets read", ""]
+        out += [t("## Sheets read"), ""]
         for name, sheet in sheets.items():
             out.append(
-                f"- {name}: {sheet['title'] or 'untitled'}, unit {sheet['unit'] or 'none'}, "
-                f"{len(sheet['items'])} tags."
+                t(
+                    "- {name}: {title}, unit {unit}, {n} tags.",
+                    name=name,
+                    title=sheet["title"] or t("untitled"),
+                    unit=sheet["unit"] or t("none"),
+                    n=len(sheet["items"]),
+                )
             )
         out.append("")
     if s["doubt_count"]:
         out += [
-            "## To check",
+            t("## To check"),
             "",
-            f"{s['doubt_count']} findings are unsure; the plant map lists them under To check.",
+            t(
+                "{n} findings are unsure; the plant map lists them under To check.",
+                n=s["doubt_count"],
+            ),
             "",
         ]
     return "\n".join(out)

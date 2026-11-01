@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 
+from modelcraft.i18n import t
 from modelcraft.modelica.source import ClassDef, Token, find, flatten, outline, tokens
 
 IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -39,22 +40,22 @@ def _extent(extent) -> str:
     try:
         (x1, y1), (x2, y2) = extent
     except (TypeError, ValueError) as exc:
-        raise EditError("An extent is two points.") from exc
+        raise EditError(t("An extent is two points.")) from exc
     for value in (x1, y1, x2, y2):
         if not isinstance(value, (int, float)) or isinstance(value, bool) or abs(value) > 1e6:
-            raise EditError("An extent is made of numbers.")
+            raise EditError(t("An extent is made of numbers."))
     return "{{%s,%s},{%s,%s}}" % tuple(_number(v) for v in (x1, y1, x2, y2))
 
 
 def _points(points) -> str:
     if not isinstance(points, list) or len(points) > 200:
-        raise EditError("A line is a list of up to 200 points.")
+        raise EditError(t("A line is a list of up to 200 points."))
     out = []
     for point in points:
         if not (isinstance(point, list) and len(point) == 2) or not all(
             isinstance(v, (int, float)) and not isinstance(v, bool) and abs(v) < 1e6 for v in point
         ):
-            raise EditError("A point is two numbers.")
+            raise EditError(t("A point is two numbers."))
         out.append("{%s,%s}" % (_number(point[0]), _number(point[1])))
     return "{" + ",".join(out) + "}"
 
@@ -74,9 +75,11 @@ def placement(extent, rotation: float = 0.0, origin=None) -> str:
 def _class(text: str, name: str) -> tuple[ClassDef, list[Token]]:
     found = find(text, name)
     if found is None:
-        raise EditError(f"Class {name} is not in this file.")
+        raise EditError(t("Class {name} is not in this file.", name=name))
     if found.short_class:
-        raise EditError(f"{name} is a short class definition: it has no diagram to edit.")
+        raise EditError(
+            t("{name} is a short class definition: it has no diagram to edit.", name=name)
+        )
     return found, tokens(text)
 
 
@@ -273,12 +276,12 @@ def add_component(
     text: str, cls_name: str, type_name: str, name: str, extent, rotation: float = 0.0
 ) -> str:
     if not TYPE_NAME.match(type_name or ""):
-        raise EditError("Not a class name.")
+        raise EditError(t("Not a class name."))
     if not IDENT.match(name or ""):
-        raise EditError("A component name is letters, digits and _, starting with a letter.")
+        raise EditError(t("A component name is letters, digits and _, starting with a letter."))
     cls, items = _class(text, cls_name)
     if any(_declares(items, s, name) for s in _statements(items, _own(items, cls))):
-        raise EditError(f"{name} already exists in {cls_name}.")
+        raise EditError(t("{name} already exists in {cls_name}.", name=name, cls_name=cls_name))
     declaration, _ = _insert_points(text, items, cls)
     indent = _indent(text, cls)
     declared = f"{indent}{type_name} {name} annotation({placement(extent, rotation)});"
@@ -302,20 +305,20 @@ def unique_name(text: str, cls_name: str, base: str) -> str:
         candidate = stem if number == 0 else f"{stem}{number}"
         if not any(_declares(items, s, candidate) for s in statements):
             return candidate
-    raise EditError("No free name.")
+    raise EditError(t("No free name."))
 
 
 def connect(text: str, cls_name: str, left: str, right: str, points, color=(0, 0, 127)) -> str:
     for ref in (left, right):
         if not CONNECTOR_REF.match(ref or ""):
-            raise EditError("A connection joins two connectors (component.connector).")
+            raise EditError(t("A connection joins two connectors (component.connector)."))
     if left == right:
-        raise EditError("A connector cannot be connected to itself.")
+        raise EditError(t("A connector cannot be connected to itself."))
     cls, items = _class(text, cls_name)
     for statement in _statements(items, _own(items, cls)):
         pair = _connect(items, statement)
         if pair and set(pair) == {left, right}:
-            raise EditError("These connectors are already connected.")
+            raise EditError(t("These connectors are already connected."))
     _, equation = _insert_points(text, items, cls)
     indent = _indent(text, cls)
     red, green, blue = (max(0, min(255, int(c))) for c in color)
@@ -344,7 +347,7 @@ def _statement_span(text: str, items: list[Token], statement: list[int]) -> tupl
 
 def delete_component(text: str, cls_name: str, name: str) -> str:
     if not IDENT.match(name or ""):
-        raise EditError("Not a component name.")
+        raise EditError(t("Not a component name."))
     cls, items = _class(text, cls_name)
     statements = _statements(items, _own(items, cls))
     spans = []
@@ -354,7 +357,10 @@ def delete_component(text: str, cls_name: str, name: str) -> str:
                 items, statement
             ):
                 raise EditError(
-                    f"{name} is declared together with other components: delete it in the text."
+                    t(
+                        "{name} is declared together with other components: delete it in the text.",
+                        name=name,
+                    )
                 )
             spans.append(_statement_span(text, items, statement))
         pair = _connect(items, statement)
@@ -363,7 +369,13 @@ def delete_component(text: str, cls_name: str, name: str) -> str:
         ):
             spans.append(_statement_span(text, items, statement))
     if not spans:
-        raise EditError(f"{name} is not declared in {cls_name} (it may be inherited).")
+        raise EditError(
+            t(
+                "{name} is not declared in {cls_name} (it may be inherited).",
+                name=name,
+                cls_name=cls_name,
+            )
+        )
     for start, end in sorted(spans, reverse=True):
         text = text[:start] + text[end:]
     return text
@@ -388,7 +400,7 @@ def delete_connection(text: str, cls_name: str, left: str, right: str) -> str:
         if pair and set(pair) == {left, right}:
             start, end = _statement_span(text, items, statement)
             return text[:start] + text[end:]
-    raise EditError("This connection is not in the class's text (it may be inherited).")
+    raise EditError(t("This connection is not in the class's text (it may be inherited)."))
 
 
 def _matching(items: list[Token], open_index: int) -> int:
@@ -400,14 +412,14 @@ def _matching(items: list[Token], open_index: int) -> int:
             depth -= 1
             if depth == 0:
                 return i
-    raise EditError("Unbalanced brackets.")
+    raise EditError(t("Unbalanced brackets."))
 
 
 def _declaration(text: str, cls_name: str, name: str) -> tuple[list[Token], list[int], int]:
     """The tokens, the declaration statement of ``name`` and the index of its name token."""
 
     if not IDENT.match(name or ""):
-        raise EditError("Not a component name.")
+        raise EditError(t("Not a component name."))
     cls, items = _class(text, cls_name)
     for statement in _statements(items, _own(items, cls)):
         if _declares(items, statement, name):
@@ -419,7 +431,13 @@ def _declaration(text: str, cls_name: str, name: str) -> tuple[list[Token], list
                     depth -= 1
                 elif depth == 0 and items[i].text == name and i != statement[0]:
                     return items, statement, i
-    raise EditError(f"{name} is not declared in {cls_name} (it may be inherited).")
+    raise EditError(
+        t(
+            "{name} is not declared in {cls_name} (it may be inherited).",
+            name=name,
+            cls_name=cls_name,
+        )
+    )
 
 
 def move(text: str, cls_name: str, name: str, extent, rotation: float = 0.0, origin=None) -> str:
@@ -461,9 +479,9 @@ def set_modifiers(text: str, cls_name: str, name: str, values: Mapping[str, str 
 
     for key, value in values.items():
         if not CONNECTOR_REF.match(key or "") or "[" in key:
-            raise EditError(f"Not a parameter name: {key}")
+            raise EditError(t("Not a parameter name: {key}", key=key))
         if value not in (None, "") and (not VALUE.match(str(value)) or ";" in str(value)):
-            raise EditError(f"Not a value Models can write for {key}.")
+            raise EditError(t("Not a value Models can write for {name}.", name=key))
     items, statement, name_index = _declaration(text, cls_name, name)
     after = name_index + 1
     while after < len(items) and items[after].text == "[":
@@ -517,7 +535,7 @@ def set_binding(text: str, cls_name: str, name: str, value: str) -> str:
 
     value = value.strip()
     if not value or not VALUE.match(value) or ";" in value or '"' in value:
-        raise EditError(f"Not a value Models can write for {name}.")
+        raise EditError(t("Not a value Models can write for {name}.", name=name))
     items, statement, name_index = _declaration(text, cls_name, name)
     after = name_index + 1
     while after < len(items) and items[after].text in ("[", "("):
@@ -546,7 +564,7 @@ def rename_class(text: str, old: str, new: str, *, within: str) -> str:
     class's own name and its ``end`` (a block duplicated into another library)."""
 
     if not IDENT.match(new or ""):
-        raise EditError("Not a class name.")
+        raise EditError(t("Not a class name."))
     body = re.sub(r"^\s*within\b[^;]*;\s*", "", text, count=1)
     body = re.sub(rf"\b(block|model|class)\s+{re.escape(old)}\b", rf"\1 {new}", body, count=1)
     body = re.sub(rf"\bend\s+{re.escape(old)}\s*;", f"end {new};", body)

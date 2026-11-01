@@ -13,6 +13,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from plantcraft_sdk.i18n import t
+
 
 @dataclass
 class SoftSensor:
@@ -56,7 +58,7 @@ def fit_soft_sensor(
     y = np.asarray(y, dtype=float)
     ok = np.isfinite(F).all(axis=1) & np.isfinite(y)
     if ok.sum() < F.shape[1] + 5:
-        raise ValueError("Too few samples with the target to fit a soft sensor.")
+        raise ValueError(t("Too few samples with the target to fit a soft sensor."))
     mean = F[ok].mean(axis=0)
     scale = F[ok].std(axis=0)
     scale[scale == 0] = 1.0

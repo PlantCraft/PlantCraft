@@ -23,6 +23,7 @@ import math
 import re
 from typing import Any
 
+from modelcraft.i18n import t
 from modelcraft.modelica import edit
 from modelcraft.modelica.declarations import (
     ClassElements,
@@ -103,20 +104,22 @@ def check_settings(values: dict[str, Any]) -> dict[str, Any]:
         start, stop = float(values["start"]), float(values["stop"])
         interval, tolerance = float(values["interval"]), float(values["tolerance"])
     except (KeyError, TypeError, ValueError) as exc:
-        raise EditError("Start, stop, step and tolerance are numbers.") from exc
+        raise EditError(t("Start, stop, step and tolerance are numbers.")) from exc
     if not all(math.isfinite(v) for v in (start, stop, interval, tolerance)):
-        raise EditError("Start, stop, step and tolerance are finite numbers.")
+        raise EditError(t("Start, stop, step and tolerance are finite numbers."))
     if stop <= start:
-        raise EditError("The stop time must come after the start time.")
+        raise EditError(t("The stop time must come after the start time."))
     if interval <= 0:
-        raise EditError("The step must be greater than zero.")
+        raise EditError(t("The step must be greater than zero."))
     if (stop - start) / interval > MAX_INTERVALS:
-        raise EditError(f"Up to {MAX_INTERVALS:,} steps: make the step larger or the time shorter.")
+        raise EditError(
+            t("Up to {n} steps: make the step larger or the time shorter.", n=f"{MAX_INTERVALS:,}")
+        )
     if not 1e-14 <= tolerance <= 0.1:
-        raise EditError("The tolerance is between 1e-14 and 0.1.")
+        raise EditError(t("The tolerance is between 1e-14 and 0.1."))
     solver = values.get("solver", "dassl")
     if solver not in SOLVERS:
-        raise EditError(f"The solver is one of {', '.join(SOLVERS)}.")
+        raise EditError(t("The solver is one of {solvers}.", solvers=", ".join(SOLVERS)))
     return {
         "start": start,
         "stop": stop,
@@ -144,7 +147,7 @@ def _class_annotation_span(text: str, cls_name: str) -> tuple[int, int] | None:
 
     cls = find(text, cls_name)
     if cls is None:
-        raise EditError(f"Class {cls_name} is not in this file.")
+        raise EditError(t("Class {name} is not in this file.", name=cls_name))
     items = tokens(text)
     for statement in edit._statements(items, edit._own(items, cls)):
         if items[statement[0]].text == "annotation":
@@ -228,7 +231,7 @@ def read(text: str, cls_name: str, catalog: dict[str, dict[str, Any]]) -> dict[s
 
     found = class_elements(text, cls_name)
     if found is None:
-        raise EditError(f"Class {cls_name} is not in this file.")
+        raise EditError(t("Class {name} is not in this file.", name=cls_name))
     problems: list[str] = []
     nodes: list[dict[str, Any]] = []
     specs: dict[str, dict[str, Any]] = {}
@@ -236,7 +239,11 @@ def read(text: str, cls_name: str, catalog: dict[str, dict[str, Any]]) -> dict[s
         spec = catalog.get(declaration.type)
         if spec is None or declaration.prefixes or declaration.dims:
             problems.append(
-                f"{declaration.name} ({declaration.type}) is not a block of the libraries."
+                t(
+                    "{name} ({type}) is not a block of the libraries.",
+                    name=declaration.name,
+                    type=declaration.type,
+                )
             )
             continue
         specs[declaration.name] = spec
@@ -244,7 +251,14 @@ def read(text: str, cls_name: str, catalog: dict[str, dict[str, Any]]) -> dict[s
         parameters: dict[str, Any] = {}
         for key, value in declaration.modifiers.items():
             if key not in known:
-                problems.append(f"{declaration.name}.{key} is not a parameter of {spec['name']}.")
+                problems.append(
+                    t(
+                        "{name}.{key} is not a parameter of {block}.",
+                        name=declaration.name,
+                        key=key,
+                        block=spec["name"],
+                    )
+                )
                 continue
             ok, parsed = literal(value)
             parameters[key] = parsed if ok else value
@@ -263,15 +277,23 @@ def read(text: str, cls_name: str, catalog: dict[str, dict[str, Any]]) -> dict[s
     for left, right in found.connections:
         edge = _edge(left, right, specs)
         if edge is None:
-            problems.append(f"connect({left}, {right}) does not join an output to an input.")
+            problems.append(
+                t(
+                    "connect({left}, {right}) does not join an output to an input.",
+                    left=left,
+                    right=right,
+                )
+            )
             continue
         edges.append(edge)
     if found.equations:
-        problems.append("The class has equations of its own: edit it in the code.")
+        problems.append(t("The class has equations of its own: edit it in the code."))
     if found.extends:
-        problems.append("The class extends another class: edit it in the code.")
+        problems.append(t("The class extends another class: edit it in the code."))
     if found.unread:
-        problems.append("The class has declarations the diagram cannot read: edit it in the code.")
+        problems.append(
+            t("The class has declarations the diagram cannot read: edit it in the code.")
+        )
     return {
         "diagram": {"version": VERSION, "nodes": nodes, "edges": edges},
         "settings": settings(found),
@@ -326,13 +348,15 @@ def _value(spec: dict[str, Any], name: str, value: Any) -> str | None:
 
     parameter = next((p for p in spec.get("parameters", []) if p["name"] == name), None)
     if parameter is None:
-        raise EditError(f"{name} is not a parameter of {spec['name']}.")
+        raise EditError(t("{name} is not a parameter of {block}.", name=name, block=spec["name"]))
     if value is None or value == "" or value == parameter.get("default"):
         return None
     try:
         return modelica_value(value)
     except ValueError as exc:
-        raise EditError(f"{spec['name']}: {name} is not a value Models can write.") from exc
+        raise EditError(
+            t("{block}: {name} is not a value Models can write.", block=spec["name"], name=name)
+        ) from exc
 
 
 def _set_comment(text: str, cls_name: str, name: str, comment: str) -> str:
@@ -378,36 +402,57 @@ def check_diagram(diagram: dict[str, Any], catalog: dict[str, dict[str, Any]]) -
 
     nodes = diagram.get("nodes") or []
     if len(nodes) > 500:
-        raise EditError("Up to 500 blocks in a model.")
+        raise EditError(t("Up to 500 blocks in a model."))
     ids: dict[str, dict[str, Any]] = {}
     for node in nodes:
         name = node.get("id", "")
         if not NAME.match(name or "") or name in KEYWORDS:
             raise EditError(
-                f"{name!r} cannot name a block: use letters, digits and _, starting with a "
-                "lower-case letter (and not a Modelica word)."
+                t(
+                    "{name} cannot name a block: use letters, digits and _, starting with a "
+                    "lower-case letter (and not a Modelica word).",
+                    name=repr(name),
+                )
             )
         if name in ids:
-            raise EditError(f"Two blocks are named {name}.")
+            raise EditError(t("Two blocks are named {name}.", name=name))
         if node.get("block") not in catalog:
-            raise EditError(f"{node.get('block')} is not a block of the libraries.")
+            raise EditError(t("{block} is not a block of the libraries.", block=node.get("block")))
         for key in ("x", "y"):
             value = node.get(key)
             if not isinstance(value, (int, float)) or isinstance(value, bool) or abs(value) > 1e5:
-                raise EditError("A block's place is two numbers.")
+                raise EditError(t("A block's place is two numbers."))
         ids[name] = node
     fed: set[tuple[str, str]] = set()
     for wire in diagram.get("edges") or []:
         source, target = ids.get(wire.get("source")), ids.get(wire.get("target"))
         if source is None or target is None:
-            raise EditError("A wire joins two blocks of the model.")
+            raise EditError(t("A wire joins two blocks of the model."))
         if wire.get("source_port") not in _ports(catalog[source["block"]], "outputs"):
-            raise EditError(f"{wire.get('source')} has no output {wire.get('source_port')}.")
+            raise EditError(
+                t(
+                    "{block} has no output {port}.",
+                    block=wire.get("source"),
+                    port=wire.get("source_port"),
+                )
+            )
         if wire.get("target_port") not in _ports(catalog[target["block"]], "inputs"):
-            raise EditError(f"{wire.get('target')} has no input {wire.get('target_port')}.")
+            raise EditError(
+                t(
+                    "{block} has no input {port}.",
+                    block=wire.get("target"),
+                    port=wire.get("target_port"),
+                )
+            )
         key = (wire["target"], wire["target_port"])
         if key in fed:
-            raise EditError(f"{wire['target']}.{wire['target_port']} has two wires: keep one.")
+            raise EditError(
+                t(
+                    "{block}.{port} has two wires: keep one.",
+                    block=wire["target"],
+                    port=wire["target_port"],
+                )
+            )
         fed.add(key)
 
 
@@ -423,8 +468,10 @@ def write(
     current = read(text, cls_name, catalog)
     if not current["editable"]:
         raise EditError(
-            "This model has text the diagram cannot hold: edit it in the code. "
-            + " ".join(current["problems"][:3])
+            t(
+                "This model has text the diagram cannot hold: edit it in the code. {problems}",
+                problems=" ".join(current["problems"][:3]),
+            )
         )
     old_nodes = {node["id"]: node for node in current["diagram"]["nodes"]}
     new_nodes = {node["id"]: node for node in diagram.get("nodes") or []}
