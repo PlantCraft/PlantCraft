@@ -9,6 +9,14 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **Three months of plant-scale history on an 8 GB machine (pc-carga, 2026-11-01).** The Historian
+  died for lack of memory with 1.5 GB on the `medium` machine profile: it now gets 3 GB (4 GB on
+  `large`, 6 GB on `xlarge`). A Historian worker starting on a busy archive could deadlock the
+  readers, because PostgreSQL's `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` locks the table even
+  when the column is there: only missing columns are altered now. In the benches, `extreme.py`
+  read no signal at plant scale (it took only the first page of `/api/v1/signals`) and `age.py`
+  could report another machine's "People at once" (the newest report by name, not by time).
+
 - **Analytics on an 8 GB machine: 2 GB of memory, and health that sees a crash loop (SDK 0.101.0).**
   The `medium` machine profile gave Analytics 1 GB (`LINKCRAFT_MEMORY`). With a plant of 2,050
   loops and three months of history, its engine died for lack of memory 56 times in four hours

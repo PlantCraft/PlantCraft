@@ -212,6 +212,22 @@ class Database:
         key = f"{owner}:columns"
         if key in self._applied or not columns:
             return
+        if self.postgres:
+            # ALTER TABLE takes the table's strongest lock even when the column is already there,
+            # so with readers on a busy archive every start of a worker could deadlock them
+            # (pc-carga, 3 months at plant scale, 2026-11-01). Only missing columns are altered.
+            with self.connect() as connection:
+                present = {
+                    (row[0], row[1])
+                    for row in connection.execute(
+                        "SELECT table_name, column_name FROM information_schema.columns "
+                        "WHERE table_schema = current_schema()"
+                    )
+                }
+            columns = tuple(item for item in columns if (item[0], item[1]) not in present)
+            if not columns:
+                self._applied.add(key)
+                return
         with self.lock, self.connect() as connection:
             if self.postgres:
                 connection.execute("SELECT pg_advisory_xact_lock(4207100810)")
