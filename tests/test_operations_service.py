@@ -253,6 +253,51 @@ def test_service_hours_stop_the_clock_outside_the_working_day():
             ServiceHours.check(bad)
 
 
+def test_holidays_are_days_off_for_queues_with_working_hours():
+    from dataclasses import replace
+    from datetime import date
+    from zoneinfo import ZoneInfo
+
+    from plantcraft.actions.sla import ServiceHours, check_holidays
+
+    zone = ZoneInfo("America/Sao_Paulo")
+    week = ServiceHours.check(
+        {"days": ["mon", "tue", "wed", "thu", "fri"], "start": "08:00", "end": "17:00"}
+    )
+    # Friday 16:00 with a 2 h target: Monday 09:00, or Tuesday 09:00 when Monday is a holiday.
+    friday = datetime(2026, 10, 30, 19, 0, tzinfo=UTC)
+    off = replace(week, holidays=frozenset({date(2026, 11, 2)}))
+    assert off.add(friday, 120, zone) == datetime(2026, 11, 3, 12, 0, tzinfo=UTC)
+    assert off.minutes(friday, datetime(2026, 11, 3, 12, 0, tzinfo=UTC), zone) == 120
+    assert off == week  # the holidays are the plant's, not part of a queue's hours
+    assert check_holidays(
+        [{"day": "2026-12-25", "name": " Christmas "}, {"day": "2026-11-02"}]
+    ) == [{"day": "2026-11-02", "name": ""}, {"day": "2026-12-25", "name": "Christmas"}]
+    for bad in (
+        [{"day": "25/12/2026"}],
+        [{"day": "2026-12-25"}, {"day": "2026-12-25"}],
+        [{"day": "2026-1-5"}],
+        "2026-12-25",
+    ):
+        with pytest.raises(ValueError):
+            check_holidays(bad)
+
+
+def test_an_administrator_sets_the_plant_s_holidays(world):
+    admin = sign_in(world.client())
+    op = sign_in(world.client(), "op", PASSWORD)
+    days = [{"day": "2026-12-25", "name": "Christmas"}, {"day": "2026-11-02", "name": "All Souls"}]
+    assert op.put("/api/operations/holidays", json={"holidays": days}).status_code == 403
+    answer = admin.put("/api/operations/holidays", json={"holidays": days})
+    assert answer.status_code == 200, answer.text
+    assert [item["day"] for item in answer.json()["holidays"]] == ["2026-11-02", "2026-12-25"]
+    assert audit(admin, "operations.holidays")
+    assert admin.get("/api/operations/targets").json()["holidays"][1]["name"] == "Christmas"
+    bad = admin.put("/api/operations/holidays", json={"holidays": [{"day": "tomorrow"}]})
+    assert bad.status_code == 422
+    assert admin.put("/api/operations/holidays", json={"holidays": []}).json()["holidays"] == []
+
+
 def test_an_administrator_sets_a_queue_s_hours(world):
     admin = sign_in(world.client())
     op = sign_in(world.client(), "op", PASSWORD)

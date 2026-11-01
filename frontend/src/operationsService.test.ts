@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { currentTarget, minutesText, slaText, workingHoursText } from "./OperationsRequests";
+import { currentTarget, holidaysText, minutesText, parseHolidays, slaText, workingHoursText } from "./OperationsRequests";
 import { grantState, readGrantPrefill } from "./OperationsSupport";
 import { uptimeText, uptimeTone, windowState } from "./OperationsUptime";
 import type { SlaClock } from "./collabApi";
@@ -35,6 +35,12 @@ describe("Operations, targets and support access", () => {
   it("writes a queue's working hours", () => {
     expect(workingHoursText({ days: ["mon", "tue", "wed", "thu", "fri"], start: "08:00", end: "17:00" })).toBe("Mon–Fri 08:00–17:00");
     expect(workingHoursText({ days: ["sat", "mon"], start: "06:00", end: "14:00" })).toBe("Mon, Sat 06:00–14:00");
+  });
+
+  it("reads and writes the plant's holidays, one per line", () => {
+    const days = [{ day: "2026-11-02", name: "All Souls" }, { day: "2026-12-25", name: "" }];
+    expect(holidaysText(days)).toBe("2026-11-02 All Souls\n2026-12-25");
+    expect(parseHolidays("2026-11-02  All Souls \n\n 2026-12-25\n")).toEqual(days);
   });
 });
 

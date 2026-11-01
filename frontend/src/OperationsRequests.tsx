@@ -271,5 +271,43 @@ function ServiceHoursPanel({ answer, groups, editable, onChanged }: { answer: Ta
       </div>
     </div>}
     {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
+    <HolidaysPanel answer={answer} editable={editable} onChanged={onChanged} />
   </section>;
+}
+
+/** "2026-12-25 Christmas" per line, for the holidays' text box. */
+export function holidaysText(holidays: Array<{ day: string; name: string }>): string {
+  return holidays.map((item) => `${item.day}${item.name ? ` ${item.name}` : ""}`).join("\n");
+}
+
+/** The lines of the holidays' text box: a date, then an optional name; blank lines skipped. */
+export function parseHolidays(text: string): Array<{ day: string; name: string }> {
+  return text.split("\n").map((line) => line.trim()).filter(Boolean).map((line) => {
+    const [day, ...rest] = line.split(/\s+/);
+    return { day, name: rest.join(" ") };
+  });
+}
+
+/** The plant's holidays: the clocks of queues with working hours stop on them. */
+function HolidaysPanel({ answer, editable, onChanged }: { answer: TargetsAnswer; editable: boolean; onChanged: (answer: TargetsAnswer) => void }) {
+  const holidays = answer.holidays ?? [];
+  const [text, setText] = useState(holidaysText(holidays));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => { setText(holidaysText(answer.holidays ?? [])); }, [answer.holidays]);
+  async function save() {
+    setBusy(true);
+    try { onChanged(await operationsApi.setHolidays(parseHolidays(text))); setError(""); } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
+  }
+  return <div className="ops-holidays">
+    <h4>{t("Holidays")}</h4>
+    <p className="muted">{t("Days off for every queue with working hours. One per line: the date, then a name.")}</p>
+    {editable
+      ? <>
+        <textarea rows={4} value={text} placeholder="2026-12-25 Christmas" aria-label={t("Holidays")} onChange={(event) => setText(event.target.value)} />
+        <div className="ops-service-hours-actions"><button type="button" className="button button-secondary" disabled={busy} onClick={() => void save()}>{t("Save holidays")}</button></div>
+      </>
+      : holidays.length ? <ul>{holidays.map((item) => <li key={item.day}>{item.day} {item.name}</li>)}</ul> : <p className="muted">{t("No holidays.")}</p>}
+    {error && <div className="form-error" role="alert"><AlertTriangle size={15} /> {error}</div>}
+  </div>;
 }

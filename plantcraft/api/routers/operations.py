@@ -580,6 +580,8 @@ def _targets_answer(rt: Any) -> dict[str, Any]:
             {"queue": key or None, "queue_name": names.get(key) if key else None, **hours.as_dict()}
             for key, hours in sorted(calendars.items())
         ],
+        # Days off for every queue with working hours, on the plant's clock.
+        "holidays": rt.workspace.actions.holidays(),
         "timezone": str(plant_timezone()),
     }
 
@@ -607,6 +609,24 @@ def set_service_hours(payload: QueueHours, admin: AdminUser, rt: Runtime) -> dic
         "operations.service_hours",
         {"queue": payload.queue, "hours": value.as_dict() if value else None},
     )
+    return _targets_answer(rt)
+
+
+class Holidays(BaseModel):
+    # [{"day": "2026-12-25", "name": "Christmas"}, ...]; the whole list, replacing the old one.
+    holidays: list[dict[str, Any]] = Field(default_factory=list, max_length=400)
+
+
+@router.put("/holidays")
+def set_holidays(payload: Holidays, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
+    """The plant's holidays: the clocks of queues with working hours stop on them."""
+
+    before = rt.workspace.actions.holidays()
+    try:
+        value = rt.workspace.actions.set_holidays(payload.holidays, actor=admin)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    _audit(rt, admin, "operations.holidays", {"before": before, "after": value})
     return _targets_answer(rt)
 
 

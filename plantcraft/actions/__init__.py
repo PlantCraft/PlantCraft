@@ -19,7 +19,7 @@ who created it, the members of its group, and the leaders above them in the grou
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from typing import Any
 
@@ -28,7 +28,7 @@ from plantcraft.db import Migration, Store, add_columns
 from plantcraft.i18n import t
 from plantcraft.refs import parse_ref
 
-from .sla import ServiceHours, Targets, check_targets, request_sla
+from .sla import ServiceHours, Targets, check_holidays, check_targets, request_sla
 
 # English constants; read them through ``t()``.
 # A checklist entry of the history is stored as "<verb>:<item>" and read in the reader's language.
@@ -262,6 +262,14 @@ class ActionStore(Store):
         days TEXT NOT NULL,
         start_at TEXT NOT NULL,
         end_at TEXT NOT NULL,
+        updated_by TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    );
+
+    -- The plant's holidays: days off for every queue that has working hours.
+    CREATE TABLE IF NOT EXISTS follow_up_holidays (
+        day TEXT PRIMARY KEY,
+        name TEXT NOT NULL DEFAULT '',
         updated_by TEXT NOT NULL,
         updated_at TEXT NOT NULL
     );
@@ -981,12 +989,39 @@ class ActionStore(Store):
 
         with self._lock, self._connect() as connection:
             rows = connection.execute("SELECT * FROM follow_up_queue_hours").fetchall()
+        off = frozenset(date.fromisoformat(item["day"]) for item in self.holidays())
         return {
-            row["queue"]: ServiceHours.check(
-                {"days": row["days"].split(","), "start": row["start_at"], "end": row["end_at"]}
+            row["queue"]: replace(
+                ServiceHours.check(
+                    {"days": row["days"].split(","), "start": row["start_at"], "end": row["end_at"]}
+                ),
+                holidays=off,
             )
             for row in rows
         }
+
+    def holidays(self) -> list[dict[str, str]]:
+        """The plant's holidays, oldest first: ``[{"day": "2026-12-25", "name": "Christmas"}]``."""
+
+        with self._lock, self._connect() as connection:
+            rows = connection.execute(
+                "SELECT day, name FROM follow_up_holidays ORDER BY day"
+            ).fetchall()
+        return [{"day": row["day"], "name": row["name"]} for row in rows]
+
+    def set_holidays(self, payload: Any, *, actor: str) -> list[dict[str, str]]:
+        """Replaces the plant's holidays with ``payload`` (``check_holidays``)."""
+
+        found = check_holidays(payload)
+        now = self._now()
+        with self._lock, self._write() as connection:
+            connection.execute("DELETE FROM follow_up_holidays")
+            connection.executemany(
+                "INSERT INTO follow_up_holidays (day, name, updated_by, updated_at) "
+                "VALUES (?, ?, ?, ?)",
+                [(item["day"], item["name"], actor, now) for item in found],
+            )
+        return found
 
     def set_service_hours(
         self, queue: str | None, payload: dict[str, Any] | None, *, actor: str
