@@ -139,10 +139,35 @@ def reset_workspace(scenario_path: Path) -> list[Path]:
     return removed
 
 
+def update_notice(scenario_path: Path, minutes: float | None) -> int:
+    """Announce a public demo's update ``minutes`` from now, or clear it (None)."""
+
+    import time
+
+    from plantcraft.api.runtime import PROJECT_ROOT
+    from plantcraft.auth.demo_visits import DemoVisits
+    from plantcraft.config import load_scenario
+    from plantcraft.db import Database
+
+    scenario = load_scenario(scenario_path.resolve(), project_root=PROJECT_ROOT)
+    visits = DemoVisits(Database(scenario.storage.sqlite_path))
+    if minutes is None:
+        visits.clear_update()
+        print("Update notice cleared: visits can start again.")
+    else:
+        visits.announce_update(time.time() + max(minutes, 0) * 60)
+        print(f"Update announced in {minutes:g} min: no new visits; every visit ends then.")
+    return 0
+
+
 def _demo(argv: list[str]) -> int:
     """``processcraft demo reset``: forget the workspace; the next start recreates it.
 
     ``processcraft demo seed``: fill a running installation with the demo story (demo_seed).
+
+    ``processcraft demo update-notice --in 2`` (or ``--clear``): a public demo's visits see that
+    the demo is updated in 2 minutes; then every visit ends and no new one starts until cleared
+    (docs/public-demo.md, "Updating the demo").
     """
 
     if argv[:1] == ["seed"]:
@@ -153,13 +178,17 @@ def _demo(argv: list[str]) -> int:
     from plantcraft.api.runtime import DEFAULT_SCENARIO
 
     parser = argparse.ArgumentParser(prog="plantcraft demo")
-    parser.add_argument("command", choices=["reset", "seed"])
+    parser.add_argument("command", choices=["reset", "seed", "update-notice"])
+    parser.add_argument("--in", dest="minutes", type=float, default=2.0)
+    parser.add_argument("--clear", action="store_true")
     parser.add_argument(
         "--scenario",
         type=Path,
         default=Path(os.environ.get("PLANTCRAFT_SCENARIO", str(DEFAULT_SCENARIO))),
     )
     args = parser.parse_args(argv)
+    if args.command == "update-notice":
+        return update_notice(args.scenario, None if args.clear else args.minutes)
     removed = reset_workspace(args.scenario)
     print(
         t(

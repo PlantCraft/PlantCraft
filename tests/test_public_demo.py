@@ -66,7 +66,7 @@ def test_the_sign_in_page_offers_the_demo_never_its_password(suite):
     app, _admin = suite
     answer = TestClient(app).get("/api/session").json()
     assert answer["authenticated"] is False
-    assert answer["public_demo"] == {"seats": 10, "minutes": 30}
+    assert answer["public_demo"] == {"seats": 30, "minutes": 30, "updating": False}
 
 
 def test_the_visit_offers_the_teams_contact_only_at_an_https_address(monkeypatch):

@@ -175,6 +175,13 @@ def _visit_may_ask(request: Request, rt: Any, user: str, text: str = "") -> None
     visit, within its limits (assistant_chat.demo); a person who is no visitor passes."""
 
     if not _is_visitor(user):
+        # In a public demo only the people an administrator made editors or administrators ask
+        # (``models_allowed_for``), as the status says: another viewer reads.
+        if public_demo() is not None and not models_allowed_for(_level(rt, user)):
+            raise HTTPException(
+                status_code=403,
+                detail=t("This is a public demo: you can try everything, but nothing is saved."),
+            )
         return
     settings = demo_assistant()
     owner = _owner(request, rt, user)
@@ -385,6 +392,8 @@ def start(payload: ChatStart, request: Request, user: CurrentUser, rt: Runtime) 
         settings = demo_assistant()
         if settings is not None:
             rt.assistant.store.forget_visits(settings.keep_days)
+    else:
+        _visit_may_ask(request, rt, user, payload.text)
     ref = ""
     if payload.ref.strip():
         try:
@@ -596,7 +605,11 @@ def retry(chat_id: int, request: Request, user: CurrentUser, rt: Runtime) -> dic
 
     _reader_of(rt, user)
     found = _owned(rt, chat_id, _owner(request, rt, user))
-    if _is_visitor(user) and demo_assistant() is None:
+    if (_is_visitor(user) and demo_assistant() is None) or (
+        not _is_visitor(user)
+        and public_demo() is not None
+        and not models_allowed_for(_level(rt, user))
+    ):
         raise HTTPException(
             status_code=403,
             detail=t("This is a public demo: you can try everything, but nothing is saved."),

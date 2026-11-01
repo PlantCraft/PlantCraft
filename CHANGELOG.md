@@ -7,6 +7,15 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Changed
+
+- **Public demo: a visible 30-minute clock and a 5-minute idle end.** A visit lasts
+  `PLANTCRAFT_PUBLIC_DEMO_MINUTES` (30) from its start, whatever its use, with its clock always
+  on screen; unused for `PLANTCRAFT_PUBLIC_DEMO_IDLE_MINUTES` (5) it ends even with nobody
+  waiting, after a "Still there?" minute. The heartbeat answers `clock_seconds` and
+  `idle_minutes` too (docs/public-demo.md).
+- **Public demo: 30 places by default** (`PLANTCRAFT_PUBLIC_DEMO_SEATS`, was 10).
+
 ### Added
 
 - `@plantcraft/ui`, the block diagram editor (Analytics' algorithms, Models): **a wire is
@@ -27,6 +36,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   instruction it reads (in CI, `tests/test_llm_battery.py`) and against a real model
   (`python -m tests.llm_battery --model ...`), with a report per case. The report includes
   tokens and time per answer.
+- **Public demo: updates announced to the visits.** `plantcraft demo update-notice --in 2`
+  shows every visit a countdown strip, stops new visits, then ends them and sends them to the
+  site's `/demo-updating` page (`PLANTCRAFT_PUBLIC_DEMO_UPDATING_URL`), which opens the demo
+  again once it is back; `--clear` after the update. `vm.sh demo` does both around an update.
+  The proxy answers a PlantCraft page asked for while it restarts with a short "PlantCraft is
+  restarting" page instead of a bare 502.
 - **API v1: interpolated reads and summaries (gap H5, `plantcraft-sdk` 0.95.0).**
   - Series reads (`GET .../series`, `POST /api/v1/series`) take `sampling=interpolated` and
     `max_gap`. They give the value at each grid time, as PI's and Seeq's interpolated reads

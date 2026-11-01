@@ -65,9 +65,21 @@ def _session_payload(username: str | None, rt: Any, request: Request) -> dict[st
         # what the interface may offer; the API enforces the same rules.
         "access": shown,
         # A public demo offers "Enter the demo" on the sign-in page (its places and minutes).
-        "public_demo": demo.as_dict() if (demo := public_demo()) else None,
-        # A visit of the public demo: when it ends (the frame's clock counts down to it).
-        "demo_visit": {"seconds_left": visit.seconds_left(), "minutes": demo.minutes}
+        "public_demo": {
+            **demo.as_dict(),
+            # An update announced or under way: the sign-in page says so instead of "Enter".
+            "updating": rt.workspace.demo_visits.update_at() is not None,
+        }
+        if (demo := public_demo())
+        else None,
+        # A visit of the public demo: its clock (shown all the time) and when it ends (the
+        # clock, or sooner when unused).
+        "demo_visit": {
+            "clock_seconds": visit.clock_left(demo.minutes),
+            "seconds_left": visit.seconds_left(),
+            "minutes": demo.minutes,
+            "idle_minutes": demo.idle_minutes,
+        }
         if visit and demo
         else None,
         # The sign-in page names the installation: which plant, which version.
