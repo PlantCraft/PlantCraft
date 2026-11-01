@@ -221,7 +221,7 @@ class ChatModel:
                 problem += " " + t(
                     "Change the provider's reasoning effort in Settings › Language models."
                 )
-            raise RuntimeError(problem) from exc
+            raise ModelServiceError(problem, exc.code) from exc
         except urllib.error.URLError as exc:
             raise RuntimeError(_reach_problem(self.url, exc.reason, bool(proxy))) from exc
         except (TimeoutError, socket.timeout) as exc:
@@ -459,6 +459,14 @@ def _open(request: urllib.request.Request, timeout: float, proxy: str = "") -> A
         urllib.request.ProxyHandler({"https": proxy} if proxy else {})
     )
     return opener.open(request, timeout=timeout)
+
+
+class ModelServiceError(RuntimeError):
+    """The model service answered with an error (``code``: its HTTP status)."""
+
+    def __init__(self, message: str, code: int):
+        super().__init__(message)
+        self.code = code
 
 
 def _http_problem(code: int, detail: str) -> str:

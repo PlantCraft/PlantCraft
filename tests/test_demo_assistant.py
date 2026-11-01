@@ -404,3 +404,34 @@ def test_another_viewer_of_the_demo_reads_but_never_asks(demo):
     ).is_success
     assert reader.get("/api/assistant").json()["available"] is False
     assert _ask(reader).status_code == 403
+
+
+def test_a_service_without_credit_reads_as_a_pause_not_an_error(demo, monkeypatch):
+    from plantcraft.specialists.model import ModelServiceError
+
+    def broke(self, system, messages, tool=None, tools=None):
+        raise ModelServiceError("The model service is limiting this key (429): no credit.", 429)
+
+    app = demo(PLANTCRAFT_PUBLIC_DEMO_LLM="on")
+    visitor = _visit(app)
+    monkeypatch.setattr(VisitModel, "answer", broke)
+    started = _ask(visitor)
+    assert started.status_code == 201
+    chat = visitor.get(f"/api/assistant/chats/{started.json()['chat']['chat_id']}").json()
+    answer = chat["messages"][-1]
+    # The visitor reads a plain sentence, never the key or the settings the error names.
+    assert answer["state"] == "failed"
+    assert answer["text"].startswith("The assistant cannot answer right now.")
+    assert "429" not in answer["text"] and "key" not in answer["text"]
+    # The question the assistant could not answer is not one of the visit's ten.
+    assert visitor.get("/api/assistant").json()["visit"]["left"] == 10
+    # Visits stop asking for a while instead of each one failing.
+    refused = _ask(_visit(app))
+    assert refused.status_code == 429
+    assert refused.json()["detail"].startswith("The assistant cannot answer right now.")
+
+
+def test_the_pause_ends_by_itself():
+    limits = DemoLimits()
+    limits.pause(600, now=1000.0)
+    assert limits.paused(now=1599.0) and not limits.paused(now=1601.0)
