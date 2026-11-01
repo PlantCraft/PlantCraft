@@ -92,6 +92,27 @@ describe("the assistant's side panel", () => {
     act(() => root.unmount());
   });
 
+  it("counts a demo visit's questions down and stops at none", async () => {
+    const answer = { message_id: 2, role: "assistant", text: "Done.", state: "done", steps: [], charts: [], meta: {} };
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      const json = (value: unknown) => new Response(JSON.stringify(value), { status: 200, headers: { "Content-Type": "application/json" } });
+      if (url.endsWith("/api/assistant")) return json({ available: true, allowed: true, reason: "", chats: [], visit: { questions: 10, max_text: 1200, left: 1 } });
+      if (url.endsWith("/api/assistant/chats") && init?.method === "POST") return json({ chat: { chat_id: 7 }, messages: [{ message_id: 1, role: "user", text: "Why?", state: "done", steps: [], charts: [], meta: {} }, answer] });
+      return json({ messages: [answer] });
+    }));
+    const page = () => ({ place: "Desk" });
+    const { host, root } = await mount(createElement("div", null, createElement(AssistantTopButton, { platformUrl: "/", page }), createElement(AssistantHost, { platformUrl: "/", page })));
+    await act(async () => { button(host, "Ask the assistant about this page")?.click(); });
+    await act(async () => { await Promise.resolve(); });
+    expect(host.querySelector(".pc-drawer-composer")?.textContent).toContain("1 of 10 questions left in this demo visit.");
+    expect((host.querySelector("textarea") as HTMLTextAreaElement).maxLength).toBe(1200);
+    await act(async () => { button(host, "Explain this page")?.click(); });
+    await act(async () => { await Promise.resolve(); });
+    expect(host.querySelector(".pc-drawer-composer")?.textContent).toContain("This visit used its 10 questions.");
+    expect((button(host, "Send") as HTMLButtonElement).disabled).toBe(true);
+    act(() => root.unmount());
+  });
+
   it("a task that needs the person's words waits for them", async () => {
     const { calls } = server();
     const tasks: AssistantTask[] = [{ label: "Ask about one execution", instructions: "Read that execution.", ask: "Which execution?" }];

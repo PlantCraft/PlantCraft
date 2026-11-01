@@ -552,9 +552,16 @@ def chat(
     stars = rt.desk.marks(marker, "star")
     return {
         # A visit's own chat is the visit's (``mine``), as a person's own is theirs.
-        "chat": _with_marks(
-            _present_chat(rt, found, owner if found["username"] == owner else user), stars, set()
-        ),
+        "chat": {
+            **_with_marks(
+                _present_chat(rt, found, owner if found["username"] == owner else user),
+                stars,
+                set(),
+            ),
+            # Whether this person may ask in it: their own chat (a visit: its own, not the
+            # team's chats the visitor account keeps).
+            "can_ask": found["username"] == owner,
+        },
         "messages": [_present_message(rt, item, user) for item in shown],
         "working": any(item["state"] == "working" for item in messages),
     }
