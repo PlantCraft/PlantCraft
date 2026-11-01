@@ -512,3 +512,34 @@ def test_an_image_reaches_openai_in_both_of_its_formats():
             {"type": "input_image", "image_url": "data:image/png;base64,iVBO"},
         ],
     }
+
+
+def test_the_start_of_each_request_is_kept_for_the_next_by_the_provider(monkeypatch):
+    sent: list[dict] = []
+    answers = [
+        {"output": [{"type": "message", "content": [{"type": "output_text", "text": "ok"}]}]},
+        {"content": [{"type": "text", "text": "ok"}], "stop_reason": "end_turn"},
+    ]
+
+    def urlopen(request, timeout):
+        sent.append(json.loads(request.data))
+        return _Response(json.dumps(answers.pop(0)).encode())
+
+    monkeypatch.setattr(model_module, "_open", lambda request, timeout, proxy="": urlopen(request, timeout))  # fmt: skip
+    tools = [
+        {"name": "search_assets", "description": "Find.", "input_schema": {"type": "object"}},
+        {"name": "list_actions", "description": "Open.", "input_schema": {"type": "object"}},
+    ]
+    question = [{"role": "user", "content": "hi"}]
+    ChatModel("sk-x", provider="openai", model="gpt-5-mini").answer("Rules.", question, lambda *_: None, tools)  # fmt: skip
+    ChatModel("sk-x", provider="anthropic", model="claude-x").answer("Rules.", question, lambda *_: None, tools)  # fmt: skip
+    openai, anthropic = sent
+    # OpenAI: the same tools, the same cache, whatever their order.
+    assert openai["prompt_cache_key"].startswith("plantcraft-")
+    names = ",".join(sorted(["list_actions", "search_assets"]))
+    assert openai["prompt_cache_key"].endswith(model_module.hashlib.sha256(names.encode()).hexdigest()[:16])  # fmt: skip
+    # Anthropic: marked after the tools and after the instructions; the tools are not changed.
+    assert anthropic["system"] == [{"type": "text", "text": "Rules.", "cache_control": {"type": "ephemeral"}}]  # fmt: skip
+    assert "cache_control" not in anthropic["tools"][0]
+    assert anthropic["tools"][-1]["cache_control"] == {"type": "ephemeral"}
+    assert "cache_control" not in tools[-1]

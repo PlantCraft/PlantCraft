@@ -121,6 +121,28 @@ guide away, take **Another role**, or close it. While a guide is on, the apps' o
   here. `PLANTCRAFT_PUBLIC_DEMO_LLM=off` and a restart turn it off.
 - **Nothing a visitor does reaches another visitor**: no messages, no actions, no audit entries.
 
+## A copy of the demo for each visit
+
+With `PLANTCRAFT_PUBLIC_DEMO_ISOLATED=true`, each visit's tokens carry `"isolated": true` and
+every app gives the visit its own copy of the app's database, taken the first time the visit
+touches it (SQLite's backup, in `data/<app>/demo-slots/<visit hash>/`). Every read and write of
+the visit goes to that copy, so one visitor never sees what another changed, and the app's own
+file, which no visitor writes, stays the demo's starting point. A copy is deleted 45 minutes after
+it was taken, since a visit lasts 30 at most. Nothing has to tell the apps that a visit ended.
+
+- The app checks the token's signature before it picks a copy (`DemoSlots`, added by
+  `web.mount`); a forged claim never makes or picks one.
+- A store whose rows a copy must not reset (counters, such as the assistant's questions) sets
+  `DEMO_SHARED = True` and stays on the app's file.
+- A database larger than `PLANTCRAFT_DEMO_SLOT_MAX_MB` (200) is never copied, and that app keeps
+  its visits on the shared data.
+- Work that leaves the request (a queue item, a thread) carries `demo_slots.visit_key()` and runs
+  inside `demo_slots.using(key)`. Without that it runs on the app's own file.
+- Not yet: the visitor is still refused when saving (the editors are unlocked app by app, with
+  their limits, in a later step), and PlantCraft's own database and the Historian are not copied.
+
+The code is in `plantcraft_sdk.server.demo_slots`.
+
 ## Keeping the demo fast
 
 A demo is only convincing when it answers quickly, so a visit is held to a share of the suite:

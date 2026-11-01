@@ -42,6 +42,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from plantcraft_sdk.server import demo_slots
 from plantcraft_sdk.utc import normalize_times, utc_iso
 
 # File systems where SQLite's WAL shared memory (an mmapped -shm file) is not safe.
@@ -211,12 +212,20 @@ class Database:
             if found < mine:
                 connection.execute(f"PRAGMA user_version = {int(mine)}")
 
-    def connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.path, timeout=30)
+    def connect(self, *, shared: bool = False) -> sqlite3.Connection:
+        """A connection to the app's file, or to the current demo visit's copy of it
+        (``plantcraft_sdk.server.demo_slots``) unless ``shared``."""
+
+        path = self.path
+        key = None if shared else demo_slots.visit_key()
+        if key is not None and demo_slots.copyable(self.path):
+            path = demo_slots.prepare(self.path, key)
+        connection = sqlite3.connect(path, timeout=30)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         connection.execute("PRAGMA busy_timeout = 30000")
-        connection.execute(f"PRAGMA journal_mode = {journal_mode(self.path.parent)}")
+        if path == self.path:
+            connection.execute(f"PRAGMA journal_mode = {journal_mode(self.path.parent)}")
         return connection
 
     def apply_schema(self, owner: str, schema: str) -> None:
@@ -274,6 +283,9 @@ class Store:
     """Base class giving module stores the shared connection helpers."""
 
     SCHEMA = ""
+    # True: a demo visit's requests still use the app's own file (counters a visit's copy must
+    # not reset; plantcraft_sdk.server.demo_slots).
+    DEMO_SHARED = False
     # Changes to tables already shipped, in order (``Migration``; never renamed, never removed).
     MIGRATIONS: tuple[Migration, ...] = ()
     # Kept for apps that still name it: every time ``_now`` writes has milliseconds (utc_iso).
@@ -295,6 +307,10 @@ class Store:
         return self.db.lock
 
     def _connect(self) -> sqlite3.Connection:
+        if self.DEMO_SHARED:
+            # Opened outside the visit: the path is chosen when the connection opens.
+            with demo_slots.using(None):
+                return self.db.connect()
         return self.db.connect()
 
     @classmethod
