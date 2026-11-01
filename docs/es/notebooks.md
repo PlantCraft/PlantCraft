@@ -66,7 +66,9 @@ run = spikes.run(asset="FIC-101", start="-24h")  # sobre la PV del lazo, aquí
 run.values()  # cada salida: un resultado, un número, una serie
 link.get("block", "transform.moving_average").run(x=my_series, window_samples=30)
 link.get("algorithm", "flow").run(asset="FIC-101")  # un algoritmo completo sobre un lazo
-link.runtime().test_block(block_file, x=my_series)  # un bloque que usted escribe, probado como lo prueba Link
+link.runtime().test_block(
+    block_file, x=my_series
+)  # un bloque que usted escribe, probado como lo prueba Link
 ```
 
 Los modelos de Models se ejecutan en Models (OpenModelica), no en el notebook: `.run()` pone una
