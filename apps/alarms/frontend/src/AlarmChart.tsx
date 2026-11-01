@@ -20,7 +20,7 @@ export function AlarmChart({ chart, limit = null, high = null, deadband = 0, occ
   ];
   const shapes = [
     ...lines.map((line) => ({ type: "line" as const, xref: "paper" as const, x0: 0, x1: 1, y0: line.y, y1: line.y, line: { color: line.color, width: 1.5, dash: line.dash } })),
-    ...occurrences.flatMap((item) => markStrip(item.start ?? item.started_at, (item.end ?? item.ended_at) || end, colors.problem)),
+    ...occurrences.flatMap((item) => { const from = item.start ?? item.started_at; return from ? markStrip(from, (item.end ?? item.ended_at) || end, colors.problem) : []; }),
   ];
   const theme = plotTheme(mode);
   return <Plot
