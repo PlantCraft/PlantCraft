@@ -13,6 +13,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from plantcraft_sdk.i18n import t
+
 
 @dataclass
 class Fopdt:
@@ -47,7 +49,7 @@ def fit_fopdt(u: np.ndarray, y: np.ndarray, dt: float, max_dead: int = 60) -> Fo
         if best is None or err < best[0]:
             best = (err, d, float(coef[0]), float(coef[1]))
     if best is None:
-        raise ValueError("Too few samples to fit a model.")
+        raise ValueError(t("Too few samples to fit a model."))
     err, d, a, b = best
     a = min(max(a, 1e-6), 0.999999)
     var = float(np.nanvar(dy[1:]))

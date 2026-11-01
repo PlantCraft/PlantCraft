@@ -12,6 +12,7 @@ import io
 import shutil
 import subprocess
 
+from doccraft.i18n import t
 from doccraft.plantmap.reader.primitives import Circle, Page, Text
 from doccraft.plantmap.reader.svg import DrawingError
 
@@ -30,13 +31,13 @@ def read_image(data: bytes) -> Page:
     try:
         from PIL import Image
     except ImportError as exc:  # pragma: no cover - the image has it
-        raise DrawingError("Reading images needs Pillow.") from exc
+        raise DrawingError(t("Reading images needs Pillow.")) from exc
     Image.MAX_IMAGE_PIXELS = MAX_PIXELS
     try:
         image = Image.open(io.BytesIO(data))
         image.load()
     except Exception as exc:  # Pillow raises many kinds on a broken or huge file
-        raise DrawingError("This image cannot be read (broken, or too large).") from exc
+        raise DrawingError(t("This image cannot be read (broken, or too large).")) from exc
     dpi = image.info.get("dpi", (150, 150))[0] or 150
     return read_image_array(image, scale=float(dpi) / 72.0)
 
@@ -56,7 +57,7 @@ def read_image_array(image, *, scale: float) -> Page:
         scale *= shrink
     words = ocr(gray)
     if words is None:
-        page.notes.append("This drawing is a scan and OCR (Tesseract) is not installed here.")
+        page.notes.append(t("This drawing is a scan and OCR (Tesseract) is not installed here."))
         return page
     heights = sorted(b[3] - b[1] for _, b in words) or [12]
     text_px = heights[len(heights) // 2]
@@ -64,13 +65,17 @@ def read_image_array(image, *, scale: float) -> Page:
     circles = find_circles(gray, int(1.6 * text_px), int(4.5 * text_px))
     if len(circles) > MAX_BUBBLES:
         page.notes.append(
-            f"{len(circles)} round shapes found; only the {MAX_BUBBLES} clearest were read."
+            t(
+                "{n} round shapes found; only the {most} clearest were read.",
+                n=len(circles),
+                most=MAX_BUBBLES,
+            )
         )
         circles = circles[:MAX_BUBBLES]
     for n, (cx, cy, r) in enumerate(circles):
         if time.monotonic() - started > BUDGET_SECONDS:
             page.notes.append(
-                f"Time budget reached: {len(circles) - n} round shapes were not read."
+                t("Time budget reached: {n} round shapes were not read.", n=len(circles) - n)
             )
             break
         inner = read_bubble(gray, cx, cy, r, 0.82) or read_bubble(gray, cx, cy, r, 0.93)
@@ -90,7 +95,7 @@ def read_image_array(image, *, scale: float) -> Page:
     from doccraft.plantmap.reader.graph import stacked_bubbles
 
     stacked_bubbles(page)
-    page.notes.append("Scanned drawing: tags and their places are read; lines are not traced.")
+    page.notes.append(t("Scanned drawing: tags and their places are read; lines are not traced."))
     return page
 
 
@@ -183,7 +188,7 @@ def ocr(gray, psm: str = "11") -> list[tuple[str, tuple[int, int, int, int]]] | 
             check=False,
         )
     except subprocess.TimeoutExpired as exc:
-        raise DrawingError("Reading this scan took too long.") from exc
+        raise DrawingError(t("Reading this scan took too long.")) from exc
     out = []
     for line in done.stdout.decode("utf-8", "replace").splitlines()[1:]:
         cols = line.split("\t")

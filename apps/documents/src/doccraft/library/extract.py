@@ -16,6 +16,8 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import PurePath
 
+from doccraft.i18n import t
+
 MAX_PAGES = 5000
 MAX_ZIP_RATIO = 100  # an Office file that expands more than this is refused (zip bomb)
 MAX_ZIP_BYTES = 500 * 1024 * 1024
@@ -73,7 +75,11 @@ def extract(data: bytes, filename: str) -> Extracted:
     kind = format_of(filename)
     if kind is None:
         raise Unreadable(
-            f"{PurePath(filename).suffix or 'This'} files are not read; send PDF, Word, Excel, PowerPoint, text, Markdown, CSV or HTML."
+            t(
+                "{suffix} files are not read; send PDF, Word, Excel, PowerPoint, text, Markdown, "
+                "CSV or HTML.",
+                suffix=PurePath(filename).suffix or t("This"),
+            )
         )
     if kind in ("docx", "xlsx", "pptx"):
         _check_zip(data)
@@ -83,7 +89,11 @@ def extract(data: bytes, filename: str) -> Extracted:
         raise
     except Exception as error:  # a reader's own error on a broken file
         raise Unreadable(
-            f"The file could not be read as {kind.upper()}: {type(error).__name__}."
+            t(
+                "The file could not be read as {kind}: {error}.",
+                kind=kind.upper(),
+                error=type(error).__name__,
+            )
         ) from error
 
 
@@ -125,7 +135,9 @@ def extract_isolated(data: bytes, filename: str) -> Extracted:
     try:
         return pool(EXTRACT).run(_extract_payload, {"data": data, "filename": filename})
     except CodeError as error:
-        raise Unreadable(f"The file could not be read within the limits: {error}") from error
+        raise Unreadable(
+            t("The file could not be read within the limits: {error}", error=error)
+        ) from error
 
 
 def read_isolated(data: bytes, filename: str) -> tuple[Extracted, list[dict]]:
@@ -138,17 +150,19 @@ def read_isolated(data: bytes, filename: str) -> tuple[Extracted, list[dict]]:
     try:
         return pool(EXTRACT).run(_read_payload, {"data": data, "filename": filename})
     except CodeError as error:
-        raise Unreadable(f"The file could not be read within the limits: {error}") from error
+        raise Unreadable(
+            t("The file could not be read within the limits: {error}", error=error)
+        ) from error
 
 
 def _check_zip(data: bytes) -> None:
     try:
         archive = zipfile.ZipFile(io.BytesIO(data))
     except zipfile.BadZipFile as error:
-        raise Unreadable("The file is not a valid Office document.") from error
+        raise Unreadable(t("The file is not a valid Office document.")) from error
     expanded = sum(info.file_size for info in archive.infolist())
     if expanded > MAX_ZIP_BYTES or expanded > MAX_ZIP_RATIO * max(len(data), 1):
-        raise Unreadable("The file expands to too much data to be read safely.")
+        raise Unreadable(t("The file expands to too much data to be read safely."))
 
 
 def _pdf(data: bytes) -> Extracted:
@@ -159,9 +173,9 @@ def _pdf(data: bytes) -> Extracted:
         try:
             reader.decrypt("")
         except Exception as error:
-            raise Unreadable("The PDF is protected by a password.") from error
+            raise Unreadable(t("The PDF is protected by a password.")) from error
     if len(reader.pages) > MAX_PAGES:
-        raise Unreadable(f"The PDF has more than {MAX_PAGES} pages.")
+        raise Unreadable(t("The PDF has more than {n} pages.", n=MAX_PAGES))
     # Headings are the lines set in a larger type than the body: the body's size is the one most
     # characters use, and each larger size is one heading level, the largest first.
     # A run's style is (size, bold); a bold run of the body's size is the smallest heading.

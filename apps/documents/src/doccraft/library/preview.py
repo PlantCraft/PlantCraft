@@ -13,6 +13,7 @@ import html
 import io
 import re
 
+from doccraft.i18n import t
 from doccraft.library.extract import Unreadable, _check_zip
 
 MAX_BLOCKS = 20_000  # a page of a few MB at most, whatever the file holds
@@ -27,7 +28,13 @@ def docx_html(data: bytes) -> str:
     try:
         document = docx.Document(io.BytesIO(data))
     except Exception as error:  # a reader's own error on a broken file
-        raise Unreadable(f"The file could not be read as DOCX: {type(error).__name__}.") from error
+        raise Unreadable(
+            t(
+                "The file could not be read as {kind}: {error}.",
+                kind="DOCX",
+                error=type(error).__name__,
+            )
+        ) from error
     out: list[str] = []
     listing = False
     for count, child in enumerate(document.element.body.iterchildren()):

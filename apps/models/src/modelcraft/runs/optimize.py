@@ -26,6 +26,7 @@ from typing import Any
 import numpy as np
 from scipy import optimize as sp
 
+from modelcraft.i18n import t
 from modelcraft.runs.studies import STATISTICS
 
 METHODS = ("nelder-mead", "cobyla", "slsqp")
@@ -56,37 +57,39 @@ def check(spec: dict[str, Any]) -> None:
 
     variables = spec.get("variables") or []
     if not variables:
-        raise OptimizationError("Choose at least one value to optimize.")
+        raise OptimizationError(t("Choose at least one value to optimize."))
     if len(variables) > MAX_VARIABLES:
-        raise OptimizationError(f"At most {MAX_VARIABLES} values can be optimized together.")
+        raise OptimizationError(t("At most {n} values can be optimized together.", n=MAX_VARIABLES))
     names = [item["name"] for item in variables]
     if len(set(names)) != len(names):
-        raise OptimizationError("A value is optimized twice.")
+        raise OptimizationError(t("A value is optimized twice."))
     for item in variables:
         low, high, start = float(item["min"]), float(item["max"]), float(item["start"])
         if not low < high:
             raise OptimizationError(
-                f"{item['name']}: the smallest value must be below the largest."
+                t("{name}: the smallest value must be below the largest.", name=item["name"])
             )
         if not low <= start <= high:
-            raise OptimizationError(f"{item['name']}: the start value must be within its bounds.")
+            raise OptimizationError(
+                t("{name}: the start value must be within its bounds.", name=item["name"])
+            )
     if spec.get("method") not in METHODS:
-        raise OptimizationError(f"The method is one of {', '.join(METHODS)}.")
+        raise OptimizationError(t("The method is one of {methods}.", methods=", ".join(METHODS)))
     objective = spec.get("objective") or {}
     if objective.get("statistic") not in STATISTICS or objective.get("goal") not in GOALS:
-        raise OptimizationError("Say what the optimization minimizes, maximizes or targets.")
+        raise OptimizationError(t("Say what the optimization minimizes, maximizes or targets."))
     if objective["goal"] == "target" and objective.get("target") is None:
-        raise OptimizationError("Give the value the objective should reach.")
+        raise OptimizationError(t("Give the value the objective should reach."))
     constraints = spec.get("constraints") or []
     if len(constraints) > MAX_CONSTRAINTS:
-        raise OptimizationError(f"At most {MAX_CONSTRAINTS} constraints.")
+        raise OptimizationError(t("At most {n} constraints.", n=MAX_CONSTRAINTS))
     for item in constraints:
         if item.get("statistic") not in STATISTICS or item.get("op") not in OPERATORS:
-            raise OptimizationError(f"{item.get('variable')}: not a constraint.")
+            raise OptimizationError(t("{name}: not a constraint.", name=item.get("variable")))
     if constraints and spec["method"] == "nelder-mead":
-        raise OptimizationError("Nelder-Mead takes no constraints: use COBYLA or SLSQP.")
+        raise OptimizationError(t("Nelder-Mead takes no constraints: use COBYLA or SLSQP."))
     if int(spec.get("max_simulations") or 0) < 2:
-        raise OptimizationError("Allow at least 2 simulations.")
+        raise OptimizationError(t("Allow at least 2 simulations."))
 
 
 def variables_measured(spec: dict[str, Any]) -> list[str]:
@@ -240,21 +243,23 @@ def run(
         if len(cache) >= budget and not answer.success:
             raise _Budget
         state["message"] = (
-            "Converged: the best values change no more." if answer.success else str(answer.message)
+            t("Converged: the best values change no more.")
+            if answer.success
+            else str(answer.message)
         )
         state["converged"] = bool(answer.success)
     except _Budget:
         state["status"] = "done"
-        state["message"] = f"Reached the most simulations allowed ({budget})."
+        state["message"] = t("Reached the most simulations allowed ({n}).", n=budget)
         state["converged"] = False
     except Stop:
         state["status"] = "stopped"
-        state["message"] = "Cancelled."
+        state["message"] = t("Cancelled.")
         state["converged"] = False
     state["best"] = _best(state["evaluations"])
     if state["best"] is None and state["status"] == "done":
         state["status"] = "failed"
-        state["message"] = "No simulation gave the objective a value."
+        state["message"] = t("No simulation gave the objective a value.")
     return state
 
 

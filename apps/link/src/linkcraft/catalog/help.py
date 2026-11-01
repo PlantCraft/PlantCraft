@@ -17,9 +17,11 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from plantcraft_sdk.i18n import localized
+
 from linkcraft.catalog.labels import METHOD_LABELS, PARAMETER_LABELS
 from linkcraft.catalog.registry import METHOD_SPECS
-from linkcraft.i18n import t
+from linkcraft.i18n import current_language, t
 
 HELP_DIR = Path(__file__).resolve().parents[1] / "methods" / "help"
 SECTIONS = (
@@ -29,7 +31,10 @@ SECTIONS = (
     ("reading", "How to read the finding"),
     ("limits", "Limits"),
 )
-PARAMETER = re.compile(r"^`(?P<key>\w+)` \(default (?P<default>[^)]*)\): (?P<meaning>.+)$", re.S)
+# A translated page writes "(padrão X)" for "(default X)" (methods/help/<language>/, docs/translations.md).
+PARAMETER = re.compile(
+    r"^`(?P<key>\w+)` \((?:default|padrão) (?P<default>[^)]*)\): (?P<meaning>.+)$", re.S
+)
 
 
 def format_default(value: Any) -> str:
@@ -95,7 +100,8 @@ def parse(text: str) -> dict[str, Any]:
             sections.append({"title": line[3:].strip(), "lines": current})
         elif current is not None:
             current.append(line)
-    ids = {name: key for key, name in SECTIONS}
+    # A translated page titles its sections in its language.
+    ids = {name: key for key, name in SECTIONS} | {t(name): key for key, name in SECTIONS}
     return {
         "title": title,
         "sections": [
@@ -127,12 +133,16 @@ def documented_parameters(page: dict[str, Any]) -> dict[str, dict[str, str]]:
     return found
 
 
-@lru_cache(maxsize=None)
 def _page(method_id: str) -> dict[str, Any] | None:
+    return _page_in(method_id, current_language())
+
+
+@lru_cache(maxsize=None)
+def _page_in(method_id: str, language: str) -> dict[str, Any] | None:
     path = HELP_DIR / f"{method_id}.md"
     if method_id not in METHOD_SPECS or not path.is_file():
         return None
-    return parse(path.read_text(encoding="utf-8"))
+    return parse(localized(path).read_text(encoding="utf-8"))
 
 
 def method_help(method_id: str, configured: dict[str, Any] | None = None) -> dict[str, Any] | None:

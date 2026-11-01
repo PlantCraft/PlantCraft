@@ -2,7 +2,7 @@
 .PHONY: ci deps standard lint format test test-fast test-postgres sources-check sources-public frontend e2e bench serve collect image package lock
 
 PYTHON ?= $(shell command -v python >/dev/null 2>&1 && echo python || echo python3)
-SDK := plantcraft-sdk==0.103.0
+SDK := plantcraft-sdk==0.104.0
 
 ci: deps standard lint frontend test
 
@@ -16,7 +16,7 @@ deps:
 # targets, vendored SDK hash; run as a module so $(PYTHON) finds it.
 standard:
 	$(PYTHON) -m plantcraft_sdk.app_cli check .
-	$(PYTHON) -m plantcraft_sdk.i18n_check .
+	$(PYTHON) -m plantcraft_sdk.i18n_check --strict .
 
 lint:
 	ruff check .

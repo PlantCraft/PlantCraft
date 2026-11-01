@@ -106,6 +106,20 @@ def t(text: str, /, **values: object) -> str:
     return translated.format(**values) if values else translated
 
 
+def localized(path: Path) -> Path:
+    """The translation of a document for the current language, else the English ``path``.
+
+    A translated document sits in a folder named after its language next to the English one:
+    ``docs/help/pt-BR/alarms.md`` translates ``docs/help/alarms.md``."""
+
+    language = current_language()
+    if language != DEFAULT_LANGUAGE:
+        translated = path.parent / language / path.name
+        if translated.is_file():
+            return translated
+    return path
+
+
 def request_language(headers: dict[str, str], cookies: dict[str, str]) -> str | None:
     """The language a request asks for: the page's header, else the suite's cookie."""
 

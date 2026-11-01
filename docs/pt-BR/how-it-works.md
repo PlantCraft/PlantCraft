@@ -19,7 +19,7 @@ Apps da suíte | Link e os outros, cada um por conta própria
 | Fontes de dados, o cache de histórico e os sinais em uso | PlantCraft |
 | Ativos, seus tipos e os sinais vinculados a eles | PlantCraft |
 | Malhas (ativos do tipo `loop`, sinais por papel) | PlantCraft |
-| Como cada malha é analisada, rondas, notas e relatórios | Analytics |
+| Como cada malha é analisada, rodadas, notas e relatórios | Analytics |
 | Quem alterou o quê, no PlantCraft e nos apps | Registro de auditoria do PlantCraft |
 
 ## Entrar uma vez
@@ -27,7 +27,7 @@ Apps da suíte | Link e os outros, cada um por conta própria
 Você entra no PlantCraft. Ele dá ao seu navegador um token de curta duração
 que cada app da suíte confere por conta própria, sem perguntar ao PlantCraft
 a cada vez. Um app que não encontra o token manda você para o login do
-PlantCraft e de volta. O trabalho que um app faz sozinho (as rondas do
+PlantCraft e de volta. O trabalho que um app faz sozinho (as rodadas do
 Analytics) usa uma chave de app que um administrador emite no PlantCraft.
 
 ## Só leitura

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 
+from doccraft.i18n import t
 from doccraft.plantmap.reader.primitives import Page, Text, add_path
 from doccraft.plantmap.reader.svg import DrawingError
 
@@ -18,21 +19,27 @@ def read_pdf(data: bytes, *, ocr: bool = True) -> list[Page]:
     try:
         import pdfplumber
     except ImportError as exc:  # pragma: no cover - the image has it
-        raise DrawingError("Reading PDF needs pdfplumber.") from exc
+        raise DrawingError(t("Reading PDF needs pdfplumber.")) from exc
     pages: list[Page] = []
     try:
         pdf = pdfplumber.open(io.BytesIO(data))
     except Exception as exc:  # pdfminer raises many kinds on a broken file
-        raise DrawingError("This is not a readable PDF file.") from exc
+        raise DrawingError(t("This is not a readable PDF file.")) from exc
     with pdf:
         if len(pdf.pages) > MAX_PAGES:
-            raise DrawingError(f"This PDF has more than {MAX_PAGES} pages.")
+            raise DrawingError(t("This PDF has more than {n} pages.", n=MAX_PAGES))
         for number, source in enumerate(pdf.pages):
             page = Page(width=float(source.width), height=float(source.height))
             try:
                 _vector(page, source)
             except Exception as exc:  # a broken page never stops the others
-                page.notes.append(f"Page {number + 1} could not be read: {type(exc).__name__}.")
+                page.notes.append(
+                    t(
+                        "Page {n} could not be read: {error}.",
+                        n=number + 1,
+                        error=type(exc).__name__,
+                    )
+                )
             if not page.texts and len(page.segs) < 10 and ocr:
                 page = _scan(data, number, page)
             pages.append(page)
@@ -79,7 +86,7 @@ def _scan(data: bytes, number: int, page: Page) -> Page:
     try:
         import pypdfium2
     except ImportError:  # pragma: no cover
-        page.notes.append("This page is a scan and pypdfium2 is not installed.")
+        page.notes.append(t("This page is a scan and pypdfium2 is not installed."))
         return page
     pdf = pypdfium2.PdfDocument(data)
     try:

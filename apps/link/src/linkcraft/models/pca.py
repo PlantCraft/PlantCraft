@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from linkcraft.i18n import t
 from linkcraft.models.stats import chi2_quantile
 
 MIN_SAMPLES_PER_SIGNAL = 5
@@ -109,7 +110,9 @@ def fit_pca(
     rows = rows[np.all(np.isfinite(rows), axis=1)]
     needed = max(MIN_SAMPLES, MIN_SAMPLES_PER_SIGNAL * len(signals))
     if len(rows) < needed:
-        raise ValueError(f"{len(rows)} complete samples, {needed} needed")
+        raise ValueError(
+            t("{found} complete samples, {needed} needed", found=len(rows), needed=needed)
+        )
     mean = rows.mean(axis=0)
     std = rows.std(axis=0, ddof=1)
     level = np.maximum(np.abs(mean), 1.0)
@@ -120,7 +123,7 @@ def fit_pca(
         if not kept
     ]
     if keep.sum() < 2:
-        raise ValueError("fewer than two signals vary in the period")
+        raise ValueError(t("fewer than two signals vary in the period"))
     names = [name for name, kept in zip(signals, keep, strict=True) if kept]
     mean, std = mean[keep], std[keep]
     z = (rows[:, keep] - mean) / std

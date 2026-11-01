@@ -18,6 +18,7 @@ from typing import Any
 
 from plantcraft_sdk.images import raw_image
 
+from modelcraft.i18n import t
 from modelcraft.modelica.declarations import ClassElements, class_elements, literal
 from modelcraft.modelica.source import ClassDef, flatten, outline
 
@@ -159,7 +160,7 @@ def _base_port(name: str, *, direction: str) -> dict[str, Any]:
         "port": name,
         "types": [SIGNAL],
         "type": SIGNAL,
-        "label": words.get(name, name),
+        "label": t(words[name]) if name in words else name,
         "description": "",
         "unit": "",
         "required": direction == "input",

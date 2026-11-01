@@ -11,6 +11,7 @@ import math
 import re
 import xml.etree.ElementTree as ET
 
+from doccraft.i18n import t
 from doccraft.plantmap.reader.primitives import Page, Text, add_path
 
 Matrix = tuple[float, float, float, float, float, float]  # a b c d e f
@@ -25,13 +26,13 @@ class DrawingError(ValueError):
 def read_svg(data: bytes) -> Page:
     head = data[:4096].lower()
     if b"<!doctype" in head or b"<!entity" in data.lower():
-        raise DrawingError("This SVG declares a DOCTYPE or entities, which are not read.")
+        raise DrawingError(t("This SVG declares a DOCTYPE or entities, which are not read."))
     try:
         root = ET.fromstring(data)
     except ET.ParseError as exc:
-        raise DrawingError(f"This is not a readable SVG file ({exc}).") from exc
+        raise DrawingError(t("This is not a readable SVG file ({error}).", error=exc)) from exc
     if _local(root.tag) != "svg":
-        raise DrawingError("This XML file is not an SVG drawing.")
+        raise DrawingError(t("This XML file is not an SVG drawing."))
     width, height, base = _viewport(root)
     page = Page(width=width, height=height)
     count = 0
@@ -40,7 +41,7 @@ def read_svg(data: bytes) -> Page:
         el, matrix, inherited = stack.pop()
         count += 1
         if count > MAX_ELEMENTS:
-            raise DrawingError("This SVG has too many elements to read.")
+            raise DrawingError(t("This SVG has too many elements to read."))
         tag = _local(el.tag)
         if tag in {"defs", "clipPath", "mask", "symbol", "style", "script", "metadata", "title"}:
             continue

@@ -153,7 +153,7 @@ export function AlarmMark({ priority, x, y }: { priority: keyof typeof ALARM_MAR
     : priority === "high" ? <path d={`M0 ${-r - 2}L${r + 2} ${r}H${-r - 2}Z`} />
     : priority === "medium" ? <path d={`M0 ${-r - 2}L${r + 2} 0L0 ${r + 2}L${-r - 2} 0Z`} />
     : <circle r={r} />;
-  return <g className={`dg-alarm-mark dg-alarm-${priority}`} transform={`translate(${x} ${y})`} aria-label={`Priority ${ALARM_MARK[priority]} alarm`}>
+  return <g className={`dg-alarm-mark dg-alarm-${priority}`} transform={`translate(${x} ${y})`} aria-label={t("Priority {mark} alarm", { mark: ALARM_MARK[priority] })}>
     {shape}
     <text y={priority === "high" ? 4 : 1} textAnchor="middle" dominantBaseline="central">{ALARM_MARK[priority]}</text>
   </g>;

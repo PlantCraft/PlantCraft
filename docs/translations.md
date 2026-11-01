@@ -2,8 +2,8 @@
 
 The suite is written in English. Every text a person reads is English in the code, wrapped in
 `t()`, and is its own catalog key; a translation is a catalog file next to the code that uses it.
-A text missing from a catalog shows in English. Brazilian Portuguese (`pt-BR`) is the first
-language; another one is a new catalog file per module plus its line in the language lists below.
+A text missing from a catalog shows in English. Brazilian Portuguese (`pt-BR`) is complete
+(screens, servers and help); another one is a new catalog file per module plus its line in the language lists below.
 
 ## Switched off by default
 
@@ -41,10 +41,24 @@ screens over the shared components', an app's server over the SDK's.
   (`LanguageMiddleware`, added by `plantcraft_sdk.server.web.mount`).
 - Text is translated when it is produced (`t()` inside the function, not at import).
 
+## Help pages and guides
+
+A translated document sits in a folder named after its language next to the English one, and a
+page without a translation shows in English (`plantcraft_sdk.i18n.localized`): an app's
+`docs/help/pt-BR/<page>.md`, Analytics' `methods/help/pt-BR/` and `methods/help/guides/pt-BR/`,
+the platform's guides in `docs/pt-BR/`. An Analytics method page keeps its sections in order,
+titled with their catalog translation, and each parameter as ``- `name` (padrão X): meaning``.
+
+## Words
+
+Every translation follows [translations-glossary-pt-BR.md](translations-glossary-pt-BR.md): one
+word, one meaning, product names never translated.
+
 ## The check
 
 `python -m plantcraft_sdk.i18n_check <folder>` finds every `locales` folder under the folder and
 counts the English texts its code passes to `t()` against each catalog. It fails on a broken
 catalog (not flat, an empty translation, `{fields}` that differ). `--missing` lists what is not
-translated; `--strict` also fails on it, the gate once a language is complete. `make ci` runs it
-for the platform (`make i18n`) and in every app (`make standard`).
+translated; `--strict` also fails on it. pt-BR is complete (2026-11-01), so `make ci` runs it with
+`--strict` for the platform (`make i18n`) and in every app (`make standard`): a new text in `t()`
+needs its pt-BR entry in the same change.

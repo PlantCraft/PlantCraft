@@ -122,12 +122,12 @@ class Pump(BaseModel):
     @classmethod
     def _curve(cls, value: list[list[float]]) -> list[list[float]]:
         if any(len(point) != 2 for point in value):
-            raise ValueError("each point is [flow, efficiency]")
+            raise ValueError(t("Each point is [flow, efficiency]."))
         flows = [point[0] for point in value]
         if any(later <= earlier for earlier, later in zip(flows, flows[1:], strict=False)):
-            raise ValueError("the flows increase from one point to the next")
+            raise ValueError(t("The flows increase from one point to the next."))
         if any(not 0 <= point[1] <= 100 for point in value):
-            raise ValueError("efficiencies are between 0 and 100 %")
+            raise ValueError(t("Efficiencies are between 0 and 100 %."))
         return value
 
 

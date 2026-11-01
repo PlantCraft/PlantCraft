@@ -65,7 +65,7 @@ export function PreferencesPage() {
           ))}
         </div>
       </FormSection>
-      <FormSection id="pref-language" icon={<Languages size={17} />} title={t("Language")} detail={LANGUAGES.length < 2 ? t("The suite is in English for now; Portuguese comes back once the screens are final.") : t("The language of every app of the suite.")}>
+      <FormSection id="pref-language" icon={<Languages size={17} />} title={t("Language")} detail={LANGUAGES.length < 2 ? t("Other languages are off in this installation; an administrator turns them on with PLANTCRAFT_TRANSLATIONS=1.") : t("The language of every app of the suite.")}>
         <div className="form-grid">
           <label>{t("Language")}
             <select value={lang} disabled={LANGUAGES.length < 2} onChange={(event) => setLang(event.target.value)}>

@@ -1,6 +1,7 @@
 /** Block files (`plantcraft-block/1`) in the interface: a new one, reading one pasted or
  * uploaded, saving one to disk, and the line-by-line difference between two versions' code. */
 import { saveFile } from "@plantcraft/ui";
+import { t } from "./i18n";
 import type { BlockFileDoc, BlockFileParameter, BlockFilePort } from "./types";
 
 export const BLOCK_FORMAT = "plantcraft-block/1";
@@ -54,9 +55,9 @@ export function parseBlockFile(text: string): BlockFileDoc {
   try {
     parsed = JSON.parse(candidate || trimmed);
   } catch (error) {
-    throw new Error(`Not a block file: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(t("Not a block file: {error}", { error: error instanceof Error ? error.message : String(error) }));
   }
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Not a block file: a block file is a JSON object.");
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error(t("Not a block file: a block file is a JSON object."));
   const file = parsed as Partial<BlockFileDoc>;
   return {
     ...newBlockFile(),

@@ -54,9 +54,9 @@ def _percents(text: str) -> dict[str, float]:
         try:
             number = float(value)
         except ValueError:
-            raise ValueError(f"not 'stream = percent': {part.strip()[:40]}") from None
+            raise ValueError(t("Not 'stream = percent': {part}", part=part.strip()[:40])) from None
         if name not in STREAMS or not 0 < number <= 100:
-            raise ValueError(f"not 'stream = percent': {part.strip()[:40]}")
+            raise ValueError(t("Not 'stream = percent': {part}", part=part.strip()[:40]))
         found[name] = number
     return found
 

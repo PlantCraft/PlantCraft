@@ -7,20 +7,30 @@ instalação para outra. O dia a dia de fontes e sinais (navegar pelas tags,
 escolher o que guardar, o histórico) fica no app **Historian**; só a árvore de
 ativos se move com **Ativos › Importar** e **Exportar**.
 
+> Desde 2026-10-24 o arquivo de configuração não tem página no PlantCraft (o
+> responsável o achou pouco claro ao lado da importação de ativos, e enviar um
+> arquivo sobre uma planta em uso era arriscado). Ele continua para instalações
+> por script e para copiar uma instalação para outra, pela API com a sessão de
+> um administrador: `GET /api/map/template.xlsx` ou `/api/map/export.json`,
+> depois `POST /api/map/preview?filename=<file>` e
+> `POST /api/map/apply?filename=<file>` com o arquivo no corpo
+> (`ci/bench/suite_bench.py` faz exatamente isso). Na interface, a árvore de
+> ativos é importada em **Ativos › Importar**, e a última importação pode ser
+> desfeita lá; fontes e sinais são do Historian.
+
 ## O arquivo
 
-O arquivo tem quatro listas. Em **Settings › Arquivo de configuração** você baixa
-um modelo, exporta a configuração atual, envia o arquivo, confere a prévia e
-aplica.
+O arquivo tem quatro listas: baixe o modelo, ou exporte a configuração atual,
+preencha, confira a prévia e aplique.
 
 - **Excel (.xlsx)**: uma aba por lista, com os nomes das colunas na primeira
-  linha. A aba **Leia-me** do modelo explica cada coluna. Abas com nomes em
+  linha. A aba de leia-me do modelo explica cada coluna. Abas com nomes em
   português (`fontes`, `ativos`, `sinais`, `malhas`) também são aceitas.
 - **JSON**: um objeto com as listas `sources`, `assets`, `signals` e `loops`.
-- **CSV**: uma lista só, com o nome da aba no arquivo (`signals.csv`,
-  `assets.csv`...).
+- **CSV**: uma lista só, com o nome da aba como nome do arquivo
+  (`signals.csv`, `assets.csv`...).
 
-### `sources` (fontes)
+### `sources`
 
 | Coluna | Obrigatória | O que é |
 | --- | --- | --- |
@@ -35,7 +45,7 @@ aplica.
 | `timeout_seconds` | | Tempo máximo de cada leitura. |
 | `tags` | PI | Tags da fonte separadas por `;`. |
 
-### `assets` (ativos)
+### `assets`
 
 | Coluna | Obrigatória | O que é |
 | --- | --- | --- |
@@ -44,18 +54,18 @@ aplica.
 | `kind` | sim | Tipo do ativo: `unit`, `area`, `equipment`, `loop` ou outro tipo cadastrado na plataforma. |
 | `parent_id` | | Ativo pai; vazio: direto sob a instalação. |
 | `description` | | Descrição livre. |
-| `attributes` | | Atributos do ativo: no JSON, um objeto (`{"potencia_kw": 75}`); na planilha, cada coluna extra da aba. Ainda não são guardados: a prévia avisa quais foram ignorados. |
+| `attributes` | | Atributos do ativo: no JSON, um objeto (`{"power_kw": 75}`); na planilha, cada coluna extra da aba. Ainda não são guardados: a prévia avisa quais foram ignorados. |
 
-### `signals` (sinais)
+### `signals`
 
 | Coluna | Obrigatória | O que é |
 | --- | --- | --- |
 | `tag` | sim | A tag na fonte (NodeId de texto no OPC UA, ponto no PI, coluna no CSV). |
-| `source_id` | | Fonte da tag; vazio: a fonte do cenário. |
+| `source_id` | | A fonte da tag; vazio: a fonte do cenário. |
 | `name`, `unit` | | Nome legível e unidade de engenharia. |
 | `asset_id` | | Ativo ao qual o sinal pertence. Uma tag pode aparecer em várias linhas, uma por ativo. |
-| `role` | | Papel do sinal no ativo (`pv`, `pressao`, `vibracao`...). |
-| `monitor` | | `sim`/`não`: a plataforma acompanha o sinal. Vazio: sim. |
+| `role` | | O papel do sinal no ativo (`pv`, `pressure`, `vibration`...). |
+| `monitor` | | `yes`/`no`: a plataforma acompanha o sinal. Vazio: sim. |
 
 ### `loops` (malhas de controle)
 
@@ -67,8 +77,8 @@ aplica.
 | `area`, `unit`, `service` | | Área (agrupa nos painéis), unidade de processo e descrição curta. |
 | `pv` | sim | Tag da variável de processo. |
 | `sp`, `op`, `mode`, `secondary` | | Tags do setpoint, da saída, do modo e de uma variável secundária. |
-Cada malha vira um ativo do tipo `loop` com seus sinais por papel, e assim
-todo app da suíte a encontra: o Analytics a analisa na próxima ronda. Como uma
+Cada malha vira um ativo do tipo `loop` com os seus sinais por papel, e assim
+todo app da suíte a encontra: o Analytics a analisa na próxima rodada. Como uma
 malha é analisada (`protocol`, `loop_type`, `criticality`, `enabled`) é
 definido no Analytics; essas colunas, quando presentes, são ignoradas aqui com
 um aviso. Uma malha que vem do arquivo de cenário é alterada nesse arquivo, não
@@ -87,34 +97,33 @@ cabeçalho):
   desconhecido (o ativo fica sob a instalação), senha que falta digitar,
   atributos e configurações de malha ignorados.
 
-**Aplicar** (somente administradores) grava tudo de uma vez. Importar o mesmo
+**Aplicar** (só administradores) grava tudo de uma vez. Importar o mesmo
 arquivo de novo não muda nada. O que não está no arquivo fica como está; só
 com a opção **Remover o que não está no arquivo** a plataforma remove as fontes
-adicionadas, os ativos feitos à mão, os vínculos de sinais e as malhas
-importadas que o arquivo não lista (as malhas do cenário nunca são removidas).
+adicionadas, os ativos feitos à mão, os vínculos de sinais e as malhas de um
+mapa que o arquivo não lista (as malhas do cenário nunca são removidas).
 
 Para editar no Excel: **Exportar mapa atual (Excel)**, edite e importe de
 volta. Sem edições, a prévia diz que nada muda.
 
-## Montar o mapa com um modelo de linguagem a partir dos manuais
+## Montar o mapa a partir dos manuais com um modelo de linguagem
 
 O caminho mais curto para uma planta nova costuma ser: juntar os manuais e as
 listas de I/O dos equipamentos, pedir ao seu assistente de IA que monte o JSON
-e conferir o resultado na prévia antes de aplicar. Em **Configuração › Arquivo
-de configuração**, **Copiar como prompt** põe um prompt pronto na área de
-transferência: o formato do arquivo com todas as colunas, um exemplo, os tipos
-de ativo desta instalação e as regras que a resposta deve seguir. Escolha
-**Montar o mapa a partir de documentos**, cole no assistente que a sua planta
-permite, anexe os documentos e envie. **Revisar um arquivo de mapa** pede ao
-assistente que confira um arquivo colado depois do prompt.
+e conferir o resultado na prévia antes de aplicar. Para a árvore de ativos,
+**Ativos › Importar › Copiar como prompt** põe um prompt pronto na área de
+transferência: o formato do arquivo, um exemplo, os tipos de ativo desta
+instalação e as regras que a resposta deve seguir. Para um mapa inteiro, o
+mesmo tipo de prompt vem da API (`/api/prompts/plant-map`).
 
-O botão só preenche a área de transferência: nada é enviado. O prompt nunca
-leva o endereço, o usuário ou a senha de uma fonte de dados; as fontes são
-configuradas em Configuração, e o assistente monta só ativos, sinais, malhas e
-relações.
+O botão só preenche a área de transferência: nada é enviado a lugar nenhum. O
+prompt nunca leva o endereço, o usuário ou a senha de uma fonte de dados; as
+fontes são configuradas em Configurações, e ao assistente só se pedem ativos,
+sinais, malhas e relações.
 
-Depois, em **Arquivo de configuração**, envie o JSON e leia a prévia com atenção: avisos
-de tags que não existem na fonte costumam ser erros de leitura do modelo.
+Depois, confira a prévia do JSON (Ativos › Importar, ou `/api/map/preview`) e
+leia-a com atenção: avisos de tags que não existem na fonte costumam ser erros
+de leitura do modelo.
 
 ## Para quem implanta
 
@@ -123,8 +132,8 @@ de tags que não existem na fonte costumam ser erros de leitura do modelo.
   em `sources.key` ao lado do banco (ou no arquivo indicado por
   `PLANTCRAFT_SOURCES_KEY_FILE`). Sem a chave, as senhas guardadas precisam
   ser digitadas de novo.
-- Cada leitura de dados vai para a fonte dona de cada tag; tags sem dono são
+- Cada leitura de dados vai para a fonte dona de cada tag; tags sem dona são
   lidas da fonte do cenário, exatamente como antes. Fontes OPC UA e PI
   adicionadas usam o mesmo cache local de histórico que a fonte do cenário.
-- Ler e gerar planilhas Excel usa o pacote `openpyxl` (grupo `server` das
+- Ler e gravar planilhas Excel usa o pacote `openpyxl` (grupo `server` das
   dependências).

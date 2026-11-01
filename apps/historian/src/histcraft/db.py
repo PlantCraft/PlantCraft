@@ -33,6 +33,8 @@ from urllib.parse import urlsplit, urlunsplit
 
 from plantcraft_sdk.utc import is_instant, utc_iso
 
+from histcraft.i18n import t
+
 _CLOCK: ContextVar[datetime | None] = ContextVar("histcraft_clock", default=None)
 # Seconds a PostgreSQL statement may run in this context (``read_timeout``); None: no limit.
 _READ_TIMEOUT: ContextVar[float | None] = ContextVar("histcraft_read_timeout", default=None)
@@ -44,7 +46,10 @@ class ReadTimeout(RuntimeError):
     def __init__(self, seconds: float):
         self.seconds = seconds
         super().__init__(
-            f"This read took longer than {seconds:g} s: ask for a shorter period or a larger step."
+            t(
+                "This read took longer than {seconds} s: ask for a shorter period or a larger step.",
+                seconds=f"{seconds:g}",
+            )
         )
 
 

@@ -235,9 +235,9 @@ class OutsideLimits(BaseModel):
     @model_validator(mode="after")
     def _limits(self) -> OutsideLimits:
         if self.lower is None and self.upper is None:
-            raise ValueError("give a lower limit, an upper limit or both")
+            raise ValueError(t("Give a lower limit, an upper limit or both."))
         if self.lower is not None and self.upper is not None and self.lower > self.upper:
-            raise ValueError("the lower limit is above the upper limit")
+            raise ValueError(t("The lower limit is above the upper limit."))
         return self
 
 

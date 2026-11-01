@@ -499,7 +499,7 @@ class Deviation(BaseModel):
             try:
                 Calibration.from_dict(self.calibration)
             except (KeyError, TypeError, ValueError) as exc:
-                raise ValueError("a calibration made by Calibrate") from exc
+                raise ValueError(t("Use a calibration made by Calibrate.")) from exc
         return self
 
 
@@ -719,7 +719,7 @@ class Band(BaseModel):
     @model_validator(mode="after")
     def _band(self) -> Band:
         if self.above is None and self.below is None:
-            raise ValueError("give a value it must stay above, below, or both")
+            raise ValueError(t("Give a value it must stay above, below, or both."))
         return self
 
 
@@ -811,7 +811,7 @@ class Empirical(BaseModel):
             try:
                 PcaModel.from_dict(self.calibration)
             except (KeyError, TypeError, ValueError) as exc:
-                raise ValueError("a calibration made by Calibrate") from exc
+                raise ValueError(t("Use a calibration made by Calibrate.")) from exc
         return self
 
 
@@ -1040,7 +1040,7 @@ class RegressionParameters(BaseModel):
             try:
                 Regression.from_dict(self.calibration)
             except (KeyError, TypeError, ValueError) as exc:
-                raise ValueError("a calibration made by Calibrate") from exc
+                raise ValueError(t("Use a calibration made by Calibrate.")) from exc
         return self
 
 
