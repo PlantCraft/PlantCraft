@@ -75,32 +75,85 @@ def run_cases(battery: Battery, groups: set[str] | None = None, log=print) -> li
     return results
 
 
+# Hard questions: a nine-loop plant of its own, asked as the administrator (hard.py) --------------
+
+
+def run_hard(battery: Battery, log=print) -> list[Result]:
+    """Each hard question asked once; a real model only (the fake one cannot analyse)."""
+
+    from plantcraft.api.routers.assistant_chat import _reader
+    from tests.llm_battery import hard
+
+    if battery.fake:
+        return [
+            Result("hard", "hard", "The hard questions", "hard", None,
+                   ["only a real model can pass it"])
+        ]  # fmt: skip
+    hard.plant_notes(battery)
+    results = []
+    for case in hard.build_cases(_reader(battery.app, battery.rt, "admin")):
+        try:
+            outcome = hard.ask(battery, case)
+            if outcome.status != 201 or outcome.state not in ("", "done"):
+                passed, notes = (
+                    False,
+                    [f"FAIL: no answer ({outcome.status} {outcome.state} {outcome.detail})"],
+                )
+            else:
+                passed, notes = case.judge(outcome.text)
+        except Exception as exc:  # a case that breaks is a failed case, with why
+            outcome, passed, notes = None, False, [f"FAIL: the case broke: {exc!r}"[:400]]
+        notes.append(f"golden: {case.golden}")
+        result = Result(
+            id=case.id,
+            group="hard",
+            title=case.title,
+            expected="hard",
+            passed=passed,
+            notes=notes,
+            text=(outcome.text if outcome else "")[:2500],
+            seconds=round(outcome.seconds, 2) if outcome else 0.0,
+            tokens=outcome.tokens() if outcome else {},
+            tool_calls=outcome.tool_calls if outcome else 0,
+            model_calls=outcome.calls if outcome else 0,
+        )
+        results.append(result)
+        log(f"{result.verdict:16} {case.id:30} {' | '.join(notes)[:200]}")
+    return results
+
+
 # Quality: the assistant's own evaluation (Setup › Language models › Evaluate) --------------------
 
 
-def run_quality(battery: Battery, log=print, timeout: float = 3600) -> list[Result]:
-    """The evaluation's questions whose right answer is read from the plant (evals.py)."""
+def run_quality(
+    battery: Battery, log=print, timeout: float = 3600, suite: str = "questions"
+) -> list[Result]:
+    """Setup's evaluation, as an administrator: ``questions`` (answers read from the plant,
+    evals.py) into group ``quality``, or ``works`` (each ask and create work as its page asks
+    it, work_evals.py) into group ``works``, so a create work's model can be chosen per use."""
+
+    group = "works" if suite == "works" else "quality"
 
     if battery.fake:
         return [
             Result(
-                "quality",
-                "quality",
-                "The evaluation's questions",
-                "quality",
+                group,
+                group,
+                f"The evaluation's {suite}",
+                group,
                 None,
                 ["only a real model can pass it"],
             )  # fmt: skip
         ]
     started = time.monotonic()
-    response = battery.admin.post("/api/assistant/evals", json={})
+    response = battery.admin.post("/api/assistant/evals", json={"suite": suite})
     if response.status_code != 202:
         return [
             Result(
-                "quality",
-                "quality",
-                "The evaluation's questions",
-                "quality",
+                group,
+                group,
+                f"The evaluation's {suite}",
+                group,
                 False,
                 [f"FAIL: could not start: HTTP {response.status_code} {response.text[:200]}"],
             )  # fmt: skip
@@ -119,10 +172,10 @@ def run_quality(battery: Battery, log=print, timeout: float = 3600) -> list[Resu
         keys = ("input_tokens", "cached_tokens", "output_tokens", "reasoning_tokens")
         results.append(
             Result(
-                id=f"quality-{item.get('id')}",
-                group="quality",
+                id=f"{group}-{item.get('id')}",
+                group=group,
                 title=f"{item.get('title') or item.get('id')}: {str(item.get('question') or '')[:120]}",
-                expected="quality",
+                expected=group,
                 passed=bool(item.get("passed")),
                 notes=[
                     ("ok: " if item.get("passed") else "FAIL: ")
@@ -136,14 +189,14 @@ def run_quality(battery: Battery, log=print, timeout: float = 3600) -> list[Resu
                 model_calls=record["calls"] if record else 1,
             )
         )
-        log(f"{'PASS' if item.get('passed') else 'FAIL':16} quality-{item.get('id')}")
+        log(f"{'PASS' if item.get('passed') else 'FAIL':16} {group}-{item.get('id')}")
     if run.get("state") != "done":
         results.append(
             Result(
-                "quality-run",
-                "quality",
+                f"{group}-run",
+                group,
                 "The evaluation's run",
-                "quality",
+                group,
                 False,
                 [f"FAIL: the run ended {run.get('state')}: {run.get('error', '')}"],
             )  # fmt: skip
@@ -347,6 +400,10 @@ def write_report(
         f"{sum(1 for r in results if r.expected == 'model' and r.passed is not None)} |",
         f"| Quality (evaluation questions) | {sum(bool(r.passed) for r in results if r.expected == 'quality')} | "
         f"{sum(1 for r in results if r.expected == 'quality' and r.passed is not None)} |",
+        f"| Works (ask and create, as their pages ask) | {sum(bool(r.passed) for r in results if r.expected == 'works')} | "
+        f"{sum(1 for r in results if r.expected == 'works' and r.passed is not None)} |",
+        f"| Hard questions (nine-loop plant) | {sum(bool(r.passed) for r in results if r.expected == 'hard')} | "
+        f"{sum(1 for r in results if r.expected == 'hard' and r.passed is not None)} |",
         f"| Load | {sum(bool(r.passed) for r in results if r.expected == 'load')} | "
         f"{sum(1 for r in results if r.expected == 'load' and r.passed is not None)} |",
         f"| **All asked** | **{sum(bool(r.passed) for r in asked)}** | **{len(asked)}** |",
@@ -384,7 +441,18 @@ def write_report(
                 "",
                 f"At US$ {prices['input']}/{prices['cached']}/{prices['output']} per million input/cached/output "
                 f"tokens: mean US$ {statistics.mean(costs):.4f} per answer, max US$ {max(costs):.4f}.",
+                "",
+                "| Group | Answers | Mean US$ | Max US$ | Mean s |",
+                "|---|---|---|---|---|",
             ]
+            for group in GROUPS:
+                mine = [(r, c) for r, c in zip(answered, costs, strict=True) if r.group == group]
+                if mine:
+                    lines.append(
+                        f"| {group} | {len(mine)} | {statistics.mean(c for _, c in mine):.4f} | "
+                        f"{max(c for _, c in mine):.4f} | "
+                        f"{statistics.mean(r.seconds for r, _ in mine):.1f} |"
+                    )
         lines.append("")
     if load:
         lines += [
