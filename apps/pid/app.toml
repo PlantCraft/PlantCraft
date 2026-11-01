@@ -35,7 +35,7 @@ image = "pidcraft"
 [requires]
 platform = ">=0.6,<0.8"
 processcraft_api = ">=1.0,<2"
-sdk = "0.100.0"
+sdk = "0.102.0"
 asset_types = []
 roles = {}
 

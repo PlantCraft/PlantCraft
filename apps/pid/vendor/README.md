@@ -1,15 +1,15 @@
 # vendor
 
-Two packages of PlantCraft that are published on no index. StarterCraft pins both and installs them
+Two packages of PlantCraft that are published on no index. PlantCraft PID pins both and installs them
 only from this folder, so the image builds offline and checks each file's hash. Neither is edited
 here: a change is made in `sdk/python` or `ui/` at the repository's root, released as a new
 version, and `dev/revendor` puts the new file here with its hash.
 
-## plantcraft-sdk 0.100.0
+## plantcraft-sdk 0.102.0
 
-`pip install --no-index --find-links vendor plantcraft-sdk==0.100.0` (Makefile, CI and the
+`pip install --no-index --find-links vendor plantcraft-sdk==0.102.0` (Makefile, CI and the
 Dockerfile). The wheel is PlantCraft's reproducible build (`make sdk-wheel`, PlantCraft
-9125ec3): every app on SDK 0.100.0 vendors these same bytes.
+6b144fa): every app on SDK 0.102.0 vendors these same bytes.
 
 ## @plantcraft/ui 0.105.0
 
@@ -23,6 +23,6 @@ PlantCraft's `make ui-package` (every app on ui 0.105.0 vendors the same bytes).
 The same in `sha256sum -c` format (the Docker build and `plantcraft-app check` check both):
 
 ```text
-04b2dd894bcfaea0cc27e8c9403bbfc4e6c29dd6b6ac44ada2b7a8cbea8ff806  plantcraft_sdk-0.100.0-py3-none-any.whl
+9829554083eec2ef3d578a8f343967da3062bd4081aaa452ac41107993857493  plantcraft_sdk-0.102.0-py3-none-any.whl
 a36410ce8272c14764d95717e261e803649867305d82c4f4223f4db84ab836e9  plantcraft-ui-0.105.0.tgz
 ```

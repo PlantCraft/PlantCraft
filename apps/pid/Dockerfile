@@ -55,9 +55,9 @@ RUN --mount=type=secret,id=build_ca,required=false \
         --wheel-dir /wheelhouse -r requirements.lock
 COPY vendor ./vendor
 # plantcraft-sdk from vendor/ only, checked against the SHA256 in vendor/README.md.
-RUN grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.100.0-py3-none-any.whl' vendor/README.md \
+RUN grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.102.0-py3-none-any.whl' vendor/README.md \
         | (cd vendor && sha256sum -c -) \
-    && cp vendor/plantcraft_sdk-0.100.0-py3-none-any.whl /wheelhouse/
+    && cp vendor/plantcraft_sdk-0.102.0-py3-none-any.whl /wheelhouse/
 
 FROM ${PYTHON_IMAGE} AS compiled
 WORKDIR /build
@@ -127,7 +127,7 @@ RUN --mount=type=bind,from=wheels,source=/wheelhouse,target=/wheelhouse \
     python -m pip install --no-cache-dir --root-user-action=ignore --no-index --find-links /wheelhouse \
         --require-hashes --no-deps -r /tmp/requirements.lock \
     && python -m pip install --no-cache-dir --root-user-action=ignore --no-index --no-deps \
-        /wheelhouse/plantcraft_sdk-0.100.0-py3-none-any.whl \
+        /wheelhouse/plantcraft_sdk-0.102.0-py3-none-any.whl \
     && python -m pip check \
     && site="$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')" \
     && cp -r /compiled/. "$site/" \
