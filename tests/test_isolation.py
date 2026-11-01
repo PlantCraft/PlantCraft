@@ -475,6 +475,11 @@ def test_processcraft_starts_with_secure_defaults() -> None:
         "PLANTCRAFT_LLM_PROXY": "http://llm-egress:3128",
         "PLANTCRAFT_LLM_NO_PROXY": "${PLANTCRAFT_LLM_NO_PROXY:-}",
         "PLANTCRAFT_LLM": "${PLANTCRAFT_LLM:-}",
+        # A public demo's visitors ask the model only when its .env turns it on, under limits.
+        "PLANTCRAFT_PUBLIC_DEMO_LLM": "${PLANTCRAFT_PUBLIC_DEMO_LLM:-off}",
+        "PLANTCRAFT_PUBLIC_DEMO_LLM_QUESTIONS": "${PLANTCRAFT_PUBLIC_DEMO_LLM_QUESTIONS:-10}",
+        "PLANTCRAFT_PUBLIC_DEMO_LLM_PER_ADDRESS": "${PLANTCRAFT_PUBLIC_DEMO_LLM_PER_ADDRESS:-30}",
+        "PLANTCRAFT_PUBLIC_DEMO_LLM_DAILY": "${PLANTCRAFT_PUBLIC_DEMO_LLM_DAILY:-600}",
     }
     assert not any("API_KEY" in name or "TOKEN" in name for name in environment)
     assert "PASSWORD=" not in json.dumps(environment)
