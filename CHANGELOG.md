@@ -312,6 +312,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **The Zabbix template imports and reads.** Zabbix 7.0 refused it ("UUIDv4 is expected": its
+  uuids were version 5), and a Zabbix agent could not reach `metrics.json` because the install
+  folder was 0750. The uuids are now version 4 (the test checks it) and `install.sh` lets others
+  cross the install folder without listing it. Both found by importing the template into a Zabbix
+  7.0 server on the final VM test.
 - **Documents no longer restarts forever on a medium machine.** Its memory ceiling was 1 GB on
   the small and medium profiles, and it needs about 950 MB just to start (1.3 GB idle), so on an
   8 GB VM it was killed for memory in a loop and the demo story stopped there. The ceilings are now

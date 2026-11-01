@@ -37,7 +37,8 @@ def test_the_template_is_a_zabbix_7_export_with_unique_uuids():
     assert "version: '7.0'" in text and "template: PlantCraft by Zabbix agent" in text
     uuids = re.findall(r"uuid: (\S+)", text)
     assert len(uuids) > 20 and len(set(uuids)) == len(uuids)
-    assert all(re.fullmatch(r"[0-9a-f]{32}", u) for u in uuids)
+    # Zabbix 7.0 refuses the import unless every uuid is a version 4 one ("UUIDv4 is expected").
+    assert all(re.fullmatch(r"[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}", u) for u in uuids)
     # Every trigger names an item of this template.
     for key in re.findall(r"\(/PlantCraft by Zabbix agent/([^,)]+)", text):
         assert f"key: {key}" in text or f"key: '{key}'" in text, key
