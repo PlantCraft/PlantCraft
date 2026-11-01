@@ -137,10 +137,11 @@ def browser():
         instance.close()
 
 
-def _open_page(browser, server, locale, tours=False):
-    context = browser.new_context(
-        base_url=server, viewport={"width": 1440, "height": 900}, locale=locale
-    )
+def _open_page(browser, server, locale, tours=False, phone=False):
+    from plantcraft_sdk.e2e import PHONE
+
+    screen = PHONE if phone else {"viewport": {"width": 1440, "height": 900}}
+    context = browser.new_context(base_url=server, locale=locale, **screen)
     if not tours:
         context.add_init_script(TOURS_OFF)
     page = context.new_page()
@@ -201,6 +202,18 @@ def first_visit_page(browser, server):
     """Signed in as the administrator, with the guided tour as a first visitor gets it."""
 
     context, page, errors, outside = _open_page(browser, server, "en-US", tours=True)
+    _sign_in(context)
+    yield page
+    context.close()
+    assert not errors, f"JavaScript errors on the page: {errors}"
+    assert not outside, f"Requests outside the server: {outside}"
+
+
+@pytest.fixture()
+def first_visit_phone(browser, server):
+    """The first visit on a phone: the guided tour opens, on a 390 px wide touch screen."""
+
+    context, page, errors, outside = _open_page(browser, server, "en-US", tours=True, phone=True)
     _sign_in(context)
     yield page
     context.close()

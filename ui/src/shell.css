@@ -319,9 +319,9 @@
 .pct-skip:hover { color: var(--pc-text); text-decoration: underline; }
 @keyframes pct-fade { from { opacity: 0; } }
 @keyframes pct-rise { from { opacity: 0; transform: translateY(6px); } }
-@media (max-width: 639px) {
-  .pct-card, .pct-centred { top: auto !important; bottom: 16px; left: 16px !important; right: 16px; width: auto; transform: none; }
-}
+/* On a phone the card sits across the foot of what shows; Tour.tsx places it (left, width,
+   bottom) from the visible screen, which a page wider than the phone moves. */
+.pct-phone .pct-card { top: auto; right: auto; transform: none; overflow-y: auto; }
 @media (prefers-reduced-motion: reduce) { .pct-card, .pct-spot, .pct-dim, .pct-progress span { animation: none; transition: none; } }
 
 /* The four quick buttons that cross every app, above the person (round 8):
