@@ -7,6 +7,21 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Changed
+
+- **A new look for the whole suite (`@plantcraft/ui`).** Three levels, page, card and text, with
+  card and text at the most contrast: white cards and near-black text in light, near-black cards
+  on a grey page and near-white text in dark. Fields, buttons, search and filters take the card's
+  colour. Cards lose their outline for a hairline edge and a soft shadow, with 12 px corners. The
+  sidebar floats as a card in the theme's colours (it was graphite in both themes). One vertical
+  rhythm: 14 px between cards, 8 px between a toolbar and its table, 24 px above a new group.
+  Tables are denser, cut the description to one line and show the whole text on hover; a status
+  in a table is a dot and a word. Labels are no longer in capitals. Charts drop the vertical grid,
+  take series a step darker in light and lighter in dark, and mark a stretch (a check's event, a
+  bad-quality period, an alarm) with a strip on top of the plot instead of tinting it
+  (`markStrip()`); a scatter coloured by time uses `timeScale()`. The page title and its size
+  are unchanged; page tabs keep their underline.
+
 ### Added
 
 - **Public demo: a copy of every app's database for each visit (`plantcraft-sdk` 0.97.0).**
