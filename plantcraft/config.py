@@ -185,7 +185,7 @@ class LoopConfig(BaseModel):
     """A control loop the scenario describes: placed in the asset tree as a ``loop`` asset.
 
     Analysis settings (protocols, methods, parameters) belong to the app that analyses
-    loops (LinkCraft); scenario files may still carry them and they are ignored here.
+    loops; scenario files may still carry them and they are ignored here.
     """
 
     loop_id: str

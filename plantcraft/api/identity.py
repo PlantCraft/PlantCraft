@@ -87,7 +87,11 @@ def issue_user_token(
     return {"token": token, "expires_at": expires_at(expiry)}
 
 
-def issue_service_token(rt: Any, app_id: str, key_id: str) -> dict[str, str]:
+def issue_service_token(
+    rt: Any, app_id: str, key_id: str, scopes: list[str] | None = None
+) -> dict[str, str]:
+    # A key with scopes gives tokens that hold only those (``scope``), within the app's own.
+    extra = {} if scopes is None else {"scope": list(scopes)}
     token, expiry = rt.tokens.issue(
         f"app:{app_id}",
         ttl=SERVICE_TOKEN_SECONDS,
@@ -95,6 +99,7 @@ def issue_service_token(rt: Any, app_id: str, key_id: str) -> dict[str, str]:
         level="viewer",
         apps={app_id: "viewer"},
         key_id=key_id,
+        **extra,
     )
     return {"token": token, "expires_at": expires_at(expiry)}
 
@@ -234,7 +239,7 @@ def v1_caller(request: Request, rt: Runtime) -> Caller:
         # A revoked app key ends its service tokens at once.
         if not rt.workspace.app_keys.is_active(str(claims.get("key_id") or "")):
             raise _unauthorized(t("This app key was revoked."))
-        _hold_to_permissions(request, rt, username[4:])
+        _hold_to_permissions(request, rt, username[4:], claims.get("scope"))
     else:
         if rt.auth.enabled and username != rt.auth.username:
             user = rt.workspace.users.get_user(username)
@@ -256,15 +261,17 @@ def v1_caller(request: Request, rt: Runtime) -> Caller:
     )
 
 
-def _hold_to_permissions(request: Request, rt: Any, app_id: str) -> None:
-    """An app's own token uses only the routes its ``[permissions]`` name (scale review E4)."""
+def _hold_to_permissions(request: Request, rt: Any, app_id: str, key_scopes: Any = None) -> None:
+    """An app's own token uses only the routes its ``[permissions]`` name (scale review E4),
+    and, from a key with scopes, only those among them (backlog B8)."""
 
     scopes = getattr(rt, "app_scopes", None)
     route = request.scope.get("route")
     path = getattr(route, "path", None)
     if scopes is None or not path:
         return
-    reason = scopes.refusal(app_id, request.method, path)
+    held = [str(item) for item in key_scopes] if isinstance(key_scopes, list) else None
+    reason = scopes.refusal(app_id, request.method, path, key_scopes=held)
     if reason is not None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

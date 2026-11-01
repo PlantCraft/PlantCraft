@@ -38,7 +38,7 @@ export interface LoopConfig {
   metadata: Record<string, unknown>; asset_record?: AssetRecord | null; set_here?: string[];
 }
 
-/** Where a CPM setting comes from: PlantCraft's asset record, a person here, or LinkCraft's default. */
+/** Where a CPM setting comes from: PlantCraft's asset record, a person here, or Analytics' default. */
 export type SettingSource = "asset" | "here" | "default";
 
 export interface LoopSummary {
@@ -54,7 +54,7 @@ export interface SeriesPoint { timestamp: string; pv?: number | null; sp?: numbe
 
 export interface LoopDetail {
   loop: LoopConfig; origin: string; summary: LoopSummary | null; results: MethodResult[]; likely_causes?: LikelyCause[];
-  /** What LinkCraft publishes to PlantCraft for this loop: ok, warning, alarm or unknown. */
+  /** What Analytics publishes to PlantCraft for this loop: ok, warning, alarm or unknown. */
   suite_status?: string;
   incomplete?: boolean; missing_roles?: string[]; loop_type_known?: boolean;
   settings_source?: Record<"profile_id" | "criticality" | "method_parameters", SettingSource>;

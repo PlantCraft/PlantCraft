@@ -10,6 +10,9 @@ import { useAdminView } from "./session";
 import "./access.css";
 import "./apps.css";
 
+// The release key keeps the name it was made with (processcraft, before the rename): shown as PlantCraft.
+const publisherLabel = (id: string) => (id === "processcraft" || id === "plantcraft" ? "PlantCraft" : id);
+
 const PENDING = new Set(["installing", "updating", "rolling_back", "removing", "key"]);
 const ORIGINS: Record<string, string> = {
   configured: t("Configured"),
@@ -108,7 +111,7 @@ export default function AppsPage() {
       <section className="apps-status" aria-label={t("App installs")}>
         <span className={`apps-chip ${data.install_enabled ? "apps-chip-on" : "apps-chip-off"}`}>{data.install_enabled ? t("Installs on") : t("Installs off (PLANTCRAFT_APP_INSTALL=off)")}</span>
         <span className={`apps-chip ${data.installer.online ? "apps-chip-on" : "apps-chip-warn"}`}>{data.installer.online ? t("Installer running") : t("Installer not running: requests wait until it starts")}</span>
-        <span className="apps-chip">{data.trusted_publishers.length ? t("Trusted publishers: {list}", { list: data.trusted_publishers.join(", ") }) : t("No trusted publishers: add their public keys to trusted-publishers/")}</span>
+        <span className="apps-chip">{data.trusted_publishers.length ? t("Trusted publishers: {list}", { list: data.trusted_publishers.map(publisherLabel).join(", ") }) : t("No trusted publishers: add their public keys to trusted-publishers/")}</span>
       </section>
       {preview ? <PreviewPanel preview={preview} busy={busy === "install"} onInstall={() => void confirmInstall()} onCancel={() => void act("discard", async () => { await appsApi.discard(preview.upload_id); setPreview(null); })} /> : <section className="pc-grid">
         <UploadCard disabled={!data.install_enabled} maxMb={data.max_mb} onPreview={setPreview} onError={setError} />

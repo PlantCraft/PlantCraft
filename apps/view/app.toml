@@ -11,7 +11,7 @@ description = """\
 Screens anyone in the plant can read: KPIs with limits, trends, bars and tables over the signals \
 and assets of PlantCraft, refreshed on their own, in full screen for a control room wall, or \
 behind a read-only public link. One dashboard can serve every asset of a kind, and panels can show \
-other apps' results, such as PlantCraft Analytics's loop health and signal quality. Reports put the same \
+other apps' results, such as PlantCraft Analytics' loop health and signal quality. Reports put the same \
 panels, notes and the period's events in a PDF, made every day, week or month and sent to people \
 and groups in Messages. Needs PlantCraft with signals; assets with signal roles make asset \
 dashboards possible."""
@@ -29,7 +29,7 @@ image = "dashcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.100.0"
+sdk = "0.101.0"
 asset_types = ["unit", "equipment", "loop"]   # asset pages link here (subtypes included)
 roles = {}
 
@@ -183,7 +183,7 @@ ask = "Which unit or section should it show?"
 instructions = """Plan a new process diagram for what the person describes: its name, then the equipment from left to right in the direction of flow (search_assets, get_asset: the unit's equipment and its feeds and downstream-of relations), the process lines between them, the loops above the equipment they control with their PV and SP, and the level, running and flow each symbol should show, each with its asset and role. Find the assets before you answer, and propose the plan from what the person said rather than asking again."""
 
 [consumes]
-# Optional: a card can show any app's result; PlantCraft Analytics's (CPMCraft and DataCraft until
+# Optional: a card can show any app's result; PlantCraft Analytics' (CPMCraft and DataCraft until
 # 2026-10-20) come first. Cards saved with the old names read these (dashboards/merged_apps.py).
 results = [
     { kind = "linkcraft.loop_health", subject = "asset:loop" },

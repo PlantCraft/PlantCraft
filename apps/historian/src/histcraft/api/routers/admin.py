@@ -1,4 +1,4 @@
-"""The routes behind HistCraft's pages: overview, sources, signals and settings.
+"""The routes behind Historian's pages: overview, sources, signals and settings.
 
 Browsing a server and testing a connection are answered by the collector, which
 holds the plant connections: the route files a request and the page polls

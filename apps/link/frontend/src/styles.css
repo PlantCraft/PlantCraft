@@ -1,4 +1,4 @@
-/* LinkCraft styles on the suite's tokens, fonts and frame (@plantcraft/ui). */
+/* Analytics styles on the suite's tokens, fonts and frame (@plantcraft/ui). */
 @import "@plantcraft/ui/fonts.css";
 @import "@plantcraft/ui/tokens.css";
 @import "@plantcraft/ui/shell.css";
@@ -22,7 +22,7 @@ td small + small { margin-top: calc(3px * var(--pc-space-scale, 1)); }
 .label-line { display: flex; flex-wrap: wrap; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); }
 .label-line .source-tag { margin-left: 0; }
 
-/* The status LinkCraft publishes to PlantCraft, under the loop's own status. */
+/* The status Analytics publishes to PlantCraft, under the loop's own status. */
 .suite-status { display: flex; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); margin-top: calc(6px * var(--pc-space-scale, 1)); }
 .asset-not-covered { display: grid; gap: var(--pc-space-3); padding: var(--pc-space-5); }
 .asset-not-covered .heading-actions { display: flex; flex-wrap: wrap; gap: var(--pc-space-2); }

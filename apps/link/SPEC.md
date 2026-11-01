@@ -32,7 +32,7 @@ Performance Manager, AspenTech Aspen Watch. Sources are public only (clean room,
 
 ## Loop source
 
-Where PlantCraft Analytics's loops come from (decided 2026-10-19):
+Where PlantCraft Analytics' loops come from (decided 2026-10-19):
 
 1. **PlantCraft loop assets** (asset catalog, stage 2 of the asset model, 2026-10-19): every
    asset whose `type_path` contains `loop` (`LINKCRAFT_LOOP_ASSET_KIND`), so types derived from

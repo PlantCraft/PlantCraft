@@ -158,3 +158,15 @@ def test_pages_need_a_sign_in_except_public_ones(setup):
     assert shared.status_code == 200 and shared.headers["cache-control"] == "no-store"
     client.cookies.set("processcraft_token", fake.token("operator"))
     assert client.get("/demo/loops").text == "<html>app</html>"
+
+
+def test_health_fails_when_the_runtime_names_a_problem():
+    runtime = _runtime(FakePlantCraft())
+    problems = ["The engine process stopped 3 times."]
+    runtime.health_problem = lambda: problems[0]
+    client = TestClient(mount(APIRouter(), runtime, version="0.1.0"))
+    answer = client.get("/healthz")
+    assert answer.status_code == 503
+    assert answer.json()["problem"] == "The engine process stopped 3 times."
+    problems[0] = None
+    assert client.get("/healthz").json() == {"status": "ok", "version": "0.1.0"}

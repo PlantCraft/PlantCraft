@@ -5,7 +5,7 @@ Callers authenticate with a signed token (``Authorization: Bearer`` or the
 ``processcraft_token`` cookie), not the session: this router is mounted
 without the session guard. Plant data is read only: no route here writes to a
 data source. Signals and series come from the data layer
-(``plantcraft.platform.datalayer``): PlantCraft's sources, or HistCraft; the
+(``plantcraft.platform.datalayer``): PlantCraft's sources, or Historian; the
 only write, ``PUT /api/v1/series``, stores an app's derived series there.
 """
 
@@ -139,7 +139,7 @@ def service_token(payload: ServiceTokenRequest, rt: Runtime) -> dict[str, str]:
     record = rt.workspace.app_keys.verify(app_id, payload.key)
     if record is None:
         raise HTTPException(status_code=401, detail=t("Unknown app or key."))
-    return issue_service_token(rt, app_id, record["key_id"])
+    return issue_service_token(rt, app_id, record["key_id"], record.get("scopes"))
 
 
 @router.get("/me")
@@ -444,7 +444,7 @@ def asset_types(_caller: V1Reader, rt: Runtime) -> list[dict[str, Any]]:
 # Signals -------------------------------------------------------------------------
 #
 # The caller is checked here; the data layer answers (``plantcraft.platform.datalayer``):
-# PlantCraft's own sources, or HistCraft when ``HISTCRAFT_URL`` is set.
+# PlantCraft's own sources, or Historian when ``HISTCRAFT_URL`` is set.
 
 
 def _catalog(rt: Any) -> SignalCatalog:

@@ -1,9 +1,9 @@
-"""API v1 with HistCraft as the data layer (``HISTCRAFT_URL``), against a stub (no network).
+"""API v1 with Historian as the data layer (``HISTCRAFT_URL``), against a stub (no network).
 
 PlantCraft checks the caller as always, then forwards to ``{HISTCRAFT_URL}/api/v1/data/...``
 with a token it issues to itself (``aud: histcraft``, ``sub: app:processcraft``,
-``apps: {histcraft: editor}``). HistCraft's 4xx about the request and its 504 (a read past its
-time limit) reach the caller; its other failures are a 502 and a timeout a 504. Sources live in HistCraft too: the Sources page's
+``apps: {histcraft: editor}``). Historian's 4xx about the request and its 504 (a read past its
+time limit) reach the caller; its other failures are a 502 and a timeout a 504. Sources live in Historian too: the Sources page's
 routes forward there, and no plant source is read by PlantCraft.
 """
 
@@ -40,7 +40,7 @@ SERIES = {
 
 
 def _public(source: dict) -> dict:
-    """A source as HistCraft lists it: no password, ``has_password`` instead."""
+    """A source as Historian lists it: no password, ``has_password`` instead."""
 
     fields = (
         "id",
@@ -60,7 +60,7 @@ def _public(source: dict) -> dict:
 
 
 class FakeHistCraft:
-    """HistCraft's data API as PlantCraft calls it: records each request, answers v1 shapes."""
+    """Historian's data API as PlantCraft calls it: records each request, answers v1 shapes."""
 
     def __init__(self, keys):
         self.keys = keys
@@ -100,7 +100,7 @@ class FakeHistCraft:
         if self.timeout:
             raise httpx.ReadTimeout("slow", request=request)
         if self.fail:
-            return httpx.Response(self.fail, json={"detail": "HistCraft says no."})
+            return httpx.Response(self.fail, json={"detail": "Historian says no."})
         method = request.method
         if method == "GET" and path == "/signals":
             return httpx.Response(200, json=[SIGNAL])
@@ -229,7 +229,7 @@ class FakeHistCraft:
 
 @pytest.fixture()
 def hist(request, monkeypatch):
-    """PlantCraft (sign-in on) with HistCraft as its data layer, and the stub it calls."""
+    """PlantCraft (sign-in on) with Historian as its data layer, and the stub it calls."""
 
     monkeypatch.setenv("HISTCRAFT_URL", URL)
     client = request.getfixturevalue("central")
@@ -260,7 +260,7 @@ def test_v1_reads_are_forwarded_with_processcraft_own_token(hist):
     assert listed.status_code == 200 and listed.json() == [SIGNAL]  # mode passes through
     assert hist.get("/api/v1/signals/plc:FIC-101.PV", headers=reader).json() == SIGNAL
     bare = hist.get("/api/v1/signals/FIC-101.PV", headers=reader)
-    assert bare.json()["id"] == "plc:FIC-101.PV"  # HistCraft resolves the bare tag
+    assert bare.json()["id"] == "plc:FIC-101.PV"  # Historian resolves the bare tag
     series = hist.get(
         "/api/v1/signals/plc:FIC-101.PV/series",
         params={"start": "2026-10-19T00:00:00Z", "step": 60},
@@ -305,7 +305,7 @@ def test_v1_reads_are_forwarded_with_processcraft_own_token(hist):
 
 
 def test_long_series_pass_through_as_histcraft_wrote_them(hist):
-    """Series and batches are HistCraft's JSON bytes, never parsed and written again."""
+    """Series and batches are Historian's JSON bytes, never parsed and written again."""
 
     written = b'{"signal": "plc:FIC-101.PV",  "kind": "number", "t": [], "v": []}'
     batch = b'{"series": [],   "errors": []}'
@@ -597,7 +597,7 @@ def test_sources_are_managed_in_histcraft(hist):
     ).json()
     assert editing["ok"] is True
     sent = fake.calls("POST", "/sources/test")[-1]["body"]
-    assert sent["id"] == "pi" and sent["password"] is None  # HistCraft uses the stored one
+    assert sent["id"] == "pi" and sent["password"] is None  # Historian uses the stored one
     down = {**settings, "base_url": "https://down.example/piwebapi"}
     failed = hist.post("/api/data/sources/test", json={"type": "pi_web_api", "settings": down})
     assert failed.status_code == 200 and failed.json()["ok"] is False
@@ -613,7 +613,7 @@ def test_sources_are_managed_in_histcraft(hist):
     ]
     with pytest.raises(DataLayerError) as refused:
         _rt(hist).datalayer.stop_signals("app", ["linkcraft:x"])
-    assert refused.value.status == 422  # derived signals: HistCraft's refusal is passed on
+    assert refused.value.status == 422  # derived signals: Historian's refusal is passed on
     assert hist.delete("/api/data/sources/pi").json() == {"removed": "pi", "signals": 0}
     assert hist.delete("/api/data/sources/plc").status_code == 409  # it still has signals
     assert hist.delete("/api/data/sources/nope").status_code == 404
@@ -640,7 +640,7 @@ def test_the_interface_charts_read_through_histcraft(hist):
 
 
 def test_an_opcua_source_sends_only_the_options_histcraft_takes():
-    """The demo map's OPC UA source carries auth_type: HistCraft refuses it ("Unknown option")."""
+    """The demo map's OPC UA source carries auth_type: Historian refuses it ("Unknown option")."""
 
     from plantcraft.platform.datalayer.histcraft import source_body
 
@@ -667,7 +667,7 @@ def test_an_opcua_source_sends_only_the_options_histcraft_takes():
 
 
 def test_the_demo_map_imports_into_histcraft(hist):
-    """install.sh --demo: the Simulator map creates the source and its signals in HistCraft."""
+    """install.sh --demo: the Simulator map creates the source and its signals in Historian."""
 
     _admin(hist)
     plant = {
@@ -715,7 +715,7 @@ def test_the_demo_map_imports_into_histcraft(hist):
         item["role"]: item["source_id"] for item in _rt(hist).workspace.assets.signals("FIC-1003")
     }
     assert bound == {"pv": "plantcraft", "op": "plantcraft"}  # not the scenario's source
-    # A loop bound before HistCraft (no source) is bound again by the next import.
+    # A loop bound before Historian (no source) is bound again by the next import.
     store = _rt(hist).workspace.assets
     store.set_signals(
         "FIC-1003",
@@ -731,7 +731,7 @@ def test_the_demo_map_imports_into_histcraft(hist):
 
 
 def test_a_map_may_name_a_source_kept_in_histcraft(hist):
-    """A signals sheet without a sources sheet: the source exists in HistCraft (added on its
+    """A signals sheet without a sources sheet: the source exists in Historian (added on its
     pages or by an earlier import) and is known, read once for the whole file."""
 
     _admin(hist)
@@ -757,7 +757,7 @@ def test_a_map_may_name_a_source_kept_in_histcraft(hist):
         item["role"]: item["source_id"] for item in _rt(hist).workspace.assets.signals("TIC-777")
     }
     assert roles == {"pv": "plc", "sp": "plc", "op": "plc"}
-    # A source neither in the file nor in HistCraft is still an error.
+    # A source neither in the file nor in Historian is still an error.
     plant["signals"][0]["source_id"] = "nowhere"
     wrong = hist.post("/api/map/preview?filename=plant.json", content=json.dumps(plant).encode())
     assert any("nowhere" in i["message"] for i in wrong.json()["issues"])

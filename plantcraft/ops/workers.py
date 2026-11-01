@@ -1,6 +1,6 @@
 """Several server processes on one installation (``PLANTCRAFT_WORKERS``, docs/operations.md).
 
-PlantCraft answers from 2 to 4 processes when HistCraft is the data layer: one Python process
+PlantCraft answers from 2 to 4 processes when Historian is the data layer: one Python process
 holds one request in Python code at a time (the GIL), so many people at once wait in line.
 Everything they share lives in the data folder: the database (WAL, ``plantcraft.db``), the
 session and token keys (created once, ``O_EXCL``) and the login throttle (a table). Two things

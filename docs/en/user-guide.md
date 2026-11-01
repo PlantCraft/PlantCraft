@@ -227,7 +227,7 @@ dashboards, twins, models, actions and conversations. To write the story again
 (it never duplicates anything), run in the installation folder:
 
 ```bash
-docker compose exec processcraft processcraft demo seed
+docker compose exec processcraft plantcraft demo seed
 ```
 
 From a source checkout, `python run_opcua_demo.py` starts the same demo for

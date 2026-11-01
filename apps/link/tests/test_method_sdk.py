@@ -1,4 +1,4 @@
-"""Methods written as one function with ``@method`` (from plantcraft_sdk), as LinkCraft uses it."""
+"""Methods written as one function with ``@method`` (from plantcraft_sdk), as Analytics uses it."""
 
 from __future__ import annotations
 

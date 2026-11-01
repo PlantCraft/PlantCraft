@@ -2,7 +2,7 @@
 
 PlantCraft does not analyse loops; it describes them, so the apps of the suite find
 them through API v1 (``GET /api/v1/assets``: kind ``loop``, ``signals`` by role).
-LinkCraft reads every loop asset with a ``pv`` signal as a loop to monitor.
+Analytics reads every loop asset with a ``pv`` signal as a loop to monitor.
 
 Two places describe loops:
 
@@ -42,7 +42,7 @@ SCENARIO_ORIGIN = "scenario"
 # The origin the monolith's CPM module gave the scenario's loops.
 LEGACY_ORIGIN = "cpm"
 MAP_ORIGIN = "map"
-# Columns of the former loops sheet whose settings now live in LinkCraft
+# Columns of the former loops sheet whose settings now live in Analytics
 # (loop_type and criticality are attributes of the loop's record now).
 APP_COLUMNS = ("protocol", "function_type", "enabled")
 LOOP_TYPE = "loop"
@@ -336,7 +336,7 @@ class LoopsSection:
             }
             bindings = [item for item in store.signals(loop_id) if item.get("role") in role_keys]
             bound = {item["role"]: item["signal_id"] for item in bindings}
-            # With HistCraft, a binding must also name the source its tag is read from.
+            # With Historian, a binding must also name the source its tag is read from.
             sourced = not getattr(
                 getattr(platform, "datalayer", None), "manages_sources", False
             ) or all(
@@ -372,7 +372,7 @@ class LoopsSection:
                 write_record(ctx, loop_id, record)
                 signals = _signals(platform, roles)
                 if getattr(getattr(platform, "datalayer", None), "manages_sources", False):
-                    # With HistCraft, a binding keeps the source its tag is read from.
+                    # With Historian, a binding keeps the source its tag is read from.
                     for item in signals:
                         item["source_id"] = ctx.tag_source(item["signal_id"])
                 store.set_signals(loop_id, signals, origin=MAP_ORIGIN)

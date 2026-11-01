@@ -112,7 +112,7 @@ def _apply(rt: Any, content: bytes, filename: str, prune: bool, user: str) -> di
         result = plantmap.apply(rt.platform, content, filename, prune=prune, actor=user)
     except plantmap.MapError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except DataLayerError as exc:  # HistCraft refused or did not answer a source change
+    except DataLayerError as exc:  # Historian refused or did not answer a source change
         raise HTTPException(status_code=exc.status, detail=exc.detail) from exc
     if result["applied"]:
         rt.sync_assets()

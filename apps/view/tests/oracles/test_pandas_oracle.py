@@ -1,7 +1,7 @@
 """Oracle: what a card shows equals what pandas computes from the same samples.
 
 A recorded file (gaps, irregular samples, a spike) is served by the fake as
-PlantCraft serves a recorded file; every case reads it through a DashCraft
+PlantCraft serves a recorded file; every case reads it through a View
 card and checks the number against pandas. The pass count is the
 ``[oracles] pandas_cases`` floor in ``tests/floors.toml``; a case is never
 removed to raise it.

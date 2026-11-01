@@ -5,7 +5,7 @@ diagram (``share/diagram/<token>``), live or played back on its time bar.
 The token in the path is the only key: it is checked against the SHA-256 kept
 when the link was made, opens that one dashboard and nothing else, and stops
 working when an editor revokes it or deletes the dashboard. Data is read with
-DashCraft's service token. Turned off with ``DASHCRAFT_PUBLIC_LINKS=false``.
+View's service token. Turned off with ``DASHCRAFT_PUBLIC_LINKS=false``.
 """
 
 from __future__ import annotations

@@ -3,7 +3,7 @@
 Loops from PlantCraft assets take the ids of the asset's role map at every sync. A loop defined
 here before the rename names bare tags: it is looked up once and stored by the id PlantCraft
 answers (``loops/sync.py``, ``rename_signal_ids``). A bare tag still reads until API v1 is
-frozen; LinkCraft never builds an id from a tag.
+frozen; Analytics never builds an id from a tag.
 """
 
 from __future__ import annotations
@@ -101,7 +101,7 @@ def test_a_tag_two_sources_have_is_refused_with_both_ids(runtime, fake):
 
 def test_an_installation_from_before_the_rename_gains_the_column(tmp_path):
     path = tmp_path / "old.sqlite3"
-    with sqlite3.connect(path) as connection:  # workspace_loops as LinkCraft created it before
+    with sqlite3.connect(path) as connection:  # workspace_loops as Analytics created it before
         connection.executescript(
             """
             CREATE TABLE workspace_loops (

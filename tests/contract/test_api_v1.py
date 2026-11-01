@@ -351,7 +351,7 @@ def test_apps_installed_from_processcraft_follow_the_configured_ones(central):
     as the app they became, unknown apps last); pending installs do not."""
 
     store = _rt(central).apps.store
-    store.save("histcraft", name="HistCraft", version="1.0.0", url="/hist/", origin="package",
+    store.save("histcraft", name="Historian", version="1.0.0", url="/hist/", origin="package",
                status="running")  # fmt: skip
     store.save("wiki", name="Wiki", version=None, url="https://wiki.plant.example/",
                origin="external", status="external")  # fmt: skip
@@ -361,7 +361,7 @@ def test_apps_installed_from_processcraft_follow_the_configured_ones(central):
     assert [item["id"] for item in apps] == ["histcraft", "linkcraft", "dashcraft", "wiki"]
     assert all(set(item) == APP_FIELDS for item in apps)
     assert apps[0] == {
-        "id": "histcraft", "name": "HistCraft", "url": "/hist/", "access": "editor",
+        "id": "histcraft", "name": "Historian", "url": "/hist/", "access": "editor",
         "version": "1.0.0",
     }  # fmt: skip
     viewer = central.get("/api/v1/apps", headers=_as(central, "op")).json()

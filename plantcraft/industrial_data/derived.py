@@ -1,6 +1,6 @@
-"""Derived series apps publish (``PUT /api/v1/series``), kept here when there is no HistCraft.
+"""Derived series apps publish (``PUT /api/v1/series``), kept here when there is no Historian.
 
-With HistCraft configured the writes go there (``platform.datalayer``); without it, as in tests
+With Historian configured the writes go there (``platform.datalayer``); without it, as in tests
 and installs without a historian, they live in these tables and are read back through API v1
 like any other signal, under the source ``app-<app id>``. Values are kept as written: a later
 write at the same instant replaces the value.

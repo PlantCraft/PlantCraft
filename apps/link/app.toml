@@ -1,4 +1,4 @@
-# PlantCraft Analytics's manifest: the single source of its metadata (PlantCraft app standard, section 4).
+# PlantCraft Analytics' manifest: the single source of its metadata (PlantCraft app standard, section 4).
 # The launcher card, the Apps page, the package, the image labels and /api/meta read it;
 # tests/test_app_standard.py checks that nothing else disagrees with it.
 
@@ -30,7 +30,7 @@ image = "linkcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.100.0"
+sdk = "0.101.0"
 asset_types = ["loop"]
 roles = { loop = ["pv", "op"] }
 

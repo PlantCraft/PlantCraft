@@ -1,6 +1,6 @@
 """The demo story: fills a fresh installation with data that explains the suite by itself.
 
-``processcraft demo seed`` (run by ``install.sh --demo`` inside the PlantCraft container) signs
+``plantcraft demo seed`` (run by ``install.sh --demo`` inside the PlantCraft container) signs
 in as the administrator and goes through every app's own HTTP API, exactly as a person would in
 the browser, so the story only uses what the apps already offer. One plant, Riverbend Refinery
 (the Simulator: four units, 50 loops), and one week of a team that looks after it:
@@ -2798,7 +2798,7 @@ def histcraft_calc(hist: Http) -> None:
 def linkcraft(link: Http, suite: Suite) -> None:
     link.post("/api/loops/sync")
     loops = wait_until(
-        "Analytics's loops",
+        "Analytics' loops",
         lambda: [item for item in _items(link.get("/api/loops"), "loops")],
         suite.wait,
     )
@@ -3878,7 +3878,7 @@ def view_diagrams(dash: Http, suite: Suite) -> None:
             log(f"View: old diagram '{item['name']}' replaced by its page")
 
 
-# Analytics's model examples ------------------------------------------------------------------
+# Analytics' model examples ------------------------------------------------------------------
 
 
 def link_models(link: Http, suite: Suite) -> None:
@@ -4701,7 +4701,7 @@ def _demo_map(args: argparse.Namespace) -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="processcraft demo seed",
+        prog="plantcraft demo seed",
         description="Fill a fresh installation with the Simulator demo story (idempotent).",
     )
     parser.add_argument(

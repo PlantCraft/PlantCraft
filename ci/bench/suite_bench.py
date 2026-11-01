@@ -10,26 +10,26 @@
 What it does, against the installation in ``--prefix`` (its ``.env``, admin password, local CA
 and ``docker compose``):
 
-1. HistCraft: a source ``bench`` (disabled, so the collector leaves it alone) with ``loops`` x
+1. Historian: a source ``bench`` (disabled, so the collector leaves it alone) with ``loops`` x
    PV/SP/OP plus ``extra`` signals, and ``hours`` of archive written through the real
-   compressors and PostgreSQL (``ci/bench/hist_seed.py``, run inside the HistCraft container).
+   compressors and PostgreSQL (``ci/bench/hist_seed.py``, run inside the Historian container).
 2. PlantCraft: a plant map of one unit, an area per 50 loops and the loops with their roles,
    previewed and imported (``/api/map``).
-3. Reads through PlantCraft's API v1 (forwarded to HistCraft): batches of 500 signals over the
+3. Reads through PlantCraft's API v1 (forwarded to Historian): batches of 500 signals over the
    last hour and the whole window, one signal's raw week, and a 24 h trend of 100 signals; the
    same batches straight from the Historian (``/hist/api/v1/series``) when it serves them.
-4. LinkCraft: the signal checks over every signal, then the monitoring round over every loop
+4. Analytics: the signal checks over every signal, then the monitoring round over every loop
    (sync, read, analyse, publish), twice; then ``--queue-jobs`` executions (1000 by default) put
    in its queue at once, a person's "run now" on bench loops: how long the queue takes to drain,
    the longest wait, failures, and that its metrics carry the queue for PlantCraft's watch.
-5. DashCraft: a dashboard of 12 trend and 12 KPI cards on the bench loops, every card read.
-6. LinkCraft models: the demo's FIC-1001 model algorithm (a process model beside the plant)
+5. View: a dashboard of 12 trend and 12 KPI cards on the bench loops, every card read.
+6. Analytics models: the demo's FIC-1001 model algorithm (a process model beside the plant)
    copied onto ``twins`` bench loops; the share of them it ran on in the minutes watched.
 
 CPU and memory of each container are sampled through the run. The report is written to
 ``docs/bench/results/<host>-<UTC time>-<scale>.json`` (and ``.md``) so runs on different
 machines and days can be compared. ``--keep`` leaves the bench data in the stack; by default it
-is removed at the end (dashboard, model algorithm, assets, the HistCraft source and its archive).
+is removed at the end (dashboard, model algorithm, assets, the Historian source and its archive).
 
 Only the Python standard library is used, so the system ``python3`` of any machine runs it.
 """
@@ -310,7 +310,7 @@ def seed_histcraft(suite: Suite, loops: int, extra: int, hours: float, report: d
     seeded = json.loads(out.strip().splitlines()[-1])
     report["histcraft_seed"] = seeded
     log(
-        f"HistCraft: {seeded['points']} signals, {seeded['archived']:,} values archived in "
+        f"Historian: {seeded['points']} signals, {seeded['archived']:,} values archived in "
         f"{seeded['archive_seconds']} s ({seeded['values_per_second']:,}/s), compacted in "
         f"{seeded['compact_seconds']} s"
     )
@@ -437,7 +437,7 @@ def link_round(suite: Suite, report: dict, timeout: float) -> None:
             before, _, _ = suite.call("GET", "/link/api/status")
             previous = (before.get("round") or {}).get("started_at")
             if time.perf_counter() - began > timeout:
-                raise RuntimeError(f"the LinkCraft round could not start in {timeout:.0f} s")
+                raise RuntimeError(f"the Analytics round could not start in {timeout:.0f} s")
         began = time.perf_counter()
         while True:
             time.sleep(2)
@@ -446,7 +446,7 @@ def link_round(suite: Suite, report: dict, timeout: float) -> None:
             if current.get("started_at") != previous and current.get("completed_at"):
                 break
             if time.perf_counter() - began > timeout:
-                raise RuntimeError(f"the LinkCraft round did not end in {timeout:.0f} s")
+                raise RuntimeError(f"the Analytics round did not end in {timeout:.0f} s")
         summary = current.get("summary") or {}
         rounds.append(
             {
@@ -689,12 +689,12 @@ def markdown(report: dict) -> str:
         "|---|---|",
     ]
     for key, label in (
-        ("histcraft_seed", "HistCraft archive write"),
+        ("histcraft_seed", "Historian archive write"),
         ("plant_map", "Plant map import"),
         ("reads", "API v1 reads"),
-        ("signal_quality", "LinkCraft signal checks"),
-        ("link_rounds", "LinkCraft rounds"),
-        ("link_queue", "LinkCraft queue (executions at once)"),
+        ("signal_quality", "Analytics signal checks"),
+        ("link_rounds", "Analytics rounds"),
+        ("link_queue", "Analytics queue (executions at once)"),
         ("dashboard", "Dashboard"),
         ("twins", "Model algorithm on loops"),
     ):
@@ -765,7 +765,7 @@ def main() -> int:
     parser.add_argument("--twin-minutes", type=float, default=3.0)
     parser.add_argument("--round-timeout", type=float, default=3600.0)
     parser.add_argument("--queue-jobs", type=int, default=1000, help="executions queued at once")
-    parser.add_argument("--skip-seed", action="store_true", help="HistCraft already seeded")
+    parser.add_argument("--skip-seed", action="store_true", help="Historian already seeded")
     parser.add_argument("--keep", action="store_true", help="leave the bench data in the stack")
     parser.add_argument(
         "--cleanup", action="store_true", help="only remove what a --keep run left, then stop"

@@ -84,7 +84,8 @@ def add_worker(
 
 @router.post("/workers/{worker_id}/code")
 def new_code(worker_id: str, request: Request, admin: AdminUser, rt: Runtime) -> dict[str, Any]:
-    """A new one-time code for a worker whose machine did not enroll in time."""
+    """A new one-time code for a worker whose machine did not enroll in time, or that was revoked
+    (it enrolls again under the same name)."""
 
     worker = rt.compute.worker(worker_id)
     if worker is None:

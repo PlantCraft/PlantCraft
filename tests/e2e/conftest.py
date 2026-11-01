@@ -57,7 +57,7 @@ def server(tmp_path_factory):
         PLANTCRAFT_BASIC_AUTH_ENABLED="true",
         PLANTCRAFT_BASIC_AUTH_USERNAME="admin",
         PLANTCRAFT_BASIC_AUTH_PASSWORD_FILE=str(secret),
-        # LinkCraft installed beside PlantCraft: the launcher must show it.
+        # Analytics installed beside PlantCraft: the launcher must show it.
         PLANTCRAFT_APPS="linkcraft=/link/@0.1.0",
     )
     _fake_installer(tmp)

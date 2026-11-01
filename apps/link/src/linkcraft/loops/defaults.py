@@ -39,9 +39,9 @@ def _setting(loop: LoopConfig, key: str) -> str:
 def setting_sources(loop: LoopConfig, origin: str) -> dict[str, str]:
     """Where each CPM setting of a loop comes from, for the interface.
 
-    ``here``: a person set it in LinkCraft; ``asset``: derived from PlantCraft's asset record
-    (its loop type or criticality); ``default``: LinkCraft's default (the record says nothing
-    LinkCraft knows).
+    ``here``: a person set it in Analytics; ``asset``: derived from PlantCraft's asset record
+    (its loop type or criticality); ``default``: Analytics' default (the record says nothing
+    Analytics knows).
     """
 
     record = loop.asset_record

@@ -2,14 +2,14 @@
 
 - **Results** of kind ``signal_quality`` (read by others as ``linkcraft.signal_quality``): one
   per checked signal (``signal:<id>``) and one per asset that has signals (``asset:<id>``, the
-  worst of its signals: the aggregate is LinkCraft's job, consumers never recompute it).
+  worst of its signals: the aggregate is Analytics' job, consumers never recompute it).
   good/suspect/bad map to ok/warning/alarm (D5), quality to ``score``, apt to ``usable``;
-  ``expires_at`` is two run intervals later, so a LinkCraft that stopped never leaves a green
+  ``expires_at`` is two run intervals later, so a Analytics that stopped never leaves a green
   light behind.
 - **Derived series**: one point per judged signal and run in ``app-linkcraft:<signal id>.quality``
   (number, ``/100``), subject the signal, result ``signal_quality``.
 - **Runs**: each execution of the algorithm, while it runs and when it ends. Its schedule is one
-  of LinkCraft's schedules (``round-signal_quality``), published with the others.
+  of Analytics' schedules (``round-signal_quality``), published with the others.
 """
 
 from __future__ import annotations
@@ -86,7 +86,7 @@ def signal_result(verdict: dict[str, Any], expires_at: str) -> dict[str, Any]:
 def asset_result(
     asset: dict[str, Any], latest: dict[str, dict[str, Any]], expires_at: str
 ) -> dict[str, Any] | None:
-    """The worst of the asset's signals, or None when the asset has no signal LinkCraft checked."""
+    """The worst of the asset's signals, or None when the asset has no signal Analytics checked."""
 
     members = []
     for role, signal_id in sorted((asset.get("signals") or {}).items()):
@@ -230,7 +230,7 @@ def quality_points(verdicts: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 class QualityPublisher:
-    """Publishes through LinkCraft's ``SuiteClient``; failures are logged there, never raised."""
+    """Publishes through Analytics' ``SuiteClient``; failures are logged there, never raised."""
 
     def __init__(self, suite: SuiteClient | None, root_path: str):
         self.suite = suite

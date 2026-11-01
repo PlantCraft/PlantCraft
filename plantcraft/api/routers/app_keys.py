@@ -20,6 +20,8 @@ router = APIRouter(prefix="/api/app-keys")
 class AppKeyPayload(BaseModel):
     app_id: str = Field(min_length=1, max_length=40)
     label: str = Field(default="", max_length=120)
+    # The permissions this key's tokens hold, within the app's own; leave out for all of them.
+    scopes: list[str] | None = Field(default=None, max_length=40)
 
 
 @router.get("")
@@ -37,14 +39,16 @@ def create_key(payload: AppKeyPayload, admin: AdminUser, rt: Runtime) -> dict[st
     """A new key for the app; ``key`` is in this answer only (set it as ``PLANTCRAFT_APP_KEY``)."""
 
     try:
-        record, key = rt.workspace.app_keys.create(payload.app_id, label=payload.label, actor=admin)
+        record, key = rt.workspace.app_keys.create(
+            payload.app_id, label=payload.label, actor=admin, scopes=payload.scopes
+        )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     rt.workspace.audit.record(
         admin,
         "app_key.create",
         f"app:{record['app_id']}",
-        {"key_id": record["key_id"], "label": record["label"]},
+        {"key_id": record["key_id"], "label": record["label"], "scopes": record["scopes"]},
         app_id="processcraft",
     )
     return {**record, "key": key}

@@ -101,7 +101,7 @@ heartbeat.
 | The task's code raises, runs out of time or memory | The executor stops that task alone (its own process) and answers `{"status": "error", "error"}`; the app shows the reason |
 | The task is cancelled (`POST .../cancel`, a cancelled run) | The worker hears it at its next heartbeat and stops it |
 | An executor stops (its heartbeat is a minute old) while its gateway runs | The gateway gives its tasks back at once, for another worker |
-| A worker is revoked | Its gateway is refused, says so in its log and waits to be stopped (no restart loop); remove it and add it again |
+| A worker is revoked | Its gateway is refused, says so in its log and waits to be stopped (no restart loop); "Enroll again" in Settings › Compute gives it a new one-time code under the same name |
 | PlantCraft restarts while an app waits for answers | The app keeps waiting (up to 5 minutes unreachable): the tasks are in PlantCraft's database |
 | A worker stops answering (machine off, network cut) | Its tasks' leases run out (30 s) and they go back to the queue, for another worker; after three tries a task fails with the reason |
 | No worker online runs an app's tasks | They wait; after 2 minutes System tells the administrators in Messages, and the app shows "waiting for a compute worker" (`GET /api/v1/compute/capacity`) |

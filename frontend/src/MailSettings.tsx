@@ -77,7 +77,7 @@ export function MailSettingsPage() {
               <option value="none">{t("None (an internal relay, usually port 25)")}</option>
             </select></label>
             <label>{t("Port")}<input type="number" min={1} max={65535} value={draft.port} onChange={(event) => setDraft({ ...draft, port: Number(event.target.value) || 587 })} /></label>
-            <label>{t("Sender address")}<input value={draft.sender} maxLength={200} placeholder="processcraft@company.local" onChange={(event) => setDraft({ ...draft, sender: event.target.value.trim() })} /></label>
+            <label>{t("Sender address")}<input value={draft.sender} maxLength={200} placeholder="plantcraft@company.local" onChange={(event) => setDraft({ ...draft, sender: event.target.value.trim() })} /></label>
             <label>{t("User (optional)")}<input value={draft.username} maxLength={200} autoComplete="off" onChange={(event) => setDraft({ ...draft, username: event.target.value })} /></label>
             <label>{t("Password")}<input type="password" value={draft.password} autoComplete="new-password" aria-invalid={retype || undefined} placeholder={retype ? t("Type it again for the new server") : settings.has_password ? t("Saved: leave empty to keep it") : t("Only if the server asks for one")} onChange={(event) => setDraft({ ...draft, password: event.target.value, clear_password: false })} />
               {retype && <small className="cl-retype"><AlertTriangle size={12} /> {t("The server changed: type the password again. The saved one is only ever sent to the server it was typed for.")}</small>}</label>

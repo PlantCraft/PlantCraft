@@ -1,6 +1,6 @@
 /**
  * Starting a run: the simulation dialog (the experiment, parameter overrides and, optionally,
- * plant data from HistCraft as the model's inputs and as a comparison) and the FMU export dialog.
+ * plant data from Historian as the model's inputs and as a comparison) and the FMU export dialog.
  */
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
