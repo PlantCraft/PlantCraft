@@ -199,6 +199,111 @@ def _demo(argv: list[str]) -> int:
     return 0
 
 
+def _llm(argv: list[str]) -> int:
+    """``plantcraft llm set``: add or replace a language model provider and make one of its models
+    the installation's default, without the browser (Setup › Language models does the same).
+
+    The key is read from standard input (``--key-stdin``) or a file (``--key-file``), never from
+    the command line, so it stays out of the shell's history and the process list:
+
+        docker compose exec -T processcraft plantcraft llm set --name "OpenAI demo" \\
+            --kind openai --model gpt-5-mini --key-stdin < demo-openai.key
+
+    ``plantcraft llm show`` prints the providers and the default (keys only as a hint).
+    """
+
+    import sys
+
+    from plantcraft.api.runtime import DEFAULT_SCENARIO, PROJECT_ROOT
+    from plantcraft.config import load_scenario
+    from plantcraft.platform.workspace import Workspace
+    from plantcraft.specialists.profiles import PROVIDERS, REASONING, KeyFile, SpecialistStore
+
+    parser = argparse.ArgumentParser(prog="plantcraft llm")
+    parser.add_argument(
+        "--scenario",
+        type=Path,
+        default=Path(os.environ.get("PLANTCRAFT_SCENARIO", str(DEFAULT_SCENARIO))),
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("show")
+    chosen = commands.add_parser("set")
+    chosen.add_argument("--name", required=True, help=t("the provider's name in Setup"))
+    chosen.add_argument("--kind", choices=sorted(PROVIDERS), required=True)
+    chosen.add_argument("--model", required=True, help=t("the model to use by default"))
+    chosen.add_argument("--endpoint", default="")
+    chosen.add_argument("--reasoning", choices=sorted(REASONING), default="")
+    secret = chosen.add_mutually_exclusive_group()
+    secret.add_argument("--key-stdin", action="store_true", help=t("reads the key from stdin"))
+    secret.add_argument("--key-file", type=Path, help=t("reads the key from this file"))
+    args = parser.parse_args(argv)
+
+    scenario = load_scenario(args.scenario.resolve(), project_root=PROJECT_ROOT)
+    workspace = Workspace(scenario.storage.sqlite_path)
+    keys = os.environ.get("PLANTCRAFT_SPECIALIST_KEYS_FILE", "").strip() or Path(
+        scenario.storage.sqlite_path
+    ).with_name("specialist-keys.json")
+    store = SpecialistStore(workspace.db, workspace.users, KeyFile(keys))
+    if args.command == "show":
+        settings = store.settings()
+        for item in store.providers():
+            default = item["provider_id"] == settings["provider_id"]
+            print(
+                f"{item['provider_id']:<20} {item['kind']:<10} {', '.join(item['models'])}"
+                f" key={item.get('api_key_hint') or '-'}"
+                + (f"  default: {settings['model']}" if default else "")
+            )
+        return 0
+    key = None
+    if args.key_stdin:
+        key = sys.stdin.read()
+    elif args.key_file:
+        key = args.key_file.read_text(encoding="utf-8")
+    if key is not None:
+        # An env file's line (OPENAI_API_KEY=sk-...) or the bare key.
+        key = key.strip().split("=", 1)[-1].strip().strip("\"'")
+        if not key:
+            print(t("The key is empty."), file=sys.stderr)
+            return 2
+    actor = "cli"
+    existing = next(
+        (item for item in store.providers() if item["name"] == args.name.strip()[:80]), None
+    )
+    models = [args.model] + [
+        name for name in (existing or {}).get("models", []) if name != args.model
+    ]
+    try:
+        provider = store.save_provider(
+            existing["provider_id"] if existing else None,
+            actor=actor,
+            name=args.name,
+            kind=args.kind,
+            endpoint=args.endpoint,
+            models=models,
+            api_key=key,
+            reasoning=args.reasoning,
+        )
+        store.save_settings(actor=actor, provider_id=provider["provider_id"], model=args.model)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    store.sync_egress()
+    workspace.audit.record(
+        actor,
+        "language_model.changed",
+        "settings:language-model",
+        {"provider_id": provider["provider_id"], "model": args.model, "cli": True},
+    )
+    print(
+        t(
+            "Provider {provider} saved; the default model is {model}.",
+            provider=provider["provider_id"],
+            model=args.model,
+        )
+    )
+    return 0
+
+
 def _pi(argv: list[str]) -> int:
     """``processcraft pi check``: diagnose the PI Web API source before the pilot."""
 
@@ -256,6 +361,8 @@ def main(argv: list[str] | None = None) -> int:
         return _demo(argv[1:])
     if argv[:1] == ["pi"]:
         return _pi(argv[1:])
+    if argv[:1] == ["llm"]:
+        return _llm(argv[1:])
     args = _parser().parse_args(argv)
     refusal = _refuse_open_network(args.host, args.no_sign_in)
     if refusal:
