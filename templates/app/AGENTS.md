@@ -2,7 +2,7 @@
 
 This folder is a working app of the PlantCraft suite, made to be copied: **StarterCraft**
 (`starter`, prefix `/starter/`, port 9100, uid 20100) keeps a note on any asset of the plant.
-It has every part a suite app has and nothing else, so an agent (Claude Code or another) can turn
+It has only the parts every suite app needs, so an agent (Claude Code or another) can turn
 it into a new app in one session and try it inside the platform.
 
 It lives in two places: `templates/app/` of the PlantCraft repository (where CI tests it against
@@ -19,7 +19,9 @@ fixed.
 
 ## Start here
 
-1. Read `README.md` (what each file does) and `prompts/README.md` (the prompts to build an app).
+1. Read `README.md` (what each file does), `docs/README.md` (the guides) and `prompts/README.md`
+   (the prompts to build an app). To add search, widgets, events, Desk items, a language model,
+   results or background work, follow its recipe in `docs/recipes/`.
 2. New app: `make rename NAME=Logbook` once (it becomes LogbookCraft, id `logbook`), then build
    the object and its pages (prompts `02` and `03`), then try it (prompt `04`).
 3. `make test-fast` while working, `make ci` before every commit, `make e2e` when you touched a
@@ -34,6 +36,7 @@ app.toml        the manifest: id, name, version, prefix, port, uid, permissions 
 src/starter/    the app, in layers (below)
 tests/          pytest against FakePlantCraft (no real PlantCraft); tests/e2e: browser journeys
 frontend/       Vite + React + TypeScript on @plantcraft/ui, served under /starter/
+docs/           the guides (docs/README.md), recipes (docs/recipes/) and STATUS/devlog/gaps
 docs/help/      help pages served at /api/help and shown under Help
 vendor/         the plantcraft-sdk wheel and the @plantcraft/ui package (never edited here)
 deploy/         requirements.in/.lock: the image's hashed dependencies (`make lock`)
@@ -45,10 +48,11 @@ tools/          rename.py (`make rename`)
 |---|---|---|
 | -1 | `i18n` | `t()`; anything may use it |
 | 0 | `config`, `meta` | settings from the environment; `app.toml` and the help pages |
-| 1 | `notes` | the app's object: its contract (`NoteDraft`) and its store (`NoteStore`) |
-| 2 | `api`, `cli` | FastAPI app under `/starter`, command line |
+| 1 | `suite` | what the app sends to PlantCraft with its app key (none yet; `docs/recipes/`) |
+| 2 | `notes` | the app's object: contract (`NoteDraft`), store (`NoteStore`), rules (`NoteService`) |
+| 3 | `api`, `cli` | FastAPI app under `/starter`, command line |
 
-A new object goes in layer 1 beside `notes` (its own package: contract and store). Methods that
+A new object goes in layer 2 beside `notes` (its own package: contract and store). Methods that
 compute something (an analysis on plant signals) go in a layer between the objects and the API.
 `tests/test_suite_rules.py` enforces the table: a package imports only from lower layers.
 

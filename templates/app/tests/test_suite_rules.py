@@ -18,7 +18,7 @@ FLOORS = tomllib.loads((ROOT / "tests" / "floors.toml").read_text(encoding="utf-
 # | Layer | Packages |
 # | -1 | i18n (everything may use t()) |
 # | 0 | config, meta (the store is plantcraft_sdk.server.store) |
-# | 1 | suite (what the app sends to PlantCraft: events, Desk, language model) |
+# | 1 | suite (what the app sends to PlantCraft on its own; none yet, docs/recipes/) |
 # | 2 | notes (the app's own object, its store and its service) |
 # | 3 | api, cli |
 LAYERS = {"i18n": -1, "config": 0, "meta": 0, "suite": 1, "notes": 2, "api": 3, "cli": 3}
@@ -87,4 +87,4 @@ def test_no_api_route_answers_without_a_token(runtime, fake):
         client.headers.pop("Authorization", None)
         leaks, reached = apptest.open_routes(client, prefix="")
     assert not leaks, "routes answering without a token:\n" + "\n".join(leaks)
-    assert reached > 10
+    assert reached >= 8  # the routes were reached, not missed

@@ -15,7 +15,7 @@ from plantcraft_sdk.auth import User
 from plantcraft_sdk.server import web
 
 from starter import APP_ID, __version__
-from starter.api.routers import notes, refs, search, widgets
+from starter.api.routers import notes
 from starter.api.runtime import Runtime
 from starter.config import Settings
 from starter.meta import FILES
@@ -40,7 +40,7 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
         title="StarterCraft",
         version=__version__,
         files=FILES,
-        routers=(notes.router, search.router, refs.router, widgets.router),
+        routers=(notes.router,),
         ui=ui_folder(),
         me=me,
     )

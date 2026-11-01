@@ -14,6 +14,24 @@ secret `BANNED_WORDS` and fails on any of them in the tree or in a pull request'
 own (`templates/app`). Creating repositories and making anything public stays a maintainer's
 decision (AGENTS.md, section 9).
 
+## The app template repository
+
+[`PlantCraft/plantcraft-app-template`](https://github.com/PlantCraft/plantcraft-app-template)
+(created 2026-11-01, a GitHub template repository) is a copy of `templates/app`, which stays the
+source: the template workflow tests it here against every change to the SDK and the interface.
+At each release, after `templates/app` was revendored and is green, the template repository gets
+the same files in one pull request:
+
+```sh
+git clone https://github.com/PlantCraft/plantcraft-app-template ../plantcraft-app-template
+cd ../plantcraft-app-template && git switch -c release-<version>
+rsync -a --delete --exclude .git ../PlantCraft/templates/app/ ./
+make ci && git add -A && git commit -m "Template of PlantCraft <version>"
+```
+
+Changes to the template are made in `templates/app` here, never in the template repository
+alone.
+
 ## Building the snapshot
 
 ```sh

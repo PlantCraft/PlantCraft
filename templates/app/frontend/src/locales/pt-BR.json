@@ -4,9 +4,6 @@
   "By": "Por",
   "Delete": "Excluir",
   "Example": "Exemplo",
-  "Follow up by": "Acompanhar até",
-  "Follow up on": "Acompanhar em",
-  "Follow up on {day}": "Acompanhar em {day}",
   "New note": "Nova nota",
   "No notes yet": "Ainda não há notas",
   "Note": "Nota",
@@ -15,9 +12,7 @@
   "Page not found.": "Página não encontrada.",
   "Save note": "Salvar nota",
   "Starter": "Starter",
-  "Summarise": "Resumir",
   "The notes on this asset.": "As notas deste ativo.",
-  "Username": "Usuário",
   "When": "Quando",
   "Written by {who}, {when}.": "Escrita por {who}, {when}."
 }
