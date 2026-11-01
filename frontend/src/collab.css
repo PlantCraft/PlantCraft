@@ -190,7 +190,7 @@
 .nt-text { margin: 0; white-space: pre-wrap; line-height: 1.55; }
 .nt-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .nt-buttons .button { display: inline-flex; align-items: center; gap: 6px; }
-.nt-history-title { margin: 8px 0 0; color: var(--pc-text-3); font-size: var(--pc-fs-xs); text-transform: uppercase; letter-spacing: .05em; }
+.nt-history-title { margin: 8px 0 0; color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
 .nt-history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .nt-history li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 8px; align-items: start; font-size: var(--pc-fs-sm); }
 .nt-history li svg { margin-top: 3px; color: var(--pc-text-4); }

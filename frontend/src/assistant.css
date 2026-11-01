@@ -9,7 +9,7 @@
 .asst-list > header { display: flex; flex-direction: column; gap: 10px; padding: 0 4px; }
 .asst-list h1 { margin: 0; font: 700 var(--pc-fs-xl) var(--pc-font-display); }
 .asst-new-button { justify-content: center; gap: 6px; }
-.asst-list h2 { margin: 0 0 4px; padding: 0 8px; color: var(--pc-text-3); font-size: var(--pc-fs-2xs); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.asst-list h2 { margin: 0 0 4px; padding: 0 8px; color: var(--pc-text-3); font-size: var(--pc-fs-2xs); font-weight: 700; }
 .asst-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .asst-list li { display: flex; align-items: center; gap: 4px; border-radius: var(--pc-radius-md); }
 .asst-list li:hover, .asst-list li.active { background: var(--pc-primary-soft); }
@@ -76,7 +76,7 @@
 /* Charts drawn from the plant's history. */
 
 .asst-refs { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
-.asst-refs-label { color: var(--pc-text-3); font-size: var(--pc-fs-2xs); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.asst-refs-label { color: var(--pc-text-3); font-size: var(--pc-fs-2xs); font-weight: 700; }
 .asst-ref { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; padding: 2px 8px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-pill); background: var(--pc-surface); color: var(--pc-text-2); font-size: var(--pc-fs-xs); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 a.asst-ref:hover { border-color: var(--pc-primary-border); color: var(--pc-primary-text); }
 .asst-foot { display: flex; align-items: center; gap: 6px; color: var(--pc-text-4); font-size: var(--pc-fs-2xs); }

@@ -111,11 +111,6 @@
 .dg-timebar { display: flex; flex-direction: column; gap: var(--pc-space-2); padding: var(--pc-space-2) 0; }
 .dg-timebar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pc-space-2); }
 .dg-timebar-label { font-size: var(--pc-fs-sm); color: var(--pc-text-2); }
-.dg-segmented { display: inline-flex; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); overflow: hidden; background: var(--pc-surface); }
-.dg-segmented button { border: 0; background: none; padding: 5px 10px; font: inherit; font-size: var(--pc-fs-sm); color: var(--pc-text-2); cursor: pointer; }
-.dg-segmented button + button { border-left: 1px solid var(--pc-border); }
-.dg-segmented button:hover { background: var(--pc-surface-2); color: var(--pc-text); }
-.dg-segmented button.dg-on { background: var(--pc-primary-soft); color: var(--pc-primary); font-weight: 600; }
 .dg-timebar input[type="range"] { flex: 1 1 240px; min-width: 160px; accent-color: var(--pc-primary); }
 .dg-timebar time { font-family: var(--pc-font-mono); font-size: var(--pc-fs-sm); color: var(--pc-text-2); min-width: 11ch; }
 .dg-timebar .dg-live { color: var(--pc-good-text); font-weight: 600; }

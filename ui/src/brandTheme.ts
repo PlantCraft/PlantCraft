@@ -12,11 +12,11 @@ export const BRAND_COLORS = {
   light: {
     primary: "#2e5a88",
     surface: "#ffffff",
-    text: "#1d1d1f",
-    text2: "#424245",
-    text3: "#636368",
+    text: "#111113",
+    text2: "#2c2c2e",
+    text3: "#55555a",
     grid: "#e8e8ed",
-    axis: "#d2d2d7",
+    axis: "#dedee3",
     good: "#34c759",
     attention: "#ff9f0a",
     serious: "#f2690d",
@@ -24,16 +24,16 @@ export const BRAND_COLORS = {
     inactive: "#8e8e93",
     unusable: "#af52de",
     info: "#32ade6",
-    series: ["#1762b6", "#e06d00", "#00958f", "#654db6", "#cfa529", "#913e20", "#ca488f", "#438f31"],
+    series: ["#0f55a3", "#c25e00", "#007f7a", "#523c9e", "#a8851c", "#7d3319", "#b03a7b", "#357a26"],
   },
   dark: {
     primary: "#3d78b6",
-    surface: "#1c1c1e",
-    text: "#f5f5f7",
-    text2: "#d2d2d7",
-    text3: "#98989d",
-    grid: "#2c2c2e",
-    axis: "#38383a",
+    surface: "#0b0b0c",
+    text: "#fafafa",
+    text2: "#e5e5ea",
+    text3: "#b0b0b5",
+    grid: "#2a2a2d",
+    axis: "#3a3a3d",
     good: "#30d158",
     attention: "#ff9f0a",
     serious: "#ff7a2e",
@@ -41,7 +41,7 @@ export const BRAND_COLORS = {
     inactive: "#8e8e93",
     unusable: "#bf5af2",
     info: "#64d2ff",
-    series: ["#4087de", "#e06d00", "#04a19b", "#8a74e2", "#b48a00", "#a95436", "#d14e95", "#499537"],
+    series: ["#6aa8f2", "#ff9b40", "#33d1c9", "#ad9cf5", "#e6c04a", "#e0805a", "#f07ab6", "#74c95c"],
   },
 } as const;
 
@@ -109,9 +109,15 @@ export function magnitudeScale(theme: BrandTheme = currentTheme()): Array<[numbe
   return theme === "dark" ? [[0, "#10243f"], [1, "#86b6f3"]] : [[0, "#eef5fe"], [1, "#0a4285"]];
 }
 
+/** Older to newer points (a scatter coloured by time): faint to strong PlantCraft Blue, readable on
+ * the card of either theme (Plotly's "Blues" ends near black on a black card). */
+export function timeScale(theme: BrandTheme = currentTheme()): Array<[number, string]> {
+  return theme === "dark" ? [[0, "#2c4c72"], [1, "#a9d0ff"]] : [[0, "#b7cde8"], [1, "#0f55a3"]];
+}
+
 /**
- * Base Plotly layout in the brand: Inter, the validated colourway, quiet
- * grid. Spread it first, then the chart's own settings:
+ * Base Plotly layout in the brand: Inter, the colourway, a quiet horizontal grid and no
+ * vertical one; the plot sits on the card's own white or black, never a tinted fill. Spread it first, then the chart's own settings:
  * `layout={{ ...plotTheme(), height: 300, xaxis: { ...plotTheme().xaxis, tickformat } }}`.
  */
 export function plotTheme(theme: BrandTheme = currentTheme()) {
@@ -134,7 +140,7 @@ export function plotTheme(theme: BrandTheme = currentTheme()) {
     // light text was unreadable on it (View round 7).
     hoverlabel: { bgcolor: c.surface, bordercolor: c.axis, font: { family: "JetBrains Mono, ui-monospace, monospace", size: 11, color: c.text } },
     legend: { font: { size: 11, color: c.text2 } },
-    xaxis: { ...axis },
+    xaxis: { ...axis, showgrid: false },
     yaxis: { ...axis },
     modebar: { color: c.text3, activecolor: c.primary, bgcolor: "rgba(0,0,0,0)" },
   };

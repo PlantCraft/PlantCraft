@@ -8,6 +8,7 @@ import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Search, X } from "lucide
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { t } from "./i18n.js";
 import { MultiSelect } from "./MultiSelect.js";
+import { cutCellTipProps } from "./WidgetTip.js";
 
 export type SortValue = string | number | null | undefined;
 
@@ -202,7 +203,7 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
       </div>}
     </div>}
     <div className="table-panel pc-dt-scroll">
-      <table className="table" aria-label={label}>
+      <table className="table" aria-label={label} {...cutCellTipProps()}>
         <thead><tr>
           {selectable && <th className="pc-dt-check"><input type="checkbox" checked={allVisibleTicked} onChange={toggleVisible} aria-label={t("Select the rows of this page")} /></th>}
           {columns.map((column) => <th key={column.key} className={cellClass(column)} aria-sort={sort?.key === column.key ? (sort.descending ? "descending" : "ascending") : undefined}>{header(column)}</th>)}

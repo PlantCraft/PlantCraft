@@ -52,7 +52,7 @@ button, input, select, textarea { font: inherit; }
    spans 2 columns (.pc-span-2) or the whole row (.pc-span-all); .pc-grid-2 is the two-column
    layout (charts or panels side by side). Never set another column count on a page. */
 .pcs-content, .pc-page { container: pc-page / inline-size; }
-.pc-grid { --pc-cols: 4; margin-bottom: var(--pc-space-6); display: grid; grid-template-columns: repeat(var(--pc-cols), minmax(0, 1fr)); gap: var(--pc-space-4); align-items: stretch; }
+.pc-grid { --pc-cols: 4; margin-bottom: var(--pc-gap-card); display: grid; grid-template-columns: repeat(var(--pc-cols), minmax(0, 1fr)); gap: var(--pc-gap-card); align-items: stretch; }
 .pc-grid-2 { --pc-cols: 2; align-items: start; }
 .pc-grid-2 > :only-child { grid-column: 1 / -1; } /* one panel of a pair: the whole row */
 .pc-grid > * { min-width: 0; margin: 0; }
@@ -76,7 +76,7 @@ button, input, select, textarea { font: inherit; }
    above the title and nothing under it: the sidebar already says where the person is. Pages that
    still write a line above (.eyebrow, .breadcrumb) or under the title draw it no more; a line that
    must stay (Desk's date and clocks, an action's status) is marked .pc-heading-keep. */
-.page-heading { --pc-heading-height: 40px; min-height: var(--pc-heading-height); margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px 24px; }
+.page-heading { --pc-heading-height: 40px; min-height: var(--pc-heading-height); margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px 24px; }
 .page-heading > div:first-child { min-width: 0; flex: 1 1 auto; }
 .page-heading > div:first-child .eyebrow, .page-heading > div:first-child p:not(.pc-heading-keep) { display: none; }
 .page-heading > .page-heading-title { display: flex; align-items: center; gap: 10px; }
@@ -103,8 +103,9 @@ button, input, select, textarea { font: inherit; }
    section 10, "Buttons and forms"). .page-heading-action is the older name of the same row. */
 .heading-actions, .page-heading-action, .pc-actions { display: flex; align-items: center; gap: var(--pc-space-2, 8px); flex-wrap: wrap; }
 .eyebrow { color: var(--pc-text-3); font-size: var(--pc-fs-sm); font-weight: var(--pc-fw-medium); display: flex; align-items: center; gap: 6px; }
-/* A section of a page: a title over a grid. */
-.section-title { margin: 28px 0 12px; color: var(--pc-text); font: 600 var(--pc-fs-xl)/1.3 var(--pc-font-display); letter-spacing: var(--pc-tracking-heading); display: flex; align-items: center; gap: 8px; }
+/* A section of a page: a title over a grid. It opens a new group, so it has room above it and
+   sits close to what it names. */
+.section-title { margin: var(--pc-gap-group) 0 6px; color: var(--pc-text); font: 600 var(--pc-fs-xl)/1.3 var(--pc-font-display); letter-spacing: var(--pc-tracking-heading); display: flex; align-items: center; gap: 8px; }
 .section-title small { margin-left: auto; color: var(--pc-text-3); font: 500 var(--pc-fs-sm) var(--pc-font-sans); }
 .page-heading + .section-title { margin-top: 0; }
 .breadcrumb a { color: var(--pc-primary-text); font-weight: 600; }
@@ -115,11 +116,11 @@ button, input, select, textarea { font: inherit; }
    before the text. Primary (blue) is the most important action where it stands; secondary (grey)
    every other; ghost a quiet one inside a panel; danger removes something; .button-icon is a
    button with only an icon (Refresh), named by its title and aria-label. */
-.button { min-height: 36px; padding: 0 14px; border: 1px solid transparent; border-radius: var(--pc-radius-md); display: inline-flex; align-items: center; justify-content: center; gap: 7px; color: var(--pc-text-2); background: transparent; font-size: var(--pc-fs-sm); font-weight: 600; white-space: nowrap; text-decoration: none; transition: .15s ease; }
-.button-primary { color: var(--pc-on-accent); background: var(--pc-primary); box-shadow: var(--pc-shadow-1); }
+.button { min-height: 36px; padding: 0 14px; border: 1px solid transparent; border-radius: var(--pc-radius-md); display: inline-flex; align-items: center; justify-content: center; gap: 7px; color: var(--pc-text-2); background: transparent; font-size: var(--pc-fs-sm); font-weight: 500; white-space: nowrap; text-decoration: none; transition: .15s ease; }
+.button-primary { color: var(--pc-on-accent); background: var(--pc-primary); box-shadow: 0 1px 2px rgb(0 0 0 / .12), inset 0 .5px 0 rgb(255 255 255 / .15); }
 .button-primary:hover { background: var(--pc-primary-hover); }
 .button-secondary { border-color: var(--pc-border); color: var(--pc-text-2); background: var(--pc-surface); }
-.button-secondary:hover { border-color: var(--pc-border-strong); background: var(--pc-surface-2); }
+.button-secondary:hover { border-color: var(--pc-border-strong); background: var(--pc-surface-3); }
 .button-small { min-height: 30px; padding: 0 10px; gap: 6px; font-size: var(--pc-fs-xs); }
 .button > svg { width: 16px; height: 16px; flex: none; }
 .button-small > svg { width: 14px; height: 14px; }
@@ -141,14 +142,14 @@ button, input, select, textarea { font: inherit; }
 /* Panels and cards --------------------------------------------------------------------
    .panel is the surface; .card is a panel that opens something (title, a line, a footer);
    .kpi-card is a number with its label, coloured on top by its status. */
-.panel { padding: 20px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: var(--pc-shadow-1); min-width: 0; margin-bottom: 18px; }
+.panel { padding: 14px 16px; border: 1px solid transparent; border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: var(--pc-shadow-1); min-width: 0; margin-bottom: var(--pc-gap-card); }
 .panel-header { margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .panel-header h2 { margin: 0 0 4px; font-size: var(--pc-fs-lg); font-weight: 600; }
 .panel-header p { margin: 0; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
 .panel-header a { color: var(--pc-primary-text); display: inline-flex; align-items: center; gap: 2px; font-size: var(--pc-fs-sm); font-weight: 600; }
-.card { display: flex; flex-direction: column; gap: 6px; margin: 0; color: inherit; text-align: left; transition: border-color .15s ease, box-shadow .15s ease; }
+.card { display: flex; flex-direction: column; gap: 6px; margin: 0; color: inherit; text-align: left; transition: border-color var(--pc-duration-slow) var(--pc-ease), box-shadow var(--pc-duration-slow) var(--pc-ease), transform var(--pc-duration-slow) var(--pc-ease); }
 :is(a, button).card { cursor: pointer; font: inherit; }
-:is(a, button).card:hover, .card-link:hover { border-color: var(--pc-primary-border, var(--pc-primary)); box-shadow: var(--pc-shadow-2); }
+:is(a, button).card:hover, .card-link:hover { border-color: var(--pc-primary-border, var(--pc-primary)); box-shadow: var(--pc-shadow-2); transform: translateY(-1px); }
 .card strong { color: var(--pc-text); font-size: var(--pc-fs-base); }
 .card p { margin: 0; color: var(--pc-text-3); font-size: var(--pc-fs-sm); line-height: 1.5; }
 .card small { color: var(--pc-text-3); margin-top: auto; }
@@ -185,9 +186,11 @@ a.kpi-split-item:hover { background: var(--pc-surface-2); }
 .kpi-chip:hover { border-color: var(--pc-border-strong); }
 
 /* Status ------------------------------------------------------------------------------ */
-.tag { padding: 2px 8px; border-radius: var(--pc-radius-pill); color: var(--pc-primary-text); background: var(--pc-primary-soft); font: 600 var(--pc-fs-xs)/1.6 var(--pc-font-sans); }
-.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: var(--pc-radius-pill); font-size: var(--pc-fs-xs); font-weight: 600; white-space: nowrap; }
-.pill i { width: 7px; height: 7px; border-radius: 50%; }
+.tag { padding: 2px 8px; border-radius: var(--pc-radius-pill); color: var(--pc-primary-text); background: var(--pc-primary-soft); font: 500 var(--pc-fs-xs)/1.6 var(--pc-font-sans); white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: var(--pc-radius-pill); font-size: var(--pc-fs-xs); font-weight: 600; white-space: nowrap; }
+.pill i { width: 6px; height: 6px; border-radius: 50%; }
+/* In a table a status is its dot and its word: no filled capsule on every row. */
+.table .pill { padding-left: 0; padding-right: 0; border-color: transparent; background: transparent; }
 .health { display: inline-flex; align-items: center; gap: 8px; min-width: 110px; }
 .health-bar { width: 70px; height: 6px; border-radius: 3px; background: var(--pc-surface-3); overflow: hidden; }
 .health-bar span { display: block; height: 100%; }
@@ -200,7 +203,8 @@ a.kpi-split-item:hover { background: var(--pc-surface-2); }
 .module-error { min-height: auto; margin-bottom: 14px; padding: 12px; border-radius: var(--pc-radius-md); color: var(--pc-problem-text); background: var(--pc-problem-soft); display: flex; justify-content: flex-start; align-items: center; }
 
 /* Lists and tables -------------------------------------------------------------------- */
-.toolbar { margin-bottom: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* A toolbar belongs to what it filters: 8 px above it. */
+.toolbar { margin-bottom: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .search { padding: 0 10px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text-3); }
 .search input { min-width: 260px; padding: 0; border: 0; background: transparent; }
 .search input:focus { outline: none; }
@@ -208,19 +212,23 @@ a.kpi-split-item:hover { background: var(--pc-surface-2); }
 .segmented { width: max-content; max-width: 100%; padding: 3px; display: inline-flex; flex-shrink: 0; align-self: flex-start; gap: 3px; overflow-x: auto; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); }
 .segmented button { min-height: 30px; padding: 0 12px; border: 0; border-radius: var(--pc-radius-sm); display: inline-flex; align-items: center; gap: 6px; color: var(--pc-text-3); background: transparent; font-size: var(--pc-fs-sm); font-weight: 600; white-space: nowrap; }
 .segmented button:hover { color: var(--pc-text); }
-.segmented button:is(.on, .active) { color: var(--pc-primary-text); background: var(--pc-primary-soft); }
+.segmented button:is(.on, .active) { color: var(--pc-text); background: var(--pc-surface-4); }
 .segmented button span { padding: 1px 6px; border-radius: var(--pc-radius-pill); background: color-mix(in srgb, var(--pc-text-4) 14%, transparent); font-size: var(--pc-fs-xs); }
 .table-panel { padding: 0; overflow-x: auto; }
 /* A header cell holds what it hides (the sr-only "Actions"): an absolute label otherwise stretches the page on a phone past the table's own scroll. :where() keeps a sticky header's rule winning. */
 :where(.table-panel) th { position: relative; }
 .table { width: 100%; border-collapse: collapse; }
-.table th { padding: 11px 14px; text-align: left; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 600; border-bottom: 1px solid var(--pc-border-subtle); white-space: nowrap; }
-.table td { padding: 11px 14px; border-bottom: 1px solid var(--pc-border-subtle); vertical-align: top; font-size: var(--pc-fs-sm); }
-.table td small { display: block; margin-top: 3px; color: var(--pc-text-3); }
+.table th { padding: 8px 12px; text-align: left; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 600; border-bottom: 1px solid var(--pc-border-subtle); white-space: nowrap; }
+.table td { padding: 7px 12px; border-bottom: 1px solid var(--pc-border-subtle); vertical-align: top; font-size: var(--pc-fs-sm); }
+.table :is(td, th):first-child { padding-left: 18px; }
+.table :is(td, th):last-child { padding-right: 18px; }
+/* A row is two lines: the name, then its description cut to one line (DataTable shows the whole
+   text on hover). */
+.table td small { display: -webkit-box; margin-top: 1px; color: var(--pc-text-3); -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .table tbody tr:last-child td { border-bottom: 0; }
 .table th.num, .table td.num { text-align: right; white-space: nowrap; }
 .clickable { cursor: pointer; }
-.clickable:hover td { background: var(--pc-surface-2); }
+.clickable:hover td { background: color-mix(in srgb, var(--pc-primary) 4%, var(--pc-surface)); }
 .row-actions { margin-top: 12px; display: flex; gap: 6px; justify-content: flex-end; }
 .table .row-actions { margin-top: 0; }
 /* A header cell stays a table cell (as flex it drops out of the header row and its rule). */
@@ -381,14 +389,14 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 .pc-assistant-inline { width: 100%; height: min(72vh, 760px); min-height: 460px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); box-shadow: none; animation: none; }
 
 /* DataTable: sort, filter, pages, a checkbox per row ------------------------------------ */
-.pc-dt { margin-bottom: 18px; }
-.pc-dt .table-panel { border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: var(--pc-shadow-1); }
+.pc-dt { margin-bottom: var(--pc-gap-card); }
+.pc-dt .table-panel { border: 1px solid transparent; border-radius: var(--pc-radius-lg); background: var(--pc-surface); box-shadow: var(--pc-shadow-1); }
 /* A phone: tighter cells, secondary columns left out (DataColumn phone "hide"). */
 @media (max-width: 720px) {
   .pc-dt .table th, .pc-dt .table td { padding: 9px 10px; }
   .pc-dt .pc-dt-phone-hide { display: none; }
 }
-.pc-dt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pc-dt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
 .pc-dt-search { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text-3); flex: 1 1 240px; max-width: 360px; }
 .pc-dt-search input { border: 0; outline: 0; background: transparent; color: var(--pc-text); font: inherit; width: 100%; min-height: 34px; padding: 0; box-shadow: none; }
 .pc-dt-selection { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; color: var(--pc-text-2); font-size: var(--pc-fs-sm); font-weight: 600; }
@@ -397,7 +405,7 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 .pc-dt-check { width: 36px; }
 .pc-dt-check input { margin: 0; }
 .pc-dt-clickable { cursor: pointer; }
-.pc-dt-clickable:hover td { background: var(--pc-surface-2); }
+.pc-dt-clickable:hover td { background: color-mix(in srgb, var(--pc-primary) 4%, var(--pc-surface)); }
 .pc-dt-empty { color: var(--pc-text-3); text-align: center; padding: 22px 14px !important; }
 .pc-dt-pages { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 8px; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
 .pc-dt-pages label { display: inline-flex; align-items: center; gap: 6px; }
@@ -408,11 +416,15 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 
 /* Overview widgets --------------------------------------------------------------------- */
 .pc-wg-head { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 10px; min-height: 28px; flex-wrap: wrap; }
+/* An Overview without buttons of its own: Customize sits on the title's line, at the right, so
+   the cards start right under the title (2026-11-01). */
+.pc-overview-heading:not(:has(.heading-actions)) ~ .pc-wg > .pc-wg-head:not(.pc-wg-head-editing) { margin-top: calc(-16px - var(--pc-heading-height)); margin-bottom: 16px; min-height: var(--pc-heading-height); pointer-events: none; }
+.pc-overview-heading:not(:has(.heading-actions)) ~ .pc-wg > .pc-wg-head:not(.pc-wg-head-editing) > * { pointer-events: auto; }
 .pc-wg-hint { margin: 0 auto 0 0; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
 /* Customize is seldom used: a quiet text button, not a primary action. */
 .pc-wg-customize { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 0; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-3); font: inherit; font-size: var(--pc-fs-sm); cursor: pointer; }
 .pc-wg-customize:hover, .pc-wg-customize:focus-visible { background: var(--pc-surface-3); color: var(--pc-text); }
-.pc-wg-card { margin: 0; height: 100%; padding: 14px 16px; display: flex; flex-direction: column; overflow: hidden; }
+.pc-wg-card { margin: 0; height: 100%; padding: 12px 14px; display: flex; flex-direction: column; overflow: hidden; }
 /* A one-row widget (a count, the clocks): a tighter frame, the title above its value. */
 .pc-wg-card.pc-wg-h1 { padding: 10px 14px; }
 .pc-wg-h1 .pc-wg-card-head { margin-bottom: 2px; min-height: 20px; }
@@ -504,7 +516,8 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 .pc-phone-fold[open] > :not(summary) { margin-left: 8px; margin-right: 8px; }
 .pc-wg-tools { display: inline-flex; gap: 2px; }
 .pc-wg-body { flex: 1; min-width: 0; min-height: 0; overflow: auto; }
-.pc-wg-number { display: block; font-size: 34px; line-height: 1.1; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--pc-text); }
+.pc-wg-number { display: block; font-size: 34px; line-height: 1.1; font-weight: 600; letter-spacing: -.035em; font-variant-numeric: tabular-nums; color: var(--pc-text); }
+.pc-wg-number small { letter-spacing: 0; }
 .pc-wg-number small { font-size: var(--pc-fs-sm); color: var(--pc-text-3); font-weight: 600; }
 .pc-wg-label { display: block; margin-top: 4px; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
 .pc-wg-link { display: block; color: inherit; text-decoration: none; }
@@ -526,7 +539,9 @@ a.pc-wg-row:hover b { color: var(--pc-primary-text); }
 .pc-wg-h1 .pc-wg-split, .pc-wg-h1 .pc-wg-series { flex-direction: row; align-items: center; gap: 12px; }
 .pc-wg-h1 .pc-wg-split-head, .pc-wg-h1 .pc-wg-series-head { flex: none; flex-wrap: nowrap; }
 .pc-wg-h1 .pc-wg-split-head .pc-wg-label, .pc-wg-h1 .pc-wg-series-head .pc-wg-label { display: none; }
-.pc-wg-bar { display: flex; gap: 2px; height: 10px; border-radius: 999px; overflow: hidden; background: var(--pc-surface-3); flex: none; }
+/* Status in large areas is calmer: separate rounded parts, a touch less saturated. */
+.pc-wg-bar { display: flex; gap: 3px; height: 8px; flex: none; }
+.pc-wg-bar > span { border-radius: 4px; filter: saturate(.82); }
 .pc-wg-h1 .pc-wg-bar { flex: 1; }
 .pc-wg-bar span { min-width: 4px; }
 .pc-wg-parts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--pc-fs-sm); }
@@ -563,8 +578,8 @@ a.pc-wg-barrow:hover b { color: var(--pc-primary-text); }
 .pc-wg-tile-group { display: flex; flex-direction: column; gap: 4px; min-width: 0; max-width: 100%; }
 .pc-wg-tile-name { color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 600; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 a.pc-wg-tile-name:hover { color: var(--pc-primary-text); }
-.pc-wg-tile-set { display: flex; flex-wrap: wrap; gap: 3px; max-width: calc(20 * (var(--pc-wg-tile) + 3px)); }
-.pc-wg-square { display: block; width: var(--pc-wg-tile); height: var(--pc-wg-tile); border-radius: 2px; }
+.pc-wg-tile-set { display: flex; flex-wrap: wrap; gap: 4px; max-width: calc(20 * (var(--pc-wg-tile) + 4px)); }
+.pc-wg-square { display: block; width: var(--pc-wg-tile); height: var(--pc-wg-tile); border-radius: 4px; filter: saturate(.82); }
 a.pc-wg-square:hover, a.pc-wg-square:focus-visible, span.pc-wg-square:hover, span.pc-wg-square:focus-visible { outline: 2px solid var(--pc-text); outline-offset: 1px; }
 /* A mark's hover note (WidgetTip.ts): one for the page, beside the pointer, never clipped by a card. */
 .pc-wg-tip { position: fixed; z-index: 1000; max-width: 280px; padding: 8px 10px; border: 1px solid var(--pc-border-strong); border-radius: 8px; background: var(--pc-surface); color: var(--pc-text); box-shadow: 0 6px 20px rgb(0 0 0 / 0.18); font-size: var(--pc-fs-xs); line-height: 1.4; pointer-events: none; display: flex; flex-direction: column; gap: 2px; }
@@ -803,7 +818,7 @@ button.pc-version:hover { border-color: color-mix(in srgb, var(--pc-primary) 35%
 .pc-explore-path button { border: 0; background: none; padding: 2px 4px; color: var(--pc-primary-text); font-weight: 600; border-radius: var(--pc-radius-sm); }
 .pc-explore-path button[aria-current] { color: var(--pc-text); }
 .pc-explore-body { display: flex; flex-direction: column; gap: 12px; max-height: 420px; overflow: auto; }
-.pc-explore-body h4 { margin: 0 0 4px; font-size: var(--pc-fs-xs); text-transform: uppercase; letter-spacing: .05em; color: var(--pc-text-3); }
+.pc-explore-body h4 { margin: 0 0 4px; font-size: var(--pc-fs-xs); color: var(--pc-text-3); }
 .pc-explore-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .pc-explore-item { width: 100%; display: flex; justify-content: space-between; gap: 12px; text-align: left; border: 1px solid transparent; background: none; padding: 6px 8px; border-radius: var(--pc-radius-md); color: var(--pc-text); }
 .pc-explore-item:hover:not(:disabled) { background: var(--pc-surface-2, var(--pc-primary-soft)); }
@@ -824,7 +839,7 @@ button.pc-version:hover { border-color: color-mix(in srgb, var(--pc-primary) 35%
 .pc-folder:hover { background: var(--pc-surface-2); }
 .pc-folder.active { background: var(--pc-primary-soft); color: var(--pc-primary-text); }
 .pc-folder small { color: var(--pc-text-3); }
-.pc-folder-heading { margin: 12px 10px 4px; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.pc-folder-heading { margin: 12px 10px 4px; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 700; }
 .pc-folder-new { display: inline-flex; align-items: center; gap: 6px; margin: 6px 10px 4px; padding: 0; border: 0; background: none; color: var(--pc-primary-text); font: 600 var(--pc-fs-sm)/1.3 var(--pc-font-sans); cursor: pointer; }
 .pc-folder-new:hover { text-decoration: underline; }
 .pc-folder-place { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; color: var(--pc-text-2); font-size: var(--pc-fs-sm); }
@@ -876,7 +891,7 @@ button.pc-version:hover { border-color: color-mix(in srgb, var(--pc-primary) 35%
 
 /* The Queue panel's work (SuiteQueue.tsx, docs/quick-access.md) */
 .pc-job-group { display: grid; gap: 6px; margin-bottom: 14px; }
-.pc-job-group h3, .pc-job-heading { margin: 0 0 2px; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
+.pc-job-group h3, .pc-job-heading { margin: 0 0 2px; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 650; }
 .pc-job-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .pc-job { padding: 10px 12px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); display: flex; align-items: flex-start; gap: 12px; }
 .pc-job .pc-app-mark, .pc-job .pcs-app-fallback { flex: none; margin-top: 1px; }

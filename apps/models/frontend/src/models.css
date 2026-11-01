@@ -341,7 +341,7 @@ h4.mc-dialog-section { font-size: var(--pc-fs-sm); }
 .mc-page-main > .panel h2 { margin: 0 0 8px; font-size: var(--pc-fs-md); }
 .mc-model-about p { margin: 0 0 12px; color: var(--pc-text-2); line-height: var(--pc-lh-relaxed); }
 .mc-facts { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 0; }
-.mc-facts dt { font-size: var(--pc-fs-xs); font-weight: 600; color: var(--pc-text-3); text-transform: uppercase; letter-spacing: .04em; }
+.mc-facts dt { font-size: var(--pc-fs-xs); font-weight: 600; color: var(--pc-text-3); }
 .mc-facts dd { margin: 2px 0 0; overflow-wrap: anywhere; }
 .mc-facts-column { flex-direction: column; gap: 10px; }
 .mc-contract { table-layout: fixed; width: 100%; }
@@ -350,7 +350,7 @@ h4.mc-dialog-section { font-size: var(--pc-fs-sm); }
 .mc-contract .mc-col-unit { width: 18%; }
 .mc-contract td { vertical-align: top; overflow-wrap: anywhere; }
 .mc-contract td small { display: block; color: var(--pc-text-3); }
-.mc-contract .mc-contract-group th { background: var(--pc-surface-2); color: var(--pc-text-2); font-size: var(--pc-fs-xs); text-transform: uppercase; letter-spacing: .04em; text-align: left; }
+.mc-contract .mc-contract-group th { background: var(--pc-surface-2); color: var(--pc-text-2); font-size: var(--pc-fs-xs); text-align: left; }
 .mc-model-preview { height: 560px; }
 .mc-page-diagram .panel-header { margin-bottom: 12px; }
 .mc-node-parameters h2 small { font-weight: 400; margin-left: 6px; }

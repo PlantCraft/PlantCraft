@@ -111,7 +111,7 @@ a.dk-inbox-link:hover b { color: var(--pc-primary-text); }
 .dk-month-head b { font-size: var(--pc-fs-sm); text-transform: capitalize; }
 .dk-month-head .pcs-icon-button { width: 24px; height: 24px; }
 .dk-month-grid { width: 100%; flex: 1; border-collapse: collapse; table-layout: fixed; }
-.dk-month-grid th { padding: 0 0 2px; color: var(--pc-text-4); font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.dk-month-grid th { padding: 0 0 2px; color: var(--pc-text-4); font-size: 10px; font-weight: 600; }
 .dk-month-grid td { padding: 0; text-align: center; height: calc((100% - 16px) / var(--dk-weeks, 6)); }
 .dk-month-day { position: relative; display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: var(--pc-text-2); font-size: var(--pc-fs-xs); font-variant-numeric: tabular-nums; text-decoration: none; }
 .dk-month-day:hover { background: var(--pc-surface-3); color: var(--pc-text); }
@@ -172,7 +172,7 @@ a.dk-agenda-event:hover b { color: var(--pc-primary-text); }
 .dk-todo.with-detail { grid-template-columns: 220px minmax(0, 1fr) 320px; }
 .dk-todo-nav { display: flex; flex-direction: column; gap: 2px; padding: 8px; position: sticky; top: 12px; }
 .dk-todo-nav hr { width: 100%; margin: 6px 0; border: 0; border-top: 1px solid var(--pc-border-subtle); }
-.dk-todo-nav-label { margin: 8px 10px 2px; color: var(--pc-text-4); font-size: var(--pc-fs-xs); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.dk-todo-nav-label { margin: 8px 10px 2px; color: var(--pc-text-4); font-size: var(--pc-fs-xs); font-weight: 700; }
 .dk-todo-nav-hint { margin: 2px 10px 4px; color: var(--pc-text-4); font-size: var(--pc-fs-xs); }
 .dk-todo-examples { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
 .dk-todo-examples p { flex-basis: 100%; margin: 0; }
@@ -216,7 +216,7 @@ a.dk-agenda-event:hover b { color: var(--pc-primary-text); }
 .dk-todo-late { color: var(--pc-problem-text); font-weight: 600; }
 .dk-todo-empty { padding: 12px 6px; }
 .dk-todo-aside { margin-top: 16px; }
-.dk-todo-aside h3, .dk-todo-done summary { margin: 0 0 6px; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.dk-todo-aside h3, .dk-todo-done summary { margin: 0 0 6px; color: var(--pc-text-3); font-size: var(--pc-fs-xs); font-weight: 700; }
 .dk-todo-aside ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--pc-fs-sm); }
 .dk-todo-aside li { display: flex; align-items: baseline; gap: 10px; }
 .dk-todo-aside time { min-width: 52px; color: var(--pc-text-3); font-variant-numeric: tabular-nums; }
@@ -243,7 +243,7 @@ a.dk-agenda-event:hover b { color: var(--pc-primary-text); }
 /* Notes (round 7) */
 .dk-notes { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 14px; align-items: start; }
 .dk-notes-list { display: flex; flex-direction: column; gap: 4px; padding: 8px; position: sticky; top: 12px; max-height: calc(100vh - 140px); overflow: auto; }
-.dk-notes-list h2, .dk-notes-list h3 { margin: 8px 6px 2px; font-size: var(--pc-fs-xs, 12px); color: var(--pc-text-3); text-transform: uppercase; letter-spacing: .04em; }
+.dk-notes-list h2, .dk-notes-list h3 { margin: 8px 6px 2px; font-size: var(--pc-fs-xs, 12px); color: var(--pc-text-3); }
 .dk-notes-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .dk-notes-search { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); color: var(--pc-text-3); }
 .dk-notes-search input { flex: 1; min-width: 0; border: 0; background: transparent; box-shadow: none; padding: 4px 0; }
