@@ -17,7 +17,8 @@
  *   historian, and what the block does, how to read it and its limits;
  * - the check's problems on the blocks they concern, and a test run's values on the wires;
  * - undo and redo, copy and paste, delete, "Arrange" (no block over another) and fit to screen,
- *   with the usual keys; "Expand" gives the diagram the whole window (Esc leaves).
+ *   with the usual keys; "Full screen" gives the diagram the whole window (Esc leaves);
+ * - a "Legend" button that unfolds what the colours of the wires and blocks mean.
  *
  * Exported from `@plantcraft/ui/blockEditor` (it needs `@xyflow/react`, which apps without
  * diagrams do not install). Styles: `@plantcraft/ui/blockEditor.css`.
@@ -53,6 +54,7 @@ import {
   Database,
   Eye,
   EyeOff,
+  Info,
   Maximize2,
   Minimize2,
   Plus,
@@ -160,6 +162,7 @@ const EditorContext = createContext<EditorContextValue | null>(null);
 const useEditor = () => useContext(EditorContext) as EditorContextValue;
 
 const RECORDABLE = new Set(["number", "result", "series"]);
+const LEGEND_KEY = "plantcraft-ui:block-legend";
 /** Library colours (blockEditor.css `--be-lib-N`): the catalog's libraries take them in turn. */
 const LIBRARY_COLOURS = 11;
 const libraryClass = (index: number | undefined) => `be-lib-${(index ?? 0) % LIBRARY_COLOURS}`;
@@ -734,8 +737,12 @@ function Editor(props: BlockEditorProps) {
   // A test run's values on the wires: off at first, since on a full diagram they crowd it.
   const [showValues, setShowValues] = useState(false);
   const [pointed, setPointed] = useState<Pointed>(null);
-  // "Expand": the diagram over the whole window, until Esc or the button again.
+  // "Full screen": the diagram over the whole window, until Esc or the button again.
   const [expanded, setExpanded] = useState(false);
+  // The legend folds into one "Legend" button (Jonathan, 2026-11-01: less on the canvas); open or
+  // not is remembered in this browser.
+  const [legendOpen, setLegendOpen] = useState(() => { try { return localStorage.getItem(LEGEND_KEY) === "1"; } catch { return false; } });
+  const toggleLegend = () => setLegendOpen((now) => { try { localStorage.setItem(LEGEND_KEY, now ? "0" : "1"); } catch { /* private window */ } return !now; });
   const clip = useRef<Clip | null>(null);
   const paletteSearch = useRef<HTMLInputElement | null>(null);
   const flow = useReactFlow();
@@ -998,7 +1005,7 @@ function Editor(props: BlockEditorProps) {
             {/* Zoom and fit are the canvas's own buttons (bottom left) and keys (+, -, F); the
                 toolbar gives the diagram the whole window instead. */}
             <button type="button" className="be-tool be-tool-text" aria-pressed={expanded} title={expanded ? t("Back to the page (Esc)") : t("Give the diagram the whole window")} onClick={() => setExpanded((now) => !now)}>
-              {expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />} {expanded ? t("Exit full screen") : t("Expand")}
+              {expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />} {expanded ? t("Exit full screen") : t("Full screen")}
             </button>
             {trace && (
               <>
@@ -1071,7 +1078,11 @@ function Editor(props: BlockEditorProps) {
             </ReactFlow>
             {refusal && <div className="be-refusal" role="status"><AlertTriangle size={14} /> {refusal}</div>}
             {!diagram.nodes.length && !readOnly && <div className="be-empty-canvas">{t("Drag blocks from the left, then wire an output to an input.")}</div>}
-            <div className="be-legend">
+            <div className={`be-legend${legendOpen ? "" : " be-legend-closed"}`}>
+              <button type="button" className="be-legend-toggle" aria-expanded={legendOpen} onClick={toggleLegend} title={legendOpen ? t("Hide the legend") : t("What the colours of the wires and blocks mean")}>
+                <Info size={13} /> {t("Legend")}
+              </button>
+              {legendOpen && <>
               <div className="be-legend-row" aria-label={t("What the wires carry")}>
                 <b>{t("Wires")}</b>
                 {legend.map((type) => (
@@ -1086,6 +1097,7 @@ function Editor(props: BlockEditorProps) {
                   {usedLibraries.map((library) => <span key={library.library} title={library.description}><i className={`be-lib-dot ${libraryClass(libraryIndex[library.library])}`} />{library.name}</span>)}
                 </div>
               )}
+              </>}
             </div>
           </div>
           <aside className="be-inspector" aria-label={t("Inspector")}>

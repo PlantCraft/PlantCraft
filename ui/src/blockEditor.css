@@ -153,6 +153,11 @@
 .be-refusal { position: absolute; left: 50%; top: 12px; z-index: 5; transform: translateX(-50%); max-width: min(520px, 90%); padding: 8px 12px; border: 1px solid var(--pc-problem-border); border-radius: var(--pc-radius-md); display: flex; align-items: center; gap: 7px; color: var(--pc-problem-text); background: var(--pc-problem-soft); box-shadow: var(--pc-shadow-2); font-size: var(--pc-fs-sm); }
 .be-empty-canvas { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; color: var(--pc-text-3); font-size: var(--pc-fs-md); }
 .be-legend { position: absolute; left: 56px; bottom: 12px; z-index: 4; max-width: calc(100% - 290px); padding: 5px 9px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); display: grid; gap: 4px; background: var(--pc-surface); color: var(--pc-text-3); font-size: var(--pc-fs-2xs); }
+.be-legend-closed { padding: 0; border: 0; background: none; }
+.be-legend-toggle { width: fit-content; height: 26px; padding: 0 9px; border: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md); display: inline-flex; align-items: center; gap: 5px; color: var(--pc-text-2); background: var(--pc-surface); font-size: var(--pc-fs-2xs); font-weight: var(--pc-fw-semibold); cursor: pointer; }
+.be-legend:not(.be-legend-closed) .be-legend-toggle { height: auto; padding: 0; border: 0; background: none; }
+.be-legend-toggle:hover { color: var(--pc-text); }
+.be-legend-toggle:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 1px; }
 .be-legend-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .be-legend-row b { min-width: 38px; color: var(--pc-text-2); font-weight: var(--pc-fw-semibold); }
 .be-legend span { display: inline-flex; align-items: center; gap: 4px; }
@@ -163,7 +168,7 @@
 .be-swatch.be-type-intervals { background: repeating-linear-gradient(90deg, var(--be-type) 0 6px, transparent 6px 8px, var(--be-type) 8px 9px, transparent 9px 11px); }
 .be-swatch-wide { width: 22px; height: 4px; }
 
-/* "Expand": the editor over the whole window (Esc or the button leaves). */
+/* "Full screen": the editor over the whole window (Esc or the button leaves). */
 .be-editor.be-expanded { position: fixed; inset: 0; z-index: 900; min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
 body.be-body-expanded { overflow: hidden; }
 

@@ -154,7 +154,7 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 - The algorithm's diagram (its page and the editor) takes `@plantcraft/ui`'s new editor: wires in
   distinct colours and dashes, lit when pointed at, a wire's inspector, values above the wires,
-  "Expand" to the whole window, the libraries named in the legend and an "Arrange" with no
+  "Full screen", a legend behind its button that names the libraries and an "Arrange" with no
   overlaps.
 - **Runs with many signals keep their wires faster.** A run kept each wire's thinned series
   and then cut it to its last point; it now keeps the last point directly, and it formats the

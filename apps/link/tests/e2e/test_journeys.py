@@ -149,8 +149,9 @@ def test_an_algorithm_page_and_its_editor_window(signed_in, app_url, screenshots
     expect(page.locator(".alg-diagram .react-flow__node").first).to_be_visible()
     # Read-only, the diagram's toolbar keeps only what works there (round 9).
     tools = page.locator(".alg-diagram .be-tools")
-    expect(tools.get_by_role("button", name="Expand")).to_be_visible()
-    # The legend says what a block's colour is: the library it comes from (2026-11-01).
+    expect(tools.get_by_role("button", name="Full screen")).to_be_visible()
+    # The legend, folded into its button, says what a block's colour is: its library (2026-11-01).
+    page.locator(".alg-diagram .be-legend-toggle").click()
     expect(page.locator(".alg-diagram .be-legend")).to_contain_text("Control loop performance")
     expect(tools.locator(".be-tool", has_text="Arrange")).to_have_count(0)
     expect(tools.locator('[title^="Delete"]')).to_have_count(0)
@@ -699,8 +700,8 @@ def test_an_algorithm_duplicated_on_screen_is_tested_saved_and_scheduled(
     page.locator(".react-flow__edge").first.click(force=True)
     expect(page.locator(".be-inspector .be-wire-end")).to_have_count(2)
     expect(page.locator(".be-inspector")).to_contain_text("From")
-    # Expand gives the diagram the whole window; Esc leaves.
-    page.get_by_role("button", name="Expand").click()
+    # Full screen gives the diagram the whole window; Esc leaves.
+    page.get_by_role("button", name="Full screen").click()
     expect(page.locator(".be-editor.be-expanded")).to_be_visible()
     page.keyboard.press("Escape")
     expect(page.locator(".be-editor.be-expanded")).to_have_count(0)

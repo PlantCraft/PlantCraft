@@ -18,9 +18,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
     last test.
   - "Values on wires" writes each output's value once, at the output, above every wire (another
     wire no longer covers it); a lit wire shows its value even with the values off.
-  - "Expand" gives the diagram the whole window (Esc leaves). The toolbar's fit button, a copy of
-    the canvas's own, is gone; the keys F (fit), + and - zoom.
-  - The legend also names the libraries the blocks' colours stand for.
+  - "Full screen" gives the diagram the whole window (Esc leaves). The toolbar's fit button, a
+    copy of the canvas's own, is gone; the keys F (fit), + and - zoom.
+  - The legend folds into a "Legend" button; open, it also names the libraries the blocks'
+    colours stand for.
 - **API v1: interpolated reads and summaries (gap H5, `plantcraft-sdk` 0.95.0).**
   - Series reads (`GET .../series`, `POST /api/v1/series`) take `sampling=interpolated` and
     `max_gap`. They give the value at each grid time, as PI's and Seeq's interpolated reads

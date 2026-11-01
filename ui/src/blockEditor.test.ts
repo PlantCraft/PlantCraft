@@ -103,7 +103,10 @@ describe("BlockEditor", () => {
     expect(host.querySelector('.be-node[data-block="logic.worst"] .be-tip')?.textContent).toContain("Frozen.");
     // The wires carry no values until asked.
     expect(host.querySelector(".be-wire-value")).toBeNull();
-    // The legend names the wires' kinds and the libraries the blocks come from.
+    // The legend starts folded into its button; open, it names the wires' kinds and the
+    // libraries the blocks come from.
+    expect(host.querySelector(".be-legend")?.textContent).not.toContain("Blocks");
+    await act(async () => host.querySelector<HTMLButtonElement>(".be-legend-toggle")?.click());
     expect(host.querySelector(".be-legend")?.textContent).toContain("Blocks");
     // Libraries start folded; opening one folds the other.
     expect(host.querySelectorAll(".be-palette-item")).toHaveLength(0);
