@@ -11,6 +11,7 @@ into the other one on the way out.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import socket
@@ -36,6 +37,8 @@ MAX_TOKENS = 4000
 # address suggests and switches once when the service names the other one.
 COMPLETION_TOKENS = 16000
 TOKEN_PARAMS = ("max_completion_tokens", "max_tokens")
+# Anthropic's mark for the start of a request it may keep for the next ones (5 minutes).
+CACHED = {"type": "ephemeral"}
 
 Tool = Callable[[str, dict[str, Any]], Any]
 
@@ -162,14 +165,17 @@ class ChatModel:
                     )
                 except _OtherTokenParam as exc:
                     raise RuntimeError(_http_problem(400, str(exc))) from exc
+        # Anthropic reuses a request's start only where ``cache_control`` marks it: the tools
+        # (the same for every question) and the instructions (the same in each round of one
+        # answer). Below the model's minimum length nothing is cached, and nothing fails.
         body: dict[str, Any] = {
             "model": self.model,
             "max_tokens": MAX_TOKENS,
-            "system": system,
+            "system": [{"type": "text", "text": system, "cache_control": CACHED}],
             "messages": messages,
         }
         if tools:
-            body["tools"] = tools
+            body["tools"] = [*tools[:-1], {**tools[-1], "cache_control": CACHED}]
         return self._post(
             body,
             {"x-api-key": self.api_key, "anthropic-version": "2023-06-01"},
@@ -628,6 +634,11 @@ def _to_responses(
         "max_output_tokens": COMPLETION_TOKENS,
         "store": False,
     }
+    if tools:
+        # Requests with the same tools go to the same cache: OpenAI then reuses their start
+        # (the tools and the instructions' fixed rules) at the cached price.
+        names = ",".join(sorted(item["name"] for item in tools))
+        body["prompt_cache_key"] = "plantcraft-" + hashlib.sha256(names.encode()).hexdigest()[:16]
     if reasoning:
         body["reasoning"] = {"effort": reasoning}
     if tools:
