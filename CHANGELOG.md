@@ -312,6 +312,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- **SDK 0.96.0: an app without an app key no longer warns that its contributions were not
+  sent.** An app's stand-in client for a missing key (Analytics) has no `put_contributions`: the
+  SDK now treats it as no client and lets `GET /api/ops/metrics` carry the contributions, instead
+  of retrying in the background and logging a warning half a minute later.
+
 - Tests: the network guard of `tests/conftest.py` lets the suite journeys reach the installation `PLANTCRAFT_SUITE_URL` names. Since the visitor fixture asks `/api/session` from Python, `make e2e-suite` against a host name was refused before any journey ran.
 - **The suite's journeys on an installation without the public demo.** `tests/e2e_suite` walked
   the visitor's journeys only through "Enter the demo", so on a `--demo` install 13 of 15 failed.

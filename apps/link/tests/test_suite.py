@@ -400,7 +400,9 @@ def test_without_the_suite_endpoints_a_round_still_works_and_logs_once(tmp_path,
             first = fake.requests
             assert runtime.run_round()["status"] == "ok"
             second = fake.requests - first
-        messages = [record.getMessage() for record in caplog.records]
+        messages = [
+            record.getMessage() for record in caplog.records if record.name == "linkcraft.data.suite"
+        ]
         # runs, results, events, schedules, series
         assert len(messages) == len(set(messages)) == 5
         assert second < first  # the endpoints are left alone after their 404
