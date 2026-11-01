@@ -161,7 +161,7 @@ def run_load(
     log=print,
     timeout: float = 600,
 ) -> tuple[list[Result], dict[str, Any]]:
-    """``people`` viewers ask ``questions`` each, at once; meanwhile the administrator keeps
+    """``people`` demo visits ask ``questions`` each, at once; meanwhile the administrator keeps
     reading the asset list. Every answer must arrive; the plan wants p95 within 20 s and the rest
     of the suite not slowed."""
 
@@ -169,7 +169,7 @@ def run_load(
     for index in range(people):
         name = f"load{index + 1}"
         if name not in battery.people:
-            battery.person(name, "viewer")
+            battery.visit(name)
         clients.append(battery.people[name])
     times: list[float] = []
     failures: list[str] = []
