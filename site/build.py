@@ -1,11 +1,11 @@
-"""Builds PlantCraft's site into dist/: the page, its assets and fonts, and the chat's knowledge.
+"""Builds PlantCraft's site into dist/: its pages, their assets and fonts, and the chat's knowledge.
 
     python build.py [--owner PlantCraft] [--bundle plantcraft-0.6.0-linux-amd64-bundle] [--draft]
                     [--demo-url https://demo.example] [--contact team@example] [--security sec@example] [--noindex]
 
-The page is page/template.html with the app cards, links and bundle name filled in; the app
-marks come from docs/images/apps and the fonts from ui/src/fonts, so the site uses the suite's
-own. knowledge.json is the public documentation listed in knowledge/sources.toml, cut into
+Each page (index, pricing, partners, install; pages.py) and privacy.html is put in
+page/template.html with the links filled in; the logo and app marks come from docs/images and the
+fonts from ui/src/fonts, so the site uses the suite's own. knowledge.json is the public documentation listed in knowledge/sources.toml, cut into
 passages, which the chat answers from. Nothing in dist/ is secret: it is all served as it is.
 Beside the page: privacy.html (what the site and the demo keep), robots.txt and
 .well-known/security.txt (RFC 9116). --noindex keeps search engines away (a site online for tests
@@ -27,72 +27,42 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(HERE))
 
+import pages  # noqa: E402
 from sitechat.knowledge import Knowledge  # noqa: E402
 
-MARKS = ROOT / "docs/images/apps"
+IMAGES = ROOT / "docs/images"
+MARKS = IMAGES / "apps"
 FONTS = ROOT / "ui/src/fonts"
-
-# (mark, name, category, what it does): the names people see (docs/glossary.md).
-APPS = [
-    (
-        "desk",
-        "Desk",
-        "Your day",
-        "What needs you, actions, calendar, to-do, notes and the team on shift.",
-    ),
-    (
-        "histcraft",
-        "Historian",
-        "Data",
-        "Collects and archives the plant's signals from OPC UA, PI Web API, MQTT, Modbus TCP, SQL and CSV, read-only to the plant.",
-    ),
-    (
-        "linkcraft",
-        "Analytics",
-        "Signals and assets",
-        "Scheduled monitors, diagnostics and KPIs for signals and control loops: what is wrong and why.",
-    ),
-    (
-        "alarmcraft",
-        "Alarms",
-        "Operations",
-        "Alarms and alerts, shelving, history and alarm performance.",
-    ),
-    (
-        "dashcraft",
-        "View",
-        "Dashboards and diagrams",
-        "Dashboards, process diagrams, trends and scheduled reports, shared with the shift.",
-    ),
-    (
-        "modelcraft",
-        "Models",
-        "Modelling",
-        "Block-diagram models with Modelica underneath: simulations, studies, optimization and FMUs.",
-    ),
-    (
-        "doccraft",
-        "Documents",
-        "Plant knowledge",
-        "Manuals, control narratives and datasheets, searched offline and cited by the assistant.",
-    ),
-]
 
 # The clips at the top of the page (page/assets/clips/<name>.webm, .mp4 and .jpg, recorded from
 # the demo by record_clips.py): name, tab label, what it shows.
 CLIPS = [
-    ("dashboards", "Dashboards", "View: a dashboard of the unit, shared with the shift."),
-    ("process", "Process", "View: the plant's process diagram with live values."),
-    ("reports", "Reports", "View: a scheduled report of the unit, as it is sent by e-mail."),
+    ("dashboards", "Monitor your KPIs", "View: a dashboard of the unit, shared with the shift."),
+    ("process", "See your plant", "View: the plant's process diagram with live values."),
     (
         "analytics",
-        "Analytics",
+        "Find the problems",
         "Analytics: an algorithm's block diagram and the results on every asset.",
     ),
-    ("alarms", "Alarms", "Alarms: the alarms of the plant, their history and performance."),
-    ("sources", "Sources", "PlantCraft: the plant's data sources, read-only, and their signals."),
-    ("desk", "Desk", "Desk: messages, actions, calendar and what needs you today."),
+    ("alarms", "Handle alarms", "Alarms: the alarms of the plant, their history and performance."),
+    ("reports", "Share reports", "View: a scheduled report of the unit, as it is sent by e-mail."),
+    (
+        "sources",
+        "Collect the data",
+        "Historian: the plant's data sources, read-only, and their signals.",
+    ),
+    ("desk", "Manage your day", "Desk: messages, actions, calendar and what needs you today."),
 ]
+
+# The pages beside index.html: file, title, description (the nav shows the first three).
+NAV = [("./", "Home"), ("pricing.html", "Pricing"), ("partners.html", "Partners")]
+DESCRIPTIONS = {
+    "index.html": "The open suite for industrial plants: historian, analytics, alarms, dashboards, models and documents on your own servers, with an AI assistant that checks the results with you.",
+    "pricing.html": "PlantCraft is free and open source. Pay only for help: installation, monitoring, diagnosis, custom apps, support and training, per plant.",
+    "partners.html": "Integrators, consultants and app builders: deliver PlantCraft straight to the plant, and keep your own apps open or closed.",
+    "install.html": "Install PlantCraft in about 10 minutes: one signed offline bundle with the whole suite and a demo plant.",
+    "privacy.html": "What PlantCraft's site and public demo keep about visitors, and what PlantCraft installed at a plant sends out: nothing.",
+}
 
 
 def mark(app: str, size: int = 44) -> str:
@@ -103,40 +73,36 @@ def mark(app: str, size: int = 44) -> str:
     return svg.replace("<svg ", '<svg aria-hidden="true" focusable="false" ', 1)
 
 
-def cards() -> str:
-    return "\n".join(
-        f'      <article class="app"><div class="app-head">{mark(app)}<div><h3>{name}</h3>'
-        f'<p class="cat">{cat}</p></div></div><p>{text}</p></article>'
-        for app, name, cat, text in APPS
-    )
-
-
 def showcase() -> str:
-    """One video and one button per clip under it; showcase.js swaps the video's sources (a
-    single video element, so speed-control browser add-ons draw one control, not seven)."""
+    """The clips at the top: one video, then one button per clip and a pause button with a bar
+    under it; on a phone, the clip's name between back and next. showcase.js swaps the video's sources
+    (a single video element, so speed-control browser add-ons draw one control, not seven)."""
     n, _, alt = CLIPS[0]
     tabs = "".join(
-        f'<button type="button" aria-pressed="{"true" if i == 0 else "false"}" '
+        f'<button type="button" class="tab" aria-pressed="{"true" if i == 0 else "false"}" '
         f'data-webm="assets/clips/{name}.webm" data-mp4="assets/clips/{name}.mp4" '
         f'data-poster="assets/clips/{name}.jpg" data-label="{escape(text)}">'
-        f'<span class="clip-name">{label}</span><span class="clip-fill"></span></button>'
+        f'{label}<span class="f"></span></button>'
         for i, (name, label, text) in enumerate(CLIPS)
     )
     return (
-        '    <figure class="showcase" aria-label="PlantCraft at work">\n'
-        '      <div class="shot"><video muted playsinline preload="auto" '
+        '<figure class="showcase" aria-label="PlantCraft at work">'
+        '<div class="show"><video muted playsinline preload="auto" '
         f'poster="assets/clips/{n}.jpg" aria-label="{escape(alt)}" width="1440" height="900">'
         f'<source src="assets/clips/{n}.webm" type="video/webm">'
-        f'<source src="assets/clips/{n}.mp4" type="video/mp4"></video></div>\n'
-        '      <div class="clip-bar">'
+        f'<source src="assets/clips/{n}.mp4" type="video/mp4"></video></div>'
+        f'<div class="tabs clip-tabs" aria-label="Parts of the suite">{tabs}</div>'
+        '<div class="clip-nav"><button type="button" class="clip-prev" aria-label="Previous">‹</button>'
+        f'<span class="clip-name">{CLIPS[0][1]}</span>'
+        '<button type="button" class="clip-next" aria-label="Next">›</button></div>'
+        '<div class="clip-bar">'
         '<button type="button" class="clip-play" aria-label="Pause">'
         '<svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16">'
         '<path class="i-pause" d="M4 3h3v10H4zM9 3h3v10H9z"/>'
         '<path class="i-play" d="M4 2.5v11l9.5-5.5z"/></svg></button>'
         '<input class="clip-seek" type="range" min="0" max="1000" value="0" step="1" '
-        'aria-label="Position in the clip"></div>\n'
-        f'      <div class="clip-tabs" aria-label="Parts of the suite">{tabs}</div>\n'
-        "    </figure>"
+        'aria-label="Position in the clip"></div>'
+        "</figure>"
     )
 
 
@@ -170,38 +136,47 @@ def build(
 ) -> Path:
     gh = f"https://github.com/{owner}/PlantCraft"
     banner = '<p class="draft">Draft: not published yet</p>' if draft else ""
-    demo = (
-        f'<a class="btn primary" href="{escape(demo_url)}">Try the live demo</a>'
-        if demo_url
-        else ""
-    )
-    demo_float = (
-        f'<a class="demo-launch" href="{escape(demo_url)}"><svg aria-hidden="true" viewBox="0 0 20 20"'
-        ' width="16" height="16"><path d="M6 4v12l10-6z" fill="currentColor"/></svg>Live demo</a>'
-        if demo_url
-        else ""
-    )
     if contact:
         write = f'write to <a href="mailto:{escape(contact)}">{escape(contact)}</a>'
     else:
         write = "write to us with <b>Talk to us</b> on the site"
-    values = {
-        "%%CARDS%%": cards(),
-        "%%SHOWCASE%%": showcase(),
-        "%%LOGO%%": mark("processcraft", 28),
-        "%%GH%%": gh,
-        "%%DOCS%%": f"{gh}/blob/main",
-        "%%BUNDLE%%": bundle,
-        "%%DRAFT%%": banner,
-        "%%ROBOTS%%": '<meta name="robots" content="noindex, nofollow">' if noindex else "",
-        "%%DEMO%%": demo,
-        "%%DEMO_FLOAT%%": demo_float,
-        "%%INSTALL_PRIMARY%%": "" if demo_url else " primary",
-        "%%WRITE%%": write,
-        "%%MAIL%%": f'<a href="mailto:{escape(contact)}">{escape(contact)}</a>' if contact else "",
-    }
-    html = _versioned(_fill((HERE / "page/template.html").read_text(encoding="utf-8"), values))
-    privacy = _versioned(_fill((HERE / "page/privacy.html").read_text(encoding="utf-8"), values))
+    shell = (HERE / "page/template.html").read_text(encoding="utf-8")
+    bodies = {fn: (title, body) for fn, (title, body) in pages.PAGES.items()}
+    bodies["privacy.html"] = (
+        "Privacy · PlantCraft",
+        (HERE / "page/privacy.html").read_text(encoding="utf-8"),
+    )
+    built = {}
+    for fn, (title, body) in bodies.items():
+        nav = "".join(
+            f'<a href="{href}"{" class=cur" if href == fn or (href == "./" and fn == "index.html") else ""}>{name}</a>'
+            for href, name in NAV
+        )
+        scripts = (
+            '<script src="assets/showcase.js" defer></script>\n'
+            '<script src="assets/home.js" defer></script>\n'
+            if fn == "index.html"
+            else ""
+        )
+        values = {
+            "%%BODY%%": body.replace("%%SHOWCASE%%", showcase()),
+            "%%TITLE%%": title,
+            "%%DESCRIPTION%%": DESCRIPTIONS[fn],
+            "%%SCRIPTS%%": scripts,
+            "%%NAV%%": nav,
+            "%%INSTALL_CUR%%": " cur" if fn == "install.html" else "",
+            "%%GH%%": gh,
+            "%%DOCS%%": f"{gh}/blob/main",
+            "%%BUNDLE%%": bundle,
+            "%%DRAFT%%": banner,
+            "%%ROBOTS%%": '<meta name="robots" content="noindex, nofollow">' if noindex else "",
+            "%%DEMO_URL%%": escape(demo_url or "https://demo.plantcraft.io"),
+            "%%WRITE%%": write,
+            "%%MAIL%%": f'<a href="mailto:{escape(contact)}">{escape(contact)}</a>'
+            if contact
+            else "",
+        }
+        built[fn] = _versioned(_fill(shell, values))
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(HERE / "page/assets", out / "assets")
@@ -212,8 +187,13 @@ def build(
     for licence in FONTS.glob("OFL-*.txt"):
         shutil.copy(licence, out / "assets/fonts" / licence.name)
     (out / "assets/plantcraft.svg").write_text(mark("processcraft", 64))
-    (out / "index.html").write_text(html, encoding="utf-8")
-    (out / "privacy.html").write_text(privacy, encoding="utf-8")
+    for fn, html in built.items():
+        (out / fn).write_text(html, encoding="utf-8")
+    (out / "assets/img/apps").mkdir(parents=True)
+    for name in ("logo.svg", "logo-mark.svg"):
+        shutil.copy(IMAGES / name, out / "assets/img" / name)
+    for svg in MARKS.glob("*.svg"):
+        shutil.copy(svg, out / "assets/img/apps" / svg.name)
     (out / "robots.txt").write_text(
         "User-agent: *\nDisallow: /\n" if noindex else "User-agent: *\nAllow: /\n"
     )
