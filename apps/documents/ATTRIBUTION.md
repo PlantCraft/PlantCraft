@@ -51,6 +51,6 @@ PlantCraft authors (Apache-2.0).
 ## Data
 
 No third-party dataset is committed (the P&ID test drawings moved with the plant map to
-PlantCraft PID, `apps/pid`). `tests/files/incident.pdf` is one of the suite's invented
+PlantCraft PID, a closed app kept in a private repository). `tests/files/incident.pdf` is one of the suite's invented
 demo documents (PlantCraft `deploy/demo/documents/`). The test plant (`plantcraft_sdk.testplant`, a port of
 The Simulator's loop equations) is synthetic.

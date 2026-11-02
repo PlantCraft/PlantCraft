@@ -22,7 +22,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   (`/api/apps/licenses`), PlantCraft checks the signature and the installation and serves it to
   that app only (`GET /api/v1/apps/self/license`). `plantcraft_sdk.licensing` gives apps the
   same check, offline (docs/app-package.md, section 8).
-- **PlantCraft PID (`apps/pid`, `/pid/`, port 8160, uid 10016)**, the first closed app: the P&ID
+- **PlantCraft PID (`/pid/`, port 8160, uid 10016)**, the first closed app: the P&ID
   reader and plant map, moved out of Documents, compiled with Nuitka and licensed.
 
 ### Fixed

@@ -212,7 +212,7 @@ new version would leave outside their range or untested.
 A closed app (`source = "closed"`) is an app whose source the client does not receive. Two
 things make it closed, and a third makes it paid:
 
-1. **The image carries compiled code only.** PlantCraft PID (`apps/pid`) is the first one: its
+1. **The image carries compiled code only.** PlantCraft PID is the first one (its source lives in a private repository, not here): its
    Dockerfile compiles the Python package with Nuitka (Apache-2.0, free) into one native module
    (`--mode=module`, docstrings removed), copies only that into the image, and fails the build if
    any `.py` or `.pyc` of the app is left. The frontend is minified with no source maps.
