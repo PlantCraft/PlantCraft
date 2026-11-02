@@ -301,7 +301,7 @@ TIERS0 = """<div class="tiers">
 <div class="tier"><span class="tag">Free</span><div class="amt">Free forever</div><p>The whole suite on your own servers, every app, no limits.</p>
 <ol class="steps"><li>Check the <a href="install.html#req">requirements</a>: Docker on Linux, macOS or Windows</li><li>Download the signed bundle</li><li>Run the installer and sign in, about 10 minutes</li></ol>
 <div class="tb"><a class="btn p" href="%%GH%%/releases/latest">Download 0.6.0</a><a class="btn" href="install.html">How to install</a></div></div>
-<div class="tier hl"><span class="tag">Founding plants <em>3 places</em></span><div class="amt">Free 30-day pilot</div><p>For the first process plants, with us at your side.</p>
+<div class="tier hl"><span class="tag">Founding plants <em>3 places</em></span><div class="amt">30 days of free help</div><p>We install and set it up with you. The software stays free after the 30 days.</p>
 <ul class="check"><li>We install and configure it with you</li><li>Connection to your PI, OPC UA or CSV</li><li>First findings and suggested actions, reviewed together</li></ul>
 <div class="tb"><a class="btn p" href="pricing.html#pilot">Apply for a pilot</a></div></div>
 <div class="tier"><span class="tag">Services and support</span><div class="amt">Per plant</div><p>For plants that run on it every day. Never per user or per tag.</p>
@@ -437,9 +437,9 @@ pricing = f"""<header class="phero"><p class="eyebrow">Pricing</p><h1>Free to us
 <section class="tight">{TIERSF('<a class="btn" href="#services">See the services</a>')}</section>
 <section id="services"><div class="shead"><p class="eyebrow">Services</p><h2>What we can do for your plant.</h2><p class="hint">Pick what you need. Each plant gets one price for the year, set by its size.</p></div>
 <div class="sgroups">{srv}</div></section>
-<section id="pilot"><div class="pilot"><div><p class="eyebrow">Founding plants</p><h2>Three places for a free pilot.</h2>
-<p class="hint">30 days on one unit of your plant, with us at your side. Free in money, not in commitment.</p>
-<div class="twocol"><div><h4>You get</h4><ul class="check"><li>Installation and connection to your data</li><li>First findings in the first week</li><li>Suggested actions, reviewed together</li><li>A founding price for the year after, agreed up front</li></ul></div>
+<section id="pilot"><div class="pilot"><div><p class="eyebrow">Founding plants</p><h2>Three places for 30 days of free help.</h2>
+<p class="hint">For 30 days we help you install, connect and set up PlantCraft on one unit of your plant, at no cost. PlantCraft itself is free and stays free after the 30 days: nothing starts to be charged.</p>
+<div class="twocol"><div><h4>You get</h4><ul class="check"><li>Installation and connection to your data</li><li>First findings in the first week</li><li>Suggested actions, reviewed together</li><li>If you want support afterwards, a founding price agreed up front. Optional</li></ul></div>
 <div><h4>We ask</h4><ul class="check"><li>A process plant with historian data</li><li>One person who owns the pilot</li><li>About 4 hours of your team's time</li><li>Permission to tell the story, without names if you prefer</li></ul></div></div></div>
 {form("Apply for a pilot", [("Name", 0), ("Company and plant", 0), ("Work e-mail", 0), ("What would you like to find first?", 0)], "Send", "We answer personally within 2 working days.")}</div></section>
 {end("Ask for a quote.", "Tell us about your plant, how many units and what you need. We answer personally.", "Talk to us", "Ask the assistant")}"""
@@ -540,7 +540,7 @@ install = f'''<header class="phero"><p class="eyebrow">Install</p><h1>Running in
 <div class="osbox"><div class="ostabs">{ostabs}</div>{ospanes}<p class="fnote mt">Proxies, HTTPS certificates, backups and updates are in the install guide. <a href="%%DOCS%%/docs/install.md" class="more">Read it on GitHub →</a></p></div></section>
 <section><div class="shead"><p class="eyebrow">Step 3</p><h2>Your first day.</h2></div>
 <div class="howto"><div><span>1</span><b>Try the demo plant</b><p>Every app is filled with a sample plant, so you can explore before connecting yours.</p></div><div><span>2</span><b>Connect your data</b><p>Add PI, OPC UA or a CSV. The assistant drafts your assets and signals.</p></div><div><span>3</span><b>See the first findings</b><p>Analytics runs on a schedule and the assistant points to what needs attention.</p></div></div></section>
-<section><div class="help"><div><b>Rather have us install it?</b><span>Founding plants get installation and setup with us, free for 30 days.</span></div><a class="btn white" href="pricing.html#pilot">Apply for a pilot</a></div></section>
+<section><div class="help"><div><b>Rather have us install it?</b><span>Founding plants get 30 days of free help to install and set it up. The software is always free.</span></div><a class="btn white" href="pricing.html#pilot">Apply for a pilot</a></div></section>
 <section id="help"><div class="pilot"><div><p class="eyebrow">Talk to us</p><h2>Stuck somewhere?</h2>
 <p class="hint">Tell us where it stopped and what you see. We answer personally.</p>
 <ul class="check big"><li>Help with Docker, proxies and certificates</li><li>Help connecting PI, OPC UA or your database</li><li>Or ask the assistant on any page, any time</li></ul></div>
