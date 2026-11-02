@@ -296,6 +296,18 @@ def test_page_has_no_external_resource_inline_code_or_price(dist):
         assert f"<b>{pillar}</b>" in html
 
 
+def test_every_page_is_built_with_the_shell_forms_and_no_inline_code(dist):
+    for page in ("index.html", "pricing.html", "partners.html", "install.html", "privacy.html"):
+        html = (dist / page).read_text()
+        assert "%%" not in html and "<style" not in html and ' style="' not in html, page
+        assert not re.search(r"\son\w+=", html), page
+        assert 'src="assets/visit.js' in html and 'src="assets/chat.js' in html, page
+        assert 'class="btn sm p" href=' in html and ">Try the demo</a>" in html, page
+    for page in ("pricing.html", "partners.html", "install.html"):
+        html = (dist / page).read_text()
+        assert '<form class="form"' in html and 'name="email"' in html and 'name="website"' in html
+
+
 def test_privacy_robots_and_security_txt(dist):
     privacy = (dist / "privacy.html").read_text()
     assert "No cookies" in privacy and "%%" not in privacy
@@ -305,7 +317,6 @@ def test_privacy_robots_and_security_txt(dist):
     assert "Contact: https://github.com/PlantCraft/PlantCraft/security/advisories/new" in security
     assert "Expires: " in security
     assert "noindex" not in (dist / "index.html").read_text()
-    assert "Try the live demo" not in (dist / "index.html").read_text()
 
 
 def test_a_site_online_before_its_launch(tmp_path):
@@ -320,7 +331,7 @@ def test_a_site_online_before_its_launch(tmp_path):
     )
     html = (out / "index.html").read_text()
     assert '<meta name="robots" content="noindex, nofollow">' in html
-    assert 'href="https://demo.plant.example/">Try the live demo</a>' in html
+    assert 'href="https://demo.plant.example/">Try the demo</a>' in html
     assert (out / "robots.txt").read_text() == "User-agent: *\nDisallow: /\n"
     assert "noindex" in (out / "privacy.html").read_text()
     assert "mailto:team@plant.example" in (out / "privacy.html").read_text()

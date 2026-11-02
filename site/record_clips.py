@@ -50,7 +50,7 @@ class Rec:
         opts = dict(
             ignore_https_errors=True,
             viewport={"width": 1440, "height": 900},
-            color_scheme="dark",
+            color_scheme="light",
             locale="en-US",
             timezone_id="America/Sao_Paulo",
         )
