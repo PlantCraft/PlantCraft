@@ -16,4 +16,4 @@ body:
     id: version
     attributes:
       label: Version and app
-      description: e.g. "0.5.1, Historian", or "the online demo"
+      description: e.g. "0.6.0, Historian", or "the online demo"

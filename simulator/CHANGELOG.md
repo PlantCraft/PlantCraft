@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **Sparkplug B in the source test kit** (`simcraft.testkit.sparkplug`): an edge node with a
