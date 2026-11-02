@@ -26,7 +26,8 @@ Each release has one bundle per processor: `linux-amd64` for x86_64 servers and 
 for 64-bit ARM ones (`uname -m` says `x86_64` or `aarch64`). The installer refuses a bundle for
 the other processor (`--allow-emulation` runs it emulated, several times slower). Copy three
 files of the release to the server: the bundle, its `.sha256` and the signature of that hash,
-`.sha256.sig`. Then check that the bundle is the one the publisher signed **before unpacking
+`.sha256.sig` (a bundle over 2 GiB comes in parts, `.tar.gz.part-*`: join them first with
+`cat <bundle>.tar.gz.part-* > <bundle>.tar.gz`). Then check that the bundle is the one the publisher signed **before unpacking
 it**, with `ssh-keygen` (OpenSSH 8.1 or later, already on every supported Linux and on macOS):
 
 ```bash
