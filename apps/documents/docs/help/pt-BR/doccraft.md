@@ -120,4 +120,4 @@ listas, na busca, no assistente ou nos links. Desmarque **O assistente pode lê-
 em um documento para mantê-lo longe do assistente enquanto as pessoas ainda o encontram.
 
 Todo documento enviado, alterado, baixado ou excluído, e toda busca que o assistente faz, fica
-registrado no registro de auditoria do PlantCraft.
+registrado no log de auditoria do PlantCraft.

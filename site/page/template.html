@@ -3,146 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>PlantCraft</title>
+<title>%%TITLE%%</title>
 %%ROBOTS%%
-<meta name="description" content="The open suite for process plants: historian, analytics, alarms, dashboards, process models and documents on your own servers, with an AI assistant that checks the results with you.">
+<meta name="description" content="%%DESCRIPTION%%">
 <link rel="icon" href="assets/plantcraft.svg?v=2" type="image/svg+xml">
 <link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js" defer></script>
 <script src="assets/chat.js" defer></script>
-<script src="assets/showcase.js" defer></script>
-<script src="assets/visit.js" defer></script>
+%%SCRIPTS%%<script src="assets/visit.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 %%DRAFT%%
-<div class="wrap">
-  <nav aria-label="Main">
-    <a class="logo" href="#top">%%LOGO%% PlantCraft</a>
-    <div class="navlinks">
-      <a href="#open">Open</a><a href="#secure">Secure</a><a href="#llm">LLM-first</a><a href="#fast">Fast</a><a href="#apps">Apps</a><a href="#install">Install</a><a href="%%GH%%">GitHub</a>
-      <button class="btn small primary" type="button" data-chat="contact">Talk to us</button>
-    </div>
-  </nav>
-
-  <main id="main">
-  <header class="hero" id="top">
-    <div class="hero-text">
-      <h1>The open suite for process plants.</h1>
-      <p class="lead">Historian, analytics, alarms, dashboards, process models and plant documents in one place, with an AI assistant that checks the results with you.</p>
-      <div class="ctas">
-        %%DEMO%%
-        <a class="btn%%INSTALL_PRIMARY%%" href="#install">Install free</a>
-        <button class="btn" type="button" data-chat="ask">Ask a question</button>
-        <a class="btn" href="%%GH%%">Source on GitHub</a>
-      </div>
-    </div>
-%%SHOWCASE%%
-    <ul class="pillars-row" aria-label="The four pillars">
-      <li><a href="#open"><b>Open</b><span>All code and methods</span></a></li>
-      <li><a href="#secure"><b>Secure</b><span>On your own network</span></a></li>
-      <li><a href="#llm"><b>LLM-first</b><span>An assistant that checks</span></a></li>
-      <li><a href="#fast"><b>Fast</b><span>Value in days</span></a></li>
-    </ul>
-  </header>
-
-  <section id="open" aria-labelledby="open-h">
-    <p class="eyebrow">01 · Open</p>
-    <h2 id="open-h">All of it open, and yours to extend.</h2>
-    <p class="sec-lead">Every line of code and every method is open. Nothing is a black box: each result says how it was reached, in blocks and Python you can read, change and share.</p>
-    <ul class="points">
-      <li><b>Apache-2.0</b><span>Use it, change it, ship it inside your own products. No paid edition, no locked feature.</span></li>
-      <li><b>Open methods</b><span>The performance and data quality methods are open and written in Python, from public literature, so you can check, cite and improve them.</span></li>
-      <li><b>A complete suite</b><span>Apps for data, analytics, alarms, dashboards, models and documents, ready to install and configure, sharing the same people, assets, signals and look.</span></li>
-      <li><b>Expandable</b><span>New apps for your process, your research or your client are created from a template and slot in beside the official ones.</span></li>
-    </ul>
-  </section>
-
-  <section id="secure" class="split" aria-labelledby="secure-h">
-    <div class="split-head">
-      <p class="eyebrow">02 · Secure</p>
-      <h2 id="secure-h">Built for the plant's IT and OT review.</h2>
-      <p class="sec-lead">Plants install nothing their security teams have not approved. PlantCraft is built for that review from the first line, and a two-page <a href="%%DOCS%%/docs/security-guide.md">security guide</a> maps it to the Purdue model and IEC 62443.</p>
-    </div>
-    <ul class="rows">
-        <li><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M4 5h16v6H4zM4 13h16v6H4zM8 8h.01M8 16h.01"/></svg><div><b>On your own infrastructure</b><span>Installs on your servers and inside your network, from one signed bundle, even with no internet. No telemetry, licence call or outside service.</span></div></li>
-        <li><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M3 12h11M10 7l5 5-5 5M19 4v16"/></svg><div><b>Read-only to the plant</b><span>Reads OPC UA, PI Web API, MQTT, Modbus TCP, SQL and CSV. It never writes to a DCS, PLC or historian.</span></div></li>
-        <li><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M6 11h12v9H6zM9 11V8a3 3 0 0 1 6 0v3"/></svg><div><b>Protected by default</b><span>One HTTPS port with sign-in and an audit log, calculations isolated with no network or secrets, and a backup before every update.</span></div></li>
-        <li><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><path d="M8 7h8a5 5 0 0 1 0 10H8A5 5 0 0 1 8 7zM8 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg><div><b>AI you configure</b><span>Off until an administrator turns it on. Connect the provider you choose, or a model your company already runs. The assistant reads only what the person asking may read.</span></div></li>
-    </ul>
-  </section>
-
-  <section id="llm" aria-labelledby="llm-h">
-    <p class="eyebrow">03 · LLM-first</p>
-    <h2 id="llm-h">An assistant that finds the problems with you.</h2>
-    <p class="sec-lead">Instead of searching through results and charts, ask. The assistant checks the calculations and the results, points to what needs attention and suggests what to do, so your time goes to understanding the problem and planning the fix with your team.</p>
-    <div class="two">
-      <ul class="points single">
-        <li><b>Checks the results</b><span>It reads the plant's data, the results of every app, its documents and history, and answers with charts and links to its sources.</span></li>
-        <li><b>Suggests actions</b><span>It says what is wrong, why, and what to do first. A person always confirms.</span></li>
-        <li><b>Helps you build, too</b><span>It proposes new blocks, algorithms, alarm rules and models with their fields filled in, for you to review.</span></li>
-        <li><b>Your own AI, too</b><span>Copy any block, model or the plant map as a prompt, or let your assistant read the plant through a read-only MCP server.</span></li>
-      </ul>
-      <div class="asks" aria-label="Examples of what people ask">
-        <p class="ask">Why did this alarm fire?</p>
-        <p class="ask">What should we fix first this week?</p>
-        <p class="ask">What changed in the furnace since Monday?</p>
-        <p class="ask">Help me create a block that detects a sticky valve.</p>
-        <p class="ask">Help me design a model of this heat exchanger.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="fast" aria-labelledby="fast-h">
-    <p class="eyebrow">04 · Fast</p>
-    <h2 id="fast-h">Value in days, not months.</h2>
-    <p class="sec-lead">No project before the first result. Install it, point it at the plant's data, and the first findings arrive the same day. Measured in our tests on a 4 vCPU, 16 GB server with 8,000 signals; a larger server does more.</p>
-    <dl class="stats">
-      <div><dt>under 1 hour</dt><dd>to install from the offline bundle</dd></div>
-      <div><dt>0.2 s</dt><dd>to run one algorithm on one asset</dd></div>
-      <div><dt>21 ms</dt><dd>for a 24-hour trend of one signal (p95)</dd></div>
-      <div><dt>29,000+</dt><dd>values a second written by the Historian</dd></div>
-    </dl>
-    <p class="note">Sources: <a href="%%DOCS%%/docs/install.md">Install PlantCraft</a> and <a href="%%DOCS%%/docs/en/sizing.md">Sizing the server</a>. Run the same bench on your own machine.</p>
-  </section>
-
-  <section id="apps" aria-labelledby="apps-h">
-    <p class="eyebrow">The suite</p>
-    <h2 id="apps-h">One platform. Every plant tool.</h2>
-    <p class="sec-lead">Each app runs in its own container and shares the same people, plant assets and look. Install the ones you need.</p>
-    <div class="grid">
-%%CARDS%%
-    </div>
-    <p class="note">Also inside: Jupyter notebooks with the plant's data, in the browser or on your own computer, and a simulated plant to try everything safely before connecting a real one.</p>
-  </section>
-
-  <section id="install" aria-labelledby="install-h">
-    <p class="eyebrow">Install</p>
-    <h2 id="install-h">One bundle, one command.</h2>
-    <div class="two">
-      <div>
-        <p class="sec-lead">Made for networks without internet: copy the bundle to the server, check its signature, run the installer. It sets up the platform, the apps, the demo plant if you want it, and an administrator account.</p>
-        <p class="note">Linux for plant servers; macOS and Windows with Docker Desktop for trials. <a href="%%DOCS%%/docs/install.md">The install guide</a> · <a href="%%DOCS%%/docs/requirements.md">Requirements</a></p>
-      </div>
-      <pre><span class="c"># Linux with Docker; the bundle from the releases page</span>
-tar -xzf %%BUNDLE%%.tar.gz
-cd %%BUNDLE%%
-./install.sh --all-apps --demo
-<span class="c"># open https://&lt;server&gt;/ and sign in as admin</span></pre>
-    </div>
-  </section>
-
-  <section class="end" id="contact" aria-labelledby="contact-h">
-    <p class="eyebrow">Talk to us</p>
-    <h2 id="contact-h">Tell us about your plant.</h2>
-    <p class="sec-lead">A pilot on your unit, help to install it, training for your team, an app for your process, or a question the documentation does not answer: write to us and we answer personally.</p>
-    <div class="ctas">%%DEMO%%<button class="btn%%INSTALL_PRIMARY%%" type="button" data-chat="contact">Talk to us</button><button class="btn" type="button" data-chat="ask">Ask the assistant</button></div>
-  </section>
-  </main>
-
-  <footer>
-    <span>PlantCraft · Apache-2.0 · built with <a href="%%DOCS%%/docs/how-we-build.md">Claude Code</a> <span class="social"><a href="https://www.linkedin.com/company/plantcraft_io" rel="me" aria-label="PlantCraft on LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.5h4V21H3zM9.5 9.5h3.8v1.6h.06c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.77 2.65 4.77 6.1V21h-4v-5.1c0-1.22-.02-2.79-1.7-2.79-1.7 0-1.96 1.33-1.96 2.7V21h-4z"/></svg></a><a href="https://x.com/plantcraft_io" rel="me" aria-label="PlantCraft on X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77zm-1.08 16.18h1.7L7.4 4.73H5.58z"/></svg></a><a href="https://www.youtube.com/@plantcraft_io" rel="me" aria-label="PlantCraft on YouTube" title="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.75 15.02V8.98L15.5 12z"/></svg></a></span></span>
-    <div class="fl">%%MAIL%%<a href="%%DOCS%%/docs/README.md">Docs</a><a href="%%DOCS%%/docs/security-guide.md">Security</a><a href="%%DOCS%%/TRADEMARKS.md">Trademarks</a><a href="privacy.html">Privacy</a><a href="%%GH%%">GitHub</a></div>
-  </footer>
+<div class="top"><div class="wrap"><nav aria-label="Main"><a class="logo" href="./"><img src="assets/img/logo.svg" alt="PlantCraft" width="135" height="26"></a>
+<div class="links">%%NAV%%<a class="btn sm%%INSTALL_CUR%%" href="install.html">Install</a><a class="btn sm p" href="%%DEMO_URL%%">Try the demo</a><a class="soc" href="%%GH%%" title="GitHub" aria-label="PlantCraft on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.4c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg></a></div>
+<button class="burger" type="button" aria-label="Menu" aria-expanded="false"><i></i><i></i><i></i></button></nav>
+<div class="mmenu">%%NAV%%<a href="install.html">Install</a><a href="%%GH%%">GitHub</a><a class="btn p" href="%%DEMO_URL%%">Try the demo</a></div></div></div>
+<div class="wrap"><main id="main">
+%%BODY%%
+</main>
+<footer><span>PlantCraft · Apache-2.0 · %%MAIL%%</span><div class="fl"><a href="pricing.html">Pricing</a><a href="partners.html">Partners</a><a href="install.html">Install</a><a href="%%DOCS%%/docs/README.md">Docs</a><a href="%%DOCS%%/docs/security-guide.md">Security</a><a href="%%DOCS%%/TRADEMARKS.md">Trademarks</a><a href="privacy.html">Privacy</a></div><div class="fsoc"><a href="https://www.linkedin.com/company/plantcraft_io" rel="me" aria-label="PlantCraft on LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.5h4V21H3zM9.5 9.5h3.8v1.6h.06c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.77 2.65 4.77 6.1V21h-4v-5.1c0-1.22-.02-2.79-1.7-2.79-1.7 0-1.96 1.33-1.96 2.7V21h-4z"/></svg></a><a href="https://x.com/plantcraft_io" rel="me" aria-label="PlantCraft on X" title="X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77zm-1.08 16.18h1.7L7.4 4.73H5.58z"/></svg></a><a href="https://www.youtube.com/@plantcraft_io" rel="me" aria-label="PlantCraft on YouTube" title="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.75 15.02V8.98L15.5 12z"/></svg></a><a href="%%GH%%" aria-label="PlantCraft on GitHub" title="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.4c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg></a></div></footer>
 </div>
 
 <div id="chat" class="chat" role="dialog" aria-modal="false" aria-labelledby="chat-title" hidden>
@@ -171,7 +51,6 @@ cd %%BUNDLE%%
   <p class="chat-foot">An AI assistant: it can be wrong, so check the pages it cites. Questions are kept without your name or address to improve the answers. <button type="button" class="link" data-chat="contact">Talk to a person</button></p>
 </div>
 <div class="launchers">
-  %%DEMO_FLOAT%%
   <button class="chat-launch" type="button" data-chat="ask" aria-controls="chat"><svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18"><path d="M4 3h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3.5V14H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" fill="currentColor"/></svg>Ask PlantCraft</button>
 </div>
 </body>

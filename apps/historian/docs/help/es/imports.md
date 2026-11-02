@@ -61,4 +61,4 @@ modo archive. Sus valores se conservan hasta que se elimina la importación, sal
 se le asigne su propia retención. La lista conserva cada importación con quién la cargó y cuándo.
 
 **Eliminar** borra la importación, sus señales y todos los valores que trajo, después de que
-usted escribe su id. No se puede deshacer. Solo Ingeniería importa y elimina.
+usted escribe su id. No se puede deshacer. Solo los editores importan y eliminan.

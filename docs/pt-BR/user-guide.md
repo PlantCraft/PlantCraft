@@ -21,7 +21,7 @@ você:
 
 - **Administrador**: tudo, inclusive pessoas, grupos, apps e Configurações.
 - **Editor**: altera a árvore de ativos e edita nos apps.
-- **Leitor**: vê os ativos e abre os apps deles somente para leitura; não altera
+- **Visualizador**: vê os ativos e abre os apps deles somente para leitura; não altera
   nada, e os botões de criar e editar não aparecem.
 - **Só dashboards**: para telas da sala de controle.
 
@@ -66,7 +66,7 @@ O **PlantCraft**, último na lista de apps, é a configuração da suíte: a **V
 responde "a instalação está saudável?", em widgets que você organiza: **Apps online**,
 **Conexões de dados** (cada conexão do Historian), **Sistema** (problemas abertos, disco livre,
 último backup, versão, quem entrou hoje) e, para administradores, **Mudanças recentes** do
-registro de auditoria. **Personalizar** traz os outros de volta: **Precisa de atenção**,
+log de auditoria. **Personalizar** traz os outros de volta: **Precisa de atenção**,
 **Ações abertas**, **Piores primeiro**, **Seus apps** e os widgets que cada app instalado
 publica (um app que não está instalado não acrescenta nenhum). Um quadro que você organizou
 fica como você o deixou; **Voltar ao padrão** traz este. Ativos, Configurações, Pessoas, Apps,

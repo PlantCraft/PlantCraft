@@ -62,7 +62,7 @@ chegam numa pasta, e **Exportações** leva dados para CSV.
 ## 4. Acompanhar as malhas (Analytics)
 
 Abra o **Analytics**. Ele executa **algoritmos**, feitos de **blocos**, sobre os ativos e os
-sinais da planta, e publica **resultados**: um nível (OK, Atenção, Crítico ou Desconhecido),
+sinais da planta, e publica **resultados**: um nível (OK, Aviso, Crítico ou Desconhecido),
 uma pontuação de 0 a 100 e uma frase que diz por quê.
 
 1. **Monitores** lista o que roda sozinho: *Desempenho de malhas de controle* julga cada malha,
@@ -88,7 +88,7 @@ alertas, nas palavras da ISA-18.2: uma regra é **Simples** (um limite com banda
 atraso), **Blocos** ou **Python**. Abra *PIC-1202 pressure high* ou *Loop critical for over 1 h*
 para ver cada tipo.
 
-- **Alarmes** é a lista do que está ativo agora. **Reconhecer** reconhece um; **Suprimir** o esconde por
+- **Alarmes** é a lista do que está ativo agora. **Reconhecer** reconhece um; **Arquivar** o esconde por
   um tempo, com um motivo. Um alarme também chega em **Notificações**, com os mesmos botões.
 - **Eventos** lista o que os apps publicaram (um resultado que mudou de nível, uma execução que
   falhou) e transforma um deles em regra com um clique.

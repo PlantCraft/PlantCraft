@@ -1,7 +1,7 @@
 # Desempenho dos alarmes
 
 A página Desempenho mede a carga de alarmes em um período (24 horas, 7 ou 30 dias) para uma
-posição de operador, contra as metas públicas da ISA-18.2 e da EEMUA 191. Os alarmes suprimidos
+posição de operador, contra as metas públicas da ISA-18.2 e da EEMUA 191. Os alarmes arquivados
 e fora de serviço não disparam nada e não são contados.
 
 | Indicador | Aceitável | Administrável |

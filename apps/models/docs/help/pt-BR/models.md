@@ -65,7 +65,7 @@ ficam no código, a um clique (**Código Modelica**).
 
 | Papel | Pode |
 |---|---|
-| Leitor | Ler os modelos, blocos, estudos e simulações, com os gráficos e as mensagens |
+| Visualizador | Ler os modelos, blocos, estudos e simulações, com os gráficos e as mensagens |
 | Editor | Todo o resto: desenhar e salvar modelos, simulá-los, iniciar e cancelar estudos, exportar FMUs, escrever bibliotecas de blocos |
 
 ## Onde as coisas ficam guardadas

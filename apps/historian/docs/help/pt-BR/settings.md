@@ -21,7 +21,7 @@ vêm em três níveis, e o mais específico prevalece:
 
 A página de um sinal diz o que está em vigor e de onde vem, por exemplo "400 dias, das
 configurações gerais". Uma alteração em qualquer nível chega ao coletor em segundos; os sinais
-que definem o próprio valor não mudam. Cada alteração é escrita no registro de auditoria do
+que definem o próprio valor não mudam. Cada alteração é escrita no log de auditoria do
 PlantCraft.
 
 ## Agregações e o disco

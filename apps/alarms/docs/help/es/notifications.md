@@ -28,7 +28,7 @@ que PlantCraft puede enviarlo.
 
 Resumen › Desempeño › **Metas** contiene las metas de la instalación. Alarms las mide
 (**Desempeño**, con las diez alarmas más frecuentes) y las usa para que los mensajes sean pocos.
-Los valores predeterminados son las metas públicas de ISA-18.2 y EEMUA 191; alguien de Ingeniería
+Los valores predeterminados son las metas públicas de ISA-18.2 y EEMUA 191; un editor
 las cambia, y cada cambio queda en la auditoría de PlantCraft.
 
 | Protección | Qué hace |
@@ -58,9 +58,9 @@ conteo de no leídos, pierde sus botones e indica qué la resolvió ("Reconocida
 "Normalizada"). Un mensaje que agrupa varias alarmas se resuelve cuando todas lo están. Una nueva
 activación de la alarma es una conversación nueva.
 
-## Silenciamientos
+## Silencios
 
-Un **silenciamiento** (Reglas › Silenciamientos) retiene los mensajes de algunas alarmas (áreas,
+Un **silencio** (Reglas › Silencios) retiene los mensajes de algunas alarmas (áreas,
 disciplinas o alarmas elegidas) durante un tiempo, con un motivo: una parada planificada, una
 parada general. Las alarmas se siguen activando, mostrando y registrando. Para detener la alarma
 en sí mientras se repara su instrumento, **suprímala** en su lugar (Operación de alarmas).
@@ -71,6 +71,6 @@ La página de cada alarma lista sus **Mensajes enviados**: cuándo, a quién y s
 se vuelve a intentar en cada ciclo durante un día.
 
 El diseño sigue descripciones públicas de herramientas de alertas (las reglas y la agrupación de
-notificaciones de Grafana Alerting; la agrupación, la inhibición y los silenciamientos de
-Prometheus Alertmanager) y la distinción de ISA-18.2 entre suprimir una alarma (shelving) y no
+notificaciones de Grafana Alerting; la agrupación, la inhibición y los silencios de
+Prometheus Alertmanager) y la distinción de ISA-18.2 entre archivar una alarma (shelving) y no
 avisar sobre ella.

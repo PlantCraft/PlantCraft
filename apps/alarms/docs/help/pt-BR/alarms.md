@@ -37,7 +37,7 @@ alarmes são disparados.
 Uma regra cobre ativos nomeados, todos os ativos sob um ramo, todos os ativos de um tipo, os
 ativos de um monitor do Analytics, ou qualquer ativo que seus eventos citem, e gera **um alarme
 por ativo** por padrão: "PV acima de 50 sob a Unidade 100" é uma regra e uma dúzia de alarmes.
-Cada alarme tem sua própria vida ISA-18.2 (disparado, reconhecido, suprimido), enquanto as
+Cada alarme tem sua própria vida ISA-18.2 (disparado, reconhecido, arquivado), enquanto as
 mensagens da regra inteira são agrupadas, para que cinquenta malhas não virem cinquenta
 mensagens. Veja **Regras** e **Notificações**.
 

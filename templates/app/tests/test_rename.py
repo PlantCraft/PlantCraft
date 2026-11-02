@@ -10,7 +10,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 IGNORED = shutil.ignore_patterns(
-    "node_modules", "dist", "*.egg-info", "__pycache__", ".ruff_cache", ".pytest_cache", "var"
+    ".git",
+    "node_modules",
+    "dist",
+    "*.egg-info",
+    "__pycache__",
+    ".ruff_cache",
+    ".pytest_cache",
+    "var",
 )
 
 

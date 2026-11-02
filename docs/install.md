@@ -140,6 +140,11 @@ Each release has, per processor:
 | `....tar.gz.sha256` | Its SHA-256 hash |
 | `....tar.gz.sha256.sig` | The publisher's signature over that hash |
 
+A bundle over 2 GiB is published in parts (`....tar.gz.part-aa`, `-ab`, ...), because the
+release page limits each file to 2 GiB. Download every part of your processor and join them
+first: `cat plantcraft-<version>-linux-<arch>-bundle.tar.gz.part-* > plantcraft-<version>-linux-<arch>-bundle.tar.gz`.
+The hash and the signature are of the joined file.
+
 Check them before you unpack, on any system with OpenSSH 8.1 or later (every supported Linux
 and macOS has it; on Windows, in the Ubuntu window of WSL). Why and what each check proves:
 [Check a release](verify-a-release.md).

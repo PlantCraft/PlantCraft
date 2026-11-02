@@ -88,7 +88,7 @@ en las palabras de ISA-18.2: una regla es **Simple** (un límite con banda muert
 **Bloques** o **Python**. Abra *PIC-1202 pressure high* o *Loop critical for over 1 h* para ver
 cada tipo.
 
-- **Alarmas** es la lista de lo que está activo ahora. **Reconozca** una; **Suprimir** la oculta
+- **Alarmas** es la lista de lo que está activo ahora. **Reconozca** una; **Archivar** la oculta
   por un tiempo con un motivo. Una alarma también llega a **Notificaciones**, con los mismos
   botones.
 - **Eventos** lista lo que publicaron las apps (un resultado que cambió de nivel, una ejecución que

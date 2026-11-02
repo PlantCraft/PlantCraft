@@ -38,7 +38,7 @@ que Events, Alarms y el asistente la ven. Los scripts y otras apps las leen y es
 
 ## Valores editados
 
-Alguien de Ingeniería puede insertar un valor donde no había ninguno, cambiar uno o eliminar uno
+Un editor puede insertar un valor donde no había ninguno, cambiar uno o eliminar uno
 (una lectura tomada mientras se calibraba el sensor, un valor escrito a mano), siempre con un
 motivo. El valor leído lleva entonces su marca (*insertado*, *editado* o *eliminado*), el valor
 reemplazado se conserva con quién lo cambió, cuándo y por qué (la lista bajo **Valores
@@ -53,7 +53,7 @@ configuración: `source_id`, `tag`, `address`, `name`, `description`, `unit`, `k
 `low`, `high`, `mode`, `scan_seconds`, `deviation`, `max_seconds`, `retention_days`, `enabled`.
 Una celda de configuración vacía significa "heredar" de la fuente o de la configuración general.
 
-**Importar lista de señales** (Ingeniería), en la página Importaciones, lee un archivo así,
+**Importar lista de señales** (editores), en la página Importaciones, lee un archivo así,
 separado por comas, puntos y coma o tabulaciones. Solo `source_id` y `tag` son obligatorios; las
 columnas omitidas conservan lo que tienen las señales. Una fila cuya fuente y tag existen cambia
 esa señal; cualquier otra fila agrega una. Historian muestra primero lo que el archivo agrega y
