@@ -1,25 +1,5 @@
 -- PlantCraft 0.6.0 (30e9973 + release): the tables a fresh installation of that release has.
 -- Written by dev/schema-snapshot/dump.py; never edited (tests/test_upgrade_schema.py).
-CREATE TRIGGER app_knowledge_subjects_delete AFTER DELETE ON app_knowledge BEGIN
-        DELETE FROM app_knowledge_subjects WHERE app_id = OLD.app_id AND ref = OLD.ref AND subject IN (SELECT value FROM json_each(CASE WHEN json_valid(OLD.subjects_json) AND json_type(OLD.subjects_json) = 'array' THEN OLD.subjects_json ELSE '[]' END) WHERE json_each.type = 'text');
-    END;
-CREATE TRIGGER app_knowledge_subjects_insert AFTER INSERT ON app_knowledge BEGIN
-        INSERT OR IGNORE INTO app_knowledge_subjects (app_id, ref, subject) SELECT NEW.app_id, NEW.ref, value FROM json_each(CASE WHEN json_valid(NEW.subjects_json) AND json_type(NEW.subjects_json) = 'array' THEN NEW.subjects_json ELSE '[]' END) WHERE json_each.type = 'text';
-    END;
-CREATE TRIGGER app_knowledge_subjects_update AFTER UPDATE OF subjects_json ON app_knowledge BEGIN
-        DELETE FROM app_knowledge_subjects WHERE app_id = OLD.app_id AND ref = OLD.ref AND subject IN (SELECT value FROM json_each(CASE WHEN json_valid(OLD.subjects_json) AND json_type(OLD.subjects_json) = 'array' THEN OLD.subjects_json ELSE '[]' END) WHERE json_each.type = 'text');
-        INSERT OR IGNORE INTO app_knowledge_subjects (app_id, ref, subject) SELECT NEW.app_id, NEW.ref, value FROM json_each(CASE WHEN json_valid(NEW.subjects_json) AND json_type(NEW.subjects_json) = 'array' THEN NEW.subjects_json ELSE '[]' END) WHERE json_each.type = 'text';
-    END;
-CREATE TRIGGER app_run_subjects_delete AFTER DELETE ON app_runs BEGIN
-        DELETE FROM app_run_subjects WHERE app_id = OLD.app_id AND run_id = OLD.run_id AND subject IN (SELECT value FROM json_each(CASE WHEN json_valid(OLD.subjects_json) AND json_type(OLD.subjects_json) = 'array' THEN OLD.subjects_json ELSE '[]' END) WHERE json_each.type = 'text');
-    END;
-CREATE TRIGGER app_run_subjects_insert AFTER INSERT ON app_runs BEGIN
-        INSERT OR IGNORE INTO app_run_subjects (app_id, run_id, subject) SELECT NEW.app_id, NEW.run_id, value FROM json_each(CASE WHEN json_valid(NEW.subjects_json) AND json_type(NEW.subjects_json) = 'array' THEN NEW.subjects_json ELSE '[]' END) WHERE json_each.type = 'text';
-    END;
-CREATE TRIGGER app_run_subjects_update AFTER UPDATE OF subjects_json ON app_runs BEGIN
-        DELETE FROM app_run_subjects WHERE app_id = OLD.app_id AND run_id = OLD.run_id AND subject IN (SELECT value FROM json_each(CASE WHEN json_valid(OLD.subjects_json) AND json_type(OLD.subjects_json) = 'array' THEN OLD.subjects_json ELSE '[]' END) WHERE json_each.type = 'text');
-        INSERT OR IGNORE INTO app_run_subjects (app_id, run_id, subject) SELECT NEW.app_id, NEW.run_id, value FROM json_each(CASE WHEN json_valid(NEW.subjects_json) AND json_type(NEW.subjects_json) = 'array' THEN NEW.subjects_json ELSE '[]' END) WHERE json_each.type = 'text';
-    END;
 CREATE TABLE app_contributions (
         app TEXT PRIMARY KEY,
         version TEXT NOT NULL DEFAULT '',
@@ -1005,3 +985,23 @@ CREATE INDEX idx_user_group_members_user ON user_group_members(username);
 CREATE INDEX idx_watch_incidents_open
     ON watch_incidents(check_key, closed_at);
 CREATE INDEX idx_watch_maintenance_end ON watch_maintenance(ends_at);
+CREATE TRIGGER app_knowledge_subjects_delete AFTER DELETE ON app_knowledge BEGIN
+        DELETE FROM app_knowledge_subjects WHERE app_id = OLD.app_id AND ref = OLD.ref AND subject IN (SELECT value FROM json_each(CASE WHEN json_valid(OLD.subjects_json) AND json_type(OLD.subjects_json) = 'array' THEN OLD.subjects_json ELSE '[]' END) WHERE json_each.type = 'text');
+    END;
+CREATE TRIGGER app_knowledge_subjects_insert AFTER INSERT ON app_knowledge BEGIN
+        INSERT OR IGNORE INTO app_knowledge_subjects (app_id, ref, subject) SELECT NEW.app_id, NEW.ref, value FROM json_each(CASE WHEN json_valid(NEW.subjects_json) AND json_type(NEW.subjects_json) = 'array' THEN NEW.subjects_json ELSE '[]' END) WHERE json_each.type = 'text';
+    END;
+CREATE TRIGGER app_knowledge_subjects_update AFTER UPDATE OF subjects_json ON app_knowledge BEGIN
+        DELETE FROM app_knowledge_subjects WHERE app_id = OLD.app_id AND ref = OLD.ref AND subject IN (SELECT value FROM json_each(CASE WHEN json_valid(OLD.subjects_json) AND json_type(OLD.subjects_json) = 'array' THEN OLD.subjects_json ELSE '[]' END) WHERE json_each.type = 'text');
+        INSERT OR IGNORE INTO app_knowledge_subjects (app_id, ref, subject) SELECT NEW.app_id, NEW.ref, value FROM json_each(CASE WHEN json_valid(NEW.subjects_json) AND json_type(NEW.subjects_json) = 'array' THEN NEW.subjects_json ELSE '[]' END) WHERE json_each.type = 'text';
+    END;
+CREATE TRIGGER app_run_subjects_delete AFTER DELETE ON app_runs BEGIN
+        DELETE FROM app_run_subjects WHERE app_id = OLD.app_id AND run_id = OLD.run_id AND subject IN (SELECT value FROM json_each(CASE WHEN json_valid(OLD.subjects_json) AND json_type(OLD.subjects_json) = 'array' THEN OLD.subjects_json ELSE '[]' END) WHERE json_each.type = 'text');
+    END;
+CREATE TRIGGER app_run_subjects_insert AFTER INSERT ON app_runs BEGIN
+        INSERT OR IGNORE INTO app_run_subjects (app_id, run_id, subject) SELECT NEW.app_id, NEW.run_id, value FROM json_each(CASE WHEN json_valid(NEW.subjects_json) AND json_type(NEW.subjects_json) = 'array' THEN NEW.subjects_json ELSE '[]' END) WHERE json_each.type = 'text';
+    END;
+CREATE TRIGGER app_run_subjects_update AFTER UPDATE OF subjects_json ON app_runs BEGIN
+        DELETE FROM app_run_subjects WHERE app_id = OLD.app_id AND run_id = OLD.run_id AND subject IN (SELECT value FROM json_each(CASE WHEN json_valid(OLD.subjects_json) AND json_type(OLD.subjects_json) = 'array' THEN OLD.subjects_json ELSE '[]' END) WHERE json_each.type = 'text');
+        INSERT OR IGNORE INTO app_run_subjects (app_id, run_id, subject) SELECT NEW.app_id, NEW.run_id, value FROM json_each(CASE WHEN json_valid(NEW.subjects_json) AND json_type(NEW.subjects_json) = 'array' THEN NEW.subjects_json ELSE '[]' END) WHERE json_each.type = 'text';
+    END;
