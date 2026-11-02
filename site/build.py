@@ -74,8 +74,8 @@ def mark(app: str, size: int = 44) -> str:
 
 
 def showcase() -> str:
-    """The clips at the top: one button per clip above one video, a pause button and a bar under
-    it; on a phone, the clip's name between back and next. showcase.js swaps the video's sources
+    """The clips at the top: one video, then one button per clip and a pause button with a bar
+    under it; on a phone, the clip's name between back and next. showcase.js swaps the video's sources
     (a single video element, so speed-control browser add-ons draw one control, not seven)."""
     n, _, alt = CLIPS[0]
     tabs = "".join(
@@ -87,11 +87,11 @@ def showcase() -> str:
     )
     return (
         '<figure class="showcase" aria-label="PlantCraft at work">'
-        f'<div class="tabs clip-tabs" aria-label="Parts of the suite">{tabs}</div>'
         '<div class="show"><video muted playsinline preload="auto" '
         f'poster="assets/clips/{n}.jpg" aria-label="{escape(alt)}" width="1440" height="900">'
         f'<source src="assets/clips/{n}.webm" type="video/webm">'
         f'<source src="assets/clips/{n}.mp4" type="video/mp4"></video></div>'
+        f'<div class="tabs clip-tabs" aria-label="Parts of the suite">{tabs}</div>'
         '<div class="clip-nav"><button type="button" class="clip-prev" aria-label="Previous">‹</button>'
         f'<span class="clip-name">{CLIPS[0][1]}</span>'
         '<button type="button" class="clip-next" aria-label="Next">›</button></div>'
