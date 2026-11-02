@@ -114,7 +114,7 @@ export function AssistantChart({ chart, base, height = 260, className = "pc-answ
       </span>
     </figcaption>
     {lines.length > 0 && <Suspense fallback={<div className="pc-answer-chart-wait"><LoaderCircle className="spin" size={16} /></div>}>
-      {groups.map((group) => <TimeChart key={group.map((line) => line.name).join("|")} lines={group} height={each} start={chart.start} end={chart.end} filename={chart.title || "assistant-chart"} />)}
+      {groups.map((group) => <TimeChart key={group.map((line) => line.name).join("|")} lines={group} height={each} start={chart.start} end={chart.end} filename={chart.title || "assistant-chart"} assistant={false} />)}
     </Suspense>}
     {empty.length > 0 && <p className="pc-answer-chart-note">{t("No data in this period: {signals}", { signals: empty.map((item) => item.signal).join(", ") })}</p>}
     {(chart.errors ?? []).length > 0 && <p className="pc-answer-chart-errors">{(chart.errors ?? []).map((item) => `${item.signal}: ${item.detail}`).join(" · ")}</p>}

@@ -92,6 +92,17 @@ def _env_int(name: str, default: int, low: int, high: int) -> int:
     return max(low, min(high, value))
 
 
+# The assistant on each chart (a trial, 2026-11-02, off by default): "icon" puts the assistant's
+# mark in each chart's corner, "focus" adds the chart last pointed at to the menu beside the
+# page's title. Either opens a small popover over the chart that asks and answers in place.
+CHART_MODES = ("off", "icon", "focus")
+
+
+def chart_mode() -> str:
+    value = os.environ.get("PLANTCRAFT_ASSISTANT_CHARTS", "").strip().lower()
+    return value if value in CHART_MODES else "off"
+
+
 def chart_tool() -> dict[str, Any]:
     return {
         "name": CHART,
@@ -728,6 +739,7 @@ class ChatEngine:
             "reason": reason,
             "profiles": profiles,
             "daily_limit": self.daily,
+            "charts": chart_mode(),
         }
 
     def _model(self, profile_id: str) -> tuple[Any, str]:
