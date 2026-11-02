@@ -26,6 +26,9 @@ ASSETS = HERE / "page/assets/clips"
 SPEED = 1.6
 URL = os.environ.get("PLANTCRAFT_SUITE_URL", "https://vm").rstrip("/")
 
+HIDE_CLOCK = """setInterval(() => document.querySelectorAll(".demo-visit-bar, .demo-contact")
+    .forEach((e) => { e.style.display = "none"; }), 200);"""
+
 CURSOR = """
 (() => {
   if (window.__pcCursor) return; window.__pcCursor = 1;
@@ -62,6 +65,8 @@ class Rec:
             opts["storage_state"] = "state.json"
         self.c = self.b.new_context(**opts)
         self.c.add_init_script(CURSOR)
+        # The demo visit's clock and contact button are for visitors, not for a clip.
+        self.c.add_init_script(HIDE_CLOCK)
         self.pg = self.c.new_page()
         self.pg.set_default_timeout(20000)
         self.x, self.y = 720, 450
@@ -132,9 +137,9 @@ def desk(r):
     yield
     r.move(460, 360, 900)
     r.pg.wait_for_timeout(900)
-    r.to(r.pg.get_by_text("FIC-1003 recycle valve").first, 900)
+    r.to(r.pg.get_by_text("Hold the FIC-1003 flow").first, 900)
     r.pg.wait_for_timeout(500)
-    r.click(r.pg.get_by_text("FIC-1003 recycle valve").first, 300, 3200)
+    r.click(r.pg.get_by_text("Hold the FIC-1003 flow").first, 300, 3200)
     r.click(r.pg.get_by_role("link", name="Actions").first, 900, 2600)
     r.click(r.pg.get_by_role("link", name="Calendar").first, 700, 2600)
 
