@@ -405,6 +405,9 @@ services:
       # Executions at once and the slots they take on the compute worker (the machine profile).
       LINKCRAFT_WORKERS: "${LINKCRAFT_WORKERS:-}"
       LINKCRAFT_COMPUTE_SLOTS: "${LINKCRAFT_COMPUTE_SLOTS:-}"
+      # The raw samples kept between rounds (data/cache.py; 512 MB when empty): the server and
+      # its engine share LINKCRAFT_MEMORY, so the machine profile sizes it to that limit.
+      LINKCRAFT_READ_CACHE_MB: "${LINKCRAFT_READ_CACHE_MB:-}"
     secrets:
       - linkcraft_app_key
     volumes:

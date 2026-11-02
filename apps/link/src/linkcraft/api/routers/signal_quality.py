@@ -35,6 +35,11 @@ DASHBOARD_URL = "/dash/"
 # people on it during a round it took 2 s at p95, each answer ~70 ms of one process (0.6.0 load
 # test C4); a few seconds behind is nothing on a page of rounds every 10 minutes.
 OVERVIEW_SECONDS = 3.0
+# One answer per scope is built at a time. With 20 people on it at 3 months of data (2026-11-02,
+# pc-carga C4) each answer took up to 27 s while the engine ran a round, every request that came
+# meanwhile built its own, and the server grew from 0.24 to 1.9 GB until the container's limit
+# killed it. Now the others wait for the one being built (or take the previous one at once).
+OVERVIEW_WAIT_SECONDS = 120.0
 _OVERVIEW_LOCK = threading.Lock()
 
 
@@ -246,18 +251,45 @@ def _stored(rt: Any, moment: datetime, stamp: str) -> str:
 @router.get("/overview")
 def overview(scope: Scope, rt: RuntimeDep) -> dict[str, Any]:
     """Now and the week, for signals and loops, and where the app's dashboard lives (kept
-    ``OVERVIEW_SECONDS`` per asset scope)."""
+    ``OVERVIEW_SECONDS`` per asset scope, built once at a time per scope)."""
 
-    key = scope.roots
+    return kept_answer(rt, "_overview_answers", scope.roots, lambda: _overview(scope, rt))
+
+
+def kept_answer(rt: Any, slot: str, key: Any, build: Any) -> Any:
+    """The answer kept under ``key`` while fresh (``OVERVIEW_SECONDS``); else one request builds
+    it while the others take the previous answer, or wait for the new one when there is none."""
+
     with _OVERVIEW_LOCK:
-        kept = rt.__dict__.setdefault("_overview_answers", {})
+        kept = rt.__dict__.setdefault(slot, {})
+        building = rt.__dict__.setdefault(slot + "_building", {})
         found = kept.get(key)
         if found and time.monotonic() - found[0] < OVERVIEW_SECONDS:
             return found[1]
-    answer = _overview(scope, rt)
-    with _OVERVIEW_LOCK:
-        kept[key] = (time.monotonic(), answer)
-    return answer
+        done = building.get(key)
+        if done is None:
+            done = building[key] = threading.Event()
+            mine = True
+        else:
+            mine = False
+    if not mine:
+        if found:
+            return found[1]
+        done.wait(OVERVIEW_WAIT_SECONDS)
+        with _OVERVIEW_LOCK:
+            found = kept.get(key)
+        if found:
+            return found[1]
+        return build()  # the one building it failed: this request tries on its own
+    try:
+        answer = build()
+        with _OVERVIEW_LOCK:
+            kept[key] = (time.monotonic(), answer)
+        return answer
+    finally:
+        with _OVERVIEW_LOCK:
+            building.pop(key, None)
+        done.set()
 
 
 def _overview(scope: Any, rt: Any) -> dict[str, Any]:
