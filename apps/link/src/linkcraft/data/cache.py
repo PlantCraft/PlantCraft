@@ -42,7 +42,7 @@ def enabled_by_default() -> bool:
 
 def max_bytes_by_default() -> int:
     try:
-        megabytes = float(os.environ.get(CACHE_MB_ENV, DEFAULT_MB))
+        megabytes = float(os.environ.get(CACHE_MB_ENV, "").strip() or DEFAULT_MB)
     except ValueError:
         megabytes = DEFAULT_MB
     return int(max(0.0, megabytes) * 1024 * 1024)
