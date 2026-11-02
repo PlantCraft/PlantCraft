@@ -6,6 +6,8 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **Alarm performance published as a result.** Every hour, Alarms publishes the Performance page's reading over the last 24 hours, 7 days and 30 days as an `alarm_performance` result on the site and on each area. Other apps can read it without calling Alarms; View's reports print it. Each result expires after two hours.

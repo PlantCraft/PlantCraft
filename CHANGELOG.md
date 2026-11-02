@@ -7,6 +7,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **Spanish (SDK 0.105.0, ui 0.109.0).** The whole suite in Spanish (`es`) next to Brazilian
