@@ -3,7 +3,7 @@
 | Tipo | Muestra | Señales |
 |---|---|---|
 | Valor | Un valor (último, media, mín., máx., ...) por señal sobre una ventana, coloreado según sus umbrales, con su línea debajo si se desea | hasta 24 |
-| Indicador | Un valor en un medidor (o un indicador de barra), con las bandas de umbral; un medidor por señal. Estilo **Indicador analógico (ISA-101)**: una barra gris con el rango normal, los límites LL, L, H y HH de los umbrales y el setpoint (una señal de rol SP del mismo activo); el puntero toma color solo fuera de lo normal | hasta 24 |
+| Medidor | Un valor en un cuadrante (o un medidor de barra), con las bandas de umbral; un cuadrante por señal. Estilo **Indicador analógico (ISA-101)**: una barra gris con el rango normal, los límites LL, L, H y HH de los umbrales y el setpoint (una señal de rol SP del mismo activo); el puntero toma color solo fuera de lo normal | hasta 24 |
 | Tendencia | Líneas sobre una ventana; dos unidades tienen dos ejes; umbrales como líneas o áreas | hasta 24 |
 | Gráfico de barras | Un valor por señal, vertical u horizontal, coloreado según los umbrales | hasta 24 |
 | Tabla | Último, media, mín. y máx. por señal, celdas coloreadas según los umbrales | hasta 24 |
@@ -44,7 +44,7 @@ del activo; uno de valor o de indicador, con una.
 | Grupo | Qué define |
 |---|---|
 | Panel | Título, descripción, página, ventana de tiempo propia |
-| Valor, Indicador, Gráfico de barras, Tabla, Gráfico, Dispersión | Lo que dibuja el tipo: el valor (último, media, ...), la línea bajo un valor, el medidor o el indicador de barra, la dirección de las barras, el estilo de línea y los puntos, las columnas de la tabla |
+| Estadística, Medidor, Gráfico de barras, Tabla, Gráfico, Dispersión | Lo que dibuja el tipo: el valor (último, media, ...), la línea bajo un valor, el cuadrante o el medidor de barra, la dirección de las barras, el estilo de línea y los puntos, las columnas de la tabla |
 | Leyenda, Eje | Posición y tabla de la leyenda (con último, media, mín., máx.), etiquetas de los ejes, escala, mín. y máx. flexibles |
 | Opciones estándar | Unidad, decimales, mín. y máx., el rango normal (la línea de un valor y el indicador analógico lo sombrean; vacío: entre el escalón normal de los umbrales y el siguiente), color de los valores |
 | Umbrales | Escalones a partir de un color base: cada escalón tiene un valor y un color; **absolutos** o **porcentaje** de mín. a máx.; en tendencias y barras se muestran como líneas, áreas, ambas o nada, con sus etiquetas |

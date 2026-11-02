@@ -161,7 +161,7 @@ navegador.
 ## Para administradores
 
 - **Desligado por padrão.** Um administrador liga os Notebooks (PlantCraft › Configurações ›
-  Notebooks), e toda mudança vai para o registro de auditoria (`notebooks.settings`, e
+  Notebooks), e toda mudança vai para o log de auditoria (`notebooks.settings`, e
   `notebooks.create` para cada notebook que o PlantCraft escreve). `PLANTCRAFT_NOTEBOOKS=off` nas
   configurações da instalação os deixa desligados de vez.
 - **O que roda onde.** O código Python roda no navegador de cada pessoa, não no servidor: o
@@ -175,7 +175,7 @@ navegador.
   `Retry-After`, e o `plantcraft-notebook` espera e pede de novo sozinho (até 4 vezes, no máximo
   30 s cada). As leituras dos próprios apps (Analytics, Alarms, View), dentro da rede interna,
   nunca contam, então um notebook pesado nunca os deixa lentos. A primeira recusa de cada minuto,
-  por pessoa, vai para o registro de auditoria (`usage.limited`).
+  por pessoa, vai para o log de auditoria (`usage.limited`).
 - **O que um notebook pode fazer.** Exatamente o que a pessoa pode fazer no PlantCraft pela API
   v1, pela própria sessão: ler sinais, séries, ativos, resultados e eventos. Ligue os Notebooks
   quando as pessoas forem de confiança para rodar o código que escrevem ou recebem, como qualquer
@@ -194,6 +194,6 @@ navegador.
   Notebooks estão ligados e a instalação o tem; um administrador pode retirá-lo em Configurações
   › Notebooks › Kit para os computadores das pessoas. O PlantCraft acrescenta a cada zip, ao
   enviá-lo, o endereço do servidor e, com a autoridade certificadora local, o certificado raiz
-  dela; nunca um token. Cada download vai para o registro de auditoria
+  dela; nunca um token. Cada download vai para o log de auditoria
   (`notebooks.kit_download`), e cada token de kit também (`assistant_token.create`). Um kit roda
   no computador da pessoa e só lê pela API v1, dentro dos limites acima.

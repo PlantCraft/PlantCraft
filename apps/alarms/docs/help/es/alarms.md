@@ -27,7 +27,7 @@ activan las alarmas.
    regla allí.
 3. **Reglas** lista cada regla como una oración, cada una activada o desactivada desde la lista.
    **Nueva regla** escribe una en el formulario Simple o en Python. La pestaña
-   **Silenciamientos** retiene los mensajes durante una parada planificada.
+   **Silencios** retiene los mensajes durante una parada planificada.
 4. **Alarmas** reúne todas las alarmas en una tabla, primero las más urgentes: **Necesita
    atención** (predeterminado), **No reconocidas** o **Todas**, y **Solo las mías**. Una fila abre
    la alarma: su valor, su historial (cada activación, normalización, reconocimiento y cambio) y
@@ -39,7 +39,7 @@ Una regla cubre activos nombrados, todos los activos bajo una rama, todos los ac
 los activos de un monitor de Analytics, o cualquier activo que nombren sus eventos, y genera
 **una alarma por activo** de forma predeterminada: "PV por encima de 50 bajo la Unidad 100" es
 una regla y una docena de alarmas. Cada alarma mantiene su propio ciclo de vida ISA-18.2
-(activada, reconocida, suprimida), mientras que los mensajes de toda la regla se agrupan, así que
+(activada, reconocida, archivada), mientras que los mensajes de toda la regla se agrupan, así que
 cincuenta lazos no se convierten en cincuenta mensajes. Vea **Reglas** y **Notificaciones**.
 
 ## De dónde vienen los datos

@@ -2,7 +2,7 @@
 
 ## O que detecta
 
-Com que frequência o setpoint se moveu mais que um limiar, em mudanças por hora, e o movimento
+Com que frequência o setpoint se moveu mais que um limite, em mudanças por hora, e o movimento
 total. Movimentos frequentes do setpoint pelos operadores muitas vezes escondem uma malha que não
 mantém o alvo sozinha.
 

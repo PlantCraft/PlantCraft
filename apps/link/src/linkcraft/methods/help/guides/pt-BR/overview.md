@@ -8,7 +8,7 @@ onde:
 
 - **Resultados por estado**: todos os resultados divididos em alarme, atenção, desconhecido e OK.
   Cada parte abre os resultados correspondentes.
-- **Em alarme, 14 dias**: quantos estavam em alarme e em atenção no fim de cada dia.
+- **Em alarme, 14 dias**: quantos estavam em alarme e em aviso no fim de cada dia.
 - **Mapa de saúde**: um quadrado por ativo e sinal, colorido pelo estado e agrupado por área.
   Cada quadrado abre seu resultado.
 - **Piores resultados**: os que estão em alarme ou atenção, com a menor saúde, qualidade ou
