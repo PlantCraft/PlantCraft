@@ -943,4 +943,3 @@ button.pc-version:hover { border-color: color-mix(in srgb, var(--pc-primary) 35%
 .pc-chart-popover-composer button:disabled { opacity: .45; cursor: default; }
 .pc-chart-popover > footer { display: flex; align-items: center; justify-content: space-between; gap: var(--pc-space-2); padding: 0 var(--pc-space-3) var(--pc-space-2); color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
 .pc-chart-popover-desk { display: inline-flex; align-items: center; gap: 4px; border: 0; background: transparent; color: var(--pc-primary-text); font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
-.pc-title-assistant-menu .pc-title-assistant-chart { border-bottom: 1px solid var(--pc-border-subtle); border-radius: var(--pc-radius-md) var(--pc-radius-md) 0 0; margin-bottom: var(--pc-space-1); }

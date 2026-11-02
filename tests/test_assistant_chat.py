@@ -90,8 +90,8 @@ def test_without_a_model_the_assistant_says_why_and_takes_no_question(signed):
 
 def test_the_assistant_on_each_chart_is_a_trial_off_by_default(signed, monkeypatch):
     assert signed.get("/api/assistant").json()["charts"] == "off"
-    monkeypatch.setenv("PLANTCRAFT_ASSISTANT_CHARTS", "Focus")
-    assert signed.get("/api/assistant").json()["charts"] == "focus"
+    monkeypatch.setenv("PLANTCRAFT_ASSISTANT_CHARTS", "Icon")
+    assert signed.get("/api/assistant").json()["charts"] == "icon"
     monkeypatch.setenv("PLANTCRAFT_ASSISTANT_CHARTS", "sideways")
     assert signed.get("/api/assistant").json()["charts"] == "off"
 

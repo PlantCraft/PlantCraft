@@ -39,7 +39,6 @@ export { RecipientPicker, recipientLabel, recipientPeople, type GroupOption, typ
 export { MultiSelect, multiSelectSummary, type MultiSelectOption, type MultiSelectProps } from "./MultiSelect.js";
 export { announceMessagesChanged, closeMessages, embeddedMessagesUrl, isEmbedded, MESSAGES_CHANGED, MessagesHost, NOTIFICATIONS, openMessages, openNotifications, useOpenMessages } from "./MessagesDrawer.js";
 export { claimPanel, closeAllPanels, markPanelSwap, otherPanelOpen, PANEL_OUT_MS, PANEL_SWAP_MS, panelSwapping, registerPanel, setOutsidePanel, SidePanel, useClosePanelsOnMove, usePresence, type PanelKind, type SidePanelProps } from "./SidePanel.js";
-export { CHART_MODE_KEY, chartModeOf, type ChartAssistantMode } from "./chartFocus.js";
 export { AnswerProgress, answerPhase, AssistantChart, splitByDefault, trendsHref, type AssistantChartData, type AssistantChartSeries } from "./AssistantAnswer.js";
 export { AskAssistant, AssistantDrawer, AssistantHost, AssistantMark, AssistantTitleButton, AssistantTopButton, assistantStatus, assistantTasks, assistantWorks, closeAssistant, openAssistant, openPageAssistant, pageContext, ProposalCard, suiteTasks, takeAssistantDraft, taskContext, useAssistantPage, useAssistantPlace, workTask, type AssistantProposal, type AssistantRequest, type AssistantTask, type AssistantWork, type AssistantWorkField } from "./AssistantDrawer.js";
 export { assistantUrl } from "./Assistant.js";

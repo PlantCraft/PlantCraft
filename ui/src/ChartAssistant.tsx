@@ -6,23 +6,45 @@
  * the person through the same tools as the side panel (docs/assistant.md), and changes nothing.
  * The chat is not kept: it is deleted a day later unless the person continues it in Desk.
  *
- * Two ways to reach it, so both can be tried (owner, 2026-11-02):
- * - "icon": the assistant's mark in each chart's buttons (the row Plotly shows on hover).
- * - "focus": no mark on the charts; the menu beside the page's title (round 9, one button per
- *   page) adds "Explain this chart" for the chart the person last pointed at.
- * `Plot` (Plot.tsx) does both for every chart of every app; a chart opts out with `assistant={false}`.
+ * It is reached from the assistant's mark in each chart's row of buttons (the row Plotly shows on
+ * hover; owner's pick, 2026-11-02, over a "focus" item in the menu beside the page's title).
+ * `Plot` (Plot.tsx) does it for every chart of every app; a chart opts out with `assistant={false}`.
  */
 import { AlertTriangle, ArrowUp, ExternalLink, LoaderCircle, X } from "lucide-react";
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { AnswerProgress } from "./AssistantAnswer.js";
 import { AssistantMark, assistantStatus, forgetAssistantStatus, useAssistantPlaceValue, usePageSource } from "./AssistantDrawer.js";
-import { chartModeOf, closeChartAssistant, focusChart, forgetChart, openChartAssistant, takeChartQuestion, useOpenedChart, type ChartAssistantMode } from "./chartFocus.js";
 import { useDismiss } from "./dismiss.js";
 import { platformPath } from "./Journey.js";
 import { renderMarkdown } from "./Markdown.js";
 import { t } from "./i18n.js";
 import { displayTimeZone } from "./timeZone.js";
+
+/** Whether the assistant is offered on charts (`charts` in `GET /api/assistant`, from
+ * `PLANTCRAFT_ASSISTANT_CHARTS`): "icon" puts its mark in each chart's buttons. */
+export type ChartAssistantMode = "off" | "icon";
+/** A person trying it in their own browser: `localStorage["pc-assistant-charts"] = "icon"` (or "off"). */
+export const CHART_MODE_KEY = "pc-assistant-charts";
+
+/** The mode PlantCraft sets, or the one this browser tries; always off where no model answers. */
+export function chartModeOf(status: { available?: boolean; charts?: string } | null | undefined): ChartAssistantMode {
+  if (!status?.available) return "off";
+  let tried: string | null = null;
+  try { tried = window.localStorage.getItem(CHART_MODE_KEY); } catch { tried = null; }
+  return (tried ?? status.charts) === "icon" ? "icon" : "off";
+}
+
+// The chart whose popover is open: one at a time for the page.
+let opened: string | null = null;
+const listeners = new Set<() => void>();
+const emit = () => listeners.forEach((listener) => listener());
+const subscribe = (listener: () => void) => { listeners.add(listener); return () => listeners.delete(listener); };
+/** Open the assistant's popover over this chart (closing any other). */
+export function openChartAssistant(id: string) { opened = id; emit(); }
+export function closeChartAssistant() { if (opened === null) return; opened = null; emit(); }
+function forgetChart(id: string) { if (opened === id) closeChartAssistant(); }
+export function useOpenedChart(): string | null { return useSyncExternalStore(subscribe, () => opened, () => null); }
 
 /** What a chart tells the assistant about itself, beyond what it draws. */
 export type ChartAssistantOptions = {
@@ -159,16 +181,6 @@ export function useChartAssistant(options: ChartAssistantOptions | false | undef
   const [node, setNode] = useState<HTMLElement | null>(null);
   const open = useCallback(() => openChartAssistant(id), [id]);
   const finalConfig = useMemo(() => (mode === "icon" ? chartConfig(config, open) : config), [mode, config, open]);
-  // Focus: the chart the person points at (or reaches with the keyboard) is the one the menu
-  // beside the title offers.
-  useEffect(() => {
-    if (mode !== "focus" || !node) return;
-    const mark = () => focusChart({ id, title: latest.current.title });
-    node.addEventListener("pointerenter", mark);
-    node.addEventListener("focusin", mark);
-    node.addEventListener("pointerdown", mark);
-    return () => { node.removeEventListener("pointerenter", mark); node.removeEventListener("focusin", mark); node.removeEventListener("pointerdown", mark); };
-  }, [mode, node, id]);
   useEffect(() => () => forgetChart(id), [id]);
   const opened = useOpenedChart() === id;
   const describe = useCallback(() => {
@@ -224,15 +236,6 @@ export function ChartPopover({ anchor, title, subject, describe, platformUrl, on
     const rect = anchor.getBoundingClientRect();
     setStyle(popoverPlace(rect, document.documentElement.clientWidth || window.innerWidth, { x: window.scrollX, y: window.scrollY }));
   }, [anchor]);
-  // Picked in the menu beside the title ("Explain this chart"): asked as soon as the status is read.
-  const first = useRef<number | null | undefined>(undefined);
-  if (first.current === undefined) first.current = takeChartQuestion();
-  useEffect(() => {
-    if (!status || first.current === null || first.current === undefined) return;
-    const question = chartQuestions()[first.current];
-    first.current = null;
-    if (question) void ask(question.label, question.instructions);
-  }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (chatId === null || !working) return;
     const timer = window.setInterval(async () => {

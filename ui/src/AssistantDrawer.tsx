@@ -30,7 +30,6 @@ import { formatDate } from "./format.js";
 import { isoOf, localOf } from "./timeChart.js";
 import { t } from "./i18n.js";
 import { claimPanel, registerPanel, SidePanel, usePresence } from "./SidePanel.js";
-import { chartModeOf, openChartAssistant, useFocusedChart } from "./chartFocus.js";
 
 /** Often enough to follow the text as it is written (streamed into the message). */
 export const DRAWER_POLL_MS = 700;
@@ -187,7 +186,7 @@ type Message = { message_id: number; role: "user" | "assistant"; text: string; s
 /** `can_set_up`: the person is an administrator, who connects the model in Setup. */
 /** `demo`: a public demo's visitor, who reads what the assistant does but never asks it. */
 /** `visit`: a public demo visit that may ask: its questions, characters a question, and left. */
-/** `charts`: how the assistant is offered on charts (chartFocus.ts, a trial). */
+/** `charts`: whether the assistant is offered on each chart (ChartAssistant.tsx, a trial). */
 type Status = { available: boolean; allowed?: boolean; reason: string; can_set_up?: boolean; demo?: boolean; visit?: { questions: number; max_text: number; left: number }; charts?: string };
 /** One of the person's earlier chats, as `GET /api/assistant` lists them. */
 export type AssistantChatSummary = { chat_id: number; title: string; place?: string; updated_at?: string; working?: boolean };
@@ -736,8 +735,6 @@ export function AssistantTitleButton() {
   const [works, setWorks] = useState<AssistantWork[] | null>(null);
   const box = useRef<HTMLSpanElement>(null);
   const platformUrl = described?.platformUrl ?? source?.platformUrl;
-  // The "focus" trial (ChartAssistant.tsx): the chart the person last pointed at, offered first.
-  const focusedChart = useFocusedChart();
   const close = useCallback(() => setMenu(false), []);
   useDismiss(menu, close, box);
   // The menu opens under the button and stays inside the screen: on a phone a page with a long
@@ -786,9 +783,6 @@ export function AssistantTitleButton() {
       <h4>{t("What the assistant does here")}</h4>
       {demo && <p className="pc-drawer-note">{t("In this public demo it does not answer: these are what you could ask on this page. Pick one to read the team's chats.")}</p>}
       {works === null && described?.page && <p className="pc-drawer-wait"><LoaderCircle className="spin" size={13} /> {t("Loading…")}</p>}
-      {ready && focusedChart && chartModeOf(state) === "focus" && <button type="button" role="menuitem" className="pc-title-assistant-chart" onClick={() => { setMenu(false); openChartAssistant(focusedChart.id, 0); }}>
-        <strong>{t("Explain this chart")}</strong><small>{focusedChart.title}</small>
-      </button>}
       {(works ?? []).map((work) => <button key={work.key} type="button" role="menuitem" onClick={() => start({ work: work.key })}>
         <strong>{work.title}{work.kind === "create" && <span className="pc-work-creates">{t("Creates")}</span>}</strong>{work.hint && <small>{work.hint}</small>}
       </button>)}

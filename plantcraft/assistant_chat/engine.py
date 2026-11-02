@@ -93,9 +93,9 @@ def _env_int(name: str, default: int, low: int, high: int) -> int:
 
 
 # The assistant on each chart (a trial, 2026-11-02, off by default): "icon" puts the assistant's
-# mark in each chart's corner, "focus" adds the chart last pointed at to the menu beside the
-# page's title. Either opens a small popover over the chart that asks and answers in place.
-CHART_MODES = ("off", "icon", "focus")
+# mark in each chart's buttons, which opens a small popover over the chart that asks and answers
+# in place (ui ChartAssistant.tsx).
+CHART_MODES = ("off", "icon")
 
 
 def chart_mode() -> str:

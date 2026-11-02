@@ -3,8 +3,7 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { forgetAssistantStatus } from "./AssistantDrawer";
-import { ChartPopover, chartConfig, chartContext, chartTitle, popoverPlace } from "./ChartAssistant";
-import { CHART_MODE_KEY, chartModeOf, closeChartAssistant, focusChart, forgetChart, openChartAssistant, useFocusedChart, useOpenedChart } from "./chartFocus";
+import { CHART_MODE_KEY, ChartPopover, chartConfig, chartContext, chartModeOf, chartTitle, closeChartAssistant, openChartAssistant, popoverPlace, useOpenedChart } from "./ChartAssistant";
 
 afterEach(() => { forgetAssistantStatus(); vi.unstubAllGlobals(); window.localStorage.clear(); document.body.innerHTML = ""; });
 
@@ -15,8 +14,10 @@ describe("the assistant on each chart", () => {
     expect(chartModeOf({ available: true })).toBe("off");
     expect(chartModeOf({ available: true, charts: "icon" })).toBe("icon");
     expect(chartModeOf({ available: true, charts: "sideways" })).toBe("off");
-    window.localStorage.setItem(CHART_MODE_KEY, "focus");
-    expect(chartModeOf({ available: true, charts: "icon" })).toBe("focus");
+    window.localStorage.setItem(CHART_MODE_KEY, "off");
+    expect(chartModeOf({ available: true, charts: "icon" })).toBe("off");
+    window.localStorage.setItem(CHART_MODE_KEY, "icon");
+    expect(chartModeOf({ available: true })).toBe("icon");
     expect(chartModeOf({ available: false, charts: "icon" })).toBe("off");
   });
 
@@ -62,21 +63,19 @@ describe("the assistant on each chart", () => {
     expect(popoverPlace({ top: 100, right: 300 }, 390, { x: 0, y: 0 })).toMatchObject({ position: "fixed", bottom: "16px" });
   });
 
-  it("keeps the chart last pointed at and the one whose popover is open", async () => {
+  it("keeps one popover open for the page", async () => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-    const seen: Array<[string | undefined, string | null]> = [];
-    function Probe() { const focused = useFocusedChart(); const opened = useOpenedChart(); seen.push([focused?.title, opened]); return null; }
+    const seen: Array<string | null> = [];
+    function Probe() { seen.push(useOpenedChart()); return null; }
     const host = document.createElement("div");
     document.body.append(host);
     const root = createRoot(host);
     await act(async () => { root.render(createElement(Probe)); });
-    act(() => focusChart({ id: "a", title: "Flow" }));
     act(() => openChartAssistant("a"));
-    expect(seen.at(-1)).toEqual(["Flow", "a"]);
+    act(() => openChartAssistant("b"));
+    expect(seen.at(-1)).toBe("b");
     act(() => closeChartAssistant());
-    expect(seen.at(-1)).toEqual(["Flow", null]);
-    act(() => forgetChart("a"));
-    expect(seen.at(-1)).toEqual([undefined, null]);
+    expect(seen.at(-1)).toBeNull();
     act(() => root.unmount());
   });
 

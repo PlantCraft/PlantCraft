@@ -13,8 +13,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   chart asks "Explain this chart", "What stands out?", "What could explain this?" or the
   person's own question, and answers in place from what the chart draws and the plant's reads;
   the chat is not kept unless continued in Desk. `PLANTCRAFT_ASSISTANT_CHARTS=icon` puts the
-  assistant's mark in each chart's buttons; `focus` offers the chart last pointed at in the menu
-  beside the page's title. Every chart drawn with `Plot` has it once apps take this ui.
+  assistant's mark in each chart's buttons. Every chart drawn with `Plot` has it.
 - **Spanish (SDK 0.105.0, ui 0.109.0).** The whole suite in Spanish (`es`) next to Brazilian
   Portuguese: every catalog of the platform, the shared components, the SDK, the six apps and the
   template, the help of every app, Analytics' method pages and guides, and the platform's guides
