@@ -9,6 +9,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- Platform: a bundle over 2 GiB is also written in parts of 1900 MiB (`.tar.gz.part-*`), since GitHub refuses a release file of 2 GiB or more (0.6.0's bundles are 2.1 GiB). The install and verify guides say how to join them; the hash and signature are of the joined file.
 - Analytics: the Overview is built once at a time per asset scope; people who open it meanwhile get the previous answer or wait for the new one. With 20 people at 3 months of data each request built its own and the server grew to 1.9 GB until the container's memory limit stopped it.
 - Install: the machine profile sizes Analytics' read cache (`LINKCRAFT_READ_CACHE_MB` 128/256/512/1024 MB), since the server and its engine share `LINKCRAFT_MEMORY`; it was 512 MB on every machine.
 
