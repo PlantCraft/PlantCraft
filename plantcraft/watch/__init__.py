@@ -119,6 +119,10 @@ class Check:
     grace: int = GRACE_DOWN
     # "warning" posts 🟠, "critical" 🔴 (the load checks have both levels).
     level: str = "critical"
+    # A service that restarted between two ticks: nobody is told before ``grace``, but its
+    # uptime counts it at once (one tick down), or a container the memory limit stops and Docker
+    # starts again within seconds read 100 % (2026-11-01, 3-month load test).
+    blip: bool = False
 
 
 class WatchStore(Store):
@@ -168,6 +172,19 @@ class WatchStore(Store):
                 VALUES (?, ?, ?, ?, ?)
                 """,
                 (check.key, check.subject, check.detail, utc_text(at), int(notified)),
+            )
+
+    def record(self, check: Check, opened: datetime, closed: datetime) -> None:
+        """An incident that already ended, nobody told (a restart below its grace)."""
+
+        with self._lock, self._write() as connection:
+            connection.execute(
+                """
+                INSERT INTO watch_incidents
+                    (check_key, subject, detail, opened_at, closed_at, notified)
+                VALUES (?, ?, ?, ?, ?, 0)
+                """,
+                (check.key, check.subject, check.detail, utc_text(opened), utc_text(closed)),
             )
 
     def update(self, incident_id: int, detail: str) -> None:
@@ -404,7 +421,7 @@ class SuiteWatch:
                 found.append(Check(f"service:{name}", subject, True, t("its health check fails")))
             elif isinstance(restarts, int) and before is not None and restarts > before:
                 detail = t("restarted {count} times", count=restarts)
-                found.append(Check(f"service:{name}", subject, True, detail))
+                found.append(Check(f"service:{name}", subject, True, detail, blip=True))
             elif health == "starting":
                 found.append(
                     Check(f"service:{name}", subject, True, t("still starting"),
@@ -686,6 +703,8 @@ class SuiteWatch:
                 self.store.update(incident["incident_id"], check.detail)
             return []
         if count < check.grace:
+            if check.blip:
+                self.store.record(check, now - timedelta(seconds=TICK_SECONDS), now)
             return []
         quiet = self.store.get(f"posted:{check.key}")
         last = parse_instant(quiet) if quiet else None
