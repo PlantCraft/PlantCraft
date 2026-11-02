@@ -5,7 +5,7 @@ sinais. Filtre por estado, por fonte, por uma verificação que o sinalizou, ou 
 nome. Abra um sinal para ver por que recebeu seu resultado.
 
 - **Bom** (mostrado no PlantCraft como *OK*): todas as verificações passaram.
-- **Suspeito** (*Atenção*): pelo menos uma verificação alertou; os dados ainda são utilizáveis.
+- **Suspeito** (*Aviso*): pelo menos uma verificação alertou; os dados ainda são utilizáveis.
 - **Ruim** (*Alarme*): pelo menos uma verificação falhou; malhas e outros apps não devem confiar
   nesses dados.
 - **Desconhecido**: nenhuma verificação conseguiu julgar o sinal (amostras de menos, ilegível, só

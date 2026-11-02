@@ -41,7 +41,7 @@ Um editor pode inserir um valor onde não havia nenhum, alterar um ou excluir um
 feita enquanto o sensor estava em calibração, um valor digitado à mão), sempre com um motivo. O
 valor lido passa a levar sua marca (*inserido*, *editado* ou *excluído*), o valor substituído fica
 guardado com quem o alterou, quando e por quê (a lista em **Valores editados**, ou
-`GET /api/v1/edits/{signal}`), e cada edição fica no registro de auditoria do PlantCraft. Os
+`GET /api/v1/edits/{signal}`), e cada edição fica no log de auditoria do PlantCraft. Os
 sinais que um app escreve são alterados nesse app. Scripts usam `POST /api/v1/edits`.
 
 ## A lista de sinais em uma planilha

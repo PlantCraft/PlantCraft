@@ -1,7 +1,7 @@
 # Desempeño de las alarmas
 
 La página Desempeño mide la carga de alarmas en un período (24 horas, 7 o 30 días) para un puesto
-de operación, frente a las metas públicas de ISA-18.2 y EEMUA 191. Las alarmas suprimidas y fuera
+de operación, frente a las metas públicas de ISA-18.2 y EEMUA 191. Las alarmas archivadas y fuera
 de servicio no activan nada y no se cuentan.
 
 | Indicador | Aceptable | Manejable |

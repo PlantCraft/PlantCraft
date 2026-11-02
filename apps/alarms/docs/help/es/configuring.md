@@ -83,7 +83,7 @@ debería ser una alarma.
 
 ## Salidas
 
-- **Alarms**: siempre; la alarma se lista para reconocer, suprimir y comentar.
+- **Alarms**: siempre; la alarma se lista para reconocer, archivar y comentar.
 - **Dashboards** (activado): sus alarmas colorean sus activos y aparecen en los widgets de
   alarmas activas de View y del Resumen.
 - **Mensajes** (activado, al responsable): en Mensajes de PlantCraft, agrupados, con

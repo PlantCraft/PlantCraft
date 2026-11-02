@@ -1,6 +1,6 @@
 # Glossário pt-BR
 
-> **Estado:** rascunho para revisão do mantenedor (2026-11-01). Toda tradução para o português
+> **Estado:** revisado em 2026-11-02 contra o uso de fornecedores do setor (ver Fontes). Toda tradução para o português
 > segue esta tabela. Uma palavra, um sentido, em toda a suíte, como em [glossary.md](glossary.md).
 > Mudar um termo aqui significa trocá-lo em todos os catálogos (`locales/pt-BR.json`).
 
@@ -15,8 +15,10 @@
 - Os campos `{nome}` ficam iguais ao inglês. Pode mudar a ordem das palavras ao redor deles, mas
   nunca o campo.
 - Os números e as datas são escritos pelo `locale`, nunca pelo texto traduzido.
-- Os termos da ISA-18.2 seguem a tradução corrente no Brasil (reconhecer, suprimir, fora de
+- Os termos da ISA-18.2 seguem a tradução corrente no Brasil (reconhecer, arquivar, fora de
   serviço).
+- Na dúvida, vale o termo que os fornecedores do setor já usam em pt-BR (Grafana, ThingsBoard,
+  Elipse, Microsoft), para que a tela fale como as outras ferramentas da planta.
 
 ## Palavras da suíte
 
@@ -32,7 +34,7 @@
 | Role | Papel | o papel de um sinal no ativo |
 | Target / Targets | Alvo / Alvos | antes havia "Assuntos" no catálogo; padronizado como Alvo |
 | Result / Results | Resultado / Resultados | |
-| OK, Warning, Critical, Unknown | OK, Atenção, Crítico, Desconhecido | níveis de um resultado |
+| OK, Warning, Critical, Unknown | OK, Aviso, Crítico, Desconhecido | níveis de um resultado; "Aviso" como no Grafana e no ThingsBoard |
 | Event / Events | Evento / Eventos | |
 | Run / Runs | Execução / Execuções | |
 | Simulation | Simulação | em Models |
@@ -62,7 +64,7 @@
 | Inbox | Caixa de entrada | |
 | Messages, Chats, Notifications | Mensagens, Conversas, Notificações | |
 | Today, Actions, Calendar, To-do, Notes, Team | Hoje, Ações, Agenda, Tarefas, Notas, Equipe | páginas do Desk |
-| Audit log | Registro de auditoria | |
+| Audit log | Log de auditoria | como no ThingsBoard e no Microsoft 365 |
 | Backups, Updates | Backups, Atualizações | |
 | App keys | Chaves dos apps | |
 | Token | Token | |
@@ -122,7 +124,8 @@
 |---|---|
 | Acknowledge / Acknowledged | Reconhecer / Reconhecido |
 | Unacknowledged | Não reconhecido |
-| Shelve / Shelved | Suprimir / Suprimido |
+| Shelve / Shelved / Unshelve | Arquivar / Arquivado / Desarquivar |
+| Suppressed by design | Suprimido por projeto |
 | Out of service | Fora de serviço |
 | Return to normal (RTN) | Retorno ao normal (RTN) |
 | Priority: Critical, High, Medium, Low | Prioridade: Crítica, Alta, Média, Baixa |
@@ -151,12 +154,12 @@
 | Steady state | Regime permanente |
 | Optimization | Otimização |
 
-## Escolhidos durante a tradução (a revisar)
+## Escolhidos durante a tradução
 
 | Inglês | Português | Onde / observação |
 |---|---|---|
 | Target (meta de desempenho ou de atendimento) | Meta | metas de alarmes e de pedidos; "Alvo" fica para o alvo de um resultado |
-| Editor / Viewer (papéis) | Engenharia / Leitura | |
+| Editor / Viewer (papéis) | Editor / Visualizador | como no Grafana |
 | Operations (app) | Operação | |
 | Request | Pedido | |
 | Partners | Parceiros | |
@@ -168,8 +171,8 @@
 | Calendar | Agenda | |
 | Schedule (do backup) | Programação | não colide com Agenda |
 | Process display / diagram | Tela de processo | View |
-| Stat, Gauge, Dial | Valor, Indicador, Mostrador | painéis do View |
-| Threshold | Limiar | |
+| Stat, Gauge, Bar gauge, Dial | Estatística, Medidor, Medidor de barra, Mostrador | painéis do View, como no Grafana |
+| Threshold | Limite | como no Grafana e no ThingsBoard |
 | Wire | Ligação | blocos |
 | Gate | Barreira | |
 | Tracking | Acompanhamento | Models |
@@ -186,3 +189,16 @@
 | Critical (prioridade) | Crítica | uma mesma chave serve a nível e prioridade em alguns apps |
 | Archive | Arquivo | colide com "arquivo" (file); alternativa: "Acervo" |
 | Scope, Model exchange, claim | em inglês | |
+
+## Fontes (revisão de 2026-11-02)
+
+- Grafana, catálogo pt-BR: `public/locales/pt-BR/grafana.json` em github.com/grafana/grafana
+  (Visão geral, Configurações, Limite/Limites, Medidor, Estatística, Aviso, Visualizador,
+  Silenciamento, Regra).
+- ThingsBoard, catálogo pt-BR: `ui-ngx/src/assets/locale/locale.constant-pt_BR.json` em
+  github.com/thingsboard/thingsboard (Ativo, Alarme, Reconhecer, Reconhecido, Aviso, Crítico,
+  Fila, Rótulo, Relatório, Log de auditoria, Severidade, Dashboard, Widget).
+- FUXA (SCADA aberto), catálogo pt: `client/src/assets/i18n/pt.json` (Alarmes, Relatório).
+- Elipse E3 (SCADA brasileiro), "Arquivamento e gerenciamento de alarmes no E3Alarm":
+  https://kb.elipse.com.br/arquivamento-e-gerenciamento-de-alarmes-no-e3alarm/ (Arquivar,
+  Desarquivar, alarme arquivado para o *shelving* da ISA-18.2).

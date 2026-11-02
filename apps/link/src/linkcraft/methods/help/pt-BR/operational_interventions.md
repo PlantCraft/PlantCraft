@@ -13,7 +13,7 @@ de atenção constante não está cumprindo seu papel, mesmo quando o erro parec
   intervenções do operador é uma medida industrial comum.
 - Jelali (2006), An overview of control performance assessment technology and industrial
   applications, Control Engineering Practice. Lista as intervenções do operador entre os KPIs
-  práticos de CPA industrial. Os limiares são uma heurística de engenharia; ajuste-os por planta.
+  práticos de CPA industrial. Os limites são uma heurística de engenharia; ajuste-os por planta.
 
 ## Parâmetros
 

@@ -2,7 +2,7 @@
   " The server accepts: {offered}.": " O servidor aceita: {offered}.",
   " With Kerberos, check the service user's ticket (klist) and the HTTP/ SPN of the PI Web API server.": " Com Kerberos, confira o ticket do usuário de serviço (klist) e o SPN HTTP/ do servidor PI Web API.",
   ", user {name}": ", usuário {name}",
-  ", {count} with warnings": ", {count} com atenção",
+  ", {count} with warnings": ", {count} com aviso",
   "; {events} events over {hours} h read in {seconds} s.": "; {events} eventos em {hours} h lidos em {seconds} s.",
   "A CSV source is read when its files change.": "Uma fonte CSV é lida quando seus arquivos mudam.",
   "A CSV source reads only files in {folders}.": "Uma fonte CSV só lê arquivos em {folders}.",

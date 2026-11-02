@@ -70,8 +70,8 @@ Sus ecuaciones se quedan en el código, a un clic (**Código Modelica**).
 
 | Rol | Puede |
 |---|---|
-| Lectura | Leer los modelos, bloques, estudios y simulaciones con sus gráficos y mensajes |
-| Ingeniería | Todo lo demás: dibujar y guardar modelos, ejecutarlos, iniciar y cancelar estudios, exportar FMU, escribir bibliotecas de bloques |
+| Visualizador | Leer los modelos, bloques, estudios y simulaciones con sus gráficos y mensajes |
+| Editor | Todo lo demás: dibujar y guardar modelos, ejecutarlos, iniciar y cancelar estudios, exportar FMU, escribir bibliotecas de bloques |
 
 ## Dónde se guardan las cosas
 

@@ -87,7 +87,7 @@ seção 5.
   configurações, backups), no PlantCraft e em cada app (os apps gravam a sua por
   `POST /api/v1/audit`), com o nome da pessoa, guardada no banco do PlantCraft, e cada login, tentativa
   falha, login bloqueado e saída, com o endereço de origem e o método (local, LDAP, OIDC). Os
-  administradores leem em Settings › Registro de auditoria (filtros, busca, CSV); as linhas só são
+  administradores leem em Settings › Log de auditoria (filtros, busca, CSV); as linhas só são
   acrescentadas.
 - Acesso de assistentes de IA (desligado por padrão, `docs/assistant-access.md`): um servidor MCP
   somente leitura em `/mcp`, pelo qual o assistente de IA da própria pessoa lê a planta, com um
@@ -177,7 +177,7 @@ binário do Caddy (G13).
 | CR 1.5 / 1.7 Gestão de autenticadores, força de senha | Atende: senhas com hash, no mínimo 8 caracteres, senha de admin gerada |
 | CR 1.11 Tentativas de login sem sucesso | Atende: 10 falhas bloqueiam por 5 minutos |
 | CR 2.1 Aplicação de autorização | Atende na API, com teste de permissão de todas as rotas |
-| CR 2.8 Eventos auditáveis | Sim: trilha central das mudanças no PlantCraft e nos apps, das chamadas de assistentes de IA e de cada login e saída, lida em Settings › Registro de auditoria |
+| CR 2.8 Eventos auditáveis | Sim: trilha central das mudanças no PlantCraft e nos apps, das chamadas de assistentes de IA e de cada login e saída, lida em Settings › Log de auditoria |
 | CR 3.1 / 4.1 Integridade e confidencialidade da comunicação | Atende em C1 (TLS); C2 depende do TLS dos servidores PI e OPC UA |
 | CR 3.4 Integridade de software e de informação | Atende: somas SHA-256, imagens fixadas; versões e pacotes de app assinados (Ed25519) e conferidos antes de instalar e atualizar |
 | CR 5.1 Segmentação de rede | Atende: zonas Z2 a Z4 acima (SL2) |

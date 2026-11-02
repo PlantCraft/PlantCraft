@@ -18,8 +18,8 @@ contraseña: el menú del perfil, abajo a la izquierda, cambia entre personas.
 Lo que usted puede hacer depende de su nivel de acceso y de las apps habilitadas para usted:
 
 - **Administrador**: todo, incluidas personas, grupos, apps y Configuración.
-- **Ingeniería**: cambia el árbol de activos y edita en las apps.
-- **Lectura**: ve los activos y abre sus apps en solo lectura; no cambia nada, y los botones de
+- **Editor**: cambia el árbol de activos y edita en las apps.
+- **Visualizador**: ve los activos y abre sus apps en solo lectura; no cambia nada, y los botones de
   crear y editar no aparecen.
 - **Solo dashboards**: para las pantallas de la sala de control.
 

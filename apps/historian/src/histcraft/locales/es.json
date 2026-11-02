@@ -141,7 +141,7 @@
   "Only administrators can do this.": "Solo los administradores pueden hacer esto.",
   "Only an OPC UA source has a server certificate.": "Solo una fuente OPC UA tiene certificado de servidor.",
   "Only its author or an administrator removes a note.": "Solo su autor o un administrador elimina una nota.",
-  "Only its author or an editor changes a saved export.": "Solo su autor o alguien de Ingeniería cambia una exportación guardada.",
+  "Only its author or an editor changes a saved export.": "Solo su autor o un editor cambia una exportación guardada.",
   "Only number signals have interpolated reads.": "Solo las señales numéricas tienen lecturas interpoladas.",
   "Only numbers and signals go in a formula.": "En una fórmula solo van números y señales.",
   "Only the Historian's own certificate is renewed here.": "Aquí solo se renueva el certificado propio de Historian.",

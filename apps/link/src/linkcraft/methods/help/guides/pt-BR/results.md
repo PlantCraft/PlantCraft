@@ -2,7 +2,7 @@
 
 O que cada algoritmo do Analytics concluiu, em cada ativo em que roda: uma linha por algoritmo e
 ativo, os piores primeiro. Cada linha mostra o ativo, seu tipo, o algoritmo e sua versão, o estado
-nas palavras da suíte (OK, Atenção, Alarme, Desconhecido), a medida do resultado (qualidade,
+nas palavras da suíte (OK, Aviso, Alarme, Desconhecido), a medida do resultado (qualidade,
 saúde, pontuação), o achado principal, os rótulos do algoritmo e quando rodou.
 
 Filtre por **algoritmo**, **rótulo**, **tipo de ativo**, **grupo** (o grupo responsável pelo
@@ -37,7 +37,7 @@ Para cada controlador, no último dia, semana ou mês:
   faixa. Uma CV em um limite é o controlador empurrando a planta contra uma restrição, não uma
   falha.
 - O estado é *Alarme* quando o tempo ligado, ou o de MVs em serviço, fica abaixo de 50% e
-  *Atenção* abaixo de 90%.
+  *Aviso* abaixo de 90%.
 
 A página de um controlador ordena seus **limites ativos por custo**: as horas em que cada um esteve
 ativo, o preço-sombra do próprio controlador (a média enquanto ativo) e o **valor de 1% a mais de

@@ -7,6 +7,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Changed
+
+- Translations: the pt-BR and es glossaries were reviewed against the words industry tools already use (Grafana, ThingsBoard, FUXA, Elipse), and every catalog and help page follows: Shelve is Arquivar/Archivar (as in Elipse E3; "suprimir" stays for suppressed by design), Warning is Aviso in pt-BR, Threshold is Limite in pt-BR, Gauge is Medidor and Stat is Estatística/Estadística (View), the Editor/Viewer roles are Editor/Visualizador, Audit log is Log de auditoria in pt-BR and Silence is Silencio in es.
+
 ### Fixed
 
 - Platform: a bundle over 2 GiB is also written in parts of 1900 MiB (`.tar.gz.part-*`), since GitHub refuses a release file of 2 GiB or more (0.6.0's bundles are 2.1 GiB). The install and verify guides say how to join them; the hash and signature are of the joined file.

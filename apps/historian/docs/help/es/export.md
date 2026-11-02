@@ -25,7 +25,7 @@ Dé un nombre a la selección y presione **Guardar exportación**. Las exportaci
 listan a la izquierda; abra una y descárguela de nuevo. Un período relativo ("últimas 24 horas")
 lee hasta el momento de la descarga, así que "Unidad 100, último día" entrega el día más reciente
 cada vez. **Guardar** la cambia; **Guardar como nueva** conserva la anterior. Cualquiera que
-exporte puede guardar; el autor o alguien de Ingeniería la cambia o la elimina.
+exporte puede guardar; el autor o un editor la cambia o la elimina.
 
 ## Período y resolución
 
