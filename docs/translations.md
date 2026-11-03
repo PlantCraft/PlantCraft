@@ -36,7 +36,7 @@ screens over the shared components', an app's server over the SDK's.
 - Screens: `i18n.ts` calls `createI18n({ "pt-BR": ptBR, es })` from `@plantcraft/ui` and exports
   its `t` and `locale` (`Intl` and `localeCompare` use `locale`). The shared components take the
   same translator.
-- Server: the app's `i18n.py` calls `use_catalogs(Path(__file__).with_name("locales"))` and
+- Server: the app's `i18n.py` calls `use_app_catalogs(__file__)` (StarterCraft, on the released SDK, still `use_catalogs(Path(__file__).with_name("locales"))`) and
   re-exports `t` from `plantcraft_sdk.i18n`; the app server sets each request's language
   (`LanguageMiddleware`, added by `plantcraft_sdk.server.web.mount`).
 - Text is translated when it is produced (`t()` inside the function, not at import).

@@ -6,6 +6,7 @@
   and ``guarded`` reads of PlantCraft.
 - ``plantcraft_sdk.server.web``: the web application under the app's prefix: the endpoints every
   app serves (``docs/app-standard.md``, section 7), the built interface and sign-in redirects.
+- ``plantcraft_sdk.server.cli``: the commands every app has (``serve``, ``check``) and their logs.
 - ``plantcraft_sdk.server.logs``: JSON logs to the console and a rotating file, secrets redacted.
 - ``plantcraft_sdk.server.ops``: request ids, one log line per request, ``/api/ops/metrics``.
 - ``plantcraft_sdk.server.settings``: the settings every app reads (PlantCraft's URLs, the app

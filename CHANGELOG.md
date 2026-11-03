@@ -36,6 +36,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- The command line every app has (`serve`, `check`, their logs and uvicorn's options) is written once in the SDK, `plantcraft_sdk.server.cli`, and the six official apps use it; an app's `i18n.py` calls `plantcraft_sdk.i18n.use_app_catalogs(__file__)`. No change in behavior.
+
 - **The apps build against the repository's own SDK and ui.** Every app under `apps/` installs
   `sdk/python` from the tree (`make deps`), its interface links `ui/` (`file:../../../ui`) and
   its image takes both as build contexts, so a change to the SDK or ui is tested with every app

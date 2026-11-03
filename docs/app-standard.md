@@ -419,7 +419,7 @@ suite/              the only code that talks to PlantCraft for the app (layer 1)
 api/                routers (layer 3): validate, check access, call the service, answer; a
                     page reading the plant as the person uses rt.user_client(user) here
 api/runtime.py      builds the clients, the stores, the services and the Suite
-cli.py              `<id> serve` and the app's commands (layer 3)
+cli.py              `<id> serve`, `<id> check` (`plantcraft_sdk.server.cli`) and the app's commands (layer 3)
 ```
 
 - `suite_problems(root, id)`: only `suite/`, `runtime.py` and `cli.py` use the service client

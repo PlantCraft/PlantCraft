@@ -1,6 +1,7 @@
 """Command line: ``linkcraft serve``, ``engine``, ``round``, ``signals``, ``sync`` and ``compact``.
 
-Settings come from the environment (``linkcraft.config``). ``linkcraft engine`` runs the
+Settings come from the environment (``linkcraft.config``); the commands every app has, and their logs, are
+``plantcraft_sdk.server.cli``. ``linkcraft engine`` runs the
 schedules and the queue's workers (``engine.process``): ``serve`` starts it as its child unless
 ``LINKCRAFT_ENGINE`` says otherwise.
 """
@@ -9,15 +10,17 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
+
+from plantcraft_sdk.server.cli import app_parser, serve, start_logs
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="linkcraft", description=__doc__.splitlines()[0])
-    commands = parser.add_subparsers(dest="command", required=True)
-    serve = commands.add_parser("serve", help="Run the web application (API and interface).")
-    serve.add_argument("--host", default=os.environ.get("LINKCRAFT_HOST", "127.0.0.1"))
-    serve.add_argument("--port", type=int, default=int(os.environ.get("LINKCRAFT_PORT", "8140")))
+    parser, commands = app_parser(
+        "linkcraft",
+        __doc__,
+        port=8140,
+        serve_help="Run the web application (API and interface).",
+    )
     engine = commands.add_parser("engine", help="Run the schedules and the queue's workers.")
     engine.add_argument("--parent", type=int, default=None, help=argparse.SUPPRESS)
     commands.add_parser("round", help="Sync loops from PlantCraft and run one round now.")
@@ -31,30 +34,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     compact.add_argument("--dry-run", action="store_true", help="Say what it would do.")
     args = parser.parse_args(argv)
-    from plantcraft_sdk.server.logs import configure_logging
-
     from linkcraft import __version__
     from linkcraft.config import Settings
 
     # One JSON line per record, to the console and <data dir>/logs (LINKCRAFT_LOG_LEVEL).
-    configure_logging(
-        "linkcraft", version=__version__, data_dir=Settings.from_environment().data_dir
-    )
+    start_logs("linkcraft", __version__, Settings, args.command, to_file=True)
 
     if args.command == "serve":
-        import uvicorn
-
         from linkcraft.api.app import create_app
 
-        uvicorn.run(
-            create_app(),
-            host=args.host,
-            port=args.port,
-            proxy_headers=True,
-            log_config=None,
-            access_log=False,
-        )
-        return 0
+        return serve(create_app(), args)
 
     if args.command == "compact":
         from linkcraft.compact import compact as run_compact

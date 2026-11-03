@@ -1,6 +1,7 @@
 """Command line: ``histcraft serve``, ``histcraft collect``, ``histcraft housekeeping``.
 
-Settings come from the environment (``histcraft.config``).
+Settings come from the environment (``histcraft.config``); the commands every app has, and
+their logs, are ``plantcraft_sdk.server.cli``.
 
 - ``serve``: the web application (API and pages); with ``HISTCRAFT_COLLECTOR=embedded``
   (the default) it also collects.
@@ -13,7 +14,6 @@ Settings come from the environment (``histcraft.config``).
 
 from __future__ import annotations
 
-import argparse
 import asyncio
 import inspect
 import json
@@ -22,13 +22,13 @@ import os
 import signal
 from pathlib import Path
 
+from plantcraft_sdk.server.cli import app_parser, serve, start_logs
+
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="histcraft", description=__doc__.splitlines()[0])
-    commands = parser.add_subparsers(dest="command", required=True)
-    serve = commands.add_parser("serve", help="Run the web application (API and pages).")
-    serve.add_argument("--host", default=os.environ.get("HISTCRAFT_HOST", "127.0.0.1"))
-    serve.add_argument("--port", type=int, default=int(os.environ.get("HISTCRAFT_PORT", "8100")))
+    parser, commands = app_parser(
+        "histcraft", __doc__, port=8100, serve_help="Run the web application (API and pages)."
+    )
     commands.add_parser("collect", help="Run the collector alone.")
     commands.add_parser("housekeeping", help="Merge small chunks and apply retention now.")
     commands.add_parser("healthcheck", help="Exit 0 while the collector's heartbeat is fresh.")
@@ -36,18 +36,10 @@ def main(argv: list[str] | None = None) -> int:
     # The server (uid 10008) and the collector (uid 10013, group 10008) share /data: files they
     # create stay readable and writable by the group, closed to everyone else.
     os.umask(0o007)
-    from plantcraft_sdk.server.logs import configure_logging
-
     from histcraft import __version__
     from histcraft.config import Settings
 
-    # JSON lines to standard error and, for the server, the rotating file in the data folder
-    # (HISTCRAFT_LOG_LEVEL sets the level).
-    configure_logging(
-        "histcraft",
-        version=__version__,
-        data_dir=Settings.from_environment().data_dir if args.command == "serve" else None,
-    )
+    start_logs("histcraft", __version__, Settings, args.command)
     logging.getLogger("asyncua").setLevel(logging.WARNING)
 
     if args.command == "serve":
@@ -76,18 +68,13 @@ def main(argv: list[str] | None = None) -> int:
             # past uvicorn's 5 s ping, and the supervisor killed it mid-answer: a 502 for the
             # reader (pc-carga, 2026-11-01). Only a worker silent for a minute is stuck.
             extra["timeout_worker_healthcheck"] = 60
-        uvicorn.run(
+        return serve(
             "histcraft.cli:app_factory" if workers > 1 else _app(),
+            args,
             factory=workers > 1,
             workers=workers,
-            host=args.host,
-            port=args.port,
-            proxy_headers=True,
-            log_config=None,
-            access_log=False,
             **extra,
         )
-        return 0
 
     from histcraft.archive.store import ArchiveStore
     from histcraft.catalog.store import CatalogStore
@@ -158,13 +145,9 @@ def app_factory():
     """One server process's app when there are several (``uvicorn --factory``): its own JSON
     logs, as ``main`` sets them for one."""
 
-    from plantcraft_sdk.server.logs import configure_logging
-
     from histcraft import __version__
     from histcraft.config import Settings
 
-    configure_logging(
-        "histcraft", version=__version__, data_dir=Settings.from_environment().data_dir
-    )
+    start_logs("histcraft", __version__, Settings, "serve")
     logging.getLogger("asyncua").setLevel(logging.WARNING)
     return _app()

@@ -4,7 +4,7 @@ English is the source text and the catalog key: ``t("Loop {loop} not found.", lo
 Each module keeps its translations in ``locales/<language>.json`` next to its code
 (docs/translations.md); an app adds its folder once, in its ``i18n`` module:
 
-    use_catalogs(Path(__file__).with_name("locales"))
+    use_app_catalogs(__file__)  # the ``locales`` folder next to that module
 
 and the SDK's own catalog (``plantcraft_sdk/locales``) is always under it. A text missing from
 the catalogs is English.
@@ -54,6 +54,12 @@ def use_catalogs(*folders: Path) -> None:
         if folder not in _folders:
             _folders.append(Path(folder))
     catalog.cache_clear()
+
+
+def use_app_catalogs(module_file: str | Path) -> None:
+    """An app's ``i18n`` module: its ``locales`` folder, next to ``module_file``, over the SDK's."""
+
+    use_catalogs(Path(module_file).with_name("locales"))
 
 
 def normalize(value: str | None) -> str | None:

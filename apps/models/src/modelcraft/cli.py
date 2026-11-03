@@ -1,40 +1,34 @@
 """Command line: ``modelcraft serve``, ``modelcraft check`` and ``modelcraft runner``.
 
-Settings come from the environment (``modelcraft.config``).
+Settings come from the environment (``modelcraft.config``). The commands every app has, and
+their logs, are ``plantcraft_sdk.server.cli``.
 """
 
 from __future__ import annotations
 
-import argparse
 import json
-import os
+
+from plantcraft_sdk.server.cli import app_parser, serve, start_logs
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="modelcraft", description=__doc__.splitlines()[0])
-    commands = parser.add_subparsers(dest="command", required=True)
-    serve = commands.add_parser("serve", help="Run the web application and the API.")
-    serve.add_argument("--host", default=os.environ.get("MODELCRAFT_HOST", "127.0.0.1"))
-    serve.add_argument("--port", type=int, default=int(os.environ.get("MODELCRAFT_PORT", "8130")))
-    commands.add_parser("check", help="Check the app key, PlantCraft and the Modelica runner.")
+    parser, commands = app_parser(
+        "modelcraft",
+        __doc__,
+        port=8130,
+        serve_help="Run the web application and the API.",
+        check_help="Check the app key, PlantCraft and the Modelica runner.",
+    )
     commands.add_parser(
         "runner",
         help="Run the Modelica runner on this machine (needs omc; the suite runs it in its own container).",
         add_help=False,
     )
     args, rest = parser.parse_known_args(argv)
-    from plantcraft_sdk.server.logs import configure_logging
-
     from modelcraft import __version__
     from modelcraft.config import Settings
 
-    # JSON lines to standard error and, for the server, the rotating file in the data folder
-    # (MODELCRAFT_LOG_LEVEL sets the level).
-    configure_logging(
-        "modelcraft",
-        version=__version__,
-        data_dir=Settings.from_environment().data_dir if args.command == "serve" else None,
-    )
+    start_logs("modelcraft", __version__, Settings, args.command)
 
     if args.command == "runner":
         from modelcraft.omc import runner
@@ -44,24 +38,13 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f"unrecognized arguments: {' '.join(rest)}")
 
     if args.command == "serve":
-        import uvicorn
-
         from modelcraft.api.app import create_app
 
-        uvicorn.run(
-            create_app(),
-            host=args.host,
-            port=args.port,
-            proxy_headers=True,
-            log_config=None,
-            access_log=False,
-        )
-        return 0
+        return serve(create_app(), args)
 
     from plantcraft_sdk.client import PlantCraftError
 
     from modelcraft.api.runtime import Runtime
-    from modelcraft.config import Settings
 
     settings = Settings.from_environment()
     settings.examples = False

@@ -27,7 +27,7 @@ def test_image_and_cli_use_the_manifest_values():
     dockerfile = (ROOT / "Dockerfile").read_text()
     assert "HISTCRAFT_PORT=8100" in dockerfile and "USER 10008:10008" in dockerfile
     assert 'org.processcraft.app.id="histcraft"' in dockerfile
-    assert re.search(r'"HISTCRAFT_PORT", "8100"', (ROOT / "src/histcraft/cli.py").read_text())
+    assert re.search(r"port=8100\b", (ROOT / "src/histcraft/cli.py").read_text())
     assert 'assetsDir: "static"' in (ROOT / "frontend/vite.config.ts").read_text()
 
 
