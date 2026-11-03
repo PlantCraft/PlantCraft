@@ -11,7 +11,8 @@ import { wallClock } from "./timeZone.js";
 
 const TimeChart = lazy(() => import("./Plot.js").then((module) => ({ default: module.TimeChart })));
 
-export type AssistantChartSeries = { signal: string; kind?: string | null; unit?: string | null; t: string[]; v: Array<number | string | null> };
+/** `label`: how the legend names the signal ("FIC-1003.PV · Recycle flow"); older charts have none. */
+export type AssistantChartSeries = { signal: string; label?: string | null; kind?: string | null; unit?: string | null; t: string[]; v: Array<number | string | null> };
 /** A chart of an answer: drawn from the plant's history by PlantCraft, never by the model.
  * `trends`: the page that opens these signals over this period in Trends (View), when installed. */
 export type AssistantChartData = { title: string; start: string; end: string; series: AssistantChartSeries[]; errors?: Array<{ signal: string; detail: string }>; trends?: string | null };
@@ -97,7 +98,7 @@ export function AssistantChart({ chart, base, height = 260, className = "pc-answ
       else await box.current?.requestFullscreen();
     } catch { setFull((value) => !value); }
   }
-  const lines = drawn.map((item) => ({ name: item.signal, unit: item.unit || undefined, t: item.t, v: item.v, text: item.kind === "text" || item.v.every((value) => typeof value !== "number") }));
+  const lines = drawn.map((item) => ({ name: item.label || item.signal, unit: item.unit || undefined, t: item.t, v: item.v, text: item.kind === "text" || item.v.every((value) => typeof value !== "number") }));
   const groups = split && lines.length > 1 ? lines.map((line) => [line]) : [lines];
   const tall = full ? Math.max(240, (typeof window === "undefined" ? 800 : window.innerHeight) - 120) : height;
   const each = groups.length > 1 ? Math.max(full ? 160 : 130, Math.round(tall / groups.length)) : tall;
@@ -106,7 +107,7 @@ export function AssistantChart({ chart, base, height = 260, className = "pc-answ
   const trends = trendsHref(chart, base);
   return <figure ref={box} className={`${className}${full ? " pc-answer-chart-full" : ""}`}>
     <figcaption>
-      <span><strong>{chart.title || chart.series.map((item) => item.signal).join(", ")}</strong><small>{when(chart.start)} – {when(chart.end)}</small></span>
+      <span><strong>{chart.title || chart.series.map((item) => item.label || item.signal).join(", ")}</strong><small>{when(chart.start)} – {when(chart.end)}</small></span>
       <span className="pc-answer-chart-tools">
         {lines.length > 1 && <button type="button" onClick={() => setSplit((value) => !value)} title={split ? t("All on one plot") : t("One plot per signal")} aria-label={split ? t("All on one plot") : t("One plot per signal")}>{split ? <Square size={14} /> : <Rows3 size={14} />}</button>}
         {trends && <a href={trends} title={t("Open in Trends to go on with the analysis")}><LineChart size={14} aria-hidden="true" />{t("Open in Trends")}</a>}
@@ -116,7 +117,7 @@ export function AssistantChart({ chart, base, height = 260, className = "pc-answ
     {lines.length > 0 && <Suspense fallback={<div className="pc-answer-chart-wait"><LoaderCircle className="spin" size={16} /></div>}>
       {groups.map((group) => <TimeChart key={group.map((line) => line.name).join("|")} lines={group} height={each} start={chart.start} end={chart.end} filename={chart.title || "assistant-chart"} />)}
     </Suspense>}
-    {empty.length > 0 && <p className="pc-answer-chart-note">{t("No data in this period: {signals}", { signals: empty.map((item) => item.signal).join(", ") })}</p>}
+    {empty.length > 0 && <p className="pc-answer-chart-note">{t("No data in this period: {signals}", { signals: empty.map((item) => item.label || item.signal).join(", ") })}</p>}
     {(chart.errors ?? []).length > 0 && <p className="pc-answer-chart-errors">{(chart.errors ?? []).map((item) => `${item.signal}: ${item.detail}`).join(" · ")}</p>}
     <small className="pc-answer-chart-source">{t("Drawn from the plant's history, not by the model.")}</small>
   </figure>;

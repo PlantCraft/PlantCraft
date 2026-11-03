@@ -389,6 +389,17 @@ export function ProposalCard({ base, chatId, messageId, index, proposal }: { bas
   </form>;
 }
 
+/** The id of the last message before the first one still being written: a poll asks for what
+ * comes after it (the server adds the ones being written). */
+export function settledUpTo(messages: Array<{ message_id: number; state: string }>): number {
+  let last = 0;
+  for (const item of messages) {
+    if (item.state === "working") break;
+    last = item.message_id;
+  }
+  return last;
+}
+
 function merge(current: Message[], fresh: Message[]): Message[] {
   const byId = new Map(current.map((item) => [item.message_id, item]));
   for (const item of fresh) byId.set(item.message_id, item);
@@ -513,16 +524,25 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
     void readChats(base, status.available).then((value) => alive && setEarlier(value));
     return () => { alive = false; };
   }, [base, status]);
-  // Follow the answer being written.
+  // Follow the answer being written: only what changed (the messages after the last settled one),
+  // and one read at a time. Reading the whole chat every 700 ms, the next read sent before the last
+  // answered, piled up on a busy server as the chat grew (public demo, 2026-11-03).
+  const shownMessages = useRef(messages);
+  shownMessages.current = messages;
   useEffect(() => {
     if (chatId === null || !working) return;
-    const timer = window.setInterval(async () => {
+    let alive = true;
+    let timer = 0;
+    const poll = async () => {
       try {
-        const view = await call<{ messages: Message[] }>(base, `api/assistant/chats/${chatId}`);
-        setMessages((value) => merge(value, view.messages));
+        const after = settledUpTo(shownMessages.current);
+        const view = await call<{ messages: Message[] }>(base, `api/assistant/chats/${chatId}${after ? `?after=${after}` : ""}`);
+        if (alive) setMessages((value) => merge(value, view.messages));
       } catch { /* the next poll tries again */ }
-    }, DRAWER_POLL_MS);
-    return () => window.clearInterval(timer);
+      if (alive) timer = window.setTimeout(() => void poll(), DRAWER_POLL_MS);
+    };
+    timer = window.setTimeout(() => void poll(), DRAWER_POLL_MS);
+    return () => { alive = false; window.clearTimeout(timer); };
   }, [base, chatId, working]);
   useEffect(() => { const box = scroller.current; if (box && typeof box.scrollTo === "function") box.scrollTo({ top: box.scrollHeight, behavior: "smooth" }); }, [messages]);
 
@@ -637,7 +657,7 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
       {error && <p className="pc-drawer-failed"><AlertTriangle size={14} /> {error}</p>}
     </div>
     {status?.available && readOnly && <p className="pc-drawer-note">{t("This is one of the team's chats, to read. Go back to your chats to ask your own question.")}</p>}
-    {status?.available && !readOnly && <form className="pc-drawer-composer" onSubmit={submit}>
+    {status?.available && !readOnly && <form className={`pc-drawer-composer${status.visit ? " pc-drawer-composer-visit" : ""}`} onSubmit={submit}>
       {task && <span className="pc-drawer-task">{task.label}<button type="button" onClick={() => setTask(null)} aria-label={t("Not this")}><X size={12} /></button></span>}
       {left !== null && status.visit && <small className="pc-drawer-note" role="status">{left > 0 ? t("{left} of {count} questions left in this demo visit.", { left, count: status.visit.questions }) : t("This visit used its {count} questions. Install PlantCraft to use the assistant with your own model.", { count: status.visit.questions })}</small>}
       <textarea ref={input} value={draft} rows={2} maxLength={status.visit?.max_text ?? 8000} onChange={(event) => setDraft(event.target.value)} onKeyDown={keys} placeholder={task?.ask ?? (messages.length ? t("Ask a follow-up") : t("Write what you want"))} aria-label={t("Your question")} />

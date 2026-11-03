@@ -758,6 +758,9 @@ a.pc-drawer-keep { text-decoration: none; }
 .pc-drawer-composer { padding: calc(10px * var(--pc-space-scale, 1)) var(--pc-space-3); border-top: 1px solid var(--pc-border-subtle); display: flex; flex-wrap: wrap; gap: var(--pc-space-2); align-items: flex-end; }
 .pc-drawer-composer textarea { flex: 1 1 180px; resize: none; min-height: 40px; max-height: 160px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); padding: var(--pc-space-2) calc(10px * var(--pc-space-scale, 1)); font: inherit; font-size: var(--pc-fs-sm); background: var(--pc-surface); color: var(--pc-text); }
 .pc-drawer-composer > .pc-drawer-note { flex-basis: 100%; margin: 0; }
+/* A public demo visit: its clock sits at the bottom of the window, over the panel's box; the box
+   keeps clear of it (the clock is drawn by the platform, outside an app's frame). */
+.pc-drawer-composer-visit { padding-bottom: calc(10px + 52px); }
 .pc-drawer-send { width: 36px; height: 36px; border: 0; border-radius: 10px; display: grid; place-items: center; background: var(--pc-primary); color: var(--pc-on-accent); cursor: pointer; }
 .pc-drawer-send:disabled { opacity: .45; cursor: default; }
 .pc-drawer-head > svg { flex: none; color: var(--pc-text-2); }

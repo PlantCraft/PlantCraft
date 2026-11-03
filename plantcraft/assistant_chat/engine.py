@@ -32,11 +32,12 @@ from plantcraft.assistant_access import mcp
 from plantcraft.assistant_access.app_tools import AppTool, AppTools, refs_in, refs_named
 from plantcraft.assistant_chat import MAX_TEXT, ChatStore
 from plantcraft.assistant_chat.demo import (
-    PAUSING_CODES,
+    PAUSING,
     DemoLimits,
     DemoQuestions,
     clean_answer,
     demo_assistant,
+    failure_kind,
     is_visit,
     unavailable,
 )
@@ -52,6 +53,8 @@ LOGGER = logging.getLogger(__name__)
 HISTORY = 30
 ROUNDS = 8
 CHART_POINTS = 600
+# How far past now a chart may end before its window is taken as written on the wrong clock.
+FUTURE_SLACK = timedelta(minutes=15)
 CHART_SIGNALS = 6
 MAX_REFS = 40
 # What a tool answer may weigh in the model's context.
@@ -100,8 +103,9 @@ def chart_tool() -> dict[str, Any]:
             "Use it whenever the person asks for a chart, a trend or a series, or when a trend "
             "explains your answer. The chart appears in the chat; you get back each signal's "
             "points, first, last, min, max and mean to comment on. Find the signal ids first "
-            "(search_signals, search_assets or get_asset). Times are ISO 8601; default: the last "
-            "24 h. A signal with 0 points has no data in that period: say so, and look for the "
+            "(search_signals, search_assets or get_asset). Times are ISO 8601 in UTC with Z (or "
+            "with an offset); default: the last 24 h. History ends now: a window ahead of now is "
+            "moved back to end now. A signal with 0 points has no data in that period: say so, and look for the "
             "period that has data (signal_value gives the last sample's time)."
         ),
         "input_schema": {
@@ -253,6 +257,12 @@ def _when(value: Any, default: datetime) -> datetime:
 
 def _iso(moment: datetime) -> str:
     return moment.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def _iso_local(moment: datetime) -> str:
+    """A time on its own clock with its offset: ``2026-11-03T11:18-03:00``."""
+
+    return moment.isoformat(timespec="minutes")
 
 
 def _stats(values: list[Any]) -> dict[str, Any]:
@@ -475,11 +485,35 @@ def fit(payload: Any) -> Any:
     return text[:TOOL_TEXT] + f"\n[cut: {len(text) - TOOL_TEXT} more characters; narrow the query]"
 
 
+def signal_of(reader: Reader, signal_id: str) -> dict[str, Any]:
+    """A signal as the person reads it (``GET /api/v1/signals/{id}``); empty when it cannot be
+    read."""
+
+    if not signal_id:
+        return {}
+    status, signal = reader("GET", f"/api/v1/signals/{quote(signal_id, safe='')}", {})
+    return signal if status < 400 and isinstance(signal, dict) else {}
+
+
 def unit_of(reader: Reader, signal_id: str) -> str:
     """A signal's unit, read as the person (empty when it has none or cannot be read)."""
 
-    status, signal = reader("GET", f"/api/v1/signals/{quote(signal_id, safe='')}", {})
-    return str(signal.get("unit") or "") if status < 400 and isinstance(signal, dict) else ""
+    return str(signal_of(reader, signal_id).get("unit") or "")
+
+
+def signal_label(signal_id: str, signal: dict[str, Any]) -> str:
+    """How a chart names a signal: its tag without the source and the folders before it
+    (``plantcraft:CPM.Loops.FIC-1003.PV`` is ``FIC-1003.PV``), then its description or a name
+    that says more than the tag."""
+
+    tag = signal_id.split(":", 1)[1] if ":" in signal_id else signal_id
+    parts = tag.split(".")
+    short = ".".join(parts[-2:]) if len(parts) > 2 else tag
+    name = str(signal.get("name") or "").strip()
+    about = str(signal.get("description") or "").strip()
+    if not about and name and name not in (short, tag, parts[-1], signal_id):
+        about = name
+    return f"{short} · {about}"[:120] if about and about != short else short
 
 
 def summary(arguments: dict[str, Any]) -> str:
@@ -885,6 +919,12 @@ class ChatEngine:
             raise RuntimeError(t("This chat's specialist has no model now."))
         if hasattr(model, "rounds"):
             model.rounds = ROUNDS if demo is None else demo.rounds
+        if demo is not None:
+            # A visitor does not wait minutes: the answer has its seconds, each call fewer.
+            if hasattr(model, "deadline"):
+                model.deadline = demo.seconds
+            if isinstance(getattr(model, "timeout", None), (int, float)):
+                model.timeout = min(model.timeout, demo.call_seconds)
         if on_text is not None and hasattr(model, "on_text"):
             model.on_text = on_text
 
@@ -996,6 +1036,7 @@ class ChatEngine:
         level: str | None = None,
     ) -> None:
         token = set_language(language)
+        began = time.monotonic()
         try:
             self.store.update(message_id, meta={"queued": False})
             history = history_for_model(
@@ -1021,6 +1062,7 @@ class ChatEngine:
                 self.store.update(message_id, text=text)
 
             done = self.run(chat, username, history, reader, apps, shown, writing, level)
+            visit = is_visit(chat.get("username"))
             self.store.update(
                 message_id,
                 text=done["text"],
@@ -1029,19 +1071,24 @@ class ChatEngine:
                 charts=done["charts"],
                 refs=done["refs"],
                 meta={
-                    "model": done["model"],
+                    # A demo visitor is not shown the model's name under every answer: it says
+                    # nothing to them (2026-11-03); the demo's stats keep what answers spent.
+                    "model": "" if visit else done["model"],
                     "queued": False,
                     "proposals": done["proposals"],
                     "usage": done["usage"],
                 },
             )
-            if is_visit(chat.get("username")):
-                self.demo_questions.answered(chat["username"], "done", done["usage"])
+            if visit:
+                self.demo_questions.answered(
+                    chat["username"], "done", done["usage"], seconds=time.monotonic() - began
+                )
         except Exception as exc:
             LOGGER.warning("The assistant could not answer in chat %s: %s", chat["chat_id"], exc)
             visit = is_visit(chat.get("username"))
-            if visit and getattr(exc, "code", None) in PAUSING_CODES:
-                self.demo_limits.pause()
+            why = failure_kind(exc)
+            if visit and why in PAUSING:
+                self.demo_limits.pause(PAUSING[why])
             self.store.update(
                 message_id,
                 # A visitor reads a plain sentence, never the service's error (it names keys
@@ -1057,7 +1104,11 @@ class ChatEngine:
             )
             if visit:
                 self.demo_questions.answered(
-                    chat["username"], "failed", getattr(exc, "usage", None) or {}
+                    chat["username"],
+                    "failed",
+                    getattr(exc, "usage", None) or {},
+                    seconds=time.monotonic() - began,
+                    failure=why,
                 )
         finally:
             reset_language(token)
@@ -1382,10 +1433,17 @@ class ChatEngine:
         unique = list(dict.fromkeys(ids))
         if len(unique) > CHART_SIGNALS:
             raise ValueError(f"a chart shows {CHART_SIGNALS} signals at most")
-        end = _when(arguments.get("end"), datetime.now(timezone.utc))
+        now = datetime.now(timezone.utc)
+        end = _when(arguments.get("end"), now)
         start = _when(arguments.get("start"), end - timedelta(hours=24))
         if start >= end:
             raise ValueError("start must come before end")
+        if end > now + FUTURE_SLACK:
+            # History ends now. A window that ends hours ahead is "the last hours" written on
+            # the wrong clock (the plant's hours with UTC's mark, or UTC's with the plant's
+            # offset): it is moved back to end now, the same length (2026-11-03, a chart of
+            # 10:18-14:18 at 11:18 on the plant's clock, three hours of it empty).
+            start, end = start - (end - now), now
         checked: dict[str, Any] = {"signal_ids": unique, "start": _iso(start), "end": _iso(end)}
         title = arguments.get("title")
         if isinstance(title, str) and title.strip():
@@ -1414,11 +1472,16 @@ class ChatEngine:
         for item in payload.get("series") or []:
             times = list(item.get("t") or [])[: CHART_POINTS * 2]
             values = list(item.get("v") or [])[: CHART_POINTS * 2]
+            signal_id = str(item.get("signal") or "")
+            found = signal_of(reader, signal_id)
             series.append(
                 {
                     "signal": item.get("signal"),
+                    # What the legend says: the tag people know and the signal's description
+                    # ("FIC-1003.PV · Recycle flow"), not the source's full id (2026-11-03).
+                    "label": signal_label(signal_id, found),
                     "kind": item.get("kind"),
-                    "unit": item.get("unit") or unit_of(reader, str(item.get("signal") or "")),
+                    "unit": item.get("unit") or str(found.get("unit") or ""),
                     "t": times,
                     "v": values,
                 }
@@ -1452,7 +1515,10 @@ class ChatEngine:
             "start": checked["start"],
             "end": checked["end"],
             "step_seconds": step,
-            "signals": [{"signal": item["signal"], **_stats(item["v"])} for item in series],
+            "signals": [
+                {"signal": item["signal"], "label": item["label"], **_stats(item["v"])}
+                for item in series
+            ],
             "errors": errors,
         }
 
@@ -1584,7 +1650,9 @@ class ChatEngine:
             lines.append(instructions)
         # From here on, what changes from one question to the next.
         lines.append(
-            f"You are talking with {name} ({username}). Times are ISO 8601 in UTC; now is {now}. "
+            f"You are talking with {name} ({username}). Times are ISO 8601 in UTC; now is {now} "
+            f"({_iso_local(datetime.now(plant_timezone()))} on the plant's clock). Give tools "
+            "times in UTC with Z, or with the plant's offset; 'the last 4 hours' ends now. "
             f"The plant's time zone is {zone}: "
             "'yesterday' and 'today' are its calendar days unless the person says otherwise "
             f"(yesterday is {yesterday[0]} to {yesterday[1]}; today began at {yesterday[1]}; "
