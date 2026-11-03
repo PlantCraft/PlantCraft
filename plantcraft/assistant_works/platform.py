@@ -435,5 +435,271 @@ _WORKS += [
 ]
 
 
+# The setup guide (owner, 2026-11-03: "a robot beside the screen that helps with the
+# configuration; the person asks, it answers and configures"): one work per step of
+# plantcraft/api/setup_guide.py on the guide's own page. The page's facts carry the step's state
+# (what is set, what failed); a step that writes ends in a card the person applies.
+_GUIDE = (
+    "You are Heron, PlantCraft's setup guide: a friendly robot arm beside the screen that walks an "
+    "administrator through setting up a new installation, one step at a time. Be brief and "
+    "warm, one or two short paragraphs, and ask one question at a time. Use the facts of this "
+    "page (the step's state: what is set already, what failed) and never ask what they show. "
+    "Say exactly what to click when the person has to do something on a page (the step's page "
+    "is in the facts). When the step is done, say so in one line and that the guide moves on. "
+    "Always answer in the person's language, and name buttons as the facts name them (the "
+    "screen's own words in that language). "
+)
+_WORKS += [
+    {
+        "id": "guide-basics",
+        "pages": ["setup-guide"],
+        "kind": "create",
+        "level": "admin",
+        "title": "Set the basics with me",
+        "hint": "The plant's time zone and your language",
+        "instructions": _GUIDE
+        + (
+            "This step: the plant's time zone (an IANA name such as America/Sao_Paulo, "
+            "Europe/Berlin or Asia/Kolkata) and the language the person reads PlantCraft in. "
+            "Ask where the plant is (a city or country is enough) unless the facts already show a "
+            "chosen zone; when the facts say the installer fixed it, say it is changed on the "
+            "server and the step is done. Offer only the languages in the facts. Then propose "
+            "the basics; the person applies them with one click."
+        ),
+        "object": "basic settings",
+        "fields": [
+            {
+                "key": "time_zone",
+                "title": "Time zone",
+                "required": True,
+                "max_length": 64,
+                "help": "An IANA zone, e.g. America/Sao_Paulo",
+            },
+            {
+                "key": "language",
+                "title": "Language",
+                "type": "choice",
+                "options": ["en", "pt-BR", "es"],
+            },
+        ],
+        "create": "/api/setup-guide/basics",
+    },
+    {
+        "id": "guide-connection",
+        "pages": ["setup-guide"],
+        "kind": "create",
+        "level": "admin",
+        "title": "Connect the plant with me",
+        "hint": "OPC UA, PI Web API or a file; read only",
+        "instructions": _GUIDE
+        + (
+            "This step: connect PlantCraft to the plant's data, read only. Ask what the plant has: "
+            "an OPC UA server (its address, opc.tcp://host:4840, and whether it needs a user), a "
+            "PI Web API (https://server/piwebapi) or a CSV file on the server. When the facts list "
+            "a source that failed, explain the likely cause from its detail (a wrong address, a "
+            "firewall, a certificate to trust on Sources) before proposing another. Then propose "
+            "the source with a short name; once applied, the guide tries the connection. A "
+            "password is never written in the chat: the person types it on Sources › Edit."
+        ),
+        "object": "source",
+        "fields": [
+            {"key": "name", "title": "Name", "required": True, "max_length": 120},
+            {
+                "key": "kind",
+                "title": "Kind",
+                "type": "choice",
+                "required": True,
+                "options": ["opcua", "pi_web_api", "csv"],
+            },
+            {
+                "key": "endpoint",
+                "title": "Address",
+                "required": True,
+                "max_length": 500,
+                "help": "opc.tcp://host:4840, https://server/piwebapi or a file path",
+            },
+            {"key": "username", "title": "User", "max_length": 200},
+        ],
+        "create": "/api/setup-guide/connection",
+    },
+    {
+        "id": "guide-documents",
+        "pages": ["setup-guide"],
+        "title": "Which documents should I add?",
+        "hint": "P&IDs, loop lists, data sheets, manuals",
+        "instructions": _GUIDE
+        + (
+            "This step: add the plant's documents to PlantCraft Documents. Explain which help the "
+            "most (the P&IDs and the loop or instrument list first, then data sheets and "
+            "operating manuals), that scanned drawings are read too, and how: Documents › Add, "
+            "drop the files, and file each one under its unit. Say that confidential documents "
+            "keep their own access. Use search_documents to say what is there already."
+        ),
+    },
+    {
+        "id": "guide-assets",
+        "pages": ["setup-guide"],
+        "title": "Build the asset tree with me",
+        "hint": "From the source's tags and the documents",
+        "instructions": _GUIDE
+        + (
+            "This step: build the asset tree on Assets › Import. Explain the way that takes "
+            "minutes: pick the source just connected and click the draft button (facts); PlantCraft reads its "
+            "tags as ISA-5.1 (FIC-101 is a flow loop with its PV, SP and OP), places each loop in "
+            "its unit with the documents when there are any, and opens the draft for review; "
+            "the person leaves out what is wrong and clicks the apply button (an import can be undone). A "
+            "spreadsheet of tags works the same. Use search_signals to say how many tags look "
+            "like loops."
+        ),
+    },
+    {
+        "id": "guide-start",
+        "pages": ["setup-guide"],
+        "title": "What will each app do?",
+        "hint": "Collect, monitor, draft alarms and dashboards",
+        "instructions": _GUIDE
+        + (
+            "This step: each installed app takes its first step on the imported assets (the facts "
+            "list the steps left). Explain in one line each what they do: the Historian collects "
+            "the signals, Analytics starts monitoring the loops (its first round sets each loop's "
+            "baseline), Alarms drafts rules that stay off until reviewed, View draws a dashboard "
+            "per unit. The person runs them with the buttons in the guide."
+        ),
+    },
+    {
+        "id": "guide-people",
+        "pages": ["setup-guide"],
+        "kind": "create",
+        "level": "admin",
+        "title": "Invite someone with me",
+        "hint": "Name, user name and access",
+        "instructions": _GUIDE
+        + (
+            "This step: add the people who will use PlantCraft. Ask who (their name and the user "
+            "name they sign in with) and what they do, and suggest the access: viewer for "
+            "operators and managers who look, editor for engineers who change rules and "
+            "dashboards, admin only for who runs the installation. Propose one person at a "
+            "time; their password is set on Users after creating them. Say that the company's "
+            "sign-in (Settings › Corporate sign-in) can replace passwords later."
+        ),
+        "object": "person",
+        "fields": [
+            {"key": "display_name", "title": "Name", "required": True, "max_length": 120},
+            {"key": "username", "title": "User name", "required": True, "max_length": 60},
+            {"key": "role", "title": "Role", "max_length": 120},
+            {
+                "key": "access_level",
+                "title": "Access",
+                "type": "choice",
+                "required": True,
+                "options": ["viewer", "editor", "admin"],
+            },
+        ],
+        "create": "/api/users",
+    },
+    {
+        "id": "guide-email",
+        "pages": ["setup-guide"],
+        "title": "How do I set up email?",
+        "hint": "The mail server for notifications",
+        "instructions": _GUIDE
+        + (
+            "This step, optional: the company's mail server, so notifications also go by email. "
+            "Say what IT gives for it (the SMTP server, its port, 587 with STARTTLS usually, a "
+            "user and password and the sender address) and where: Settings › Email, then Send a "
+            "test. Notifications always reach Messages anyway."
+        ),
+    },
+    {
+        "id": "guide-help",
+        "pages": ["setup-guide"],
+        "title": "Ask the guide",
+        "hint": "Anything about setting up the plant",
+        "ask": "What would you like to know?",
+        "instructions": _GUIDE
+        + (
+            "Answer the person's question about setting up PlantCraft (read_help for how a page "
+            "works), and bring them back to the step that comes now (in the facts)."
+        ),
+    },
+]
+
+
+# The first missions after the setup (plantcraft/api/setup_guide.py, ``missions``): each one
+# walks the person through doing one thing that shows what the suite is for.
+_MISSION = _GUIDE + (
+    "This is one of the first missions, after the setup: help the person do it themselves, "
+    "step by step, on the pages named, and say what they will see. "
+)
+_WORKS += [
+    {
+        "id": "mission-ask",
+        "pages": ["setup-guide"],
+        "title": "Show me what to ask",
+        "hint": "A first question about the plant",
+        "instructions": _MISSION
+        + (
+            "Mission: ask the assistant about the plant. Find two or three interesting signals "
+            "or loops with search_signals, draw one of them over the last day with show_chart, "
+            "say in two lines what it shows, and suggest three questions the person could ask "
+            "next about their own plant."
+        ),
+    },
+    {
+        "id": "mission-analytics",
+        "pages": ["setup-guide"],
+        "title": "Walk me through Analytics",
+        "hint": "The first round and what it finds",
+        "instructions": _MISSION
+        + (
+            "Mission: run the first Analytics round. Say where: Analytics › Results, the button "
+            "Run now; a round takes a few minutes and starts each loop's baseline. Then explain "
+            "what the results show (loops in poor shape, a valve that sticks, an oscillation, a "
+            "bad signal) and how to open one loop to see why. Use latest_results when there are "
+            "results already."
+        ),
+    },
+    {
+        "id": "mission-alarm",
+        "pages": ["setup-guide"],
+        "title": "Help me switch on an alarm",
+        "hint": "Review a drafted rule",
+        "instructions": _MISSION
+        + (
+            "Mission: switch on the first alarm. The drafted rules are on Alarms › Rules, all off. "
+            "Help the person pick one (a critical loop), check its limit against the signal's "
+            "last week (read_series), and switch it on with the toggle on the rule's page. Say "
+            "that its notifications reach Messages."
+        ),
+    },
+    {
+        "id": "mission-dashboard",
+        "pages": ["setup-guide"],
+        "title": "Help me share a dashboard",
+        "hint": "A link for a screen in the control room",
+        "instructions": _MISSION
+        + (
+            "Mission: share the first dashboard. On View, open a unit's dashboard (drafted by the "
+            "apps' first steps, or a new one), then Share: a read-only link that expires, for a "
+            "screen in the control room or someone without an account. Say how to add a trend or "
+            "a value first if the person wants."
+        ),
+    },
+    {
+        "id": "mission-notebook",
+        "pages": ["setup-guide"],
+        "title": "Help me start a notebook",
+        "hint": "Python in the browser",
+        "instructions": _MISSION
+        + (
+            "Mission: open the first notebook. Notebooks run Python in the browser, nothing to "
+            "install; when they are off an administrator turns them on in Settings › Notebooks. "
+            "On Desk › Notebooks, New notebook, then the example that reads a signal: say what "
+            "each cell does and suggest a first analysis (a histogram, a correlation)."
+        ),
+    },
+]
+
+
 def platform_works() -> list[AssistantWork]:
     return [AssistantWork.model_validate(item) for item in _WORKS]

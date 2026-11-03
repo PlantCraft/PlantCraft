@@ -1405,7 +1405,8 @@ class ChatEngine:
         proposals.append(
             {
                 "work": work.key,
-                "object": work.spec.object,
+                # The card's words in the person's language (the platform's works are translated).
+                "object": public.get("object") or work.spec.object,
                 "fields": clean,
                 "state": "proposed",
                 "card": {**{key: public[key] for key in ("app", "title", "fields")}, **routes},

@@ -282,6 +282,7 @@ def test_desk_offers_its_works_and_each_create_route_takes_the_cards_fields(sign
         assert [item["key"] for item in offered] == keys, page
     assert {w.key for w in rt.assistant.works.all() if w.spec.kind == "create"} == {
         "processcraft:new-action", "processcraft:new-event", "processcraft:new-asset",
+        "processcraft:guide-basics", "processcraft:guide-connection", "processcraft:guide-people",
     }  # fmt: skip
     action = rt.assistant.works.get("processcraft:new-action")
     fields, problems = action.check(

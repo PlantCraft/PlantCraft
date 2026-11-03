@@ -64,6 +64,8 @@ export type AssistantWorkField = {
   type: "text" | "long_text" | "number" | "integer" | "boolean" | "choice" | "date" | "datetime" | "list";
   required?: boolean;
   options?: string[];
+  /** What each option reads as, in the person's language (the value sent is the option). */
+  labels?: Record<string, string>;
   max_length?: number;
   min?: number | null;
   max?: number | null;
@@ -292,7 +294,7 @@ function FieldInput({ field, value, onChange, disabled }: { field: AssistantWork
   if (field.type === "long_text") input = <textarea id={id} rows={3} value={text} maxLength={field.max_length} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
   else if (field.type === "choice") input = <select id={id} value={text} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
     {(!field.required || !text) && <option value="">—</option>}
-    {(field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}
+    {(field.options ?? []).map((option) => <option key={option} value={option}>{field.labels?.[option] ?? option}</option>)}
   </select>;
   else {
     const type = { number: "number", integer: "number", date: "date", datetime: "datetime-local" }[field.type as string] ?? "text";
@@ -597,6 +599,8 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
   }, [status, works, request.work, request.task]);
   /** The person's words, with the task they complete. */
   function send() {
+    // Enter sends too: not while the answer is still being written (the server says 409).
+    if (busy || working || !draft.trim()) return;
     if (task) void ask(`${task.label}: ${draft.trim()}`, task);
     else void ask(draft);
   }

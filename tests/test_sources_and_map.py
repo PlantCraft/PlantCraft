@@ -459,3 +459,34 @@ def test_the_plant_map_prompt_carries_the_format_and_no_source(client, second_cs
     # A question outside the presets falls back to the default one.
     other = client.get("/api/prompts/plant-map", params={"question": "anything"}).json()
     assert "Build the plant map" in other["text"]
+
+
+def test_an_imported_tree_routes_the_signals_of_an_added_source(client, second_csv):
+    """A tree drafted from an added source binds its tags; the import routes them there too,
+    so the platform reads their values (and the undo takes the routes back)."""
+
+    source = _add_csv(client, second_csv)["source_id"]
+    document = {
+        "format": "plantcraft.assets",
+        "version": 1,
+        "assets": [
+            {
+                "asset_id": "B-201",
+                "name": "Bomba B-201",
+                "type": "equipment",
+                "signals": [{"role": "flow", "tag": "B201.Vazao", "source_id": source}],
+            }
+        ],
+    }
+    review = client.post(
+        "/api/asset-file/read",
+        params={"filename": "assets.json"},
+        content=json.dumps(document).encode(),
+    ).json()
+    applied = client.post("/api/asset-file/apply", json=review).json()
+    assert applied["applied"], applied
+    registry = client.app.state.runtime.platform.sources
+    assert registry.routes()["B201.Vazao"]["source_id"] == source
+    assert registry.source_of("B201.Vazao") == source
+    assert client.post("/api/asset-file/undo").status_code == 200
+    assert "B201.Vazao" not in registry.routes()

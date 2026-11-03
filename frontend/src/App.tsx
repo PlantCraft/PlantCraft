@@ -16,6 +16,8 @@ import { currentAssetPath, sourcesUrl } from "./assetLinks";
 import { operationsTour } from "./OperationsTour";
 import { platformTour } from "./PlatformTour";
 import SuiteHealthBanner from "./SuiteHealthBanner";
+import { SetupGuide } from "./SetupGuide";
+import "./setupGuide.css";
 import { LANGUAGES, language, setLanguage, t, type Language } from "./i18n";
 import { SessionContext, canSee, safeNext, useAccess, useCanOperate } from "./session";
 import { suiteApi, TOKEN_RENEW_MS } from "./suiteApi";
@@ -296,6 +298,9 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const [inboxRefresh, setInboxRefresh] = useState(0);
   const bumpInbox = useCallback(() => setInboxRefresh((value) => value + 1), []);
   const admin = canSee(access, "users");
+  // While the setup guide walks an administrator through a new installation, the welcome tour
+  // waits: the guide offers it once the plant is set up (null: the guide has not answered yet).
+  const [guiding, setGuiding] = useState<boolean | null>(null);
   const adminView = canSee(access, "administration");
   // Notebooks are in everyone's Desk once an administrator turned them on (always for admins,
   // who find there how to turn them on); the switch is in Setup › Notebooks.
@@ -423,13 +428,14 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
       onOpenPreferences={() => navigate("/preferences")}
       apps={apps}
       inboxRefresh={inboxRefresh}
-      tour={framed ? undefined : operating ? opsTour : tour}
+      tour={framed ? undefined : operating ? opsTour : admin && guiding !== false ? undefined : tour}
       onTour={framed ? (shown?.tour ? () => send({ type: "pc-frame:tour" }) : undefined) : undefined}
     >
       {!framed && admin && <SuiteHealthBanner />}
       {!framed && error && <div className="inline-error">{error}</div>}
       {!framed && (isKnownPath(path) ? <Page path={path} data={data} username={username} onInboxChange={bumpInbox} /> : <NotFound />)}
       {frames}
+      {admin && <SetupGuide navigate={navigate} onGuiding={setGuiding} />}
     </SuiteShell>
   );
 }
