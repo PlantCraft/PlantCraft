@@ -9,8 +9,10 @@ paths = [
   '''sdk/python/tests/test_prompts\.py''',
   '''tests/test_app_installer\.py''',
 ]
-# A docstring's example call, not a key.
+# A docstring's example call, not a key; a closed app passing the PUBLIC key of its publisher (the same
+# as deploy/trusted-publishers/processcraft.pub) to its licence check, not a secret.
 regexTarget = "line"
 regexes = [
   '''PlantCraftClient\(url, app="linkcraft", key=key''',
+  '''public_key=PUBLISHER_KEY''',
 ]

@@ -33,6 +33,7 @@ health = "/healthz"
 image = "cpmcraft"
 
 [requires]
+platform = ">=0.6,<0.8"
 processcraft_api = ">=1.0"
 sdk = "0.2.0"
 asset_types = ["loop"]

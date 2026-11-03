@@ -1077,6 +1077,8 @@ def test_no_v1_route_writes_to_a_data_source(central):
             ("GET", "/api/v1/compute/capacity"): {},
         }
     )
+    # A closed app reads its own licence (tests/test_app_compat_license.py): an app's token only.
+    calls[("GET", "/api/v1/apps/self/license")] = {}
     # An app's call to a language model (tests/contract/test_api_v1_llm.py).
     calls[("POST", "/api/v1/llm/{use}")] = {
         "path": "/api/v1/llm/x",

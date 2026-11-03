@@ -572,6 +572,27 @@ class PlantCraftClient:
         self._installation_id = str(found) if found else None
         return self._installation_id
 
+    def app_license(self) -> bytes | None:
+        """``GET /api/v1/apps/self/license``: the ``.pclicense`` an administrator added for this
+        app (Apps › Licences), as its bytes, or None. The app checks its signature itself with
+        its publisher's key (``plantcraft_sdk.licensing``). None for a PlantCraft before 0.6."""
+
+        import json as _json
+
+        try:
+            found = self._send("GET", "/api/v1/apps/self/license").get("license")
+        except NotFound:
+            return None
+        return _json.dumps(found).encode() if found else None
+
+    def platform_version(self) -> str | None:
+        """The PlantCraft version this app runs on (``GET /api/v1/installation``), or None."""
+
+        try:
+            return self._send("GET", "/api/v1/installation").get("version") or None
+        except NotFound:
+            return None
+
     def installation_time_zone(self) -> str:
         """``GET /api/v1/installation``: the installation's IANA time zone, what "local" means
         in a schedule (cached for a minute; UTC when PlantCraft is older than 0.5)."""

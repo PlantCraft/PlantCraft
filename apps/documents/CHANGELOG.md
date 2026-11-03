@@ -4,6 +4,14 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Removed
+
+- **The plant map and the P&ID reader moved to PlantCraft PID** (a closed app with a
+  licence), with the Diagrams and Plant map pages, the "Read a scanned diagram again" model use
+  and the SVG, DEXPI and image formats. Documents still reads P&IDs sent as PDF for their text.
+  The image no longer carries tesseract, pdfplumber or pypdfium2. An older data folder opens
+  unchanged; its diagram tables are no longer written.
+
 ## [0.6.0] - 2026-11-02
 
 ### Added

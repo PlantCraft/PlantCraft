@@ -161,11 +161,30 @@ def installation(_caller: V1Caller, rt: Runtime) -> dict[str, Any]:
     (the "local" every app's schedules and screens mean) and what this PlantCraft draws for
     apps (``features``: the tables of ``[contributes]``)."""
 
+    from plantcraft.apps.manager import API_VERSION, platform_version
+    from plantcraft_sdk.scopes import PERMISSIONS
+
     return {
         "id": rt.workspace.installation.installation_id(),
         "time_zone": plant_timezone().key,
         "features": list(FEATURES),
+        # docs/app-package.md, section 7: what apps' [requires] and `plantcraft-app compat`
+        # are held to.
+        "version": platform_version(),
+        "api": API_VERSION,
+        "scopes": sorted(PERMISSIONS),
     }
+
+
+@router.get("/apps/self/license")
+def own_license(caller: V1Caller, rt: Runtime) -> dict[str, Any]:
+    """The ``.pclicense`` an administrator added for the calling app (Apps › Licences), or
+    null. The app checks its signature itself, with its publisher's key
+    (``plantcraft_sdk.licensing``)."""
+
+    if caller.app_id is None:
+        raise HTTPException(status_code=403, detail=t("Only an app reads its own licence."))
+    return {"license": rt.apps.license_file(caller.app_id)}
 
 
 @router.get("/apps")

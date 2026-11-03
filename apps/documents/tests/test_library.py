@@ -171,17 +171,6 @@ def test_a_file_is_read_in_a_worker_process():
     assert "P-101" in found.sections[0].text
 
 
-def test_a_drawing_is_read_in_the_worker_process_too():
-    from doccraft.library import extract
-    from doccraft.plantmap.sample.draw import draw_all
-
-    _, canvas, _ = draw_all()[0]
-    data = canvas.svg().encode()
-    extracted, diagrams = extract.read_isolated(data, "PID-U-100-01.svg")
-    assert diagrams and diagrams[0]["items"]
-    assert extracted.format == "drawing"
-
-
 def test_meaning_search_walks_past_passages_the_person_may_not_read():
     """The best passages by meaning are checked a chunk at a time: when the whole first chunk
     is in folders the person may not see, the next chunks are read until enough are found."""

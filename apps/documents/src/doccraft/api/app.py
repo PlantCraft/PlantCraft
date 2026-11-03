@@ -15,7 +15,7 @@ from plantcraft_sdk.auth import User
 from plantcraft_sdk.server import web
 
 from doccraft import APP_ID, __version__
-from doccraft.api.routers import library, plantmap, refs, search, tools, widgets
+from doccraft.api.routers import library, refs, search, tools, widgets
 from doccraft.api.runtime import Runtime
 from doccraft.config import Settings
 from doccraft.meta import FILES
@@ -46,7 +46,6 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
         files=FILES,
         routers=(
             library.router,
-            plantmap.router,
             tools.router,
             search.router,
             refs.router,

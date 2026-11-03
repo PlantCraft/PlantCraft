@@ -9,13 +9,28 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **App packages say what they run on, what they were tested on, their languages and whether they
+  are closed (SDK 0.106.0).** `app.toml` gains `[app] source` (`open` or `closed`) and
+  `languages`, `[requires] platform` (the PlantCraft versions it installs on), `[tested] platform`
+  (stamped by the package build from `compat/<version>.json`) and `[license]`. PlantCraft refuses
+  an install outside the ranges, warns when the version is untested, keeps the version an app was
+  installed on and answers `GET /api/apps/upgrade-check?to=` before an upgrade
+  (docs/app-package.md, section 7). `plantcraft-app compat` runs the compatibility checks and the
+  app's `tests/compat` against a real PlantCraft and writes the report.
+- **Licences for closed apps.** A publisher signs a `.pclicense` for one installation with its
+  package key (`plantcraft-app license issue`); the administrator adds it in Apps › Licences
+  (`/api/apps/licenses`), PlantCraft checks the signature and the installation and serves it to
+  that app only (`GET /api/v1/apps/self/license`). `plantcraft_sdk.licensing` gives apps the
+  same check, offline (docs/app-package.md, section 8).
+- **PlantCraft PID (`/pid/`, port 8160, uid 10016)**, the first closed app: the P&ID
+  reader and plant map, moved out of Documents, compiled with Nuitka and licensed.
 - Integrators' guide, "PlantCraft next to MES, data lake and your own LLM" (`docs/integrators.md`): an on-premises OpenAI-compatible model for the assistant (with Ollama's context length), agents reading through MCP, plant data into a data lake (Historian's feed files or API v1) and MES data into the Historian, with a list for IT.
 - A test of the assistant against a real Ollama server (`tests/test_ollama_live.py`, workflow `ollama.yml`): the model answers, calls a read-only tool, and a question in Desk goes through the plant's read-only tools after its provider was added in Setup › Language models. It runs on changes to the model client and the assistant, every Monday, and by hand with another model.
 - Answers from OpenAI-compatible servers (Ollama, vLLM) now keep the tokens they spent: a streamed chat completion asks for them (`stream_options.include_usage`); before, `meta.usage` stayed at zero.
 
 ### Changed
 
-- Tours: the first tour is shorter (16 steps, was 20). It leaves out one asset's page, System health, Apps and Backups; its step on the menu under the person's name now shows the theme and the display size (Larger text to More space) beside Help. Operations has a short tour of its own (Status, Requests, Backups, the assistant) instead of opening Desk's. Each app's tour no longer stops on its Overview; Analytics' shows Monitors (which algorithm runs, on which assets and when), Documents' shows Diagrams and the Plant map when P&IDs were read, and Models' shows Tracking when one is set up. A public demo opens in the light theme until the visitor picks another (ui 0.110.0).
+- Tours: the first tour is shorter (16 steps, was 20). It leaves out one asset's page, System health, Apps and Backups; its step on the menu under the person's name now shows the theme and the display size (Larger text to More space) beside Help. Operations has a short tour of its own (Status, Requests, Backups, the assistant) instead of opening Desk's. Each app's tour no longer stops on its Overview; Analytics' shows Monitors (which algorithm runs, on which assets and when), and Models' shows Tracking when one is set up. A public demo opens in the light theme until the visitor picks another (ui 0.110.0).
 
 - Translations: the pt-BR and es glossaries were reviewed against the words industry tools already use (Grafana, ThingsBoard, FUXA, Elipse), and every catalog and help page follows: Shelve is Arquivar/Archivar (as in Elipse E3; "suprimir" stays for suppressed by design), Warning is Aviso in pt-BR, Threshold is Limite in pt-BR, Gauge is Medidor and Stat is Estatística/Estadística (View), the Editor/Viewer roles are Editor/Visualizador, Audit log is Log de auditoria in pt-BR and Silence is Silencio in es.
 
