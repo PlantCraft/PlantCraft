@@ -38,8 +38,8 @@ export function SetupPage() {
   return <>
     <Heading title={t("Settings")} />
     <section className="panel setup-guide-tile">
-      <div><strong>{t("Getting started")}</strong><p className="muted">{t("The robot that walks you through a new installation, step by step: the language model, the plant's data, the asset tree, the apps' first steps and your team.")}</p></div>
-      <button type="button" className="button button-secondary" onClick={openSetupGuide}>{t("Open Getting started")}</button>
+      <div><strong>{t("Getting started")}</strong><p className="muted">{t("Aaron, the robot that walks you through a new installation, step by step: the language model, the plant's data, the asset tree, the apps' first steps and your team.")}</p></div>
+      <button type="button" className="button button-secondary" onClick={openSetupGuide}>{t("Open Aaron")}</button>
     </section>
     {setupGroups().map((group) => <NextSteps key={group.title} title={group.title} navigate={navigate} limit={group.items.length} items={group.items} />)}
   </>;

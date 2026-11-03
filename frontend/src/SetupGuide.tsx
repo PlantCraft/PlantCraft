@@ -29,7 +29,7 @@ function talkMission(guide: Guide, mission: GuideMission) {
   openAssistant({
     page: "processcraft:setup-guide",
     work: mission.work,
-    title: t("Getting started"),
+    title: "Aaron",
     place: `${t("First missions")} › ${mission.title}`,
     subject: "",
     facts: { mission: mission.id, mission_title: mission.title, mission_page: `${mission.page_label} (${mission.page})`, missions: guide.missions.map((item) => `${item.title}: ${item.done ? "done" : "to do"}`).join("; ") },
@@ -43,7 +43,7 @@ function talkAbout(guide: Guide, step: GuideStep, help = false) {
   openAssistant({
     page: "processcraft:setup-guide",
     work: help ? "processcraft:guide-help" : step.work,
-    title: t("Getting started"),
+    title: "Aaron",
     place: `${t("Getting started")} › ${step.title}`,
     subject: "",
     facts: stepFacts(guide, step),
@@ -120,7 +120,7 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
       : upNext ? t("Next mission: {mission}", { mission: upNext.title }) : guideLine(guide);
 
   return <div className={["setup-guide", open ? "setup-guide-open" : ""].filter(Boolean).join(" ")}>
-    {open && <section className="guide-card" role="dialog" aria-label={t("Getting started")}>
+    {open && <section className="guide-card" role="dialog" aria-label={t("Aaron, your setup guide")}>
       <header className="guide-card-head">
         <GuideRobot mood={mood} size={56} />
         <div className="guide-card-title">
@@ -166,7 +166,7 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
       <button type="button" className="guide-bubble-text" onClick={() => setOpen(true)}>{line}</button>
       <button type="button" className="guide-icon-button" onClick={() => setBubble(false)} title={t("Close")} aria-label={t("Close")}><X size={13} /></button>
     </div>}
-    <button type="button" className="guide-launcher" onClick={() => setOpen((value) => !value)} title={t("Getting started")} aria-label={t("Getting started")} aria-expanded={open}>
+    <button type="button" className="guide-launcher" onClick={() => setOpen((value) => !value)} title={t("Aaron, your setup guide")} aria-label={t("Aaron, your setup guide")} aria-expanded={open}>
       <GuideRobot mood={mood} size={44} view="head" />
       {!guide.finished && <span className="guide-badge">{guide.done}/{guide.total}</span>}
       {guide.finished && !allDone && <span className="guide-badge guide-badge-trophy"><Trophy size={10} /> {guide.missions_done}/{guide.missions.length}</span>}

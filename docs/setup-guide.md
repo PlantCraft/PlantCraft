@@ -1,8 +1,8 @@
-# Setup guide
+# Setup guide (Aaron)
 
 > **Updated:** 2026-11-03
 
-A new installation is empty: no model, no source, no assets. The setup guide is a small robot in
+A new installation is empty: no model, no source, no assets. The setup guide is Aaron, a small industrial robot arm in
 the corner of every screen, for administrators, that walks through it one step at a time and,
 with a language model, talks the person through each step and applies what they agree on.
 

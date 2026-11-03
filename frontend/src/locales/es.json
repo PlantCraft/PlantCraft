@@ -2500,16 +2500,17 @@
   "Skip for now": "Omitir por ahora",
   "Take the mark back": "Deshacer la marca",
   "The apps start from an import: build the asset tree on Assets › Import first, or skip this step if you built it by hand.": "Las apps empiezan a partir de una importación: arma primero el árbol de activos en Activos › Importar, u omite este paso si lo armaste a mano.",
-  "The robot that walks you through a new installation, step by step: the language model, the plant's data, the asset tree, the apps' first steps and your team.": "El robot que te guía en una instalación nueva, paso a paso: el modelo de lenguaje, los datos de la planta, el árbol de activos, los primeros pasos de las apps y tu equipo.",
   "Your plant is set up. Open me any time from Settings.": "Tu planta está configurada. Ábreme cuando quieras desde Configuración.",
   "{done} of {total} steps": "{done} de {total} pasos",
   "Getting started": "Primeros pasos",
-  "Open Getting started": "Abrir Primeros pasos",
   "Every step and mission is done. The apps are collecting, monitoring and drafting; their Overview pages show what they find.": "Todos los pasos y misiones están hechos. Las apps están recolectando, monitoreando y preparando borradores; el Resumen de cada una muestra lo que encuentran.",
   "First missions": "Primeras misiones",
   "Mission complete: {mission}": "Misión cumplida: {mission}",
   "Next mission: {mission}": "Próxima misión: {mission}",
   "Then, the first missions": "Después, las primeras misiones",
   "Your plant is set up. Now try what PlantCraft is for: each mission takes a few minutes.": "Tu planta está configurada. Ahora prueba para qué sirve PlantCraft: cada misión toma pocos minutos.",
-  "{done} of {total} missions": "{done} de {total} misiones"
+  "{done} of {total} missions": "{done} de {total} misiones",
+  "Aaron, the robot that walks you through a new installation, step by step: the language model, the plant's data, the asset tree, the apps' first steps and your team.": "Aaron, el robot que te guía en una instalación nueva, paso a paso: el modelo de lenguaje, los datos de la planta, el árbol de activos, los primeros pasos de las apps y tu equipo.",
+  "Open Aaron": "Abrir a Aaron",
+  "Aaron, your setup guide": "Aaron, tu guía de configuración"
 }
