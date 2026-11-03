@@ -81,13 +81,13 @@ def test_compact_keeps_chunks_at_most_chunk_values(tmp_path):
 def test_a_long_backlog_compacts_in_steps_with_the_same_result(tmp_path, monkeypatch):
     # A backfill leaves a point with thousands of small chunks: they merge a few at a time
     # (COMPACT_CHUNKS) and in batches of fewer points, never all in memory at once.
-    from histcraft.archive import store
+    from histcraft.archive import compaction
 
     archive = make(tmp_path)
     for point in (1, 2, 3):
         fill(archive, point=point, chunks=40, per=10)
     before = [archive.read(point, 0, 10**9) for point in (1, 2, 3)]
-    monkeypatch.setattr(store, "COMPACT_CHUNKS", 7)
+    monkeypatch.setattr(compaction, "COMPACT_CHUNKS", 7)
     assert archive.compact(10**12) == 3 * 39
     for point, (times, values) in zip((1, 2, 3), before, strict=True):
         assert archive.point_stats()[point]["chunks"] == 1
