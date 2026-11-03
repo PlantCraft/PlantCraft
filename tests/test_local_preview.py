@@ -54,7 +54,10 @@ def test_apps_and_frame_match_the_caddy_proxy():
         # Documents is framed like every other app (the visit's clock, the platform's sidebar)...
         (scope("/doc/", document=True, signed_in=True), (PLATFORM, True)),
         # ...but its API and its files (Open the PDF, Download) stay the app's.
-        (scope("/doc/api/documents/x/file", document=True, signed_in=True), (ROUTES["/doc/"], False)),
+        (
+            scope("/doc/api/documents/x/file", document=True, signed_in=True),
+            (ROUTES["/doc/"], False),
+        ),
     ],
 )
 def test_upstream(request_scope, expected):
