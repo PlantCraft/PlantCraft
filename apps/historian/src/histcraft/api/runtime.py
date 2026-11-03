@@ -25,6 +25,7 @@ from histcraft import APP_ID
 from histcraft.api import queue
 from histcraft.api.read_budget import ReadBudget
 from histcraft.archive.query import PointRef, Reader, SourceUnavailable
+from histcraft.archive.query import point_ref as point_ref  # the routers' import
 from histcraft.archive.store import ArchiveStore
 from histcraft.catalog.annotations import Annotations
 from histcraft.catalog.store import CatalogStore
@@ -32,6 +33,7 @@ from histcraft.collector.service import Collector, CollectorThread, source_passw
 from histcraft.conditions import open_conditions
 from histcraft.config import Settings
 from histcraft.db import Database
+from histcraft.export.lake import LakeFeeds
 from histcraft.export.saved import SavedExports
 from histcraft.i18n import t
 from histcraft.sources.cache import RecentReads
@@ -40,16 +42,6 @@ from histcraft.vault import Vault
 LOGGER = logging.getLogger(__name__)
 # Sources whose recent reads are kept in memory (``sources.cache``).
 CACHED_KINDS = ("pi_web_api", "opcua")
-
-
-def point_ref(point: dict[str, Any]) -> PointRef:
-    return PointRef(
-        int(point["id"]),
-        point["signal"],
-        point["kind"],
-        bool(point["step"]),
-        point.get("mode") or "archive",
-    )
 
 
 class Runtime(PlatformRuntime):
@@ -73,6 +65,8 @@ class Runtime(PlatformRuntime):
         self.archive = ArchiveStore(Database(settings.archive_target, password=password))
         # Export choices kept under a name, beside the catalog (``export.saved``).
         self.saved_exports = SavedExports(self.catalog.db)
+        # Where each data lake feed of a saved export is; the collector writes it (``export.lake``).
+        self.lake_feeds = LakeFeeds(self.catalog.db)
         # Notes on signals, at an instant or over an interval (``catalog.annotations``).
         self.annotations = Annotations(self.catalog.db)
         self.vault = Vault(settings.secret_key_path)

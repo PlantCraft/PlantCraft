@@ -179,7 +179,7 @@ export type AppMeta = { app?: { version?: string } };
 
 /** One asset of PlantCraft's tree as Export offers it (``GET /api/export/options``). */
 export interface ExportAsset { id: string; name: string; kind: string; kind_label: string; parent_id: string | null; depth: number; loop: boolean; loops: number; signals: number; missing: number }
-export interface ExportOptions { assets: ExportAsset[]; assets_error: string | null; points: number; max_days: number; max_raw_days: number; max_signals: number }
+export interface ExportOptions { assets: ExportAsset[]; assets_error: string | null; points: number; max_days: number; max_raw_days: number; max_signals: number; lake?: { folder: string; keep_days: number; can_schedule: boolean } }
 /** What a choice exports (``POST /api/export/preview``). */
 export interface ExportPreview { signals: number; assets: number; loops: number; missing: number; tags: string[] }
 

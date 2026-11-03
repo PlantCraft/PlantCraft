@@ -19,8 +19,12 @@ export interface ExportChoice { signals: string[]; assets: string[]; expand_asse
 /** A tag in the export list: what ``/api/export/resolve`` answers for an asset, or a tag picked by itself. */
 export interface ExportTag { signal: string; tag: string; name: string; unit: string; archived: boolean; asset_id?: string; asset_name?: string; role?: string }
 /** A choice saved under a name (``/api/export/saved``). A relative period has ``hours``; a fixed one ``start`` and ``end``. */
-export interface SavedExportIn { name: string; signals: string[]; assets: string[]; hours: number | null; start: string | null; end: string | null; step_seconds: number | null; aggregate?: Aggregate; anonymize: boolean }
-export interface SavedExport extends SavedExportIn { id: string; created_by: string; updated_by: string; created: string; updated: string }
+export interface SavedExportIn { name: string; signals: string[]; assets: string[]; hours: number | null; start: string | null; end: string | null; step_seconds: number | null; aggregate?: Aggregate; anonymize: boolean; lake?: LakeSchedule }
+/** A saved export sent to the data lake folder every hour or day (administrators), or not. */
+export type LakeSchedule = "off" | "hourly" | "daily";
+/** Where a data lake feed is: the next period it writes, its last file and any problem. */
+export interface LakeState { next: string | null; last_file: string; last_rows: number; problem: string; updated: string | null }
+export interface SavedExport extends SavedExportIn { id: string; created_by: string; updated_by: string; created: string; updated: string; lake_state?: LakeState | null }
 
 /** The two example files of an import: one column per tag, or one value per line. */
 export type ExampleShape = "wide" | "long";

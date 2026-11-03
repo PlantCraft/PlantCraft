@@ -426,6 +426,7 @@ def test_histcraft_collects_simcraft_and_keeps_its_own_database() -> None:
     assert services["histcraft"]["volumes"] == [
         "./data/histcraft:/data",
         "./data/histcraft-csv:/csv:ro",
+        "./data/lake-export:/lake",
     ]
     assert (
         histcraft["HISTCRAFT_DATABASE_URL"] == "postgresql://histcraft@histcraft-db:5432/histcraft"

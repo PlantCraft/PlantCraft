@@ -55,6 +55,18 @@ class PointRef:
     mode: str = "archive"
 
 
+def point_ref(point: dict[str, Any]) -> PointRef:
+    """The ``PointRef`` of a catalog point."""
+
+    return PointRef(
+        int(point["id"]),
+        point["signal"],
+        point["kind"],
+        bool(point["step"]),
+        point.get("mode") or "archive",
+    )
+
+
 class SourceUnavailable(RuntimeError):
     """The plant system a signal is read from did not answer (HTTP 502); says why."""
 
