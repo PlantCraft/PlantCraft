@@ -204,6 +204,23 @@ on every page, the same way in every app, and each page says what it can do ther
 - Declared today: Alarms (an alarm), Historian (a point), Analytics (results, a loop, a run, an
   algorithm), Models (a project), View (a dashboard), PlantCraft (an asset).
 
+## On each chart (a trial)
+
+A small popover over a chart asks and answers in place, then closes: no panel, nothing kept
+(2026-11-02, the idea of Grafana's "Explain this"; only the idea, none of its code). It is off
+until `PLANTCRAFT_ASSISTANT_CHARTS=icon` turns it on: the assistant's mark joins each chart's row
+of buttons (shown on hover; a small card without the row gets the mark alone). The owner picked
+this over a "focus" item in the menu beside the page's title. A person tries it in their own
+browser with `localStorage["pc-assistant-charts"]` (`icon` or `off`). The popover offers **Explain this chart**, **What stands out?** and
+**What could explain this?**, or the person's own question, and a follow-up. The model gets what
+the chart draws, each line's period, minimum and maximum with their times, mean, first and last
+values and about 24 points, never the whole series (`chartContext` in `ui/src/ChartAssistant.tsx`),
+then the page's context; it reads the plant as the person, as in the panel. The chat is started
+with `keep: false`, so it is deleted a day later unless the person clicks **Continue in Desk**.
+Every chart drawn with `Plot` or `TimeChart` (`@plantcraft/ui/plot`) has it; a chart passes
+`assistant={{ title, subject, context }}` to say more about itself, or `assistant={false}` (the
+charts inside an answer) to leave it out.
+
 ## Works: what the assistant does on each page
 
 In the interface these are **tasks** (docs/glossary.md); the code, the API and `app.toml` keep
@@ -399,6 +416,7 @@ to an administrator, PlantCraft's and the installed apps':
 | `PLANTCRAFT_ASSISTANT_WORKERS` | 4 | Answers written at once in a server process; more wait in a queue ("Waiting for a free slot") |
 | `PLANTCRAFT_ASSISTANT_DAILY` | 300 | Answers a person gets per day |
 | `PLANTCRAFT_ASSISTANT_DAILY_READS` | 2000 | Signal reads the assistant makes for a person per day (each tool call counts its signals, at least one). Past it the tools refuse until the plant's next day, and the audit log records `assistant.read_limit` once that day |
+| `PLANTCRAFT_ASSISTANT_CHARTS` | off | The assistant on each chart, a trial: `icon` turns it on (above, "On each chart") |
 | `PLANTCRAFT_ASSISTANT_BULK_SIGNALS` | 60 | Distinct signals one answer may read before the audit log records `assistant.bulk_read` (a possible extraction); the answer goes on |
 | One at a time | | A person has one answer being written at a time |
 | Tool rounds | 8 | Rounds of tool calls before the model answers with what it read |

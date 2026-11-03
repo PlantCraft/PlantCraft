@@ -10,6 +10,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, type ReactNode } from "react";
 import type { PlotParams } from "react-plotly.js";
 import type { BrandTheme } from "./brandTheme.js";
+import { useChartAssistant, type ChartAssistantOptions } from "./ChartAssistant.js";
 import { SHARED_PLOTLY, SHARED_VENDOR_URL } from "./sharedVendor.js";
 import { timeFigure, type TimeFigureOptions } from "./timeChart.js";
 import { zonedFigure } from "./timeZone.js";
@@ -53,17 +54,23 @@ const PlotlyPlot = lazy(async () => {
   return { default: createPlotlyComponent(Plotly) };
 });
 
-export type PlotProps = PlotParams;
+export type PlotProps = PlotParams & {
+  /** The assistant on this chart (ChartAssistant.tsx, a trial behind `PLANTCRAFT_ASSISTANT_CHARTS`):
+   * what the chart is about, or false where it is not offered (a chart inside an answer). */
+  assistant?: ChartAssistantOptions | false;
+};
 
 /**
  * The one Plotly build the interface ships: lines, bars, pie, histograms, box and heatmaps.
  * UTC times (ISO with "Z" or an offset) are drawn in the display time zone (see timeZone.ts);
  * a zoom or click hands back that zone's wall clock, which `fromWallClock` turns into a time.
  */
-export function Plot(props: PlotProps) {
+export function Plot({ assistant, ...props }: PlotProps) {
   const figure = useMemo(() => zonedFigure({ data: props.data as unknown[], layout: props.layout as Record<string, unknown> }), [props.data, props.layout]);
   const watch = useRef<{ observer: ResizeObserver; frame: number } | null>(null);
   const { onInitialized, useResizeHandler } = props;
+  // The assistant on the chart: its button among the chart's, and its popover over it.
+  const helper = useChartAssistant(assistant, props.data as unknown[], props.layout, props.config as Record<string, unknown> | undefined);
   // `useResizeHandler` follows the window only; a chart also follows its own box, which changes
   // without the window when the sidebar folds, a panel opens or a dashboard grid lays out again.
   const follow = (node: HTMLElement) => {
@@ -84,12 +91,15 @@ export function Plot(props: PlotProps) {
       {...props}
       data={figure.data as PlotProps["data"]}
       layout={figure.layout as PlotProps["layout"]}
-      onInitialized={(state, node) => { follow(node); onInitialized?.(state, node); }}
+      config={helper.config as PlotProps["config"]}
+      onInitialized={(state, node) => { follow(node); helper.follow(node); onInitialized?.(state, node); }}
     />
+    {helper.popover}
   </Suspense>;
 }
 
 export type { TimeLine } from "./timeChart.js";
+export type { ChartAssistantOptions } from "./ChartAssistant.js";
 
 export type TimeChartProps = TimeFigureOptions & {
   /** "auto" follows the user's theme; "light" or "dark" fixes it (a printed report). */
@@ -99,6 +109,8 @@ export type TimeChartProps = TimeFigureOptions & {
   /** Shown instead of the chart when no line has a value. */
   empty?: ReactNode;
   className?: string;
+  /** The assistant on this chart (see `Plot`). */
+  assistant?: ChartAssistantOptions | false;
 };
 
 /** The suite's time chart: one look for every trend, in the user's theme, with quality bands. */
@@ -112,7 +124,7 @@ export function TimeChart(props: TimeChartProps) {
   return <div className={["pc-time-chart", props.className].filter(Boolean).join(" ")}>
     {props.toolbar && <div className="pc-time-chart-toolbar">{props.toolbar}</div>}
     {hasValues || !props.empty
-      ? <Plot data={figure.data} layout={figure.layout} config={figure.config} style={{ width: "100%" }} useResizeHandler />
+      ? <Plot data={figure.data} layout={figure.layout} config={figure.config} style={{ width: "100%" }} useResizeHandler assistant={props.assistant} />
       : props.empty}
   </div>;
 }

@@ -88,6 +88,14 @@ def test_without_a_model_the_assistant_says_why_and_takes_no_question(signed):
     assert signed.get("/api/assistant").json()["chats"] == []  # the refused chat is not kept
 
 
+def test_the_assistant_on_each_chart_is_a_trial_off_by_default(signed, monkeypatch):
+    assert signed.get("/api/assistant").json()["charts"] == "off"
+    monkeypatch.setenv("PLANTCRAFT_ASSISTANT_CHARTS", "Icon")
+    assert signed.get("/api/assistant").json()["charts"] == "icon"
+    monkeypatch.setenv("PLANTCRAFT_ASSISTANT_CHARTS", "sideways")
+    assert signed.get("/api/assistant").json()["charts"] == "off"
+
+
 def test_a_chat_reads_as_the_person_and_draws_charts_from_the_history(signed):
     signal = _signal(signed)
     _ready(
