@@ -47,12 +47,6 @@ export function tourSteps(examples: TourExamples = { dashboard: null, diagram: n
       body: tt("View shows the plant: dashboards to share by link, process displays, trends to look at any signal in a few clicks, and reports sent as PDF on a schedule."),
     },
     {
-      path: "/",
-      target: '.pcs-content [data-tour="widgets"]',
-      title: tt("Overview"),
-      body: tt("The dashboards, the saved trends and the public links at a glance. Customize arranges the widgets as you like."),
-    },
-    {
       path: "/dashboards",
       target: ".pcs-content .pc-grid, .pcs-content .tc-empty-list",
       title: tt("Your dashboards"),

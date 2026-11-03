@@ -45,12 +45,6 @@ export function tourSteps(): TourStep[] {
       body: tt("Alarms tells the right person when something needs action. Rules read two things: values (the plant's signals and what the apps compute, such as a loop's health) and events (what the apps report, such as an Analytics run that failed or a signal without data). A rule that holds raises an alarm."),
     },
     {
-      path: "/",
-      target: '.pcs-content [data-tour="widgets"]',
-      title: tt("Overview"),
-      body: tt("The alarms at a glance: which need action, the load of the last 24 hours and the alarms raised most often. Hover a widget's title for what it shows; Customize chooses and orders the widgets."),
-    },
-    {
       path: "/events",
       target: LIST,
       title: tt("Events"),

@@ -11,7 +11,7 @@ import { SearchPage } from "./SearchPage";
 import { HelpView } from "./SuitePages";
 import { t } from "./i18n";
 import { href, navigate, usePath } from "./nav";
-import { NAV, tourExample, tourSteps } from "./pages";
+import { NAV, tourDiagrams, tourExample, tourSteps } from "./pages";
 import type { Me } from "./types";
 import { ErrorBox, Loading } from "./ui";
 
@@ -43,9 +43,9 @@ export function App() {
     api.me().then(setMe).catch((err: Error) => setError(err.message));
   }, []);
   // The tour opens one document: found before it starts.
-  const [example, setExample] = useState<string | null | undefined>(undefined);
-  useEffect(() => { if (me) void tourExample().then(setExample); }, [me]);
-  const tour = useMemo(() => (me && example !== undefined ? () => tourSteps(example) : undefined), [me, example]);
+  const [example, setExample] = useState<{ doc: string | null; diagrams: boolean } | undefined>(undefined);
+  useEffect(() => { if (me) void Promise.all([tourExample(), tourDiagrams()]).then(([doc, diagrams]) => setExample({ doc, diagrams })); }, [me]);
+  const tour = useMemo(() => (me && example !== undefined ? () => tourSteps(example.doc, example.diagrams) : undefined), [me, example]);
   return <SuiteShell
     app="doccraft"
     appName="PlantCraft Documents"

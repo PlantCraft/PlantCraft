@@ -48,11 +48,12 @@ export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
 
 /** The pages the tour opens, when this installation has them: a block, an example model and a
  * finished simulation. */
-export type TourExamples = { block: string | null; model: string | null; run: string | null };
+export type TourExamples = { block: string | null; model: string | null; run: string | null; tracking?: boolean };
 
 export async function tourExamples(): Promise<TourExamples> {
-  const found: TourExamples = { block: null, model: null, run: null };
+  const found: TourExamples = { block: null, model: null, run: null, tracking: false };
   await Promise.all([
+    api.trackings().then((items) => { found.tracking = items.length > 0; }).catch(() => undefined),
     api.catalog().then(({ blocks }) => {
       const block = blocks.find((item) => /tank/i.test(item.block_id)) ?? blocks.find((item) => /pid/i.test(item.block_id)) ?? blocks[0];
       if (block) found.block = blockPath(block.block_id);
@@ -77,12 +78,6 @@ export function tourSteps(examples: TourExamples = { block: null, model: null, r
     {
       title: tt("Welcome to Models"),
       body: tt("Models is for studying a process: draw it from blocks with inputs and outputs, choose the solver and the time step, run it over time and compare simulations with different parameters. It never runs on the plant."),
-    },
-    {
-      path: "/",
-      target: '.pcs-content [data-tour="widgets"]',
-      title: tt("Overview"),
-      body: tt("Models at a glance: the latest simulations and the Modelica runner. Customize chooses and orders the widgets; PlantCraft's Overview can show them too."),
     },
     {
       path: "/blocks",
@@ -126,6 +121,12 @@ export function tourSteps(examples: TourExamples = { block: null, model: null, r
     target: ".pcs-content .mc-results",
     title: tt("A simulation's results"),
     body: tt("Pick variables on the left to plot them over time, and compare with another run, as in a Modelica tool."),
+  });
+  if (examples.tracking) steps.push({
+    path: "/tracking",
+    target: ".pcs-content .pc-dt",
+    title: tt("Tracking"),
+    body: tt("A model run against the plant on a schedule: model minus plant becomes a signal for every compared variable, and a limit raises an event when the model drifts off the plant."),
   });
   steps.push(assistantTourStep("/models", [
     tt("Draw a model from a description of the process"),
