@@ -19,8 +19,8 @@ suite app (manifest, store, API, interface, help, tests, image, package).
 
 ## API
 
-`GET /api/notes`, `POST /api/notes`, `GET|PUT|DELETE /api/notes/{note_id}`, `GET /api/search`
-(the suite's Ctrl+K), plus the standard `/healthz`, `/api/meta`, `/api/help`.
+`GET /api/notes`, `POST /api/notes`, `GET|PUT|DELETE /api/notes/{note_id}`, plus the standard
+`/healthz`, `/api/me`, `/api/meta`, `/api/help`.
 
 ## Sources
 

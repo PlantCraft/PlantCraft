@@ -13,6 +13,7 @@ import time
 from collections.abc import Callable
 from typing import Any
 
+from doccraft.i18n import t
 from doccraft.library import extract
 from doccraft.library.embed import Embedder
 from doccraft.library.indexer import index_revision
@@ -73,17 +74,22 @@ class LibraryService:
         by: str,
     ) -> dict[str, Any]:
         if not data:
-            raise Refused("The file is empty.")
+            raise Refused(t("The file is empty."))
         if len(data) > self.max_bytes:
-            raise Refused(f"The file is larger than {self.max_bytes // (1024 * 1024)} MB.")
+            raise Refused(t("The file is larger than {n} MB.", n=self.max_bytes // (1024 * 1024)))
         if extract.format_of(filename) is None:
             raise Refused(
-                "This kind of file is not read: send PDF, Word, Excel, PowerPoint, text, "
-                "Markdown, CSV or HTML."
+                t(
+                    "This kind of file is not read: send PDF, Word, Excel, PowerPoint, text, "
+                    "Markdown, CSV or HTML."
+                )
             )
         if self.store.counts()["bytes"] + len(data) > self.quota_bytes:
             raise Refused(
-                "The documents' disk quota is full: delete old documents or ask an administrator to raise it."
+                t(
+                    "The documents' disk quota is full: delete old documents or ask an "
+                    "administrator to raise it."
+                )
             )
         existing = self.store.by_number(fields.get("number") or "")
         if existing is None:

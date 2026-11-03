@@ -2,7 +2,8 @@
 
 ``app.toml`` at the repository root is the single source of an app's metadata
 (``docs/app-standard.md``, section 4); ``/api/meta`` serves it with the build's revision. Help
-pages are the Markdown files of ``docs/help``. Both are found in ``<APP>_APP_DIR`` (``/app`` in
+pages are the Markdown files of ``docs/help`` (a translation in ``docs/help/<language>/``, see
+``plantcraft_sdk.i18n.localized``). Both are found in ``<APP>_APP_DIR`` (``/app`` in
 the image), else in the source checkout::
 
     FILES = AppFiles("twincraft", Path(__file__).resolve().parents[2],
@@ -17,6 +18,8 @@ import tomllib
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
+
+from plantcraft_sdk.i18n import localized, t
 
 HELP_ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,60}$")
 OTHER_CATEGORY = "More"
@@ -91,8 +94,11 @@ class AppFiles:
         pages = []
         for path in sorted(folder.glob("*.md")):
             if HELP_ID.match(path.stem):
-                text = path.read_text(encoding="utf-8")
-                category = self.help_categories.get(path.stem, OTHER_CATEGORY)
+                text = localized(path).read_text(encoding="utf-8")
+                category = "/".join(
+                    t(part)
+                    for part in self.help_categories.get(path.stem, OTHER_CATEGORY).split("/")
+                )
                 pages.append(
                     {"id": path.stem, "title": _title(text, path.stem), "category": category}
                 )
@@ -110,5 +116,5 @@ class AppFiles:
         path = self.help_folder() / f"{page_id}.md"
         if not path.is_file():
             return None
-        text = path.read_text(encoding="utf-8")
+        text = localized(path).read_text(encoding="utf-8")
         return {"id": page_id, "title": _title(text, page_id), "markdown": text}

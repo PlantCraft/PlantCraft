@@ -25,6 +25,7 @@ from plantcraft_sdk.client import PlantCraftClient
 from plantcraft_sdk.compute.client import ComputeClient
 from plantcraft_sdk.files import write_json
 
+from modelcraft.i18n import t
 from modelcraft.omc import runner
 from modelcraft.omc.messages import parse, simulation_log
 
@@ -81,7 +82,11 @@ class JobAnswer:
             found.extend(simulation_log(self.steps["simulate.msg"]))
         if self.status == "timeout":
             found.append(
-                {"level": "error", "text": "The job took longer than its time limit.", "file": None}
+                {
+                    "level": "error",
+                    "text": t("The job took longer than its time limit."),
+                    "file": None,
+                }
             )
         if self.status == "cancelled":
             found.append({"level": "warning", "text": "Cancelled.", "file": None})
@@ -144,7 +149,7 @@ def _answer(folder: Path) -> JobAnswer:
     try:
         data = json.loads((folder / "result.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        data = {"status": "error", "error": "The runner gave no answer."}
+        data = {"status": "error", "error": t("The runner gave no answer.")}
     return JobAnswer(
         status=str(data.get("status", "error")),
         seconds=float(data.get("seconds") or 0.0),
@@ -172,12 +177,12 @@ class QueueExecutor:
         try:
             data = json.loads((self.jobs_dir / "runner.json").read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
-            return {"available": False, "reason": "The Modelica runner has not started."}
+            return {"available": False, "reason": t("The Modelica runner has not started.")}
         age = time.time() - float(data.get("at") or 0)
         available = age < HEARTBEAT_SECONDS
         return {
             "available": available,
-            "reason": "" if available else "The Modelica runner stopped answering.",
+            "reason": "" if available else t("The Modelica runner stopped answering."),
             "omc": data.get("omc", ""),
             "libraries": data.get("libraries", {}),
             "workers": data.get("workers"),
@@ -215,7 +220,7 @@ class QueueExecutor:
             if time.monotonic() > deadline:
                 # Never picked up, or the runner died with it: take it back if still queued.
                 shutil.rmtree(self.jobs_dir / "queue" / job_id, ignore_errors=True)
-                raise RunnerUnavailable("The Modelica runner did not answer in time.")
+                raise RunnerUnavailable(t("The Modelica runner did not answer in time."))
             time.sleep(self.poll_seconds)
         collected = self.jobs_dir / "collected" / job_id
         done.rename(collected)
@@ -252,7 +257,7 @@ class LocalExecutor:
     def state(self) -> dict[str, Any]:
         return {
             "available": bool(self.version),
-            "reason": "" if self.version else "omc is not installed on this machine.",
+            "reason": "" if self.version else t("omc is not installed on this machine."),
             "omc": self.version,
             "libraries": dict(runner.LIBRARY_VERSIONS),
             "workers": 2,
@@ -270,7 +275,7 @@ class LocalExecutor:
         job_id: str | None = None,
     ) -> JobAnswer:
         if not self.version:
-            raise RunnerUnavailable("omc is not installed on this machine.")
+            raise RunnerUnavailable(t("omc is not installed on this machine."))
         folder = self.jobs_dir / (job_id or new_job_id())
         shutil.rmtree(folder, ignore_errors=True)
         _write_job(folder, {**job, "timeout": timeout}, files, extra or {})
@@ -312,8 +317,10 @@ class SuiteExecutor:
         client = self.client()
         if client is None:
             raise RunnerUnavailable(
-                "PlantCraft Models has no app key, so it cannot hand jobs to PlantCraft's "
-                "compute workers."
+                t(
+                    "PlantCraft Models has no app key, so it cannot hand jobs to PlantCraft's "
+                    "compute workers."
+                )
             )
         return ComputeClient(client, version=SUITE_VERSION)
 
@@ -326,14 +333,19 @@ class SuiteExecutor:
         except RunnerUnavailable as exc:
             state = {"available": False, "reason": str(exc)}
         except Exception as exc:  # noqa: BLE001 - PlantCraft restarting
-            state = {"available": False, "reason": f"PlantCraft's compute did not answer: {exc}"}
+            state = {
+                "available": False,
+                "reason": t("PlantCraft's compute did not answer: {error}", error=exc),
+            }
         else:
             available = int(found.get("workers") or 0) > 0
             state = {
                 "available": available,
                 "reason": ""
                 if available
-                else "No compute worker runs Modelica: add one in PlantCraft › Settings › Compute.",
+                else t(
+                    "No compute worker runs Modelica: add one in PlantCraft › Settings › Compute."
+                ),
                 "workers": found.get("slots"),
                 "queued": int(found.get("queued") or 0),
                 "running": int(found.get("running") or 0),
@@ -376,7 +388,9 @@ class SuiteExecutor:
                 size=placement.get("size"),
             )
         except Exception as exc:  # noqa: BLE001 - not run: the caller says why
-            raise RunnerUnavailable(f"PlantCraft's compute queue did not take the job: {exc}")
+            raise RunnerUnavailable(
+                t("PlantCraft's compute queue did not take the job: {error}", error=exc)
+            )
         with self.lock:
             self.tasks[job_id] = task_id
             cancelled = job_id in self.cancelled
@@ -395,10 +409,13 @@ class SuiteExecutor:
             if cancelled:
                 return JobAnswer(status="cancelled")
             raise RunnerUnavailable(
-                "No Modelica runner answered in time: " + (answer.error or "cancelled")
+                t(
+                    "No Modelica runner answered in time: {error}",
+                    error=answer.error or "cancelled",
+                )
             )
         if answer.status != "done":
-            return JobAnswer(status="error", error=answer.error or "The compute task failed.")
+            return JobAnswer(status="error", error=answer.error or t("The compute task failed."))
         collected = self.jobs_dir / "collected" / job_id
         shutil.rmtree(collected, ignore_errors=True)
         (collected / "out").mkdir(parents=True)

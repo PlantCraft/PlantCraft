@@ -20,6 +20,7 @@ from typing import Any
 
 import numpy as np
 
+from modelcraft.i18n import t
 from modelcraft.omc import results
 
 STATISTICS = ("final", "min", "max", "mean", "integral", "overshoot", "settling", "iae")
@@ -46,11 +47,17 @@ def parameter_values(item: dict[str, Any]) -> list[float | bool]:
             step = (stop - start) / (count - 1)
             values = [round(start + index * step, 12) for index in range(count)]
     else:
-        raise StudyError(f"Unknown way to vary {item.get('name')}: {mode}")
+        raise StudyError(t("Unknown way to vary {name}: {mode}", name=item.get("name"), mode=mode))
     if not values:
-        raise StudyError(f"{item.get('name')} has no values.")
+        raise StudyError(t("{name} has no values.", name=item.get("name")))
     if len(values) > MAX_VALUES_PER_PARAMETER:
-        raise StudyError(f"{item.get('name')} has more than {MAX_VALUES_PER_PARAMETER} values.")
+        raise StudyError(
+            t(
+                "{name} has more than {n} values.",
+                name=item.get("name"),
+                n=MAX_VALUES_PER_PARAMETER,
+            )
+        )
     return values
 
 
@@ -61,11 +68,11 @@ def combinations(sweep: list[dict[str, Any]]) -> list[dict[str, float | bool]]:
         return [{}]
     names = [item["name"] for item in sweep]
     if len(set(names)) != len(names):
-        raise StudyError("A parameter is varied twice.")
+        raise StudyError(t("A parameter is varied twice."))
     lists = [parameter_values(item) for item in sweep]
     count = math.prod(len(values) for values in lists)
     if count > 100_000:
-        raise StudyError(f"The sweep would make {count:,} simulations.")
+        raise StudyError(t("The sweep would make {n} simulations.", n=f"{count:,}"))
     return [dict(zip(names, values, strict=True)) for values in itertools.product(*lists)]
 
 

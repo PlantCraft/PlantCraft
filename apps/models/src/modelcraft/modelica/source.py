@@ -11,6 +11,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from modelcraft.i18n import t
+
 CLASS_WORDS = {
     "class",
     "model",
@@ -331,7 +333,7 @@ def policy(text: str, *, allow_external: bool = False) -> list[dict]:
 
     for index, token in enumerate(items):
         if token.kind == "keyword" and token.text == "external" and not allow_external:
-            refuse(token, "External functions (C code) are turned off on this server.")
+            refuse(token, t("External functions (C code) are turned off on this server."))
             continue
         if token.kind != "ident" or (index and items[index - 1].text == "."):
             continue
@@ -340,8 +342,10 @@ def policy(text: str, *, allow_external: bool = False) -> list[dict]:
         if any(a == "Utilities" and b in FORBIDDEN_AFTER_UTILITIES for a, b in pairs):
             refuse(
                 token,
-                "Files and system commands (Modelica.Utilities.System, Files) are not available here.",
+                t(
+                    "Files and system commands (Modelica.Utilities.System, Files) are not available here."
+                ),
             )
         elif parts[-1] == "Utilities" and len(parts) > 1:
-            refuse(token, "Use the packages of Modelica.Utilities by name (Strings, Streams).")
+            refuse(token, t("Use the packages of Modelica.Utilities by name (Strings, Streams)."))
     return problems

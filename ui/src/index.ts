@@ -27,7 +27,7 @@ export { createNav, type AppNav } from "./nav.js";
 export { LOGOUT_URL, RENEW_EVERY_MS, RENEW_URL, renewToken, signInAgain, signOut } from "./session.js";
 export { fillText, saveFile } from "./files.js";
 export { formatAgo, formatDate, formatDuration, formatNumber, formatReading, formatShare } from "./format.js";
-export { translationsOn, uiLocale } from "./i18n.js";
+export { chosenLanguage, createI18n, LANGUAGE_COOKIE, LANGUAGE_STORAGE_KEY, serverTranslationsOn, setLanguage, SUITE_LANGUAGES, supportedLanguage, translationsOn, TRANSLATIONS_COOKIE, uiLocale, type Catalog, type I18n, type Language } from "./i18n.js";
 export { cityName, cityZones, configureTimeZone, deviceTimeZone, displayStamp, displayTimeZone, fileStamp, fileTime, fileTimeHeader, fixedOffsetZones, fromWallClock, isFixedOffset, isUtc, offsetLabel, plantTimeZone, resolveTimeZone, setTimeZoneMode, timeZoneLabel, timeZoneMode, wallClock, zonedFigure, zoneOffset, zoneSuffix, LOCAL_ZONE, TIME_ZONE_COOKIE, TIME_ZONE_MODE_KEY, type TimeZoneMode } from "./timeZone.js";
 export { TimeZoneSelect, timeZoneGroups, timeZoneValue, type TimeZoneGroup, type TimeZoneOption } from "./TimeZoneSelect.js";
 export * from "./brandTheme.js";

@@ -150,6 +150,21 @@ def test_a_slow_start_and_a_crash_loop(world):
     assert len(posted) == 1 and "restarted 3 times" in posted[0] and "dashcraft" in posted[0]
 
 
+def test_one_restart_tells_nobody_but_counts_in_the_uptime(world):
+    world.ticks(1, processcraft="healthy", histcraft="healthy", dashcraft="healthy")
+    posted = []
+    for restarts in (0, 1, 1, 1):
+        world.services(processcraft="healthy", histcraft="healthy", dashcraft="healthy")
+        world.desk.files["metrics.json"]["services"][2]["restarts"] = restarts
+        world.now += timedelta(seconds=30)
+        world.desk.files["metrics.json"]["at"] = world.now.isoformat()
+        posted += world.watch.tick()
+    assert posted == [] and not world.watch.store.open_incidents()
+    row = next(item for item in world.watch.uptime()["services"] if item["service"] == "dashcraft")
+    assert row["outages"]["24h"] == 1 and row["down_seconds"]["24h"] == 30
+    assert row["uptime"]["24h"] < 100
+
+
 def test_operations_hold_the_services_still(world):
     world.desk.running = {"action": "backup", "started_at": world.now.isoformat()}
     assert world.ticks(5, processcraft="healthy", histcraft="exited", dashcraft="healthy") == []

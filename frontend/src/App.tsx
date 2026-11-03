@@ -2,7 +2,7 @@
  * person's day, at "/", and PlantCraft, the suite's setup and administration, at "/admin". */
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Activity, AlertTriangle, ArrowRight, Building2, CalendarDays, ChevronDown, ClipboardCheck, CloudDownload, DatabaseBackup, Gauge, KeyRound, Languages, LayoutDashboard, LifeBuoy, ListTodo, LoaderCircle, LockKeyhole, Network, Package, ScrollText, Settings2, ShieldCheck, SlidersHorizontal, StickyNote, Sun, UserRound, Users, XCircle } from "lucide-react";
-import { announceMessagesChanged, AppFrames, appPrefix, claimPanel, isFramed, otherPanelOpen, PythonMark, sanitizeIcon, SuiteShell, toApp, toFrame, FRAME_ATTR, FRAME_OFF, type FrameState, type ShellNavItem, type SuiteApp } from "@plantcraft/ui";
+import { announceMessagesChanged, AppFrames, appPrefix, claimPanel, isFramed, otherPanelOpen, PythonMark, sanitizeIcon, setTheme, SuiteShell, THEME_KEY, toApp, toFrame, FRAME_ATTR, FRAME_OFF, type FrameState, type ShellNavItem, type SuiteApp } from "@plantcraft/ui";
 import { api, requestJson, UNAUTHORIZED_EVENT } from "./api";
 import { BrandMark } from "./Brand";
 import { DemoUsers, HelpPage, NoAccess, NotFound } from "./CorePages";
@@ -13,6 +13,7 @@ import type { DemoVisitInfo, PublicDemoInfo } from "./demoApi";
 import { directoryApi, ssoStartUrl, type SignInMethods } from "./directoryApi";
 import { EMBEDDED, isMessagesPath, navigate, openOutside } from "./nav";
 import { currentAssetPath, sourcesUrl } from "./assetLinks";
+import { operationsTour } from "./OperationsTour";
 import { platformTour } from "./PlatformTour";
 import SuiteHealthBanner from "./SuiteHealthBanner";
 import { LANGUAGES, language, setLanguage, t, type Language } from "./i18n";
@@ -312,6 +313,9 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   useEffect(() => { if (username) void syncPreferences(); }, [username]);
   const readOnly = !access.can_edit;
   const tour = useMemo(() => (data ? () => platformTour(data, adminView, readOnly, notebooksOn) : undefined), [data, adminView, readOnly, notebooksOn]);
+  const sponsorOnly = !operate && (access.sponsor_of ?? []).length > 0;
+  // Operations has its own short tour (2026-11-03), remembered apart from the platform's.
+  const opsTour = useMemo(() => () => operationsTour(adminView, sponsorOnly), [adminView, sponsorOnly]);
   if (loading && !data) return <LoadingScreen />;
   if (!data) return <ErrorState message={error} retry={load} />;
   const me = data.users.find((item) => item.username === username) ?? null;
@@ -319,8 +323,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const desk = isDeskPath(path);
   // Operations is an app of its own for the people who may open it; for everyone else /health
   // stays PlantCraft's read-only "System health".
-  // A sponsor at the plant who is not in Operations opens its Requests and Partners only.
-  const sponsorOnly = !operate && (access.sponsor_of ?? []).length > 0;
+  // A sponsor at the plant who is not in Operations opens its Requests and Partners only (sponsorOnly).
   const operating = operate ? isOperationsPath(path) : sponsorOnly && SPONSOR_PATHS.includes(path);
   // Desk: the person's day. PlantCraft: the plant's assets for everyone; the rest is administration.
   // Messages and the Assistant are not Desk pages any more: their buttons above the
@@ -371,7 +374,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
   const apps: SuiteApp[] = [
     { id: "desk", name: "Desk", url: "/" },
     { id: "processcraft", name: "PlantCraft", url: "/" },
-    ...(operate || sponsorOnly ? [{ id: "operations", name: "Operations", url: sponsorOnly ? "/ops/partners" : "/health" }] : []),
+    ...(operate || sponsorOnly ? [{ id: "operations", name: t("Operations"), url: sponsorOnly ? "/ops/partners" : "/health" }] : []),
     ...data.apps.filter((app) => app.access).map((app) => ({ id: app.id, name: app.name, url: app.url, version: app.version })),
   ];
   // Only the apps in frames have an address prefix: Desk, PlantCraft and Operations are pages of
@@ -403,7 +406,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
       localApps={LOCAL}
       assistant={framed ? shown?.assistant ?? false : path !== "/assistant" && !path.startsWith("/assistant/")}
       assistantControl={framed ? assistantControl : undefined}
-      tourId={framed ? undefined : "processcraft"}
+      tourId={framed ? undefined : operating ? "operations" : "processcraft"}
       subtitle={framed ? shown?.subtitle : desk ? t("Your day") : operating ? t("Status and logs") : t("Platform")}
       nav={framed ? frameNav : nav}
       path={framed ? shown?.path ?? "/" : path}
@@ -420,7 +423,7 @@ function Shell({ username, canSwitch, onLogout, path }: { username: string; canS
       onOpenPreferences={() => navigate("/preferences")}
       apps={apps}
       inboxRefresh={inboxRefresh}
-      tour={framed ? undefined : tour}
+      tour={framed ? undefined : operating ? opsTour : tour}
       onTour={framed ? (shown?.tour ? () => send({ type: "pc-frame:tour" }) : undefined) : undefined}
     >
       {!framed && admin && <SuiteHealthBanner />}
@@ -493,6 +496,16 @@ function FramedPlatform() {
   return null;
 }
 
+/** A public demo opens in the light theme, the easiest to read at first (owner, 2026-11-03); a
+ * visitor who picked a theme in the menu under their name keeps it. */
+function lightForVisitors() {
+  try {
+    if (window.localStorage.getItem(THEME_KEY) === null) setTheme("light");
+  } catch {
+    // Storage blocked: the system's theme stays.
+  }
+}
+
 function App() {
   if (FRAMED) return <FramedPlatform />;
   return <PlatformApp />;
@@ -503,7 +516,7 @@ function PlatformApp() {
   const [path, setPath] = useState(currentPath);
   const [logoutError, setLogoutError] = useState("");
   const loadSession = useCallback(() => {
-    api.session().then((result) => setAuth(authFrom(result))).catch(() => setAuth(SIGNED_OUT));
+    api.session().then((result) => { if (result.public_demo) lightForVisitors(); setAuth(authFrom(result)); }).catch(() => setAuth(SIGNED_OUT));
   }, []);
   useEffect(loadSession, [loadSession]);
   useEffect(() => {

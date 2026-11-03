@@ -12,6 +12,8 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
   The image no longer carries tesseract, pdfplumber or pypdfium2. An older data folder opens
   unchanged; its diagram tables are no longer written.
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **P&IDs saved as DEXPI (XML) go straight into the plant map.** Send the `.xml` a P&ID tool

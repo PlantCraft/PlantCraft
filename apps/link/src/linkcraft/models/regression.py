@@ -22,6 +22,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from linkcraft.i18n import t
+
 METHODS = ("ols", "ridge", "pls")
 MIN_SAMPLES = 8
 
@@ -149,7 +151,13 @@ def fit_regression(
     rows, target = rows[keep], target[keep]
     needed = max(MIN_SAMPLES, 2 * len(inputs) + 2)
     if len(target) < needed:
-        raise ValueError(f"{len(target)} samples of the target with every input, {needed} needed")
+        raise ValueError(
+            t(
+                "{found} samples of the target with every input, {needed} needed",
+                found=len(target),
+                needed=needed,
+            )
+        )
     mean, std = rows.mean(axis=0), rows.std(axis=0, ddof=1)
     warnings = [
         f"{name} did not move in the period: it cannot explain the target."

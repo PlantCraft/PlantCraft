@@ -30,6 +30,8 @@ from typing import Any
 
 import pandas as pd
 
+from histcraft.i18n import t
+
 FORMAT = "processcraft-data-package"
 VERSION = 2
 ROLES = ("pv", "sp", "op", "mode", "secondary")
@@ -205,6 +207,8 @@ Open it in a PlantCraft of your own
 3. Link picks the loops up at its next sync and analyses them.
 """
 
+ANONYMIZED = "Tags and assets are aliases (S001, A001); the key stays with whoever made it.\n"
+
 
 def build(
     *,
@@ -255,19 +259,25 @@ def build(
     words = {"mean": "time-weighted mean", "first": "first value", "last": "last value"}
     words |= {"min": "lowest value", "max": "highest value"}
     aggregation = (
-        f"{words.get(aggregate, aggregate)} over each {step_seconds} s"
+        t(
+            "{aggregate} over each {seconds} s",
+            aggregate=t(words.get(aggregate, aggregate)),
+            seconds=step_seconds,
+        )
         if step_seconds
-        else "as recorded"
+        else t("as recorded")
     )
-    files["README.txt"] = README.format(
-        created=created,
-        start=start.isoformat(),
-        end=end.isoformat(),
-        aggregation=aggregation,
-        anonymized="Tags and assets are aliases (S001, A001); the key stays with whoever made it.\n"
-        if anonymize
-        else "",
-    ).encode()
+    files["README.txt"] = (
+        t(README)
+        .format(
+            created=created,
+            start=start.isoformat(),
+            end=end.isoformat(),
+            aggregation=aggregation,
+            anonymized=t(ANONYMIZED) if anonymize else "",
+        )
+        .encode()
+    )
     not_read = {aliases.signal(key) or key: value for key, value in (failed or {}).items()}
     if not anonymize:
         not_read.update(selection.missing)

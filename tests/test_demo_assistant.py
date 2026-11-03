@@ -5,6 +5,7 @@ a few questions, read-only, and what each answer spent is counted."""
 from __future__ import annotations
 
 import json
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -410,7 +411,11 @@ def test_a_service_without_credit_reads_as_a_pause_not_an_error(demo, monkeypatc
     from plantcraft.specialists.model import ModelServiceError
 
     def broke(self, system, messages, tool=None, tools=None):
-        raise ModelServiceError("The model service is limiting this key (429): no credit.", 429)
+        raise ModelServiceError(
+            "The model service is limiting this key (429): no credit.",
+            429,
+            '{"error": {"code": "insufficient_quota"}}',
+        )
 
     app = demo(PLANTCRAFT_PUBLIC_DEMO_LLM="on")
     visitor = _visit(app)
@@ -435,3 +440,140 @@ def test_the_pause_ends_by_itself():
     limits = DemoLimits()
     limits.pause(600, now=1000.0)
     assert limits.paused(now=1599.0) and not limits.paused(now=1601.0)
+
+
+def test_a_rate_limit_waits_and_asks_again_but_no_credit_does_not(monkeypatch):
+    """A 429 "too many calls" passes: the client waits what the service names and asks again; a
+    429 with no quota left, or a refused key, fails at once (2026-11-03)."""
+
+    import io
+    import urllib.error
+
+    from plantcraft.specialists import model as module
+
+    sent: list[int] = []
+    answers = [
+        urllib.error.HTTPError(
+            "u", 429, "limit", {"retry-after-ms": "10"}, io.BytesIO(b'{"error": "rate_limit"}')
+        ),
+        urllib.error.HTTPError("u", 503, "busy", {}, io.BytesIO(b"busy")),
+    ]
+
+    class Done:
+        headers = {"content-type": "application/json"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def read(self):
+            return json.dumps({"content": [{"type": "text", "text": "ok"}]}).encode()
+
+    def opened(request, timeout, proxy=""):
+        sent.append(1)
+        if answers:
+            raise answers.pop(0)
+        return Done()
+
+    monkeypatch.setattr(module, "_open", opened)
+    monkeypatch.setattr(module.time, "sleep", lambda _seconds: None)
+    client = module.ChatModel("key", provider="anthropic", model="m")
+    assert client.answer("system", [{"role": "user", "content": "hi"}]) == "ok"
+    assert len(sent) == 3
+
+    sent.clear()
+    answers[:] = [
+        urllib.error.HTTPError(
+            "u", 429, "quota", {}, io.BytesIO(b'{"error": {"code": "insufficient_quota"}}')
+        )
+    ]
+    with pytest.raises(module.ModelServiceError) as failed:
+        client.answer("system", [{"role": "user", "content": "hi"}])
+    assert failed.value.kind == "no_credit" and len(sent) == 1
+
+
+def test_a_busy_minute_pauses_visits_for_seconds_not_minutes(demo, monkeypatch):
+    from plantcraft.assistant_chat.demo import PAUSING, SHORT_PAUSE_SECONDS
+    from plantcraft.specialists.model import ModelServiceError
+
+    def busy(self, system, messages, tool=None, tools=None):
+        raise ModelServiceError("limited", 429, '{"error": {"code": "rate_limit_exceeded"}}')
+
+    app = demo(PLANTCRAFT_PUBLIC_DEMO_LLM="on")
+    monkeypatch.setattr(VisitModel, "answer", busy)
+    assert _ask(_visit(app)).status_code == 201
+    assert PAUSING["rate_limited"] == SHORT_PAUSE_SECONDS <= 30
+    limits = app.state.runtime.assistant.demo_limits
+    assert limits.paused() and not limits.paused(now=time.monotonic() + SHORT_PAUSE_SECONDS + 1)
+    # The demo's stats say why answers failed, never the service's text.
+    stats = (
+        TestClient(app)
+        .get("/api/demo/stats", headers={"Authorization": "Bearer stats-key"})
+        .json()["assistant"]
+    )
+    assert stats["failed"] == 1 and stats["failures"] == {"rate_limited": 1}
+
+
+def test_a_visits_answer_has_its_seconds_and_hides_the_models_name(demo):
+    app = demo(PLANTCRAFT_PUBLIC_DEMO_LLM="on")
+    visitor = _visit(app)
+    started = _ask(visitor)
+    chat = visitor.get(f"/api/assistant/chats/{started.json()['chat']['chat_id']}").json()
+    answer = chat["messages"][-1]
+    assert answer["state"] == "done" and answer["meta"]["model"] == ""
+    stats = (
+        TestClient(app)
+        .get("/api/demo/stats", headers={"Authorization": "Bearer stats-key"})
+        .json()["assistant"]
+    )
+    assert stats["answered"] == 1 and stats["answer_seconds"]["max"] >= 0
+
+
+def test_a_model_past_its_seconds_answers_with_what_it_read(monkeypatch):
+    from plantcraft.specialists import model as module
+
+    calls: list[bool] = []
+
+    def called(self, system, conversation, tools):
+        calls.append(tools is not None)
+        if tools is None:
+            return {"content": [{"type": "text", "text": "with what I read"}]}
+        return {
+            "stop_reason": "tool_use",
+            "content": [{"type": "tool_use", "id": f"t{len(calls)}", "name": "x", "input": {}}],
+        }
+
+    monkeypatch.setattr(module.ChatModel, "_call", called)
+    client = module.ChatModel("key", provider="anthropic", model="m")
+    client.deadline = 0
+    text = client.answer("s", [{"role": "user", "content": "hi"}], lambda *_: {}, [{"name": "x"}])
+    # One round of reads, then the answer: no more rounds once the time is up.
+    assert text == "with what I read" and calls == [True, False]
+
+
+def test_a_chart_ahead_of_now_ends_now_and_names_its_signals():
+    from plantcraft.assistant_chat.engine import ChatEngine, signal_label
+
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    # "The last 4 hours" written on the wrong clock: 3 hours ahead of now.
+    ahead = ChatEngine._chart_arguments(
+        {
+            "signal_ids": ["plantcraft:CPM.Loops.FIC-1003.PV"],
+            "start": (now - timedelta(hours=1)).isoformat(),
+            "end": (now + timedelta(hours=3)).isoformat(),
+        }
+    )
+    start = datetime.fromisoformat(ahead["start"].replace("Z", "+00:00"))
+    end = datetime.fromisoformat(ahead["end"].replace("Z", "+00:00"))
+    assert end - start == timedelta(hours=4) and abs((end - now).total_seconds()) < 5
+    # A window in the past stays as asked.
+    past = ChatEngine._chart_arguments(
+        {"signal_ids": ["a"], "start": "2026-01-01T00:00:00Z", "end": "2026-01-01T04:00:00Z"}
+    )
+    assert (past["start"], past["end"]) == ("2026-01-01T00:00:00Z", "2026-01-01T04:00:00Z")
+    found = {"name": "PV", "description": "Recycle flow"}
+    assert signal_label("plantcraft:CPM.Loops.FIC-1003.PV", found) == "FIC-1003.PV · Recycle flow"
+    assert signal_label("scenario:FIC-101.PV", {}) == "FIC-101.PV"
+    assert signal_label("pi:TI_200", {"name": "Reactor inlet"}) == "TI_200 · Reactor inlet"

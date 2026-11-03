@@ -180,7 +180,7 @@ def queue_item(job: dict[str, Any], root: str) -> dict[str, Any]:
     }
     if job["status"] in {"queued", "scheduled", "waiting_data"}:
         item["cancel"] = {
-            "label": "Cancel",
+            "label": t("Cancel"),
             "method": "POST",
             "href": f"{root.rstrip('/')}/api/executions/{job['job_id']}/cancel",
         }

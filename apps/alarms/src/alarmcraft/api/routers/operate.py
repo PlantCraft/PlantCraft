@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from alarmcraft.alarms.model import PRIORITIES
 from alarmcraft.alarms.records import config_of, owner_of
 from alarmcraft.api.deps import CurrentUser, EditorUser, RuntimeDep, alarm_or_404
-from alarmcraft.api.routers.alarms import mark_mine, summary, window_of
+from alarmcraft.api.routers.alarms import mark_mine, rule_names, summary, window_of
 from alarmcraft.api.runtime import Runtime
 from alarmcraft.api.scope import of_seen, seen
 from alarmcraft.engine.performance import performance
@@ -75,7 +75,8 @@ def summary_of(
     stored = [alarm for alarm in seen(scope, every) if not rule or alarm.get("rule_id") == rule]
     if dashboards:
         stored = [alarm for alarm in stored if config_of(alarm).get("dashboards", True)]
-    rows = mark_mine(rt, [summary(rt, alarm) for alarm in stored], user.username)
+    names = rule_names(rt)
+    rows = mark_mine(rt, [summary(rt, alarm, names) for alarm in stored], user.username)
     counts = {status: 0 for status in STATUS_ORDER}
     for row in rows:
         counts[row["status"]] += 1

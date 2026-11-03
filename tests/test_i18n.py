@@ -95,3 +95,24 @@ def test_translations_off_answers_in_english(monkeypatch):
         assert i18n.current_language() == "en"
     finally:
         i18n.reset_language(token)
+
+
+def test_pages_learn_whether_translations_are_on(client, monkeypatch):
+    # Every page of the suite (apps included) offers other languages only from this cookie.
+    assert client.get("/healthz").cookies.get(i18n.TRANSLATIONS_COOKIE) == "1"
+    assert i18n.TRANSLATIONS_COOKIE not in client.get("/healthz").headers.get("set-cookie", "")
+    monkeypatch.setenv("PLANTCRAFT_TRANSLATIONS", "0")
+    assert client.get("/healthz").cookies.get(i18n.TRANSLATIONS_COOKIE) == "0"
+
+
+def test_sdk_text_is_translated_through_the_platform(monkeypatch):
+    from plantcraft_sdk import i18n as sdk_i18n
+
+    monkeypatch.setattr(sdk_i18n, "catalog", lambda language: {"Only in the SDK": "Só no SDK"})
+    i18n.catalog.cache_clear()
+    token = i18n.set_language("pt-BR")
+    try:
+        assert t("Only in the SDK") == "Só no SDK"
+    finally:
+        i18n.reset_language(token)
+        i18n.catalog.cache_clear()

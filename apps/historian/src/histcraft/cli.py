@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import inspect
 import json
 import logging
 import os
@@ -66,6 +67,15 @@ def main(argv: list[str] | None = None) -> int:
             # Each process builds its app from the environment and holds its part of the read
             # budget (``Settings.read_values``).
             os.environ["HISTCRAFT_SERVER_PROCESSES"] = str(workers)
+        extra: dict = {}
+        if (
+            workers > 1
+            and "timeout_worker_healthcheck" in inspect.signature(uvicorn.run).parameters
+        ):
+            # A worker turning a long read into JSON (240 h of 10 signals, ~29 MB) holds the GIL
+            # past uvicorn's 5 s ping, and the supervisor killed it mid-answer: a 502 for the
+            # reader (pc-carga, 2026-11-01). Only a worker silent for a minute is stuck.
+            extra["timeout_worker_healthcheck"] = 60
         uvicorn.run(
             "histcraft.cli:app_factory" if workers > 1 else _app(),
             factory=workers > 1,
@@ -75,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
             proxy_headers=True,
             log_config=None,
             access_log=False,
+            **extra,
         )
         return 0
 

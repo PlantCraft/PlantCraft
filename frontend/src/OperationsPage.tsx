@@ -136,7 +136,8 @@ export function HealthPage() {
     {data && <section className="apps-status" aria-label={t("State")}>
       <span className={`apps-chip ${data.installer.online ? "apps-chip-on" : "apps-chip-warn"}`}>{data.installer.online ? t("Installer running") : t("Installer not running: requests wait until it starts")}</span>
       <RunningChip data={data} />
-      {data.free_bytes != null && <span className="apps-chip">{t("Free disk: {size}", { size: size(data.free_bytes) })}</span>}
+      {/* The installer's figure is from its last backup index; the watch's own reading below is live (pc-carga, 2026-11-01). */}
+      {data.free_bytes != null && !health?.metrics?.disk && <span className="apps-chip">{t("Free disk: {size}", { size: size(data.free_bytes) })}</span>}
     </section>}
     {health && <HealthPanel health={health} canAct={canAct} />}
     {health?.watching && <UptimePanel admin={canAct} services={(health.metrics?.services ?? []).map((item) => item.service)} />}

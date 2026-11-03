@@ -65,8 +65,8 @@ Revisado em: 2026-10-23.
 | Plotly.js (`plotly.js-cartesian-dist-min`) + `react-plotly.js` | 3.7 / 4.1 | MIT | Todos os gráficos; o `@plantcraft/ui` dá o visual comum (`timeChart`) |
 | React Flow (`@xyflow/react`) | 12.12 | MIT | Editor de diagramas de blocos (`BlockEditor`, Analytics) |
 | CodeMirror | 6 | MIT | Editores de código Modelica e Python (Models) |
-| FullCalendar (`@fullcalendar/*`) | 6.1 | MIT | Calendário da Desk: ano, mês, semana, dia e lista; eventos criados e movidos arrastando |
-| Tiptap (`@tiptap/*`, sobre ProseMirror) | 3.31 | MIT | Notas da Desk: texto formatado, checklists e menções com `#` (só as extensões gratuitas) |
+| FullCalendar (`@fullcalendar/*`) | 6.1 | MIT | Agenda do Desk: ano, mês, semana, dia e lista; eventos criados e movidos arrastando |
+| Tiptap (`@tiptap/*`, sobre ProseMirror) | 3.31 | MIT | Notas do Desk: texto formatado, checklists e menções com `#` (só as extensões gratuitas) |
 | Lucide (`lucide-react`) | 0.468 | ISC | Ícones |
 | Inter e JetBrains Mono (no `@plantcraft/ui`) | Fontsource 5.3 | OFL-1.1 | Fontes, embutidas (sem serviço de fontes) |
 
@@ -108,7 +108,7 @@ o gatilho da nota) ou **manter** (a biblioteca traria mais do que tira).
 | Nosso | Onde | Alternativa | Veredito |
 |---|---|---|---|
 | Backup do Historian (`pg_dump`) | `plantcraft/apps/operations.py` | pgBackRest (MIT) | **Mais tarde**: quando o arquivo passar de uns 100 GB (já planejado) |
-| Partições do arquivo do Historian | `histcraft/archive/partitions.py` | pg_partman (PostgreSQL) | **Mais tarde**: se a manutenção das partições crescer; compressão e rollups ficam nossos |
+| Partições do arquivo do Historian | `histcraft/archive/partitions.py` | pg_partman (PostgreSQL) | **Mais tarde**: se a manutenção das partições crescer; compressão e agregações ficam nossas |
 | Tabela de dados (ordenar, buscar, filtros, páginas) | `ui/src/DataTable.tsx` | TanStack Table (MIT) | **Mais tarde**: quando uma lista ficar longa demais para o navegador; aí a solução é paginar no servidor, o que a biblioteca não faz |
 | Traduções (`t()`, catálogos JSON) | `plantcraft/i18n`, `ui/src/i18n.ts` | i18next ou FormatJS (MIT) | **Mais tarde**: quando a interface precisar de um terceiro idioma ou plurais por idioma |
 | Stores SQLite e migrações para frente | `sdk/python/plantcraft_sdk/server/store.py` (~170 linhas) | SQLAlchemy Core + Alembic (MIT) | **Mais tarde**: se algum app precisar rodar em outro banco |
@@ -118,7 +118,7 @@ o gatilho da nota) ou **manter** (a biblioteca traria mais do que tira).
 | Navegação entre páginas | `ui/src/nav.ts` (~60 linhas) | React Router (MIT) | **Manter**: cada app tem poucas páginas |
 | Motor de blocos | `sdk/python/plantcraft_sdk/blocks` | pipefunc, PathSim (MIT) | **Manter**: decidido em 2026-10-22, as bibliotecas eram novas demais |
 | Agendamentos, fila de jobs e workers | `linkcraft/engine` | APScheduler, Procrastinate (MIT) | **Manter**: seriam duas bibliotecas (e PostgreSQL para o Procrastinate) para fazer o que o SQLite do app já faz |
-| Compressão, chunks e rollups do Historian | `histcraft/archive` | TimescaleDB | **Manter**: swinging door é o método dos historiadores de planta, e a compressão do TimescaleDB é Timescale License, não código aberto |
+| Compressão, chunks e agregações do Historian | `histcraft/archive` | TimescaleDB | **Manter**: swinging door é o método dos historiadores de planta, e a compressão do TimescaleDB é Timescale License, não código aberto |
 | Cliente de modelo de linguagem | `plantcraft/specialists/model.py` | SDKs oficiais, LiteLLM (MIT) | **Manter**: HTTP puro fala os dois formatos sem dependência; desligado por padrão |
 | SBOM da imagem | `sdk/python/plantcraft_sdk/sbom.py` | Syft (Apache-2.0) | **Manter**: o Syft já é usado quando instalado; o nosso é o plano B offline |
 | Cliente PI Web API | `histcraft/sources/pi_web_api.py` | Nenhuma madura e aberta | **Manter** |

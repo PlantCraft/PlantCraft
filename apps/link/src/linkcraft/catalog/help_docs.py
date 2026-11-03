@@ -15,6 +15,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from plantcraft_sdk.i18n import localized
+
 from linkcraft.catalog import signal_checks
 from linkcraft.catalog.help import HELP_DIR, format_default, method_help
 from linkcraft.catalog.registry import GROUPS, METHOD_GROUP, METHOD_SPECS
@@ -39,7 +41,7 @@ LOOP_TYPES_TITLE = "Analysis defaults per loop type"
 
 
 def _title(path: Path) -> str:
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in localized(path).read_text(encoding="utf-8").splitlines():
         if line.startswith("# "):
             return line[2:].strip()
     return path.stem
@@ -101,7 +103,7 @@ def docs() -> list[dict[str, str]]:
 def guide(name: str) -> str | None:
     if not any(name == known for known, _ in GUIDES) or name == "loop-types":
         return None
-    return (GUIDES_DIR / f"{name}.md").read_text(encoding="utf-8")
+    return localized(GUIDES_DIR / f"{name}.md").read_text(encoding="utf-8")
 
 
 def loop_method_markdown(method_id: str, configured: dict[str, Any] | None = None) -> str | None:

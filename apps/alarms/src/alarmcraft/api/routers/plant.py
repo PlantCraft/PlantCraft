@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query
 from plantcraft_sdk.server.picker import signal_choices
 
 from alarmcraft.api.deps import CurrentUser, EditorView, RuntimeDep, guarded
-from alarmcraft.api.routers.alarms import summary
+from alarmcraft.api.routers.alarms import rule_names, summary
 from alarmcraft.api.scope import seen
 from alarmcraft.i18n import t
 
@@ -127,8 +127,9 @@ def asset_alarms(
         if exc.status_code == 404:
             raise HTTPException(404, t("Asset not found.")) from exc
         raise
+    names = rule_names(rt)
     alarms = [
-        summary(rt, alarm)
+        summary(rt, alarm, names)
         for alarm in seen(rt.asset_scope(user), rt.alarms.list())
         if alarm.get("asset_id") == asset
     ]

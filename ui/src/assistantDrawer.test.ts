@@ -20,7 +20,7 @@ function server(available = true, allowed = true, canSetUp = false) {
     const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
     if (url.endsWith("/api/assistant")) return json({ available, allowed, can_set_up: canSetUp, reason: available ? "" : "No language model is set up yet.", chats: [{ chat_id: 7, title: "Which loops are worst?", place: "Link › Loops", updated_at: "2026-10-24T10:00:00Z" }] });
     if (url.endsWith("/api/assistant/chats") && method === "POST") return json({ chat: { chat_id: 7 }, messages: [{ message_id: 1, role: "user", text: "Why?", state: "done", steps: [], charts: [], meta: {} }, answer] }, 201);
-    if (url.endsWith("/api/assistant/chats/7") && method === "GET") { polls += 1; return json({ messages: [{ ...answer, state: "done", text: "Because the **valve** stuck.", steps: [{ tool: "get_asset", title: "Asset", summary: "asset_id: FIC-101", state: "ok" }], meta: { model: "Local · m" } }] }); }
+    if (/\/api\/assistant\/chats\/7(\?after=\d+)?$/.test(url) && method === "GET") { polls += 1; return json({ messages: [{ ...answer, state: "done", text: "Because the **valve** stuck.", steps: [{ tool: "get_asset", title: "Asset", summary: "asset_id: FIC-101", state: "ok" }], meta: { model: "Local · m" } }] }); }
     if (url.endsWith("/keep")) return json({ chat_id: 7, kept: true });
     if (method === "DELETE") return json({ deleted: 7 });
     return json({ detail: "no" }, 404);
@@ -73,6 +73,8 @@ describe("the assistant's side panel", () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(1600); });
     expect(host.querySelector(".pc-drawer-markdown")?.innerHTML).toContain("<strong>valve</strong>");
     expect(host.textContent).toContain("1 reads of the plant");
+    // While the answer is written the panel asks only for what comes after the question.
+    expect(calls.some((item) => item.method === "GET" && item.url.endsWith("/api/assistant/chats/7?after=1"))).toBe(true);
     // Every chat is kept (round 8): Full page opens it in Desk's Assistant.
     expect(host.querySelector(".pc-drawer-keep[href]")?.getAttribute("href")).toBe("/assistant/7");
     expect(calls.some((item) => item.url.endsWith("/keep"))).toBe(false);

@@ -196,9 +196,10 @@ class Stats(threading.Thread):
 def plant_signals(suite: Suite, count: int) -> list[str]:
     """The plant's first ``count`` number signals (Analytics' loops' and checks' kind)."""
 
-    # One page (the contract's largest) holds far more than a round reads. The plant's own
+    # The whole list in one answer (no ``limit``): at plant scale a page in id order can hold
+    # only apps' and the suite's own signals (pc-carga, 2026-11-01, read 0). The plant's own
     # signals only: not those apps write (app-*) nor the suite's health (system:).
-    answer, _, _ = suite.call("GET", "/api/v1/signals?limit=5000")
+    answer, _, _ = suite.call("GET", "/api/v1/signals", timeout=300)
     found = [
         item.get("id")
         for item in answer or []

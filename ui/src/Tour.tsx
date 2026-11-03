@@ -76,11 +76,41 @@ const FIND_FOR_MS = 3000;
 /** How long a step's ``openPanel`` waits for its button to be drawn. */
 const WAIT_FOR_BUTTON_MS = 8000;
 
+/** Below this width of the screen the card sits at its foot, across it. */
+const PHONE_WIDTH = 640;
+
+/** The part of the page the person sees, in the page's own coordinates (what `position: fixed`
+ * uses). On a phone a page wider than the screen widens that frame past the screen: the card
+ * follows what shows, so its buttons never end up out of reach under the dimmed page. */
+/** `frame`: the height of that frame (`innerHeight`), which a wide page makes taller too. */
+type Screen = { left: number; top: number; width: number; height: number; frame: number };
+
+function screenNow(): Screen {
+  const frame = window.innerHeight;
+  const view = window.visualViewport;
+  if (!view) return { left: 0, top: 0, width: window.innerWidth, height: frame, frame };
+  return { left: view.offsetLeft, top: view.offsetTop, width: view.width, height: view.height, frame };
+}
+
+function sameScreen(a: Screen, b: Screen): boolean {
+  return a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height && a.frame === b.frame;
+}
+
+/** On a phone, the card across the foot of what shows. */
+export function phoneCardPlace(screen: Screen): CSSProperties {
+  return {
+    left: screen.left + 16,
+    width: Math.max(screen.width - 32, 200),
+    bottom: Math.max(screen.frame - (screen.top + screen.height), 0) + 16,
+    maxHeight: Math.max(screen.height - 32, 160),
+  };
+}
+
 /** Where the card goes: beside the target if there is room, else below or above it, else centred. */
 function cardPlace(box: Box | null, card: { width: number; height: number }): CSSProperties {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  if (!box || vw < 640) return {};
+  if (!box || vw < PHONE_WIDTH) return {};
   const fitsY = (top: number) => Math.min(Math.max(top, 16), vh - card.height - 16);
   const fitsX = (left: number) => Math.min(Math.max(left, 16), vw - card.width - 16);
   if (box.left + box.width + GAP + card.width + 16 <= vw) return { top: fitsY(box.top), left: box.left + box.width + GAP };
@@ -120,6 +150,27 @@ export function GuidedTour({ app, steps, path, navigate, onClose }: GuidedTourPr
   const nextRef = useRef<HTMLButtonElement>(null);
   const step = steps[Math.min(index, steps.length - 1)];
   const last = index >= steps.length - 1;
+  const [screen, setScreen] = useState<Screen>(screenNow);
+  useEffect(() => {
+    const follow = () => setScreen((now) => {
+      const found = screenNow();
+      return sameScreen(now, found) ? now : found;
+    });
+    follow();
+    const view = window.visualViewport;
+    view?.addEventListener("resize", follow);
+    view?.addEventListener("scroll", follow);
+    window.addEventListener("resize", follow);
+    // A page that grows wider once its data arrives widens the frame without a resize event.
+    const timer = window.setInterval(follow, 500);
+    return () => {
+      view?.removeEventListener("resize", follow);
+      view?.removeEventListener("scroll", follow);
+      window.removeEventListener("resize", follow);
+      window.clearInterval(timer);
+    };
+  }, []);
+  const phone = screen.width < PHONE_WIDTH;
 
   // Open the step's page (once per step: a page that redirects is left alone).
   const pathRef = useRef(path);
@@ -201,10 +252,10 @@ export function GuidedTour({ app, steps, path, navigate, onClose }: GuidedTourPr
   }, [index, go, onClose]);
 
   if (!step) return null;
-  const place = cardPlace(box, cardSize);
-  const centred = !("top" in place);
+  const place = phone ? phoneCardPlace(screen) : cardPlace(box, cardSize);
+  const centred = !phone && !("top" in place);
   return (
-    <div className="pct-tour" data-step={index + 1}>
+    <div className={`pct-tour${phone ? " pct-phone" : ""}`} data-step={index + 1}>
       <div className={`pct-blocker${box ? "" : " pct-dim"}`} onClick={(event) => event.stopPropagation()} />
       {box && <div className="pct-spot" style={{ top: box.top, left: box.left, width: box.width, height: box.height }} aria-hidden="true" />}
       <div ref={cardRef} className={`pct-card${centred ? " pct-centred" : ""}`} style={place} role="dialog" aria-modal="true" aria-labelledby="pct-title" aria-describedby="pct-body">
@@ -306,7 +357,9 @@ export function openPanel(button: string, panel: string): () => () => void {
     const timer = window.setInterval(() => {
       const found = find();
       if (found || Date.now() - started > WAIT_FOR_BUTTON_MS) window.clearInterval(timer);
-      if (found && !open()) found.click();
+      // A button that would leave the page (the assistant's, taking an administrator to set up a
+      // model) is left alone: the tour would end.
+      if (found && !open() && !found.hasAttribute("data-leaves-page")) found.click();
     }, 150);
     return () => {
       window.clearInterval(timer);

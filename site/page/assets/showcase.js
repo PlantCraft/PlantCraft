@@ -1,7 +1,8 @@
 // The clips at the top of the page: one video, and under it a pause button, a bar to click or
 // drag, and one button per part of the suite whose fill shows how far its clip has played. The
 // clips play one after the other; picking one, dragging the bar or pausing stops that. With
-// reduced motion nothing plays until the visitor presses play.
+// reduced motion nothing plays until the visitor presses play. On a phone the buttons give way to
+// the clip's name between back and next.
 (() => {
   const v = document.querySelector(".showcase video");
   const tabs = [...document.querySelectorAll(".clip-tabs button")];
@@ -36,12 +37,17 @@
     const [webm, mp4] = v.querySelectorAll("source");
     webm.src = t.dataset.webm;
     mp4.src = t.dataset.mp4;
+    const name = document.querySelector(".clip-name");
+    if (name) name.textContent = t.firstChild.textContent;
     v.load();
     if (start) v.play().catch(() => {});
     paint();
   }
 
   tabs.forEach((tab, i) => tab.addEventListener("click", () => { auto = false; show(i, true); }));
+  const step = (d) => { auto = false; show((current + d + tabs.length) % tabs.length, true); };
+  document.querySelector(".clip-prev")?.addEventListener("click", () => step(-1));
+  document.querySelector(".clip-next")?.addEventListener("click", () => step(1));
   ["play", "pause", "timeupdate", "loadedmetadata", "seeked"].forEach((ev) => v.addEventListener(ev, paint));
   v.addEventListener("ended", () => {
     if (auto) show((current + 1) % tabs.length, true);

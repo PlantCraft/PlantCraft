@@ -1,9 +1,10 @@
 /**
- * The platform's guided tour (@plantcraft/ui's tour), in the order the owner asked (2026-10-28):
- * Desk's menu on the left (Today, the calendar, actions), then the quick buttons at the foot of
- * the menu (Messages, Notifications and the Assistant open their panels; the queues), then the switch to another app,
- * PlantCraft (assets, one asset, system health; People, Apps and Backups for administrators
- * and a public demo's visitor), and it ends on the other apps. Each app
+ * The platform's guided tour (@plantcraft/ui's tour), in the order the owner asked (2026-10-28,
+ * shortened 2026-11-03): Desk's menu on the left (Today, the calendar, actions), then the quick
+ * buttons at the foot of the menu (Messages, Notifications and the Assistant open their panels;
+ * the queues), then the switch to another app, PlantCraft (the assets; People for administrators
+ * and a public demo's visitor), the menu under the person's name (theme, display size, Help),
+ * and it ends on the other apps. Operations has a tour of its own (OperationsTour). Each app
  * opens with its own tour. With the demo story (`processcraft demo seed`) it walks the demo plant.
  * Its texts are in the tour's own language (`tt`, picked on the tour card); their translations are
  * in @plantcraft/ui.
@@ -111,46 +112,20 @@ export function platformTour(data: HomeData, admin: boolean, readOnly = false, n
       body: <p>{tt("You are in another app now: PlantCraft, the platform. Sites, units and equipment, each with its record and signals, set up once for every app.")}</p>,
     },
   ];
-  if (demo) steps.push({
-    path: "/assets/FIC-1003",
-    target: '[data-tour="asset-overview"]',
-    title: tt("One asset, one page"),
-    body: <p>{tt("FIC-1003 is the recycle flow loop, and its valve is sticking. Its page holds the record, the signals, actions and history, each in a tab.")}</p>,
+  // People: shown to administrators, and to a public demo's visitor, who reads it without
+  // changing anything. Backups, the system's health and the apps are Operations' (its own tour).
+  if (admin) steps.push({
+    path: "/users",
+    target: '[data-tour="users"]',
+    title: tt("People and access"),
+    body: <p>{tt("Who may sign in, and which apps each person opens: to edit, to read, or not at all. Groups, the next tab, are the teams: they share actions, messages and alarms.")}</p>,
   });
-  steps.push({
-    path: "/health",
-    target: '.pcs-content [data-tour="health"], .pcs-content .panel',
-    title: tt("System health"),
-    body: <p>{tt("Whether every app and data source is running, each with its state and what it last said.")}</p>,
-  });
-  // The administration: shown to administrators, and to a public demo's
-  // visitor, who reads it without changing anything.
-  if (admin) steps.push(
-    {
-      path: "/users",
-      target: '[data-tour="users"]',
-      title: tt("People and access"),
-      body: <p>{tt("Who may sign in, and which apps each person opens: to edit, to read, or not at all. Groups, the next tab, are the teams: they share actions, messages and alarms.")}</p>,
-    },
-    {
-      path: "/apps",
-      target: ".pcs-content .apps-page",
-      title: tt("Apps"),
-      body: <p>{tt("The apps this installation runs, their versions and health. An administrator adds, updates or removes them here.")}</p>,
-    },
-    {
-      path: "/backups",
-      target: ".pcs-content .apps-page",
-      title: tt("Backups"),
-      body: <p>{tt("Backups on a schedule, each checked, and a restore tested in a separate copy, so the plant's data is never lost.")}</p>,
-    },
-  );
   steps.push({
     path: "/admin",
     target: ".pcs-user-pop",
     onShow: openPanel(".pcs-account .pcs-profile", ".pcs-user-pop"),
-    title: tt("Help, in every app"),
-    body: <p>{tt("The menu under your name holds Help, with a guide for every page of the app you are in, this tour, the theme and your preferences.")}</p>,
+    title: tt("Help and display, in every app"),
+    body: <p>{tt("The menu under your name sets the theme, light or dark, and the display size, from larger text to more space on the screen. It also holds your profile and preferences, Help with a guide for every page of the app you are in, and this tour.")}</p>,
   });
   steps.push({
     path: "/admin",

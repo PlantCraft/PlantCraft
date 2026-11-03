@@ -13,6 +13,7 @@ from plantcraft_sdk.blocks import Block, BlockDocs, BlockSpec, inport, outport
 from pydantic import BaseModel, Field
 
 from linkcraft.blocks.base import condition, numeric
+from linkcraft.i18n import t
 
 LIBRARY = "logic"
 OUT = outport("intervals", "intervals", "Condition", "True where the condition holds.")
@@ -72,7 +73,7 @@ class Combine(BaseModel):
 def _combine(inputs: dict[str, Any], parameters: Any, _ctx: Any) -> dict[str, Any]:
     given = [item for item in inputs.get("in") or [] if isinstance(item, pd.Series)]
     if not given:
-        raise ValueError("wire at least one condition")
+        raise ValueError(t("Wire at least one condition."))
     index = given[0].index
     for item in given[1:]:
         index = index.union(item.index)

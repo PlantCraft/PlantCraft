@@ -34,6 +34,15 @@ import httpx
 TOURS_OFF = "try { localStorage.setItem('plantcraft-ui:tours-off', '1') } catch (error) {}"
 
 
+# A phone as Chromium emulates one: 390 px wide, touch, and a page that may grow wider than the
+# screen (the browser then widens its frame, as a real phone does).
+PHONE: dict[str, Any] = {
+    "viewport": {"width": 390, "height": 844},
+    "is_mobile": True,
+    "has_touch": True,
+}
+
+
 def required(app_id: str) -> bool:
     return os.environ.get(f"{app_id.upper()}_E2E_REQUIRED") == "1"
 
@@ -136,11 +145,19 @@ def page(
     browser: Any,
     cookies: Iterable[dict[str, Any]] = (),
     viewport: dict[str, int] | None = None,
+    *,
+    phone: bool = False,
+    tours: bool = False,
 ) -> Iterator[Any]:
-    """A fresh browser page with the tour off; fails the test on any JavaScript error."""
+    """A fresh browser page with the tour off; fails the test on any JavaScript error.
 
-    context = browser.new_context(viewport=viewport or {"width": 1440, "height": 900})
-    context.add_init_script(TOURS_OFF)
+    ``phone``: a 390 px touch screen (``PHONE``). ``tours``: the tour opens as on a first visit.
+    """
+
+    screen = PHONE if phone else {"viewport": viewport or {"width": 1440, "height": 900}}
+    context = browser.new_context(**screen)
+    if not tours:
+        context.add_init_script(TOURS_OFF)
     if cookies:
         context.add_cookies(list(cookies))
     opened = context.new_page()
@@ -151,6 +168,48 @@ def page(
     finally:
         context.close()
     assert not errors, f"JavaScript errors on the page: {errors}"
+
+
+def walk_tour(opened: Any, max_steps: int = 40) -> int:
+    """Walk the open guided tour to its end by Next, as a person taps it; returns the steps.
+
+    Fails when Next cannot be pressed (something covers it, or it is off the screen) or when a
+    page the tour opens is wider than the screen: on a phone that page widens the browser's
+    frame and the card used to slide out of reach (2026-11-01, the platform's Apps step).
+    """
+
+    import re
+
+    from playwright.sync_api import expect
+
+    tour = opened.get_by_role("dialog")
+    width = opened.viewport_size["width"]
+    wide: dict[str, int] = {}
+    steps = 1
+    start = tour.get_by_role("button", name="Start the tour")
+    if start.count():
+        start.click(timeout=5000)
+        steps += 1
+    for _ in range(max_steps):
+        button = tour.get_by_role("button", name=re.compile("^(Next|Finish)"))
+        expect(button).to_be_in_viewport()
+        finish = tour.get_by_role("button", name="Finish")
+        if finish.count():
+            finish.click(timeout=5000)
+            expect(opened.get_by_role("dialog")).to_have_count(0)
+            break
+        # Playwright refuses a click another element would take: it fails here.
+        tour.get_by_role("button", name="Next").click(timeout=5000)
+        steps += 1
+        opened.wait_for_load_state("networkidle")
+        opened.wait_for_timeout(300)
+        drawn = opened.evaluate("document.documentElement.scrollWidth")
+        if drawn > width:
+            wide[re.sub(r"^https?://[^/]+", "", opened.url)] = drawn
+    else:
+        raise AssertionError(f"the tour did not end in {max_steps} steps")
+    assert not wide, f"pages wider than the screen ({width} px) during the tour: {wide}"
+    return steps
 
 
 def screenshots(app_id: str) -> Path | None:

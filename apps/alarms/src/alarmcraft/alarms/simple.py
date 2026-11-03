@@ -46,7 +46,7 @@ class SimpleValue(BaseModel):
     def _one(self) -> SimpleValue:
         self.signal, self.role = self.signal.strip(), self.role.strip()
         if bool(self.signal) == bool(self.role):
-            raise ValueError("choose a value: a signal or a signal role")
+            raise ValueError(t("choose a value: a signal or a signal role"))
         return self
 
     def words(self) -> str:
@@ -117,11 +117,11 @@ class SimpleGrade(BaseModel):
     def _complete(self) -> SimpleGrade:
         if self.source == "value":
             if self.value is None:
-                raise ValueError("choose the signal that holds the grade")
+                raise ValueError(t("choose the signal that holds the grade"))
             self.kinds = []
         else:
             if not self.kinds:
-                raise ValueError("choose the events that name the grade")
+                raise ValueError(t("choose the events that name the grade"))
             self.value = None
         return self
 
@@ -155,28 +155,28 @@ class SimpleCondition(BaseModel):
     @classmethod
     def _finite(cls, value: float | None) -> float | None:
         if value is not None and not math.isfinite(value):
-            raise ValueError("a finite number")
+            raise ValueError(t("a finite number"))
         return value
 
     @model_validator(mode="after")
     def _complete(self) -> SimpleCondition:
         if self.input == "value":
             if self.value is None:
-                raise ValueError("choose the value")
+                raise ValueError(t("choose the value"))
             self.event = None
             if self.op in ("between", "outside"):
                 if self.limit is None or self.high is None or self.high < self.limit:
-                    raise ValueError("a range needs its low and high ends")
+                    raise ValueError(t("a range needs its low and high ends"))
             elif self.op not in ("changed", "unchanged") and self.limit is None:
-                raise ValueError("a comparison needs its limit")
+                raise ValueError(t("a comparison needs its limit"))
             if self.grade_limits and self.op in ("between", "outside", "changed", "unchanged"):
-                raise ValueError("limits by grade are for a value compared with one limit")
+                raise ValueError(t("limits by grade are for a value compared with one limit"))
             grades = [item.grade for item in self.grade_limits]
             if len(set(grades)) != len(grades):
-                raise ValueError("each grade once in a condition")
+                raise ValueError(t("each grade once in a condition"))
         else:
             if self.event is None:
-                raise ValueError("choose the event")
+                raise ValueError(t("choose the event"))
             self.value = None
             self.grade_limits = []
         return self
@@ -249,16 +249,16 @@ class SimpleLogic(BaseModel):
     @model_validator(mode="after")
     def _permissive(self) -> SimpleLogic:
         if self.enable_when is not None and self.enable_when.input != "value":
-            raise ValueError("a permissive is a value (a pump's run signal), not an event")
+            raise ValueError(t("a permissive is a value (a pump's run signal), not an event"))
         if self.enable_when is None:
             self.enable_delay_seconds = 0.0
         if self.enable_when is not None:
             self.enable_when.grade_limits = []
         graded = any(item.grade_limits for item in self.conditions)
         if graded and self.grade is None:
-            raise ValueError("limits by grade need where the grade comes from")
+            raise ValueError(t("limits by grade need where the grade comes from"))
         if self.grade is not None and not graded:
-            raise ValueError("give at least one grade its limit, or remove the grade")
+            raise ValueError(t("give at least one grade its limit, or remove the grade"))
         return self
 
     def sentence(self) -> str:

@@ -38,12 +38,6 @@ export function tourSteps(example: string | null = null): TourStep[] {
       body: tt("The plant's manuals, narratives, datasheets, procedures and reports, read into passages that you and the assistant can find and cite by page."),
     },
     {
-      path: "/",
-      target: '.pcs-content [data-tour="widgets"]',
-      title: tt("Overview"),
-      body: tt("Search or ask the documents, see the latest ones and those not linked to assets yet. Customize arranges the widgets as you like."),
-    },
-    {
       path: "/documents",
       target: ".pcs-content .pc-dt, .pcs-content .empty",
       title: tt("Documents"),

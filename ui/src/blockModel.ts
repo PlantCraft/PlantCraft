@@ -5,6 +5,7 @@
  * here: every rule the editor applies (which ports may be wired, where a pasted block goes,
  * how "Arrange" lays blocks out) is a function of data, tested on its own.
  */
+import { t } from "./i18n.js";
 
 /** What a wire carries (`real`: a continuous value in time, Models' signals). */
 export type PortType = "series" | "state" | "number" | "result" | "intervals" | "real";
@@ -157,14 +158,14 @@ export type WireRules = { loops?: boolean };
  */
 export function wireProblem(diagram: Diagram, blocks: Record<string, BlockSpec>, wire: DiagramEdge, rules: WireRules = {}): string {
   const nodes = Object.fromEntries(diagram.nodes.map((node) => [node.id, node]));
-  if (wire.source === wire.target) return "A block cannot feed itself.";
+  if (wire.source === wire.target) return t("A block cannot feed itself.");
   const { source, target } = edgePorts(wire, nodes, blocks);
-  if (!source || !target) return "Unknown port.";
-  if (!accepts(target.types, source.type)) return `${source.label} gives ${source.type}; ${target.label} takes ${target.types.join(" or ")}.`;
+  if (!source || !target) return t("Unknown port.");
+  if (!accepts(target.types, source.type)) return t("{source} gives {type}; {target} takes {types}.", { source: source.label, type: source.type, target: target.label, types: target.types.join(t(" or ")) });
   if (diagram.edges.some((edge) => edge.source === wire.source && edge.source_port === wire.source_port && edge.target === wire.target && edge.target_port === wire.target_port)) {
-    return "Already wired.";
+    return t("Already wired.");
   }
-  if (!rules.loops && reaches(diagram.edges, wire.target, wire.source)) return "This wire would close a loop.";
+  if (!rules.loops && reaches(diagram.edges, wire.target, wire.source)) return t("This wire would close a loop.");
   return "";
 }
 

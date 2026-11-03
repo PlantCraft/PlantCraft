@@ -114,18 +114,25 @@ guide away, take **Another role**, or close it. While a guide is on, the apps' o
   | `_HISTORY` | 12 | Last turns of the chat sent with a question |
   | `_TOOL_CALLS` | 16 | Tool calls in one answer |
   | `_MAX_ANSWER` | 4000 | Characters of one answer |
+  | `_SECONDS` | 75 | Seconds one answer may take: past them, no more reads, the model answers with what it read |
+  | `_CALL_SECONDS` | 60 | Seconds one call to the model may take |
 
-  When the model service refuses the installation (no credit left, key refused or limited:
-  429, 401, 403), the visitor reads "The assistant cannot answer right now" instead of the
-  service's error, that question is not one of the visit's, and visits stop asking for 10
-  minutes instead of each one failing (the error stays in the server's log).
+  A service that only limits the rate (429 "too many calls or tokens a minute") or fails for a
+  moment (500, 502, 503, 504) is asked again, after the wait it names, twice at most. When the
+  answer still fails, the visitor reads "The assistant cannot answer right now" instead of the
+  service's error, and that question is not one of the visit's. Visits stop asking for 10
+  minutes when the service refuses the installation (no credit left, key refused: 429 with no
+  quota, 401, 403), and for 20 seconds when it was only limiting the rate (until 2026-11-03 any
+  429 stopped them for 10 minutes). The error stays in the server's log.
 
   A visit's answer never points outside the suite: images, raw HTML and links or addresses of
   other sites are taken out on the server, whatever the model was led to write.
 
   The counts are kept in `assistant_demo_questions`, with the tokens each answer spent, so a
   restart does not reset them; `GET /api/demo/stats` adds today's (`assistant`: questions,
-  answered, failed, input, cached, output and reasoning tokens). Give the demo its own provider
+  answered, failed, input, cached, output and reasoning tokens, `failures`: why answers failed,
+  by kind (`rate_limited`, `no_credit`, `key_refused`, `service_error`, `timeout`,
+  `unreachable`, `empty`, `other`), and `answer_seconds`: median, p90 and max of the answered). Give the demo its own provider
   key with a monthly spending cap at the provider: it is the limit that holds whatever happens
   here. `PLANTCRAFT_PUBLIC_DEMO_LLM=off` and a restart turn it off.
 

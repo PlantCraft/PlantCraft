@@ -16,7 +16,7 @@ from fastapi import HTTPException
 from plantcraft_sdk.app_manifest import parse_manifest
 from plantcraft_sdk.server.objects import AppObjects, notebooks_router, object_item
 
-from alarmcraft.api.routers.alarms import summary
+from alarmcraft.api.routers.alarms import rule_names, summary
 from alarmcraft.api.routers.rules import rule_or_404, rule_row
 from alarmcraft.api.scope import seen, sees_alarm
 from alarmcraft.meta import FILES
@@ -64,8 +64,9 @@ def rule(user: Any, rt: Any, rule_id: str) -> dict[str, Any] | None:
 @objects.lister("alarm")
 def alarms(user: Any, rt: Any) -> list[dict[str, Any]]:
     rows = []
+    names = rule_names(rt)
     for alarm in seen(rt.asset_scope(user), rt.alarms.list()):
-        row = summary(rt, alarm)
+        row = summary(rt, alarm, names)
         rows.append(
             object_item(
                 row["alarm_id"],

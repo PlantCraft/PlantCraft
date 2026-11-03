@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from modelcraft.i18n import t
 from modelcraft.modelica.edit import _connect, _own, _section_of, _statements
 from modelcraft.modelica.source import ClassDef, Token, find, tokens
 
@@ -285,11 +286,11 @@ def modelica_value(value: object) -> str:
         return str(value)
     if isinstance(value, float):
         if value != value or value in (float("inf"), float("-inf")):
-            raise ValueError("Not a finite number.")
+            raise ValueError(t("Not a finite number."))
         text = repr(value)
         return text[:-2] if text.endswith(".0") else text
     if isinstance(value, list):
         return "{" + ", ".join(modelica_value(item) for item in value) + "}"
     if isinstance(value, str):
         return value.strip()
-    raise ValueError("Not a value Models can write.")
+    raise ValueError(t("Not a value Models can write."))

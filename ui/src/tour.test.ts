@@ -6,7 +6,7 @@ import { formatAgo, formatDuration, formatNumber, formatShare } from "./format";
 import { createNav } from "./nav";
 import { addStatusTones, statusVar } from "./brandTheme";
 import { SuiteShell, startTour } from "./SuiteShell";
-import { GuidedTour, TOURS_OFF_KEY, tourDue, tourPageFor } from "./Tour";
+import { GuidedTour, phoneCardPlace, TOURS_OFF_KEY, tourDue, tourPageFor } from "./Tour";
 import { configureUi } from "./i18n";
 import { TOUR_LANGUAGE_KEY, tourLanguage, tourLanguageFor, tt } from "./tourLanguage";
 import { TOUR_TEXTS } from "./tourTexts";
@@ -20,6 +20,16 @@ function mount() {
 }
 
 const click = (node: Element | null | undefined) => node?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }));
+
+describe("tour card on a phone", () => {
+  it("sits across the foot of what shows, also when the page is wider than the phone", () => {
+    expect(phoneCardPlace({ left: 0, top: 0, width: 390, height: 844, frame: 844 })).toEqual({ left: 16, width: 358, bottom: 16, maxHeight: 812 });
+    // A 594 px page: the frame is 594 x 1285, the phone shows its top left 390 x 844.
+    expect(phoneCardPlace({ left: 0, top: 0, width: 390, height: 844, frame: 1285 })).toEqual({ left: 16, width: 358, bottom: 457, maxHeight: 812 });
+    // Scrolled sideways: the card follows.
+    expect(phoneCardPlace({ left: 204, top: 441, width: 390, height: 844, frame: 1285 })).toMatchObject({ left: 220, bottom: 16 });
+  });
+});
 
 describe("tour pages", () => {
   it("never leaves the page the person opened on the first step, then follows the steps", () => {

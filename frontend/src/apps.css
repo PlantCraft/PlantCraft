@@ -1,6 +1,7 @@
 /* Apps page: install from a file, the catalog, external apps, and the installed list. */
 
-.apps-page { display: grid; gap: var(--pc-space-4); }
+/* One column that never grows past the screen: a wide table scrolls inside its own panel. */
+.apps-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--pc-space-4); }
 .apps-page > .form-error, .apps-page > .ac-notice { margin: 0; }
 .apps-status { display: flex; flex-wrap: wrap; gap: var(--pc-space-2); }
 .apps-chip { padding: calc(5px * var(--pc-space-scale, 1)) calc(10px * var(--pc-space-scale, 1)); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-pill); color: var(--pc-text-3); background: var(--pc-surface); font-size: var(--pc-fs-xs); font-weight: 700; }

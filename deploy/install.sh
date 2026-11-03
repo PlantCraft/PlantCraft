@@ -732,8 +732,8 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
         fi
         # An app whose image is not loaded is switched off (an upgrade to a bundle without it).
         version="$(env_get "$key" "$env")"
-        if [[ ",$profiles," == *",$app,"* ]] && ! app_image "$app" "${version:-0.5.1}"; then
-            warn "image $app:${version:-0.5.1} is not loaded: the $app profile is switched off"
+        if [[ ",$profiles," == *",$app,"* ]] && ! app_image "$app" "${version:-0.6.0}"; then
+            warn "image $app:${version:-0.6.0} is not loaded: the $app profile is switched off"
             profiles="$(printf '%s' ",$profiles," | sed "s/,$app,/,/; s/^,//; s/,\$//")"
         fi
     done
@@ -743,8 +743,8 @@ write_env() { # write_env PLANTCRAFT_VERSION SIMCRAFT_VERSION (apps: BUNDLE_APP_
     # The Simulator is its own image; an installation that had the demo keeps running without it
     # when the new bundle does not carry it (--demo itself was checked before anything changed).
     plant="$(env_get SIMCRAFT_VERSION "$env")"
-    if [[ ",$profiles," == *",demo,"* ]] && ! simcraft_image "${plant:-0.5.1}"; then
-        warn "image simcraft:${plant:-0.5.1} is not loaded: the demo profile is switched off"
+    if [[ ",$profiles," == *",demo,"* ]] && ! simcraft_image "${plant:-0.6.0}"; then
+        warn "image simcraft:${plant:-0.6.0} is not loaded: the demo profile is switched off"
         profiles="$(printf '%s' ",$profiles," | sed 's/,demo,/,/; s/^,//; s/,$//')"
     fi
     env_set COMPOSE_PROFILES "$profiles" "$env"
@@ -827,10 +827,11 @@ LINKCRAFT_EXECUTOR_CPUS 2 3 6 rest
 LINKCRAFT_EXECUTOR_SLOTS 2 3 6 rest
 LINKCRAFT_EXECUTOR_MEMORY 1536m 2g 8g 16g
 LINKCRAFT_TASK_MEMORY_MB 768 1024 2048 4096
+LINKCRAFT_READ_CACHE_MB 128 256 512 1024
 DASHCRAFT_CPUS 1 2 2 4
 DASHCRAFT_MEMORY 384m 512m 2g 2g
 ALARMCRAFT_CPUS 0.5 1 1 2
-ALARMCRAFT_MEMORY 384m 384m 1g 1g
+ALARMCRAFT_MEMORY 384m 768m 1g 1g
 MODELCRAFT_CPUS 0.5 1 1 2
 MODELCRAFT_MEMORY 384m 512m 1g 2g
 MODELCRAFT_RUN_WORKERS 1 2 2 4
@@ -841,7 +842,7 @@ DOCCRAFT_CPUS 1 1 2 4
 DOCCRAFT_MEMORY 1536m 2g 3g 4g
 HISTCRAFT_CPUS 2 2 4 8
 HISTCRAFT_WORKERS 2 2 3 4
-HISTCRAFT_MEMORY 1g 1536m 2g 4g
+HISTCRAFT_MEMORY 1g 3g 4g 6g
 HISTCRAFT_READ_VALUES 1500000 3000000 4000000 8000000
 HISTCRAFT_COLLECTOR_CPUS 1 1 2 2
 HISTCRAFT_COLLECTOR_MEMORY 384m 512m 1g 2g
@@ -961,7 +962,7 @@ check_demo() { # check_demo SIMCRAFT_VERSION_OF_THE_BUNDLE
         return 0
     fi
     version="${1:-$(env_get SIMCRAFT_VERSION "$PREFIX/.env")}"
-    version="${version:-${SIMCRAFT_VERSION:-0.5.1}}"
+    version="${version:-${SIMCRAFT_VERSION:-0.6.0}}"
     simcraft_image "$version" ||
         die "--demo: image simcraft:$version not found. Build it from simulator/ (make simcraft-image)."
 }
@@ -997,7 +998,7 @@ check_apps() {
             continue
         fi
         version="${version:-$(env_get "$(version_key "$app")" "$PREFIX/.env")}"
-        version="${version:-0.5.1}"
+        version="${version:-0.6.0}"
         app_image "$app" "$version" || die "--with-$app: image $app:$version not found."
         if [ "$app" = histcraft ]; then
             local db
@@ -1245,7 +1246,7 @@ do_install() {
         # each app's repository), so that --all-apps means them.
         for app in $(app_ids); do
             app_version="$(env_get "$(version_key "$app")" "$BUNDLE_DIR/.env.example")"
-            app_version="${app_version:-0.5.1}"
+            app_version="${app_version:-0.6.0}"
             if app_image "$app" "$app_version"; then BUNDLE_APP_VERSIONS="$BUNDLE_APP_VERSIONS $app=$app_version"; fi
         done
     elif [ "$INSTALLED" = 1 ] && [ "$PREFIX" = "$BUNDLE_DIR" ]; then

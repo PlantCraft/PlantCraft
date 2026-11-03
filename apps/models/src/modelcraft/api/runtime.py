@@ -25,6 +25,7 @@ from plantcraft_sdk.server.store import Database
 
 from modelcraft import APP_ID
 from modelcraft.config import Settings
+from modelcraft.i18n import t
 from modelcraft.omc import results
 from modelcraft.omc.jobs import Executor, LocalExecutor, QueueExecutor, SuiteExecutor
 from modelcraft.projects.models import SYSTEM
@@ -358,7 +359,7 @@ class Runtime(PlatformRuntime):
 
         client = self.service_client
         if client is None:
-            raise RuntimeError("Models has no app key: it cannot read the plant on its own.")
+            raise RuntimeError(t("Models has no app key: it cannot read the plant on its own."))
         config = tracking["config"]
         extra, compare, duration = read_plant(
             lambda *args: client.series_many(*args),

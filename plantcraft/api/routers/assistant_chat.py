@@ -268,19 +268,43 @@ def _profile_names(rt: Any) -> dict[str, str]:
     return {profile["id"]: profile["name"] for profile in rt.assistant.profiles()}
 
 
-def _present_refs(rt: Any, refs: list[str], viewer: str) -> list[dict[str, Any]]:
-    shown = []
-    for ref in refs:
+def _present_refs(
+    rt: Any, refs: list[str], viewer: str, known: dict[str, dict[str, Any]] | None = None
+) -> list[dict[str, Any]]:
+    """The references as links; ``known``: those already resolved for this request."""
+
+    if known is None:
+        known = _resolve_refs(rt, refs, viewer)
+    return [known.get(ref) or {"ref": ref, "title": ref, "url": None} for ref in refs]
+
+
+def _resolve_refs(rt: Any, refs: list[str], viewer: str) -> dict[str, dict[str, Any]]:
+    """Every reference of a chat's messages resolved once, with one reader of the person's
+    access: a chat polled while an answer is written read each one again for each message,
+    each with a new reader, and grew slower with every answer (public demo, 2026-11-03)."""
+
+    wanted = list(dict.fromkeys(refs))
+    try:
+        resolved = rt.platform.refs.resolve_many(wanted, viewer=viewer)
+    except Exception:  # a broken resolver must not break the chat
+        resolved = {}
+    shown: dict[str, dict[str, Any]] = {}
+    for ref in wanted:
         try:
-            shown.append(present_ref(_resolve(rt, ref, viewer)))
+            shown[ref] = present_ref(resolved.get(ref) or _resolve(rt, ref, viewer))
         except Exception:  # an object gone or a reference of an app not installed
-            shown.append({"ref": ref, "title": ref, "url": None})
+            shown[ref] = {"ref": ref, "title": ref, "url": None}
     return shown
 
 
-def _present_message(rt: Any, message: dict[str, Any], viewer: str) -> dict[str, Any]:
+def _present_message(
+    rt: Any,
+    message: dict[str, Any],
+    viewer: str,
+    known: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     item = dict(message)
-    item["refs"] = _present_refs(rt, message.get("refs") or [], viewer)
+    item["refs"] = _present_refs(rt, message.get("refs") or [], viewer, known)
     if item.get("charts"):
         trends = _trends_page(rt)
         item["charts"] = [
@@ -559,6 +583,7 @@ def chat(
     )
     messages = rt.assistant.store.messages(chat_id)
     shown = [item for item in messages if item["message_id"] > after or item["state"] == "working"]
+    known = _resolve_refs(rt, [ref for item in shown for ref in item.get("refs") or []], user)
     marker = marks_owner(request, rt, user)
     if not after and f"chat:{chat_id}" in rt.desk.marks(marker, "unread"):
         rt.desk.set_mark(marker, f"chat:{chat_id}", "unread", False)
@@ -575,7 +600,7 @@ def chat(
             # team's chats the visitor account keeps).
             "can_ask": found["username"] == owner,
         },
-        "messages": [_present_message(rt, item, user) for item in shown],
+        "messages": [_present_message(rt, item, user, known) for item in shown],
         "working": any(item["state"] == "working" for item in messages),
     }
 

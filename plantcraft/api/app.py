@@ -69,7 +69,14 @@ from plantcraft.api.runtime import PROJECT_ROOT, ApiRuntime
 from plantcraft.api.usage import EDGE_HEADER, install_usage_limits
 from plantcraft.auth.public_demo import RateLimiter, public_demo
 from plantcraft.config import env_flag, plant_timezone
-from plantcraft.i18n import COOKIE, reset_language, set_language, t
+from plantcraft.i18n import (
+    COOKIE,
+    TRANSLATIONS_COOKIE,
+    reset_language,
+    set_language,
+    t,
+    translations_on,
+)
 from plantcraft.ops.workers import startup
 from plantcraft_sdk.server.logs import configure_logging
 from plantcraft_sdk.server.memory import Releaser
@@ -304,9 +311,16 @@ def create_app(runtime: ApiRuntime | None = None) -> FastAPI:
             or request.headers.get("accept-language")
         )
         try:
-            return await call_next(request)
+            response = await call_next(request)
         finally:
             reset_language(token)
+        # Every app's page offers other languages only while this installation turned them on.
+        on = "1" if translations_on() else "0"
+        if request.cookies.get(TRANSLATIONS_COOKIE) != on:
+            response.set_cookie(
+                TRANSLATIONS_COOKIE, on, max_age=31_536_000, path="/", samesite="lax"
+            )
+        return response
 
     @app.middleware("http")
     async def plant_time_zone(request: Request, call_next):

@@ -10,19 +10,15 @@ import { ErrorBox, Heading, Link, Loading, message } from "./ui";
 function NoteForm({ assetId = "", onSaved }: { assetId?: string; onSaved: (note: Note) => void }) {
   const [asset, setAsset] = useState(assetId);
   const [text, setText] = useState("");
-  const [followUp, setFollowUp] = useState("");
-  const [followUpBy, setFollowUpBy] = useState("");
   const [error, setError] = useState("");
-  const save = () => api.create({ asset_id: asset.trim(), text: text.trim(), follow_up: followUp || null, follow_up_by: followUpBy.trim() || null })
-    .then((note) => { setText(""); setFollowUp(""); setFollowUpBy(""); setError(""); onSaved(note); })
+  const save = () => api.create({ asset_id: asset.trim(), text: text.trim() })
+    .then((note) => { setText(""); setError(""); onSaved(note); })
     .catch((err) => setError(message(err)));
   return <form className="panel" onSubmit={(event) => { event.preventDefault(); void save(); }}>
     <h2>{t("New note")}</h2>
     <div className="form-grid">
       <label>{t("Asset")}<input value={asset} onChange={(event) => setAsset(event.target.value)} placeholder="FIC-1001" required /></label>
       <label className="form-wide">{t("Note")}<textarea value={text} onChange={(event) => setText(event.target.value)} rows={3} maxLength={4000} required /></label>
-      <label>{t("Follow up on")}<input type="date" value={followUp} onChange={(event) => setFollowUp(event.target.value)} /></label>
-      <label>{t("Follow up by")}<input value={followUpBy} onChange={(event) => setFollowUpBy(event.target.value)} placeholder={t("Username")} maxLength={80} /></label>
     </div>
     {error && <ErrorBox text={error} />}
     <div className="form-actions"><button className="button button-primary" type="submit">{t("Save note")}</button></div>
@@ -63,21 +59,15 @@ export function NotesPage({ me, assetId }: { me: Me; assetId?: string }) {
 export function NotePage({ me, noteId }: { me: Me; noteId: string }) {
   const [note, setNote] = useState<Note | null>(null);
   const [error, setError] = useState("");
-  const [summary, setSummary] = useState("");
   useEffect(() => { api.note(noteId).then(setNote).catch((err) => setError(message(err))); }, [noteId]);
   if (error) return <ErrorBox text={error} />;
   if (!note) return <Loading />;
   const remove = () => api.remove(noteId).then(() => navigate("/")).catch((err) => setError(message(err)));
-  // A model chosen in PlantCraft's Setup > Language models; the page says so while there is none.
-  const summarise = () => api.summary(noteId).then((answer) => setSummary(answer.summary)).catch((err) => setSummary(message(err)));
   return <>
     <Heading eyebrow={t("Note")} title={note.asset_name ?? note.asset_id}
       detail={t("Written by {who}, {when}.", { who: note.created_by, when: formatAgo(note.created_at) })} />
     <div className="panel">
       <p>{note.text}</p>
-      {note.follow_up && <p className="muted">{t("Follow up on {day}", { day: note.follow_up })}{note.follow_up_by ? ` · ${note.follow_up_by}` : ""}</p>}
-      {summary && <p role="status">{summary}</p>}
-      <button className="button" type="button" onClick={() => void summarise()}>{t("Summarise")}</button>{" "}
       {me.can_edit && <button className="button" type="button" onClick={() => void remove()}>{t("Delete")}</button>}
     </div>
   </>;

@@ -1,8 +1,8 @@
 # 01: A new app from the template
 
 ```text
-Read AGENTS.md and README.md of this folder, and docs/app-standard.md of PlantCraft (the
-repository's root, or ../PlantCraft).
+Read AGENTS.md, README.md and docs/README.md of this folder, and docs/app-standard.md of
+PlantCraft (the repository's root, or ../PlantCraft).
 
 I want an app called <Name>Craft (id <name>) for <who uses it and for what, in two sentences>.
 Its main object is <object>: <what one record holds, field by field, with the limits of each>.

@@ -12,6 +12,7 @@
  * What cannot be read is said in `problems`; the rest is kept and arranged left to right.
  */
 import { addNode, arrange, emptyDiagram, wireProblem, type BlockCatalog, type BlockSpec, type Diagram, type DiagramEdge } from "@plantcraft/ui/blockEditor";
+import { t } from "./i18n";
 
 export type Sketch = { diagram: Diagram; problems: string[] };
 
@@ -55,9 +56,9 @@ export function sketchDiagram(text: string, catalog: Pick<BlockCatalog, "blocks"
     else if (node) {
       const call = CALL.exec(node[2].trim());
       const block = findBlock(catalog.blocks, call ? call[1] : node[2]);
-      if (!block && /^[-+\d."']/.test(node[2].trim())) { problems.push(`${line}: a constant is a block's parameter, not a block.`); continue; }
-      if (!block) { problems.push(`Unknown block: ${(call ? call[1] : node[2]).trim()}`); continue; }
-      if (named[node[1]]) { problems.push(`${node[1]} is named twice.`); continue; }
+      if (!block && /^[-+\d."']/.test(node[2].trim())) { problems.push(t("{line}: a constant is a block's parameter, not a block.", { line })); continue; }
+      if (!block) { problems.push(t("Unknown block: {block}", { block: (call ? call[1] : node[2]).trim() })); continue; }
+      if (named[node[1]]) { problems.push(t("{name} is named twice.", { name: node[1] })); continue; }
       const added = addNode(diagram, specs, block.block_id, { x: 0, y: 0 });
       // The node keeps the name the text gave it when it is free.
       const id = /^[a-z][a-z0-9_]*$/.test(node[1]) && !diagram.nodes.some((item) => item.id === node[1]) ? node[1] : added.id;
@@ -69,9 +70,9 @@ export function sketchDiagram(text: string, catalog: Pick<BlockCatalog, "blocks"
         const from = SOURCE.exec(given);
         if (key && block.parameters.some((item) => item.name === key) && !(from && named[from[1]])) parameters.push({ line, node: node[1], name: key, value: value(given) });
         else if (from) wires.push({ line, source: from[1], sourcePort: from[2], target: node[1], targetPort: key || undefined });
-        else problems.push(`Not understood: ${argument} in ${line}`);
+        else problems.push(t("Not understood: {argument} in {line}", { argument, line }));
       }
-    } else problems.push(`Not understood: ${line}`);
+    } else problems.push(t("Not understood: {line}", { line }));
   }
   const block = (id: string) => specs[diagram.nodes.find((node) => node.id === id)?.block ?? ""];
   // A wire may name a block by its id's part instead of its node (`det.value -> output.value`):
@@ -84,14 +85,14 @@ export function sketchDiagram(text: string, catalog: Pick<BlockCatalog, "blocks"
   for (const wire of wires) {
     const source = node(wire.source);
     const target = node(wire.target);
-    if (!source || !target) { problems.push(`Unknown block in: ${wire.line}`); continue; }
+    if (!source || !target) { problems.push(t("Unknown block in: {line}", { line: wire.line })); continue; }
     const outputs = byName(block(source).outputs, wire.sourcePort);
     const free = (port: string) => !diagram.edges.some((edge) => edge.target === target && edge.target_port === port);
     const inputs = byName(block(target).inputs, wire.targetPort);
     // An input taken by an earlier line keeps its wire, unless it takes several.
     const ordered = [...inputs.filter((port) => free(port.port)), ...inputs.filter((port) => !free(port.port) && port.multiple)];
     let chosen: DiagramEdge | null = null;
-    let why = "No port fits.";
+    let why = t("No port fits.");
     for (const input of ordered) {
       for (const output of outputs) {
         const candidate = { source, source_port: output.port, target, target_port: input.port };
@@ -106,7 +107,7 @@ export function sketchDiagram(text: string, catalog: Pick<BlockCatalog, "blocks"
   }
   for (const parameter of parameters) {
     const id = named[parameter.node];
-    if (!id || !block(id).parameters.some((item) => item.name === parameter.name)) { problems.push(`Unknown parameter: ${parameter.line}`); continue; }
+    if (!id || !block(id).parameters.some((item) => item.name === parameter.name)) { problems.push(t("Unknown parameter: {line}", { line: parameter.line })); continue; }
     diagram = { ...diagram, nodes: diagram.nodes.map((node) => (node.id === id ? { ...node, parameters: { ...node.parameters, [parameter.name]: parameter.value } } : node)) };
   }
   return { diagram: diagram.nodes.length ? arrange(diagram) : diagram, problems };

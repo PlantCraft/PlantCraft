@@ -15,6 +15,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from alarmcraft.i18n import t
+
 NAME = re.compile(r"^[^\x00-\x1f\x7f]{1,120}$")
 ROLE = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
 # Who answers for an alarm: a person or a group of the platform (``user:<name>``, ``group:<id>``).
@@ -54,7 +56,7 @@ Discipline = Literal[
 def _text(value: Any, limit: int) -> str:
     text = str(value or "").strip()
     if len(text) > limit or any(ord(ch) < 32 and ch not in "\n\t" for ch in text):
-        raise ValueError(f"at most {limit} characters, no control characters")
+        raise ValueError(t("at most {limit} characters, no control characters", limit=limit))
     return text
 
 
@@ -106,7 +108,7 @@ class AlarmDraft(BaseModel):
     def _owner(cls, value: str | None) -> str | None:
         value = (value or "").strip()
         if value and not OWNER.match(value):
-            raise ValueError("an owner is user:<username> or group:<id>")
+            raise ValueError(t("an owner is user:<username> or group:<id>"))
         return value or None
 
     @field_validator("area", "asset_id", "label")
@@ -119,7 +121,7 @@ class AlarmDraft(BaseModel):
     def _name(cls, value: str) -> str:
         value = (value or "").strip()
         if not NAME.match(value):
-            raise ValueError("a name of 1 to 120 characters")
+            raise ValueError(t("a name of 1 to 120 characters"))
         return value
 
     @field_validator("cause", "consequence", "action", "sentence")

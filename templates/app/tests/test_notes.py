@@ -11,9 +11,8 @@ def test_an_editor_writes_a_note_on_an_asset_and_everyone_reads_it(runtime, fake
     body = created.json()
     assert body["asset_id"] == "FIC-1001" and body["created_by"] == "engineer"
     assert body["asset_name"]  # read from PlantCraft as the person
-    # Declared in app.toml (the fake holds the app to it, tests/plant.py), written by name.
-    [event] = [item for item in fake.links.events if item["kind"] == "starter.note.written"]
-    assert event["subject"] == "asset:FIC-1001" and event["category"] == "user"
+    [entry] = [item for item in fake.audit_log if item["action"] == "starter.note.created"]
+    assert entry["subject"] == body["note_id"] and entry["username"] == "engineer"
     with client_for(runtime, fake, "operator") as operator:
         listed = operator.get("/api/notes", params={"asset": "FIC-1001"}).json()
     assert [row["note_id"] for row in listed] == [body["note_id"]]
@@ -46,10 +45,3 @@ def test_people_without_access_see_nothing(runtime, fake):
         assert outsider.get("/api/notes").status_code == 403
     with client_for(runtime, fake, None) as anonymous:
         assert anonymous.get("/api/notes").status_code == 401
-
-
-def test_the_suite_search_finds_notes(client):
-    client.post("/api/notes", json=note())
-    found = client.get("/api/search", params={"q": "valve"}).json()
-    assert [item["href"] for item in found["items"]][0].startswith("/notes/")
-    assert client.get("/api/search", params={"q": "pump"}).json()["items"] == []

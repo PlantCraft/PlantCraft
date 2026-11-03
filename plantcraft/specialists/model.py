@@ -15,6 +15,7 @@ import hashlib
 import json
 import logging
 import socket
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -45,6 +46,13 @@ Tool = Callable[[str, dict[str, Any]], Any]
 # Seconds one call to the model may take: small reasoning models with a page of tool results
 # took over 60 s per call (gpt-5-nano, 2026-10-26).
 CALL_TIMEOUT = 180
+# A service that limits how fast it is called (429 "rate limit", not "no credit") or that failed
+# for a moment (500, 502, 503, 504) is asked again, after the wait it names (``Retry-After``),
+# this many times at most and never longer than ``RETRY_WAIT`` seconds a time (public demo,
+# 2026-11-03: a first question of a visit read "cannot answer right now" now and then).
+RETRIES = 2
+RETRY_WAIT = 8.0
+TRANSIENT = (500, 502, 503, 504)
 
 
 class ChatModel:
@@ -73,9 +81,12 @@ class ChatModel:
         # The tokens of the latest ``answer``, all its calls together (``usage_of``): what the
         # chat keeps with each answer, to know what an answer costs.
         self.usage: dict[str, int] = empty_usage()
+        # Seconds one ``answer`` may take in all (None: no limit): past it, no more tool rounds,
+        # the model answers with what it read (a public demo visit's answer, assistant_chat.demo).
+        self.deadline: float | None = None
         if provider == "openai":
             if not model:
-                raise ValueError("Name the model to use.")
+                raise ValueError(t("Name the model to use."))
             base = (endpoint or OPENAI_ENDPOINT).rstrip("/")
             openai = urllib.parse.urlsplit(base).hostname == "api.openai.com"
             # OpenAI's reasoning models refuse tools in chat completions ("Function tools with
@@ -98,16 +109,19 @@ class ChatModel:
     ) -> str:
         conversation = list(messages)
         self.usage = empty_usage()
+        ends = None if self.deadline is None else time.monotonic() + self.deadline
         for _ in range(self.rounds + 1):
+            if ends is not None and time.monotonic() >= ends and len(conversation) > len(messages):
+                break  # out of time: an answer with what was read
             payload = self._call(system, conversation, tools if tool else None)
             content = payload.get("content") or []
             if payload.get("stop_reason") == "refusal":
-                raise RuntimeError("The model refused to answer.")
+                raise RuntimeError(t("The model refused to answer."))
             calls = [block for block in content if block.get("type") == "tool_use"]
             text = _text(content)
             if payload.get("stop_reason") != "tool_use" or not calls or tool is None:
                 if not text:
-                    raise RuntimeError("Empty answer from the model.")
+                    raise RuntimeError(t("Empty answer from the model."))
                 return text
             conversation.append({"role": "assistant", "content": content})
             results = []
@@ -134,7 +148,7 @@ class ChatModel:
         # Out of tool rounds: an answer with what it has.
         text = _text(self._call(system, conversation, None).get("content") or [])
         if not text:
-            raise RuntimeError("Empty answer from the model.")
+            raise RuntimeError(t("Empty answer from the model."))
         return text
 
     def _call(
@@ -185,6 +199,23 @@ class ChatModel:
     def _post(
         self, body: dict[str, Any], headers: dict[str, str], stream: type[_Stream] | None = None
     ) -> dict[str, Any]:
+        """One call to the service, asked again after a moment when it is only limiting the rate
+        or failed for a moment (``RETRIES``); no credit, a refused key or a bad request is not."""
+
+        for attempt in range(RETRIES + 1):
+            try:
+                return self._post_once(body, headers, stream)
+            except ModelServiceError as exc:
+                if attempt >= RETRIES or exc.kind not in ("rate_limited", "service_error"):
+                    raise
+                wait = min(RETRY_WAIT, exc.retry_after if exc.retry_after else 1.0 + 2 * attempt)
+                LOGGER.info("The model service answered %s; asking again in %.1f s", exc.code, wait)
+                time.sleep(wait)
+        raise AssertionError("unreachable")
+
+    def _post_once(
+        self, body: dict[str, Any], headers: dict[str, str], stream: type[_Stream] | None = None
+    ) -> dict[str, Any]:
         """One call to the service; with ``on_text`` set and a ``stream`` reader for the format,
         the answer comes as server-sent events, read into the same answer as a whole one."""
 
@@ -221,7 +252,9 @@ class ChatModel:
                 problem += " " + t(
                     "Change the provider's reasoning effort in Settings › Language models."
                 )
-            raise ModelServiceError(problem, exc.code) from exc
+            raise ModelServiceError(
+                problem, exc.code, detail, _retry_after(getattr(exc, "headers", None))
+            ) from exc
         except urllib.error.URLError as exc:
             raise RuntimeError(_reach_problem(self.url, exc.reason, bool(proxy))) from exc
         except (TimeoutError, socket.timeout) as exc:
@@ -462,11 +495,47 @@ def _open(request: urllib.request.Request, timeout: float, proxy: str = "") -> A
 
 
 class ModelServiceError(RuntimeError):
-    """The model service answered with an error (``code``: its HTTP status)."""
+    """The model service answered with an error (``code``: its HTTP status; ``kind``: what it
+    means, ``error_kind``)."""
 
-    def __init__(self, message: str, code: int):
+    def __init__(self, message: str, code: int, detail: str = "", retry_after: float = 0.0):
         super().__init__(message)
         self.code = code
+        self.kind = error_kind(code, detail)
+        self.retry_after = retry_after
+
+
+def error_kind(code: int, detail: str = "") -> str:
+    """What an error answer of the model service means, as a short word: ``no_credit`` (429
+    with no quota left), ``rate_limited`` (429, too many calls or tokens a minute: it passes),
+    ``key_refused`` (401, 403), ``service_error`` (500, 502, 503, 504: it passes) or
+    ``refused`` (any other)."""
+
+    lowered = detail.lower()
+    if code == 429:
+        quota = ("insufficient_quota", "quota", "billing", "credit")
+        return "no_credit" if any(word in lowered for word in quota) else "rate_limited"
+    if code in (401, 403):
+        return "key_refused"
+    if code in TRANSIENT:
+        return "service_error"
+    return "refused"
+
+
+def _retry_after(headers: Any) -> float:
+    """The seconds the service asks to wait (``retry-after-ms`` or ``retry-after``), 0 when it
+    names none."""
+
+    if headers is None:
+        return 0.0
+    try:
+        found = headers.get("retry-after-ms")
+        if found:
+            return max(0.0, float(found) / 1000)
+        found = headers.get("retry-after")
+        return max(0.0, float(found)) if found else 0.0
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def _http_problem(code: int, detail: str) -> str:
@@ -704,7 +773,7 @@ def _from_openai(payload: dict[str, Any]) -> dict[str, Any]:
 
     choices = payload.get("choices") or []
     if not choices:
-        raise RuntimeError("Empty answer from the model.")
+        raise RuntimeError(t("Empty answer from the model."))
     message = choices[0].get("message") or {}
     content: list[dict[str, Any]] = []
     if message.get("content"):

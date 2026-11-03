@@ -22,6 +22,7 @@ from typing import Any
 
 from plantcraft.config import plant_timezone, use_installation_zone, valid_zone
 from plantcraft.db import Database, Store
+from plantcraft.i18n import t
 
 INSTALLATION_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
@@ -89,7 +90,7 @@ def installation_file() -> dict[str, Any]:
             )
         if key == "PLANTCRAFT_PLANT_SUBNET":
             value = f"{value} … {os.environ.get('PLANTCRAFT_EGRESS_SUBNET', '')}"
-        entries.append({"key": key, "label": LOCKED_LABELS.get(key, key), "value": value})
+        entries.append({"key": key, "label": t(LOCKED_LABELS.get(key, key)), "value": value})
     sha = (os.environ.get("PLANTCRAFT_INSTALLATION_CONF_SHA256") or "").strip().lower()
     return {
         "present": bool(keys),

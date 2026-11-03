@@ -25,7 +25,89 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 - **PlantCraft PID (`/pid/`, port 8160, uid 10016)**, the first closed app: the P&ID
   reader and plant map, moved out of Documents, compiled with Nuitka and licensed.
 
+### Changed
+
+- Tours: the first tour is shorter (16 steps, was 20). It leaves out one asset's page, System health, Apps and Backups; its step on the menu under the person's name now shows the theme and the display size (Larger text to More space) beside Help. Operations has a short tour of its own (Status, Requests, Backups, the assistant) instead of opening Desk's. Each app's tour no longer stops on its Overview; Analytics' shows Monitors (which algorithm runs, on which assets and when), and Models' shows Tracking when one is set up. A public demo opens in the light theme until the visitor picks another (ui 0.110.0).
+
+- Translations: the pt-BR and es glossaries were reviewed against the words industry tools already use (Grafana, ThingsBoard, FUXA, Elipse), and every catalog and help page follows: Shelve is Arquivar/Archivar (as in Elipse E3; "suprimir" stays for suppressed by design), Warning is Aviso in pt-BR, Threshold is Limite in pt-BR, Gauge is Medidor and Stat is Estatística/Estadística (View), the Editor/Viewer roles are Editor/Visualizador, Audit log is Log de auditoria in pt-BR and Silence is Silencio in es.
+
 ### Fixed
+
+- Public demo assistant (found recording the 0.6 video, 2026-11-03):
+  - The visit's clock no longer covers the assistant's text box: the side panel's box and Desk's keep clear of it.
+  - A model service that only limits the rate (429) or fails for a moment (5xx) is asked again after the wait it names, and only stops the visits' questions for 20 seconds (any 429 stopped them for 10 minutes, so a visit's first question read "The assistant cannot answer right now"). `GET /api/demo/stats` says why answers failed (`failures`) and how long they took (`answer_seconds`).
+  - The side panel follows an answer by reading only what is new, one read at a time: it read the whole chat every 0.7 s even while the last read was still being answered, and around the fifth question of a visit answers stopped arriving. A chat's references are resolved once per read, not once per message. A visit's answer takes at most 75 seconds (`PLANTCRAFT_PUBLIC_DEMO_LLM_SECONDS`), then the model answers with what it read.
+  - A chart the model asked for on the wrong clock (ending hours after now) is moved back to end now, the same length, and the model is told the time on both clocks. A chart of the last 4 hours at 11:18 showed 10:18 to 14:18, three of its hours empty.
+  - A chart's legend names its signals by tag and description ("FIC-1003.PV · Recycle flow"), not by the source's full id (ui 0.111.0).
+  - A demo visitor no longer sees the model's name under every answer.
+- Analytics: a new database gives the disk back by itself as old history is thinned (SQLite `auto_vacuum = INCREMENTAL`, handed back a few megabytes at a time by the hourly upkeep, up to 1 GB an hour). At 3 months of a 2,050-loop plant the file stayed at 23.8 GB with 9 GB of it free. A database made before keeps its size until `linkcraft compact` runs once (in a quiet hour); that run turns the mode on, and the log says so once.
+- Operations: a service that restarts once now counts in its uptime (one 30 s outage) even though, as before, nobody is told until it restarts again. A container that the memory limit stopped and Docker started within seconds read 100 %.
+- Platform: a bundle over 2 GiB is also written in parts of 1900 MiB (`.tar.gz.part-*`), since GitHub refuses a release file of 2 GiB or more (0.6.0's bundles are 2.1 GiB). The install and verify guides say how to join them; the hash and signature are of the joined file.
+- Analytics: the Overview is built once at a time per asset scope; people who open it meanwhile get the previous answer or wait for the new one. With 20 people at 3 months of data each request built its own and the server grew to 1.9 GB until the container's memory limit stopped it.
+- Install: the machine profile sizes Analytics' read cache (`LINKCRAFT_READ_CACHE_MB` 128/256/512/1024 MB), since the server and its engine share `LINKCRAFT_MEMORY`; it was 512 MB on every machine.
+
+## [0.6.0] - 2026-11-02
+
+### Added
+
+- **Spanish (SDK 0.105.0, ui 0.109.0).** The whole suite in Spanish (`es`) next to Brazilian
+  Portuguese: every catalog of the platform, the shared components, the SDK, the six apps and the
+  template, the help of every app, Analytics' method pages and guides, and the platform's guides
+  (`docs/es/`). Its words follow docs/translations-glossary-es.md. The language picker offers
+  Español, the assistant answers in Spanish, and `make ci` holds both languages complete. Still
+  off by default (`PLANTCRAFT_TRANSLATIONS=1`).
+
+### Added
+
+- **The whole suite in Brazilian Portuguese (SDK 0.104.0, ui 0.108.0).** Every catalog is complete:
+  the platform, the shared components, the SDK and the six apps, screens and servers (about
+  9,000 texts), the help of every app, Analytics' method pages and guides, and the platform's
+  guides (`docs/pt-BR/`). Text a person reads that was still bare now goes through `t()`. Help
+  pages read their translation from a `pt-BR/` folder next to the English page
+  (`plantcraft_sdk.i18n.localized`). Words follow one glossary (docs/translations-glossary-pt-BR.md).
+  `make ci` now fails on a text missing from a catalog (`i18n_check --strict`). Still off by
+  default: an installation turns it on with `PLANTCRAFT_TRANSLATIONS=1`.
+
+### Added
+
+- **One translation mechanism for the whole suite (SDK 0.102.0, ui 0.106.0).** Every app now
+  translates the same way as the platform: `createI18n` in `@plantcraft/ui` for the screens and
+  `use_catalogs` with `LanguageMiddleware` in `plantcraft_sdk.i18n` for the servers, each module
+  with its own `locales/pt-BR.json` next to its code (the shared components and the SDK carry
+  their own). One language choice covers every app. `python -m plantcraft_sdk.i18n_check` (in
+  `make ci`) fails on a broken catalog and counts what is still missing. Translations stay off
+  until an installation sets `PLANTCRAFT_TRANSLATIONS=1`, which PlantCraft now tells every page
+  of the suite (the `plantcraft_translations` cookie). See docs/translations.md.
+
+### Fixed
+
+- **Under load with three months of plant-scale history (pc-carga, 2026-11-01).** Alarms' summary
+  read each alarm's rule with its own database connection: with 2,194 alarms and 30 people it
+  answered 500 ("unable to open database file"). Every list of alarms now reads the rules once,
+  and Alarms gets 768 MB on the `medium` profile (384 MB died for lack of memory). A Historian
+  worker turning a 240 h read into JSON (~29 MB) missed uvicorn's 5 s ping and was killed
+  mid-answer, a 502 for the reader: the ping now waits a minute. Operations' Status page showed
+  two different free disks (the installer's from its last backup index, and the live one); it
+  now shows the live one.
+
+- **The guided tour goes to the end on a phone (SDK 0.103.0, ui 0.107.0).** On a 390 px phone the
+  platform tour stopped on its Apps step: the installed-apps table widened the page to about
+  600 px, the phone widened its frame to match, and the tour's card slid below the screen, under
+  the dimmed page, so only its close button could be reached. The Apps page now stays as wide as
+  the screen (the table scrolls inside its panel; Publisher and Adds are left out on a phone), and
+  the tour's card follows the part of the page that shows, so Next is always within reach. A
+  tour step that opens the assistant no longer sends an administrator without a language model
+  to its setup page, which ended the tour. New browser journeys walk the platform's tour and the
+  tours of Analytics, View, Alarms, Models and Documents to the end on a phone
+  (`plantcraft_sdk.e2e.walk_tour`, `e2e.page(..., phone=True, tours=True)`).
+
+- **Three months of plant-scale history on an 8 GB machine (pc-carga, 2026-11-01).** The Historian
+  died for lack of memory with 1.5 GB on the `medium` machine profile: it now gets 3 GB (4 GB on
+  `large`, 6 GB on `xlarge`). A Historian worker starting on a busy archive could deadlock the
+  readers, because PostgreSQL's `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` locks the table even
+  when the column is there: only missing columns are altered now. In the benches, `extreme.py`
+  read no signal at plant scale (it took only the first page of `/api/v1/signals`) and `age.py`
+  could report another machine's "People at once" (the newest report by name, not by time).
 
 - **Analytics on an 8 GB machine: 2 GB of memory, and health that sees a crash loop (SDK 0.101.0).**
   The `medium` machine profile gave Analytics 1 GB (`LINKCRAFT_MEMORY`). With a plant of 2,050

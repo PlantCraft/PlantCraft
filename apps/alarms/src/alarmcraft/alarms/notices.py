@@ -36,6 +36,7 @@ from plantcraft_sdk.utc import zone_of as sdk_zone_of
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from alarmcraft.alarms.model import OWNER, Discipline
+from alarmcraft.i18n import t
 
 KEEP_DAYS = 30
 MAX_SILENCE_MINUTES = 30 * 24 * 60
@@ -58,7 +59,7 @@ def _ids(values: list[str], limit: int = 300) -> list[str]:
     for value in values:
         value = str(value or "").strip()
         if not value or len(value) > limit or any(ord(ch) < 32 for ch in value):
-            raise ValueError("ids of 1 to 300 characters")
+            raise ValueError(t("ids of 1 to 300 characters"))
         if value not in found:
             found.append(value)
     return found
@@ -69,10 +70,13 @@ def _recipient_refs(value: list[str], extra: tuple[str, ...] = ("owner",)) -> li
     for item in found:
         if item not in extra and not OWNER.match(item):
             raise ValueError(
-                "recipients are user:<username>, group:<id>, " + " or ".join(extra) + " (the word)"
+                t(
+                    "recipients are user:<username>, group:<id>, {words} (the word)",
+                    words=t(" or ").join(extra),
+                )
             )
     if not found:
-        raise ValueError("at least one recipient")
+        raise ValueError(t("at least one recipient"))
     return found
 
 
@@ -96,15 +100,15 @@ class Window(BaseModel):
     def _clock(cls, value: str) -> str:
         value = (value or "").strip()
         if not CLOCK.match(value):
-            raise ValueError("a time of day as HH:MM (00:00 to 24:00)")
+            raise ValueError(t("a time of day as HH:MM (00:00 to 24:00)"))
         return value
 
     @model_validator(mode="after")
     def _span(self) -> Window:
         if self.start == "24:00":
-            raise ValueError("a window starts at 23:59 at the latest")
+            raise ValueError(t("a window starts at 23:59 at the latest"))
         if minutes_of(self.start) == minutes_of(self.end):
-            raise ValueError("a window ends at another time than it starts")
+            raise ValueError(t("a window ends at another time than it starts"))
         self.days = sorted(dict.fromkeys(self.days), key=DAYS.index)
         return self
 
@@ -142,7 +146,7 @@ def valid_zone(value: str) -> str:
     try:
         ZoneInfo(value)
     except (ZoneInfoNotFoundError, ValueError) as exc:
-        raise ValueError("a time zone like America/Sao_Paulo, UTC or local") from exc
+        raise ValueError(t("a time zone like America/Sao_Paulo, or local")) from exc
     return value
 
 
@@ -181,10 +185,12 @@ class Delivery(BaseModel):
     @model_validator(mode="after")
     def _hours(self) -> Delivery:
         if self.hours_mode != "always" and not self.hours:
-            raise ValueError("add the hours to send in, or send always")
+            raise ValueError(t("add the hours to send in, or send always"))
         steps = [step.after_minutes for step in self.escalations]
         if steps != sorted(set(steps)):
-            raise ValueError("escalation steps go from the shortest wait to the longest, once each")
+            raise ValueError(
+                t("escalation steps go from the shortest wait to the longest, once each")
+            )
         return self
 
 
@@ -217,13 +223,13 @@ class SilenceDraft(BaseModel):
     def _reason(cls, value: str) -> str:
         value = (value or "").strip()
         if not value or any(ord(ch) < 32 for ch in value):
-            raise ValueError("say why, in one line")
+            raise ValueError(t("say why, in one line"))
         return value
 
     @model_validator(mode="after")
     def _something(self) -> SilenceDraft:
         if not (self.areas or self.disciplines or self.alarm_ids):
-            raise ValueError("choose the areas, disciplines or alarms to silence")
+            raise ValueError(t("choose the areas, disciplines or alarms to silence"))
         self.disciplines = list(dict.fromkeys(self.disciplines))
         return self
 

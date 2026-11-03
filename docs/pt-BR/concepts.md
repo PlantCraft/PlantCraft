@@ -50,7 +50,7 @@ Cada pessoa pode abrir todos os apps ou só alguns.
 
 ### Nível de acesso
 
-Administrador, editor, leitor ou só painéis: o que uma pessoa pode alterar,
+Administrador, editor, visualizador ou só dashboards: o que uma pessoa pode alterar,
 aqui e nos apps.
 
 ### Token e chave de app
@@ -59,6 +59,6 @@ Um token prova a um app quem você é; dura minutos e se renova enquanto o
 PlantCraft está aberto. Uma chave de app permite que um app trabalhe sozinho;
 ela aparece uma única vez e pode ser revogada.
 
-### Registro de auditoria
+### Log de auditoria
 
 O registro de quem alterou o quê, escrito pelo PlantCraft e pelos apps.

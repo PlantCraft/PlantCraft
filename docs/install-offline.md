@@ -26,14 +26,15 @@ Each release has one bundle per processor: `linux-amd64` for x86_64 servers and 
 for 64-bit ARM ones (`uname -m` says `x86_64` or `aarch64`). The installer refuses a bundle for
 the other processor (`--allow-emulation` runs it emulated, several times slower). Copy three
 files of the release to the server: the bundle, its `.sha256` and the signature of that hash,
-`.sha256.sig`. Then check that the bundle is the one the publisher signed **before unpacking
+`.sha256.sig` (a bundle over 2 GiB comes in parts, `.tar.gz.part-*`: join them first with
+`cat <bundle>.tar.gz.part-* > <bundle>.tar.gz`). Then check that the bundle is the one the publisher signed **before unpacking
 it**, with `ssh-keygen` (OpenSSH 8.1 or later, already on every supported Linux and on macOS):
 
 ```bash
 # The publisher's key, once: this line, compared with the one on the release page.
 echo 'release@plantcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
     > plantcraft.allowed_signers
-B=plantcraft-0.5.1-linux-amd64-bundle.tar.gz
+B=plantcraft-0.6.0-linux-amd64-bundle.tar.gz
 ssh-keygen -Y verify -f plantcraft.allowed_signers -I release@plantcraft -n file \
     -s $B.sha256.sig < $B.sha256        # Good "file" signature for release@plantcraft ...
 sha256sum -c $B.sha256                 # plantcraft-...tar.gz: OK  (macOS: shasum -a 256 -c)
@@ -200,7 +201,7 @@ settings and certificates.
 | `LINKCRAFT_SIGNAL_ROUND_MINUTES`, `LINKCRAFT_SIGNAL_WINDOW_HOURS` | `15`, `24` | Analytics' Signal quality schedule and window at its first start (then changed in Analytics) |
 | `LINKCRAFT_HISTORY_DAYS`, `LINKCRAFT_HISTORY_FULL_DAYS` | `90`, `14` | How long Analytics keeps loop health and signal check history, and how many recent days keep every point (older days keep the last point of each hour; signal problems are always kept) |
 | `HISTCRAFT_URL` | empty | Optional data layer. Empty: PlantCraft reads its own sources. With the Historian on, `http://histcraft:8100/hist` makes the Historian the data layer (sources kept in the Historian, signals and series read through it) |
-| `SIMCRAFT_VERSION` | `0.5.1` | Image of the `demo` profile; set by `install.sh` from the bundle |
+| `SIMCRAFT_VERSION` | `0.6.0` | Image of the `demo` profile; set by `install.sh` from the bundle |
 | `PLANTCRAFT_ADMIN_USERNAME` | `admin` | Emergency administrator |
 | `PLANTCRAFT_MACHINE` | `auto` | The machine profile (below): `small`, `medium`, `large`, `xlarge`, `auto` or `off`; `--machine` sets it |
 | `PLANTCRAFT_MAX_CPUS`, `PLANTCRAFT_MAX_MEMORY` | empty | On a shared server, the most the profile sizes for (`6`, `12g`) |
@@ -258,7 +259,7 @@ certificate authority, OCSP responder or update server.
 against the same folder:
 
 ```bash
-cd plantcraft-0.5.1-linux-amd64-bundle
+cd plantcraft-0.6.0-linux-amd64-bundle
 sudo ./install.sh --prefix /opt/plantcraft
 ```
 
@@ -439,7 +440,7 @@ Each app is included when its image `<app>:$<APP>_VERSION` exists
 locally (built in its folder, `apps/<app>`, with `make image`; `LINKCRAFT_VERSION`,
 `DASHCRAFT_VERSION`, `HISTCRAFT_VERSION`, `ALARMCRAFT_VERSION`, `MODELCRAFT_VERSION`, default the suite's version), the Historian only with its
 PostgreSQL image (`docker pull` the digest `compose.yaml` names, once), and the Simulator when
-`simcraft:$SIMCRAFT_VERSION` (default `0.5.1`) does.
+`simcraft:$SIMCRAFT_VERSION` (default `0.6.0`) does.
 The Simulator lives in `simulator/`: `make simcraft-image` builds its image from the
 folder at `SIMCRAFT_SRC` (default `simulator`, which must be that version), and
 `make bundle` and `make isolation` run it whenever that folder exists. A Simulator image

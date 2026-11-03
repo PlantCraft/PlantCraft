@@ -38,6 +38,8 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from typing import Any
 
+from alarmcraft.i18n import t
+
 FLOOD_ALARMS = 10
 SLOT = timedelta(minutes=10)
 HOUR = timedelta(hours=1)
@@ -225,77 +227,112 @@ def performance(
     figures = [
         {
             "id": "per_hour",
-            "label": "Average alarms per hour",
-            "help": "How many alarms an operator received each hour, on average. ISA-18.2 takes about 6 an hour as what one person can handle.",
+            "label": t("Average alarms per hour"),
+            "help": t(
+                "How many alarms an operator received each hour, on average. ISA-18.2 takes about 6 an hour as what one person can handle."
+            ),
             "value": round(per_hour, 2),
-            "target": f"≤ {per_person:g} (≤ {2 * per_person:g} manageable)",
+            "target": t(
+                "≤ {limit} (≤ {manageable} manageable)",
+                limit=f"{per_person:g}",
+                manageable=f"{2 * per_person:g}",
+            ),
             "status": _status(per_hour, per_person, 2 * per_person),
         },
         {
             "id": "per_10min",
-            "label": "Average alarms per 10 minutes",
-            "help": "The same load counted in 10-minute periods, the time an operator has to react to each one.",
+            "label": t("Average alarms per 10 minutes"),
+            "help": t(
+                "The same load counted in 10-minute periods, the time an operator has to react to each one."
+            ),
             "value": round(per_ten, 2),
-            "target": f"≤ {round(per_person / 6, 2):g} (≤ {round(per_person / 3, 2):g} manageable)",
+            "target": t(
+                "≤ {limit} (≤ {manageable} manageable)",
+                limit=f"{round(per_person / 6, 2):g}",
+                manageable=f"{round(per_person / 3, 2):g}",
+            ),
             "status": _status(per_ten, per_person / 6, per_person / 3),
         },
         {
             "id": "flood",
-            "label": "Time in flood",
-            "help": "The share of 10-minute periods with more alarms than an operator can answer (an alarm flood): too many to read, the important ones get lost.",
+            "label": t("Time in flood"),
+            "help": t(
+                "The share of 10-minute periods with more alarms than an operator can answer (an alarm flood): too many to read, the important ones get lost."
+            ),
             "value": round(flood_share, 1),
             "unit": "%",
-            "target": f"< 1 % of 10-minute periods with more than {flood_alarms} alarms",
+            "target": t(
+                "< 1 % of 10-minute periods with more than {count} alarms", count=flood_alarms
+            ),
             "status": _status(flood_share, 1, 5),
         },
         {
             "id": "busy",
-            "label": "Time above 30 alarms an hour",
-            "help": "The share of hours with more than 30 alarms: five times what one person handles, when alarms stop being read.",
+            "label": t("Time above 30 alarms an hour"),
+            "help": t(
+                "The share of hours with more than 30 alarms: five times what one person handles, when alarms stop being read."
+            ),
             "value": round(100.0 * busy_hours / len(hourly), 1),
             "unit": "%",
-            "target": f"as little as possible (hours with more than {BUSY_PER_HOUR} alarms)",
+            "target": t(
+                "as little as possible (hours with more than {count} alarms)",
+                count=BUSY_PER_HOUR,
+            ),
             "status": _status(100.0 * busy_hours / len(hourly), 1, 5),
         },
         {
             "id": "fleeting",
-            "label": "Fleeting alarms",
-            "help": f"Alarms back to normal within {FLEETING_SECONDS:g} seconds with nobody acting: they ask for nothing, so they should not be alarms (a delay or a deadband removes them).",
+            "label": t("Fleeting alarms"),
+            "help": t(
+                "Alarms back to normal within {seconds} seconds with nobody acting: they ask for "
+                "nothing, so they should not be alarms (a delay or a deadband removes them).",
+                seconds=f"{FLEETING_SECONDS:g}",
+            ),
             "value": sum(fleeting.values()),
-            "target": "none",
+            "target": t("none"),
             "status": "ok" if not fleeting else "warning",
         },
         {
             "id": "peak",
-            "label": "Peak alarms in 10 minutes",
-            "help": "The most alarms raised in any one 10-minute period: the worst moment of the period.",
+            "label": t("Peak alarms in 10 minutes"),
+            "help": t(
+                "The most alarms raised in any one 10-minute period: the worst moment of the period."
+            ),
             "value": peak,
             "target": f"≤ {flood_alarms}",
             "status": _status(peak, flood_alarms, 2 * flood_alarms),
         },
         {
             "id": "top10",
-            "label": "Load from the 10 most frequent alarms",
-            "help": "The share of all alarms that come from the 10 raised most often. A high share means a few bad actors make most of the noise: fix those first.",
+            "label": t("Load from the 10 most frequent alarms"),
+            "help": t(
+                "The share of all alarms that come from the 10 raised most often. A high share means a few bad actors make most of the noise: fix those first."
+            ),
             "value": round(top_share, 1),
             "unit": "%",
-            "target": "≤ 5 % (≤ 10 % manageable) on a large alarm system",
+            "target": t("≤ 5 % (≤ 10 % manageable) on a large alarm system"),
             "status": "ok" if total < 50 else _status(top_share, 5, 10),
         },
         {
             "id": "chattering",
-            "label": "Chattering alarms",
-            "help": "Alarms that raise and clear again and again within a minute, usually a limit too close to normal operation or a missing deadband.",
+            "label": t("Chattering alarms"),
+            "help": t(
+                "Alarms that raise and clear again and again within a minute, usually a limit too close to normal operation or a missing deadband."
+            ),
             "value": len(chattering),
-            "target": f"none ({chatter_count} or more raises within a minute)",
+            "target": t("none ({count} or more raises within a minute)", count=chatter_count),
             "status": "ok" if not chattering else "alarm",
         },
         {
             "id": "stale",
-            "label": "Stale alarms",
-            "help": "Alarms active for a long time without being solved. An alarm that stays on stops being read.",
+            "label": t("Stale alarms"),
+            "help": t(
+                "Alarms active for a long time without being solved. An alarm that stays on stops being read."
+            ),
             "value": len(stale),
-            "target": f"fewer than 5 active for more than {stale_hours:g} hours",
+            "target": t(
+                "fewer than 5 active for more than {hours} hours", hours=f"{stale_hours:g}"
+            ),
             "status": _status(len(stale), 4, 9),
         },
     ]

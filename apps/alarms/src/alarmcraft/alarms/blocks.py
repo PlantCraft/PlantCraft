@@ -145,7 +145,7 @@ def _kinds(values: list[str]) -> list[str]:
     for value in values:
         value = str(value or "").strip()
         if not EVENT_KIND.match(value) or ("*" in value and not value.endswith(".*")):
-            raise ValueError("an event kind like linkcraft.run.failed, or linkcraft.finding.*")
+            raise ValueError(t("an event kind like linkcraft.run.failed, or linkcraft.finding.*"))
         if value not in found:
             found.append(value)
     return found
@@ -278,7 +278,7 @@ class CompareParams(BaseModel):
     @classmethod
     def _finite(cls, value: float) -> float:
         if not math.isfinite(value):
-            raise ValueError("a finite number")
+            raise ValueError(t("a finite number"))
         return value
 
 
@@ -335,14 +335,14 @@ class GradeEntry(BaseModel):
     def _grade(cls, value: str) -> str:
         value = value.strip()
         if not value:
-            raise ValueError("a grade has a name")
+            raise ValueError(t("a grade has a name"))
         return value
 
     @field_validator("limit")
     @classmethod
     def _finite(cls, value: float) -> float:
         if not math.isfinite(value):
-            raise ValueError("a finite number")
+            raise ValueError(t("a finite number"))
         return value
 
 
@@ -367,7 +367,7 @@ class GradeParams(EventParams):
     def _unique(self) -> GradeParams:
         names = [item.grade for item in self.limits]
         if len(set(names)) != len(names):
-            raise ValueError("each grade once")
+            raise ValueError(t("each grade once"))
         return self
 
 
