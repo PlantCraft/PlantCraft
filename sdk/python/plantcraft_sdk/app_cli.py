@@ -9,7 +9,7 @@ files, the ``pyproject.toml`` version equal to the ``app.toml`` version, the
 ``vendor/README.md`` (an app inside the PlantCraft repository, under ``apps/``, links
 the tree's ``sdk/python`` and ``ui/`` instead and has no ``vendor/``); and the operations rules (``docs/operations.md``): a
 ``CHANGELOG.md`` entry for the version, every SQLite file in ``[backup]``, logs
-through ``configure_logging``. Prints every problem and exits 1 when there is one;
+through ``configure_logging`` (or ``plantcraft_sdk.server.cli.start_logs``). Prints every problem and exits 1 when there is one;
 warnings alone exit 0. Each app's ``make ci`` runs it.
 """
 
@@ -271,7 +271,7 @@ def _operations(root: Path, manifest: AppManifest, report: Report) -> None:
     for name in sorted(named - declared):
         report.errors.append(f"app.toml: [backup] sqlite does not name {name} (it is in the code)")
     code = "\n".join(sources.values())
-    if sources and "configure_logging(" not in code:
+    if sources and "configure_logging(" not in code and "start_logs(" not in code:
         report.errors.append(
             "src: logs do not go through plantcraft_sdk.server.logs.configure_logging"
         )

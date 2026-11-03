@@ -7,10 +7,8 @@ each request (``plantcraft_sdk.i18n.LanguageMiddleware``).
 
 from __future__ import annotations
 
-from pathlib import Path
+from plantcraft_sdk.i18n import current_language, t, use_app_catalogs
 
-from plantcraft_sdk.i18n import current_language, t, use_catalogs
-
-use_catalogs(Path(__file__).with_name("locales"))
+use_app_catalogs(__file__)
 
 __all__ = ["current_language", "t"]
