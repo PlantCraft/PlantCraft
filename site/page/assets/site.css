@@ -368,3 +368,22 @@ footer{padding-bottom:46px}.launchers{bottom:84px}
 .stack .ptab.on .pn,.stack .ptab.on .ps{color:var(--t3)}.stack .ptab.on .pico{background:var(--soft)}.stack .ptab.on .pi{stroke:var(--accent)}
 @media (min-width:761px){.show{height:min(calc(100vh - 390px),600px)}}
 @media (min-width:761px){.showcase .clip-bar{width:min(100%,calc(min(100vh - 390px,600px)*16/8.4));max-width:100%}}
+/* Open, simpler (2026-11-03): goal on one line, blocks on one line, step text and Data/Python under the chart */
+.vopen .goal{flex-direction:row;align-items:baseline;gap:6px;flex-wrap:wrap}
+.vopen .gk{font-size:15px;color:var(--t3)}
+.vopen .chain{flex-wrap:nowrap;overflow:hidden}
+.vopen .blk{white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.vopen .arr{flex:none}
+.dbot{display:flex;align-items:center;gap:10px;margin-top:8px}
+.dbot p{flex:1;min-width:0;font-size:13.5px;color:var(--t2);line-height:1.4}
+.dbot p b{color:var(--t1)}
+.vis.net{grid-template-rows:auto;align-content:center}
+/* phone: the four reasons start closed and open on tap, like the apps */
+.stack .ptab{pointer-events:auto;border-radius:14px;border-bottom-color:var(--line);cursor:pointer}
+.stack .ptab .pgo{display:block;color:var(--t4);font-size:22px;transition:.2s}
+.stack .ptab.on{border-radius:14px 14px 0 0;border-bottom-color:transparent}
+.stack .ptab.on .pgo{transform:rotate(90deg);color:var(--t4)}
+.stack .ppane{display:none!important}
+.stack .ppane.on{display:grid!important}
+.stack .ppane[data-p=secure] .pr,.stack .ppane[data-p=fast] .pr{display:none}
+.vopen .chain{padding:3px}

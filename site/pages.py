@@ -239,16 +239,15 @@ CHATS = [
 ]
 
 VIS = {
-    "vis-open": """<div class="vis vopen"><div class="goal"><span class="gk">Goal <em id="extag"></em></span><b id="exgoal"></b></div>
+    "vis-open": """<div class="vis vopen"><div class="goal"><span class="gk">Goal:</span> <b id="exgoal"></b></div>
 <div class="chain" id="chain"></div>
-<div class="dview" id="dview" data-v="data"><div class="dtop"><span id="dstep"></span><span class="dhint" id="dhint"></span><div class="dseg"><button type="button" class="on" data-v="data">Data</button><button type="button" data-v="py">Python</button></div></div>
-<div class="dd"><div id="dplot"></div><p id="dtext"></p></div><pre class="py" id="py"></pre></div>
+<div class="dview" id="dview" data-v="data"><div class="dd"><div id="dplot"></div></div><pre class="py" id="py"></pre>
+<div class="dbot"><p><b id="dstep"></b> <span id="dtext"></span></p><div class="dseg"><button type="button" class="on" data-v="data">Data</button><button type="button" data-v="py">Python</button></div></div></div>
 <div class="vfoot"><span class="rdot" id="exdot"></span><span class="rlab">Result</span><b id="exres"></b><button type="button" class="mini" id="nextex">Next example →</button></div></div>""",
     "vis-secure": """<div class="vis net"><div class="zone plant"><span class="zl">Plant control network</span><div class="node">DCS / PLC</div><div class="node">PI · OPC UA</div></div>
 <div class="flow"><span class="dot"></span><span class="dot d2"></span><span class="dot d3"></span><em>read-only</em></div>
 <div class="zone site"><span class="zl">Your site network</span><div class="node main"><img src="LOGO" alt="">PlantCraft server</div><div class="node">Engineers · browser</div></div>
-<div class="noint"><span>Internet</span><s>not needed</s></div>
-<ul class="ticks" id="ticks"><li>Signed bundle checked</li><li>Sign-in required</li><li>Audit log on</li><li>Backup before update</li></ul></div>""",
+</div>""",
     "vis-llm": """<div class="vis vchat"><div class="vh"><span>Assistant · demo plant</span><button class="mini" id="nextq">Next question →</button></div><div class="msgs" id="msgs"></div>
 <div class="ask"><div>Ask about the plant…</div><a class="btn p sm" href="%%DEMO_URL%%">Try it in the live demo</a></div></div>""",
     "vis-fast": """<div class="vis term"><div class="vh dark"><span>plant-server</span><span id="clock">00:00</span></div><pre id="term"></pre><div class="bar"><i id="prog"></i></div><ul class="finds" id="finds"></ul></div>""",
