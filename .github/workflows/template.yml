@@ -4,8 +4,8 @@ name: App template
 # to sdk/python or ui/ that would break an app made from the template fails here first. The job
 # builds both packages, vendors them into the template (dev/revendor, as at a release) and runs
 # its `make ci`, on main four times a day (the schedule below) when those files changed since the
-# last green run, and by hand. Pull requests and pushes still start a run that tests nothing: a
-# push is how the schedule knows something changed. Documentation-only changes run nothing. CI
+# last green run, by hand, and on every pull request that touches them (GitHub's runners). A push
+# to main starts a run that tests nothing: it is how the schedule knows something changed. Documentation-only changes run nothing. CI
 # budget and cadence: ci/macmini/README.md.
 on:
   push:
@@ -65,8 +65,8 @@ jobs:
 
   ci:
     needs: [changes]
-    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
+    if: ${{ !cancelled() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
+    runs-on: ${{ github.event_name == 'pull_request' && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

@@ -24,19 +24,20 @@ folder changes, so a change to one app deploys that app alone. `concurrency` can
 request's run that a newer push replaces, and changes to documentation only (`*.md`, `docs/`) run
 nothing.
 
-**Tests on main a few times a day.** A pull request runs only Lint and
-Security, and its author runs `make ci` of every folder the change touches (`dev/ship`) before
-merging; that is the gate. The full tests and e2e run on main four times a day, and by hand when
-needed (`gh workflow run ci.yml -R PlantCraft/PlantCraft`, or the app's workflow). A merge is
-deployed to the Mac mini at once, so the owner sees it there within minutes, tested or not. When a
+**Tests of the changed folder on every pull request; browser journeys on main.** A pull request
+runs Lint, Security and the tests of each folder it changes (`make ci` of that app, the Simulator
+or the template; the platform's backend and frontend jobs), always on GitHub's runners (free for a
+public repository), never on the Mac mini or `TEST_RUNNER`. It merges once those checks are green.
+The browser journeys (e2e) and the container jobs run on main four times a day when the folder
+changed since its last green run, and by hand when needed (`gh workflow run ci.yml -R
+PlantCraft/PlantCraft`, or the app's workflow). A merge is deployed to the Mac mini at once. When a
 scheduled run fails, the change that broke it is found among the merges since the last green run
-and fixed or reverted at once. Pull requests still start each workflow (its jobs are skipped), so
-the status checks a ruleset may require are reported.
+and fixed or reverted at once.
 
 **A public repository and a machine of our own.** A pull request's workflow runs from the pull
 request's own files, so a stranger's fork could edit one to ask for the Mac mini. Three things
-keep it off: the test jobs name GitHub's runners (`TEST_RUNNER` may name another, never the Mac
-mini); every runner here refuses, in its job-started hook (`ci-slot-acquire.sh`), any job that is
+keep it off: the test jobs name GitHub's runners (`ubuntu-latest` on a pull request; on main
+`TEST_RUNNER` may name another, never the Mac mini); every runner here refuses, in its job-started hook (`ci-slot-acquire.sh`), any job that is
 not main's (a push, the schedule or a run by hand, all of which need write access); and
 `setup.sh` makes every outside contributor's workflow run wait for a maintainer's approval. The
 deploy jobs read no secret.

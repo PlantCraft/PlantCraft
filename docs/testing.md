@@ -54,6 +54,10 @@ A test over its budget fails the run and is named; the fix is to make it faster 
 slow on purpose. `suite_seconds` is set to about twice the measured run, and raised only with a
 line in the devlog saying why. `PLANTCRAFT_TEST_BUDGET=off` turns the check off on a machine
 busy with other work.
+The scheduled browser journeys (`make e2e` in CI) run with the check off: `suite_seconds` measures
+`make test`, and a browser run on GitHub's 2-core runner is bounded by its job instead. A browser
+test that needs Playwright skips when it is missing (`pytest.skip(..., allow_module_level=True)`
+unless `<APP>_E2E_REQUIRED=1`), so `make test` without the `e2e` extra still collects.
 
 ## Writing a new test
 

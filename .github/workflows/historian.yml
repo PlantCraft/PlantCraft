@@ -1,8 +1,8 @@
 name: Historian
 
 # Historian (apps/historian/): runs only when that folder changes. CI budget and cadence:
-# ci/macmini/README.md. Pull requests run no tests here: the Lint and Security workflows check every
-# pull request, and contributors run this folder's `make ci` locally before merging. The tests run
+# ci/macmini/README.md. A pull request runs this folder's `make ci`
+# (tests, not the browser journeys) on GitHub's runners; it merges once that check is green. The tests run
 # on main four times a day (the schedule below) when the folder changed since the last green run,
 # and by hand (Actions > this workflow > Run workflow). A push to main redeploys this app on the Mac
 # mini's local suite (repository variable MACMINI_DEPLOY) without waiting for them. The container
@@ -73,8 +73,8 @@ jobs:
 
   ci:
     needs: [changes]
-    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
+    if: ${{ !cancelled() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.run == 'true') }}
+    runs-on: ${{ github.event_name == 'pull_request' && 'ubuntu-latest' || vars.TEST_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

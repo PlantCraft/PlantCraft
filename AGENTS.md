@@ -253,10 +253,11 @@ The full plan, with roles and the GitHub organisation, is
 - Inside this repository, shared files (`plantcraft/api/app.py`, the frontend router, the
   locale catalogs, `pyproject.toml`) get small, surgical edits; re-read before editing. Add new
   code in a **new module** instead of growing a shared file.
-- **CI cadence.** A pull request runs only Lint and Security; run `make ci` of
-  every folder you touched (`dev/ship`) before merging, that is the gate. The tests and e2e run on
-  main about four times a day (ci/macmini/README.md); when one fails, the merge that broke it is
-  fixed or reverted at once.
+- **CI cadence.** A pull request runs Lint, Security and the tests of every folder it changes
+  (each folder's `make ci` on GitHub's runners; no browser journeys). Run `make ci` of every folder
+  you touched (`dev/ship`) before pushing, and merge only when the pull request's checks are green.
+  The browser journeys (e2e) run on main about four times a day (ci/macmini/README.md); when one
+  fails, the merge that broke it is fixed or reverted at once.
 - **Never stack long PR chains.** Branch from `main`, keep PRs small, merge in order. When merging
   several branches: merge one, run `make ci`, fix, then the next. Two green branches can still
   break each other.

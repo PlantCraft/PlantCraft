@@ -6,6 +6,12 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A table cell coloured by its value reads.** A fill too light for white text, such as the
+  orange of the second series, is deepened just enough for 4.5:1; a single big value is no longer
+  clipped at its top.
+
 ## [0.6.0] - 2026-11-02
 
 ### Added

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { colorOf, effective, mappedText, optionsOf, stateOf, stepOf, stepValues, valueColor } from "./fields";
+import { colorOf, contrast, effective, mappedText, optionsOf, readableFill, textOn, stateOf, stepOf, stepValues, valueColor } from "./fields";
 import { pickValues, expandValues, staticOptions } from "./variables";
 import type { Thresholds, Variable } from "./types";
 
@@ -52,5 +52,15 @@ describe("variables on the page", () => {
   it("lists and time spans need no read", () => {
     expect(staticOptions({ name: "p", type: "interval", options: ["8h"] })).toEqual([{ value: "8h", text: "8 hours", group: null, description: "" }]);
     expect(staticOptions(loop)).toBeNull();
+  });
+});
+
+describe("a filled table cell reads", () => {
+  it("deepens a fill only as far as its text needs 4.5:1", () => {
+    const fill = readableFill("#c25e00")!;
+    expect(fill).not.toBe("#c25e00");
+    expect(contrast(textOn(fill)!, fill)).toBeGreaterThanOrEqual(4.5);
+    expect(readableFill("#0f55a3")).toBe("#0f55a3");
+    expect(readableFill(undefined)).toBeUndefined();
   });
 });
