@@ -239,11 +239,11 @@ CHATS = [
 ]
 
 VIS = {
-    "vis-open": """<div class="vis vopen"><div class="goal"><span class="gk">Goal <em id="extag"></em></span><b id="exgoal"></b></div>
+    "vis-open": """<div class="vis vopen"><div class="goal"><span class="gk">Goal:</span> <b id="exgoal"></b></div>
 <div class="chain" id="chain"></div>
-<div class="dview" id="dview" data-v="data"><div class="dtop"><span id="dstep"></span><span class="dhint" id="dhint"></span><div class="dseg"><button type="button" class="on" data-v="data">Data</button><button type="button" data-v="py">Python</button></div></div>
-<div class="dd"><div id="dplot"></div><p id="dtext"></p></div><pre class="py" id="py"></pre></div>
-<div class="vfoot"><span class="rdot" id="exdot"></span><span class="rlab">Result</span><b id="exres"></b><button type="button" class="mini" id="nextex">Next example →</button></div></div>""",
+<p class="dline"><span class="rdot" id="exdot"></span><span id="dtext"></span></p>
+<div class="dview" id="dview" data-v="data"><div class="dd"><div id="dplot"></div></div><pre class="py" id="py"></pre></div>
+<div class="dbot"><div class="dseg"><button type="button" class="on" data-v="data">Data</button><button type="button" data-v="py">Python</button></div><button type="button" class="mini" id="nextex">Next example →</button></div></div>""",
     "vis-secure": """<div class="vis net"><div class="zone plant"><span class="zl">Plant control network</span><div class="node">DCS / PLC</div><div class="node">PI · OPC UA</div></div>
 <div class="flow"><span class="dot"></span><span class="dot d2"></span><span class="dot d3"></span><em>read-only</em></div>
 <div class="zone site"><span class="zl">Your site network</span><div class="node main"><img src="LOGO" alt="">PlantCraft server</div><div class="node">Engineers · browser</div></div>

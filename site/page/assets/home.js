@@ -56,38 +56,38 @@ const EX=[
  steps:[
  {b:'Feed flow',l:1,t:'The raw signal from the historian: last 4 days of feed flow.',s:[{d:ff,c:BLUE}]},
  {b:'Remove trend',l:2,t:'The slow rise is taken out. Only the fast changes are left.',s:[{d:ff,c:GREY,w:1},{d:ffd.map(v=>v+50),c:BLUE}]},
- {b:'Variability',l:3,t:'How much it moves in each hour. It grows in the last two days.',s:[{d:std,c:BLUE,fill:1}]},
- {b:'Compare with baseline',l:4,t:'Recent variability against the normal level for this signal.',s:[{d:std,c:BLUE},{d:ix.map(()=>1),c:RED,dash:1,lab:'baseline'}],hi:[72,95]},
- {b:'Result',l:5,t:'3.1 times the baseline: flagged as a high disturbance for the feed line.',bars:[['Baseline',1,GREY],['Last day',3.1,RED]]}]},
+ {b:'Variability',l:3,t:'How much it moves each hour. It grows in the last two days.',s:[{d:std,c:BLUE,fill:1}]},
+ {b:'vs baseline',l:4,t:'Recent variability against the normal level for this signal.',s:[{d:std,c:BLUE},{d:ix.map(()=>1),c:RED,dash:1,lab:'baseline'}],hi:[72,95]},
+ {b:'Result',l:5,t:'3.1× the baseline: a high disturbance on the feed line.',bars:[['Baseline',1,GREY],['Last day',3.1,RED]]}]},
 {asset:'Analyzer AT-210',goal:'Detect a frozen analyzer signal (AT-210)',tag:'Data quality',res:'Frozen signal since 03:00',
  py:['<span class="c"># open Python behind these blocks</span>','<span class="k">def</span> frozen(x, noise, hours=6):','    change = rolling_change(x, "10min")','    flat = change &lt; noise           <span class="c"># Below noise level</span>','    run = longest_run(flat)','    <span class="k">return</span> run &gt;= hours   <span class="c"># 9 h → frozen</span>'],
  steps:[
  {b:'Signal',l:1,t:'The analyzer value. It looks normal at first sight.',s:[{d:an,c:BLUE}]},
  {b:'Rolling change',l:2,t:'How much the value changes from one sample to the next.',s:[{d:dif,c:BLUE,fill:1}]},
- {b:'Below noise level',l:3,t:'A real analyzer always moves a little. Here it stops moving at all.',s:[{d:dif,c:BLUE},{d:ix.map(()=>.04),c:RED,dash:1,lab:'noise level'}],hi:[60,95]},
+ {b:'Below noise',l:3,t:'A real analyzer always moves a little. This one stopped.',s:[{d:dif,c:BLUE},{d:ix.map(()=>.04),c:RED,dash:1,lab:'noise level'}],hi:[60,95]},
  {b:'For 6 hours',l:4,t:'It has stayed flat for 9 hours, longer than the 6-hour limit.',s:[{d:an,c:BLUE}],hi:[60,95],hl:'9 h flat'},
- {b:'Result',l:5,t:'Frozen since 03:00. Check the analyzer before trusting its value.',bars:[['Limit',6,GREY],['Flat for',9,RED]],u:' h'}]},
+ {b:'Result',l:5,t:'Frozen since 03:00. Check the analyzer before trusting it.',bars:[['Limit',6,GREY],['Flat for',9,RED]],u:' h'}]},
 {asset:'Boiler B-1',goal:'Track steam use per ton on boiler B-1',tag:'Energy',st:'warn',res:'Uses 8 % more steam per ton than its target',
  py:['<span class="c"># open Python behind these blocks</span>','<span class="k">def</span> specific_use(steam, prod):','    s, p = daily(steam), daily(prod)','    r = s / p                      <span class="c"># Ratio</span>','    gap = r[-15:].mean() / TARGET - 1','    <span class="k">return</span> gap  <span class="c"># +8 % (lower is better)</span>'],
  steps:[
  {b:'Steam flow',l:2,t:'Tons of steam used each day, last 30 days.',s:[{d:steam,c:BLUE,bar:1}]},
  {b:'Production',l:2,t:'Tons produced each day. Weekends are lower.',s:[{d:prod,c:GREY,bar:1}]},
- {b:'Ratio',l:3,t:'Steam per ton of product. It does not depend on how much was produced. Lower is better.',s:[{d:ratio,c:BLUE}],yl:'t steam / t product'},
- {b:'Compare with target',l:4,t:'Up to day 15 it was on target. Since then it uses more steam for each ton.',s:[{d:ratio,c:BLUE},{d:ratio.map(()=>2.1),c:GRN,dash:1,lab:'target 2.10'}],hi:[15,29],hc:AMB,hl:'+8 % above target',yl:'t steam / t product'},
- {b:'Result',l:5,t:'8 % more steam per ton than the target. Not urgent, but worth a look at the boiler.',bars:[['Target',2.1,GRN],['Last 15 days',2.27,AMB]],u:' t/t'}]},
+ {b:'Ratio',l:3,t:'Steam per ton of product. Lower is better.',s:[{d:ratio,c:BLUE}],yl:'t steam / t product'},
+ {b:'vs target',l:4,t:'On target up to day 15. Since then, more steam per ton.',s:[{d:ratio,c:BLUE},{d:ratio.map(()=>2.1),c:GRN,dash:1,lab:'target 2.10'}],hi:[15,29],hc:AMB,hl:'+8 % above target',yl:'t steam / t product'},
+ {b:'Result',l:5,t:'8 % above target. Not urgent, but worth a look at the boiler.',bars:[['Target',2.1,GRN],['Last 15 days',2.27,AMB]],u:' t/t'}]},
 {asset:'Pump P-101',goal:'Watch the vibration of pump P-101',tag:'Equipment',st:'ok',res:'Healthy: vibration within its normal range',
  py:['<span class="c"># open Python behind these blocks</span>','<span class="k">def</span> vibration_ok(v, band):','    d = daily_mean(v)              <span class="c"># Daily average</span>','    inside = band.low &lt;= d &lt;= band.high','    <span class="k">return</span> inside.all()  <span class="c"># True → OK</span>'],
  steps:[
  {b:'Vibration',l:1,t:'Pump vibration from the historian, last 30 days.',s:[{d:vib,c:BLUE,w:1}],yl:'mm/s'},
  {b:'Daily average',l:2,t:'The average of each day, so short peaks do not count.',s:[{d:vib,c:GREY,w:1},{d:vibd,c:BLUE}],yl:'mm/s'},
- {b:'Normal range',l:3,t:'The range this pump had over the last year. Every day stays inside it.',s:[{d:vibd,c:BLUE},{d:vib.map(()=>3.2),c:GRN,dash:1,lab:'normal range'},{d:vib.map(()=>1.2),c:GRN,dash:1}],yl:'mm/s'},
+ {b:'Normal range',l:3,t:'Its range over the last year. Every day stays inside it.',s:[{d:vibd,c:BLUE},{d:vib.map(()=>3.2),c:GRN,dash:1,lab:'normal range'},{d:vib.map(()=>1.2),c:GRN,dash:1}],yl:'mm/s'},
  {b:'Result',l:4,t:'Nothing to do. Analytics keeps checking it every day.',bars:[['Upper limit',3.2,GREY],['Last 30 days',2.1,GRN]],u:' mm/s'}]},
 {asset:'Valve FV-104',goal:'Detect a sticking control valve (FV-104)',tag:'Equipment',res:'Valve sticking: moves in jumps',
  py:['<span class="c"># open Python behind these blocks</span>','<span class="k">def</span> stiction(op, pos):','    steps = step_changes(pos)      <span class="c"># jumps</span>','    lag = lag_between(op, steps)','    <span class="k">return</span> len(steps), lag  <span class="c"># '+jumps.length+' jumps</span>'],
  steps:[
  {b:'Controller output',l:1,t:'What the controller asks the valve to do: a smooth curve.',s:[{d:op,c:GREY}]},
  {b:'Valve position',l:2,t:'What the valve actually does: it holds, then jumps.',s:[{d:op,c:GREY,w:1},{d:pos,c:BLUE,step:1}]},
- {b:'Stick-slip pattern',l:3,t:'Each red mark is a jump after the valve was stuck.',s:[{d:op,c:GREY,w:1},{d:pos,c:BLUE,step:1}],marks:jumps},
+ {b:'Stick-slip',l:3,t:'Each red mark is a jump after the valve was stuck.',s:[{d:op,c:GREY,w:1},{d:pos,c:BLUE,step:1}],marks:jumps},
  {b:'Result',l:4,t:jumps.length+' jumps in 4 days: the valve is sticking. Plan maintenance.',bars:[['Healthy valve',0,GREY],['FV-104',jumps.length,RED]],u:' jumps'}]}];
 function plot(st){const W=520,H=150,P=8;
  if(st.bars){const mx=Math.max(...st.bars.map(b=>b[1]))*1.15||1;return `<svg viewBox="0 0 ${W} ${H}" class="plt">`+st.bars.map((b,i)=>{const y=22+i*58,w=(W-170)*b[1]/mx;return `<text x="0" y="${y+22}" class="ax">${b[0]}</text><rect x="110" y="${y}" height="34" rx="6" width="${Math.max(w,2)}" fill="${b[2]}" class="gx"/><text x="${118+w}" y="${y+23}" class="bv" fill="${b[2]}">${b[1]}${st.u||'×'}</text>`}).join('')+'</svg>'}
@@ -107,29 +107,30 @@ function plot(st){const W=520,H=150,P=8;
  return `<svg viewBox="0 0 ${W} ${H}" class="plt">${g}</svg>`}
 function showStep(i){const e=EX[ex%EX.length],st=e.steps[i];sel=i;
  $$('#chain .blk').forEach((b,j)=>{b.classList.toggle('lit',j<=i||b.dataset.done==='1');b.classList.toggle('sel',j===i)});
- $('#dstep').innerHTML=`<b>${i+1}. ${st.b}</b>`;$('#dtext').textContent=st.t;
+ const last=i===e.steps.length-1;$('#exdot').className='rdot '+(last?(e.st||'alarm'):'off');$('#dtext').textContent=st.t;
  $('#dplot').innerHTML=plot(st);
  $('#py').innerHTML=e.py.map((l,j)=>`<span class="ln${j===st.l?' on':''}">${l}</span>`).join('\n')}
-ANIM.open=async(id)=>{const e=EX[ex%EX.length];$('#exgoal').textContent=e.goal;$('#extag').textContent=e.tag;$('#exdot').className='rdot '+(e.st||'alarm');$('#exres').textContent=e.res;
+ANIM.open=async(id)=>{const e=EX[ex%EX.length];$('#exgoal').textContent=e.goal;
  $('#chain').innerHTML=e.steps.map((s,i)=>`<button class="blk" data-i="${i}">${s.b}</button>`).join('<span class="arr">→</span>');
- $$('#chain .blk').forEach(b=>b.onclick=()=>{run++;$$('#chain .blk').forEach(x=>x.dataset.done='1');showStep(+b.dataset.i);$('#dhint').textContent='Click any block to see its data'});
- $('#dhint').textContent='Running the blocks…';
- for(let i=0;i<e.steps.length;i++){if(id!==run)return;showStep(i);await sleep(2200)}
- if(id!==run)return;$$('#chain .blk').forEach(x=>x.dataset.done='1');$('#dhint').textContent='Click any block to see its data'};
+ $$('#chain .blk').forEach(b=>b.onclick=()=>{run++;$$('#chain .blk').forEach(x=>x.dataset.done='1');showStep(+b.dataset.i)});
+ for(let i=0;i<e.steps.length;i++){if(id!==run)return;showStep(i);await sleep(4000)}
+ if(id!==run)return;$$('#chain .blk').forEach(x=>x.dataset.done='1')};
 $('#nextex').onclick=()=>{ex++;run++;ANIM.open(run)};
 $$('.dseg button').forEach(b=>b.onclick=()=>{view=b.dataset.v;$$('.dseg button').forEach(x=>x.classList.toggle('on',x===b));$('#dview').dataset.v=view});
 
-// phone: the four reasons one under the other (each starts when it comes into view); the apps a
-// list whose open item shows right under it
+// phone: the four reasons and the apps are lists that start closed; a tap opens the item right
+// under it (and starts its animation), a second tap closes it
 const MQ=matchMedia('(max-width:760px)');
 function phoneLayout(){const m=MQ.matches;document.body.classList.toggle('stack',m);
  $$('.ptab').forEach(t=>{const p=$(`.ppane[data-p="${t.dataset.p}"]`);if(m)t.after(p);else $('.pbox').appendChild(p)});
- $$('.atab').forEach(t=>{const p=$(`.apane[data-i="${t.dataset.i}"]`);if(m)t.after(p);else $('.apanes').appendChild(p)})}
+ $$('.atab').forEach(t=>{const p=$(`.apane[data-i="${t.dataset.i}"]`);if(m)t.after(p);else $('.apanes').appendChild(p)});
+ if(m){$$('.ptab,.ppane,.atab,.apane').forEach(e=>e.classList.remove('on'));$$('.ptab').forEach(e=>e.setAttribute('aria-pressed','false'))}
+ else{if(!$('.ptab.on'))showP($('.ptab').dataset.p);if(!$('.atab.on'))$$('.atab,.apane').forEach(e=>e.classList.toggle('on',e.dataset.i==='0'))}}
 function toTop(el){scrollTo({top:el.getBoundingClientRect().top+scrollY-64,behavior:'smooth'})}
-$$('.ptab').forEach(b=>b.addEventListener('click',()=>{if(!MQ.matches)showP(b.dataset.p)}));
+$$('.ptab').forEach(b=>b.addEventListener('click',()=>{if(!MQ.matches){showP(b.dataset.p);return}
+ const was=b.classList.contains('on');$$('.ptab,.ppane').forEach(e=>{const on=e.dataset.p===b.dataset.p&&!was;e.classList.toggle('on',on);if(e.classList.contains('ptab'))e.setAttribute('aria-pressed',on)});
+ if(!was){run++;ANIM[b.dataset.p](run);setTimeout(()=>toTop(b),30)}}));
 $$('.atab').forEach(b=>b.onclick=()=>{const was=b.classList.contains('on');$$('.atab,.apane').forEach(e=>e.classList.toggle('on',e.dataset.i===b.dataset.i&&!(MQ.matches&&was)));if(MQ.matches&&!was)setTimeout(()=>toTop(b),30)});
-const seen=new IntersectionObserver(es=>{if(!MQ.matches)return;es.forEach(e=>{if(e.isIntersecting){run++;ANIM[e.target.dataset.p](run)}})},{threshold:.15});
-$$('.ppane').forEach(p=>seen.observe(p));
 MQ.addEventListener('change',phoneLayout);phoneLayout();
 $$('.zoom').forEach(i=>i.addEventListener('click',()=>{$('#lbimg').src=i.src;$('#lb').classList.add('on')}));$('#lb').addEventListener('click',()=>$('#lb').classList.remove('on'));
 })();
