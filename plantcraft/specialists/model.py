@@ -222,6 +222,9 @@ class ChatModel:
         streaming = stream is not None and self.on_text is not None
         if streaming:
             body = {**body, "stream": True}
+            if stream is _CompletionStream:
+                # Chat completions servers (Ollama, vLLM) send the tokens spent only when asked.
+                body["stream_options"] = {"include_usage": True}
         if self.provider == "openai" and self.api_key:
             headers = {**headers, "authorization": f"Bearer {self.api_key}"}
         request = urllib.request.Request(

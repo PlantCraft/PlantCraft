@@ -46,7 +46,7 @@ thousand). Checked so far:
 
 | Model | Server | What we checked |
 |---|---|---|
-| `qwen2.5:1.5b` | Ollama, CPU only | Answers, calls a tool and uses what it read, and a question in Desk that reads the demo plant (`tests/test_ollama_live.py`, every Monday and on changes to the model client: `.github/workflows/ollama.yml`). Too small for good answers: it proves the path, not the quality |
+| `qwen2.5:1.5b` | Ollama, CPU only | Answers, calls a tool and uses what it read; a question in Desk reaches the plant's tools and is answered (it often picks wrong arguments) (`tests/test_ollama_live.py`, every Monday and on changes to the model client: `.github/workflows/ollama.yml`). Too small for good answers: it proves the path, not the quality. Tokens are counted per answer (`meta.usage`) |
 | OpenAI and Anthropic models | Their APIs | The full battery ([llm-battery.md](llm-battery.md)) |
 
 For real use, pick a model of at least 7-8B parameters with tool calling (Qwen 2.5/3, Llama 3.1+,

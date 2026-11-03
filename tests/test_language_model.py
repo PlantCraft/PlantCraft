@@ -475,6 +475,10 @@ def test_the_answer_is_streamed_as_it_is_written_in_each_format(monkeypatch):
         assert text == expected and calls == [("plant_clock", args)]
         assert seen[-1] == expected and "" in seen  # each call starts again
         assert sent[-1]["stream"] is True
+        # A chat completions stream asks for the tokens spent (Ollama sends none otherwise).
+        assert ("stream_options" in sent[-1]) == (
+            model.provider == "openai" and not model.responses
+        )
     # A server that answers whole although asked to stream is read as before.
     monkeypatch.setattr(model_module, "_open", lambda request, timeout, proxy="": _Response(json.dumps({"choices": [{"message": {"content": "whole"}, "finish_reason": "stop"}]}).encode()))  # fmt: skip
     model = ChatModel("", provider="openai", model="qwen3", endpoint=LOCAL["endpoint"])
