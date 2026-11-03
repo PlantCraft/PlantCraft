@@ -11,10 +11,10 @@
  * and the next one comes. Before a language model is connected the robot cannot talk: its
  * first step points to Settings › Language models. */
 import { forgetAssistantStatus, openAssistant, startTour } from "@plantcraft/ui";
-import { ArrowRight, Check, ChevronDown, ChevronUp, CircleAlert, LoaderCircle, MessageCircle, Play, PlugZap, SkipForward, Undo2, X } from "lucide-react";
+import { ArrowRight, Check, Trophy, ChevronDown, ChevronUp, CircleAlert, LoaderCircle, MessageCircle, Play, PlugZap, SkipForward, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { language, setLanguage, t, type Language } from "./i18n";
-import { guideApi, guideLine, OPEN_GUIDE_EVENT, stepFacts, type ConnectionTest, type Guide, type GuideStep, type StartStep } from "./setupGuideApi";
+import { guideApi, guideLine, nextMission, OPEN_GUIDE_EVENT, stepFacts, type ConnectionTest, type Guide, type GuideMission, type GuideStep, type StartStep } from "./setupGuideApi";
 
 /** While the card is open: often enough to see a connection or an import as it happens. */
 const OPEN_POLL_MS = 5000;
@@ -40,6 +40,19 @@ export function GuideRobot({ mood = "idle", size = 48 }: { mood?: "idle" | "chee
     {mood === "talk" && <rect className="guide-robot-mouth" x="28" y="38.5" width="8" height="2.6" rx="1.3" />}
     <rect className="guide-robot-neck" x="26" y="52" width="12" height="5" rx="2" />
   </svg>;
+}
+
+/** Open the assistant beside the page with a mission's work. */
+function talkMission(guide: Guide, mission: GuideMission) {
+  forgetAssistantStatus();
+  openAssistant({
+    page: "processcraft:setup-guide",
+    work: mission.work,
+    title: t("Getting started"),
+    place: `${t("First missions")} › ${mission.title}`,
+    subject: "",
+    facts: { mission: mission.id, mission_title: mission.title, mission_page: `${mission.page_label} (${mission.page})`, missions: guide.missions.map((item) => `${item.title}: ${item.done ? "done" : "to do"}`).join("; ") },
+  });
 }
 
 /** Open the assistant beside the page with ``step``'s work. */
@@ -72,13 +85,15 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
       const last = before.current;
       // A step that became done since the last read: the robot cheers it.
       const newly = last ? found.steps.find((step) => step.state === "done" && last.steps.find((old) => old.id === step.id)?.state !== "done") : undefined;
-      if (newly) { setCheer(newly.title); setBubble(true); window.setTimeout(() => setCheer(null), CHEER_MS); }
+      const mission = last ? found.missions.find((item) => item.done && !last.missions.find((old) => old.id === item.id)?.done) : undefined;
+      const won = newly?.title ?? (mission ? t("Mission complete: {mission}", { mission: mission.title }) : null);
+      if (won) { setCheer(won); setBubble(true); window.setTimeout(() => setCheer(null), CHEER_MS); }
       before.current = found;
       setGuide(found);
       // The basics changed this person's language: this browser follows (it reloads).
       const chosen = found.steps.find((step) => step.id === "basics")?.facts.my_language;
       if (newly?.id === "basics" && typeof chosen === "string" && chosen && chosen !== language) window.setTimeout(() => setLanguage(chosen as Language), 1500);
-      onGuiding?.(!found.hidden && !found.finished);
+      onGuiding?.(!found.hidden && !(found.finished && found.missions_done >= found.missions.length));
     } catch {
       // Not an administrator, or offline: the robot stays away.
       onGuiding?.(false);
@@ -91,14 +106,18 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
     return () => window.clearInterval(timer);
   }, [open, load]);
   useEffect(() => {
-    const show = () => { void guideApi.hide(false).then((found) => { before.current = found; setGuide(found); onGuiding?.(!found.finished); setOpen(true); }).catch(() => undefined); };
+    const show = () => { void guideApi.hide(false).then((found) => { before.current = found; setGuide(found); onGuiding?.(!(found.finished && found.missions_done >= found.missions.length)); setOpen(true); }).catch(() => undefined); };
     window.addEventListener(OPEN_GUIDE_EVENT, show);
     return () => window.removeEventListener(OPEN_GUIDE_EVENT, show);
   }, [onGuiding]);
 
   if (!guide || guide.hidden) return null;
   const current = guide.steps.find((step) => step.id === guide.current) ?? null;
-  const percent = guide.total ? Math.round((guide.done / guide.total) * 100) : 0;
+  const missionsLeft = guide.missions.length - guide.missions_done;
+  const percent = guide.finished
+    ? (guide.missions.length ? Math.round((guide.missions_done / guide.missions.length) * 100) : 100)
+    : guide.total ? Math.round((guide.done / guide.total) * 100) : 0;
+  const upNext = nextMission(guide);
 
   async function act(key: string, run: () => Promise<Guide | void>) {
     setBusy(key); setError("");
@@ -113,24 +132,28 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
     }
   }
 
-  const mood = cheer ? "cheer" : open ? "talk" : guide.finished ? "sleep" : "idle";
-  const line = cheer ? t("Done: {step}. On to the next one!", { step: cheer }) : guide.finished ? t("Your plant is set up. Open me any time from Settings.") : guideLine(guide);
+  const allDone = guide.finished && missionsLeft === 0;
+  const mood = cheer ? "cheer" : open ? "talk" : allDone ? "sleep" : "idle";
+  const line = cheer ? t("Done: {step}. On to the next one!", { step: cheer })
+    : allDone ? t("Your plant is set up. Open me any time from Settings.")
+      : upNext ? t("Next mission: {mission}", { mission: upNext.title }) : guideLine(guide);
 
   return <div className={["setup-guide", open ? "setup-guide-open" : ""].filter(Boolean).join(" ")}>
     {open && <section className="guide-card" role="dialog" aria-label={t("Getting started")}>
       <header className="guide-card-head">
         <GuideRobot mood={mood} size={40} />
         <div className="guide-card-title">
-          <strong>{guide.finished ? t("All set") : t("Let's set up your plant")}</strong>
-          <span>{t("{done} of {total} steps", { done: guide.done, total: guide.total })}</span>
+          <strong>{allDone ? t("All set") : guide.finished ? t("First missions") : t("Let's set up your plant")}</strong>
+          <span>{guide.finished ? t("{done} of {total} missions", { done: guide.missions_done, total: guide.missions.length }) : t("{done} of {total} steps", { done: guide.done, total: guide.total })}</span>
         </div>
         <button type="button" className="guide-icon-button" onClick={() => setOpen(false)} title={t("Close")} aria-label={t("Close")}><X size={16} /></button>
       </header>
       <div className="guide-progress" aria-hidden="true"><span style={{ width: `${percent}%` }} /></div>
       {cheer && <p className="guide-cheer"><Check size={14} /> {t("Done: {step}. On to the next one!", { step: cheer })}</p>}
       {current && <CurrentStep key={current.id} guide={guide} step={current} busy={busy} navigate={(to) => { navigate(to); }} act={act} />}
-      {guide.finished && <div className="guide-step-body">
-        <p>{t("Every step is done or skipped. The apps are collecting, monitoring and drafting; their Overview pages show what they find.")}</p>
+      {guide.finished && !allDone && <Missions guide={guide} navigate={navigate} />}
+      {allDone && <div className="guide-step-body">
+        <p>{t("Every step and mission is done. The apps are collecting, monitoring and drafting; their Overview pages show what they find.")}</p>
         <div className="guide-actions">
           <button type="button" className="button button-primary" onClick={() => { setOpen(false); startTour(); }}><Play size={14} /> {t("Take the tour")}</button>
           <button type="button" className="button button-secondary" onClick={() => navigate("/")}><ArrowRight size={14} /> {t("Go to the Overview")}</button>
@@ -147,9 +170,14 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
           {step.state !== "current" && step.marked && <button type="button" className="guide-link" disabled={busy !== ""} onClick={() => void act(`undo-${step.id}`, () => guideApi.mark(step.id, null))} title={t("Take the mark back")}><Undo2 size={12} /></button>}
           {step.state === "todo" && <button type="button" className="guide-link" onClick={() => talkAbout(guide, step)} disabled={!guide.ready}>{t("Ask")}</button>}
         </li>)}
+        {guide.missions.length > 0 && <li className="guide-steps-heading">{t("Then, the first missions")}</li>}
+        {guide.missions.map((mission) => <li key={mission.id} className={`guide-step-row guide-step-${mission.done ? "done" : "todo"}`}>
+          <span className={mission.done ? "guide-step-dot guide-trophy-won" : "guide-step-dot"}><Trophy size={11} /></span>
+          <span className="guide-step-name">{mission.title}</span>
+        </li>)}
       </ol>}
       <footer className="guide-card-foot">
-        <button type="button" className="guide-link" disabled={!guide.ready || !current} onClick={() => current && talkAbout(guide, current, true)}><MessageCircle size={13} /> {t("Ask the guide anything")}</button>
+        <button type="button" className="guide-link" disabled={!guide.ready || (!current && !guide.steps.length)} onClick={() => talkAbout(guide, current ?? guide.steps[guide.steps.length - 1], true)}><MessageCircle size={13} /> {t("Ask the guide anything")}</button>
         <button type="button" className="guide-link" onClick={() => void act("hide", async () => { const found = await guideApi.hide(true); onGuiding?.(false); return found; })}>{t("Hide the guide")}</button>
       </footer>
     </section>}
@@ -160,7 +188,31 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
     <button type="button" className="guide-launcher" onClick={() => setOpen((value) => !value)} title={t("Getting started")} aria-label={t("Getting started")} aria-expanded={open}>
       <GuideRobot mood={mood} size={44} />
       {!guide.finished && <span className="guide-badge">{guide.done}/{guide.total}</span>}
+      {guide.finished && !allDone && <span className="guide-badge guide-badge-trophy"><Trophy size={10} /> {guide.missions_done}/{guide.missions.length}</span>}
     </button>
+  </div>;
+}
+
+/** The first missions, once the setup is done: each one a thing that shows what the suite does,
+ * with the robot beside the person ("Do it with me") or straight on its page. */
+function Missions({ guide, navigate }: { guide: Guide; navigate: (to: string) => void }) {
+  const next = nextMission(guide);
+  return <div className="guide-step-body">
+    <p className="guide-why">{t("Your plant is set up. Now try what PlantCraft is for: each mission takes a few minutes.")}</p>
+    <ul className="guide-missions">
+      {guide.missions.map((mission) => <li key={mission.id} className={["guide-mission", mission.done ? "guide-mission-done" : "", mission.id === next?.id ? "guide-mission-next" : ""].filter(Boolean).join(" ")}>
+        <span className="guide-mission-trophy"><Trophy size={16} /></span>
+        <div className="guide-mission-text">
+          <strong>{mission.title}</strong>
+          <span>{mission.done ? t("Done") : mission.summary}</span>
+          {!mission.done && mission.id === next?.id && <div className="guide-actions">
+            <button type="button" className="button button-primary" disabled={!guide.ready} onClick={() => talkMission(guide, mission)}><MessageCircle size={14} /> {t("Do it with me")}</button>
+            <button type="button" className="button button-secondary" onClick={() => navigate(mission.page)}>{t("Open {page}", { page: mission.page_label })}</button>
+          </div>}
+          {!mission.done && mission.id !== next?.id && <button type="button" className="guide-link" onClick={() => navigate(mission.page)}>{t("Open {page}", { page: mission.page_label })}</button>}
+        </div>
+      </li>)}
+    </ul>
   </div>;
 }
 

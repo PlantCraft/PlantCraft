@@ -623,5 +623,81 @@ _WORKS += [
 ]
 
 
+# The first missions after the setup (plantcraft/api/setup_guide.py, ``missions``): each one
+# walks the person through doing one thing that shows what the suite is for.
+_MISSION = _GUIDE + (
+    "This is one of the first missions, after the setup: help the person do it themselves, "
+    "step by step, on the pages named, and say what they will see. "
+)
+_WORKS += [
+    {
+        "id": "mission-ask",
+        "pages": ["setup-guide"],
+        "title": "Show me what to ask",
+        "hint": "A first question about the plant",
+        "instructions": _MISSION
+        + (
+            "Mission: ask the assistant about the plant. Find two or three interesting signals "
+            "or loops with search_signals, draw one of them over the last day with show_chart, "
+            "say in two lines what it shows, and suggest three questions the person could ask "
+            "next about their own plant."
+        ),
+    },
+    {
+        "id": "mission-analytics",
+        "pages": ["setup-guide"],
+        "title": "Walk me through Analytics",
+        "hint": "The first round and what it finds",
+        "instructions": _MISSION
+        + (
+            "Mission: run the first Analytics round. Say where: Analytics › Results, the button "
+            "Run now; a round takes a few minutes and starts each loop's baseline. Then explain "
+            "what the results show (loops in poor shape, a valve that sticks, an oscillation, a "
+            "bad signal) and how to open one loop to see why. Use latest_results when there are "
+            "results already."
+        ),
+    },
+    {
+        "id": "mission-alarm",
+        "pages": ["setup-guide"],
+        "title": "Help me switch on an alarm",
+        "hint": "Review a drafted rule",
+        "instructions": _MISSION
+        + (
+            "Mission: switch on the first alarm. The drafted rules are on Alarms › Rules, all off. "
+            "Help the person pick one (a critical loop), check its limit against the signal's "
+            "last week (read_series), and switch it on with the toggle on the rule's page. Say "
+            "that its notifications reach Messages."
+        ),
+    },
+    {
+        "id": "mission-dashboard",
+        "pages": ["setup-guide"],
+        "title": "Help me share a dashboard",
+        "hint": "A link for a screen in the control room",
+        "instructions": _MISSION
+        + (
+            "Mission: share the first dashboard. On View, open a unit's dashboard (drafted by the "
+            "apps' first steps, or a new one), then Share: a read-only link that expires, for a "
+            "screen in the control room or someone without an account. Say how to add a trend or "
+            "a value first if the person wants."
+        ),
+    },
+    {
+        "id": "mission-notebook",
+        "pages": ["setup-guide"],
+        "title": "Help me start a notebook",
+        "hint": "Python in the browser",
+        "instructions": _MISSION
+        + (
+            "Mission: open the first notebook. Notebooks run Python in the browser, nothing to "
+            "install; when they are off an administrator turns them on in Settings › Notebooks. "
+            "On Desk › Notebooks, New notebook, then the example that reads a signal: say what "
+            "each cell does and suggest a first analysis (a histogram, a correlation)."
+        ),
+    },
+]
+
+
 def platform_works() -> list[AssistantWork]:
     return [AssistantWork.model_validate(item) for item in _WORKS]

@@ -35,6 +35,7 @@ INSTALLATION = "@installation"
 MARKS = ("done", "skipped")
 DOCUMENTS_APP = "doccraft"
 ANALYTICS_APP = "linkcraft"
+PLANT_READS = {"tool:show_chart", "tool:read_series", "tool:signal_value", "tool:latest_results"}
 
 
 @dataclass(frozen=True)
@@ -392,6 +393,7 @@ def status(rt: Any, username: str) -> dict[str, Any]:
         items.append(item)
     ready = items[0]["state"] == "done" if items and items[0]["id"] == "model" else True
     done = sum(1 for item in items if item["state"] == "done")
+    found_missions = missions_status(rt, username, installed)
     return {
         "hidden": hidden(rt, username),
         "ready": ready,
@@ -400,4 +402,111 @@ def status(rt: Any, username: str) -> dict[str, Any]:
         "total": len(items),
         "finished": current is None,
         "steps": items,
+        "missions": found_missions,
+        "missions_done": sum(1 for item in found_missions if item["done"]),
     }
+
+
+# First missions: after the setup, the things that show what PlantCraft does ----------------
+
+
+@dataclass(frozen=True)
+class Mission:
+    id: str
+    title: str
+    summary: str
+    page: str
+    page_label: str
+    # Done when this person's audit log has this action (an app's, with its id, or PlantCraft's).
+    app: str
+    action: str
+    # The app the mission needs; left out when it is not installed.
+    needs: str | None = None
+
+
+def missions() -> list[Mission]:
+    """The first missions (owner, 2026-11-03: "configure your first Analytics, share your first
+    dashboard, open your first notebook"), in the order they show the suite. Each is done once
+    the person did it, anywhere: the guide reads their audit log."""
+
+    return [
+        Mission(
+            "ask",
+            t("Ask about your plant"),
+            t("Ask the assistant how a loop or a signal behaved; it reads the plant and draws it."),
+            "/assistant",
+            t("Assistant"),
+            "processcraft",
+            "assistant.tool",
+        ),
+        Mission(
+            "analytics",
+            t("Run your first Analytics round"),
+            t("See which loops perform poorly, which valves stick and which signals are bad."),
+            "/link/results",
+            "Analytics",
+            ANALYTICS_APP,
+            "round.started",
+            needs=ANALYTICS_APP,
+        ),
+        Mission(
+            "alarm",
+            t("Switch on your first alarm"),
+            t("Review one of the drafted alarm rules and switch it on."),
+            "/alarm/rules",
+            "Alarms",
+            "alarmcraft",
+            "rule.enabled",
+            needs="alarmcraft",
+        ),
+        Mission(
+            "dashboard",
+            t("Share your first dashboard"),
+            t(
+                "Open a unit's dashboard and share it with a link, for a screen in the control room."
+            ),
+            "/dash/",
+            "View",
+            "dashcraft",
+            "share.create",
+            needs="dashcraft",
+        ),
+        Mission(
+            "notebook",
+            t("Open your first notebook"),
+            t("Analyse the plant's data in Python, in the browser: nothing to install."),
+            "/notebooks",
+            t("Notebooks"),
+            "processcraft",
+            "notebooks.create",
+        ),
+    ]
+
+
+def missions_status(rt: Any, username: str, installed: set[str]) -> list[dict[str, Any]]:
+    found = []
+    for mission in missions():
+        if mission.needs and mission.needs not in installed:
+            continue
+        rows = rt.workspace.audit.list(
+            limit=200 if mission.id == "ask" else 1,
+            username=username,
+            app_id=mission.app,
+            action=mission.action,
+        )
+        if mission.id == "ask":
+            # A question about the plant reads its history; the guide's own chats only read help.
+            rows = [row for row in rows if row.get("subject") in PLANT_READS]
+        done = bool(rows)
+        found.append(
+            {
+                "id": mission.id,
+                "title": mission.title,
+                "summary": mission.summary,
+                "page": mission.page,
+                "page_label": mission.page_label,
+                "done": done,
+                "work": f"processcraft:mission-{mission.id}",
+            }
+        )
+    return found

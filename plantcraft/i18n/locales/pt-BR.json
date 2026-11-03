@@ -1273,5 +1273,15 @@
   "Unknown language: {language}.": "Idioma desconhecido: {language}.",
   "Users": "Usuários",
   "With the documents, the asset tree comes out with each loop in its unit and area, and I can cite them when I answer.": "Com os documentos, a árvore de ativos já sai com cada malha na sua unidade e área, e eu posso citá-los quando respondo.",
-  "Your company's mail server, so alarms and reports also reach people's inboxes.": "O servidor de e-mail da sua empresa, para alarmes e relatórios chegarem também na caixa de entrada das pessoas."
+  "Your company's mail server, so alarms and reports also reach people's inboxes.": "O servidor de e-mail da sua empresa, para alarmes e relatórios chegarem também na caixa de entrada das pessoas.",
+  "Analyse the plant's data in Python, in the browser: nothing to install.": "Analise os dados da planta em Python, no navegador: nada para instalar.",
+  "Ask about your plant": "Pergunte sobre a sua planta",
+  "Ask the assistant how a loop or a signal behaved; it reads the plant and draws it.": "Pergunte ao assistente como uma malha ou um sinal se comportou; ele lê a planta e desenha o gráfico.",
+  "Open a unit's dashboard and share it with a link, for a screen in the control room.": "Abra o dashboard de uma unidade e compartilhe por link, para uma tela na sala de controle.",
+  "Open your first notebook": "Abra seu primeiro notebook",
+  "Review one of the drafted alarm rules and switch it on.": "Revise uma das regras de alarme preparadas e ligue-a.",
+  "Run your first Analytics round": "Rode sua primeira rodada do Analytics",
+  "See which loops perform poorly, which valves stick and which signals are bad.": "Veja quais malhas têm desempenho ruim, quais válvulas agarram e quais sinais estão ruins.",
+  "Share your first dashboard": "Compartilhe seu primeiro dashboard",
+  "Switch on your first alarm": "Ligue seu primeiro alarme"
 }

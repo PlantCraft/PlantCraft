@@ -104,3 +104,27 @@ def test_each_step_has_its_work_and_the_create_works_point_at_real_routes():
             assert work.spec.pages == ["setup-guide"]
             if work.spec.kind == "create":
                 assert work.spec.level == "admin"
+
+
+def test_missions_come_after_the_setup_and_count_what_the_person_did(signed):
+    guide = signed.get("/api/setup-guide").json()
+    ids = [item["id"] for item in guide["missions"]]
+    # Only the apps listed here (Alarms is not): the platform's own missions and theirs.
+    assert ids == ["ask", "analytics", "dashboard", "notebook"] and guide["missions_done"] == 0
+    audit = signed.app.state.runtime.workspace.audit
+    # The guide's own chat reading help is not a question about the plant.
+    audit.record("admin", "assistant.tool", "tool:read_help", {}, app_id="processcraft")
+    assert signed.get("/api/setup-guide").json()["missions_done"] == 0
+    audit.record("admin", "assistant.tool", "tool:show_chart", {}, app_id="processcraft")
+    found = signed.get("/api/setup-guide").json()
+    assert found["missions_done"] == 1
+    assert {item["id"]: item["done"] for item in found["missions"]}["ask"] is True
+    # Someone else's notebook is not this person's mission.
+    audit.record("ana", "notebooks.create", "notebook:1", {}, app_id="processcraft")
+    assert signed.get("/api/setup-guide").json()["missions_done"] == 1
+
+
+def test_each_mission_has_its_work():
+    works = {work.spec.id for work in WorkRegistry().all()}
+    for mission in setup_guide.missions():
+        assert f"mission-{mission.id}" in works

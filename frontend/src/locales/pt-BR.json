@@ -2490,7 +2490,6 @@
   "Ask the guide anything": "Pergunte qualquer coisa ao guia",
   "Do it with me": "Fazer comigo",
   "Done: {step}. On to the next one!": "Feito: {step}. Vamos para a próxima!",
-  "Every step is done or skipped. The apps are collecting, monitoring and drafting; their Overview pages show what they find.": "Todas as etapas foram feitas ou puladas. As apps estão coletando, monitorando e preparando rascunhos; a Visão geral de cada uma mostra o que encontram.",
   "Go to the Overview": "Ir para a Visão geral",
   "Hide the guide": "Esconder o guia",
   "It is done": "Já fiz",
@@ -2505,5 +2504,12 @@
   "Your plant is set up. Open me any time from Settings.": "Sua planta está configurada. Me abra quando quiser em Configurações.",
   "{done} of {total} steps": "{done} de {total} etapas",
   "Getting started": "Primeiros passos",
-  "Open Getting started": "Abrir Primeiros passos"
+  "Open Getting started": "Abrir Primeiros passos",
+  "Every step and mission is done. The apps are collecting, monitoring and drafting; their Overview pages show what they find.": "Todas as etapas e missões estão feitas. As apps estão coletando, monitorando e preparando rascunhos; a Visão geral de cada uma mostra o que encontram.",
+  "First missions": "Primeiras missões",
+  "Mission complete: {mission}": "Missão cumprida: {mission}",
+  "Next mission: {mission}": "Próxima missão: {mission}",
+  "Then, the first missions": "Depois, as primeiras missões",
+  "Your plant is set up. Now try what PlantCraft is for: each mission takes a few minutes.": "Sua planta está configurada. Agora experimente para que serve a PlantCraft: cada missão leva poucos minutos.",
+  "{done} of {total} missions": "{done} de {total} missões"
 }

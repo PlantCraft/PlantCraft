@@ -21,7 +21,9 @@ export type GuideStep = {
   work: string;
   sources?: GuideSource[];
 };
-export type Guide = { hidden: boolean; ready: boolean; current: string | null; done: number; total: number; finished: boolean; steps: GuideStep[] };
+/** A first mission after the setup: done once the person did it, anywhere (their audit log). */
+export type GuideMission = { id: string; title: string; summary: string; page: string; page_label: string; done: boolean; work: string };
+export type Guide = { hidden: boolean; ready: boolean; current: string | null; done: number; total: number; finished: boolean; steps: GuideStep[]; missions: GuideMission[]; missions_done: number };
 export type ConnectionTest = { ok: boolean; message: string };
 export type StartStep = { app: string; app_name: string; id: string; title: string; description: string; open?: string | null };
 
@@ -41,7 +43,13 @@ export function openSetupGuide() { window.dispatchEvent(new CustomEvent(OPEN_GUI
 /** What the robot says in its bubble about the step that comes now. */
 export function guideLine(guide: Guide): string {
   const step = guide.steps.find((item) => item.id === guide.current);
-  return step ? step.summary : "";
+  if (step) return step.summary;
+  return nextMission(guide)?.title ?? "";
+}
+
+/** The first mission not done yet, once the setup is finished. */
+export function nextMission(guide: Guide): GuideMission | null {
+  return guide.finished ? guide.missions.find((item) => !item.done) ?? null : null;
 }
 
 /** The facts the step's work reads: where the person is in the guide and the step's own state. */

@@ -91,3 +91,18 @@ body:has(.demo-visit-bar) .setup-guide { bottom: 64px; }
 .setup-guide-tile { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .setup-guide-tile p { margin: 4px 0 0; }
 @media (max-width: 640px) { .setup-guide-tile { flex-direction: column; align-items: flex-start; } }
+
+/* The first missions, after the setup: a trophy each, gold once won. */
+.guide-missions { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.guide-mission { display: flex; gap: 10px; padding: 8px 10px; border: 1px solid var(--pc-border-subtle); border-radius: 10px; }
+.guide-mission-next { border-color: var(--pc-primary-border); background: var(--pc-primary-soft); }
+.guide-mission-trophy { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--pc-inactive-soft); color: var(--pc-text-4); }
+.guide-mission-done .guide-mission-trophy, .guide-trophy-won { background: #f5c242 !important; color: #5c4100 !important; }
+.guide-mission-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.guide-mission-text strong { color: var(--pc-text); }
+.guide-mission-text > span { color: var(--pc-text-3); font-size: 12px; }
+.guide-mission-done .guide-mission-text strong { color: var(--pc-text-3); }
+.guide-mission .guide-actions { margin-top: 6px; }
+.guide-mission .guide-link { align-self: flex-start; margin-top: 2px; }
+.guide-steps-heading { margin-top: 8px; padding: 6px 0 2px; border-top: 1px solid var(--pc-border-subtle); color: var(--pc-text-3); font-size: 12px; font-weight: 600; }
+.guide-badge-trophy { display: inline-flex; align-items: center; gap: 2px; background: #f5c242; color: #5c4100; }
