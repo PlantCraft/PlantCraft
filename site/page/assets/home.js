@@ -107,10 +107,10 @@ function plot(st){const W=520,H=150,P=8;
  return `<svg viewBox="0 0 ${W} ${H}" class="plt">${g}</svg>`}
 function showStep(i){const e=EX[ex%EX.length],st=e.steps[i];sel=i;
  $$('#chain .blk').forEach((b,j)=>{b.classList.toggle('lit',j<=i||b.dataset.done==='1');b.classList.toggle('sel',j===i)});
- $('#dstep').textContent=`${st.b}:`;$('#dtext').textContent=st.t;
+ const last=i===e.steps.length-1;$('#exdot').className='rdot '+(last?(e.st||'alarm'):'off');$('#dstep').textContent=`${st.b}:`;$('#dtext').textContent=st.t;
  $('#dplot').innerHTML=plot(st);
  $('#py').innerHTML=e.py.map((l,j)=>`<span class="ln${j===st.l?' on':''}">${l}</span>`).join('\n')}
-ANIM.open=async(id)=>{const e=EX[ex%EX.length];$('#exgoal').textContent=e.goal;$('#exdot').className='rdot '+(e.st||'alarm');$('#exres').textContent=e.res;
+ANIM.open=async(id)=>{const e=EX[ex%EX.length];$('#exgoal').textContent=e.goal;
  $('#chain').innerHTML=e.steps.map((s,i)=>`<button class="blk" data-i="${i}">${s.b}</button>`).join('<span class="arr">→</span>');
  $$('#chain .blk').forEach(b=>b.onclick=()=>{run++;$$('#chain .blk').forEach(x=>x.dataset.done='1');showStep(+b.dataset.i)});
  for(let i=0;i<e.steps.length;i++){if(id!==run)return;showStep(i);await sleep(4000)}
