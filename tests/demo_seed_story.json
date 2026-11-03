@@ -1,0 +1,68 @@
+{
+  "tables": {
+    "ALARM_RULES": 7,
+    "ASSISTANT_CHATS": 17,
+    "CALC_SIGNALS": 4,
+    "CAST": 10,
+    "CONVERSATIONS": 3,
+    "CRITICALITY": 9,
+    "DOC_FOLDERS": 3,
+    "GROUPS": 11,
+    "IMPORT_TAGS": 3,
+    "IT_ACTIONS": 3,
+    "LAB_TAGS": 5,
+    "MODEL_RUNS": 3,
+    "MODEL_STUDIES": 2,
+    "NOTEBOOKS": 2,
+    "OLD_DIAGRAMS": 8,
+    "OPEN_ACTIONS": 6,
+    "PAST_ACTIONS": 7,
+    "PAST_CONVERSATIONS": 8,
+    "REPORTS": 4,
+    "RETIRED_REPORTS": 4,
+    "SHIFT_TODOS": 3,
+    "SOURCE_FIELDS": 13,
+    "STICTION_LOOPS": 4,
+    "SURGE_LEVELS": 6,
+    "TEAM_DAY": 3,
+    "TOUR": 9,
+    "VIEW_TRENDS": 3,
+    "VISITOR_ALARMS": 6,
+    "VISITOR_APP_NOTICES": 3,
+    "VISITOR_EVENTS": 6,
+    "VISITOR_TODOS": 3
+  },
+  "workspace": {
+    "assistant": {
+      "chats": 17,
+      "notebooks": 2
+    },
+    "links": 34,
+    "notifications": 9,
+    "past": {
+      "actions": 7,
+      "conversations": 8
+    },
+    "rows": {
+      "asset_type_seeds": 20,
+      "asset_type_version": 1,
+      "asset_types": 20,
+      "assistant_chat_messages": 34,
+      "assistant_chats": 17,
+      "conversation_members": 42,
+      "conversation_messages": 44,
+      "conversations": 12,
+      "desk_notes": 1,
+      "follow_up_action_history": 25,
+      "follow_up_action_refs": 15,
+      "follow_up_actions": 7,
+      "notebook_settings": 1,
+      "notebooks": 2,
+      "notification_threads": 4,
+      "sdk_migrations": 22,
+      "workspace_migrations": 1,
+      "workspace_users": 17
+    },
+    "unread": 4
+  }
+}

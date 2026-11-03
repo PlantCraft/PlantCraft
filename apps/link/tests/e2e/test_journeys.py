@@ -850,8 +850,7 @@ def test_the_first_visit_opens_links_own_tour(browser, fake, app_url):
     # the welcome stays on the page the visitor opened; Next walks the app
     assert page.url.endswith("/link/blocks")
     tour.get_by_role("button", name="Start the tour").click()
-    expect(tour.get_by_role("heading", name="Overview")).to_be_visible()
-    tour.get_by_role("button", name="Next").click()
+    # the tour skips the Overview (#193): its first page is Blocks
     expect(tour.get_by_role("heading", name="Blocks")).to_be_visible()
     expect(page).to_have_url(re.compile(r"/link/blocks$"))
     tour.get_by_role("button", name="Skip the tour").click()

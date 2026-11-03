@@ -1192,7 +1192,7 @@ provision_app_keys() {
         die "${restart[*]} did not become healthy with the app key: see docker compose logs ${restart[*]}"
 }
 
-# The demo story (plantcraft/demo_seed.py): idempotent, so every install or upgrade with the
+# The demo story (plantcraft/demo_seed/): idempotent, so every install or upgrade with the
 # demo profile repairs it. A failure is reported, never fatal: the suite itself is up.
 seed_demo() {
     [[ ",$(env_get COMPOSE_PROFILES "$PREFIX/.env")," == *",demo,"* ]] || return 0

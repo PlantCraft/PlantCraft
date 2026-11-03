@@ -46,7 +46,8 @@ def test_the_guided_tour_walks_the_platform_and_ends_on_the_apps(first_visit_pag
         page.wait_for_load_state("networkidle")
         visited.add(re.sub(r"^https?://[^/]+", "", page.url))
     expect(tour.get_by_role("heading", name="Now the apps")).to_be_visible()
-    stops = {"/calendar", "/actions", "/assets", "/health", "/users", "/apps", "/admin"}
+    # /notebooks too where JupyterLite is built (`make notebooks`)
+    stops = {"/calendar", "/actions", "/assets", "/users", "/admin"}
     assert stops <= visited, visited
     tour.get_by_role("button", name="Finish").click()
     expect(page.get_by_role("dialog")).to_have_count(0)

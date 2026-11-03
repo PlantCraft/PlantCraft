@@ -238,3 +238,30 @@ lock:
 		--no-emit-package plantcraft --no-emit-package plantcraft-sdk \
 		-o deploy/requirements.lock
 	sed -i '1i # Pinned, hashed dependencies of the Docker image (Python 3.13, Linux). Regenerate with\n# `make lock` after changing a pyproject.toml; the image build refuses any file whose hash differs.' deploy/requirements.lock
+
+# Local preview: the site and the whole suite with the demo story on this machine, without
+# publishing anything (dev/local_preview.py, docs/development.md "Local preview"). Its own folder
+# (PREVIEW_DIR, default ~/plantcraft-preview), Compose project and ports (PREVIEW_PORT: 8260 the
+# suite, 8261 the site): another installation on the machine is never touched. MODE=public-demo
+# opens the demo to visitors; REBUILD=1 builds the images or interfaces again.
+PREVIEW_FLAGS = $(if $(MODE),--mode $(MODE)) $(if $(REBUILD),--rebuild)
+.PHONY: preview preview-light preview-reset preview-down preview-status preview-shots
+preview:
+	python3 dev/local_preview.py docker $(PREVIEW_FLAGS)
+
+# Without Docker (cloud sessions, a laptop): every server from source behind a small proxy.
+preview-light:
+	python3 dev/local_preview.py light $(PREVIEW_FLAGS)
+
+preview-reset:
+	python3 dev/local_preview.py reset $(PREVIEW_FLAGS)
+
+preview-down:
+	python3 dev/local_preview.py down
+
+preview-status:
+	python3 dev/local_preview.py status
+
+# Screenshots of the site's pages and the suite's main pages into <PREVIEW_DIR>/shots/.
+preview-shots:
+	python3 dev/local_preview.py shots

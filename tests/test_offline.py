@@ -31,8 +31,8 @@ NETWORK_MODULES = {
     # of the providers an admin added (none: it opens nothing), plus Health's look at it.
     "plantcraft/egress/__init__.py",
     # `processcraft demo seed`, run by an administrator (install.sh --public-demo): the suite's
-    # own services inside the installation's network, never an outside address.
-    "plantcraft/demo_seed.py",
+    # own services inside the installation's network, never an outside address (its HTTP client).
+    "plantcraft/demo_seed/base.py",
     # The suite's health: GET /api/ops/metrics of the suite's own servers, at their Compose
     # services inside the installation's network (PLANTCRAFT_OPS_URLS may name others).
     "plantcraft/watch/recorder.py",

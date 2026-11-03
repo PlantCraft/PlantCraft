@@ -88,6 +88,20 @@ without touching the rest. The full picture, with how the apps find one sticky v
 - **Questions:** ask the chat on [plantcraft.io](https://plantcraft.io), or write to
   [info@plantcraft.io](mailto:info@plantcraft.io).
 
+## Run locally
+
+From a checkout, the whole suite with the demo plant and the site, on your machine and in a folder
+of its own (`~/plantcraft-preview`), without publishing anything:
+
+```bash
+make preview          # with Docker: the suite at https://localhost:8260, the site at :8261
+make preview-light    # without Docker: every server from source, the suite at http://127.0.0.1:8260
+make preview-shots    # screenshots of the main pages; make preview-down stops it
+```
+
+Details, options and the other ways to run it from source:
+[docs/development.md](docs/development.md#local-preview).
+
 ## Documentation
 
 Start with [Install PlantCraft](docs/install.md), the [Getting started](docs/en/getting-started.md)
