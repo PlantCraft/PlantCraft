@@ -32,7 +32,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
-- **The assistant on each chart, a trial (ui 0.110.0, off by default).** A small popover over a
+- **The assistant on each chart, a trial (ui 0.112.0, off by default).** A small popover over a
   chart asks "Explain this chart", "What stands out?", "What could explain this?" or the
   person's own question, and answers in place from what the chart draws and the plant's reads;
   the chat is not kept unless continued in Desk. `PLANTCRAFT_ASSISTANT_CHARTS=icon` puts the
