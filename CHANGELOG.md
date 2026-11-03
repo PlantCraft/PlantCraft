@@ -26,6 +26,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   reader and plant map, moved out of Documents, compiled with Nuitka and licensed.
 - Integrators' guide, "PlantCraft next to MES, data lake and your own LLM" (`docs/integrators.md`): an on-premises OpenAI-compatible model for the assistant (with Ollama's context length), agents reading through MCP, plant data into a data lake (Historian's feed files or API v1) and MES data into the Historian, with a list for IT.
 - A test of the assistant against a real Ollama server (`tests/test_ollama_live.py`, workflow `ollama.yml`): the model answers, calls a read-only tool, and a question in Desk goes through the plant's read-only tools after its provider was added in Setup › Language models. It runs on changes to the model client and the assistant, every Monday, and by hand with another model.
+- A local preview for development: `make preview` (Docker) and `make preview-light` (no Docker,
+  every server from source behind a small proxy) start the site and the whole suite with the demo
+  story in `~/plantcraft-preview`, with their own Compose project and ports (8260, 8261), never
+  touching another installation; `make preview-reset`, `preview-down`, `preview-status` and
+  `preview-shots` (screenshots of the main pages) go with them (docs/development.md).
 - Answers from OpenAI-compatible servers (Ollama, vLLM) now keep the tokens they spent: a streamed chat completion asks for them (`stream_options.include_usage`); before, `meta.usage` stayed at zero.
 
 ### Changed
