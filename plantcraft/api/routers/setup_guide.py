@@ -1,4 +1,4 @@
-"""The setup guide's routes (``plantcraft/setup_guide.py``, docs/setup-guide.md), administrators
+"""The setup guide's routes (``plantcraft/api/setup_guide.py``, docs/setup-guide.md), administrators
 only.
 
 - ``GET /api/setup-guide``: every step with its state and facts, and the step that comes now.
@@ -19,7 +19,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from plantcraft import setup_guide
+from plantcraft.api import setup_guide
 from plantcraft.api.deps import AdminUser, Runtime
 from plantcraft.api.routers import data, installation
 from plantcraft.i18n import t

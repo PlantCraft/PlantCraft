@@ -20,7 +20,7 @@ with a language model, talks the person through each step and applies what they 
 | Send notifications by email (optional) | the person says so | nothing: it says what IT gives and where it goes |
 
 Any step can be skipped and taken back. The state is computed on every read
-(`GET /api/setup-guide`, `plantcraft/setup_guide.py`); the guide keeps only the marks (done,
+(`GET /api/setup-guide`, `plantcraft/api/setup_guide.py`); the guide keeps only the marks (done,
 skipped) and its last connection tests, in the preference row of the reserved name `@installation`,
 and whether each administrator hid the robot, in their own preferences.
 

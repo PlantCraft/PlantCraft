@@ -1,4 +1,4 @@
-/** The setup guide (/api/setup-guide, plantcraft/setup_guide.py): the steps of a new
+/** The setup guide (/api/setup-guide, plantcraft/api/setup_guide.py): the steps of a new
  * installation, each with its state and the facts the robot reads. */
 import { requestJson } from "./api";
 

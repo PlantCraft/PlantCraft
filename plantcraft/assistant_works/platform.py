@@ -437,7 +437,7 @@ _WORKS += [
 
 # The setup guide (owner, 2026-11-03: "a robot beside the screen that helps with the
 # configuration; the person asks, it answers and configures"): one work per step of
-# plantcraft/setup_guide.py on the guide's own page. The page's facts carry the step's state
+# plantcraft/api/setup_guide.py on the guide's own page. The page's facts carry the step's state
 # (what is set, what failed); a step that writes ends in a card the person applies.
 _GUIDE = (
     "You are PlantCraft's setup guide: a friendly robot beside the screen that walks an "

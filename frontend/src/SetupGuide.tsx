@@ -49,8 +49,8 @@ function talkAbout(guide: Guide, step: GuideStep, help = false) {
   openAssistant({
     page: "processcraft:setup-guide",
     work: help ? "processcraft:guide-help" : step.work,
-    title: t("Setup guide"),
-    place: `${t("Setup guide")} › ${step.title}`,
+    title: t("Getting started"),
+    place: `${t("Getting started")} › ${step.title}`,
     subject: "",
     facts: stepFacts(guide, step),
   });
@@ -117,7 +117,7 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
   const line = cheer ? t("Done: {step}. On to the next one!", { step: cheer }) : guide.finished ? t("Your plant is set up. Open me any time from Settings.") : guideLine(guide);
 
   return <div className={["setup-guide", open ? "setup-guide-open" : ""].filter(Boolean).join(" ")}>
-    {open && <section className="guide-card" role="dialog" aria-label={t("Setup guide")}>
+    {open && <section className="guide-card" role="dialog" aria-label={t("Getting started")}>
       <header className="guide-card-head">
         <GuideRobot mood={mood} size={40} />
         <div className="guide-card-title">
@@ -157,7 +157,7 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
       <button type="button" className="guide-bubble-text" onClick={() => setOpen(true)}>{line}</button>
       <button type="button" className="guide-icon-button" onClick={() => setBubble(false)} title={t("Close")} aria-label={t("Close")}><X size={13} /></button>
     </div>}
-    <button type="button" className="guide-launcher" onClick={() => setOpen((value) => !value)} title={t("Setup guide")} aria-label={t("Setup guide")} aria-expanded={open}>
+    <button type="button" className="guide-launcher" onClick={() => setOpen((value) => !value)} title={t("Getting started")} aria-label={t("Getting started")} aria-expanded={open}>
       <GuideRobot mood={mood} size={44} />
       {!guide.finished && <span className="guide-badge">{guide.done}/{guide.total}</span>}
     </button>

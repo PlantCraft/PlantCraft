@@ -2495,15 +2495,15 @@
   "Hide the guide": "Esconder o guia",
   "It is done": "Já fiz",
   "Let's set up your plant": "Vamos configurar sua planta",
-  "Open the setup guide": "Abrir o guia de configuração",
   "Open {page}": "Abrir {page}",
   "Run them all": "Executar todas",
   "Run it": "Executar",
-  "Setup guide": "Guia de configuração",
   "Skip for now": "Pular por enquanto",
   "Take the mark back": "Desfazer a marcação",
   "The apps start from an import: build the asset tree on Assets › Import first, or skip this step if you built it by hand.": "As apps começam a partir de uma importação: monte primeiro a árvore de ativos em Ativos › Importar, ou pule esta etapa se você a montou à mão.",
   "The robot that walks you through a new installation, step by step: the language model, the plant's data, the asset tree, the apps' first steps and your team.": "O robô que te guia numa instalação nova, passo a passo: o modelo de linguagem, os dados da planta, a árvore de ativos, os primeiros passos das apps e a sua equipe.",
   "Your plant is set up. Open me any time from Settings.": "Sua planta está configurada. Me abra quando quiser em Configurações.",
-  "{done} of {total} steps": "{done} de {total} etapas"
+  "{done} of {total} steps": "{done} de {total} etapas",
+  "Getting started": "Primeiros passos",
+  "Open Getting started": "Abrir Primeiros passos"
 }

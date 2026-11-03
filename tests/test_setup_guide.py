@@ -1,11 +1,11 @@
 # ruff: noqa: F811  (the fixture ``signed`` comes from test_collaboration.py)
-"""The setup guide (plantcraft/setup_guide.py, docs/setup-guide.md): each step's state comes from
+"""The setup guide (plantcraft/api/setup_guide.py, docs/setup-guide.md): each step's state comes from
 the installation itself, the robot's works propose and the guide's routes apply as the person,
 and only administrators see it."""
 
 from __future__ import annotations
 
-from plantcraft import setup_guide
+from plantcraft.api import setup_guide
 from plantcraft.assistant_works import WorkRegistry
 from tests.test_assistant_chat import LOCAL
 from tests.test_collaboration import _person, signed  # noqa: F401
