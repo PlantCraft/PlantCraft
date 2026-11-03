@@ -51,7 +51,7 @@ NETWORK_MODULES = {
     "plantcraft/api/app_proxy.py",
     # Desk's calendar links, only when an admin turns them on and names the servers allowed (off
     # by default; importing an .ics file needs no network, docs/desk.md).
-    "plantcraft/desk/__init__.py",
+    "plantcraft/desk/calendar.py",
 }
 NETWORK_IMPORTS = {
     "requests",
