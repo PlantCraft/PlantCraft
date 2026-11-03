@@ -40,7 +40,7 @@ from linkcraft.blocks.models import ModelRuntime
 from linkcraft.blocks.store import BlockStore
 from linkcraft.catalog.folders import FolderStore
 from linkcraft.catalog.presets import SHIPPED_AUTHOR
-from linkcraft.compact import create_incremental, incremental, release_free
+from linkcraft.compact import compact, compact_hour, create_incremental, incremental, release_free
 from linkcraft.config import Settings
 from linkcraft.data.cache import RawCache
 from linkcraft.data.cache import enabled_by_default as read_cache_enabled
@@ -52,7 +52,7 @@ from linkcraft.engine.compute import ComputePool
 from linkcraft.engine.jobs import schedule_work
 from linkcraft.engine.service import Engine
 from linkcraft.engine.suite_compute import SuitePool
-from linkcraft.engine.zones import use_installation_zone
+from linkcraft.engine.zones import use_installation_zone, zone_of
 from linkcraft.i18n import t
 from linkcraft.knowledge import (
     NEW_BLOCK,
@@ -885,25 +885,62 @@ class Runtime(PlatformRuntime):
             except Exception:  # PlantCraft away: said at the next check
                 LOGGER.warning("The stalled schedules were not checked", exc_info=True)
 
-    def release_disk(self) -> int:
-        """Hand back the pages the upkeep freed (``linkcraft.compact.release_free``); a file made
-        without ``INCREMENTAL`` is named once in the log, as it shrinks only with ``linkcraft compact``."""
+    def release_disk(self, now: datetime | None = None) -> int:
+        """Hand back the pages the upkeep freed (``linkcraft.compact.release_free``). A file made
+        without ``INCREMENTAL`` is compacted once, in the quiet hour (``compact_due``); until then
+        the log names it once."""
 
         path = Path(self.db.path)
         try:
             released = release_free(path)
             if released:
                 LOGGER.info("Gave %.0f MB of the database back to the disk", released / 1e6)
-            elif not self._compact_named and not incremental(path):
-                self._compact_named = True
-                LOGGER.info(
-                    "The database keeps the space old history leaves until `linkcraft compact` "
-                    "runs once (in a quiet hour); after that the hourly upkeep gives it back."
-                )
+            elif not incremental(path):
+                if self.compact_due(now):
+                    self.compact_once(path)
+                elif not self._compact_named:
+                    self._compact_named = True
+                    hour = compact_hour()
+                    LOGGER.info(
+                        "The database keeps the space old history leaves until it is compacted "
+                        "once: %s; after that the hourly upkeep gives it back.",
+                        f"at {hour:02d}:00 when no execution runs"
+                        if hour is not None
+                        else "run `linkcraft compact` in a quiet hour",
+                    )
             return released
         except Exception:  # the database busy: the next upkeep tries again
             LOGGER.warning("The database's free space was not given back", exc_info=True)
             return 0
+
+    def compact_due(self, now: datetime | None = None) -> bool:
+        """The quiet hour (``LINKCRAFT_COMPACT_HOUR`` on the installation's clock) and nothing
+        running: the dispatcher's next claim waits for the rewrite instead of racing it."""
+
+        hour = compact_hour()
+        if hour is None:
+            return False
+        local = (now or datetime.now(timezone.utc)).astimezone(zone_of(None))
+        return local.hour == hour and self.jobs.running_count() == 0
+
+    def compact_once(self, path: Path) -> dict[str, Any]:
+        LOGGER.info("Compacting the database (once: it then gives space back by itself)")
+        found = compact(path)
+        if found["status"] == "ok":
+            LOGGER.info(
+                "Compacted the database in %.0f s: %.1f GB to %.1f GB",
+                found["seconds"],
+                found["size_bytes"] / 1e9,
+                found["size_after_bytes"] / 1e9,
+            )
+        else:
+            LOGGER.info(
+                "The database was not compacted (%s): %.1f GB, %.0f %% free; tried again tomorrow",
+                found.get("reason", found["status"]),
+                found["size_bytes"] / 1e9,
+                100 * found["free_share"],
+            )
+        return found
 
     def retire_old_series(self) -> None:
         """Once PlantCraft answers: retire the series Link stopped writing in 0.4."""

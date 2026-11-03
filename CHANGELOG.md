@@ -15,6 +15,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- Analytics: a database made before the disk was given back by itself (0.6.0 and older) is now compacted once by the hourly upkeep, in the quiet hour (`LINKCRAFT_COMPACT_HOUR`, 03:00 on the installation's clock by default; `off` leaves it to `linkcraft compact`), when no execution runs, at least 20 % of the file is free and the disk holds twice the live data. From then on it gives space back by itself. At 3 months of a 2,050-loop plant the file was 23.8 GB with 9 GB free. `linkcraft compact` now also asks for room for both copies the rewrite writes (a temporary one and the write-ahead log), not one.
+- Analytics: the engine and the server hand back the memory a round used. Python's own allocator kept the pages of millions of small values parsed in a round while a few objects in them lived on: after a round of 2,050 loops 160 MB were live and the engine held 730 MB. The image now runs Python on glibc's allocator (`PYTHONMALLOC=malloc`, two arenas), which the 60 s trim already empties: 350 to 390 MB at rest, the same rounds, a signal check about 10 % slower when it runs inside the app.
 - Public demo assistant (found recording the 0.6 video, 2026-11-03):
   - The visit's clock no longer covers the assistant's text box: the side panel's box and Desk's keep clear of it.
   - A model service that only limits the rate (429) or fails for a moment (5xx) is asked again after the wait it names, and only stops the visits' questions for 20 seconds (any 429 stopped them for 10 minutes, so a visit's first question read "The assistant cannot answer right now"). `GET /api/demo/stats` says why answers failed (`failures`) and how long they took (`answer_seconds`).

@@ -663,6 +663,15 @@ class JobStore(Store):
             ).fetchall()
         return [row[0] for row in rows]
 
+    def running_count(self) -> int:
+        """Executions running now (in any process)."""
+
+        with self._lock, self._connect() as connection:
+            row = connection.execute(
+                "SELECT COUNT(*) FROM analysis_jobs WHERE status = 'running'"
+            ).fetchone()
+        return int(row[0])
+
     # The queue ---------------------------------------------------------------------------
 
     @staticmethod
