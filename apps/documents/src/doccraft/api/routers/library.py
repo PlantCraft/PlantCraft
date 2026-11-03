@@ -11,7 +11,14 @@ from fastapi.responses import FileResponse
 from plantcraft_sdk.server.queue import FORMAT as QUEUE_FORMAT
 from plantcraft_sdk.server.queue import SAMPLE_SECONDS, QueueNow
 
-from doccraft.api.deps import ACCESS, CurrentUser, EditorUser, RuntimeDep, document_or_404, editable_or_403
+from doccraft.api.deps import (
+    ACCESS,
+    CurrentUser,
+    EditorUser,
+    RuntimeDep,
+    document_or_404,
+    editable_or_403,
+)
 from doccraft.i18n import t
 from doccraft.library.extract import Unreadable, format_of
 from doccraft.library.models import (
