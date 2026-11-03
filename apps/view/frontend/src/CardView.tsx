@@ -5,7 +5,7 @@ import { AlertTriangle, Download, GripVertical, LoaderCircle, Maximize2, Repeat2
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { Data, PlotHoverEvent, Shape } from "plotly.js";
 import type { CardSource } from "./api";
-import { colorOf, effective, legible, levelLabel, mappedText, textOn, optionsOf, stepColor, stepValues, sortedSteps, stepOf, valueColor } from "./fields";
+import { colorOf, effective, legible, levelLabel, mappedText, textOn, readableFill, optionsOf, stepColor, stepValues, sortedSteps, stepOf, valueColor } from "./fields";
 import { formatDate, t } from "./i18n";
 import { AGG_LABELS, cardCsv, cardPixels, cardCsvName, cardTitle, formatValue, interpolate, stateLabel, stateStatus, windowLabel } from "./model";
 import { cursorShape, useSharedCursor } from "./cursor";
@@ -352,7 +352,7 @@ function Table({ card, rows }: { card: Card; rows: CardData["rows"] }) {
           const text = row.error ? "—" : shownValue(config, value);
           if (column === "last" && options.cell === "bar") return <td key={column} className="pc-num tc-cell-bar"><span><i style={{ width: `${share * 100}%`, background: coloured ? tone : BRAND_COLORS[currentTheme()].series[index % 8] }} /></span>{text}</td>;
           if (column !== "last" || !coloured || options.cell === "text" || last === null || last === undefined) return <td key={column} className="pc-num">{text}</td>;
-          if (options.cell === "color_background") return <td key={column} className="pc-num tc-cell-filled" style={{ background: tone, color: textOn(tone) }}>{text}</td>;
+          if (options.cell === "color_background") { const fill = readableFill(tone); return <td key={column} className="pc-num tc-cell-filled" style={{ background: fill, color: textOn(fill) }}>{text}</td>; }
           return <td key={column} className="pc-num" style={{ color: legible(tone, 4.5), fontWeight: 700 }}>{text}</td>;
         })}
       </tr>;

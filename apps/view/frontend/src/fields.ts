@@ -183,6 +183,19 @@ export function legible(color: string | undefined, minimum = 3, theme: BrandThem
   return text;
 }
 
+/** A fill dark enough for white text at ``minimum`` contrast (4.5:1 for table text): its own hue,
+ * moved towards black only as far as needed. An orange cell keeps its orange, a shade deeper. */
+export function readableFill(fill: string | undefined, minimum = 4.5): string | undefined {
+  const own = fill ? channels(fill) : null;
+  if (!fill || !own) return fill;
+  if (Math.max(contrast("#ffffff", fill), contrast("#1d1d1f", fill)) >= minimum) return fill;
+  for (let share = 0.05; share <= 1; share += 0.05) {
+    const found = mix(own, [0, 0, 0], share);
+    if (contrast("#ffffff", found) >= minimum) return found;
+  }
+  return "#000000";
+}
+
 /** The text colour on a filled background: white or the dark text, whichever reads better. */
 export function textOn(fill: string | undefined): string | undefined {
   if (!fill || !channels(fill)) return undefined;
