@@ -14,6 +14,7 @@ import { forgetAssistantStatus, openAssistant, startTour } from "@plantcraft/ui"
 import { ArrowRight, Check, Trophy, ChevronDown, ChevronUp, CircleAlert, LoaderCircle, MessageCircle, Play, PlugZap, SkipForward, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { language, setLanguage, t, type Language } from "./i18n";
+import { GuideRobot } from "./GuideRobot";
 import { guideApi, guideLine, nextMission, OPEN_GUIDE_EVENT, stepFacts, type ConnectionTest, type Guide, type GuideMission, type GuideStep, type StartStep } from "./setupGuideApi";
 
 /** While the card is open: often enough to see a connection or an import as it happens. */
@@ -21,26 +22,6 @@ const OPEN_POLL_MS = 5000;
 /** While it is closed: only to keep the bubble about the right step. */
 const CLOSED_POLL_MS = 60000;
 const CHEER_MS = 4000;
-
-/** The robot itself: a round head with a screen for a face, eyes that blink and an antenna that
- * glows. ``mood`` changes the face: listening, cheering, sleeping. */
-export function GuideRobot({ mood = "idle", size = 48 }: { mood?: "idle" | "cheer" | "talk" | "sleep"; size?: number }) {
-  return <svg className={`guide-robot guide-robot-${mood}`} width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
-    <line className="guide-robot-antenna" x1="32" y1="6" x2="32" y2="15" />
-    <circle className="guide-robot-light" cx="32" cy="6" r="4" />
-    <rect className="guide-robot-ear" x="4" y="26" width="6" height="14" rx="3" />
-    <rect className="guide-robot-ear" x="54" y="26" width="6" height="14" rx="3" />
-    <rect className="guide-robot-head" x="9" y="14" width="46" height="38" rx="15" />
-    <rect className="guide-robot-face" x="15" y="21" width="34" height="23" rx="10" />
-    {mood === "sleep"
-      ? <g className="guide-robot-eyes"><path d="M22 33h7M35 33h7" /></g>
-      : mood === "cheer"
-        ? <g className="guide-robot-eyes"><path d="M21 34l4-4 4 4M35 34l4-4 4 4" /></g>
-        : <g className="guide-robot-eyes guide-robot-blink"><ellipse cx="25.5" cy="32" rx="3.4" ry="4.2" /><ellipse cx="38.5" cy="32" rx="3.4" ry="4.2" /></g>}
-    {mood === "talk" && <rect className="guide-robot-mouth" x="28" y="38.5" width="8" height="2.6" rx="1.3" />}
-    <rect className="guide-robot-neck" x="26" y="52" width="12" height="5" rx="2" />
-  </svg>;
-}
 
 /** Open the assistant beside the page with a mission's work. */
 function talkMission(guide: Guide, mission: GuideMission) {
@@ -133,7 +114,7 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
   }
 
   const allDone = guide.finished && missionsLeft === 0;
-  const mood = cheer ? "cheer" : open ? "talk" : allDone ? "sleep" : "idle";
+  const mood = cheer ? "cheer" : busy ? "load" : error ? "error" : open ? "talk" : allDone ? "sleep" : "idle";
   const line = cheer ? t("Done: {step}. On to the next one!", { step: cheer })
     : allDone ? t("Your plant is set up. Open me any time from Settings.")
       : upNext ? t("Next mission: {mission}", { mission: upNext.title }) : guideLine(guide);
@@ -141,7 +122,7 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
   return <div className={["setup-guide", open ? "setup-guide-open" : ""].filter(Boolean).join(" ")}>
     {open && <section className="guide-card" role="dialog" aria-label={t("Getting started")}>
       <header className="guide-card-head">
-        <GuideRobot mood={mood} size={40} />
+        <GuideRobot mood={mood} size={56} />
         <div className="guide-card-title">
           <strong>{allDone ? t("All set") : guide.finished ? t("First missions") : t("Let's set up your plant")}</strong>
           <span>{guide.finished ? t("{done} of {total} missions", { done: guide.missions_done, total: guide.missions.length }) : t("{done} of {total} steps", { done: guide.done, total: guide.total })}</span>
@@ -186,7 +167,7 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
       <button type="button" className="guide-icon-button" onClick={() => setBubble(false)} title={t("Close")} aria-label={t("Close")}><X size={13} /></button>
     </div>}
     <button type="button" className="guide-launcher" onClick={() => setOpen((value) => !value)} title={t("Getting started")} aria-label={t("Getting started")} aria-expanded={open}>
-      <GuideRobot mood={mood} size={44} />
+      <GuideRobot mood={mood} size={44} view="head" />
       {!guide.finished && <span className="guide-badge">{guide.done}/{guide.total}</span>}
       {guide.finished && !allDone && <span className="guide-badge guide-badge-trophy"><Trophy size={10} /> {guide.missions_done}/{guide.missions.length}</span>}
     </button>

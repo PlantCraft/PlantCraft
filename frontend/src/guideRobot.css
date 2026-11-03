@@ -1,0 +1,76 @@
+/* Aaron, the setup guide's robot (GuideRobot.tsx). Flat, in the suite's tokens: steel links and
+   head in the primary blue, a graphite base, a dark screen with light-blue eyes. */
+.aaron {
+  --aaron-steel: var(--pc-primary, #2e5a88);
+  --aaron-joint: var(--pc-primary-hover, #264b71);
+  --aaron-base: var(--pc-text-3, #55555a);
+  --aaron-turret: var(--pc-inactive-fill, #8e8e93);
+  --aaron-screen: #0f2236;
+  --aaron-eye: #9fd4ff;
+  --aaron-led: var(--aaron-eye);
+  overflow: visible;
+}
+.aaron-base { fill: var(--aaron-base); }
+.aaron-turret, .aaron-mast { fill: var(--aaron-turret); }
+.aaron-link { stroke: var(--aaron-steel); stroke-linecap: round; }
+.aaron-link-low { stroke-width: 8; }
+.aaron-link-up { stroke-width: 7; }
+.aaron-joint { fill: var(--aaron-joint); }
+.aaron-pin { fill: var(--pc-surface, #fff); }
+.aaron-shell { fill: var(--aaron-steel); }
+.aaron-full .aaron-shell { fill: var(--aaron-joint); }
+.aaron-screen { fill: var(--aaron-screen); }
+.aaron-eye, .aaron-eye ellipse { fill: var(--aaron-eye); }
+.aaron-eye-line { fill: none; stroke: var(--aaron-eye); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* The status light, always lit while Aaron is on: amber waiting, green working, red down or in
+   trouble, out when asleep. */
+.aaron-led { fill: var(--aaron-led); }
+.aaron-idle { --aaron-led: var(--pc-attention-fill, #ff9f0a); }
+.aaron-talk, .aaron-think, .aaron-load, .aaron-cheer { --aaron-led: var(--pc-good-fill, #34c759); }
+.aaron-error { --aaron-led: var(--pc-problem-fill, #ff3b30); }
+.aaron-sleep { --aaron-led: var(--pc-inactive-fill, #8e8e93); }
+.aaron-sleep .aaron-led { opacity: 0.45; }
+.aaron-load .aaron-led { animation: aaron-glow 0.8s ease-in-out infinite; }
+
+/* The face. */
+.aaron-blink { animation: aaron-blink 5s infinite; transform-box: fill-box; transform-origin: center; }
+.aaron-mouth { animation: aaron-talk 900ms ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.aaron-scan { animation: aaron-scan 0.75s linear infinite; }
+.aaron-glance { animation: aaron-glance 6s ease-in-out infinite; }
+.aaron-ask { animation: aaron-ask 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+
+/* The whole arm: the upper link and the head turn about the elbow. */
+.aaron-full .aaron-arm { transform-box: view-box; transform-origin: 20px 28px; transition: transform 400ms ease; }
+.aaron-full.aaron-idle .aaron-arm { animation: aaron-breathe 3.2s ease-in-out infinite; }
+.aaron-full.aaron-talk .aaron-arm { animation: aaron-nod 1.2s ease-in-out infinite; }
+.aaron-full.aaron-cheer .aaron-arm { transform: rotate(-20deg); animation: aaron-wave 0.8s ease-in-out infinite; }
+.aaron-full.aaron-sleep .aaron-arm { transform: rotate(48deg); }
+.aaron-full.aaron-think .aaron-arm { animation: aaron-sway 2.6s ease-in-out infinite; }
+.aaron-full.aaron-load .aaron-arm { animation: aaron-sway 2.6s ease-in-out infinite; }
+.aaron-full.aaron-error .aaron-arm { transform: rotate(22deg); }
+
+/* The head alone: small moves of the whole head. */
+.aaron-head-only .aaron-head { transform-box: fill-box; transform-origin: 50% 100%; }
+.aaron-head-only.aaron-idle .aaron-head, .aaron-head-only.aaron-talk .aaron-head { animation: aaron-bob 3.2s ease-in-out infinite; }
+.aaron-head-only.aaron-cheer .aaron-head { animation: aaron-hop 600ms ease-in-out 3; }
+.aaron-head-only.aaron-think .aaron-head { animation: aaron-tilt 2.6s ease-in-out infinite; }
+.aaron-head-only.aaron-load .aaron-head { animation: aaron-bob 3.2s ease-in-out infinite; }
+.aaron-head-only.aaron-error .aaron-head { transform: rotate(-8deg); }
+
+@keyframes aaron-glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes aaron-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes aaron-talk { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.55); } }
+@keyframes aaron-scan { from { transform: translateX(0); } to { transform: translateX(25px); } }
+@keyframes aaron-glance { 0%, 30%, 100% { transform: translateX(0); } 38%, 50% { transform: translateX(-1.6px); } 58%, 70% { transform: translateX(1.6px); } 78% { transform: translateX(0); } }
+@keyframes aaron-ask { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.8px); } }
+@keyframes aaron-breathe { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-3deg); } }
+@keyframes aaron-nod { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(6deg); } }
+@keyframes aaron-wave { 0%, 100% { transform: rotate(-24deg); } 50% { transform: rotate(-12deg); } }
+@keyframes aaron-sway { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+@keyframes aaron-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
+@keyframes aaron-hop { 0%, 100% { transform: translateY(0) rotate(0); } 40% { transform: translateY(-3px) rotate(-6deg); } 70% { transform: translateY(-1.5px) rotate(5deg); } }
+@keyframes aaron-tilt { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .aaron, .aaron * { animation: none !important; transition: none !important; }
+}
