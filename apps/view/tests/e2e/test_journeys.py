@@ -302,7 +302,7 @@ def test_a_trend_with_two_subplots_is_saved_and_reopened(signed_in, app_url, scr
     # The chart's own theme, whatever the platform's: dark here, kept for the next visit.
     page.get_by_label("Chart").select_option("dark")
     expect(page.locator(".tc-trend-chart .main-svg").first).to_have_css(
-        "background-color", "rgb(28, 28, 30)"
+        "background-color", "rgb(11, 11, 12)"
     )
     _shot(page, screenshots, "5-dark-chart")
     assert page.evaluate("localStorage.getItem('dashcraft.chart-theme')") == "dark"

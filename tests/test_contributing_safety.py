@@ -26,6 +26,8 @@ WORKFLOWS = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
 # Paths CODEOWNERS guards before they exist (a folder an agent tool may create).
 MAY_BE_MISSING = {"/.claude/"}
 FORK_GUARD = "github.event.pull_request.head.repo.fork && 'ubuntu-latest'"
+# Stronger: every pull request (a fork's included) runs on GitHub's runners (F1, 2026-11-03).
+PR_GUARD = "github.event_name == 'pull_request' && 'ubuntu-latest'"
 PINNED = re.compile(r"^[\w.-]+/[\w./-]+@[0-9a-f]{40}$")
 
 
@@ -99,7 +101,10 @@ def test_forks_never_reach_the_self_hosted_runner(path):
         # Any runner picked by a repository variable (TEST_RUNNER, formerly CI_RUNNER) can be the
         # Mac mini, so a fork's pull request must be sent to GitHub's runners first.
         if "vars." in runs_on:
-            assert FORK_GUARD in runs_on, (
+            guard = min(
+                (runs_on.find(g) for g in (FORK_GUARD, PR_GUARD) if g in runs_on), default=-1
+            )
+            assert -1 < guard < runs_on.find("vars."), (
                 f"{path.name} job {name}: a fork's pull request must run on GitHub's runners"
             )
 

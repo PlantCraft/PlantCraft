@@ -1,9 +1,9 @@
 name: Lint
 
-# The one check of a pull request besides Security: ruff in every Python folder (the platform, each
-# app, the Simulator and the app template, each with its own settings), about a minute. The tests
-# run on main a few times a day and contributors run `make ci` of the folders they change before
-# merging (ci/macmini/README.md). Documentation-only changes run nothing.
+# Ruff in every Python folder (the platform, each app, the Simulator and the app template, each with
+# its own settings), about a minute, on every pull request. Each folder's own workflow runs its tests
+# on the pull requests that change it; the browser journeys run on main a few times a day
+# (ci/macmini/README.md). Documentation-only changes run nothing.
 on:
   pull_request:
     paths-ignore: ["**/*.md", "docs/**", "LICENSE", "NOTICE", ".claude/**"]
