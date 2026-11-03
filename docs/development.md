@@ -1,6 +1,6 @@
 # Develop PlantCraft
 
-> **Updated:** 2026-10-30
+> **Updated:** 2026-11-03
 
 How to run PlantCraft from a source checkout, its command line and its settings. Where a change
 belongs and how a pull request is reviewed: [CONTRIBUTING.md](../CONTRIBUTING.md); how the
@@ -50,6 +50,38 @@ plantcraft --scenario scenarios/generic_demo.json --browser
 
 For a production installation (PI Web API, Kerberos, systemd, backups) see
 [deployment.md](deployment.md).
+
+## Local preview
+
+The site and the whole suite with the demo story, as the public demo shows them, on this machine
+and without publishing anything (`dev/local_preview.py`):
+
+| Command | What it does |
+|---|---|
+| `make preview` | With Docker: builds this checkout's images, tags them `<version>-preview`, installs them with `deploy/install.sh --dev --all-apps --demo` and starts the site |
+| `make preview-light` | Without Docker (cloud sessions, a laptop): PlantCraft, the six apps, the Simulator and the site as processes from source, behind a small proxy that routes the apps' prefixes as the suite's proxy does |
+| `make preview-reset` | Fresh data and the demo story again, in the mode the folder holds |
+| `make preview-down` | Stops it; data kept |
+| `make preview-status` | What runs and where |
+| `make preview-shots` | Screenshots of the site's pages and the suite's main pages, signed in as the administrator, into `<folder>/shots/` |
+
+- **Its own folder, project and ports.** Everything lives in `PREVIEW_DIR` (default
+  `~/plantcraft-preview`), under the Compose project `plantcraft-preview`, on `PREVIEW_PORT`
+  (default 8260 the suite, 8261 the site; light mode also uses 8270 to 8276 and OPC UA 4841). It
+  refuses `~/PlantCraft` and `~/plantcraft-ci`, and after building an image it puts the plain
+  `<version>` tag back where it was, so another suite on the machine keeps its images.
+- **Addresses.** Docker: `https://localhost:8260` (the local certificate authority; the password
+  is in `<folder>/suite/data/initial-admin-password`). Light: `http://127.0.0.1:8260` (user
+  `admin`, password in `<folder>/light/data/admin-password`). The site: `http://127.0.0.1:8261`,
+  with its chat off unless `SITE_CHAT_PROVIDER` and a key are set.
+- **Options.** `MODE=public-demo` opens the demo to visitors ("Enter the demo") as on the public
+  demo; `REBUILD=1` builds the images (or the interfaces, in light mode) again.
+- **Light mode's limits.** No compute workers or sandboxes: Analytics' analyses and Models' runs
+  happen in the apps' own processes (`LINKCRAFT_COMPUTE=local`, `MODELCRAFT_RUNNER=local`, which
+  needs OpenModelica for a model's simulation), Historian keeps its archive in SQLite and the
+  Apps page cannot install packages. For the hardened stack use `make preview`.
+- Logs: `<folder>/logs/` (light mode, the site); `docker compose --project-directory
+  <folder>/suite logs` (Docker).
 
 ## Command line
 
