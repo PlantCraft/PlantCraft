@@ -2,21 +2,22 @@
 .PHONY: ci deps standard lint format test test-fast frontend e2e serve image package lock
 
 PYTHON ?= $(shell command -v python >/dev/null 2>&1 && echo python || echo python3)
-SDK := plantcraft-sdk==0.106.0
+# This repository's SDK and ui (docs/app-standard.md, section 3): the app builds against the tree.
+ROOT := ../..
 
 ci: deps standard lint frontend test
 
 # The suite's app standard (PlantCraft docs/app-standard.md): app.toml, layout, Makefile
-# targets, vendored SDK hash; run as a module so $(PYTHON) finds it.
+# targets; run as a module so $(PYTHON) finds it.
 standard:
 	$(PYTHON) -m plantcraft_sdk.app_cli check .
 	$(PYTHON) -m plantcraft_sdk.i18n_check --strict .
 
-# plantcraft-sdk is not on any index: it is installed from the wheel in vendor/ only, always
+# plantcraft-sdk is not on any index: it is installed from this repository's sdk/python, always
 # reinstalled so a copy left by another folder's job on a shared runner never stands in for it.
 deps:
-	$(PYTHON) -m pip install -q --force-reinstall --no-index --find-links vendor --no-deps "$(SDK)"
-	$(PYTHON) -m pip install -q --find-links vendor -e ".[dev]"
+	$(PYTHON) -m pip install -q --force-reinstall --no-deps -e $(ROOT)/sdk/python
+	$(PYTHON) -m pip install -q -e ".[dev]"
 
 lint:
 	ruff check .
@@ -34,7 +35,9 @@ test:
 test-fast:
 	$(PYTHON) -m pytest -q -m "not slow"
 
+# @plantcraft/ui is linked from this repository's ui/ (file:../../../ui): built first.
 frontend:
+	cd $(ROOT)/ui && npm ci --no-audit --no-fund && npm run build
 	cd frontend && npm ci --no-audit --no-fund && npm run build && npm test
 
 # Browser journeys (needs `pip install -e ".[e2e]"` and Chromium; set
@@ -53,6 +56,7 @@ DOCKER_BUILD_FLAGS ?=
 
 image:
 	docker build $(DOCKER_BUILD_FLAGS) $(if $(BUILD_CA),--secret id=build_ca$(comma)src=$(BUILD_CA)) \
+		--build-context ui=$(ROOT)/ui --build-context sdk=$(ROOT)/sdk/python \
 		--build-arg VERSION=$(VERSION) \
 		--build-arg REVISION=$$(git rev-parse --short HEAD 2>/dev/null || echo unknown) \
 		--build-arg CREATED=$$(date -u +%Y-%m-%dT%H:%M:%SZ) \
@@ -78,8 +82,9 @@ package: image
 		--sbom "$(or $(SBOM),dist/sbom.spdx.json)" --out dist
 
 lock:
+	$(MAKE) -C $(ROOT) sdk-wheel
 	uv pip compile deploy/requirements.in --python-version 3.13 \
 		--python-platform x86_64-manylinux_2_28 --generate-hashes --no-header --quiet \
-		--find-links vendor --no-emit-package alarmcraft --no-emit-package plantcraft-sdk \
+		--find-links $(ROOT)/dist --no-emit-package alarmcraft --no-emit-package plantcraft-sdk \
 		-o deploy/requirements.lock
 	sed -i '1i # Pinned, hashed dependencies of the Docker image (Python 3.13, Linux). Regenerate with\n# `make lock` after changing pyproject.toml; the image build refuses any file whose hash differs.' deploy/requirements.lock

@@ -131,8 +131,8 @@ and its own database.
   `processcraft_token` cookie for people, a service token from the app key for background work.
   Every request an app receives is verified with `plantcraft_sdk.auth`; the app checks
   `apps[<own id>]`.
-- **The SDK is the client.** Apps use `plantcraft-sdk` (vendored wheel, pinned version and
-  SHA-256 in `vendor/README.md`) for tokens, references, API calls and tests
+- **The SDK is the client.** Apps use `plantcraft-sdk` (pinned version: see "Where the SDK and
+  ui come from" below) for tokens, references, API calls and tests
   (`FakePlantCraft`). No app writes its own HTTP client for API v1.
 - **The SDK is the server skeleton (since 0.9.0).** What every app server does the same way lives
   once in `plantcraft_sdk.server`, never copied into an app: the app's SQLite file and the
@@ -147,7 +147,17 @@ and its own database.
   secrets redacted) and runs uvicorn with `log_config=None`; `mount` adds request ids and
   `GET /api/ops/metrics`; `Database(path, version=__version__)` stamps the schema. Each release
   has its `CHANGELOG.md` entry. See `docs/operations.md`.
-- **One wheel per SDK version.** Apps vendor the wheel built by `make sdk-wheel` in this
+- **Where the SDK and ui come from (since 2026-11-03).** An app inside this repository
+  (`apps/<app>`) builds against the tree: `make deps` installs `../../sdk/python` (editable),
+  `frontend/package.json` names `"@plantcraft/ui": "file:../../../ui"`, the image takes both
+  as build contexts (`--build-context ui=../../ui --build-context sdk=../../sdk/python`), and
+  it has no `vendor/`. A change to the SDK or ui and the apps that use it go in one pull
+  request, tested together. The versions do not move in that pull request: `dev/sdk-version`
+  moves them, and every app's pin (`plantcraft-sdk==` in `pyproject.toml`, `[requires] sdk`),
+  once per release; the Lint check fails when a pin differs from the tree's version. An app in
+  its own repository (the template, a partner's app, the closed apps) vendors both packages
+  instead, as below, and picks a new release up with `dev/revendor`.
+- **One wheel per SDK version.** An app outside this repository vendors the wheel built by `make sdk-wheel` in this
   repository, at the commit of that version: it builds from sdk/python's files with fixed
   timestamps and file modes and the setuptools pinned in `sdk/python/pyproject.toml`, so every
   machine gets the same bytes, and prints the SHA-256 that goes in `vendor/README.md`. Two apps
@@ -195,7 +205,7 @@ image = "linkcraft"                 # image name; tag = version
 [requires]
 platform = ">=0.6,<0.8"             # PlantCraft versions it installs on (app-package.md §7)
 processcraft_api = ">=1.0,<2"       # API v1 version range
-sdk = "0.2.0"                       # plantcraft-sdk version vendored
+sdk = "0.2.0"                       # plantcraft-sdk version it pins
 asset_types = ["loop"]              # types it works on (subtypes included); [] if none
 roles = { loop = ["pv", "op"] }     # signal roles it needs per type
 
@@ -383,7 +393,7 @@ Makefile            ci, deps, lint, format, test, frontend, e2e, image, package 
 Dockerfile          the three-stage image (section 7)
 pyproject.toml      Python package; version = app.toml version; ruff==0.17.1, line length 100
 deploy/requirements.in, deploy/requirements.lock   hash-pinned runtime dependencies
-vendor/             plantcraft-sdk wheel + README.md with its SHA-256
+vendor/             outside this repository only: SDK wheel, ui package, README.md with SHA-256s
 src/<id>/           code; api/ (routers on plantcraft_sdk.server), cli.py (`<id> serve`)
 frontend/           React + Vite + TypeScript, PlantCraft tokens and brand, no CDN
 tests/              unit, contract (against FakePlantCraft), hostile inputs, floors.toml, oracles/, e2e/
@@ -533,8 +543,8 @@ long the oldest item has waited, the workers busy) and the same numbers over 1 h
 ## 7. Image, runtime settings and the suite table
 
 **Image.** Three stages like Analytics' `Dockerfile`: frontend build (Node, never shipped),
-hash-checked wheelhouse (`--require-hashes --only-binary=:all:`, SDK from `vendor/` checked by
-SHA-256), runtime (Python slim pinned by digest, `--no-index`, no pip, no compilers, non-root
+hash-checked wheelhouse (`--require-hashes --only-binary=:all:`; the SDK wheel built from the
+tree's `sdk/python`, or taken from `vendor/` and checked by SHA-256 outside this repository), runtime (Python slim pinned by digest, `--no-index`, no pip, no compilers, non-root
 `uid`, `/data` owned by it, `HEALTHCHECK` on `health`). OCI labels: title, description
 (= summary), version, revision, created, licenses, source, and `org.processcraft.app.id`,
 `org.processcraft.app.prefix`, `org.processcraft.app.port`.
@@ -642,8 +652,10 @@ The short checklist of these rules, to read before drawing or reviewing a screen
 [ui-guidelines.md](ui-guidelines.md) (navigation only through the side menu and tabs, no buttons
 at the top of an Overview, buttons, forms, tables and widgets).
 
-Every app's web interface installs `@plantcraft/ui`, built from `ui/` in this repository and
-vendored like the SDK wheel: `make ui-package` writes `plantcraft-ui-<version>.tgz`, the app
+Every app's web interface installs `@plantcraft/ui`, built from `ui/` in this repository. An app
+inside it links the tree (`"@plantcraft/ui": "file:../../../ui"`; `make frontend` builds `ui/`
+first, and `resolve.dedupe: sharedWithUi(...)` from `@plantcraft/ui/vite` in `vite.config.ts`
+keeps one React). An app outside it vendors the package like the SDK wheel: `make ui-package` writes `plantcraft-ui-<version>.tgz`, the app
 copies it to `vendor/` next to the wheel and names it in `frontend/package.json`
 (`"@plantcraft/ui": "file:../vendor/plantcraft-ui-<version>.tgz"`), with its SHA-256 in
 `vendor/README.md` (`plantcraft-app check` verifies all three). The package holds:

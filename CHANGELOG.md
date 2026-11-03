@@ -36,6 +36,14 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- **The apps build against the repository's own SDK and ui.** Every app under `apps/` installs
+  `sdk/python` from the tree (`make deps`), its interface links `ui/` (`file:../../../ui`) and
+  its image takes both as build contexts, so a change to the SDK or ui is tested with every app
+  in the same pull request; the apps' `vendor/` folders and `frontend/vendor` are gone. The SDK
+  and ui versions now move once per release (`dev/sdk-version`), not in each pull request;
+  `plantcraft-app check` accepts an app inside the repository without `vendor/`, `make ui-locks`
+  refreshes the interfaces' locks and `@plantcraft/ui/vite` gives each Vite config the
+  packages to share with the linked ui (docs/app-standard.md, section 3).
 - **Pull requests run the tests of the folders they change.** Each folder's `make ci` (the
   platform's backend and frontend jobs) runs on GitHub's runners for every pull request that touches
   it, and a pull request merges once those checks are green. The browser journeys stay on main's

@@ -66,8 +66,8 @@ def test_processcraft_asks_for_the_sdk_in_the_tree() -> None:
 
 
 def test_the_platform_pins_the_sdk_of_this_tree():
-    """make image installs the platform with the vendored wheel: a pin that leaves this tree's
-    SDK version out fails the image (main, 2026-10-31). dev/sdk-version moves both."""
+    """make image installs the platform with this tree's wheel: a pin that leaves this tree's
+    SDK version out fails the image (main, 2026-10-31). dev/sdk-version moves both at a release."""
 
     version = re.search(
         r'^version = "([^"]+)"', (ROOT / "sdk/python/pyproject.toml").read_text(), re.M

@@ -6,7 +6,8 @@ Checks ``app.toml`` (``plantcraft_sdk.app_manifest``, sections 4 and 7 of
 ``docs/app-standard.md``) and the repository layout of section 5: the required
 files, the ``pyproject.toml`` version equal to the ``app.toml`` version, the
 ``Makefile`` targets and the SHA-256 line of the vendored SDK in
-``vendor/README.md``; and the operations rules (``docs/operations.md``): a
+``vendor/README.md`` (an app inside the PlantCraft repository, under ``apps/``, links
+the tree's ``sdk/python`` and ``ui/`` instead and has no ``vendor/``); and the operations rules (``docs/operations.md``): a
 ``CHANGELOG.md`` entry for the version, every SQLite file in ``[backup]``, logs
 through ``configure_logging``. Prints every problem and exits 1 when there is one;
 warnings alone exit 0. Each app's ``make ci`` runs it.
@@ -42,13 +43,15 @@ REQUIRED_FILES = (
     "pyproject.toml",
     "deploy/requirements.in",
     "deploy/requirements.lock",
-    "vendor/README.md",
     "src/{id}/cli.py",
     "tests/floors.toml",
     "docs/STATUS.md",
     "docs/gaps.md",
     "docs/devlog.md",
 )
+# An app in its own repository vendors the SDK and ui (section 3); one inside the PlantCraft
+# repository links the tree's sdk/python and ui/ instead.
+VENDOR_README = "vendor/README.md"
 REQUIRED_DIRS = ("src/{id}/api", "frontend", "tests", "docs/help")
 MAKE_TARGETS = (
     "ci",
@@ -97,9 +100,22 @@ def _make_targets(text: str) -> set[str]:
     return targets
 
 
+def in_tree(root: Path) -> bool:
+    """Is this app inside the PlantCraft repository (apps/<app>), next to sdk/python and ui/?"""
+
+    folder = root.resolve()
+    top = folder.parent.parent
+    return (
+        folder.parent.name == "apps"
+        and (top / "sdk" / "python" / "pyproject.toml").is_file()
+        and (top / "ui" / "package.json").is_file()
+    )
+
+
 def _layout(root: Path, manifest: AppManifest, report: Report) -> None:
     app_id = manifest.app.id
-    for name in REQUIRED_FILES:
+    required = REQUIRED_FILES if in_tree(root) else (*REQUIRED_FILES, VENDOR_README)
+    for name in required:
         path = root / name.format(id=app_id)
         if not path.is_file():
             report.errors.append(f"{path.relative_to(root)}: missing (section 5)")
@@ -147,6 +163,13 @@ def _makefile(root: Path, report: Report) -> None:
 
 def _vendor(root: Path, manifest: AppManifest, report: Report) -> None:
     readme = root / "vendor" / "README.md"
+    if in_tree(root):
+        if (root / "vendor").exists():
+            report.errors.append(
+                "vendor/: an app inside the PlantCraft repository links sdk/python and ui/ "
+                "(section 3); delete vendor/"
+            )
+        return
     if not readme.is_file():
         return
     text = readme.read_text()
@@ -177,10 +200,11 @@ def _frontend(root: Path, report: Report) -> None:
 
 UI_PACKAGE = "@plantcraft/ui"
 UI_TGZ = re.compile(r"^file:\.\./vendor/(plantcraft-ui-[0-9][0-9A-Za-z.+-]*\.tgz)$")
+UI_TREE = "file:../../../ui"
 
 
 def _frame(root: Path, report: Report) -> None:
-    """The web interface draws the suite frame from the vendored package (section 10, D6)."""
+    """The web interface draws the suite frame from @plantcraft/ui (section 10, D6)."""
 
     package = root / "frontend" / "package.json"
     if not package.is_file():
@@ -191,6 +215,14 @@ def _frame(root: Path, report: Report) -> None:
         )
     except (ValueError, AttributeError):
         report.errors.append("frontend/package.json: not valid JSON")
+        return
+    if in_tree(root):
+        if spec != UI_TREE:
+            report.errors.append(
+                f'frontend/package.json: depend on {UI_PACKAGE} as "{UI_TREE}" (section 10)'
+            )
+        else:
+            _shell(root, report)
         return
     match = UI_TGZ.match(spec or "")
     if not match:
@@ -208,6 +240,10 @@ def _frame(root: Path, report: Report) -> None:
     sums = {(m.group(1) or m.group(2)).lower() for m in SHA256_LINE.finditer(text)}
     if hashlib.sha256(tgz.read_bytes()).hexdigest() not in sums:
         report.errors.append(f"vendor/README.md: no SHA-256 line matches {tgz.name}")
+    _shell(root, report)
+
+
+def _shell(root: Path, report: Report) -> None:
     sources = (root / "frontend" / "src").rglob("*.tsx")
     if not any("SuiteShell" in path.read_text(encoding="utf-8") for path in sources):
         report.errors.append("frontend/src: draw the suite frame with SuiteShell (section 10)")

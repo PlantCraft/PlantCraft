@@ -16,6 +16,10 @@ on:
       - "!apps/historian/**/*.md"
       - "!apps/historian/docs/**"
       - "simulator/src/simcraft/testkit/**"
+      # The SDK and ui it builds against (from the tree since F2).
+      - "sdk/python/**"
+      - "ui/**"
+      - "!**/*.md"
       - ".github/workflows/historian.yml"
   pull_request:
     paths:
@@ -23,6 +27,10 @@ on:
       - "!apps/historian/**/*.md"
       - "!apps/historian/docs/**"
       - "simulator/src/simcraft/testkit/**"
+      # The SDK and ui it builds against (from the tree since F2).
+      - "sdk/python/**"
+      - "ui/**"
+      - "!**/*.md"
       - ".github/workflows/historian.yml"
   # The tests of main at about 09:00, 13:00, 17:00 and 21:00 Brasília (UTC-3; cron is UTC).
   schedule:
@@ -91,7 +99,7 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/historian/frontend/package-lock.json
-      # plantcraft-sdk comes from vendor/ only (pip install --no-index --find-links vendor).
+      # plantcraft-sdk and @plantcraft/ui come from this repository's sdk/python and ui/.
       - run: make ci
 
   # Every source kind against the Simulator's test kit, with the suite's pinned Telegraf
@@ -155,7 +163,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: docker build -t histcraft:ci .
+      - run: docker build --build-context ui=../../ui --build-context sdk=../../sdk/python -t histcraft:ci .
       - name: The image ships its SBOM (/app/sbom.json, CycloneDX) for the suite's bundle
         run: |
           docker run --rm histcraft:ci python -c "import json; d = json.load(open('/app/sbom.json')); names = {c['name'] for c in d['components']}; assert d['bomFormat'] == 'CycloneDX' and {'histcraft', 'fastapi', 'react'} <= names, names"

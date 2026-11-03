@@ -14,6 +14,8 @@ templates
 venv
 *.egg-info
 frontend/node_modules
+ui/node_modules
+ui/dist
 frontend/dist
 frontend/*.tsbuildinfo
 .env

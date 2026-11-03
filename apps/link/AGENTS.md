@@ -45,8 +45,6 @@ This folder:
 ```text
 src/linkcraft/   the app (layers below); tests/ (pytest, against FakePlantCraft); tests/oracles/
 frontend/       Vite + React + TypeScript, served under /link/ (base path in vite.config.ts)
-vendor/         the plantcraft-sdk wheel and the @plantcraft/ui package PlantCraft Analytics pins (never
-               edited here; SHA256 in its README)
 deploy/         requirements.in/.lock: hashed dependencies of the Docker image (`make lock`)
 ```
 

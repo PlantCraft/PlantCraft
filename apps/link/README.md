@@ -72,7 +72,7 @@ PlantCraft Analytics follows the PlantCraft app standard (it is the reference ap
 
 ```sh
 python -m venv .venv && . .venv/bin/activate
-make deps                                  # plantcraft-sdk from vendor/, then PlantCraft Analytics
+make deps                                  # plantcraft-sdk from ../../sdk/python, then PlantCraft Analytics
 (cd frontend && npm ci && npm run build)   # the interface, served under /link/
 
 # In PlantCraft: PLANTCRAFT_APPS=linkcraft=/link/ plantcraft --port 8060,
@@ -115,7 +115,7 @@ PlantCraft's `deploy/package.sh` lands, and is a stub until then).
 `make test-fast` is the quick loop while working (no slow tier); `make ci` runs what CI runs: `plantcraft-app check`, ruff, the frontend build and tests, and
 pytest (methods, signal checks, blocks and algorithms, engine, API against `FakePlantCraft`, hostile
 inputs, migration, architecture, offline). The interface draws the suite frame from
-`@plantcraft/ui` (vendored with the SDK in `vendor/`). `python -m linkcraft.bench --loops 2000 --processes 4
+`@plantcraft/ui` (linked from this repository's `ui/`). `python -m linkcraft.bench --loops 2000 --processes 4
 --latency-ms 2` times a run in turn against an in-process PlantCraft. Read
 [AGENTS.md](AGENTS.md) before changing anything.
 

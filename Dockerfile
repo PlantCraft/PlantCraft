@@ -20,10 +20,17 @@ ARG NODE_IMAGE=node:22.23.3-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e33952
 ARG PYTHON_IMAGE=python:3.13.16-slim-trixie@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
 
 FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS frontend
+# The suite frame (@plantcraft/ui) from ui/, built first with its own locked dependencies;
+# frontend/package.json links it as file:../ui (docs/app-standard.md, section 10).
+WORKDIR /build/ui
+COPY ui/package.json ui/package-lock.json ui/tsconfig.json ui/vite.mjs ui/vite.d.mts ./
+RUN --mount=type=secret,id=build_ca,required=false \
+    if [ -s /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; \
+    npm ci --no-audit --no-fund
+COPY ui/src ./src
+RUN npm run build
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
-# The suite frame (@plantcraft/ui), vendored like the SDK wheel (docs/app-standard.md, section 10).
-COPY frontend/vendor ./vendor
 RUN --mount=type=secret,id=build_ca,required=false \
     if [ -s /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; \
     npm ci --no-audit --no-fund

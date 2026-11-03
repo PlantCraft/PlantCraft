@@ -22,7 +22,6 @@ This folder:
 ```text
 src/histcraft/  the app (layers below); tests/ (pytest, against FakePlantCraft and a test OPC UA server)
 frontend/       Vite + React + TypeScript, served under /hist/ (base path in vite.config.ts)
-vendor/         the plantcraft-sdk wheel PlantCraft Historian pins (never edited here; SHA256 in its README)
 deploy/         requirements.in/.lock (hashed dependencies of the image), compose snippet for the suite
 ```
 

@@ -24,8 +24,6 @@ app.toml        the manifest: id, version, prefix, port, uid, permissions (singl
 src/modelcraft/  the app (layers below); tests/ (pytest, against FakePlantCraft and a recorded runner)
 docs/help/      help pages served at /api/help and shown under Help
 frontend/       Vite + React + TypeScript, served under /model/ (base path in vite.config.ts)
-vendor/         the plantcraft-sdk wheel and the @plantcraft/ui package PlantCraft Models pins (never
-                edited here; SHA-256 of both in its README)
 deploy/         requirements.in/.lock (+ overrides.txt): hashed dependencies of the image (`make lock`);
                 runner/Dockerfile: the Modelica runner image (OpenModelica + MSL, `make runner-image`)
 ```

@@ -24,8 +24,6 @@ app.toml        the manifest: id, version, prefix, port, uid, permissions (singl
 src/alarmcraft/  the app (layers below); tests/ (pytest, against FakePlantCraft); tests/oracles/
 docs/help/      help pages served at /api/help and shown under Help
 frontend/       Vite + React + TypeScript, served under /alarm/ (base path in vite.config.ts)
-vendor/         the plantcraft-sdk wheel and the @plantcraft/ui package PlantCraft Alarms pins (never
-                edited here; SHA-256 of both in its README)
 deploy/         requirements.in/.lock (+ overrides.txt): hashed dependencies of the image (`make lock`)
 ```
 

@@ -28,7 +28,6 @@ src/doccraft/   the app, in layers (below)
 tests/          pytest against FakePlantCraft (no real PlantCraft); tests/files: a demo PDF
 frontend/       Vite + React + TypeScript on @plantcraft/ui, served under /doc/
 docs/help/      help pages served at /api/help and shown under Help
-vendor/         the plantcraft-sdk wheel and the @plantcraft/ui package (never edited here)
 deploy/         requirements.in/.lock (`make lock`); embedding-model.lock and fetch_model.py
 ```
 

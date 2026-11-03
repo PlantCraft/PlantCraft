@@ -53,7 +53,7 @@ assets live only in PlantCraft. People sign in at PlantCraft; PlantCraft View
 verifies their token offline (`TokenVerifier`, app id `dashcraft`) and records
 every change in PlantCraft's audit log.
 
-The interface draws the suite's frame from `@plantcraft/ui` (vendored in `vendor/`): the
+The interface draws the suite's frame from `@plantcraft/ui` (linked from this repository's `ui/`): the
 sidebar with PlantCraft View's pages, the other apps, Help (the guides of `docs/help` in folders) and
 the user menu (theme, About, Sign out). Full screen and public links show the dashboard alone.
 
@@ -68,7 +68,7 @@ put on a dashboard.
 
 ```sh
 python -m venv .venv && . .venv/bin/activate
-make deps                                  # plantcraft-sdk from vendor/, then PlantCraft View
+make deps                                  # plantcraft-sdk from ../../sdk/python, then PlantCraft View
 (cd frontend && npm ci && npm run build)   # the interface, served under /dash/
 
 # In PlantCraft: PLANTCRAFT_APPS=dashcraft=/dash/ plantcraft --port 8060,

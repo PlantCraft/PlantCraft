@@ -250,6 +250,22 @@ def build_interface(folder: Path, force: bool) -> None:
     run([npm, "run", "build"], cwd=folder, stdout=subprocess.DEVNULL)
 
 
+def build_ui(force: bool) -> None:
+    """ui/ first: every interface links it (file:../ui), so it is built before them."""
+
+    folder = ROOT / "ui"
+    built = folder / "dist" / "index.js"
+    newest = max(
+        (p.stat().st_mtime for p in (folder / "src").rglob("*") if p.is_file()), default=0.0
+    )
+    if built.exists() and not force and built.stat().st_mtime >= newest:
+        return
+    npm = shutil.which("npm") or die("npm not found: install Node.js 22")
+    if not (folder / "node_modules").is_dir() or force:
+        run([npm, "ci", "--no-audit", "--no-fund"], cwd=folder, stdout=subprocess.DEVNULL)
+    run([npm, "run", "build"], cwd=folder, stdout=subprocess.DEVNULL)
+
+
 def build_site(layout: Layout, suite_url: str) -> None:
     run(
         [
@@ -349,6 +365,7 @@ def light_up(layout: Layout, args) -> None:
     ensure_venv(layout, suite=True)
     bin_dir = layout.venv / "bin"
     log("interfaces (npm ci and a build when one is missing or out of date)")
+    build_ui(args.rebuild)
     for folder in ["frontend"] + [f"{app_folder}/frontend" for _, app_folder, _ in APPS]:
         build_interface(ROOT / folder, args.rebuild)
 

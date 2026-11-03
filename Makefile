@@ -63,8 +63,8 @@ sys.exit(2)
 endef
 export SDK_CHECK
 
-# The plantcraft-sdk wheel apps vendor (docs/app-standard.md, section 3): the same bytes from
-# the same sources on any machine. Built from a copy of sdk/python's files (git's view, tests
+# The plantcraft-sdk wheel (the template's vendor/, apps outside this tree, make lock): the
+# same bytes from the same sources on any machine. Built from a copy of sdk/python's files (git's view, tests
 # left out) with fixed modes, umask and timestamps, by the setuptools pinned in its [build-system].
 # Offline: PIP_FIND_LINKS=<folder with that setuptools wheel> PIP_NO_INDEX=1 make sdk-wheel.
 SDK_EPOCH := 315532800
@@ -80,7 +80,9 @@ sdk-wheel:
 	rm -rf build/sdk-wheel
 	@sha256sum dist/plantcraft_sdk-*.whl
 
-frontend: ui-check
+# frontend/ links ui/ (file:../ui): built first.
+frontend:
+	cd ui && npm ci && npm run build
 	cd frontend && npm ci && npm run build && npm test
 
 # Notebooks: JupyterLite with a pruned Pyodide in notebooks/dist (online, about a minute; the image
@@ -103,27 +105,27 @@ notebook-kit-lock:
 		--generate-hashes --no-header -o requirements.txt
 
 # @plantcraft/ui (ui/): the suite frame every app draws (docs/app-standard.md, section 10).
-# Apps vendor the packed file like the SDK wheel; PlantCraft's own frontend installs the same
-# file from frontend/vendor/. `make ui-package` rebuilds it; `make ui-check` (part of `make
-# frontend`) fails when the vendored file is not what ui/ builds now.
+# PlantCraft's frontend and the apps in apps/ link ui/ itself (file:../ui, file:../../../ui), so a
+# change to ui/ shows everywhere in the same pull request, with no version to pick. `make
+# ui-package` packs dist/plantcraft-ui-<version>.tgz for what lives outside this tree (the app
+# template, a release); the version moves only at a release.
 UI_VERSION := $(shell $(PYTHON) -c "import json; print(json.load(open('ui/package.json'))['version'])")
 UI_TGZ := plantcraft-ui-$(UI_VERSION).tgz
-.PHONY: ui ui-package ui-check
+.PHONY: ui ui-package ui-locks
 ui:
 	cd ui && npm ci && npm test && npm run build
 
 ui-package: ui
 	mkdir -p dist && rm -f dist/plantcraft-ui-*.tgz
 	cd ui && npm pack --silent --pack-destination ../dist >/dev/null
-	mkdir -p frontend/vendor && cp dist/$(UI_TGZ) frontend/vendor/$(UI_TGZ)
 	@sha256sum dist/$(UI_TGZ)
 
-ui-check: ui
-	mkdir -p build/ui-check && rm -f build/ui-check/*.tgz
-	cd ui && npm pack --silent --pack-destination ../build/ui-check >/dev/null
-	@cmp -s build/ui-check/$(UI_TGZ) frontend/vendor/$(UI_TGZ) \
-		|| { echo "frontend/vendor/$(UI_TGZ) is not what ui/ builds now: run make ui-package"; exit 1; }
-	@sha256sum frontend/vendor/$(UI_TGZ)
+# Every interface's package-lock.json copies the linked ui's dependencies: after changing
+# ui/package.json, this writes them again (no install, no network beyond npm's metadata).
+ui-locks:
+	for dir in frontend apps/*/frontend; do \
+		npm install --package-lock-only --no-audit --no-fund --ignore-scripts --prefix $$dir || exit 1; \
+	done
 
 e2e:
 	$(PYTHON) -m pytest -q tests/e2e

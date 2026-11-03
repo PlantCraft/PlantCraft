@@ -12,10 +12,11 @@ keeps changes apart and the checks catch what reviewers would. This page is how.
 - **One repository per module.** A contributor (or an agent session) works in one repository at
   a time. Modules never import each other; they meet only in API v1, so two module teams never
   touch the same file.
-- **The platform is the only shared code**, and it changes by release: a change to
-  `plantcraft-sdk` or `@plantcraft/ui` is a PlantCraft PR and a new version; each module
-  picks it up in its own PR with `dev/revendor`. Nobody edits a vendored file. The version
-  number is taken at merge time by `dev/sdk-version` (main's next free one), never by hand.
+- **The platform is the only shared code.** The apps in this repository build against the
+  tree's `plantcraft-sdk` and `@plantcraft/ui`, so a change to either is tested with every app
+  in the same PR. Version numbers move once per release (`dev/sdk-version`), never in a PR; an
+  app in its own repository picks a release up with `dev/revendor`. Nobody edits a vendored
+  file.
 - **Contracts are additive.** API v1, the app standard and the SDK add fields and functions; they
   do not rename or remove inside a major version. A breaking change is a maintainer decision with a
   migration for every module in the same release.

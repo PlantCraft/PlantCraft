@@ -52,7 +52,7 @@ their token offline and records every change in PlantCraft's audit log.
 
 ```sh
 python -m venv .venv && . .venv/bin/activate
-make deps                                  # plantcraft-sdk from vendor/, then PlantCraft Models
+make deps                                  # plantcraft-sdk from ../../sdk/python, then PlantCraft Models
 (cd frontend && npm ci && npm run build)   # the interface, served under /model/
 make runner-image                          # the Modelica runner (OpenModelica + MSL), once
 

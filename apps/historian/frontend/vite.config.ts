@@ -1,10 +1,14 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import { sharedWithUi } from "@plantcraft/ui/vite";
 
 // Historian is served under /hist/ behind the suite's proxy (PlantCraft owns /).
 export default defineConfig({
   base: "/hist/",
   plugins: [react()],
+  // @plantcraft/ui is linked from this repository's ui/ (file:../../../ui): one copy of each
+  // library both use, this folder's.
+  resolve: { dedupe: sharedWithUi(new URL(".", import.meta.url)) },
   build: {
     outDir: "dist",
     // assets/ is reserved for asset deep links (PlantCraft app standard, section 7).

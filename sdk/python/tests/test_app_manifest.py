@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import shutil
 import tomllib
 from pathlib import Path
 
@@ -278,6 +279,48 @@ def test_check_wants_the_suite_frame(tmp_path):
     assert any("no SHA-256 line matches plantcraft-ui" in e for e in check(root).errors)
     (root / "frontend" / "package.json").write_text('{"dependencies": {}}\n')
     assert any("depend on @plantcraft/ui" in e for e in check(root).errors)
+
+
+def _tree_app(tmp_path: Path) -> Path:
+    """An app inside the PlantCraft repository: apps/<app> next to sdk/python and ui/."""
+
+    (tmp_path / "sdk" / "python").mkdir(parents=True)
+    (tmp_path / "sdk" / "python" / "pyproject.toml").write_text("")
+    (tmp_path / "ui").mkdir()
+    (tmp_path / "ui" / "package.json").write_text("{}")
+    root = tmp_path / "apps" / "cpm"
+    root.mkdir(parents=True)
+    _repo(root)
+    shutil.rmtree(root / "vendor")
+    (root / "frontend" / "package.json").write_text(
+        '{"dependencies": {"@plantcraft/ui": "file:../../../ui"}}\n'
+    )
+    return root
+
+
+def test_check_lets_an_app_in_the_repository_link_the_tree(tmp_path):
+    root = _tree_app(tmp_path)
+    report = check(root)
+    assert report.ok and report.warnings == [], report
+
+
+def test_check_refuses_vendor_in_the_tree_and_a_vendored_ui(tmp_path):
+    root = _tree_app(tmp_path)
+    (root / "vendor").mkdir()
+    (root / "frontend" / "package.json").write_text(
+        '{"dependencies": {"@plantcraft/ui": "file:../vendor/plantcraft-ui-0.1.0.tgz"}}\n'
+    )
+    errors = check(root).errors
+    assert any(e.startswith("vendor/: an app inside the PlantCraft repository") for e in errors)
+    assert any('as "file:../../../ui"' in e for e in errors)
+
+
+def test_check_wants_vendor_outside_apps(tmp_path):
+    root = _tree_app(tmp_path)
+    moved = tmp_path / "templates" / "cpm"
+    moved.parent.mkdir()
+    root.rename(moved)
+    assert "vendor/README.md: missing (section 5)" in check(moved).errors
 
 
 def test_check_warns_when_vite_keeps_assets_dir(tmp_path):

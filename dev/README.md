@@ -68,20 +68,20 @@ This is a development tool for the Mac mini only. The container reads GitHub wit
 
 ## SDK and ui versions: `dev/sdk-version`
 
-A branch that changes `sdk/python` or `ui/` ships them as a new version, and parallel branches
-would all pick main's next number. The number is taken only at merge, by the script:
+The apps under `apps/` and the platform build against this tree's `sdk/python` and `ui/`, so a
+branch that changes them keeps their versions; parallel branches never fight over a number. The
+numbers move once per release:
 
 ```sh
-dev/sdk-version          # merge origin/main, next free SDK/ui versions, build, vendor everywhere, commit
-dev/ship                 # make ci of what changed; it also runs dev/sdk-version --check
-# push, merge at once; put "SDK 0.73.0" (as printed) in the pull request's title
+dev/sdk-version                  # next minor for each package changed since the last tag
+dev/sdk-version --sdk 0.107.0    # or name them (--ui too)
+dev/sdk-version --check          # every pin equals the tree's version (dev/ship and Lint run it)
 ```
 
-- Conflicts in vendored files, and conflicts whose two sides differ only in version numbers and
-  hashes (pins, lock files, `__version__`), are taken from main and then rewritten. Any other
-  conflict stops the script: resolve it, `git commit`, run it again.
-- A package the branch does not change keeps main's version; one already above main's is kept.
-- "SDK x" and "ui y" in the Markdown lines the branch adds (changelogs, devlog) move to the new
-  numbers.
-- If main takes another SDK before your merge, GitHub shows a conflict in the vendored wheels and
-  `dev/sdk-version --check` fails: run `dev/sdk-version` again.
+It writes the new versions, moves every app's pin (`plantcraft-sdk==`, `app.toml` `[requires]
+sdk`) and the `@plantcraft/ui` entry of every interface's lock, builds both packages and
+vendors them into `templates/app` (`dev/revendor`), the one app that keeps `vendor/`. It
+commits nothing: run each folder's `make ci`, then the release.
+
+After changing `ui/package.json`'s dependencies, `make ui-locks` refreshes every interface's
+`package-lock.json` (each copies the linked package's dependencies).

@@ -104,10 +104,7 @@ def test_nothing_else_disagrees_with_the_manifest():
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
     assert project["version"] == app["version"] == linkcraft.__version__
     assert linkcraft.APP_ID == app["id"]
-    assert MANIFEST["requires"]["sdk"] in project["dependencies"][0]
-    assert f"SDK := plantcraft-sdk=={MANIFEST['requires']['sdk']}" in (ROOT / "Makefile").read_text(
-        encoding="utf-8"
-    )
+    assert f"plantcraft-sdk=={MANIFEST['requires']['sdk']}" == project["dependencies"][0]
     assert Settings().root_path + "/" == runtime["prefix"]
     vite = (ROOT / "frontend" / "vite.config.ts").read_text(encoding="utf-8")
     assert f'base: "{runtime["prefix"]}"' in vite
