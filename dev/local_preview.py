@@ -59,7 +59,7 @@ APPS = [
     ("doccraft", "apps/documents", "/doc/"),
 ]
 # The prefixes whose pages PlantCraft frames for a signed-in person (deploy/proxy/Caddyfile, @frame).
-FRAMED = ("/link/", "/dash/", "/hist/", "/alarm/", "/model/")
+FRAMED = ("/link/", "/dash/", "/hist/", "/alarm/", "/model/", "/doc/")
 OPCUA_PORT = 4841
 # Pages preview-shots takes (path, file name); the apps' first pages follow.
 SUITE_PAGES = [

@@ -51,8 +51,10 @@ def test_apps_and_frame_match_the_caddy_proxy():
             (ROUTES["/link/"], False),
         ),
         (scope("/dash/share/x", document=True), (ROUTES["/dash/"], False)),
-        # Documents is not framed by the proxy (as in the Caddyfile).
-        (scope("/doc/", document=True, signed_in=True), (ROUTES["/doc/"], False)),
+        # Documents is framed like every other app (the visit's clock, the platform's sidebar)...
+        (scope("/doc/", document=True, signed_in=True), (PLATFORM, True)),
+        # ...but its API and its files (Open the PDF, Download) stay the app's.
+        (scope("/doc/api/documents/x/file", document=True, signed_in=True), (ROUTES["/doc/"], False)),
     ],
 )
 def test_upstream(request_scope, expected):
