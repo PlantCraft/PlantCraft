@@ -78,14 +78,31 @@ def _reply(body: dict[str, Any]) -> dict[str, Any]:
             )
         address = found.group(1).rstrip(".,)")
         kind = "opcua" if address.startswith("opc.tcp") else "pi_web_api"
-        return _propose(tools, {"name": "Plant OPC UA" if kind == "opcua" else "Plant PI", "kind": kind, "endpoint": address})
+        return _propose(
+            tools,
+            {
+                "name": "Plant OPC UA" if kind == "opcua" else "Plant PI",
+                "kind": kind,
+                "endpoint": address,
+            },
+        )
     if step == "people":
         if len(users) < 2:
-            return _text("Who should I add first? Their **name**, the **user name** they sign in with, and what they do.")
+            return _text(
+                "Who should I add first? Their **name**, the **user name** they sign in with, and what they do."
+            )
         name = said.split(",")[0].strip() or "Ana Souza"
         username = re.sub(r"[^a-z0-9]+", ".", name.lower()).strip(".")[:60] or "ana"
         access = "editor" if re.search(r"engineer|engenh", said, re.I) else "viewer"
-        return _propose(tools, {"display_name": name, "username": username, "role": "Process engineer" if access == "editor" else "Operator", "access_level": access})
+        return _propose(
+            tools,
+            {
+                "display_name": name,
+                "username": username,
+                "role": "Process engineer" if access == "editor" else "Operator",
+                "access_level": access,
+            },
+        )
     if step == "assets":
         return _text(
             "The quickest way: open **Assets › Import**, choose **Draft from tags** and pick the "
@@ -94,15 +111,27 @@ def _reply(body: dict[str, Any]) -> dict[str, Any]:
             "wrong and click **Apply** (you can undo it)."
         )
     if step == "documents":
-        return _text("Start with the **P&IDs** and the **loop list**: with them each loop lands in its unit and area. Open Documents › Add and drop the files.")
+        return _text(
+            "Start with the **P&IDs** and the **loop list**: with them each loop lands in its unit and area. Open Documents › Add and drop the files."
+        )
     if step == "start":
-        return _text("Each app takes one first step: the Historian collects the signals, Analytics starts monitoring the loops, Alarms drafts rules that stay off, and View draws a dashboard per unit. Use **Run them all** in the guide.")
+        return _text(
+            "Each app takes one first step: the Historian collects the signals, Analytics starts monitoring the loops, Alarms drafts rules that stay off, and View draws a dashboard per unit. Use **Run them all** in the guide."
+        )
     return _text("I can help with every step of the setup. Which one would you like to do now?")
 
 
 def _propose(tools: set[str | None], fields: dict[str, Any]) -> dict[str, Any]:
-    name = "propose" if "propose" in tools else next((tool for tool in tools if tool and tool.startswith("propose")), "propose")
-    call = {"id": "call_1", "type": "function", "function": {"name": name, "arguments": json.dumps({"fields": fields})}}
+    name = (
+        "propose"
+        if "propose" in tools
+        else next((tool for tool in tools if tool and tool.startswith("propose")), "propose")
+    )
+    call = {
+        "id": "call_1",
+        "type": "function",
+        "function": {"name": name, "arguments": json.dumps({"fields": fields})},
+    }
     return {"role": "assistant", "content": "", "tool_calls": [call]}, "tool_calls"
 
 

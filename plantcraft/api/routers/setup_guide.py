@@ -73,16 +73,17 @@ def apply_basics(payload: BasicsPayload, admin: AdminUser, rt: Runtime) -> dict[
     """The time zone (Settings › Installation) and the person's own language (Preferences)."""
 
     zone = payload.time_zone.strip()
-    if zone != rt.workspace.installation.settings()["time_zone"] or not (
-        rt.workspace.installation.settings()["chosen"]
+    if (
+        zone != rt.workspace.installation.settings()["time_zone"]
+        or not (rt.workspace.installation.settings()["chosen"])
     ):
-        installation.save_installation(
-            installation.InstallationPayload(time_zone=zone), admin, rt
-        )
+        installation.save_installation(installation.InstallationPayload(time_zone=zone), admin, rt)
     language = (payload.language or "").strip() or None
     if language is not None:
         if language not in {"en", "pt-BR", "es"}:
-            raise HTTPException(status_code=422, detail=t("Unknown language: {language}.", language=language))
+            raise HTTPException(
+                status_code=422, detail=t("Unknown language: {language}.", language=language)
+            )
         mine = installation.preferences(rt, admin)
         installation.save_my_preferences(
             installation.PreferencesPayload(time_zone=mine["time_zone"], language=language),

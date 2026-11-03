@@ -335,7 +335,9 @@ def _people(rt: Any) -> dict[str, Any]:
     demo = {user["username"] for user in DEMO_USERS}
     # The demonstration team (a development run) is not the plant's.
     people = [
-        user for user in rt.workspace.users.list_users(kind="person") if user["username"] not in demo
+        user
+        for user in rt.workspace.users.list_users(kind="person")
+        if user["username"] not in demo
     ]
     facts = {"people": len(people)}
     return {"done": len(people) > 1, "facts": facts}

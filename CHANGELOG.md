@@ -7,6 +7,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Added
+
+- Setup guide: a small robot in the corner of every screen walks an administrator through a new installation, one step at a time: connect a language model, the basics (the plant's time zone, the person's language), connect the plant's data (OPC UA, PI Web API or a file), add the documents (when Documents is installed), build the asset tree, let the apps take their first steps, invite the team and, optionally, email. Each step knows by itself when it is done, from the installation's own state, so the guide moves on (and cheers) however the step was done. "Do it with me" opens the assistant beside the page with that step's work: it asks one question at a time and proposes the change as a card the person applies with one click (`POST /api/setup-guide/basics`, `/connection`, `/api/users`); the model never writes. The welcome tour waits until the plant is set up; Settings › Setup guide brings the robot back after it is hidden; a public demo never shows it. `dev/fake_llm.py` is a scripted OpenAI-compatible model to try it without a real one ([docs/setup-guide.md](docs/setup-guide.md); ui 0.112.0 exports `forgetAssistantStatus`).
+
 ### Changed
 
 - Tours: the first tour is shorter (16 steps, was 20). It leaves out one asset's page, System health, Apps and Backups; its step on the menu under the person's name now shows the theme and the display size (Larger text to More space) beside Help. Operations has a short tour of its own (Status, Requests, Backups, the assistant) instead of opening Desk's. Each app's tour no longer stops on its Overview; Analytics' shows Monitors (which algorithm runs, on which assets and when), Documents' shows Diagrams and the Plant map when P&IDs were read, and Models' shows Tracking when one is set up. A public demo opens in the light theme until the visitor picks another (ui 0.110.0).

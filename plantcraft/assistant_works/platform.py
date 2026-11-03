@@ -464,7 +464,7 @@ _WORKS += [
             "server and the step is done. Offer only the languages in the facts. Then propose "
             "the basics; the person applies them with one click."
         ),
-        "object": "basics",
+        "object": "basic settings",
         "fields": [
             {
                 "key": "time_zone",

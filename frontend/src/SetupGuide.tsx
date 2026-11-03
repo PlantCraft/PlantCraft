@@ -13,7 +13,7 @@
 import { forgetAssistantStatus, openAssistant, startTour } from "@plantcraft/ui";
 import { ArrowRight, Check, ChevronDown, ChevronUp, CircleAlert, LoaderCircle, MessageCircle, Play, PlugZap, SkipForward, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { t } from "./i18n";
+import { language, setLanguage, t, type Language } from "./i18n";
 import { guideApi, guideLine, OPEN_GUIDE_EVENT, stepFacts, type ConnectionTest, type Guide, type GuideStep, type StartStep } from "./setupGuideApi";
 
 /** While the card is open: often enough to see a connection or an import as it happens. */
@@ -75,6 +75,9 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
       if (newly) { setCheer(newly.title); setBubble(true); window.setTimeout(() => setCheer(null), CHEER_MS); }
       before.current = found;
       setGuide(found);
+      // The basics changed this person's language: this browser follows (it reloads).
+      const chosen = found.steps.find((step) => step.id === "basics")?.facts.my_language;
+      if (newly?.id === "basics" && typeof chosen === "string" && chosen && chosen !== language) window.setTimeout(() => setLanguage(chosen as Language), 1500);
       onGuiding?.(!found.hidden && !found.finished);
     } catch {
       // Not an administrator, or offline: the robot stays away.
