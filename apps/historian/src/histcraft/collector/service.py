@@ -15,40 +15,60 @@ bridges an outage) and is retried with a growing pause (2 s up to 60 s).
 It rereads the configuration database when its version changes, answers the
 requests people make from the pages (browse a server, test a connection, backfill
 the archive from the source's history, in the background), merges small chunks hourly and deletes values past their retention.
+
+This module puts ``Collector`` together: its configuration, its tasks per source, the lease and
+the loop, and ``CollectorThread``. The rest lives by subject: ``collector.state`` (the
+collector's sizes and periods, and each point's state), and the collector's methods in the
+mixins ``collector.archiving.Archiving`` (writing, held values and housekeeping),
+``collector.answers.Answers`` (the requests people make from the pages),
+``collector.sparkplug_intake.SparkplugIntake`` and ``collector.gateway_intake.GatewayIntake``.
+The names other modules import from here stay importable from here.
 """
 
 from __future__ import annotations
 
 import asyncio
 import dataclasses
-import logging
 import math
-import os
 import threading
 import time
 from collections import defaultdict
-from dataclasses import dataclass, field
 from typing import Any
 
-from plantcraft_sdk.contract import recorded_on_change
-
-from histcraft.archive import forecast, rollup
-from histcraft.archive.compression import Compressor
-from histcraft.archive.query import Reader, point_ref
-from histcraft.archive.store import ArchiveStore, compaction_start, now_ms
-from histcraft.catalog import ranges
-from histcraft.catalog.models import (
-    GATEWAY_KINDS,
-    LIVE_KINDS,
-    PUSHED_KINDS,
-    RETIRED_DAYS,
-    PointIn,
-)
+from histcraft.archive.store import ArchiveStore, now_ms
+from histcraft.catalog.models import GATEWAY_KINDS, LIVE_KINDS, PUSHED_KINDS
 from histcraft.catalog.store import CatalogStore
-from histcraft.collector import held, imports
-from histcraft.collector.backfill import MAX_HOURS, backfill
+from histcraft.collector.answers import Answers
+from histcraft.collector.archiving import Archiving
+from histcraft.collector.gateway_intake import GatewayIntake
 from histcraft.collector.lease import Lease, lease_for
-from histcraft.collector.reading import FUTURE_MS, Reading
+from histcraft.collector.reading import Reading
+from histcraft.collector.sparkplug_intake import SparkplugIntake
+from histcraft.collector.state import (
+    COMPACT_AGE_MS,
+    COMPACT_SECONDS,
+    COUNT_SECONDS,
+    GATEWAY_STALE_SECONDS,
+    HELD_LIMIT,
+    LAKE_SECONDS,
+    LOGGER,
+    MAX_BACKOFF,
+    REQUEST_WINDOW_MS,
+    SEEN_LIMIT,
+    SPARKPLUG_TICK,
+    SUBSCRIPTION_CHECK_SECONDS,
+    TEXT_BACKFILL_HOURS,
+    TEXT_READS,
+    TOTALS_SECONDS,
+    PointState,
+    _births_detail,
+    _compressor,
+    _describe,
+    _identity,
+    _pushed_value,
+    _text,
+    source_password,
+)
 from histcraft.config import Settings
 from histcraft.export import lake
 from histcraft.export.saved import SavedExports
@@ -57,134 +77,37 @@ from histcraft.sources.csv_watch import CsvWatcher
 from histcraft.sparkplug import Births
 from histcraft.vault import Vault
 
-LOGGER = logging.getLogger(__name__)
-COMPACT_SECONDS = 3600
-# What the archive keeps of each point (pages read it, never the whole archive) is counted again
-# this often.
-TOTALS_SECONDS = 300
-# Chunks are merged once they are this old (the newest hour stays in small, fresh chunks).
-COMPACT_AGE_MS = 3600 * 1000
-# How often the values counted per point and hour reach the archive (``ArchiveStore.settle``).
-COUNT_SECONDS = 600.0
-# How often the data lake feeds are checked for a period that ended (``export.lake``).
-LAKE_SECONDS = 60
-REQUEST_WINDOW_MS = 10 * 60 * 1000
-MAX_BACKOFF = 60.0
-# Good text readings in a row that make a number point a text one (a MODE reading AUTO).
-TEXT_READS = 3
-# Hours of the source's history a point made text reads again (its old archive held no value).
-TEXT_BACKFILL_HOURS = 48
+# The names other modules import from here, from before the split.
+__all__ = [
+    "COMPACT_AGE_MS",
+    "COMPACT_SECONDS",
+    "COUNT_SECONDS",
+    "GATEWAY_STALE_SECONDS",
+    "HELD_LIMIT",
+    "LAKE_SECONDS",
+    "LOGGER",
+    "MAX_BACKOFF",
+    "PointState",
+    "REQUEST_WINDOW_MS",
+    "SEEN_LIMIT",
+    "SPARKPLUG_TICK",
+    "SUBSCRIPTION_CHECK_SECONDS",
+    "TEXT_BACKFILL_HOURS",
+    "TEXT_READS",
+    "TOTALS_SECONDS",
+    "_births_detail",
+    "_compressor",
+    "_describe",
+    "_identity",
+    "_pushed_value",
+    "_text",
+    "source_password",
+]
 # A standby collector asks for the lease this often.
 LEASE_RETRY_SECONDS = 5.0
-# A gateway source with no value for this long (or three of its intervals) is disconnected.
-GATEWAY_STALE_SECONDS = 60.0
-# How often a subscribed OPC UA source is checked to answer (seconds).
-SUBSCRIPTION_CHECK_SECONDS = 5.0
-# How often a Sparkplug B source's messages are taken (seconds).
-SPARKPLUG_TICK = 0.2
-# Series the gateway sent that no point archives, kept per source for Browse.
-SEEN_LIMIT = 20_000
-# Values a point keeps in memory while the archive cannot be written (a day at one per second);
-# past it the oldest go first.
-HELD_LIMIT = 86_400
 
 
-@dataclass
-class PointState:
-    point: dict[str, Any]
-    compressor: Compressor
-    pending: list[tuple[int, Any]] = field(default_factory=list)
-    reads: int = 0
-    archived: int = 0
-    status: str = "waiting"
-    detail: str = ""
-    last: tuple[int, Any] | None = None
-    # Good readings in a row that were text while the point is a number (see ``reads_text``).
-    texts: int = 0
-    # The quality of the values archived now, and its changes not written yet ``(ms, quality)``.
-    quality: str = "good"
-    # The source's whole status code with it (OPC UA sub-code and LimitBits), None when Good.
-    code: int | None = None
-    changes: list[tuple] = field(default_factory=list)
-
-    @property
-    def id(self) -> int:
-        return int(self.point["id"])
-
-    def configure(self, point: dict[str, Any]) -> None:
-        self.point = point
-        self.compressor.deviation = float(point["deviation"])
-        self.compressor.percent = point.get("deviation_percent")
-        self.compressor.exception = float(point.get("exception") or 0.0)
-        self.compressor.exception_percent = point.get("exception_percent")
-        self.compressor.max_seconds = float(point["max_seconds"])
-        self.compressor.min_seconds = float(point.get("min_seconds") or 0.0)
-
-    @property
-    def reads_text(self) -> bool:
-        """A number point whose source keeps answering text: it was added as the wrong kind."""
-
-        return self.point["kind"] == "number" and self.texts >= TEXT_READS
-
-    def take(self, reading: Reading) -> None:
-        self.reads += 1
-        if self.point["kind"] == "number":
-            self.texts = self.texts + 1 if reading.good and _text(reading.value) else 0
-        quality = reading.quality if reading.good else "bad"
-        # A new sub-code or limit is a change too (H6): kept where the archive has a value.
-        changed = quality != self.quality or reading.status != self.code
-        if reading.good:
-            self.status = "ok" if quality == "good" else quality
-            self.detail = reading.detail if quality != "good" else ""
-            self.last = (reading.at_ms, reading.value)
-            out = self.compressor.feed(reading.at_ms, reading.value, keep=changed)
-        else:
-            self.status, self.detail = "bad", reading.detail
-            out = self.compressor.gap(reading.at_ms)
-        if changed and (out or not reading.good):
-            # Kept only where the archive has a value (or the gap marker) at that time.
-            self.quality, self.code = quality, reading.status
-            self.changes.append(
-                (reading.at_ms, quality, reading.status, reading.status_name or None)
-            )
-        self.pending.extend(out)
-        self.archived += len(out)
-
-    def lost(self, at_ms: int, detail: str) -> None:
-        self.status, self.detail = "disconnected", detail
-        out = self.compressor.gap(at_ms)
-        self.pending.extend(out)
-        self.archived += len(out)
-
-
-def _compressor(point: dict[str, Any]) -> Compressor:
-    return Compressor(
-        deviation=float(point["deviation"]),
-        max_seconds=float(point["max_seconds"]),
-        min_seconds=float(point.get("min_seconds") or 0.0),
-        percent=point.get("deviation_percent"),
-        exception=float(point.get("exception") or 0.0),
-        exception_percent=point.get("exception_percent"),
-        kind=point["kind"],
-        step=bool(point["step"]),
-    )
-
-
-def _text(value: Any) -> bool:
-    if not isinstance(value, str):
-        return False
-    try:
-        float(value)
-    except ValueError:
-        return True
-    return False
-
-
-def _identity(point: dict[str, Any]) -> tuple:
-    return (point["source_id"], point["address"], point["kind"], bool(point["step"]))
-
-
-class Collector:
+class Collector(Archiving, Answers, SparkplugIntake, GatewayIntake):
     def __init__(
         self,
         settings: Settings,
@@ -381,443 +304,6 @@ class Collector:
             for state in self._source_points(source_id)
         )
         return (tuple(source.get(key) for key in keys), tuple(groups))
-
-    # Writing ----------------------------------------------------------------------------
-
-    def _write(self, states: dict[int, PointState]) -> int:
-        """Archive the values pending; when the database fails they stay pending (and raise).
-
-        ``hold`` is one statement, so a failed write stored nothing and the next flush sends the
-        same values again.
-        """
-
-        batch = {}
-        changes: list[tuple] = []
-        for point_id, state in states.items():
-            if state.pending:
-                batch[point_id] = (state.point["kind"], state.pending)
-            changes += [(point_id, *change) for change in state.changes]
-        try:
-            written = self.archive.hold(batch) if batch else 0
-        except Exception:
-            self._hold(states)
-            raise
-        for state in states.values():
-            state.pending = []
-        if changes:
-            self.archive.put_qualities(changes)
-        for state in states.values():
-            state.changes = []
-        return written
-
-    def _hold(self, states: dict[int, PointState]) -> None:
-        """Keep at most ``HELD_LIMIT`` pending values per point (the newest)."""
-
-        for state in states.values():
-            extra = len(state.pending) - HELD_LIMIT
-            if extra > 0:
-                del state.pending[:extra]
-                self.dropped += extra
-                LOGGER.error(
-                    "Point %s: %s values dropped while the archive could not be written",
-                    state.id,
-                    extra,
-                )
-
-    def _write_held(self) -> int:
-        """Archive the values a previous collector kept on disk (see ``collector.held``)."""
-
-        path = held.held_path(self.settings.data_dir)
-        if not path.exists():
-            return 0
-        saved = held.load(path)
-        batch = {point: item for point, item in saved.items() if point in self.points}
-        written = self.archive.append(batch) if batch else 0
-        path.unlink(missing_ok=True)
-        LOGGER.info("Archived %s values kept on disk by the last collector", written)
-        return written
-
-    def save_held(self) -> int:
-        """Write the values still pending to disk, for the next collector; values saved."""
-
-        with self._lock:
-            batch = {
-                point_id: (state.point["kind"], list(state.pending))
-                for point_id, state in self.points.items()
-                if state.pending
-            }
-        if not batch:
-            return 0
-        count = held.save(held.held_path(self.settings.data_dir), batch)
-        with self._lock:
-            for point_id in batch:
-                if point_id in self.points:
-                    self.points[point_id].pending = []
-        LOGGER.warning("The archive could not be written: %s values kept on disk", count)
-        return count
-
-    def flush(self, *, settle: bool = False) -> int:
-        """Write archived values and every point's snapshot and status; every
-        ``archive_seconds`` (or with ``settle``) move the recent values into chunks."""
-
-        with self._lock:
-            states = dict(self.points)
-            self._write_held()
-            written = self._write(states)
-            rows = []
-            reads = 0
-            for state in states.values():
-                reads += state.reads
-                snap = state.compressor.snapshot or state.compressor.archived or state.last
-                value = snap[1] if snap else None
-                if isinstance(value, float) and not math.isfinite(value):
-                    value = None
-                rows.append(
-                    {
-                        "point": state.id,
-                        "ts": snap[0] if snap else None,
-                        "value": value,
-                        "status": state.status,
-                        "detail": state.detail[:300],
-                        "reads": state.reads,
-                        "archived": state.archived,
-                    }
-                )
-        if rows:
-            self.archive.put_snapshots(rows)
-        if settle or time.monotonic() - self._last_settle >= self.settings.archive_seconds:
-            # Outside the lock: the scans go on taking values while the rows move into chunks.
-            # Counts of values per hour every few minutes, and at the last flush.
-            self.archive.settle(count_every=0.0 if settle else COUNT_SECONDS)
-            self._last_settle = time.monotonic()
-        elapsed = max(self.settings.flush_seconds, 1e-3)
-        self._rate = max(reads - self._last_flush_reads, 0) / elapsed
-        self._last_flush_reads = reads
-        self._note_changes()
-        self._measure_buffer()
-        self.archive.set_state(
-            "collector",
-            {
-                "heartbeat": now_ms(),
-                "started": self._started_ms,
-                "version": self._version,
-                "points": len(states),
-                "reads_per_second": round(self._rate, 1),
-                "sources": self.source_status,
-                "gateway_buffer_bytes": self._buffer_bytes,
-            },
-        )
-        return written
-
-    def _measure_buffer(self) -> None:
-        """What waits in the gateway's disk buffer, once a minute (only with a gateway)."""
-
-        if not self.settings.ingest_port or time.monotonic() - self._buffer_checked < 60:
-            return
-        from histcraft.collector.gateway import buffer_bytes
-
-        self._buffer_checked = time.monotonic()
-        try:
-            self._buffer_bytes = buffer_bytes(self.settings.data_dir)
-        except OSError:
-            self._buffer_bytes = 0
-
-    def _note_changes(self) -> None:
-        """Write each source whose state changed since the last flush to its history."""
-
-        try:
-            if self._noted is None:
-                self._noted = self.catalog.last_source_statuses()
-            changed = []
-            for source_id, current in list(self.source_status.items()):
-                status = str(current.get("status") or "")
-                if status and self._noted.get(source_id) != status:
-                    at = int(current.get("since") or now_ms())
-                    changed.append((source_id, at, status, str(current.get("detail") or "")))
-            self.catalog.add_source_events(changed)
-            for source_id, _at, status, _detail in changed:
-                self._noted[source_id] = status
-        except Exception:  # noqa: BLE001 - the history never stops the values
-            LOGGER.exception("Source history not written")
-
-    def housekeeping(self, *, force: bool = False) -> dict[str, int]:
-        """Merge small chunks and delete values past retention (hourly)."""
-
-        if not force and time.monotonic() - self._last_compact < COMPACT_SECONDS:
-            return {}
-        self._last_compact = time.monotonic()
-        current = now_ms()
-        # Each point's retention in effect: its own, else its source's, else the general one.
-        # An import is kept until it is deleted, unless it was given a retention of its own.
-        # A retention of 0 days keeps the point forever. Each rollup level has its own (H9).
-        cutoffs, rollup_cutoffs = forecast.cutoffs(
-            self.catalog.points(), self.catalog.settings(), current
-        )
-        purged = self.catalog.purge_retired(older_than_ms=current - RETIRED_DAYS * 86400000)
-        if purged:
-            LOGGER.info("Retired points deleted for good after %s days: %s", RETIRED_DAYS, purged)
-        pruned = self.archive.prune(cutoffs, rollup_cutoffs)
-        # Snapshots a database crash emptied (an UNLOGGED table), from the archive.
-        self.archive.refill_snapshots()
-        older = current - COMPACT_AGE_MS
-        merged = self.archive.compact(older, since_ms=compaction_start(older))
-        # A month the collector no longer writes, copied once without compaction's dead space.
-        rewritten = self.archive.rewrite_closed(current)
-        if rewritten:
-            LOGGER.info("%s: rewritten without dead space", rewritten)
-        # Hourly rollups for long trends, each point's held or linear like its reads.
-        rolled = rollup.build(
-            self.archive,
-            [
-                (
-                    int(point["id"]),
-                    bool(point["step"]) or recorded_on_change(point["signal"], point["kind"]),
-                )
-                for point in self.catalog.points()
-                if point["kind"] == "number"
-            ],
-        )
-        suggested = self.suggest_ranges(current)
-        self._last_totals = time.monotonic()
-        self.archive.refresh_totals()
-        # The disk forecast, for the Settings page and the archive.disk_low condition (D4).
-        self.archive.set_state("forecast", self.forecast(current))
-        return {
-            "pruned_chunks": pruned,
-            "merged_chunks": merged,
-            "rewritten_months": 1 if rewritten else 0,
-            "rollup_hours": rolled,
-            "purged_points": len(purged),
-            "suggested_ranges": suggested,
-        }
-
-    def forecast(self, current: int) -> dict[str, Any]:
-        """How fast the archive grows and when the disk fills (``archive.forecast``)."""
-
-        where = self.archive.path.parent if self.archive.path else self.settings.data_dir
-        return forecast.forecast(
-            self.catalog.points(), self.archive.point_stats(), forecast.free_bytes(where), current
-        )
-
-    def suggest_ranges(self, current: int) -> int:
-        """Suggest a range for the number points that have none once they have a day of values
-        (round 8 D2, ``catalog.ranges``); a person confirms it on the point page."""
-
-        found: dict[int, tuple[float, float]] = {}
-        for point in self.catalog.points():
-            if (
-                point["kind"] != "number"
-                or point["step"]
-                or point["range_origin"]
-                or point.get("managed_by")
-            ):
-                continue
-            span = self.archive.span(int(point["id"]))
-            if span is None or current - span[0] < ranges.SUGGEST_AFTER_MS:
-                continue
-            end = span[0] + ranges.SUGGEST_AFTER_MS
-            times, values = self.archive.read(int(point["id"]), span[0], end)
-            # The read carries the value just after the day too: left out.
-            bounds = ranges.suggest(values[times <= end])
-            if bounds is not None:
-                found[int(point["id"])] = bounds
-        return self.catalog.suggest_ranges(found)
-
-    def count_totals(self) -> None:
-        """Count again what the archive keeps of each point, every ``TOTALS_SECONDS``."""
-
-        if time.monotonic() - self._last_totals < TOTALS_SECONDS:
-            return
-        self._last_totals = time.monotonic()
-        self.archive.refresh_totals()
-
-    def _start_imports(self) -> None:
-        """Write the values of confirmed CSV imports, one file at a time, beside collection;
-        with none waiting, check the folder of a repeating import that is due."""
-
-        if self._importing is not None and not self._importing.done():
-            return
-        files = imports.waiting(self.settings.data_dir)
-        if files:
-            self._importing = asyncio.create_task(
-                asyncio.to_thread(imports.write_import, files[0], self.catalog, self.archive)
-            )
-            return
-        source = next(
-            (s for s in imports.repeating(self.catalog) if imports.due(s, self.archive)), None
-        )
-        if source is not None:
-            self._importing = asyncio.create_task(
-                asyncio.to_thread(imports.check_folder, source, self.catalog, self.archive)
-            )
-
-    def feed_lake(self, *, force: bool = False) -> list[Any]:
-        """Write the saved exports' data lake files that are due (``export.lake``), every
-        ``LAKE_SECONDS``; nothing when no export has a feed on."""
-
-        if not force and time.monotonic() - self._last_lake < LAKE_SECONDS:
-            return []
-        self._last_lake = time.monotonic()
-        exports = self.saved_exports.list()
-        if not any(item.get("lake") in lake.SCHEDULES for item in exports):
-            self.lake_feeds.forget(set())
-            return []
-        return lake.feed(
-            self.settings.lake_path,
-            exports,
-            self.lake_feeds,
-            self.catalog.points(),
-            Reader(self.archive),
-            point_ref,
-            now_ms(),
-            keep_days=self.settings.lake_keep_days,
-        )
-
-    async def _housekeep(self) -> None:
-        try:
-            # The lake first: compaction may take minutes, a period's file should not wait.
-            await asyncio.to_thread(self.feed_lake)
-            await asyncio.to_thread(self.count_totals)
-            await asyncio.to_thread(self.housekeeping)
-        except Exception:  # noqa: BLE001 - the next hour tries again; collection goes on
-            LOGGER.exception("Housekeeping failed")
-
-    # Requests ---------------------------------------------------------------------------
-
-    async def answer_requests(self) -> None:
-        since = now_ms() - REQUEST_WINDOW_MS
-        waiting = [r for r in self.catalog.requests(since) if r["id"] not in self._done_requests]
-        if not waiting:
-            return
-        done = self.archive.done_requests([r["id"] for r in waiting])
-        for request in waiting:
-            if request["id"] in done:
-                self._done_requests.add(request["id"])
-                continue
-            if request["kind"] == "backfill":
-                if request["id"] not in self._backfills:
-                    self._backfills[request["id"]] = asyncio.create_task(self._backfill(request))
-                continue
-            status, result = await self._answer(request)
-            self.archive.finish_request(request["id"], status, result)
-            self._done_requests.add(request["id"])
-
-    async def _answer(self, request: dict[str, Any]) -> tuple[str, Any]:
-        source = next((s for s in self.catalog.sources() if s["id"] == request["source_id"]), None)
-        if source is None:
-            return "error", {"detail": t("Source {id} not found.", id=request["source_id"])}
-        if source["kind"] == "csv":
-            return await asyncio.to_thread(self._answer_csv, source, request)
-        if source["kind"] == "pi_web_api":
-            return await asyncio.to_thread(self._answer_history, source, request)
-        if source["kind"] in ("derived", "system", "lab"):
-            return "error", {"detail": t("A derived source is written by its app.")}
-        if source["kind"] in GATEWAY_KINDS:
-            return self._answer_gateway(source, request)
-        if source["kind"] == "sparkplug":
-            return self._answer_sparkplug(source, request)
-        try:
-            reader = self._reader_for(source)
-        except Exception as exc:  # noqa: BLE001 - e.g. direct OPC UA turned off
-            return "error", {"detail": _describe(exc)}
-        try:
-            await asyncio.wait_for(reader.connect(), self.settings.opcua_timeout + 5)
-            if request["kind"] == "browse":
-                detail = request.get("detail") or {}
-                result = await asyncio.wait_for(
-                    reader.browse(detail.get("root") or None),
-                    max(self.settings.opcua_timeout * 30, 120),
-                )
-            elif request["kind"] == "read":
-                addresses = list((request.get("detail") or {}).get("addresses") or [])[:100]
-                readings = await reader.read(addresses)
-                result = {
-                    "values": {
-                        address: {
-                            "at": r.at_ms,
-                            "value": r.value,
-                            "good": r.good,
-                            "detail": r.detail,
-                        }
-                        for address, r in readings.items()
-                    }
-                }
-            else:
-                result = await reader.test()
-            return "ok", result
-        except Exception as exc:  # noqa: BLE001 - the answer says what failed
-            answer = {"detail": str(exc) if hasattr(exc, "certificate") else _describe(exc)}
-            # A secure source not trusted yet: the page shows the certificate to trust.
-            if hasattr(exc, "certificate"):
-                answer["certificate"] = exc.certificate
-            return "error", answer
-        finally:
-            await reader.close()
-
-    async def _backfill(self, request: dict[str, Any]) -> None:
-        try:
-            status, result = await asyncio.to_thread(self._run_backfill, request)
-        except Exception as exc:  # noqa: BLE001 - the answer says what failed
-            LOGGER.exception("Backfill of %s failed", request["source_id"])
-            status, result = "error", {"detail": _describe(exc)}
-        self.archive.finish_request(request["id"], status, result)
-        self._done_requests.add(request["id"])
-        self._backfills.pop(request["id"], None)
-
-    def _run_backfill(self, request: dict[str, Any]) -> tuple[str, Any]:
-        """The source's history of its archived signals into the archive (collector/backfill.py)."""
-
-        from histcraft.sources.history import open_source
-
-        source = next((s for s in self.catalog.sources() if s["id"] == request["source_id"]), None)
-        if source is None:
-            return "error", {"detail": t("Source {id} not found.", id=request["source_id"])}
-        points = self.catalog.points(
-            source_id=source["id"], enabled_only=True, modes=("archive", "both")
-        )
-        detail = request.get("detail") or {}
-        if detail.get("points"):
-            only = {int(item) for item in detail["points"]}
-            points = [point for point in points if int(point["id"]) in only]
-        if not points:
-            return "error", {"detail": t("The source has no archived signals to backfill.")}
-        try:
-            hours = min(max(float(detail.get("hours") or 24), 0.0), MAX_HOURS)
-        except (TypeError, ValueError):
-            hours = 24.0
-        until = int(request["created_ms"])
-        history = open_source(source, self.password(source))
-        LOGGER.info("Backfill of %s: %d signals, %g h", source["id"], len(points), hours)
-        result = backfill(history, self.archive, points, until - int(hours * 3600_000), until)
-        return ("ok" if result["signals"] or not result["failed"] else "error"), result
-
-    def _answer_csv(self, source: dict[str, Any], request: dict[str, Any]) -> tuple[str, Any]:
-        """Browse or test a CSV source: the tags of its newest files, or what it finds."""
-
-        try:
-            watcher = CsvWatcher(source)
-            if request["kind"] == "browse":
-                return "ok", watcher.browse()
-            if request["kind"] == "test":
-                return "ok", watcher.test()
-            return "error", {"detail": t("A CSV source is read when its files change.")}
-        except Exception as exc:  # noqa: BLE001 - the answer says what failed
-            return "error", {"detail": _describe(exc)}
-
-    def _answer_history(self, source: dict[str, Any], request: dict[str, Any]) -> tuple[str, Any]:
-        """Browse or test a source read by its history interface (PI Web API, CSV)."""
-
-        from histcraft.sources.history import open_source
-
-        try:
-            history = open_source(source, self.password(source))
-            if request["kind"] == "browse":
-                return "ok", history.browse((request.get("detail") or {}).get("root") or None)
-            if request["kind"] == "test":
-                return "ok", history.test()
-            return "error", {"detail": t("This source is read by history, not by value.")}
-        except Exception as exc:  # noqa: BLE001 - the answer says what failed
-            return "error", {"detail": _describe(exc)}
 
     # Running ------------------------------------------------------------------------------
 
@@ -1042,304 +528,6 @@ class Collector:
                 self._signatures[source_id] = self._signature(source_id)
                 self._tasks[source_id] = asyncio.create_task(self._source_task(source_id))
 
-    # Sparkplug B ---------------------------------------------------------------------------
-
-    async def _listen(self, source_id: str, listener: Any) -> None:
-        """Take what a Sparkplug B source receives until its connection drops (it raises)."""
-
-        births = self.births.setdefault(source_id, Births(SEEN_LIMIT))
-        seeded = learnt = -1
-        while True:
-            messages = listener.messages()
-            for topic, payload, at in messages:
-                self.take_sparkplug(source_id, births.take(topic, payload, at))
-            options = (self.sources.get(source_id) or {}).get("options") or {}
-            # New metrics (a birth, or data before one) become points once, not on every tick.
-            if options.get("add_on_birth") and births.known != learnt:
-                try:
-                    await asyncio.to_thread(self._add_born, source_id, births)
-                except Exception:  # noqa: BLE001 - collection goes on; tried at the next metric
-                    LOGGER.exception("Sparkplug source %s: points not added", source_id)
-                learnt = births.known
-            if seeded != self._version:
-                seeded = self._version
-                self._seed(source_id, births)
-            self.source_status[source_id] = {
-                "status": "connected",
-                "detail": _births_detail(births, listener.dropped),
-                "since": (self.source_status.get(source_id) or {}).get("since") or now_ms(),
-                **births.summary(),
-            }
-            if not listener.connected:
-                raise ConnectionError(listener.failure or t("The broker closed the connection."))
-            await asyncio.sleep(SPARKPLUG_TICK)
-
-    def take_sparkplug(self, source_id: str, values: list[Any]) -> int:
-        """Values of a Sparkplug B source at their points; the archive only moves forward."""
-
-        taken = 0
-        now = now_ms()
-        with self._lock:
-            for item in values:
-                at = item.at_ms if item.at_ms <= now + FUTURE_MS else now
-                for state in self._pushed.get((source_id, item.address), []):
-                    if state.last is not None and at <= state.last[0]:
-                        continue
-                    if not item.good:
-                        state.take(Reading(at, None, False, item.detail, "bad"))
-                        continue
-                    value = _pushed_value(item.value, state.point["kind"])
-                    state.take(Reading(at, value, True, item.detail, item.quality))
-                    taken += 1
-        return taken
-
-    def _seed(self, source_id: str, births: Births) -> None:
-        """A point added after its birth starts from the value the birth (or data) gave."""
-
-        from histcraft.sparkplug import Value
-
-        with self._lock:
-            waiting = {
-                address
-                for (source, address), states in self._pushed.items()
-                if source == source_id and any(state.last is None for state in states)
-            }
-        values = [
-            Value(item["address"], int(item["at"] or now_ms()), item["value"])
-            for item in births.variables()
-            if item["address"] in waiting and item["value"] is not None
-        ]
-        self.take_sparkplug(source_id, values)
-
-    def _add_born(self, source_id: str, births: Births) -> int:
-        """Add a point for each metric a birth described that the source has none for."""
-
-        with self._lock:
-            have = {address for source, address in self._pushed if source == source_id}
-        fresh = [
-            item for item in births.variables() if item["kind"] and item["address"] not in have
-        ]
-        known = {p["address"] for p in self.catalog.points() if p["source_id"] == source_id}
-        fresh = [item for item in fresh if item["address"] not in known]
-        if not fresh:
-            return 0
-        result = self.catalog.add_points(
-            [
-                PointIn(
-                    tag=item["tag"][:300],
-                    source_id=source_id,
-                    address=item["address"],
-                    name=item["name"][:200],
-                    description=item["description"],
-                    unit=item["unit"],
-                    kind=item["kind"],
-                    step=item["step"],
-                )
-                for item in fresh
-            ]
-        )
-        added = len(result.get("added") or [])
-        if added:
-            LOGGER.info("Sparkplug source %s: %d metrics added from births", source_id, added)
-        return added
-
-    def _answer_sparkplug(self, source: dict[str, Any], request: dict[str, Any]) -> tuple[str, Any]:
-        """Browse or test a Sparkplug B source: what its births described so far."""
-
-        births = self.births.get(source["id"])
-        status = self.source_status.get(source["id"]) or {}
-        if births is None or status.get("status") != "connected":
-            detail = status.get("detail") or t("Not connected to the broker yet.")
-            return "error", {"detail": detail}
-        if request["kind"] == "test":
-            return "ok", births.summary()
-        variables = births.variables()
-        if not variables:
-            return "error", {
-                "detail": t(
-                    "Connected, no birth yet. Metrics appear when an edge node is born (it"
-                    " connects or restarts); Historian never asks for a rebirth."
-                )
-            }
-        return "ok", {"variables": variables, "truncated": False, "limit": SEEN_LIMIT}
-
-    # The gateway --------------------------------------------------------------------------
-
-    def _ingest_server(self) -> Any:
-        """The web server the gateway writes to (``collector.ingest``); None when it is off."""
-
-        if not self.settings.ingest_port:
-            return None
-        import uvicorn
-
-        from histcraft.collector.gateway import gateway_token
-        from histcraft.collector.ingest import ingest_app
-
-        app = ingest_app(self, gateway_token(self.settings.data_dir))
-        config = uvicorn.Config(
-            app,
-            host="0.0.0.0",  # noqa: S104 - the collector's own container network
-            port=self.settings.ingest_port,
-            log_level="warning",
-            access_log=False,
-            lifespan="off",
-        )
-        server = uvicorn.Server(config)
-        server.install_signal_handlers = lambda: None  # the collector handles its signals
-        return server
-
-    def ingest(self, metrics: list[Any]) -> int:
-        """Values the gateway pushed: archived at their points, kept as seen; the count taken."""
-
-        from histcraft.collector.ingest import GATEWAY_SOURCE, split
-
-        now = now_ms()
-        taken = 0
-        results: dict[str, list[Any]] = {}
-        with self._lock:
-            for metric in metrics:
-                source_id, values = split(metric)
-                if source_id == GATEWAY_SOURCE:
-                    self.gateway_heartbeat = now
-                    continue
-                source = self.sources.get(source_id)
-                if source is None or source["kind"] not in GATEWAY_KINDS:
-                    continue
-                at = metric.at_ms if metric.at_ms is not None else now
-                if at > now + FUTURE_MS:
-                    at = now
-                self._gateway_last[source_id] = now
-                if (source.get("options") or {}).get("laboratory"):
-                    # A LIMS: each row is a laboratory result (histcraft.lab), not a value.
-                    results.setdefault(source_id, []).append(metric)
-                    continue
-                seen = self.seen.setdefault(source_id, {})
-                for address, (value, series) in values.items():
-                    if address in seen or len(seen) < SEEN_LIMIT:
-                        seen[address] = {"at": at, "value": value, **series}
-                    for state in self._pushed.get((source_id, address), []):
-                        if state.last is not None and at <= state.last[0]:
-                            continue  # the archive only moves forward
-                        state.take(Reading(at, _pushed_value(value, state.point["kind"]), True))
-                        taken += 1
-        for source_id, rows in results.items():
-            taken += self._laboratory(self.sources[source_id], rows, now)
-        return taken
-
-    def _laboratory(self, source: dict[str, Any], metrics: list[Any], now: int) -> int:
-        """A LIMS source's rows as laboratory results: ``laboratory:<analysis>`` at the
-        sampling time, with status and times; a row read again unchanged is not rewritten."""
-
-        from histcraft import lab
-
-        column = ((source.get("options") or {}).get("tag_columns") or [""])[0]
-        samples, refused = [], 0
-        for metric in metrics:
-            fields, analysis = metric.fields, str(metric.tags.get(column) or "").strip()
-            try:
-                samples.append(
-                    lab.checked(
-                        f"laboratory:{analysis}",
-                        metric.at_ms if metric.at_ms is not None else now,
-                        fields.get("value"),
-                        now,
-                        received=lab.stamp_ms(fields.get("received_at"), "received_at"),
-                        approved=lab.stamp_ms(fields.get("approved_at"), "approved_at"),
-                        status=str(fields.get("status") or "").strip().lower() or None,
-                    )
-                )
-            except ValueError:
-                refused += 1
-        if refused:
-            LOGGER.warning("Laboratory source %s: %d rows refused", source["id"], refused)
-        if not samples:
-            return 0
-        try:
-            written, errors = lab.write(
-                self.catalog, self.archive, samples, f"source:{source['id']}", now,
-                only_changed=True,
-            )  # fmt: skip
-        except Exception:
-            LOGGER.exception("Laboratory source %s: the results were not written", source["id"])
-            return 0
-        if errors:
-            LOGGER.warning("Laboratory source %s: %s", source["id"], errors[0]["detail"])
-        return written
-
-    def check_gateway(self) -> None:
-        """Each gateway source connected while values arrive; a silence is a gap."""
-
-        now = now_ms()
-        with self._lock:
-            for source_id, source in self.sources.items():
-                if source["kind"] not in GATEWAY_KINDS:
-                    continue
-                last = self._gateway_last.get(source_id)
-                interval = float(source.get("default_scan_seconds") or 0)
-                stale = max(GATEWAY_STALE_SECONDS, 3 * interval) * 1000
-                current = self.source_status.get(source_id) or {}
-                if last is not None and now - last < stale:
-                    if current.get("status") != "connected":
-                        self.source_status[source_id] = {
-                            "status": "connected",
-                            "detail": "",
-                            "since": now,
-                        }
-                    continue
-                detail = (
-                    t("No values from the gateway for {seconds} s.", seconds=int(stale / 1000))
-                    if last is not None
-                    else t("Waiting for the gateway's first values.")
-                )
-                if current.get("status") == "connected" or not current:
-                    self.source_status[source_id] = {
-                        "status": "disconnected",
-                        "detail": detail,
-                        "since": now,
-                    }
-                    for state in self._source_points(source_id):
-                        if state.status not in ("waiting", "disconnected"):
-                            state.lost(now, detail)
-
-    def _write_gateway_config(self) -> None:
-        if not self.settings.ingest_port:
-            return
-        from histcraft.collector.gateway import write_config
-
-        try:
-            self._gateway_config = write_config(
-                self.settings, self.catalog.sources(), self.password, self._gateway_config
-            )
-        except Exception:  # noqa: BLE001 - one bad source must not stop collection
-            LOGGER.exception("The gateway's configuration could not be written")
-
-    def _answer_gateway(self, source: dict[str, Any], request: dict[str, Any]) -> tuple[str, Any]:
-        """Browse or test a gateway source: what it has sent so far."""
-
-        with self._lock:
-            seen = dict(self.seen.get(source["id"], {}))
-            last = self._gateway_last.get(source["id"])
-        if not self.settings.ingest_port:
-            return "error", {"detail": t("The gateway is not set up (HISTCRAFT_INGEST_PORT).")}
-        if not seen:
-            return "error", {
-                "detail": t(
-                    "No values received from the gateway yet. It sends every interval: check"
-                    " the address, the credentials and that the histcraft-gateway service runs."
-                )
-            }
-        if request["kind"] == "test":
-            return "ok", {"series": len(seen), "last": last}
-        from histcraft.collector.gateway import variable
-
-        variables = [variable(source["kind"], address, item) for address, item in seen.items()]
-        variables.sort(key=lambda item: item["tag"])
-        return "ok", {
-            "variables": variables,
-            "truncated": len(seen) >= SEEN_LIMIT,
-            "limit": SEEN_LIMIT,
-        }
-
     async def _take_lease(self) -> bool:
         """Wait for the archive's lease; False when stopped first."""
 
@@ -1489,43 +677,3 @@ class CollectorThread:
         self._loop.call_soon_threadsafe(self._stop.set)
         self._thread.join(timeout)
         self._thread = None
-
-
-def _births_detail(births: Births, dropped: int) -> str:
-    notes = []
-    if births.unknown_aliases:
-        notes.append(
-            t(
-                "{count} values by an alias no birth named: they are read from the node's next"
-                " birth.",
-                count=births.unknown_aliases,
-            )
-        )
-    if births.sequence_gaps:
-        notes.append(t("{count} gaps in the nodes' sequence.", count=births.sequence_gaps))
-    if births.unreadable:
-        notes.append(t("{count} messages that are not Sparkplug B.", count=births.unreadable))
-    if dropped:
-        notes.append(t("{count} messages dropped (the collector fell behind).", count=dropped))
-    return " ".join(notes)
-
-
-def _pushed_value(value: Any, kind: str) -> Any:
-    if kind == "number" and isinstance(value, bool | int):
-        return float(value)
-    return value
-
-
-def _describe(exc: BaseException) -> str:
-    if isinstance(exc, TimeoutError | asyncio.TimeoutError):
-        return t("No answer from the server in time.")
-    text = str(exc).strip()
-    return f"{type(exc).__name__}: {text}" if text else type(exc).__name__
-
-
-def source_password(source: dict[str, Any], catalog: CatalogStore, vault: Vault) -> str:
-    """A source's password: its ``HISTCRAFT_SECRET_<NAME>`` variable, else the stored one."""
-
-    if source.get("password_env"):
-        return os.environ.get(source["password_env"], "")
-    return vault.decrypt(catalog.secret(source["id"]))
