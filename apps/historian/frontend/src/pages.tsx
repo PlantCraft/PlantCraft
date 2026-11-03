@@ -34,12 +34,6 @@ export function tourSteps(example: string | null = null): TourStep[] {
       body: tt("The Historian collects every signal from your sources and keeps its history, compressed, for every app of the suite. What the apps calculate is stored here too."),
     },
     {
-      path: "/",
-      target: '.pcs-content [data-tour="widgets"]',
-      title: tt("Overview"),
-      body: tt("How many signals are collected, how they are doing, and how much the archive holds. Customize arranges the widgets as you like."),
-    },
-    {
       path: "/sources",
       target: ".pcs-content .table-panel, .pcs-content .empty",
       title: tt("Sources"),

@@ -9,6 +9,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- Tours: the first tour is shorter (16 steps, was 20). It leaves out one asset's page, System health, Apps and Backups; its step on the menu under the person's name now shows the theme and the display size (Larger text to More space) beside Help. Operations has a short tour of its own (Status, Requests, Backups, the assistant) instead of opening Desk's. Each app's tour no longer stops on its Overview; Analytics' shows Monitors (which algorithm runs, on which assets and when), Documents' shows Diagrams and the Plant map when P&IDs were read, and Models' shows Tracking when one is set up. A public demo opens in the light theme until the visitor picks another (ui 0.110.0).
+
 - Translations: the pt-BR and es glossaries were reviewed against the words industry tools already use (Grafana, ThingsBoard, FUXA, Elipse), and every catalog and help page follows: Shelve is Arquivar/Archivar (as in Elipse E3; "suprimir" stays for suppressed by design), Warning is Aviso in pt-BR, Threshold is Limite in pt-BR, Gauge is Medidor and Stat is Estatística/Estadística (View), the Editor/Viewer roles are Editor/Visualizador, Audit log is Log de auditoria in pt-BR and Silence is Silencio in es.
 
 ### Fixed

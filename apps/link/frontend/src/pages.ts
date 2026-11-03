@@ -55,12 +55,6 @@ export function tourSteps(examples: TourExamples = { block: null, algorithm: nul
       body: tt("Analytics runs algorithms on the plant's assets on a cadence: data quality, control loops, digital twins or your own. It tells you which results to look at first, and why."),
     },
     {
-      path: "/",
-      target: '.pcs-content [data-tour="widgets"]',
-      title: tt("Overview"),
-      body: tt("What Analytics runs and what it concluded: each monitor and how its last run ended, the queue and the latest runs. Customize adds the counts by status and arranges the widgets as you like."),
-    },
-    {
       path: "/blocks",
       target: ".pcs-content .pc-grid",
       title: tt("Blocks"),
@@ -84,6 +78,12 @@ export function tourSteps(examples: TourExamples = { block: null, algorithm: nul
     target: ".pcs-content .alg-diagram",
     title: tt("Inside an algorithm"),
     body: tt("Its diagram: blocks wired output to input. The tabs hold what it reads and gives, a test on an asset, where it is used and its versions."),
+  });
+  steps.push({
+    path: "/schedules",
+    target: ".pcs-content .methods-main, .pcs-content .empty",
+    title: tt("Monitors"),
+    body: tt("A monitor sets which algorithm runs, on which assets and when: every few minutes, every hour, on chosen days and times, or once. Open one for its parameters and its record of runs, failures and how long they took."),
   });
   steps.push({
     path: "/executions",
