@@ -67,7 +67,7 @@ def test_a_failed_write_keeps_the_values_for_the_next_flush(parts, monkeypatch):
 def test_a_long_outage_keeps_the_newest_values(parts, monkeypatch):
     _, _, archive = parts
     collector, by_tag = collector_with_values(parts)
-    monkeypatch.setattr("histcraft.collector.service.HELD_LIMIT", 2)
+    monkeypatch.setattr("histcraft.collector.archiving.HELD_LIMIT", 2)
     monkeypatch.setattr(archive, "hold", failing)
     with pytest.raises(ConnectionError):
         collector.flush()
