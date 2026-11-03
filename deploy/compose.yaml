@@ -408,6 +408,8 @@ services:
       # The raw samples kept between rounds (data/cache.py; 512 MB when empty): the server and
       # its engine share LINKCRAFT_MEMORY, so the machine profile sizes it to that limit.
       LINKCRAFT_READ_CACHE_MB: "${LINKCRAFT_READ_CACHE_MB:-}"
+      # The hour (installation's clock) an older database is compacted once; off: by hand.
+      LINKCRAFT_COMPACT_HOUR: "${LINKCRAFT_COMPACT_HOUR:-}"
     secrets:
       - linkcraft_app_key
     volumes:

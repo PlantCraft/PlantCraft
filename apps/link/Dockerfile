@@ -84,8 +84,16 @@ LABEL org.opencontainers.image.title="${APP_ID}" \
       org.processcraft.app.prefix="${APP_PREFIX}" \
       org.processcraft.app.port="${APP_PORT}"
 
+# PYTHONMALLOC=malloc: Python's small objects come from glibc, which hands freed pages back
+# (plantcraft_sdk.server.memory trims every 60 s), instead of from Python's own arenas, which stay
+# with the process while one live object is left in them. A round of 2,050 loops parses millions
+# of small values; afterwards 160 MB were live and the engine kept 730 MB; with glibc 350 MB, the
+# same rounds and peaks (2026-11-03). MALLOC_ARENA_MAX: two arenas, not one per thread, as in the
+# Historian.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONMALLOC=malloc \
+    MALLOC_ARENA_MAX=2 \
     HOME=/tmp \
     PLANTCRAFT_URL=http://processcraft:8060 \
     LINKCRAFT_ROOT_PATH=/link \
