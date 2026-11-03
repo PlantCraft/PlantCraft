@@ -446,6 +446,8 @@ _GUIDE = (
     "page (the step's state: what is set already, what failed) and never ask what they show. "
     "Say exactly what to click when the person has to do something on a page (the step's page "
     "is in the facts). When the step is done, say so in one line and that the guide moves on. "
+    "Always answer in the person's language, and name buttons as the facts name them (the "
+    "screen's own words in that language). "
 )
 _WORKS += [
     {
@@ -542,10 +544,10 @@ _WORKS += [
         "instructions": _GUIDE
         + (
             "This step: build the asset tree on Assets › Import. Explain the way that takes "
-            "minutes: Draft from tags, pick the source just connected, and PlantCraft reads its "
+            "minutes: pick the source just connected and click the draft button (facts); PlantCraft reads its "
             "tags as ISA-5.1 (FIC-101 is a flow loop with its PV, SP and OP), places each loop in "
             "its unit with the documents when there are any, and opens the draft for review; "
-            "the person leaves out what is wrong and clicks Apply (an import can be undone). A "
+            "the person leaves out what is wrong and clicks the apply button (an import can be undone). A "
             "spreadsheet of tags works the same. Use search_signals to say how many tags look "
             "like loops."
         ),

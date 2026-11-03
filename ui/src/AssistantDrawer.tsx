@@ -596,6 +596,8 @@ export function AssistantDrawer({ request, onClose, leaving = false }: { request
   }, [status, works, request.work, request.task]);
   /** The person's words, with the task they complete. */
   function send() {
+    // Enter sends too: not while the answer is still being written (the server says 409).
+    if (busy || working || !draft.trim()) return;
     if (task) void ask(`${task.label}: ${draft.trim()}`, task);
     else void ask(draft);
   }

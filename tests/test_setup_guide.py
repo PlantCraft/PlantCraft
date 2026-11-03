@@ -109,8 +109,11 @@ def test_each_step_has_its_work_and_the_create_works_point_at_real_routes():
 def test_missions_come_after_the_setup_and_count_what_the_person_did(signed):
     guide = signed.get("/api/setup-guide").json()
     ids = [item["id"] for item in guide["missions"]]
-    # Only the apps listed here (Alarms is not): the platform's own missions and theirs.
-    assert ids == ["ask", "analytics", "dashboard", "notebook"] and guide["missions_done"] == 0
+    # Only the apps listed here (Alarms is not), and no notebook while notebooks are off.
+    assert ids == ["ask", "analytics", "dashboard"] and guide["missions_done"] == 0
+    signed.app.state.runtime.workspace.notebooks.save_settings(actor="admin", enabled=True)
+    ids = [item["id"] for item in signed.get("/api/setup-guide").json()["missions"]]
+    assert ids == ["ask", "analytics", "dashboard", "notebook"]
     audit = signed.app.state.runtime.workspace.audit
     # The guide's own chat reading help is not a question about the plant.
     audit.record("admin", "assistant.tool", "tool:read_help", {}, app_id="processcraft")

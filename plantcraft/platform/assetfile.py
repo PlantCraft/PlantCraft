@@ -906,6 +906,7 @@ def apply(
                     for item in new
                 ],
             )
+    undo["routes"] = _route_new_signals(platform, rows)
     for relation in result["relations"]:
         if relation["include"] and relation["status"] == "create":
             store.relate(relation["from"], relation["type"], relation["to"], actor=actor)
@@ -988,6 +989,38 @@ def _journal_size(undo: dict[str, Any]) -> int:
     return sum(len(undo.get(key) or []) for key in ("created", "updated", "signals", "relations"))
 
 
+def _route_new_signals(platform: Any, rows: list[dict[str, Any]]) -> list[str]:
+    """Route the bound signals of an added source to it, so the platform reads them there.
+
+    A binding alone names the source; without a route a read goes to the scenario's source and
+    finds nothing (a plant drafted from an OPC UA server showed no values). Returns the tags
+    routed here (to forget on undo); with Historian, the source's signals are collected there."""
+
+    from plantcraft.industrial_data.registry import PRIMARY
+
+    registry = platform.sources
+    routed = registry.routes()
+    wanted: dict[str, list[str]] = {}
+    for row in rows:
+        for item in row["signals"]:
+            source = item.get("source_id") or ""
+            if source and source != PRIMARY and item["tag"] not in routed:
+                tags = wanted.setdefault(source, [])
+                if item["tag"] not in tags:
+                    tags.append(item["tag"])
+    layer = platform.datalayer
+    if layer is not None and layer.manages_sources:
+        for source, tags in wanted.items():
+            layer.add_signals(source, tags)
+        return []
+    done: list[str] = []
+    for source, tags in wanted.items():
+        if registry.known(source):
+            registry.use(source, [{"tag": tag} for tag in tags], monitored=True)
+            done += tags
+    return done
+
+
 def undo_last(platform: Any, *, actor: str) -> dict[str, Any]:
     """Take the last import back: the relations and signal bindings it added, the values it
     overwrote, then the assets it created (newest first; their children made by hand since then
@@ -1002,6 +1035,8 @@ def undo_last(platform: Any, *, actor: str) -> dict[str, Any]:
         store.unrelate(from_id, relation, to_id)
     if undo.get("signals"):
         store.unbind_signals([(asset_id, tag) for asset_id, tag in undo["signals"]])
+    if undo.get("routes"):
+        platform.sources.forget(undo["routes"])
     restored = 0
     for asset_id, previous in undo.get("updated", {}).items():
         if store.get(asset_id) is None:

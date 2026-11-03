@@ -318,13 +318,29 @@ def _assets(rt: Any) -> dict[str, Any]:
     total = sum(counts.values())
     # An empty installation holds only the plant's root.
     added = max(0, total - 1)
-    facts = {"assets": added, "by_kind": counts}
+    facts = {
+        "assets": added,
+        "by_kind": counts,
+        # The screen's words, in the person's language, for the robot to name them.
+        "page": t("Assets › Import"),
+        "draft_button": t("Draft from the source"),
+        "apply_button": t("Apply"),
+    }
     return {"done": added > 0, "facts": facts}
 
 
 def _start(rt: Any) -> dict[str, Any]:
     from plantcraft.platform import assetfile
 
+    apps = {app.id for app in rt.suite_apps()}
+    declared = [
+        f"{row['app']}:{step['id']}"
+        for row in rt.contributions.listing(list(apps))
+        for step in (row.get("contributes") or {}).get("start") or []
+    ]
+    if not declared:
+        # No installed app has a first step: nothing to wait for (the guide moves on).
+        return {"done": True, "facts": {"import": None, "no_app_steps": True}}
     found = assetfile.last_import(rt.platform)
     if found is None or found.get("undone_at") is not None:
         return {"done": False, "facts": {"import": None}}
@@ -333,12 +349,6 @@ def _start(rt: Any) -> dict[str, Any]:
         for row in rt.workspace.audit.list(limit=200, action="assets.start_step")
         if (row.get("detail") or {}).get("import_id") == found.get("import_id")
     }
-    apps = {app.id for app in rt.suite_apps()}
-    declared = [
-        f"{row['app']}:{step['id']}"
-        for row in rt.contributions.listing(list(apps))
-        for step in (row.get("contributes") or {}).get("start") or []
-    ]
     left = [key for key in declared if key not in taken]
     facts = {"import": found.get("import_id"), "taken": sorted(taken), "left": left}
     return {"done": bool(declared) and not left, "facts": facts}
@@ -502,6 +512,8 @@ def missions_status(rt: Any, username: str, installed: set[str]) -> list[dict[st
     for mission in missions():
         if mission.needs and mission.needs not in installed:
             continue
+        if mission.id == "notebook" and not rt.workspace.notebooks.enabled():
+            continue  # notebooks are off here: no mission the person cannot do
         rows = rt.workspace.audit.list(
             limit=200 if mission.id == "ask" else 1,
             username=username,

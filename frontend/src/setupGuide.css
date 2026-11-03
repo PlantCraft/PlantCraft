@@ -82,3 +82,5 @@ body:has(.demo-visit-bar) .setup-guide { bottom: 64px; }
 .guide-mission .guide-link { align-self: flex-start; margin-top: 2px; }
 .guide-steps-heading { margin-top: 8px; padding: 6px 0 2px; border-top: 1px solid var(--pc-border-subtle); color: var(--pc-text-3); font-size: 12px; font-weight: 600; }
 .guide-badge-trophy { display: inline-flex; align-items: center; gap: 2px; background: #f5c242; color: #5c4100; }
+/* A dialog (a provider form, a confirmation) is the person's focus: the robot steps aside. */
+body:has(.dialog-backdrop) .setup-guide, body:has(.modal-backdrop) .setup-guide { display: none; }

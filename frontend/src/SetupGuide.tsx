@@ -21,10 +21,15 @@ import { guideApi, guideLine, nextMission, OPEN_GUIDE_EVENT, stepFacts, type Con
 const OPEN_POLL_MS = 5000;
 /** While it is closed: only to keep the bubble about the right step. */
 const CLOSED_POLL_MS = 60000;
+/** After "Do it with me" the card is closed but the person is doing a step in the chat: look
+ * as often as with the card open, for this long, so the guide moves on right after "Create". */
+const TALKING_MS = 15 * 60_000;
+let talkingSince = 0;
 const CHEER_MS = 4000;
 
 /** Open the assistant beside the page with a mission's work. */
 function talkMission(guide: Guide, mission: GuideMission) {
+  talkingSince = Date.now();
   forgetAssistantStatus();
   openAssistant({
     page: "processcraft:setup-guide",
@@ -38,6 +43,7 @@ function talkMission(guide: Guide, mission: GuideMission) {
 
 /** Open the assistant beside the page with ``step``'s work. */
 function talkAbout(guide: Guide, step: GuideStep, help = false) {
+  talkingSince = Date.now();
   // The model may have been connected a moment ago (the guide's first step).
   forgetAssistantStatus();
   openAssistant({
@@ -83,7 +89,14 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
 
   useEffect(() => { void load(); }, [load]);
   useEffect(() => {
-    const timer = window.setInterval(() => { if (document.visibilityState === "visible") void load(); }, open ? OPEN_POLL_MS : CLOSED_POLL_MS);
+    let last = Date.now();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      const fast = open || Date.now() - talkingSince < TALKING_MS;
+      if (!fast && Date.now() - last < CLOSED_POLL_MS) return;
+      last = Date.now();
+      void load();
+    }, OPEN_POLL_MS);
     return () => window.clearInterval(timer);
   }, [open, load]);
   useEffect(() => {

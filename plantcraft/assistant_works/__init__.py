@@ -33,6 +33,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from plantcraft.assistant_works.platform import platform_works
+from plantcraft.i18n import t
 from plantcraft_sdk.contributes import (
     AssistantOffer,
     AssistantWork,
@@ -79,18 +80,29 @@ class Work:
         """What the panel draws: the work, and for a create work the card's fields and routes."""
 
         spec = self.spec
+        # The platform's own works are worded in English and read in the person's language (a
+        # catalog entry each; an app's works come worded by the app). The opening question in
+        # the person's language also makes the model answer in it.
+        say = t if self.app == "processcraft" else (lambda text: text)
         item: dict[str, Any] = {
             "key": self.key,
             "app": self.app,
             "kind": spec.kind,
-            "title": spec.title,
-            "hint": spec.hint,
-            "ask": spec.ask,
+            "title": say(spec.title) if spec.title else spec.title,
+            "hint": say(spec.hint) if spec.hint else spec.hint,
+            "ask": say(spec.ask) if spec.ask else spec.ask,
         }
         if spec.kind == "create":
+            fields = []
+            for field in spec.fields:
+                shown = field.model_dump(mode="json")
+                for key in ("title", "help"):
+                    if isinstance(shown.get(key), str) and shown[key]:
+                        shown[key] = say(shown[key])
+                fields.append(shown)
             item.update(
-                object=spec.object,
-                fields=[field.model_dump(mode="json") for field in spec.fields],
+                object=say(spec.object) if spec.object else spec.object,
+                fields=fields,
                 create=spec.create,
                 open=spec.open,
                 form=spec.form,

@@ -19,6 +19,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- Asset import: a tree drafted from an added source (OPC UA, PI Web API, CSV) bound its tags but did not route them to that source, so the plant showed no values after the setup; the import now routes them (with Historian, collects them there) and its undo takes the routes back. The setup guide's works read in the person's language (titles, cards, the opening question), name the buttons as the screen does, the notebook mission shows only with notebooks on, the apps' step no longer waits when no app has a first step, the guide looks every 5 s while the person does a step in the chat, the robot steps aside while a dialog is open, and Enter no longer sends while the assistant is still answering (ui 0.112.0).
+
 - Public demo assistant (found recording the 0.6 video, 2026-11-03):
   - The visit's clock no longer covers the assistant's text box: the side panel's box and Desk's keep clear of it.
   - A model service that only limits the rate (429) or fails for a moment (5xx) is asked again after the wait it names, and only stops the visits' questions for 20 seconds (any 429 stopped them for 10 minutes, so a visit's first question read "The assistant cannot answer right now"). `GET /api/demo/stats` says why answers failed (`failures`) and how long they took (`answer_seconds`).
