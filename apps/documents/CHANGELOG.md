@@ -4,6 +4,10 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Fixed
+
+- A public demo's visitor opens "Links to check" and sees the queue of the folders they see; it was a page that only said the part was locked. Approving or rejecting is still refused.
+
 ### Removed
 
 - **The plant map and the P&ID reader moved to PlantCraft PID** (a closed app with a

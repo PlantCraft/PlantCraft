@@ -18,7 +18,7 @@
 .co-search:focus-within { border-color: var(--pc-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc-primary) 10%, transparent); }
 .co-search svg { width: 15px; flex: none; }
 .co-search input { min-width: 0; flex: 1; border: 0; outline: none; background: transparent; color: var(--pc-text); font-size: var(--pc-fs-md); }
-.co-ref { margin: 0 1px; padding: 0 calc(6px * var(--pc-space-scale, 1)) 0 var(--pc-space-1); border-radius: var(--pc-radius-sm); display: inline-flex; align-items: center; gap: 2px; color: var(--pc-primary-text); background: var(--pc-primary-soft); font-weight: 700; vertical-align: baseline; white-space: nowrap; }
+.co-ref { margin: 0 1px; padding: 0 calc(6px * var(--pc-space-scale, 1)) 0 var(--pc-space-1); border-radius: var(--pc-radius-sm); display: inline-flex; align-items: center; gap: 2px; color: var(--pc-primary-text); background: var(--pc-primary-soft); font-weight: 700; vertical-align: baseline; white-space: nowrap; max-width: 100%; }
 .co-ref:hover { text-decoration: underline; }
 .co-ref svg { width: 11px; height: 11px; }
 .co-ref-missing { color: var(--pc-attention-text); background: var(--pc-attention-soft); }
@@ -239,6 +239,8 @@
 .act-description { white-space: pre-wrap; }
 .act-ref-list { display: flex; flex-wrap: wrap; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); font-size: var(--pc-fs-sm); }
 .act-ref-list .msg-about-chip { margin: 0; }
+/* A long title ("Action: AC-9 · Retune PIC-1202: ...") wraps on a phone instead of widening the page. */
+.act-ref-list .co-ref { white-space: normal; overflow-wrap: anywhere; }
 .act-drawer-error { margin: var(--pc-space-3) var(--pc-space-6); }
 .act-history { margin: 0 0 var(--pc-space-3); padding: 0; list-style: none; display: grid; gap: var(--pc-space-2); }
 .act-history li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: calc(9px * var(--pc-space-scale, 1)); }

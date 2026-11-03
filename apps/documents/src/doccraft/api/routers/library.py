@@ -11,7 +11,14 @@ from fastapi.responses import FileResponse
 from plantcraft_sdk.server.queue import FORMAT as QUEUE_FORMAT
 from plantcraft_sdk.server.queue import SAMPLE_SECONDS, QueueNow
 
-from doccraft.api.deps import CurrentUser, EditorUser, RuntimeDep, document_or_404, editable_or_403
+from doccraft.api.deps import (
+    ACCESS,
+    CurrentUser,
+    EditorUser,
+    RuntimeDep,
+    document_or_404,
+    editable_or_403,
+)
 from doccraft.i18n import t
 from doccraft.library.extract import Unreadable, format_of
 from doccraft.library.models import (
@@ -215,12 +222,17 @@ def _editable_docs(rt, user) -> dict[str, dict[str, Any]]:
 
 
 @router.get("/asset-links")
-def asset_link_queue(rt: RuntimeDep, user: EditorUser) -> dict[str, Any]:
+def asset_link_queue(rt: RuntimeDep, user: CurrentUser) -> dict[str, Any]:
     """The links between documents and assets found in their text that wait for a person (in
     the folders they change). A link found at least ``threshold`` times is taken at once and is
-    not here (0: every link waits)."""
+    not here (0: every link waits). A public demo's visitor sees the queue of the folders they
+    see, as the demo shows its editors; approving or rejecting is what it refuses."""
 
-    docs = _editable_docs(rt, user)
+    if user.demo is not None and not user.can_edit:
+        perms = rt.permissions(user)
+        docs = {d["doc_id"]: d for d in perms.docs(rt.store.documents(perms.visible_folders()))}
+    else:
+        docs = _editable_docs(rt, ACCESS.editor(user))
     return {
         "threshold": rt.store.auto_mentions,
         "links": rt.store.link_queue(set(docs)),

@@ -242,6 +242,17 @@ def test_links_to_assets_wait_in_a_queue_editors_clear_in_a_batch(client, runtim
     ref = lambda link: {"doc_id": link["doc_id"], "asset_id": link["asset_id"]}  # noqa: E731
     with client_for(runtime, fake, "operator") as operator:
         assert operator.get("/api/asset-links").status_code == 403
+    # A public demo's visitor opens "Links to check" like an editor; deciding is refused.
+    visit = {"visit": "v1", "ends": 4102444800}
+    with client_for(runtime, fake, None) as visitor:
+        visitor.headers["Authorization"] = f"Bearer {fake.token('operator', demo=visit)}"
+        seen = visitor.get("/api/asset-links")
+        assert seen.status_code == 200
+        assert {l["doc_id"] for l in seen.json()["links"]} >= {doc["doc_id"]}
+        refused = visitor.post(
+            "/api/asset-links/review", json={"links": [ref(keep)], "verdict": "approved"}
+        )
+        assert refused.status_code == 403 and "nothing is saved" in refused.json()["detail"]
     assert client.post(
         "/api/asset-links/review", json={"links": [ref(keep)], "verdict": "approved"}
     ).json() == {"changed": 1}

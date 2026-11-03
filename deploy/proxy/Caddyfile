@@ -120,8 +120,8 @@
 	# files, not a page asked for on its own (pc-frame=off: an app on an older ui), not a visitor
 	# without a session (View's public links).
 	@frame {
-		path /link/* /dash/* /hist/* /alarm/* /model/*
-		not path /link/api/* /dash/api/* /hist/api/* /alarm/api/* /model/api/*
+		path /link/* /dash/* /hist/* /alarm/* /model/* /doc/*
+		not path /link/api/* /dash/api/* /hist/api/* /alarm/api/* /model/api/* /doc/api/*
 		header Sec-Fetch-Dest document
 		header Cookie *processcraft_token=*
 		not query pc-frame=off
