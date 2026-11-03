@@ -9,8 +9,8 @@ lembrete para o próximo turno, o que foi mudado em uma malha e por quê.
 Digite no filtro para reduzir a lista, ou abra as notas de um ativo pelo link dele.
 
 - **Nova nota**: escolha o ativo na árvore de ativos do PlantCraft e escreva o texto (até 4.000
-  caracteres). Pessoas com papel de Engenharia e administradores escrevem notas; quem tem
-  papel de Leitura, lê.
+  caracteres). Editores e administradores escrevem notas; quem é
+  visualizador, lê.
 - **Excluir** uma nota pela página dela. Toda mudança fica registrada no log de auditoria do
   PlantCraft, com quem fez e quando.
 

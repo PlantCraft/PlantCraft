@@ -23,6 +23,15 @@ export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
 
 /** The app's guided tour (@plantcraft/ui): opens the first time a person opens the app. */
 /** The document the tour opens (the demo's valve history first), or null. */
+/** Whether the documents hold diagrams (P&IDs) read already: the tour shows them then. */
+export async function tourDiagrams(): Promise<boolean> {
+  try {
+    return (await api.diagrams()).length > 0;
+  } catch {
+    return false;
+  }
+}
+
 export async function tourExample(): Promise<string | null> {
   try {
     const docs = await api.documents();
@@ -33,17 +42,11 @@ export async function tourExample(): Promise<string | null> {
   }
 }
 
-export function tourSteps(example: string | null = null): TourStep[] {
+export function tourSteps(example: string | null = null, diagrams = false): TourStep[] {
   const steps: TourStep[] = [
     {
       title: tt("Welcome to Documents"),
       body: tt("The plant's manuals, narratives, datasheets, procedures and reports, read into passages that you and the assistant can find and cite by page."),
-    },
-    {
-      path: "/",
-      target: '.pcs-content [data-tour="widgets"]',
-      title: tt("Overview"),
-      body: tt("Search or ask the documents, see the latest ones and those not linked to assets yet. Customize arranges the widgets as you like."),
     },
     {
       path: "/documents",
@@ -52,6 +55,21 @@ export function tourSteps(example: string | null = null): TourStep[] {
       body: tt("Every document you may read, by folder: folders say who reads and who changes them. An editor sends files here; each one is read in the background and linked to the assets its tags name."),
     },
   ];
+  // The drawings read from the documents, when there are any (2026-11-03).
+  if (diagrams) steps.push(
+    {
+      path: "/diagrams",
+      target: ".pcs-content .pc-dt",
+      title: tt("Diagrams"),
+      body: tt("The pages of the documents that are P&IDs, read into equipment, instruments and the lines between them. Open one to check what was found on it."),
+    },
+    {
+      path: "/plant-map",
+      target: ".pcs-content .map-columns",
+      title: tt("Plant map"),
+      body: tt("Every diagram joined into one plant. It becomes an asset file that PlantCraft's Assets › Import reviews before anything changes."),
+    },
+  );
   // No step opens a document (its text says little in a tour).
   steps.push(
     {

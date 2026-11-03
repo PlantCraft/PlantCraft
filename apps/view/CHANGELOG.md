@@ -6,6 +6,8 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **Alarm performance section in reports (ISA-18.2).** A report section for the site or one area shows what Alarms publishes about it each hour, using the reading closest to the report's period (24 hours, 7 days or 30 days). It includes the figures against the philosophy's targets, the EEMUA 191 level, floods, time to acknowledge by priority, and the most frequent and fleeting alarms. It is the same on the page and in the PDF, Word, HTML and Markdown files. When Alarms has published nothing for that asset, the section says so.

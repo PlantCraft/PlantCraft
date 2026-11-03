@@ -105,7 +105,7 @@ papel **Operação** (a TI, ou a equipe de um integrador, sem torná-las adminis
   próprias empresas.
 - **Acesso temporário de suporte**: um administrador dá a uma pessoa o Operação por até 72
   horas, com um motivo. Ele termina sozinho ou com **Encerrar agora**, a pessoa é avisada, e os
-  dois ficam no registro de auditoria.
+  dois ficam no log de auditoria.
 
 ## No servidor
 

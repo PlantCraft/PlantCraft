@@ -10,7 +10,7 @@ costumam vir de ruído ou de sintonia agressiva.
 
 - Bauer, Horch, Xie, Jelali e Thornhill (2016), The current state of control loop performance
   monitoring: a survey of application in industry, Journal of Process Control. Curso e reversões
-  da válvula são indicadores padrão da saúde da válvula; os limiares são heurísticas de
+  da válvula são indicadores padrão da saúde da válvula; os limites são heurísticas de
   engenharia.
 
 ## Parâmetros

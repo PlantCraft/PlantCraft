@@ -38,6 +38,8 @@ with TestClient(create_app()) as client:
     client.get("/api/health")
 con = sqlite3.connect(tmp / "workspace.sqlite3")
 rows = con.execute(
-    "SELECT sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%' ORDER BY type DESC, name"
+    "SELECT sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%'"
+    # Tables first, triggers last: a trigger names its table, so it must come after it.
+    " ORDER BY CASE type WHEN 'table' THEN 0 WHEN 'index' THEN 1 WHEN 'view' THEN 2 ELSE 3 END, name"
 ).fetchall()
 print("\n".join(r[0].strip() + ";" for r in rows))

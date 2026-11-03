@@ -20,7 +20,7 @@ e fica fora da saúde da malha (não conta como zero).
   nível de média é julgado pela vazão de saída que repassa, não pelo rastreamento do setpoint.
 - Shinskey (1996), Process Control Systems: Application, Design and Tuning, McGraw-Hill.
   Tratamento clássico do controle de nível de média: o vaso absorve as perturbações para que a
-  vazão de saída fique suave. A razão de amplificação e seus limiares são uma heurística de
+  vazão de saída fique suave. A razão de amplificação e seus limites são uma heurística de
   engenharia construída sobre essa ideia; ajuste-os por planta.
 
 ## Parâmetros

@@ -4,6 +4,8 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **P&IDs saved as DEXPI (XML) go straight into the plant map.** Send the `.xml` a P&ID tool

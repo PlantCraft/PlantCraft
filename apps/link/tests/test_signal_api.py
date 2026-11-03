@@ -73,6 +73,49 @@ def test_the_overview_answer_is_kept_a_few_seconds(checked, sq_client, monkeypat
     assert len(calls) == 2
 
 
+def test_the_overview_is_built_once_at_a_time_while_people_wait():
+    import threading
+    import time
+    from types import SimpleNamespace
+
+    from linkcraft.api.routers import signal_quality
+
+    rt = SimpleNamespace()
+    builds = []
+    gate = threading.Event()
+
+    def build():
+        builds.append(1)
+        gate.wait(5)
+        time.sleep(0.05)
+        return {"n": len(builds)}
+
+    answers = []
+    threads = [
+        threading.Thread(
+            target=lambda: answers.append(signal_quality.kept_answer(rt, "slot", "all", build))
+        )
+        for _ in range(8)
+    ]
+    for thread in threads:
+        thread.start()
+    time.sleep(0.2)
+    gate.set()
+    for thread in threads:
+        thread.join(5)
+    assert len(builds) == 1 and answers == [{"n": 1}] * 8
+    # Once stale, one request builds again while another takes the previous answer at once.
+    rt.slot = {"all": (time.monotonic() - 60, {"n": 0})}
+    gate.clear()
+    first = threading.Thread(target=lambda: signal_quality.kept_answer(rt, "slot", "all", build))
+    first.start()
+    time.sleep(0.1)
+    assert signal_quality.kept_answer(rt, "slot", "all", build) == {"n": 0}
+    gate.set()
+    first.join(5)
+    assert len(builds) == 2
+
+
 def test_roles_come_from_processcraft_assets(checked, sq_client):
     signal = sq_client.get("/link/api/signals/historian:FIC-110.SP").json()
     assert signal["roles"] == ["sp"]

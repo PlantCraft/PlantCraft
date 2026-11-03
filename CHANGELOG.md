@@ -7,6 +7,29 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Changed
+
+- Tours: the first tour is shorter (16 steps, was 20). It leaves out one asset's page, System health, Apps and Backups; its step on the menu under the person's name now shows the theme and the display size (Larger text to More space) beside Help. Operations has a short tour of its own (Status, Requests, Backups, the assistant) instead of opening Desk's. Each app's tour no longer stops on its Overview; Analytics' shows Monitors (which algorithm runs, on which assets and when), Documents' shows Diagrams and the Plant map when P&IDs were read, and Models' shows Tracking when one is set up. A public demo opens in the light theme until the visitor picks another (ui 0.110.0).
+
+- Translations: the pt-BR and es glossaries were reviewed against the words industry tools already use (Grafana, ThingsBoard, FUXA, Elipse), and every catalog and help page follows: Shelve is Arquivar/Archivar (as in Elipse E3; "suprimir" stays for suppressed by design), Warning is Aviso in pt-BR, Threshold is Limite in pt-BR, Gauge is Medidor and Stat is Estatística/Estadística (View), the Editor/Viewer roles are Editor/Visualizador, Audit log is Log de auditoria in pt-BR and Silence is Silencio in es.
+
+### Fixed
+
+- Public demo assistant (found recording the 0.6 video, 2026-11-03):
+  - The visit's clock no longer covers the assistant's text box: the side panel's box and Desk's keep clear of it.
+  - A model service that only limits the rate (429) or fails for a moment (5xx) is asked again after the wait it names, and only stops the visits' questions for 20 seconds (any 429 stopped them for 10 minutes, so a visit's first question read "The assistant cannot answer right now"). `GET /api/demo/stats` says why answers failed (`failures`) and how long they took (`answer_seconds`).
+  - The side panel follows an answer by reading only what is new, one read at a time: it read the whole chat every 0.7 s even while the last read was still being answered, and around the fifth question of a visit answers stopped arriving. A chat's references are resolved once per read, not once per message. A visit's answer takes at most 75 seconds (`PLANTCRAFT_PUBLIC_DEMO_LLM_SECONDS`), then the model answers with what it read.
+  - A chart the model asked for on the wrong clock (ending hours after now) is moved back to end now, the same length, and the model is told the time on both clocks. A chart of the last 4 hours at 11:18 showed 10:18 to 14:18, three of its hours empty.
+  - A chart's legend names its signals by tag and description ("FIC-1003.PV · Recycle flow"), not by the source's full id (ui 0.111.0).
+  - A demo visitor no longer sees the model's name under every answer.
+- Analytics: a new database gives the disk back by itself as old history is thinned (SQLite `auto_vacuum = INCREMENTAL`, handed back a few megabytes at a time by the hourly upkeep, up to 1 GB an hour). At 3 months of a 2,050-loop plant the file stayed at 23.8 GB with 9 GB of it free. A database made before keeps its size until `linkcraft compact` runs once (in a quiet hour); that run turns the mode on, and the log says so once.
+- Operations: a service that restarts once now counts in its uptime (one 30 s outage) even though, as before, nobody is told until it restarts again. A container that the memory limit stopped and Docker started within seconds read 100 %.
+- Platform: a bundle over 2 GiB is also written in parts of 1900 MiB (`.tar.gz.part-*`), since GitHub refuses a release file of 2 GiB or more (0.6.0's bundles are 2.1 GiB). The install and verify guides say how to join them; the hash and signature are of the joined file.
+- Analytics: the Overview is built once at a time per asset scope; people who open it meanwhile get the previous answer or wait for the new one. With 20 people at 3 months of data each request built its own and the server grew to 1.9 GB until the container's memory limit stopped it.
+- Install: the machine profile sizes Analytics' read cache (`LINKCRAFT_READ_CACHE_MB` 128/256/512/1024 MB), since the server and its engine share `LINKCRAFT_MEMORY`; it was 512 MB on every machine.
+
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **The assistant on each chart, a trial (ui 0.110.0, off by default).** A small popover over a

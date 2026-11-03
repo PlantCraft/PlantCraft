@@ -15,6 +15,11 @@ Each release has, per processor (`linux-amd64` for x86_64, `linux-arm64` for 64-
 | `....tar.gz.sha256` | The SHA-256 hash of the bundle |
 | `....tar.gz.sha256.sig` | The publisher's Ed25519 signature over that hash |
 
+A bundle over 2 GiB is published in parts (`....tar.gz.part-aa`, `-ab`, ...), because the
+release page limits each file to 2 GiB. Download every part of your processor and join them
+first: `cat plantcraft-<version>-linux-<arch>-bundle.tar.gz.part-* > plantcraft-<version>-linux-<arch>-bundle.tar.gz`.
+The hash and the signature are of the joined file.
+
 Inside the bundle, `SHA256SUMS` holds the hash of every file (the images included) and
 `SHA256SUMS.sig` the publisher's signature over it. So the release is checked twice: by you,
 before you unpack it, and by `install.sh`, before it changes anything.
@@ -44,7 +49,7 @@ before you go on.
 ```bash
 echo 'release@plantcraft namespaces="file" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMwhizmfd8aZQ1zHpVLpIrrgxv/YlT/ufewCBueO0hnE' \
     > plantcraft.allowed_signers
-B=plantcraft-0.5.1-linux-amd64-bundle.tar.gz
+B=plantcraft-0.6.0-linux-amd64-bundle.tar.gz
 ssh-keygen -Y verify -f plantcraft.allowed_signers -I release@plantcraft -n file \
     -s $B.sha256.sig < $B.sha256      # Good "file" signature for release@plantcraft ...
 sha256sum -c $B.sha256               # plantcraft-...tar.gz: OK   (macOS: shasum -a 256 -c $B.sha256)

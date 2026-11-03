@@ -61,7 +61,7 @@ mensagem que agrupa vários alarmes é resolvida quando todos eles forem. Um nov
 Um **silenciamento** (Regras › Silenciamentos) retém as mensagens de alguns alarmes (áreas,
 disciplinas ou alarmes escolhidos) por um tempo, com um motivo: uma parada programada, uma
 parada geral. Os alarmes continuam sendo disparados, exibidos e registrados. Para parar o
-próprio alarme enquanto o instrumento é consertado, **suprima-o** (Operação dos alarmes).
+próprio alarme enquanto o instrumento é consertado, **arquive-o** (Operação dos alarmes).
 
 ## O que foi enviado
 
@@ -71,5 +71,5 @@ espera e é tentada de novo a cada ciclo por um dia.
 
 O projeto segue descrições públicas de ferramentas de alertas (as regras e o agrupamento de
 notificações do Grafana Alerting; o agrupamento, a inibição e os silenciamentos do Prometheus
-Alertmanager) e a linha que a ISA-18.2 traça entre suprimir um alarme (shelving) e não avisar
+Alertmanager) e a linha que a ISA-18.2 traça entre arquivar um alarme (shelving) e não avisar
 sobre ele.

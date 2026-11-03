@@ -6,6 +6,8 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **OPC UA subscriptions, opt-in per source** (gap H4): with *Subscribe to changes* on (option

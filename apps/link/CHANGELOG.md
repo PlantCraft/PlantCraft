@@ -6,6 +6,8 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **A regression trained once, with the range it is valid in (OLS, Ridge, PLS).** The new block

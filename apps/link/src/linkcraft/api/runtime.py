@@ -18,6 +18,7 @@ import os
 import threading
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -39,6 +40,7 @@ from linkcraft.blocks.models import ModelRuntime
 from linkcraft.blocks.store import BlockStore
 from linkcraft.catalog.folders import FolderStore
 from linkcraft.catalog.presets import SHIPPED_AUTHOR
+from linkcraft.compact import create_incremental, incremental, release_free
 from linkcraft.config import Settings
 from linkcraft.data.cache import RawCache
 from linkcraft.data.cache import enabled_by_default as read_cache_enabled
@@ -157,6 +159,8 @@ class Runtime(PlatformRuntime):
         settings.data_dir.mkdir(parents=True, exist_ok=True)
         # Before any worker process starts: they read the site blocks' versions from there.
         site.set_folder(settings.blocks_dir)
+        # A new file hands its free pages back as the history is thinned (linkcraft.compact).
+        create_incremental(Path(settings.database_path))
         self.db = Database(settings.database_path)
         self.connect(
             APP_ID,
@@ -259,6 +263,7 @@ class Runtime(PlatformRuntime):
         )
         self.last_sync: dict[str, Any] = {}
         self._last_prune = 0.0
+        self._compact_named = False
         self._summaries_thin = False
         self._last_stall_check = 0.0
         self._examples_tried = -float(EXAMPLES_RETRY_SECONDS)
@@ -872,12 +877,33 @@ class Runtime(PlatformRuntime):
             self.quality_results.thin_history(full_days=HISTORY_FULL_DAYS)
             self.jobs.prune_jobs(days=HISTORY_DAYS)
             self.jobs.prune_detail(keep=DETAIL_KEPT)
+            self.release_disk()
         if time.monotonic() - self._last_stall_check >= STALL_CHECK_SECONDS:
             self._last_stall_check = time.monotonic()
             try:
                 self.events.check_stalled()
             except Exception:  # PlantCraft away: said at the next check
                 LOGGER.warning("The stalled schedules were not checked", exc_info=True)
+
+    def release_disk(self) -> int:
+        """Hand back the pages the upkeep freed (``linkcraft.compact.release_free``); a file made
+        without ``INCREMENTAL`` is named once in the log, as it shrinks only with ``linkcraft compact``."""
+
+        path = Path(self.db.path)
+        try:
+            released = release_free(path)
+            if released:
+                LOGGER.info("Gave %.0f MB of the database back to the disk", released / 1e6)
+            elif not self._compact_named and not incremental(path):
+                self._compact_named = True
+                LOGGER.info(
+                    "The database keeps the space old history leaves until `linkcraft compact` "
+                    "runs once (in a quiet hour); after that the hourly upkeep gives it back."
+                )
+            return released
+        except Exception:  # the database busy: the next upkeep tries again
+            LOGGER.warning("The database's free space was not given back", exc_info=True)
+            return 0
 
     def retire_old_series(self) -> None:
         """Once PlantCraft answers: retire the series Link stopped writing in 0.4."""

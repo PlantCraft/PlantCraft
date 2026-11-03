@@ -52,7 +52,7 @@ MODELCRAFT_VERSION="${MODELCRAFT_VERSION:-$VERSION}"
 DOCCRAFT_VERSION="${DOCCRAFT_VERSION:-$VERSION}"
 # The apps compose.yaml runs, each in its own profile (install.sh SUITE_APPS).
 APPS=(linkcraft dashcraft histcraft alarmcraft modelcraft doccraft)
-SIMCRAFT_VERSION="${SIMCRAFT_VERSION:-0.5.1}"
+SIMCRAFT_VERSION="${SIMCRAFT_VERSION:-0.6.0}"
 # The oldest installed version this bundle updates (install.sh refuses older ones).
 UPGRADE_FROM="${UPGRADE_FROM:-0.1.0}"
 RELEASE_KEY="${RELEASE_KEY:-}"
@@ -289,6 +289,14 @@ tar -C "$DIST" -czf "$DIST/$NAME.tar.gz" "$NAME"
 if [ -n "$RELEASE_KEY" ]; then
     PYTHONPATH="$ROOT" "$PYTHON" -m plantcraft.apps.release sign-file "$DIST/$NAME.tar.gz.sha256" \
         --key "$RELEASE_KEY"
+fi
+# A release host may limit each file (GitHub: under 2 GiB): a bigger archive is also written in
+# parts of 1900 MiB, joined back with `cat <name>.tar.gz.part-* > <name>.tar.gz`. The hash and its
+# signature are of the whole archive, so they check the joined file.
+rm -f "$DIST/$NAME.tar.gz.part-"*
+if [ "$(wc -c <"$DIST/$NAME.tar.gz")" -ge 2000000000 ]; then
+    split -b 1900m "$DIST/$NAME.tar.gz" "$DIST/$NAME.tar.gz.part-"
+    log "Split into $(ls "$DIST/$NAME.tar.gz.part-"* | wc -l) parts for release hosts that limit a file to 2 GiB"
 fi
 log "Done: $DIST/$NAME.tar.gz ($(du -h "$DIST/$NAME.tar.gz" | cut -f1))"
 log "Publish this hash with the release so the client can check the download:"

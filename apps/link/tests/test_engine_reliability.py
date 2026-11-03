@@ -241,11 +241,15 @@ def test_the_tick_prunes_the_health_history_at_most_hourly():
         migrate_asset_schedules=lambda: 0,
         add_model_examples=lambda: None,
         retire_old_series=lambda: None,
+        release_disk=lambda: calls.append("release") or 0,
     )
     Runtime.tick(runtime)
     Runtime.tick(runtime)
-    # Old summaries thinned until none is left, then the stalled schedules every 5 minutes.
-    assert calls == ["thin", 90, 90, ("full", 14), ("full", 14), 90, 50, "stalled"]
+    # Old summaries thinned until none is left, the freed pages handed back to the disk, then
+    # the stalled schedules every 5 minutes.
+    assert calls == [
+        "thin", 90, 90, ("full", 14), ("full", 14), 90, 50, "release", "stalled"
+    ]  # fmt: skip
 
 
 def test_old_finished_runs_are_pruned_but_each_subject_keeps_its_newest(tmp_path):

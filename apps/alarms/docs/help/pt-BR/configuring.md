@@ -79,7 +79,7 @@ não agir e a ação corretiva: um alarme sem uma ação para o operador não de
 
 ## Saídas
 
-- **Alarms**: sempre; o alarme é listado para reconhecer, suprimir e comentar.
+- **Alarms**: sempre; o alarme é listado para reconhecer, arquivar e comentar.
 - **Dashboards** (ligada): seus alarmes colorem seus ativos e aparecem nos widgets de alarmes
   ativos do View e da Visão geral.
 - **Mensagens** (ligada, para o responsável): nas Mensagens do PlantCraft, agrupadas, com

@@ -6,6 +6,8 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **Compile a model, and see whether it is compiled.** **Compile** on a model's page builds the
