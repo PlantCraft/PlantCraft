@@ -44,6 +44,8 @@ MAX_RAW_DAYS = 7
 MAX_SIGNALS = 500
 Id = Annotated[str, StringConstraints(min_length=1, max_length=300)]
 Aggregate = Literal["mean", "first", "last", "min", "max"]
+# A saved export sent to the data lake folder every hour or day (``export.lake``), or not.
+Lake = Literal["off", "hourly", "daily"]
 
 
 class ExportRequest(BaseModel):
@@ -78,6 +80,7 @@ class SavedExport(BaseModel):
     step_seconds: int | None = Field(default=None, ge=1, le=86400)
     aggregate: Aggregate = "mean"
     anonymize: bool = False
+    lake: Lake = "off"
 
 
 def _person(user: User) -> None:
@@ -306,6 +309,12 @@ def options(runtime: RuntimeDep, user: CurrentUser, scope: Scope) -> dict[str, A
         "max_days": MAX_DAYS,
         "max_raw_days": MAX_RAW_DAYS,
         "max_signals": MAX_SIGNALS,
+        # The data lake feed: the folder the collector writes to, as this server sees it.
+        "lake": {
+            "folder": str(runtime.settings.lake_path),
+            "keep_days": runtime.settings.lake_keep_days,
+            "can_schedule": user.is_admin and user.demo is None,
+        },
     }
 
 
@@ -346,7 +355,10 @@ def resolve(
 @router.get("/saved")
 def saved_exports(runtime: RuntimeDep, user: CurrentUser) -> list[dict[str, Any]]:
     _person(user)
-    return runtime.saved_exports.list()
+    return [
+        {**item, "lake": item.get("lake") or "off", "lake_state": _lake_state(runtime, item)}
+        for item in runtime.saved_exports.list()
+    ]
 
 
 @router.post("/saved", status_code=201)
@@ -354,22 +366,67 @@ def save_export(body: SavedExport, runtime: RuntimeDep, user: CurrentUser) -> di
     """Anyone who exports may save a choice; its author or an editor changes it."""
 
     _saves(user)
-    return runtime.saved_exports.create(body.name, _payload(body), user.username)
+    _lake_allowed(user, body.lake)
+    saved = runtime.saved_exports.create(body.name, _payload(body), user.username)
+    _lake_audit(runtime, user, saved, "off")
+    return saved
 
 
 @router.put("/saved/{export_id}")
 def update_export(
     export_id: str, body: SavedExport, runtime: RuntimeDep, user: CurrentUser
 ) -> dict[str, Any]:
-    _owned(runtime, export_id, user)
-    return runtime.saved_exports.update(export_id, body.name, _payload(body), user.username) or {}
+    found = _owned(runtime, export_id, user)
+    _lake_allowed(user, body.lake, found.get("lake") or "off")
+    saved = runtime.saved_exports.update(export_id, body.name, _payload(body), user.username) or {}
+    _lake_audit(runtime, user, saved, found.get("lake") or "off")
+    return saved
 
 
 @router.delete("/saved/{export_id}")
 def delete_export(export_id: str, runtime: RuntimeDep, user: CurrentUser) -> dict[str, Any]:
-    _owned(runtime, export_id, user)
+    found = _owned(runtime, export_id, user)
+    _lake_allowed(user, "off", found.get("lake") or "off")
     runtime.saved_exports.delete(export_id)
+    _lake_audit(runtime, user, {**found, "lake": "off"}, found.get("lake") or "off")
     return {"deleted": export_id}
+
+
+def _lake_allowed(user: User, lake: str, before: str = "off") -> None:
+    """A feed runs as nobody, with no asset scope: only an administrator turns one on, and
+    changes or deletes an export whose feed is on."""
+
+    if (lake != "off" or before != "off") and not user.is_admin:
+        raise HTTPException(403, t("Only an administrator sends a saved export to the data lake."))
+
+
+def _lake_audit(runtime: Runtime, user: User, saved: dict[str, Any], before: str) -> None:
+    lake = saved.get("lake") or "off"
+    if lake == "off" and before == "off":
+        return
+    runtime.audit(
+        user,
+        "export.lake",
+        f"export:{saved.get('id', '')}",
+        {"lake": lake, "before": before, "signals": len(saved.get("signals") or [])},
+    )
+
+
+def _lake_state(runtime: Runtime, saved: dict[str, Any]) -> dict[str, Any] | None:
+    """Where an export's feed is: the next period, the last file, its rows and any problem."""
+
+    if (saved.get("lake") or "off") == "off":
+        return None
+    found = runtime.lake_feeds.all().get(saved["id"])
+    if not found:
+        return {"next": None, "last_file": "", "last_rows": 0, "problem": "", "updated": None}
+    return {
+        "next": datetime.fromtimestamp(found["next_start"] / 1000, timezone.utc).isoformat(),
+        "last_file": found["last_file"],
+        "last_rows": found["last_rows"],
+        "problem": found["last_error"],
+        "updated": found["updated"],
+    }
 
 
 def _payload(body: SavedExport) -> dict[str, Any]:
