@@ -27,7 +27,7 @@ def test_manifest_matches_the_code_the_package_and_the_suite_table():
     assert APP["runtime"]["uid"] == SUITE_ROW["uid"]
     assert APP["permissions"]["plant_write"] is False
     assert APP["permissions"]["outbound"] == []
-    sdk = re.search(r"plantcraft-sdk==([0-9.]+)", (ROOT / "Makefile").read_text())
+    sdk = re.search(r"plantcraft-sdk==([0-9.]+)", (ROOT / "pyproject.toml").read_text())
     assert sdk and APP["requires"]["sdk"] == sdk.group(1)
 
 

@@ -26,7 +26,7 @@ def test_manifest_matches_the_code_and_the_package():
     assert APP["runtime"]["prefix"] == Settings().root_path + "/"
     assert APP["permissions"]["plant_write"] is False
     assert APP["permissions"]["outbound"] == []
-    sdk = re.search(r"plantcraft-sdk==([0-9.]+)", (ROOT / "Makefile").read_text())
+    sdk = re.search(r"plantcraft-sdk==([0-9.]+)", (ROOT / "pyproject.toml").read_text())
     assert sdk and APP["requires"]["sdk"] == sdk.group(1)
 
 
