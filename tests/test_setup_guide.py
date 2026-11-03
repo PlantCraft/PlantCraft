@@ -128,3 +128,11 @@ def test_each_mission_has_its_work():
     works = {work.spec.id for work in WorkRegistry().all()}
     for mission in setup_guide.missions():
         assert f"mission-{mission.id}" in works
+
+
+def test_the_starter_model_is_off_until_turned_on(signed, monkeypatch):
+    monkeypatch.delenv("PLANTCRAFT_STARTER_MODEL", raising=False)
+    assert _steps(signed)["model"]["facts"]["starter_model"] == {"available": False, "url": None}
+    monkeypatch.setenv("PLANTCRAFT_STARTER_MODEL", "on")
+    found = _steps(signed)["model"]["facts"]["starter_model"]
+    assert found["available"] is True and found["url"].startswith("https://")

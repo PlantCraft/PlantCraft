@@ -47,3 +47,7 @@ plantcraft --scenario <a copy of deploy/site/site.json with local paths>
 
 Then sign in as an administrator, add the provider "OpenAI-compatible" at
 `http://127.0.0.1:11999/v1` with any model name on Settings › Language models, and follow the robot.
+
+## Missions and the starter model
+
+After the setup steps the guide offers first missions (ask about the plant, a first Analytics round, a first alarm, a shared dashboard, a notebook); each is done once the person did it anywhere, read from their audit log. A small credit of PlantCraft's own model for the first step is designed but off: see [starter-model.md](starter-model.md).

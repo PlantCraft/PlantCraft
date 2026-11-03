@@ -21,6 +21,7 @@ hid the robot (their own preference).
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass
 from typing import Any
 
@@ -211,14 +212,27 @@ def hide(rt: Any, username: str, value: bool) -> None:
     rt.workspace.preferences.put(username, KEY, {"hidden": bool(value)})
 
 
+STARTER_URL = "https://plantcraft.io/api/starter-model"
+
 # What the installation shows -------------------------------------------------------------
+
+
+def starter_model() -> dict[str, Any]:
+    """PlantCraft's own model with a small credit per installation (docs/starter-model.md).
+
+    Off until PLANTCRAFT_STARTER_MODEL=on: the hosted side (plantcraft.io) is not live and
+    turning it on is a spending decision. Off, the model step asks for the installation's own
+    model, as before."""
+    on = (os.environ.get("PLANTCRAFT_STARTER_MODEL") or "off").strip().lower() == "on"
+    url = (os.environ.get("PLANTCRAFT_STARTER_MODEL_URL") or STARTER_URL).strip()
+    return {"available": on, "url": url if on else None}
 
 
 def _model(rt: Any) -> dict[str, Any]:
     store = rt.specialist_chat.store
     allowed = bool(store.settings().get("allowed"))
     found = store.use_model("assistant") if allowed else None
-    facts: dict[str, Any] = {"models_allowed": allowed}
+    facts: dict[str, Any] = {"models_allowed": allowed, "starter_model": starter_model()}
     if found is not None:
         facts["model"] = found.get("label") or found.get("name") or ""
     return {"done": found is not None, "facts": facts}
