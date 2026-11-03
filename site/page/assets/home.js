@@ -56,31 +56,31 @@ const EX=[
  steps:[
  {b:'Feed flow',l:1,t:'The raw signal from the historian: last 4 days of feed flow.',s:[{d:ff,c:BLUE}]},
  {b:'Remove trend',l:2,t:'The slow rise is taken out. Only the fast changes are left.',s:[{d:ff,c:GREY,w:1},{d:ffd.map(v=>v+50),c:BLUE}]},
- {b:'Variability',l:3,t:'How much it moves in each hour. It grows in the last two days.',s:[{d:std,c:BLUE,fill:1}]},
+ {b:'Variability',l:3,t:'How much it moves each hour. It grows in the last two days.',s:[{d:std,c:BLUE,fill:1}]},
  {b:'vs baseline',l:4,t:'Recent variability against the normal level for this signal.',s:[{d:std,c:BLUE},{d:ix.map(()=>1),c:RED,dash:1,lab:'baseline'}],hi:[72,95]},
- {b:'Result',l:5,t:'3.1 times the baseline: flagged as a high disturbance for the feed line.',bars:[['Baseline',1,GREY],['Last day',3.1,RED]]}]},
+ {b:'Result',l:5,t:'3.1× the baseline: a high disturbance on the feed line.',bars:[['Baseline',1,GREY],['Last day',3.1,RED]]}]},
 {asset:'Analyzer AT-210',goal:'Detect a frozen analyzer signal (AT-210)',tag:'Data quality',res:'Frozen signal since 03:00',
  py:['<span class="c"># open Python behind these blocks</span>','<span class="k">def</span> frozen(x, noise, hours=6):','    change = rolling_change(x, "10min")','    flat = change &lt; noise           <span class="c"># Below noise level</span>','    run = longest_run(flat)','    <span class="k">return</span> run &gt;= hours   <span class="c"># 9 h → frozen</span>'],
  steps:[
  {b:'Signal',l:1,t:'The analyzer value. It looks normal at first sight.',s:[{d:an,c:BLUE}]},
  {b:'Rolling change',l:2,t:'How much the value changes from one sample to the next.',s:[{d:dif,c:BLUE,fill:1}]},
- {b:'Below noise',l:3,t:'A real analyzer always moves a little. Here it stops moving at all.',s:[{d:dif,c:BLUE},{d:ix.map(()=>.04),c:RED,dash:1,lab:'noise level'}],hi:[60,95]},
+ {b:'Below noise',l:3,t:'A real analyzer always moves a little. This one stopped.',s:[{d:dif,c:BLUE},{d:ix.map(()=>.04),c:RED,dash:1,lab:'noise level'}],hi:[60,95]},
  {b:'For 6 hours',l:4,t:'It has stayed flat for 9 hours, longer than the 6-hour limit.',s:[{d:an,c:BLUE}],hi:[60,95],hl:'9 h flat'},
- {b:'Result',l:5,t:'Frozen since 03:00. Check the analyzer before trusting its value.',bars:[['Limit',6,GREY],['Flat for',9,RED]],u:' h'}]},
+ {b:'Result',l:5,t:'Frozen since 03:00. Check the analyzer before trusting it.',bars:[['Limit',6,GREY],['Flat for',9,RED]],u:' h'}]},
 {asset:'Boiler B-1',goal:'Track steam use per ton on boiler B-1',tag:'Energy',st:'warn',res:'Uses 8 % more steam per ton than its target',
  py:['<span class="c"># open Python behind these blocks</span>','<span class="k">def</span> specific_use(steam, prod):','    s, p = daily(steam), daily(prod)','    r = s / p                      <span class="c"># Ratio</span>','    gap = r[-15:].mean() / TARGET - 1','    <span class="k">return</span> gap  <span class="c"># +8 % (lower is better)</span>'],
  steps:[
  {b:'Steam flow',l:2,t:'Tons of steam used each day, last 30 days.',s:[{d:steam,c:BLUE,bar:1}]},
  {b:'Production',l:2,t:'Tons produced each day. Weekends are lower.',s:[{d:prod,c:GREY,bar:1}]},
- {b:'Ratio',l:3,t:'Steam per ton of product. It does not depend on how much was produced. Lower is better.',s:[{d:ratio,c:BLUE}],yl:'t steam / t product'},
- {b:'vs target',l:4,t:'Up to day 15 it was on target. Since then it uses more steam for each ton.',s:[{d:ratio,c:BLUE},{d:ratio.map(()=>2.1),c:GRN,dash:1,lab:'target 2.10'}],hi:[15,29],hc:AMB,hl:'+8 % above target',yl:'t steam / t product'},
- {b:'Result',l:5,t:'8 % more steam per ton than the target. Not urgent, but worth a look at the boiler.',bars:[['Target',2.1,GRN],['Last 15 days',2.27,AMB]],u:' t/t'}]},
+ {b:'Ratio',l:3,t:'Steam per ton of product. Lower is better.',s:[{d:ratio,c:BLUE}],yl:'t steam / t product'},
+ {b:'vs target',l:4,t:'On target up to day 15. Since then, more steam per ton.',s:[{d:ratio,c:BLUE},{d:ratio.map(()=>2.1),c:GRN,dash:1,lab:'target 2.10'}],hi:[15,29],hc:AMB,hl:'+8 % above target',yl:'t steam / t product'},
+ {b:'Result',l:5,t:'8 % above target. Not urgent, but worth a look at the boiler.',bars:[['Target',2.1,GRN],['Last 15 days',2.27,AMB]],u:' t/t'}]},
 {asset:'Pump P-101',goal:'Watch the vibration of pump P-101',tag:'Equipment',st:'ok',res:'Healthy: vibration within its normal range',
  py:['<span class="c"># open Python behind these blocks</span>','<span class="k">def</span> vibration_ok(v, band):','    d = daily_mean(v)              <span class="c"># Daily average</span>','    inside = band.low &lt;= d &lt;= band.high','    <span class="k">return</span> inside.all()  <span class="c"># True → OK</span>'],
  steps:[
  {b:'Vibration',l:1,t:'Pump vibration from the historian, last 30 days.',s:[{d:vib,c:BLUE,w:1}],yl:'mm/s'},
  {b:'Daily average',l:2,t:'The average of each day, so short peaks do not count.',s:[{d:vib,c:GREY,w:1},{d:vibd,c:BLUE}],yl:'mm/s'},
- {b:'Normal range',l:3,t:'The range this pump had over the last year. Every day stays inside it.',s:[{d:vibd,c:BLUE},{d:vib.map(()=>3.2),c:GRN,dash:1,lab:'normal range'},{d:vib.map(()=>1.2),c:GRN,dash:1}],yl:'mm/s'},
+ {b:'Normal range',l:3,t:'Its range over the last year. Every day stays inside it.',s:[{d:vibd,c:BLUE},{d:vib.map(()=>3.2),c:GRN,dash:1,lab:'normal range'},{d:vib.map(()=>1.2),c:GRN,dash:1}],yl:'mm/s'},
  {b:'Result',l:4,t:'Nothing to do. Analytics keeps checking it every day.',bars:[['Upper limit',3.2,GREY],['Last 30 days',2.1,GRN]],u:' mm/s'}]},
 {asset:'Valve FV-104',goal:'Detect a sticking control valve (FV-104)',tag:'Equipment',res:'Valve sticking: moves in jumps',
  py:['<span class="c"># open Python behind these blocks</span>','<span class="k">def</span> stiction(op, pos):','    steps = step_changes(pos)      <span class="c"># jumps</span>','    lag = lag_between(op, steps)','    <span class="k">return</span> len(steps), lag  <span class="c"># '+jumps.length+' jumps</span>'],
@@ -107,7 +107,7 @@ function plot(st){const W=520,H=150,P=8;
  return `<svg viewBox="0 0 ${W} ${H}" class="plt">${g}</svg>`}
 function showStep(i){const e=EX[ex%EX.length],st=e.steps[i];sel=i;
  $$('#chain .blk').forEach((b,j)=>{b.classList.toggle('lit',j<=i||b.dataset.done==='1');b.classList.toggle('sel',j===i)});
- const last=i===e.steps.length-1;$('#exdot').className='rdot '+(last?(e.st||'alarm'):'off');$('#dstep').textContent=`${st.b}:`;$('#dtext').textContent=st.t;
+ const last=i===e.steps.length-1;$('#exdot').className='rdot '+(last?(e.st||'alarm'):'off');$('#dtext').textContent=st.t;
  $('#dplot').innerHTML=plot(st);
  $('#py').innerHTML=e.py.map((l,j)=>`<span class="ln${j===st.l?' on':''}">${l}</span>`).join('\n')}
 ANIM.open=async(id)=>{const e=EX[ex%EX.length];$('#exgoal').textContent=e.goal;

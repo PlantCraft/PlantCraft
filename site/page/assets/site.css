@@ -397,3 +397,4 @@ footer{padding-bottom:46px}.launchers{bottom:84px}
 .dline .rdot{display:inline-block;margin-right:6px;vertical-align:1px}
 .dline .rdot.off{display:none}
 @media (max-width:760px){.vopen .chain{flex-wrap:wrap;overflow:visible}.vopen .blk{overflow:visible;text-overflow:clip}}
+.vopen .dline{min-height:0;margin:10px 0 0;font-size:14px}
