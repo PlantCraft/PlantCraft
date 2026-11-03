@@ -4,6 +4,7 @@
 import { NextSteps, type JourneyStep, Heading } from "@plantcraft/ui";
 import { t } from "./i18n";
 import { navigate } from "./nav";
+import { openSetupGuide } from "./setupGuideApi";
 
 /** The Setup tiles, in two groups. Only what has no other place in the menu:
  * sources are the Historian's, asset types are in Assets, people, groups and specialists in Users,
@@ -36,6 +37,10 @@ export function setupGroups(): { title: string; items: JourneyStep[] }[] {
 export function SetupPage() {
   return <>
     <Heading title={t("Settings")} />
+    <section className="panel setup-guide-tile">
+      <div><strong>{t("Setup guide")}</strong><p className="muted">{t("The robot that walks you through a new installation, step by step: the language model, the plant's data, the asset tree, the apps' first steps and your team.")}</p></div>
+      <button type="button" className="button button-secondary" onClick={openSetupGuide}>{t("Open the setup guide")}</button>
+    </section>
     {setupGroups().map((group) => <NextSteps key={group.title} title={group.title} navigate={navigate} limit={group.items.length} items={group.items} />)}
   </>;
 }

@@ -1,0 +1,93 @@
+/* The setup guide (SetupGuide.tsx): the robot in the corner, its bubble and its card. */
+.setup-guide { position: fixed; right: 20px; bottom: 20px; z-index: 900; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; pointer-events: none; font-size: var(--pc-fs-sm); }
+.setup-guide > * { pointer-events: auto; }
+
+.guide-launcher { position: relative; width: 60px; height: 60px; border: 1px solid var(--pc-border); border-radius: 50%; background: var(--pc-surface); box-shadow: 0 6px 20px rgb(0 0 0 / 0.16); display: grid; place-items: center; cursor: pointer; padding: 0; transition: transform 160ms ease; }
+.guide-launcher:hover { transform: translateY(-2px); }
+.guide-launcher:focus-visible { outline: 2px solid var(--pc-focus); outline-offset: 2px; }
+.guide-badge { position: absolute; top: -4px; right: -6px; min-width: 26px; padding: 1px 6px; border-radius: 999px; background: var(--pc-primary); color: var(--pc-on-accent); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; box-shadow: 0 1px 3px rgb(0 0 0 / 0.2); }
+
+/* The robot. */
+.guide-robot { overflow: visible; }
+.guide-robot-head { fill: var(--pc-primary); }
+.guide-robot-ear, .guide-robot-neck { fill: var(--pc-primary-hover); }
+.guide-robot-face { fill: #0f2236; }
+.guide-robot-eyes ellipse { fill: #7fe3ff; }
+.guide-robot-eyes path { fill: none; stroke: #7fe3ff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.guide-robot-mouth { fill: #7fe3ff; animation: guide-talk 900ms ease-in-out infinite; transform-origin: 32px 40px; }
+.guide-robot-antenna { stroke: var(--pc-primary-hover); stroke-width: 3; stroke-linecap: round; }
+.guide-robot-light { fill: var(--pc-attention-fill); animation: guide-glow 2.4s ease-in-out infinite; }
+.guide-robot-blink { animation: guide-blink 5s infinite; transform-origin: 32px 32px; }
+.guide-robot-idle, .guide-robot-talk { animation: guide-bob 3.2s ease-in-out infinite; }
+.guide-robot-cheer { animation: guide-hop 600ms ease-in-out 3; }
+.guide-robot-cheer .guide-robot-light { fill: var(--pc-good-fill); }
+.guide-robot-sleep .guide-robot-light { fill: var(--pc-inactive-fill); animation: none; }
+@keyframes guide-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes guide-hop { 0%, 100% { transform: translateY(0) rotate(0); } 40% { transform: translateY(-6px) rotate(-6deg); } 70% { transform: translateY(-3px) rotate(5deg); } }
+@keyframes guide-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes guide-glow { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes guide-talk { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.55); } }
+@media (prefers-reduced-motion: reduce) {
+  .guide-robot, .guide-robot * { animation: none !important; }
+}
+
+/* The bubble: what comes now, in one line. */
+.guide-bubble { max-width: 280px; display: flex; align-items: flex-start; gap: 4px; padding: 8px 8px 8px 12px; border: 1px solid var(--pc-border); border-radius: 14px 14px 4px 14px; background: var(--pc-surface); color: var(--pc-text-2); box-shadow: 0 4px 16px rgb(0 0 0 / 0.12); animation: guide-in 220ms ease-out; }
+.guide-bubble-text { border: 0; padding: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; line-height: 1.4; }
+.guide-icon-button { flex: none; border: 0; padding: 4px; border-radius: 6px; background: none; color: var(--pc-text-4); cursor: pointer; display: inline-grid; place-items: center; }
+.guide-icon-button:hover { background: var(--pc-inactive-soft); color: var(--pc-text-2); }
+@keyframes guide-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* The card. */
+.guide-card { width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 120px); overflow: auto; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); background: var(--pc-surface); color: var(--pc-text-2); box-shadow: 0 12px 40px rgb(0 0 0 / 0.2); animation: guide-in 200ms ease-out; }
+.guide-card-head { display: flex; align-items: center; gap: 10px; padding: 12px 12px 8px 14px; }
+.guide-card-title { flex: 1; display: flex; flex-direction: column; line-height: 1.25; }
+.guide-card-title strong { color: var(--pc-text); font-size: var(--pc-fs-md, 15px); }
+.guide-card-title span { color: var(--pc-text-3); font-size: 12px; }
+.guide-progress { height: 4px; margin: 0 14px; border-radius: 999px; background: var(--pc-inactive-soft); overflow: hidden; }
+.guide-progress span { display: block; height: 100%; background: var(--pc-good-fill); transition: width 400ms ease; }
+.guide-cheer { margin: 10px 14px 0; padding: 6px 10px; border-radius: 8px; background: var(--pc-good-soft); color: var(--pc-good-text); display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.guide-step-body { padding: 10px 14px 4px; }
+.guide-step-body h3 { margin: 0 0 4px; color: var(--pc-text); font-size: 15px; }
+.guide-step-body h3 em, .guide-step-name em { color: var(--pc-text-4); font-style: normal; font-weight: 400; }
+.guide-step-body p { margin: 0 0 6px; line-height: 1.45; }
+.guide-why { color: var(--pc-text-3); }
+.guide-note { color: var(--pc-text-3); font-size: 12px; display: flex; gap: 6px; align-items: center; }
+.guide-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 2px; }
+.guide-actions .button { display: inline-flex; align-items: center; gap: 6px; }
+.guide-actions-quiet { margin-top: 4px; gap: 14px; }
+.guide-link { border: 0; padding: 2px 0; background: none; color: var(--pc-primary-text); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.guide-link:disabled { color: var(--pc-text-4); cursor: default; }
+.guide-link:not(:disabled):hover { text-decoration: underline; }
+.guide-error { margin: 6px 14px; color: var(--pc-problem-text); display: flex; gap: 6px; align-items: flex-start; }
+.guide-all-toggle { margin: 6px 14px 0; border: 0; padding: 4px 0; background: none; color: var(--pc-text-3); font: inherit; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.guide-steps { list-style: none; margin: 4px 0 0; padding: 0 14px; }
+.guide-step-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid var(--pc-border-subtle); }
+.guide-step-dot { flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--pc-inactive-soft); color: var(--pc-text-3); }
+.guide-step-done .guide-step-dot { background: var(--pc-good-fill); color: #fff; }
+.guide-step-current .guide-step-dot { background: var(--pc-primary); color: var(--pc-on-accent); }
+.guide-step-current .guide-step-name { color: var(--pc-text); font-weight: 600; }
+.guide-step-skipped .guide-step-name, .guide-step-done .guide-step-name { color: var(--pc-text-3); }
+.guide-step-name { flex: 1; }
+.guide-card-foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; padding: 8px 14px 12px; border-top: 1px solid var(--pc-border-subtle); }
+
+/* A step's own tools: its sources, the apps' first steps. */
+.guide-sources, .guide-starts { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.guide-sources li, .guide-starts li { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border: 1px solid var(--pc-border-subtle); border-radius: 8px; }
+.guide-source-name { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.guide-source-name span { color: var(--pc-text-3); font-size: 12px; overflow-wrap: anywhere; }
+.guide-source-name .guide-source-fail { color: var(--pc-problem-text); }
+.guide-dot { flex: none; width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: var(--pc-inactive-fill); }
+.guide-dot-good { background: var(--pc-good-fill); }
+.guide-good { color: var(--pc-good-text); flex: none; }
+.guide-starts-all { border: 0 !important; padding: 0 !important; }
+
+@media (max-width: 640px) {
+  .setup-guide { right: 12px; bottom: 12px; }
+  .guide-bubble { max-width: calc(100vw - 100px); }
+}
+/* A public demo's visit clock sits at the bottom: the robot steps up. */
+body:has(.demo-visit-bar) .setup-guide { bottom: 64px; }
+.setup-guide-tile { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.setup-guide-tile p { margin: 4px 0 0; }
+@media (max-width: 640px) { .setup-guide-tile { flex-direction: column; align-items: flex-start; } }

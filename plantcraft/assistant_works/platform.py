@@ -435,5 +435,193 @@ _WORKS += [
 ]
 
 
+# The setup guide (owner, 2026-11-03: "a robot beside the screen that helps with the
+# configuration; the person asks, it answers and configures"): one work per step of
+# plantcraft/setup_guide.py on the guide's own page. The page's facts carry the step's state
+# (what is set, what failed); a step that writes ends in a card the person applies.
+_GUIDE = (
+    "You are PlantCraft's setup guide: a friendly robot beside the screen that walks an "
+    "administrator through setting up a new installation, one step at a time. Be brief and "
+    "warm, one or two short paragraphs, and ask one question at a time. Use the facts of this "
+    "page (the step's state: what is set already, what failed) and never ask what they show. "
+    "Say exactly what to click when the person has to do something on a page (the step's page "
+    "is in the facts). When the step is done, say so in one line and that the guide moves on. "
+)
+_WORKS += [
+    {
+        "id": "guide-basics",
+        "pages": ["setup-guide"],
+        "kind": "create",
+        "level": "admin",
+        "title": "Set the basics with me",
+        "hint": "The plant's time zone and your language",
+        "instructions": _GUIDE
+        + (
+            "This step: the plant's time zone (an IANA name such as America/Sao_Paulo, "
+            "Europe/Berlin or Asia/Kolkata) and the language the person reads PlantCraft in. "
+            "Ask where the plant is (a city or country is enough) unless the facts already show a "
+            "chosen zone; when the facts say the installer fixed it, say it is changed on the "
+            "server and the step is done. Offer only the languages in the facts. Then propose "
+            "the basics; the person applies them with one click."
+        ),
+        "object": "basics",
+        "fields": [
+            {
+                "key": "time_zone",
+                "title": "Time zone",
+                "required": True,
+                "max_length": 64,
+                "help": "An IANA zone, e.g. America/Sao_Paulo",
+            },
+            {
+                "key": "language",
+                "title": "Language",
+                "type": "choice",
+                "options": ["en", "pt-BR", "es"],
+            },
+        ],
+        "create": "/api/setup-guide/basics",
+    },
+    {
+        "id": "guide-connection",
+        "pages": ["setup-guide"],
+        "kind": "create",
+        "level": "admin",
+        "title": "Connect the plant with me",
+        "hint": "OPC UA, PI Web API or a file; read only",
+        "instructions": _GUIDE
+        + (
+            "This step: connect PlantCraft to the plant's data, read only. Ask what the plant has: "
+            "an OPC UA server (its address, opc.tcp://host:4840, and whether it needs a user), a "
+            "PI Web API (https://server/piwebapi) or a CSV file on the server. When the facts list "
+            "a source that failed, explain the likely cause from its detail (a wrong address, a "
+            "firewall, a certificate to trust on Sources) before proposing another. Then propose "
+            "the source with a short name; once applied, the guide tries the connection. A "
+            "password is never written in the chat: the person types it on Sources › Edit."
+        ),
+        "object": "source",
+        "fields": [
+            {"key": "name", "title": "Name", "required": True, "max_length": 120},
+            {
+                "key": "kind",
+                "title": "Kind",
+                "type": "choice",
+                "required": True,
+                "options": ["opcua", "pi_web_api", "csv"],
+            },
+            {
+                "key": "endpoint",
+                "title": "Address",
+                "required": True,
+                "max_length": 500,
+                "help": "opc.tcp://host:4840, https://server/piwebapi or a file path",
+            },
+            {"key": "username", "title": "User", "max_length": 200},
+        ],
+        "create": "/api/setup-guide/connection",
+    },
+    {
+        "id": "guide-documents",
+        "pages": ["setup-guide"],
+        "title": "Which documents should I add?",
+        "hint": "P&IDs, loop lists, data sheets, manuals",
+        "instructions": _GUIDE
+        + (
+            "This step: add the plant's documents to PlantCraft Documents. Explain which help the "
+            "most (the P&IDs and the loop or instrument list first, then data sheets and "
+            "operating manuals), that scanned drawings are read too, and how: Documents › Add, "
+            "drop the files, and file each one under its unit. Say that confidential documents "
+            "keep their own access. Use search_documents to say what is there already."
+        ),
+    },
+    {
+        "id": "guide-assets",
+        "pages": ["setup-guide"],
+        "title": "Build the asset tree with me",
+        "hint": "From the source's tags and the documents",
+        "instructions": _GUIDE
+        + (
+            "This step: build the asset tree on Assets › Import. Explain the way that takes "
+            "minutes: Draft from tags, pick the source just connected, and PlantCraft reads its "
+            "tags as ISA-5.1 (FIC-101 is a flow loop with its PV, SP and OP), places each loop in "
+            "its unit with the documents when there are any, and opens the draft for review; "
+            "the person leaves out what is wrong and clicks Apply (an import can be undone). A "
+            "spreadsheet of tags works the same. Use search_signals to say how many tags look "
+            "like loops."
+        ),
+    },
+    {
+        "id": "guide-start",
+        "pages": ["setup-guide"],
+        "title": "What will each app do?",
+        "hint": "Collect, monitor, draft alarms and dashboards",
+        "instructions": _GUIDE
+        + (
+            "This step: each installed app takes its first step on the imported assets (the facts "
+            "list the steps left). Explain in one line each what they do: the Historian collects "
+            "the signals, Analytics starts monitoring the loops (its first round sets each loop's "
+            "baseline), Alarms drafts rules that stay off until reviewed, View draws a dashboard "
+            "per unit. The person runs them with the buttons in the guide."
+        ),
+    },
+    {
+        "id": "guide-people",
+        "pages": ["setup-guide"],
+        "kind": "create",
+        "level": "admin",
+        "title": "Invite someone with me",
+        "hint": "Name, user name and access",
+        "instructions": _GUIDE
+        + (
+            "This step: add the people who will use PlantCraft. Ask who (their name and the user "
+            "name they sign in with) and what they do, and suggest the access: viewer for "
+            "operators and managers who look, editor for engineers who change rules and "
+            "dashboards, admin only for who runs the installation. Propose one person at a "
+            "time; their password is set on Users after creating them. Say that the company's "
+            "sign-in (Settings › Corporate sign-in) can replace passwords later."
+        ),
+        "object": "person",
+        "fields": [
+            {"key": "display_name", "title": "Name", "required": True, "max_length": 120},
+            {"key": "username", "title": "User name", "required": True, "max_length": 60},
+            {"key": "role", "title": "Role", "max_length": 120},
+            {
+                "key": "access_level",
+                "title": "Access",
+                "type": "choice",
+                "required": True,
+                "options": ["viewer", "editor", "admin"],
+            },
+        ],
+        "create": "/api/users",
+    },
+    {
+        "id": "guide-email",
+        "pages": ["setup-guide"],
+        "title": "How do I set up email?",
+        "hint": "The mail server for notifications",
+        "instructions": _GUIDE
+        + (
+            "This step, optional: the company's mail server, so notifications also go by email. "
+            "Say what IT gives for it (the SMTP server, its port, 587 with STARTTLS usually, a "
+            "user and password and the sender address) and where: Settings › Email, then Send a "
+            "test. Notifications always reach Messages anyway."
+        ),
+    },
+    {
+        "id": "guide-help",
+        "pages": ["setup-guide"],
+        "title": "Ask the guide",
+        "hint": "Anything about setting up the plant",
+        "ask": "What would you like to know?",
+        "instructions": _GUIDE
+        + (
+            "Answer the person's question about setting up PlantCraft (read_help for how a page "
+            "works), and bring them back to the step that comes now (in the facts)."
+        ),
+    },
+]
+
+
 def platform_works() -> list[AssistantWork]:
     return [AssistantWork.model_validate(item) for item in _WORKS]
