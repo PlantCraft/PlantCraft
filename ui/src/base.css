@@ -942,7 +942,7 @@ button.pc-version:hover { border-color: color-mix(in srgb, var(--pc-primary) 35%
 .pc-chart-popover-messages .pc-drawer-question { margin: 0; color: var(--pc-text-2); font-weight: 600; }
 .pc-chart-popover-composer { display: flex; align-items: flex-end; gap: var(--pc-space-2); padding: var(--pc-space-2) var(--pc-space-3); border-top: 1px solid var(--pc-border-subtle); }
 .pc-chart-popover-composer textarea { flex: 1; min-height: 34px; max-height: 120px; resize: vertical; padding: 6px 8px; border: 1px solid var(--pc-border); border-radius: var(--pc-radius-md); background: var(--pc-surface); color: var(--pc-text); font: inherit; }
-.pc-chart-popover-composer button { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: var(--pc-radius-md); background: var(--pc-primary); color: var(--pc-on-primary, #fff); cursor: pointer; }
+.pc-chart-popover-composer button { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: var(--pc-radius-md); background: var(--pc-primary); color: var(--pc-on-accent); cursor: pointer; }
 .pc-chart-popover-composer button:disabled { opacity: .45; cursor: default; }
 .pc-chart-popover > footer { display: flex; align-items: center; justify-content: space-between; gap: var(--pc-space-2); padding: 0 var(--pc-space-3) var(--pc-space-2); color: var(--pc-text-3); font-size: var(--pc-fs-xs); }
 .pc-chart-popover-desk { display: inline-flex; align-items: center; gap: 4px; border: 0; background: transparent; color: var(--pc-primary-text); font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; }
