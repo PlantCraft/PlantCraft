@@ -81,6 +81,10 @@
 /* A public demo visit's clock (DemoVisit.tsx): above every screen, the apps' frames included. */
 .demo-visit-bar { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 1000; max-width: calc(100vw - 32px); padding: calc(5px * var(--pc-space-scale, 1)) calc(6px * var(--pc-space-scale, 1)) calc(5px * var(--pc-space-scale, 1)) var(--pc-space-3); border: 1px solid var(--pc-border); border-radius: 999px; background: var(--pc-surface); color: var(--pc-text-2); box-shadow: 0 4px 16px rgb(0 0 0 / 0.12); display: flex; align-items: center; gap: var(--pc-space-2); font-size: var(--pc-fs-sm); white-space: nowrap; }
 .demo-visit-bar > svg { flex: none; color: var(--pc-primary-text); }
+/* The clock sits over the bottom of the window: the assistant's box (Desk's page, the side panel
+   drawn by the platform, Messages) keeps clear of it (recording, 2026-11-03). */
+body:has(.demo-visit-bar) .asst-composer { margin-bottom: 64px; }
+body:has(.demo-visit-bar) :is(.pc-drawer-composer, .msg-composer) { padding-bottom: 62px; }
 .demo-visit-clock { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
 .demo-visit-note { overflow: hidden; text-overflow: ellipsis; }
 .demo-visit-leave { padding: calc(3px * var(--pc-space-scale, 1)) calc(10px * var(--pc-space-scale, 1)); border: 0; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-text); display: inline-flex; align-items: center; gap: var(--pc-space-1); font: inherit; font-weight: 600; cursor: pointer; }

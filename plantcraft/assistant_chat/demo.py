@@ -34,6 +34,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from plantcraft.auth.public_demo import VISIT_OWNER, public_demo
 from plantcraft.config import plant_timezone
@@ -58,6 +59,10 @@ class DemoAssistant:
     history: int = 12
     tool_calls: int = 16
     max_answer: int = 4000
+    # Seconds an answer may take in all: past them the model answers with what it read, and
+    # one call to the model waits ``call_seconds`` at most (a visitor does not wait minutes).
+    seconds: int = 75
+    call_seconds: int = 60
 
     def as_dict(self) -> dict[str, int]:
         return {"questions": self.questions, "max_text": self.max_text}
@@ -89,6 +94,8 @@ def demo_assistant() -> DemoAssistant | None:
         history=_number("HISTORY", 12, 2, 30),
         tool_calls=_number("TOOL_CALLS", 16, 1, 64),
         max_answer=_number("MAX_ANSWER", 4000, 200, 32_000),
+        seconds=_number("SECONDS", 75, 15, 600),
+        call_seconds=_number("CALL_SECONDS", 60, 10, 300),
     )
 
 
@@ -126,10 +133,35 @@ def plant_day_start() -> str:
     )
 
 
-# Seconds visits stop asking after the model service refused the installation (429, 401, 403).
+# Seconds visits stop asking after the model service refused the installation: no credit left
+# or the key refused (``PAUSING``), for long; only limited a moment (429 "rate limit", which the
+# model's client already waited for and asked again), for a short while: ten minutes of "cannot
+# answer right now" for every visit after one busy minute was too much (2026-11-03).
 PAUSE_SECONDS = 600
-# The service codes that pause the visits: no credit or limited (429), key refused (401, 403).
-PAUSING_CODES = (401, 403, 429)
+SHORT_PAUSE_SECONDS = 20
+PAUSING = {
+    "no_credit": PAUSE_SECONDS,
+    "key_refused": PAUSE_SECONDS,
+    "rate_limited": SHORT_PAUSE_SECONDS,
+}
+
+
+def failure_kind(exc: BaseException) -> str:
+    """Why an answer failed, as one short word the demo's stats count (never the service's
+    text): the model service's error kind (``specialists.model.error_kind``), ``timeout``,
+    ``unreachable``, ``empty`` or ``other``."""
+
+    kind = getattr(exc, "kind", None)
+    if isinstance(kind, str) and kind:
+        return kind
+    text = str(exc).lower()
+    if "in time" in text or "timed out" in text:
+        return "timeout"
+    if "reach" in text or "way out" in text:
+        return "unreachable"
+    if "empty answer" in text or "did not finish" in text:
+        return "empty"
+    return "other"
 
 
 def unavailable() -> str:
@@ -200,9 +232,18 @@ class DemoQuestions(Store):
             ).fetchone()
         return int(found)
 
-    def answered(self, owner: str, state: str, usage: dict[str, int]) -> None:
-        """The visit's latest question was answered (``done``) or not (``failed``); its tokens
-        are added (an answer asked again after a failure spends more)."""
+    def answered(
+        self,
+        owner: str,
+        state: str,
+        usage: dict[str, int],
+        *,
+        seconds: float | None = None,
+        failure: str = "",
+    ) -> None:
+        """The visit's latest question was answered (``done``) or not (``failed``, ``failure``
+        says why); its tokens are added (an answer asked again after a failure spends more), and
+        the seconds the answer took are kept."""
 
         with self._lock, self._write() as connection:
             row = connection.execute(
@@ -220,6 +261,12 @@ class DemoQuestions(Store):
                 value = usage.get(key) if isinstance(usage, dict) else None
                 if isinstance(value, int) and value > 0:
                     total[key] = int(total.get(key, 0)) + value
+            if seconds is not None:
+                total["seconds"] = round(float(seconds), 1)
+            if failure:
+                total["failure"] = failure[:40]
+            elif state == "done":
+                total.pop("failure", None)
             connection.execute(
                 "UPDATE assistant_demo_questions SET state = ?, usage_json = ? WHERE question_id = ?",
                 (state, json.dumps(total), row[0]),
@@ -228,7 +275,10 @@ class DemoQuestions(Store):
     def totals(self, since: str) -> dict[str, int]:
         """The visits' questions since ``since``: how many, answered, failed, and the tokens."""
 
-        found = {key: 0 for key in ("questions", "answered", "failed", *USAGE_KEYS)}
+        found: dict[str, Any] = {key: 0 for key in ("questions", "answered", "failed", *USAGE_KEYS)}
+        # Why answers failed (``failure_kind``) and how long the answered ones took.
+        failures: dict[str, int] = {}
+        times: list[float] = []
         with self._lock, self._connect() as connection:
             rows = connection.execute(
                 "SELECT state, usage_json FROM assistant_demo_questions WHERE asked_at >= ?",
@@ -244,10 +294,28 @@ class DemoQuestions(Store):
                 usage = json.loads(usage_json or "{}")
             except ValueError:
                 usage = {}
+            if not isinstance(usage, dict):
+                continue
             for key in USAGE_KEYS:
-                value = usage.get(key) if isinstance(usage, dict) else None
+                value = usage.get(key)
                 if isinstance(value, int):
                     found[key] += value
+            if state == "failed":
+                why = str(usage.get("failure") or "other")
+                failures[why] = failures.get(why, 0) + 1
+            elif state == "done" and isinstance(usage.get("seconds"), (int, float)):
+                times.append(float(usage["seconds"]))
+        found["failures"] = failures
+        times.sort()
+        found["answer_seconds"] = (
+            {
+                "median": times[len(times) // 2],
+                "p90": times[min(len(times) - 1, int(len(times) * 0.9))],
+                "max": times[-1],
+            }
+            if times
+            else None
+        )
         return found
 
 
