@@ -277,9 +277,13 @@ def _languages(root: Path, manifest: AppManifest, report: Report) -> None:
         from plantcraft_sdk import i18n_check  # type: ignore[attr-defined]
     except ImportError:
         return
-    if len(manifest.app.languages) > 1:
-        for problem in i18n_check.check(root):  # pragma: no cover - present from SDK 0.101
-            report.errors.append(f"i18n: {problem}")
+    languages = [language for language in manifest.app.languages if language != "en"]
+    for locales in i18n_check.catalog_folders([root.resolve()]):
+        for language in languages:
+            coverage = i18n_check.check(locales, language)
+            for problem in coverage.problems:
+                place = coverage.catalog.relative_to(root.resolve()).as_posix()
+                report.errors.append(f"{place}: {problem}")
 
 
 def _closed(root: Path, manifest: AppManifest, report: Report) -> None:

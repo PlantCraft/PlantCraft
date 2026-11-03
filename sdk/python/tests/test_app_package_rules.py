@@ -60,6 +60,8 @@ def test_each_language_needs_both_catalogs(tmp_path):
     assert check(root).ok
     (root / "src/cpmcraft/locales/pt-BR.json").write_text('{"Loops": ["Malhas"]}')
     assert any("flat table" in error for error in check(root).errors)
+    (root / "src/cpmcraft/locales/pt-BR.json").write_text(json.dumps({"{n} loops": "malhas"}))
+    assert any("fields differ" in error for error in check(root).errors)
 
 
 def test_a_closed_app_names_its_own_licence(tmp_path):
