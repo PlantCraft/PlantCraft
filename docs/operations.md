@@ -464,11 +464,17 @@ installer writes.
 **Analytics history and its file.** Analytics keeps loop health and signal checks
 `LINKCRAFT_HISTORY_DAYS` (90 by default); past `LINKCRAFT_HISTORY_FULL_DAYS` (14) it keeps the
 last point of each hour, and every signal problem. The hourly upkeep thins a day per pass, so the
-file stops growing, but SQLite only reuses the freed pages: a file that grew before (2050 loops
-and 8214 signals reached 18.5 GB) keeps its size until it is compacted. In a quiet hour:
-`docker compose exec linkcraft linkcraft compact --dry-run`, then without `--dry-run`. It runs
-only when at least 20 % of the file is free (`--min-free`) and the disk can hold the copy, and it
-holds the database while it writes (about 16 s for 1.9 GB).
+file stops growing. A database made after 0.6.0 gives the freed pages back to the disk by itself
+(SQLite `auto_vacuum = INCREMENTAL`, up to 1 GB an hour). One made before (2050 loops and 8214
+signals reached 23.8 GB at 3 months, 9 GB of it free) is compacted once by the hourly upkeep, in
+the quiet hour `LINKCRAFT_COMPACT_HOUR` (3 by default, on the installation's clock), when no
+execution runs, at least 20 % of the file is free and the disk holds twice the live data (the
+rewrite writes a temporary copy and then the write-ahead log) plus 1 GB. The rewrite holds the
+database: the queue waits, and a change saved on a page meanwhile can fail after 30 s (about 16 s
+for 1.9 GB, a few minutes at 3 months of a large plant). The compaction also turns the mode on, so
+it happens only once; the log says when it ran or why it waited. `LINKCRAFT_COMPACT_HOUR=off`
+leaves it to a person: `docker compose exec linkcraft linkcraft compact --dry-run`, then without
+`--dry-run`.
 
 ## 5. Tests
 

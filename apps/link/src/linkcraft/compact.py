@@ -7,14 +7,21 @@ at 3 months of a 2,050-loop plant the file stayed at 23.8 GB with 9 GB of it fre
 - A new database is made with ``auto_vacuum = INCREMENTAL`` (``create_incremental``), and the
   hourly upkeep hands its free pages back a few megabytes at a time (``release_free``), each step
   a short write of its own: the file follows the history down without anyone doing anything.
-- A database made before that keeps ``auto_vacuum = NONE`` until ``linkcraft compact`` runs once:
+- A database made before that keeps ``auto_vacuum = NONE`` until it is compacted once:
   ``VACUUM`` rewrites the whole file (about 16 s for 1.9 GB on a cloud machine) and holds the
-  database meanwhile, so it runs by hand, in a quiet hour, only when enough is free and the disk
-  can hold the copy. It turns on ``INCREMENTAL`` on the way, so it is needed only that once.
+  database meanwhile. The hourly upkeep does it by itself in the quiet hour
+  (``LINKCRAFT_COMPACT_HOUR``, 3 by default, on the installation's clock; ``off`` leaves it to
+  ``linkcraft compact``), when no execution runs, at least ``MIN_FREE`` of the file is free and
+  the disk holds the copy. It turns on ``INCREMENTAL`` on the way, so it is needed only once.
+
+``VACUUM`` writes the new database twice before the old pages go: a copy in the temporary folder
+(``SQLITE_TMPDIR``, the data folder in the suite) and the same pages through the write-ahead log.
+The disk needs room for both.
 """
 
 from __future__ import annotations
 
+import os
 import shutil
 import sqlite3
 import time
@@ -29,6 +36,30 @@ INCREMENTAL = 2
 RELEASE_MAX_BYTES = 1 << 30
 RELEASE_STEP_PAGES = 2048
 RELEASE_PAUSE_SECONDS = 0.05
+# The hour (installation's clock) the hourly upkeep compacts a database made before INCREMENTAL.
+COMPACT_HOUR_ENV = "LINKCRAFT_COMPACT_HOUR"
+DEFAULT_COMPACT_HOUR = 3
+# Room the disk keeps beyond the two copies VACUUM writes.
+DISK_MARGIN_BYTES = 1 << 30
+
+
+def compact_hour() -> int | None:
+    """``LINKCRAFT_COMPACT_HOUR`` (0 to 23); ``None`` when ``off`` (compact by hand only)."""
+
+    configured = os.environ.get(COMPACT_HOUR_ENV, "").strip().lower()
+    if configured in ("off", "no", "false", "none", "-1"):
+        return None
+    try:
+        hour = int(configured) if configured else DEFAULT_COMPACT_HOUR
+    except ValueError:
+        return DEFAULT_COMPACT_HOUR
+    return hour if 0 <= hour <= 23 else DEFAULT_COMPACT_HOUR
+
+
+def room_needed(size_bytes: int, free_bytes: int) -> int:
+    """Free disk ``VACUUM`` needs: the live pages twice (temporary copy and write-ahead log)."""
+
+    return 2 * max(0, size_bytes - free_bytes) + DISK_MARGIN_BYTES
 
 
 def create_incremental(path: Path) -> bool:
@@ -114,7 +145,8 @@ def compact(path: Path, *, min_free: float = MIN_FREE, dry_run: bool = False) ->
         disk = shutil.disk_usage(path.parent).free
         if not count or free / count < min_free:
             return {**answer, "status": "skipped", "reason": f"less than {min_free:.0%} free"}
-        if disk < before - free * size:
+        answer["disk_free_bytes"] = disk
+        if disk < room_needed(before, free * size):
             return {**answer, "status": "skipped", "reason": "the disk cannot hold the copy"}
         if dry_run:
             return {**answer, "status": "would_compact"}

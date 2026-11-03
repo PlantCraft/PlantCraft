@@ -10,7 +10,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 ### Added
 
 - **App packages say what they run on, what they were tested on, their languages and whether they
-  are closed (SDK 0.102.0).** `app.toml` gains `[app] source` (`open` or `closed`) and
+  are closed (SDK 0.106.0).** `app.toml` gains `[app] source` (`open` or `closed`) and
   `languages`, `[requires] platform` (the PlantCraft versions it installs on), `[tested] platform`
   (stamped by the package build from `compat/<version>.json`) and `[license]`. PlantCraft refuses
   an install outside the ranges, warns when the version is untested, keeps the version an app was
@@ -24,6 +24,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   same check, offline (docs/app-package.md, section 8).
 - **PlantCraft PID (`/pid/`, port 8160, uid 10016)**, the first closed app: the P&ID
   reader and plant map, moved out of Documents, compiled with Nuitka and licensed.
+- Integrators' guide, "PlantCraft next to MES, data lake and your own LLM" (`docs/integrators.md`): an on-premises OpenAI-compatible model for the assistant (with Ollama's context length), agents reading through MCP, plant data into a data lake (Historian's feed files or API v1) and MES data into the Historian, with a list for IT.
+- A test of the assistant against a real Ollama server (`tests/test_ollama_live.py`, workflow `ollama.yml`): the model answers, calls a read-only tool, and a question in Desk goes through the plant's read-only tools after its provider was added in Setup › Language models. It runs on changes to the model client and the assistant, every Monday, and by hand with another model.
+- Answers from OpenAI-compatible servers (Ollama, vLLM) now keep the tokens they spent: a streamed chat completion asks for them (`stream_options.include_usage`); before, `meta.usage` stayed at zero.
 
 ### Changed
 
@@ -33,6 +36,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- Analytics: a database made before the disk was given back by itself (0.6.0 and older) is now compacted once by the hourly upkeep, in the quiet hour (`LINKCRAFT_COMPACT_HOUR`, 03:00 on the installation's clock by default; `off` leaves it to `linkcraft compact`), when no execution runs, at least 20 % of the file is free and the disk holds twice the live data. From then on it gives space back by itself. At 3 months of a 2,050-loop plant the file was 23.8 GB with 9 GB free. `linkcraft compact` now also asks for room for both copies the rewrite writes (a temporary one and the write-ahead log), not one.
+- Analytics: the engine and the server hand back the memory a round used. Python's own allocator kept the pages of millions of small values parsed in a round while a few objects in them lived on: after a round of 2,050 loops 160 MB were live and the engine held 730 MB. The image now runs Python on glibc's allocator (`PYTHONMALLOC=malloc`, two arenas), which the 60 s trim already empties: 350 to 390 MB at rest, the same rounds, a signal check about 10 % slower when it runs inside the app.
 - Public demo assistant (found recording the 0.6 video, 2026-11-03):
   - The visit's clock no longer covers the assistant's text box: the side panel's box and Desk's keep clear of it.
   - A model service that only limits the rate (429) or fails for a moment (5xx) is asked again after the wait it names, and only stops the visits' questions for 20 seconds (any 429 stopped them for 10 minutes, so a visit's first question read "The assistant cannot answer right now"). `GET /api/demo/stats` says why answers failed (`failures`) and how long they took (`answer_seconds`).

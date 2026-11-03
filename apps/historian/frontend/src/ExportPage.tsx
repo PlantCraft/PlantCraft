@@ -7,7 +7,7 @@
 import { DataTable, isoOf, localOf, MultiSelect, confirmAction } from "@plantcraft/ui";
 import { Boxes, Download, KeyRound, ListPlus, Save, Search, Tags, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { api, type Downloaded, type Aggregate, type ExportChoice, type ExportTag, type SavedExport } from "./api";
+import { api, type Downloaded, type Aggregate, type ExportChoice, type ExportTag, type LakeSchedule, type SavedExport } from "./api";
 import { t } from "./i18n";
 import type { ExportAsset, ExportOptions, ExportPreview, Me, Point } from "./types";
 import { NotebookButton } from "./notebook";
@@ -90,6 +90,9 @@ export function addTags(list: ExportTag[], more: ExportTag[]): ExportTag[] {
 const tagOfPoint = (point: Point): ExportTag => ({ signal: point.signal, tag: point.tag, name: point.name || point.description || "", unit: point.unit || "", archived: true });
 const tagOfSignal = (signal: string): ExportTag => ({ signal, tag: signal.split(":").slice(1).join(":") || signal, name: "", unit: "", archived: true });
 
+/** The data lake feed of a saved export (``export.lake``). */
+const LAKE_LABELS: Record<LakeSchedule, string> = { off: "Not sent", hourly: "Every hour", daily: "Every day" };
+
 export function ExportPage({ me }: { me: Me }) {
   const [options, setOptions] = useState<ExportOptions | null>(null);
   const [saved, setSaved] = useState<SavedExport[]>([]);
@@ -110,6 +113,7 @@ export function ExportPage({ me }: { me: Me }) {
   const [step, setStep] = useState<number | null>(600);
   const [aggregate, setAggregate] = useState<Aggregate>("mean");
   const [anonymize, setAnonymize] = useState(false);
+  const [lake, setLake] = useState<LakeSchedule>("off");
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
@@ -165,7 +169,7 @@ export function ExportPage({ me }: { me: Me }) {
 
   async function open(item: SavedExport) {
     setError(""); setDone(""); setCurrent(item); setName(item.name);
-    setAssets(item.assets); setStep(item.step_seconds ?? null); setAggregate(item.aggregate ?? "mean"); setAnonymize(item.anonymize);
+    setAssets(item.assets); setStep(item.step_seconds ?? null); setAggregate(item.aggregate ?? "mean"); setAnonymize(item.anonymize); setLake(item.lake ?? "off");
     if (item.hours) { setHours(PERIODS.some((period) => period.hours === item.hours) ? item.hours : 24); setStart(""); setEnd(""); }
     else { setHours("custom"); setStart(localOf(item.start ?? "")); setEnd(localOf(item.end ?? "")); }
     let known: ExportTag[] = [];
@@ -175,7 +179,7 @@ export function ExportPage({ me }: { me: Me }) {
   }
 
   async function save(asNew: boolean) {
-    const body = { name: name.trim(), signals, assets, step_seconds: step, aggregate, anonymize, ...(hours === "custom" ? { start: isoOf(start) || null, end: isoOf(end) || null, hours: null } : { hours, start: null, end: null }) };
+    const body = { name: name.trim(), signals, assets, step_seconds: step, aggregate, anonymize, lake: canFeed ? lake : "off" as LakeSchedule, ...(hours === "custom" ? { start: isoOf(start) || null, end: isoOf(end) || null, hours: null } : { hours, start: null, end: null }) };
     setBusy(true); setError(""); setDone("");
     try {
       const value = current && !asNew ? await api.updateSavedExport(current.id, body) : await api.saveExport(body);
@@ -190,7 +194,7 @@ export function ExportPage({ me }: { me: Me }) {
     try { await api.deleteSavedExport(current.id); setSaved(await api.savedExports()); startOver(); } catch (err) { fail(err); }
   }
 
-  function startOver() { setCurrent(null); setName(""); setList([]); setAssets([]); setDone(""); }
+  function startOver() { setCurrent(null); setName(""); setList([]); setAssets([]); setLake("off"); setDone(""); }
 
   async function run(action: (value: ExportChoice) => Promise<Downloaded>) {
     setBusy(true); setError(""); setDone("");
@@ -203,7 +207,10 @@ export function ExportPage({ me }: { me: Me }) {
   const customMissing = hours === "custom" && (!start || !end);
   const empty = !list.length;
   const checked = checkedTags.length + checkedAssets.length;
-  const mine = !current || current.created_by === me.username || me.can_edit;
+  const canFeed = Boolean(options?.lake?.can_schedule);
+  // An export sent to the data lake is the administrators' to change (the server says so too).
+  const mine = (!current || current.created_by === me.username || me.can_edit) && (canFeed || (current?.lake ?? "off") === "off");
+  const feed = current?.lake && current.lake !== "off" ? current.lake_state : null;
   return <>
     <Heading
       eyebrow={t("Historian")}
@@ -219,7 +226,7 @@ export function ExportPage({ me }: { me: Me }) {
         <ul>
           <li><button type="button" className={!current ? "on" : ""} onClick={startOver}>{t("New export")}</button></li>
           {saved.map((item) => <li key={item.id}><button type="button" className={current?.id === item.id ? "on" : ""} onClick={() => void open(item)}>
-            <span>{item.name}</span><small>{[item.signals.length ? t("{count} tags", { count: item.signals.length }) : null, item.hours ? t(PERIODS.find((period) => period.hours === item.hours)?.label ?? "Last {hours} hours", { hours: item.hours }) : t("Fixed period")].filter(Boolean).join(" · ")}</small>
+            <span>{item.name}</span><small>{[item.signals.length ? t("{count} tags", { count: item.signals.length }) : null, item.hours ? t(PERIODS.find((period) => period.hours === item.hours)?.label ?? "Last {hours} hours", { hours: item.hours }) : t("Fixed period"), item.lake && item.lake !== "off" ? t(LAKE_LABELS[item.lake]) : null].filter(Boolean).join(" · ")}</small>
           </button></li>)}
           {!saved.length && <li className="muted small">{t("None yet. Build a package and save it to run it again later.")}</li>}
         </ul>
@@ -297,8 +304,13 @@ export function ExportPage({ me }: { me: Me }) {
             <label>{t("Save this export as")}<input value={name} maxLength={120} placeholder={t("Unit 100, last day")} onChange={(event) => setName(event.target.value)} /></label>
             <button type="button" className="button button-secondary" disabled={busy || empty || !name.trim() || !mine || customMissing} onClick={() => void save(false)}><Save size={15} />{current ? t("Save") : t("Save export")}</button>
             {current && <button type="button" className="button button-secondary" disabled={busy || empty || !name.trim() || customMissing} onClick={() => void save(true)}>{t("Save as new")}</button>}
+            {canFeed && <label>{t("Send to the data lake")}<select value={lake} onChange={(event) => setLake(event.target.value as LakeSchedule)}>
+              {(Object.keys(LAKE_LABELS) as LakeSchedule[]).map((key) => <option key={key} value={key}>{t(LAKE_LABELS[key])}</option>)}
+            </select></label>}
             {current && mine && <button type="button" className="button button-danger button-icon" onClick={() => void remove()} aria-label={t("Delete")} title={t("Delete")}><Trash2 size={15} /></button>}
           </div>
+          {canFeed && lake !== "off" && <p className="form-note">{t("Every {period}, the tags in the list (not the assets) are written as one CSV file to {folder} on the server, for the data lake to pick up; files older than {days} days are deleted there. The period of the export is not used.", { period: t(lake === "daily" ? "day" : "hour"), folder: options.lake?.folder ?? "", days: options.lake?.keep_days ?? 7 })}</p>}
+          {feed && <p className={feed.problem ? "notice notice-warn" : "form-note"}>{feed.last_file ? t("Last file: {file} ({rows} values).", { file: feed.last_file, rows: feed.last_rows }) : t("No file yet: the first one is written when the current period ends.")}{feed.problem ? ` ${feed.problem}` : ""}</p>}
 
           <FormFooter>
             {anonymize && <button type="button" className="button button-secondary" disabled={busy || empty} onClick={() => void run(api.exportKey)}><KeyRound size={16} />{t("Download key")}</button>}
