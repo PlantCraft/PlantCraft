@@ -54,9 +54,9 @@ f'--build-arg VERSION=${VERSION}, app.toml says {want}: build with make image')"
 # PlantCraft Analytics wheel (--no-deps: the index only provides its build backend, setuptools).
 RUN --mount=type=secret,id=build_ca,required=false \
     if [ -s /run/secrets/build_ca ]; then export PIP_CERT=/run/secrets/build_ca; fi; \
-    grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.105.0-py3-none-any.whl' vendor/README.md \
+    grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.106.0-py3-none-any.whl' vendor/README.md \
         | (cd vendor && sha256sum -c -) \
-    && cp vendor/plantcraft_sdk-0.105.0-py3-none-any.whl /wheelhouse/ \
+    && cp vendor/plantcraft_sdk-0.106.0-py3-none-any.whl /wheelhouse/ \
     && pip wheel --no-cache-dir --no-deps --wheel-dir /wheelhouse . \
     && rm -rf build
 
@@ -84,8 +84,16 @@ LABEL org.opencontainers.image.title="${APP_ID}" \
       org.processcraft.app.prefix="${APP_PREFIX}" \
       org.processcraft.app.port="${APP_PORT}"
 
+# PYTHONMALLOC=malloc: Python's small objects come from glibc, which hands freed pages back
+# (plantcraft_sdk.server.memory trims every 60 s), instead of from Python's own arenas, which stay
+# with the process while one live object is left in them. A round of 2,050 loops parses millions
+# of small values; afterwards 160 MB were live and the engine kept 730 MB; with glibc 350 MB, the
+# same rounds and peaks (2026-11-03). MALLOC_ARENA_MAX: two arenas, not one per thread, as in the
+# Historian.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONMALLOC=malloc \
+    MALLOC_ARENA_MAX=2 \
     HOME=/tmp \
     PLANTCRAFT_URL=http://processcraft:8060 \
     LINKCRAFT_ROOT_PATH=/link \
@@ -108,7 +116,7 @@ RUN --mount=type=bind,from=wheels,source=/wheelhouse,target=/wheelhouse \
     python -m pip install --no-cache-dir --root-user-action=ignore --no-index --find-links /wheelhouse \
         --require-hashes --no-deps -r /tmp/requirements.lock \
     && python -m pip install --no-cache-dir --root-user-action=ignore --no-index --no-deps \
-        /wheelhouse/plantcraft_sdk-0.105.0-py3-none-any.whl /wheelhouse/linkcraft-*.whl \
+        /wheelhouse/plantcraft_sdk-0.106.0-py3-none-any.whl /wheelhouse/linkcraft-*.whl \
     && { python -m pip check | grep -Ev '^fmpy [0-9.]+ requires (cmake|jinja2|nbformat),' || true; } \
         | { ! grep . ; } \
     && python -m compileall -q "$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/linkcraft" \

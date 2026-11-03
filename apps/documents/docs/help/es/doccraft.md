@@ -49,64 +49,11 @@ marcado, de nuevo con sus palabras en negrita. **Abrir el PDF**, en un PDF, abre
 Ctrl+K, en cualquier lugar de la
 suite, encuentra documentos por número o título y los mejores pasajes.
 
-## Diagramas y el mapa de la planta (beta)
+## P&ID
 
-Los P&ID enviados a la biblioteca también se leen como dibujos, sin conexión y sin modelo de
-lenguaje. Esto funciona con PDF de una herramienta CAD, SVG, y digitalizaciones o imágenes (PNG,
-JPEG, TIFF). La exportación DEXPI (XML) de una herramienta de P&ID se lee con exactitud: la
-herramienta ya dice qué es cada elemento y qué se une con qué, así que nada de eso es una
-suposición. Cada página que es un
-diagrama aparece en **Diagramas**. Cada página se abre con recuadros sobre lo que se encontró y una
-lista de lo que conviene verificar primero. Cada hallazgo indica qué tan seguro está el lector y
-por qué.
-Elija un recuadro: si PlantCraft tiene ese tag, el activo, sus señales y lo que dicen las apps sobre
-él están a un clic.
-
-**Mapa de la planta** une todas las hojas en una sola planta:
-
-- las unidades, con los equipos en el orden del flujo y los lazos de control de cada uno;
-- las líneas de una hoja a otra, a través de los conectores de continuación de página;
-- las válvulas manuales dibujadas sin tag: un círculo pequeño en un hueco de una línea (una
-  válvula de bola o manual tal como la dibujan las herramientas DIN/ISO 10628) es una válvula por
-  la que pasa la línea;
-- un resumen y la lista **Por verificar**.
-
-En el mapa usted puede trabajar con lo que se leyó:
-
-- Elija un elemento para ver sus líneas y las hojas en las que está dibujado. Si PlantCraft ya lo
-  tiene, su tarjeta abre el activo, sus señales y lo que dicen sobre él las apps de la suite.
-- **Correcto** o **Incorrecto** en cualquier elemento o línea, si usted puede editar. Incorrecto
-  lo quita del mapa y de todas las exportaciones. **Deshacer** lo trae de vuelta.
-- **Listas** descarga las listas de equipos, instrumentos, líneas y lazos en CSV.
-- **DEXPI (XML)** descarga el mapa en el formato abierto de intercambio de P&ID, para herramientas
-  como AVEVA, Hexagon Smart P&ID o COMOS. Contiene equipos, líneas y lazos de instrumentos, sin
-  dibujo.
-- **Archivo de activos** va a Activos › Importación de PlantCraft, donde usted lo revisa antes de
-  que algo cambie.
-- **Escribir el resumen de la planta** (si usted puede editar) escribe el mapa como un documento
-  de la biblioteca, en la carpeta que contiene la mayoría de los P&ID. Cubre cada unidad, los
-  equipos en el orden del flujo con qué alimenta a qué, los lazos de control y las hojas en las que
-  está dibujado cada elemento. Se genera a partir de los dibujos sin modelo de lenguaje. La
-  búsqueda y el asistente lo encuentran y lo citan como cualquier otro documento. Vuelva a
-  generarlo después de un cambio: se convierte en una nueva revisión.
-- **Comparar con una lista de tags**: elija la lista de tags de su planta (CSV o texto, con el tag
-  en la primera columna) para ver qué tags están en ambos y cuáles están solo en uno. El archivo se
-  queda en su navegador.
-
-En una digitalización, un editor también puede elegir **Leer de nuevo con el modelo de lenguaje**
-en la página del diagrama. La imagen de la página y lo que se encontró en ella van al modelo que un
-administrador eligió para "Read a scanned diagram again" en Instalación › Modelos de lenguaje
-(desactivado hasta entonces). Lo que el modelo agrega queda marcado como del modelo, con
-certeza media: verifíquelo en el mapa.
-
-Qué tan bien lee depende del dibujo:
-
-- Un P&ID vectorial limpio se lee casi por completo.
-- En una digitalización se leen los tags, pero no las líneas.
-- En un P&ID de una herramienta comercial, los tags se leen bien, pero solo una parte de las
-  líneas.
-
-Por eso, verifique las líneas antes de usarlas.
+Los P&ID y el mapa de la planta están en **PlantCraft PID**, una app aparte que un administrador instala
+con su licencia. Documents guarda los P&ID enviados como PDF como cualquier otro documento, leídos por su
+texto; los dibujos enviados como SVG, DEXPI o escaneos van a PlantCraft PID.
 
 ## Preguntar al asistente
 

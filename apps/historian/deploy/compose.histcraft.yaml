@@ -28,6 +28,7 @@ services:
       HISTCRAFT_DATABASE_PASSWORD_FILE: /run/secrets/histcraft_db_password
       # The collector runs in histcraft-collector (below).
       HISTCRAFT_COLLECTOR: "off"
+      HISTCRAFT_LAKE_DIR: /lake
       HISTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
     secrets:
       - histcraft_db_password
@@ -35,6 +36,8 @@ services:
       - ./data/histcraft:/data
       # CSV sources: files dropped here are read where they are (read-only).
       - ./data/histcraft-csv:/csv:ro
+      # The data lake feeds' files (src/histcraft/export/lake.py).
+      - ./data/lake-export:/lake
     networks:
       # The plant for PI Web API and OPC UA (read-only), the apps network for PlantCraft.
       - plant
@@ -67,11 +70,13 @@ services:
       HISTCRAFT_DATABASE_URL: "postgresql://histcraft@histcraft-db:5432/histcraft"
       HISTCRAFT_DATABASE_PASSWORD_FILE: /run/secrets/histcraft_db_password
       HISTCRAFT_LOG_LEVEL: "${PLANTCRAFT_LOG_LEVEL:-INFO}"
+      HISTCRAFT_LAKE_DIR: /lake
     secrets:
       - histcraft_db_password
     volumes:
       - ./data/histcraft:/data
       - ./data/histcraft-csv:/csv:ro
+      - ./data/lake-export:/lake
     networks:
       # The plant (read-only) and the network of its database.
       - plant

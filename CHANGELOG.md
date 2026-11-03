@@ -10,17 +10,36 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 ### Added
 
 - Setup guide: a small robot in the corner of every screen walks an administrator through a new installation, one step at a time: connect a language model, the basics (the plant's time zone, the person's language), connect the plant's data (OPC UA, PI Web API or a file), add the documents (when Documents is installed), build the asset tree, let the apps take their first steps, invite the team and, optionally, email. Each step knows by itself when it is done, from the installation's own state, so the guide moves on (and cheers) however the step was done. "Do it with me" opens the assistant beside the page with that step's work: it asks one question at a time and proposes the change as a card the person applies with one click (`POST /api/setup-guide/basics`, `/connection`, `/api/users`); the model never writes. The welcome tour waits until the plant is set up; Settings › Getting started brings the robot back after it is hidden; a public demo never shows it. `dev/fake_llm.py` is a scripted OpenAI-compatible model to try it without a real one ([docs/setup-guide.md](docs/setup-guide.md); ui 0.112.0 exports `forgetAssistantStatus`).
+- **App packages say what they run on, what they were tested on, their languages and whether they
+  are closed (SDK 0.106.0).** `app.toml` gains `[app] source` (`open` or `closed`) and
+  `languages`, `[requires] platform` (the PlantCraft versions it installs on), `[tested] platform`
+  (stamped by the package build from `compat/<version>.json`) and `[license]`. PlantCraft refuses
+  an install outside the ranges, warns when the version is untested, keeps the version an app was
+  installed on and answers `GET /api/apps/upgrade-check?to=` before an upgrade
+  (docs/app-package.md, section 7). `plantcraft-app compat` runs the compatibility checks and the
+  app's `tests/compat` against a real PlantCraft and writes the report.
+- **Licences for closed apps.** A publisher signs a `.pclicense` for one installation with its
+  package key (`plantcraft-app license issue`); the administrator adds it in Apps › Licences
+  (`/api/apps/licenses`), PlantCraft checks the signature and the installation and serves it to
+  that app only (`GET /api/v1/apps/self/license`). `plantcraft_sdk.licensing` gives apps the
+  same check, offline (docs/app-package.md, section 8).
+- **PlantCraft PID (`/pid/`, port 8160, uid 10016)**, the first closed app: the P&ID
+  reader and plant map, moved out of Documents, compiled with Nuitka and licensed.
+- Integrators' guide, "PlantCraft next to MES, data lake and your own LLM" (`docs/integrators.md`): an on-premises OpenAI-compatible model for the assistant (with Ollama's context length), agents reading through MCP, plant data into a data lake (Historian's feed files or API v1) and MES data into the Historian, with a list for IT.
+- A test of the assistant against a real Ollama server (`tests/test_ollama_live.py`, workflow `ollama.yml`): the model answers, calls a read-only tool, and a question in Desk goes through the plant's read-only tools after its provider was added in Setup › Language models. It runs on changes to the model client and the assistant, every Monday, and by hand with another model.
+- Answers from OpenAI-compatible servers (Ollama, vLLM) now keep the tokens they spent: a streamed chat completion asks for them (`stream_options.include_usage`); before, `meta.usage` stayed at zero.
 
 ### Changed
 
-- Tours: the first tour is shorter (16 steps, was 20). It leaves out one asset's page, System health, Apps and Backups; its step on the menu under the person's name now shows the theme and the display size (Larger text to More space) beside Help. Operations has a short tour of its own (Status, Requests, Backups, the assistant) instead of opening Desk's. Each app's tour no longer stops on its Overview; Analytics' shows Monitors (which algorithm runs, on which assets and when), Documents' shows Diagrams and the Plant map when P&IDs were read, and Models' shows Tracking when one is set up. A public demo opens in the light theme until the visitor picks another (ui 0.110.0).
+- Tours: the first tour is shorter (16 steps, was 20). It leaves out one asset's page, System health, Apps and Backups; its step on the menu under the person's name now shows the theme and the display size (Larger text to More space) beside Help. Operations has a short tour of its own (Status, Requests, Backups, the assistant) instead of opening Desk's. Each app's tour no longer stops on its Overview; Analytics' shows Monitors (which algorithm runs, on which assets and when), and Models' shows Tracking when one is set up. A public demo opens in the light theme until the visitor picks another (ui 0.110.0).
 
 - Translations: the pt-BR and es glossaries were reviewed against the words industry tools already use (Grafana, ThingsBoard, FUXA, Elipse), and every catalog and help page follows: Shelve is Arquivar/Archivar (as in Elipse E3; "suprimir" stays for suppressed by design), Warning is Aviso in pt-BR, Threshold is Limite in pt-BR, Gauge is Medidor and Stat is Estatística/Estadística (View), the Editor/Viewer roles are Editor/Visualizador, Audit log is Log de auditoria in pt-BR and Silence is Silencio in es.
 
 ### Fixed
 
 - Asset import: a tree drafted from an added source (OPC UA, PI Web API, CSV) bound its tags but did not route them to that source, so the plant showed no values after the setup; the import now routes them (with Historian, collects them there) and its undo takes the routes back. The setup guide's works read in the person's language (titles, cards, the opening question), name the buttons as the screen does, the notebook mission shows only with notebooks on, the apps' step no longer waits when no app has a first step, the guide looks every 5 s while the person does a step in the chat, the robot steps aside while a dialog is open, and Enter no longer sends while the assistant is still answering (ui 0.112.0).
-
+- Analytics: a database made before the disk was given back by itself (0.6.0 and older) is now compacted once by the hourly upkeep, in the quiet hour (`LINKCRAFT_COMPACT_HOUR`, 03:00 on the installation's clock by default; `off` leaves it to `linkcraft compact`), when no execution runs, at least 20 % of the file is free and the disk holds twice the live data. From then on it gives space back by itself. At 3 months of a 2,050-loop plant the file was 23.8 GB with 9 GB free. `linkcraft compact` now also asks for room for both copies the rewrite writes (a temporary one and the write-ahead log), not one.
+- Analytics: the engine and the server hand back the memory a round used. Python's own allocator kept the pages of millions of small values parsed in a round while a few objects in them lived on: after a round of 2,050 loops 160 MB were live and the engine held 730 MB. The image now runs Python on glibc's allocator (`PYTHONMALLOC=malloc`, two arenas), which the 60 s trim already empties: 350 to 390 MB at rest, the same rounds, a signal check about 10 % slower when it runs inside the app.
 - Public demo assistant (found recording the 0.6 video, 2026-11-03):
   - The visit's clock no longer covers the assistant's text box: the side panel's box and Desk's keep clear of it.
   - A model service that only limits the rate (429) or fails for a moment (5xx) is asked again after the wait it names, and only stops the visits' questions for 20 seconds (any 429 stopped them for 10 minutes, so a visit's first question read "The assistant cannot answer right now"). `GET /api/demo/stats` says why answers failed (`failures`) and how long they took (`answer_seconds`).
@@ -38,6 +57,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Added
 
+- **The assistant on each chart, a trial (ui 0.112.0, off by default).** A small popover over a
+  chart asks "Explain this chart", "What stands out?", "What could explain this?" or the
+  person's own question, and answers in place from what the chart draws and the plant's reads;
+  the chat is not kept unless continued in Desk. `PLANTCRAFT_ASSISTANT_CHARTS=icon` puts the
+  assistant's mark in each chart's buttons. Every chart drawn with `Plot` has it.
 - **Spanish (SDK 0.105.0, ui 0.109.0).** The whole suite in Spanish (`es`) next to Brazilian
   Portuguese: every catalog of the platform, the shared components, the SDK, the six apps and the
   template, the help of every app, Analytics' method pages and guides, and the platform's guides

@@ -25,6 +25,8 @@ demos, one-laptop installs).
 | ``HISTCRAFT_READ_BATCH`` | ``500`` | Nodes per OPC UA Read request |
 | ``HISTCRAFT_SECRET_KEY_FILE`` | ``<data dir>/secret.key`` | Key that encrypts source passwords (created 0600 on first use) |
 | ``HISTCRAFT_CSV_DIRS`` | ``/csv`` | Folders CSV sources may read (``os.pathsep`` between them), besides ``<data dir>/files`` |
+| ``HISTCRAFT_LAKE_DIR`` | ``<data dir>/lake`` | Where the data lake feeds of saved exports write their CSV files (``export.lake``) |
+| ``HISTCRAFT_LAKE_KEEP_DAYS`` | ``7`` | Days of feed files kept in that folder (0: all) |
 """
 
 from __future__ import annotations
@@ -135,6 +137,11 @@ class Settings(AppSettings):
     # ``<data>/gateway-buffer`` here and ``gateway_buffer_dir`` as the gateway sees it.
     gateway_buffer: str = "disk"
     gateway_buffer_dir: str = "/var/lib/telegraf-buffer"
+    # The data lake feed (``export.lake``): the folder the collector writes saved exports to,
+    # every hour or day, and how many days of files it keeps there (0: all). Empty:
+    # ``<data>/lake``. An installation mounts ``data/lake-export/`` at /lake.
+    lake_dir: str = ""
+    lake_keep_days: int = 7
 
     def database_password(self) -> str:
         """The PostgreSQL password, read from its file when needed (never kept)."""
@@ -151,6 +158,10 @@ class Settings(AppSettings):
         """The key that encrypts source passwords (never in the database)."""
 
         return Path(self.secret_key_file) if self.secret_key_file else self.data_dir / "secret.key"
+
+    @property
+    def lake_path(self) -> Path:
+        return Path(self.lake_dir) if self.lake_dir else self.data_dir / "lake"
 
     @property
     def config_target(self) -> str | Path:
@@ -190,4 +201,6 @@ class Settings(AppSettings):
                 "memory" if env_text("HISTCRAFT_GATEWAY_BUFFER", "disk") == "memory" else "disk"
             ),
             gateway_buffer_dir=env_text("HISTCRAFT_GATEWAY_BUFFER_DIR", "/var/lib/telegraf-buffer"),
+            lake_dir=env_text("HISTCRAFT_LAKE_DIR"),
+            lake_keep_days=int(env_number("HISTCRAFT_LAKE_KEEP_DAYS", 7)),
         )

@@ -48,60 +48,11 @@ palavras em negrito de novo. **Abrir o PDF**, em um PDF, abre naquela página; *
 em um arquivo Word, o mostra como página (o texto, os títulos e as tabelas). Ctrl+K, em qualquer
 lugar da suíte, encontra documentos por número ou título e os melhores trechos.
 
-## Diagramas e o mapa da planta (beta)
+## P&IDs
 
-Os P&IDs enviados à biblioteca também são lidos como desenhos, offline e sem modelo de linguagem.
-Isso funciona para PDF de uma ferramenta CAD, SVG e digitalizações ou imagens (PNG, JPEG, TIFF). A
-exportação DEXPI (XML) de uma ferramenta de P&ID é lida com exatidão: a ferramenta já diz o que é
-cada item e o que liga ao quê, então nada ali é palpite. Toda página que é um diagrama é listada em
-**Diagramas**. Cada página abre com caixas sobre o que foi encontrado e uma lista do que verificar
-primeiro. Cada achado diz quanta certeza o leitor tem e por quê. Escolha uma caixa: se o PlantCraft
-tem aquela tag, o ativo, os sinais dele e o que os apps dizem sobre ele ficam a um clique.
-
-**Mapa da planta** junta todas as folhas em uma planta:
-
-- as unidades, com os equipamentos na ordem do fluxo e as malhas de controle em cada um;
-- as linhas de uma folha para outra, pelos conectores de continuação;
-- as válvulas manuais desenhadas sem tag: um pequeno círculo em uma interrupção de uma linha (uma
-  válvula esfera ou manual como as ferramentas DIN/ISO 10628 a desenham) é uma válvula pela qual a
-  linha passa;
-- um resumo e a lista **A verificar**.
-
-No mapa, você pode trabalhar com o que foi lido:
-
-- Escolha um item para ver as linhas dele e as folhas em que ele está desenhado. Se o PlantCraft já
-  o tem, o cartão dele abre o ativo, os sinais dele e o que os apps da suíte dizem sobre ele.
-- **Correto** ou **Errado** em qualquer item ou linha, se você pode editar. Errado o tira do mapa e
-  de todas as exportações. **Desfazer** o traz de volta.
-- **Listas** baixa as listas de equipamentos, instrumentos, linhas e malhas em CSV.
-- **DEXPI (XML)** baixa o mapa no formato aberto de troca de P&IDs, para ferramentas como AVEVA,
-  Hexagon Smart P&ID ou COMOS. Ele contém os equipamentos, as linhas e as malhas de instrumentos,
-  sem o desenho.
-- **Arquivo de ativos** vai para Ativos › Importação do PlantCraft, onde você o revisa antes que
-  algo mude.
-- **Escrever o resumo da planta** (se você pode editar) escreve o mapa como um documento da
-  biblioteca, na pasta que tem a maioria dos P&IDs. Ele cobre cada unidade, os equipamentos na
-  ordem do fluxo com o que alimenta o quê, as malhas de controle e as folhas em que cada item está
-  desenhado. Ele é feito a partir dos desenhos, sem modelo de linguagem. A busca e o assistente o
-  encontram e o citam como qualquer outro documento. Faça de novo depois de uma mudança: ele vira
-  uma nova revisão.
-- **Conferir com uma lista de tags**: escolha a lista de tags da sua planta (CSV ou texto, com a tag
-  na primeira coluna) para ver quais tags estão em ambos e quais estão só em um. O arquivo fica no
-  seu navegador.
-
-Em uma digitalização, um editor também pode escolher **Ler de novo com o modelo de linguagem** na
-página do diagrama. A imagem da página e o que foi encontrado nela vão para o modelo que um
-administrador escolheu para "Read a scanned diagram again" em Instalação › Modelos de linguagem
-(desligado até lá). O que o modelo acrescenta é marcado como do modelo, com certeza média:
-confira-o no mapa.
-
-A qualidade da leitura depende do desenho:
-
-- Um P&ID vetorial limpo é lido quase por completo.
-- Em uma digitalização, as tags são lidas, mas as linhas não.
-- Em um P&ID de uma ferramenta comercial, as tags são bem lidas, mas só parte das linhas.
-
-Então confira as linhas antes de usá-las.
+Os P&IDs e o mapa da planta ficam no **PlantCraft PID**, um app separado que um administrador instala
+com a sua licença. O Documents guarda os P&IDs enviados como PDF como qualquer outro documento, lidos pelo
+texto; desenhos enviados como SVG, DEXPI ou digitalizações vão para o PlantCraft PID.
 
 ## Perguntar ao assistente
 

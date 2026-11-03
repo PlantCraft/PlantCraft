@@ -597,7 +597,7 @@ backup() { # backup LABEL: stops the stack, saves data, settings and the current
         docker tag "$id" "$(rollback_tag "$ref" "$now")" >/dev/null 2>&1 || true
     done < <(compose config --images 2>/dev/null | sort -u)
     as_root "processcraft:$version" \
-        "cd /install && tar --numeric-owner -czf backups/$stamp/data.tar.gz data certs" ||
+        "cd /install && tar --numeric-owner --exclude=data/lake-export -czf backups/$stamp/data.tar.gz data certs" ||
         die "the backup failed; nothing was changed."
     printf '%s\n' "$stamp" >"$PREFIX/backups/LATEST"
     log "Backup done: $(du -sh "$dir" 2>/dev/null | cut -f1) in backups/$stamp"
@@ -1045,7 +1045,7 @@ prepare_data() {
     fi
     mkdir -p "$data/processcraft" "$data/proxy" "$data/simcraft" "$PREFIX/certs" "$PREFIX/backups" \
         "$data/installer/routes" "$data/installer/status" "$data/app-requests" "$data/apps" "$data/egress" \
-        "$data/histcraft-db" "$data/histcraft-csv" "$data/compute-jobs"
+        "$data/histcraft-db" "$data/histcraft-csv" "$data/compute-jobs" "$data/lake-export"
     # The install folder can be crossed (not listed) by others, as data/ can: a monitoring agent
     # (Zabbix, docs/operations.md) reads data/installer/status/metrics.json without root.
     chmod go+x "$PREFIX"
@@ -1097,6 +1097,8 @@ prepare_data() {
         chown -R $PLANTCRAFT_UID:$PLANTCRAFT_UID data/egress
         chown -R $INSTALLER_UID:$INSTALLER_UID data/installer
         chown -R $HISTCRAFT_UID:$HISTCRAFT_UID data/histcraft-db data/histcraft-db-password
+        # The data lake feeds' files (Historian): written by its collector, read by the lake.
+        chown -R $HISTCRAFT_UID:$HISTCRAFT_UID data/lake-export
         # Its folders are made in here: once data/compute-jobs is the compute user's (0700), a
         # second install.sh run as a member of the docker group cannot reach inside it.
         mkdir -p data/compute-jobs/linkcraft data/compute-jobs/modelcraft
@@ -1112,7 +1114,7 @@ prepare_data() {
         chmod 0750 data/app-requests data/egress
         chmod 0755 data/installer data/installer/routes data/installer/status
         chmod 0711 data/apps
-        chmod 0755 data/histcraft-csv
+        chmod 0755 data/histcraft-csv data/lake-export
         chmod 0600 data/initial-admin-password data/histcraft-db-password data/public-demo-password
         if [ -f certs/key.pem ]; then chown $PROXY_UID:$PROXY_UID certs/key.pem; chmod 0400 certs/key.pem; fi
         if [ -f certs/cert.pem ]; then chmod 0444 certs/cert.pem; fi

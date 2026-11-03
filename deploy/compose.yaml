@@ -175,6 +175,9 @@ services:
       # that the audit log flags as a possible extraction (docs/assistant.md, Limits).
       PLANTCRAFT_ASSISTANT_DAILY_READS: "${PLANTCRAFT_ASSISTANT_DAILY_READS:-2000}"
       PLANTCRAFT_ASSISTANT_BULK_SIGNALS: "${PLANTCRAFT_ASSISTANT_BULK_SIGNALS:-60}"
+      # The assistant on each chart, a trial: off or icon (the assistant's mark in each chart's
+      # buttons). docs/assistant.md, "On each chart".
+      PLANTCRAFT_ASSISTANT_CHARTS: "${PLANTCRAFT_ASSISTANT_CHARTS:-off}"
       # Apps' tokens held to their permissions: enforce (default), audit (only logs) or strict
       # (an app that declared none yet gets none: for an installation with other publishers' apps).
       PLANTCRAFT_APP_PERMISSIONS: "${PLANTCRAFT_APP_PERMISSIONS:-enforce}"
@@ -408,6 +411,8 @@ services:
       # The raw samples kept between rounds (data/cache.py; 512 MB when empty): the server and
       # its engine share LINKCRAFT_MEMORY, so the machine profile sizes it to that limit.
       LINKCRAFT_READ_CACHE_MB: "${LINKCRAFT_READ_CACHE_MB:-}"
+      # The hour (installation's clock) an older database is compacted once; off: by hand.
+      LINKCRAFT_COMPACT_HOUR: "${LINKCRAFT_COMPACT_HOUR:-}"
     secrets:
       - linkcraft_app_key
     volumes:
@@ -774,6 +779,7 @@ services:
       HISTCRAFT_DATABASE_PASSWORD_FILE: /run/secrets/histcraft_db_password
       # The collector runs in histcraft-collector; this one answers pages and API only.
       HISTCRAFT_COLLECTOR: "off"
+      HISTCRAFT_LAKE_DIR: /lake
       # Values the reads in flight build at once (the machine profile; histcraft/api/read_budget.py).
       HISTCRAFT_READ_VALUES: "${HISTCRAFT_READ_VALUES:-4000000}"
       # Its server processes: a number or auto (the CPUs of its limit, up to 4).
@@ -789,6 +795,9 @@ services:
       - ./data/histcraft:/data
       # CSV sources: files the administrator drops in data/histcraft-csv, read where they are.
       - ./data/histcraft-csv:/csv:ro
+      # The data lake feeds of saved exports (Historian export/lake.py): CSV files the collector
+      # writes for the plant's data lake to pick up (the backups leave them out).
+      - ./data/lake-export:/lake
     networks:
       - plant
       - apps
@@ -842,12 +851,14 @@ services:
       # The gateway (histcraft-gateway) pushes MQTT, Modbus and SQL values here, with a token.
       HISTCRAFT_INGEST_PORT: "8186"
       HISTCRAFT_INGEST_URL: "http://histcraft-collector:8186"
+      HISTCRAFT_LAKE_DIR: /lake
     secrets:
       - histcraft_db_password
     volumes:
       # The key that decrypts source passwords (data/histcraft/secret.key), shared with the server.
       - ./data/histcraft:/data
       - ./data/histcraft-csv:/csv:ro
+      - ./data/lake-export:/lake
     networks:
       - plant
       - demo

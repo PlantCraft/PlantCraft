@@ -49,6 +49,8 @@ Em português: [docs/pt-BR](pt-BR/).
   deprecated, and what an update promises about data.
 - [AI assistant access (MCP)](assistant-access.md): the read-only MCP server people connect
   their own AI assistant to, with a token of their own. Off by default.
+- [Next to MES, data lake and your own LLM](integrators.md): for integrators and plant IT, where
+  the suite fits beside a MES, a data lake and an on-premises model, and what goes where.
 - [OPC UA demo plant](opcua-simulator.md): the Simulator as the demo source, its
   loops, tags, history and containers.
 

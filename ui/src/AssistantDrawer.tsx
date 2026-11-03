@@ -188,7 +188,8 @@ type Message = { message_id: number; role: "user" | "assistant"; text: string; s
 /** `can_set_up`: the person is an administrator, who connects the model in Setup. */
 /** `demo`: a public demo's visitor, who reads what the assistant does but never asks it. */
 /** `visit`: a public demo visit that may ask: its questions, characters a question, and left. */
-type Status = { available: boolean; allowed?: boolean; reason: string; can_set_up?: boolean; demo?: boolean; visit?: { questions: number; max_text: number; left: number } };
+/** `charts`: whether the assistant is offered on each chart (ChartAssistant.tsx, a trial). */
+type Status = { available: boolean; allowed?: boolean; reason: string; can_set_up?: boolean; demo?: boolean; visit?: { questions: number; max_text: number; left: number }; charts?: string };
 /** One of the person's earlier chats, as `GET /api/assistant` lists them. */
 export type AssistantChatSummary = { chat_id: number; title: string; place?: string; updated_at?: string; working?: boolean };
 
@@ -725,6 +726,12 @@ export function pageContext(root: Element | null, limit = 3000): string {
 type PageSource = { page: () => AssistantRequest; platformUrl?: string | null };
 let pageSource: PageSource | null = null;
 const getPageSource = () => pageSource;
+/** The shell's view of the page while an `AssistantHost` is drawn (null elsewhere): where the
+ * assistant can be offered at all, and PlantCraft's address there. */
+export function usePageSource(): { platformUrl?: string | null; place?: string } | null {
+  const source = useSyncExternalStore(subscribe, getPageSource, () => null);
+  return source;
+}
 
 /** Open the panel about the page as it is now: the page's own description (`useAssistantPage`)
  * over what the shell reads from the screen. The button beside a title and the sidebar's do this. */

@@ -19,6 +19,7 @@ PACKAGE = ROOT / "src" / "histcraft"
 # | -1 | i18n (everything may use t()) |
 # | 0 | db (its own PostgreSQL or SQLite), clock, config, meta, vault |
 # | 1 | archive, catalog, sources |
+# | 1.5 | export (packages and the data lake feed, read from the archive), lab |
 # | 2 | collector |
 # | 3 | api, cli, bench |
 LAYERS = {
@@ -35,7 +36,7 @@ LAYERS = {
     "archive": 1,
     "catalog": 1,
     "sources": 1,
-    "export": 1,
+    "export": 1.5,
     "collector": 2,
     "lab": 1.5,
     "conditions": 2,

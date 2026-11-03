@@ -655,6 +655,27 @@
     "summary": "Apps"
    }
   },
+  "/api/v1/apps/self/license": {
+   "get": {
+    "description": "The ``.pclicense`` an administrator added for the calling app (Apps › Licences), or\nnull. The app checks its signature itself, with its publisher's key\n(``plantcraft_sdk.licensing``).",
+    "operationId": "own_license_api_v1_apps_self_license_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Own License Api V1 Apps Self License Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Own License"
+   }
+  },
   "/api/v1/apps/{app}/notebooks/runtime": {
    "get": {
     "description": "The app's runtime (a zip of its Python packages) that runs its objects on the person's\ncomputer or in their browser.",

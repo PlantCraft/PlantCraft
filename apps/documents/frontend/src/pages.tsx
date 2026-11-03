@@ -1,6 +1,6 @@
 import { assistantTourStep, tt, type ShellNavItem, type TourStep } from "@plantcraft/ui";
 import { api } from "./api";
-import { FileText, LayoutDashboard, Network, PenTool, Search } from "lucide-react";
+import { FileText, LayoutDashboard, Search } from "lucide-react";
 
 /** The app's own pages in the suite frame (app standard, section 10); Help is the frame's own entry.
  * Overview first (`AppOverview`, the widgets each person arranges), then the library (`/documents`,
@@ -16,22 +16,11 @@ export const NAV: Array<Omit<ShellNavItem, "label"> & { label: string }> = [
     icon: <FileText />,
     match: (path) => path === "/documents" || path.startsWith("/documents/") || path.startsWith("/assets/") || path.startsWith("/folders/"),
   },
-  { to: "/diagrams", label: "Diagrams", icon: <PenTool />, match: (path) => path === "/diagrams" || path.startsWith("/diagrams/") },
-  { to: "/plant-map", label: "Plant map", icon: <Network />, match: (path) => path === "/plant-map" },
   { to: "/search", label: "Search", icon: <Search />, match: (path) => path === "/search" },
 ];
 
 /** The app's guided tour (@plantcraft/ui): opens the first time a person opens the app. */
 /** The document the tour opens (the demo's valve history first), or null. */
-/** Whether the documents hold diagrams (P&IDs) read already: the tour shows them then. */
-export async function tourDiagrams(): Promise<boolean> {
-  try {
-    return (await api.diagrams()).length > 0;
-  } catch {
-    return false;
-  }
-}
-
 export async function tourExample(): Promise<string | null> {
   try {
     const docs = await api.documents();
@@ -42,7 +31,7 @@ export async function tourExample(): Promise<string | null> {
   }
 }
 
-export function tourSteps(example: string | null = null, diagrams = false): TourStep[] {
+export function tourSteps(example: string | null = null): TourStep[] {
   const steps: TourStep[] = [
     {
       title: tt("Welcome to Documents"),
@@ -55,21 +44,6 @@ export function tourSteps(example: string | null = null, diagrams = false): Tour
       body: tt("Every document you may read, by folder: folders say who reads and who changes them. An editor sends files here; each one is read in the background and linked to the assets its tags name."),
     },
   ];
-  // The drawings read from the documents, when there are any (2026-11-03).
-  if (diagrams) steps.push(
-    {
-      path: "/diagrams",
-      target: ".pcs-content .pc-dt",
-      title: tt("Diagrams"),
-      body: tt("The pages of the documents that are P&IDs, read into equipment, instruments and the lines between them. Open one to check what was found on it."),
-    },
-    {
-      path: "/plant-map",
-      target: ".pcs-content .map-columns",
-      title: tt("Plant map"),
-      body: tt("Every diagram joined into one plant. It becomes an asset file that PlantCraft's Assets › Import reviews before anything changes."),
-    },
-  );
   // No step opens a document (its text says little in a tour).
   steps.push(
     {

@@ -10,6 +10,8 @@
 # --key       the publisher's Ed25519 private key (PEM), passed by path; never commit it
 # --sbom      an SPDX JSON SBOM of the image; made with syft when omitted and syft is installed
 # --out       folder for <id>-<version>.pcapp (default dist/)
+# --compat    the app's compat/ reports (plantcraft-app compat); default <app folder>/compat when
+#             it exists. The PlantCraft versions that passed go into the manifest's [tested].
 #
 # Usable from another repository: it needs only bash, docker, python3 with `cryptography`, and
 # plantcraft/apps/package.py next to this script (or PLANTCRAFT_PACKAGE_PY pointing at it).
@@ -17,7 +19,7 @@ set -Eeuo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_PY="${PLANTCRAFT_PACKAGE_PY:-$HERE/../plantcraft/apps/package.py}"
-MANIFEST="" IMAGE="" KEY="" SBOM="" OUT="dist" GZIP="--gzip"
+MANIFEST="" IMAGE="" KEY="" SBOM="" OUT="dist" GZIP="--gzip" COMPAT=""
 
 die() { printf 'package: ERROR: %s\n' "$*" >&2; exit 1; }
 while [ $# -gt 0 ]; do
@@ -27,8 +29,9 @@ while [ $# -gt 0 ]; do
         --key) KEY="$2"; shift ;;
         --sbom) SBOM="$2"; shift ;;
         --out) OUT="$2"; shift ;;
+        --compat) COMPAT="$2"; shift ;;
         --no-gzip) GZIP="" ;;
-        -h | --help) sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h | --help) sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) die "unknown option $1 (see --help)" ;;
     esac
     shift
@@ -61,6 +64,9 @@ if [ -z "$SBOM" ]; then
     SBOM="$WORK/sbom.spdx.json"
 fi
 mkdir -p "$OUT"
-python3 "$PACKAGE_PY" build --manifest "$MANIFEST" --image-tar "$WORK/image.tar" --sbom "$SBOM" \
+[ -n "$COMPAT" ] || { [ -d "$(dirname "$MANIFEST")/compat" ] && COMPAT="$(dirname "$MANIFEST")/compat"; } || true
+COMPAT_ARGS=()
+[ -n "$COMPAT" ] && COMPAT_ARGS=(--compat-dir "$COMPAT")
+python3 "$PACKAGE_PY" build ${COMPAT_ARGS[@]+"${COMPAT_ARGS[@]}"} --manifest "$MANIFEST" --image-tar "$WORK/image.tar" --sbom "$SBOM" \
     --key "$KEY" --out "$OUT/$ID-$VERSION.pcapp" $GZIP
 (cd "$OUT" && sha256sum "$ID-$VERSION.pcapp" | tee "$ID-$VERSION.pcapp.sha256")

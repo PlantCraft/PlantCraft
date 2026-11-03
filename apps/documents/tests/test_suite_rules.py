@@ -26,7 +26,6 @@ LAYERS = {
     "config": 0,
     "meta": 0,
     "suite": 1,
-    "plantmap": 1,
     "library": 2,
     "api": 3,
     "cli": 3,

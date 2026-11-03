@@ -34,6 +34,7 @@ from plantcraft_sdk.contract import recorded_on_change
 
 from histcraft.archive import forecast, rollup
 from histcraft.archive.compression import Compressor
+from histcraft.archive.query import Reader, point_ref
 from histcraft.archive.store import ArchiveStore, compaction_start, now_ms
 from histcraft.catalog import ranges
 from histcraft.catalog.models import (
@@ -49,6 +50,8 @@ from histcraft.collector.backfill import MAX_HOURS, backfill
 from histcraft.collector.lease import Lease, lease_for
 from histcraft.collector.reading import FUTURE_MS, Reading
 from histcraft.config import Settings
+from histcraft.export import lake
+from histcraft.export.saved import SavedExports
 from histcraft.i18n import t
 from histcraft.sources.csv_watch import CsvWatcher
 from histcraft.sparkplug import Births
@@ -63,6 +66,8 @@ TOTALS_SECONDS = 300
 COMPACT_AGE_MS = 3600 * 1000
 # How often the values counted per point and hour reach the archive (``ArchiveStore.settle``).
 COUNT_SECONDS = 600.0
+# How often the data lake feeds are checked for a period that ended (``export.lake``).
+LAKE_SECONDS = 60
 REQUEST_WINDOW_MS = 10 * 60 * 1000
 MAX_BACKOFF = 60.0
 # Good text readings in a row that make a number point a text one (a MODE reading AUTO).
@@ -194,6 +199,9 @@ class Collector:
         self.lease = lease if lease is not None else lease_for(archive.db)
         self.catalog = catalog
         self.archive = archive
+        # The saved exports a data lake feed sends, and where each feed is (``export.lake``).
+        self.saved_exports = SavedExports(catalog.db)
+        self.lake_feeds = lake.LakeFeeds(catalog.db)
         self.reader_factory = reader_factory or self._reader
         self.points: dict[int, PointState] = {}
         self.sources: dict[str, dict[str, Any]] = {}
@@ -210,6 +218,7 @@ class Collector:
         self._started_ms = now_ms()
         self._last_compact = time.monotonic()
         self._last_totals = -math.inf
+        self._last_lake = -math.inf
         # The recent values left by the last collector move into chunks at the first flush.
         self._last_settle = -math.inf
         # The hourly housekeeping, running beside the flushes (never in their way).
@@ -642,8 +651,32 @@ class Collector:
                 asyncio.to_thread(imports.check_folder, source, self.catalog, self.archive)
             )
 
+    def feed_lake(self, *, force: bool = False) -> list[Any]:
+        """Write the saved exports' data lake files that are due (``export.lake``), every
+        ``LAKE_SECONDS``; nothing when no export has a feed on."""
+
+        if not force and time.monotonic() - self._last_lake < LAKE_SECONDS:
+            return []
+        self._last_lake = time.monotonic()
+        exports = self.saved_exports.list()
+        if not any(item.get("lake") in lake.SCHEDULES for item in exports):
+            self.lake_feeds.forget(set())
+            return []
+        return lake.feed(
+            self.settings.lake_path,
+            exports,
+            self.lake_feeds,
+            self.catalog.points(),
+            Reader(self.archive),
+            point_ref,
+            now_ms(),
+            keep_days=self.settings.lake_keep_days,
+        )
+
     async def _housekeep(self) -> None:
         try:
+            # The lake first: compaction may take minutes, a period's file should not wait.
+            await asyncio.to_thread(self.feed_lake)
             await asyncio.to_thread(self.count_totals)
             await asyncio.to_thread(self.housekeeping)
         except Exception:  # noqa: BLE001 - the next hour tries again; collection goes on
