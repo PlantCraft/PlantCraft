@@ -1324,5 +1324,14 @@
   "Help me start a notebook": "Ayúdame a empezar un notebook",
   "Python in the browser": "Python en el navegador",
   "Draft from the source": "Borrador a partir de la fuente",
-  "Apply": "Aplicar"
+  "Apply": "Aplicar",
+  "Daily": "Diariamente",
+  "Weekdays": "Días hábiles",
+  "Weekly": "Semanalmente",
+  "Monthly": "Mensualmente",
+  "English": "English",
+  "Português (Brasil)": "Português (Brasil)",
+  "Español": "Español",
+  "OPC UA": "OPC UA",
+  "Administrator": "Administrador"
 }

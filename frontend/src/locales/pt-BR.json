@@ -2512,5 +2512,6 @@
   "{done} of {total} missions": "{done} de {total} missões",
   "Heron, the robot that walks you through a new installation, step by step: the language model, the plant's data, the asset tree, the apps' first steps and your team.": "Heron, o robô que te guia numa instalação nova, passo a passo: o modelo de linguagem, os dados da planta, a árvore de ativos, os primeiros passos das apps e a sua equipe.",
   "Open Heron": "Abrir o Heron",
-  "Heron, your setup guide": "Heron, seu guia de configuração"
+  "Heron, your setup guide": "Heron, seu guia de configuração",
+  "Every step and mission is done. Install apps from Settings › Apps to collect, monitor and draft from the plant's data.": "Todas as etapas e missões estão feitas. Instale apps em Configurações › Apps para coletar, monitorar e rascunhar a partir dos dados da planta."
 }

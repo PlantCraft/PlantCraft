@@ -21,7 +21,7 @@ import { guideApi, guideLine, nextMission, OPEN_GUIDE_EVENT, stepFacts, type Con
 const OPEN_POLL_MS = 5000;
 /** While it is closed: only to keep the bubble about the right step. */
 const CLOSED_POLL_MS = 60000;
-/** After "Do it with me" the card is closed but the person is doing a step in the chat: look
+/** After "Do it with me" or "Open <page>" the card is closed but the person is doing a step: look
  * as often as with the card open, for this long, so the guide moves on right after "Create". */
 const TALKING_MS = 15 * 60_000;
 let talkingSince = 0;
@@ -144,10 +144,10 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
       </header>
       <div className="guide-progress" aria-hidden="true"><span style={{ width: `${percent}%` }} /></div>
       {cheer && <p className="guide-cheer"><Check size={14} /> {t("Done: {step}. On to the next one!", { step: cheer })}</p>}
-      {current && <CurrentStep key={current.id} guide={guide} step={current} busy={busy} navigate={(to) => { navigate(to); }} act={act} />}
-      {guide.finished && !allDone && <Missions guide={guide} navigate={navigate} />}
+      {current && <CurrentStep key={current.id} guide={guide} step={current} busy={busy} navigate={(to) => { talkingSince = Date.now(); navigate(to); }} act={act} />}
+      {guide.finished && !allDone && <Missions guide={guide} navigate={(to) => { talkingSince = Date.now(); navigate(to); }} />}
       {allDone && <div className="guide-step-body">
-        <p>{t("Every step and mission is done. The apps are collecting, monitoring and drafting; their Overview pages show what they find.")}</p>
+        <p>{guide.steps.some((step) => step.id === "start" && step.facts.no_app_steps) ? t("Every step and mission is done. Install apps from Settings › Apps to collect, monitor and draft from the plant's data.") : t("Every step and mission is done. The apps are collecting, monitoring and drafting; their Overview pages show what they find.")}</p>
         <div className="guide-actions">
           <button type="button" className="button button-primary" onClick={() => { setOpen(false); startTour(); }}><Play size={14} /> {t("Take the tour")}</button>
           <button type="button" className="button button-secondary" onClick={() => navigate("/")}><ArrowRight size={14} /> {t("Go to the Overview")}</button>

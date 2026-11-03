@@ -34,6 +34,27 @@ from pydantic import ValidationError
 
 from plantcraft.assistant_works.platform import platform_works
 from plantcraft.i18n import t
+
+# The words a platform work's choice shows for its stored values.
+OPTION_LABELS = {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical",
+    "daily": "Daily",
+    "weekdays": "Weekdays",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "en": "English",
+    "pt-BR": "Português (Brasil)",
+    "es": "Español",
+    "opcua": "OPC UA",
+    "pi_web_api": "PI Web API",
+    "csv": "CSV file",
+    "viewer": "Viewer",
+    "editor": "Editor",
+    "admin": "Administrator",
+}
 from plantcraft_sdk.contributes import (
     AssistantOffer,
     AssistantWork,
@@ -99,6 +120,11 @@ class Work:
                 for key in ("title", "help"):
                     if isinstance(shown.get(key), str) and shown[key]:
                         shown[key] = say(shown[key])
+                if self.app == "processcraft" and shown.get("options"):
+                    # What each option reads as; the value sent stays the option itself.
+                    shown["labels"] = {
+                        option: t(OPTION_LABELS.get(option, option)) for option in shown["options"]
+                    }
                 fields.append(shown)
             item.update(
                 object=say(spec.object) if spec.object else spec.object,

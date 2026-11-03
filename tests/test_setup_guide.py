@@ -139,3 +139,21 @@ def test_the_starter_model_is_off_until_turned_on(signed, monkeypatch):
     monkeypatch.setenv("PLANTCRAFT_STARTER_MODEL", "on")
     found = _steps(signed)["model"]["facts"]["starter_model"]
     assert found["available"] is True and found["url"].startswith("https://")
+
+
+def test_the_guides_works_read_in_the_persons_language(monkeypatch):
+    from plantcraft.i18n import reset_language, set_language
+
+    monkeypatch.setenv("PLANTCRAFT_TRANSLATIONS", "1")
+
+    work = next(item for item in WorkRegistry().all() if item.spec.id == "guide-connection")
+    token = set_language("pt-BR")
+    try:
+        shown = work.public()
+    finally:
+        reset_language(token)
+    assert shown["title"] == "Conectar a planta comigo" and shown["object"] == "fonte"
+    kind = next(field for field in shown["fields"] if field["key"] == "kind")
+    assert kind["labels"]["csv"] == "Arquivo CSV" and kind["options"][0] == "opcua"
+    # Sent values stay the options; English stays English.
+    assert work.public()["object"] == "source"
