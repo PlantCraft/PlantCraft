@@ -19,8 +19,8 @@ how to ask.
 | `make format` | ruff format and safe fixes | Before committing |
 | `make serve` | The module against a PlantCraft at `PLANTCRAFT_URL` | Trying it by hand |
 | `make image`, `make package` | The container image; the signed `.pcapp` with its SBOM | Releases |
-| `plantcraft-app check .` | The module against the app standard (also in `make ci`) | After touching `app.toml`, the Makefile or vendor/ |
-| `dev/revendor --all` (platform) | Puts a new SDK wheel and UI package in every module, with hashes | After an SDK or UI release |
+| `plantcraft-app check .` | The module against the app standard (also in `make ci`) | After touching `app.toml` or the Makefile |
+| `dev/sdk-version` (platform) | Moves the SDK and UI versions and every module's pin | At a release |
 
 Every test run is held to a time budget (`[tool.plantcraft.tests]` in `pyproject.toml`): a test
 that grows slow fails and is named ([testing.md](testing.md)).
@@ -52,8 +52,8 @@ repository, the goal and the limit:
 **Something repeated** (the most valuable kind of change):
 
 > Dashboards and Alarms both draw the same signal picker. Move it into `@plantcraft/ui`,
-> release a new UI version, `dev/revendor` it into both, delete the copies, and keep both
-> modules' tests green.
+> use it from both in the same pull request, delete the copies, and keep both modules' tests
+> green.
 
 **A bug from the plant:**
 
@@ -71,8 +71,8 @@ repository, the goal and the limit:
 - **Ask for the test first.** "Write the test that fails, then fix it" gives better fixes than
   "fix it".
 - **Name the folder.** The platform is the repository's root and each module is `apps/<app>`;
-  a change to the SDK or ui is released as a new version and the apps pick it up with
-  `dev/revendor --all`, in the same PR when the change is one.
+  the apps build against the tree's SDK and ui, so a change to them and to the apps that use it
+  go in one PR; the versions move only at a release (`dev/sdk-version`).
 - **Maintainer decisions stay with a person** (AGENTS.md, section 9): making anything public, secrets,
   deleting data or branches, a write path to a plant, licences. An agent stops and asks.
 - **Look at the screen.** For interface changes ask for a Playwright screenshot, or use

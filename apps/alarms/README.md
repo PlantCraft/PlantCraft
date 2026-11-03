@@ -61,7 +61,7 @@ app key), so they keep running when nobody has the page open.
 
 ```sh
 python -m venv .venv && . .venv/bin/activate
-make deps                                  # plantcraft-sdk from vendor/, then PlantCraft Alarms
+make deps                                  # plantcraft-sdk from ../../sdk/python, then PlantCraft Alarms
 (cd frontend && npm ci && npm run build)   # the interface, served under /alarm/
 
 # In PlantCraft: list alarmcraft=/alarm/ in PLANTCRAFT_APPS, then an admin creates an app key

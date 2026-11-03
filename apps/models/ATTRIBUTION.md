@@ -2,7 +2,7 @@
 
 Every third-party asset (font, icon, image, dataset) and every direct dependency
 has a row here (AGENTS.md, "Clean room"). The PlantCraft Models mark (`docs/images/logo.svg`,
-`frontend/public/favicon.svg`), the suite frame `@plantcraft/ui` (vendored package: tokens,
+`frontend/public/favicon.svg`), the suite frame `@plantcraft/ui` (this repository's ui/: tokens,
 fonts setup, sidebar, help browser, brand marks, chart colours) is original work of the
 PlantCraft authors (Apache-2.0).
 
@@ -32,14 +32,14 @@ Library's own annotations at run time; none is copied into this repository.
 | React, React DOM | MIT |
 | Plotly.js (`plotly.js-cartesian-dist-min`), `react-plotly.js` | MIT |
 | CodeMirror 6 (`@codemirror/*`, including `legacy-modes` for Modelica), Lezer (`@lezer/highlight`) | MIT |
-| `@plantcraft/ui` (vendored package, PlantCraft authors) | Apache-2.0 |
+| `@plantcraft/ui` (this repository's ui/, PlantCraft authors) | Apache-2.0 |
 | Vite, Vitest, TypeScript, jsdom (build and test only) | MIT |
 
 ## Python libraries
 
 | Library | License |
 |---|---|
-| plantcraft-sdk (vendored wheel, PlantCraft authors) | Apache-2.0 |
+| plantcraft-sdk (this repository's sdk/python, PlantCraft authors) | Apache-2.0 |
 | NumPy (simulation results), SciPy (optimization studies), pandas (through plantcraft-sdk) | BSD-3-Clause |
 | pydantic | MIT |
 | httpx | BSD-3-Clause |

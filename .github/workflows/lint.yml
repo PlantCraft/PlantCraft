@@ -44,13 +44,12 @@ jobs:
           while IFS= read -r -d '' file; do bash -n "$file" || status=1; done \
             < <(git ls-files -z '*.sh' deploy/install.sh)
           exit $status
-      # Parallel branches that change sdk/python or ui/ must not reuse main's version: the one who
-      # merges second runs dev/sdk-version, which takes the next free one (AGENTS.md, section 6).
-      - name: SDK and ui versions above main's
-        if: github.event_name == 'pull_request'
-        run: python3 dev/sdk-version --check --base HEAD^1
+      # The apps build against this tree's sdk/python and ui/; their pins equal the tree's
+      # versions, which move only at a release (dev/sdk-version; AGENTS.md, section 6).
+      - name: SDK and ui pins equal the tree's
+        run: python3 dev/sdk-version --check
       # Keeps the repository small: no tracked file over 2 MB (the largest real ones, the FMUs and
-      # the vendored UI, are under 1 MB). Built wheels, images and kits belong in releases.
+      # the template's vendored UI, are under 1 MB). Built wheels, images and kits belong in releases.
       - name: no file over 2 MB
         run: |
           big=$(git ls-files -z | xargs -0 wc -c 2>/dev/null | awk '$2 != "total" && $1 > 2097152')

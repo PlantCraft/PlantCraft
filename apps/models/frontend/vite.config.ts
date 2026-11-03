@@ -1,10 +1,14 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import { sharedWithUi } from "@plantcraft/ui/vite";
 
 // PlantCraft Models is served under /model/ behind the suite's proxy (PlantCraft owns /).
 export default defineConfig({
   base: "/model/",
   plugins: [react()],
+  // @plantcraft/ui is linked from this repository's ui/ (file:../../../ui): one copy of each
+  // library both use, this folder's.
+  resolve: { dedupe: sharedWithUi(new URL(".", import.meta.url)) },
   build: {
     outDir: "dist",
     // Not "assets": <prefix>assets/<id> is the suite's uniform page for one asset.

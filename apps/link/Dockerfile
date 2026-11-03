@@ -5,7 +5,8 @@
 #   1. frontend: builds the web interface with Node (never shipped).
 #   2. wheels:   downloads every Python dependency as a wheel, checked against the hashes in
 #                deploy/requirements.lock (binary wheels only: no compiler anywhere), plus the
-#                PlantCraft Analytics wheel. plantcraft-sdk comes from vendor/, never from an index.
+#                PlantCraft Analytics wheel. plantcraft-sdk is built from the repository's
+#                sdk/python, never fetched from an index.
 #   3. runtime:  Python slim, installs from that wheelhouse with --no-index (no network), runs
 #                as an unprivileged user and holds no build tools, not even pip.
 #
@@ -22,11 +23,16 @@ ARG PYTHON_IMAGE=python:3.13.16-slim-trixie@sha256:70729b46c69b4f1e97c4822c1af3d
 
 # On the build machine's own processor: the web interface is the same for amd64 and arm64.
 FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS frontend
-WORKDIR /build/frontend
-# @plantcraft/ui comes from vendor/ (file:../vendor/plantcraft-ui-<version>.tgz), checked
-# against its SHA256 in vendor/README.md before npm installs it.
-COPY vendor/README.md vendor/plantcraft-ui-*.tgz /build/vendor/
-RUN cd /build/vendor && grep -o '[0-9a-f]\{64\}  plantcraft-ui-[^ ]*\.tgz' README.md | sha256sum -c -
+# The repository's layout, so frontend/package.json's file:../../../ui is /build/ui.
+WORKDIR /build/apps/app/frontend
+# @plantcraft/ui comes from this repository's ui/ (the build context named ui: make image passes
+# --build-context ui=../../ui), built first with its own locked dependencies.
+COPY --from=ui package.json package-lock.json tsconfig.json vite.mjs vite.d.mts /build/ui/
+RUN --mount=type=secret,id=build_ca,required=false \
+    if [ -s /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; \
+    cd /build/ui && npm ci --no-audit --no-fund
+COPY --from=ui src /build/ui/src
+RUN cd /build/ui && npm run build
 COPY frontend/package.json frontend/package-lock.json ./
 RUN --mount=type=secret,id=build_ca,required=false \
     if [ -s /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; \
@@ -41,7 +47,12 @@ RUN --mount=type=secret,id=build_ca,required=false \
     if [ -s /run/secrets/build_ca ]; then export PIP_CERT=/run/secrets/build_ca; fi; \
     pip wheel --no-cache-dir --require-hashes --no-deps --only-binary=:all: \
         --wheel-dir /wheelhouse -r requirements.lock
-COPY vendor ./vendor
+# plantcraft-sdk comes from this repository's sdk/python (the build context named sdk), without
+# its tests or any local bytecode.
+COPY --from=sdk pyproject.toml ./sdk/
+COPY --from=sdk plantcraft_sdk ./sdk/plantcraft_sdk
+COPY --from=sdk processcraft_sdk ./sdk/processcraft_sdk
+RUN find ./sdk -name __pycache__ -prune -exec rm -rf {} +
 COPY pyproject.toml README.md LICENSE app.toml ./
 COPY src ./src
 # The version is app.toml's (`make image` passes it): the label, the tag and /healthz agree.
@@ -50,14 +61,11 @@ RUN python -c "import sys, tomllib; \
 want = tomllib.load(open('app.toml', 'rb'))['app']['version']; \
 sys.exit(None if '${VERSION}' == want else \
 f'--build-arg VERSION=${VERSION}, app.toml says {want}: build with make image')"
-# plantcraft-sdk from vendor/ only, checked against the SHA256 in vendor/README.md; then the
+# The plantcraft-sdk wheel from the tree, then the
 # PlantCraft Analytics wheel (--no-deps: the index only provides its build backend, setuptools).
 RUN --mount=type=secret,id=build_ca,required=false \
     if [ -s /run/secrets/build_ca ]; then export PIP_CERT=/run/secrets/build_ca; fi; \
-    grep -o '[0-9a-f]\{64\}  plantcraft_sdk-0.106.0-py3-none-any.whl' vendor/README.md \
-        | (cd vendor && sha256sum -c -) \
-    && cp vendor/plantcraft_sdk-0.106.0-py3-none-any.whl /wheelhouse/ \
-    && pip wheel --no-cache-dir --no-deps --wheel-dir /wheelhouse . \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /wheelhouse ./sdk . \
     && rm -rf build
 
 FROM ${PYTHON_IMAGE} AS runtime
@@ -106,7 +114,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     FORWARDED_ALLOW_IPS=127.0.0.1
 
 WORKDIR /app
-COPY --from=frontend /build/frontend/dist /app/ui
+COPY --from=frontend /build/apps/app/frontend/dist /app/ui
 COPY LICENSE ATTRIBUTION.md CHANGELOG.md app.toml /app/
 COPY fmus /app/fmus
 
@@ -116,7 +124,7 @@ RUN --mount=type=bind,from=wheels,source=/wheelhouse,target=/wheelhouse \
     python -m pip install --no-cache-dir --root-user-action=ignore --no-index --find-links /wheelhouse \
         --require-hashes --no-deps -r /tmp/requirements.lock \
     && python -m pip install --no-cache-dir --root-user-action=ignore --no-index --no-deps \
-        /wheelhouse/plantcraft_sdk-0.106.0-py3-none-any.whl /wheelhouse/linkcraft-*.whl \
+        /wheelhouse/plantcraft_sdk-*-py3-none-any.whl /wheelhouse/linkcraft-*.whl \
     && { python -m pip check | grep -Ev '^fmpy [0-9.]+ requires (cmake|jinja2|nbformat),' || true; } \
         | { ! grep . ; } \
     && python -m compileall -q "$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/linkcraft" \

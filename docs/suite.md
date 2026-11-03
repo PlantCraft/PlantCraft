@@ -63,9 +63,10 @@ algorithms on assets there and `/twin/` opens them.
 | `plantcraft-sdk` | `sdk/python` | API v1 client (people, groups, notifications, results, events, runs), token checks, `@method`, blocks and algorithms (`blocks`: contract, diagram checks and runs, descriptions), compute tasks, `plantcraft-app` (check, sbom), `server` (web app, store, access, files, JSON logs, ops metrics), test kit (`apptest`, `testplant`, `e2e`, time budget) |
 | `@plantcraft/ui` | `ui/` | The suite frame (sidebar, Apps, Queue, search, user menu, the assistant on every page), help browser (`AppHelp`), API client (`createApiClient`), source, signal, asset and people pickers, `DataTable`, Overview widgets, time chart, block diagram editor (`BlockEditor`), base styles |
 
-Both are published on no index: each module vendors the exact files in `vendor/` with their
-SHA-256 sums, and PlantCraft's `dev/revendor` moves every module to a new version at once. The
-current versions are in `sdk/python/pyproject.toml` and `ui/package.json`.
+Both are published on no index. The modules in this repository build against the tree's
+`sdk/python` and `ui/`; a module in its own repository vendors the exact files in `vendor/`
+with their SHA-256 sums (`dev/revendor`). The versions move once per release
+(`dev/sdk-version`) and are in `sdk/python/pyproject.toml` and `ui/package.json`.
 
 ## Where to read next
 

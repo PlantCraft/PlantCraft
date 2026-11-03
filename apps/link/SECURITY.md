@@ -42,7 +42,7 @@ release.
 - **Container.** The image runs as uid 10012 with a read-only root filesystem;
   state lives only in `/data`, scratch in the `/tmp` tmpfs. It holds no build
   tools, not even pip. Dependencies are installed offline from a hash-checked
-  wheelhouse (`deploy/requirements.lock`); `plantcraft-sdk` comes from
-  `vendor/` with its SHA-256 in `vendor/README.md`.
+  wheelhouse (`deploy/requirements.lock`); `plantcraft-sdk` is built from this
+  repository's `sdk/python` in the same image build.
 - **No code execution.** PlantCraft Analytics has no method studio: methods ship with the
   code and cannot be changed at runtime.

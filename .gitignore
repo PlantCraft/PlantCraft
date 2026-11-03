@@ -1,5 +1,5 @@
 __pycache__/
-# Wheels downloaded at the root by hand (a vendored wheel lives in a folder's vendor/).
+# Wheels downloaded at the root by hand (the template's vendored wheel lives in its vendor/).
 /*.whl
 *.py[cod]
 .pytest_cache/
@@ -37,7 +37,7 @@ deploy/data/installer/
 sdk/python/build/
 /build/
 
-# Scratch output of make targets (ui-check).
+# Scratch output of make targets (sdk-wheel).
 build/
 
 # Notebooks: JupyterLite built by notebooks/build.py

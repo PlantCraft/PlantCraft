@@ -238,16 +238,17 @@ The full plan, with roles and the GitHub organisation, is
 [docs/contributing-at-scale.md](docs/contributing-at-scale.md). In short:
 
 - **One session owns one folder** (the platform, `sdk/python`, `ui/`, one `apps/<app>` or
-  `simulator/`) unless its task spans several. Changes to `plantcraft-sdk`, `@plantcraft/ui`
-  or API v1 are released as a new version, and the apps pick it up with `dev/revendor --all`,
-  in the same PR or the next one. Never edit a vendored file by hand.
-- **SDK and ui version numbers are taken at merge, by a script.** Parallel branches start from
-  the same main and would bump to the same number. Right before merging a branch that changes
-  `sdk/python` or `ui/`, run `dev/sdk-version`: it merges `origin/main` (vendored files and
-  version-only conflicts are taken from main), gives each changed package main's next minor
-  version, rebuilds, vendors it into every app, the template and `frontend/`, and commits. Then
-  `dev/ship`, push, merge at once, with the new number in the PR title. `dev/ship` and the Lint
-  check of every PR fail when a branch changes the SDK or ui without a version above main's.
+  `simulator/`) unless its task spans several.
+- **The apps build against the tree's SDK and ui** (since 2026-11-03; docs/app-standard.md,
+  section 3). `make deps` installs `sdk/python` (editable), every interface links `ui/`
+  (`file:`), and the images take both as build contexts; no app under `apps/` has a `vendor/`.
+  A change to `plantcraft-sdk`, `@plantcraft/ui` or API v1 and the apps that use it go in one
+  PR, and every app's tests run on it. **Version numbers do not move in a PR:**
+  `dev/sdk-version` moves the SDK and ui versions and every pin once per release, and the Lint
+  check fails when a pin differs from the tree's version. Only `templates/app` (and apps in
+  their own repositories) vendor the packages, refreshed with `dev/revendor` at a release.
+  Never edit a vendored file by hand. After changing `ui/package.json`'s dependencies, run
+  `make ui-locks` so every interface's lock follows.
 - **One pull request may span folders** when the change is one: an SDK change and the apps that
   use it, a ui change and every app that draws it. Each folder's workflow runs its own checks.
 - Inside this repository, shared files (`plantcraft/api/app.py`, the frontend router, the

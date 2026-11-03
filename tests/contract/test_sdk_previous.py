@@ -5,7 +5,7 @@ before the current SDK. This starts PlantCraft on a local port and runs, in anot
 with only that older SDK, the calls a suite app makes: its service token, identity, the plant,
 series, results, events and the audit log. The older SDK is the newest wheel older than
 ``plantcraft_sdk.__version__`` in ``tests/contract/previous-sdk/`` (the SDK of the last
-release, kept there at each release) or in ``apps/*/vendor``.
+release, kept there at each release) or in ``templates/app/vendor``.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ def _previous_wheel() -> tuple[Path, str] | None:
     found = {}
     wheels = [
         *(ROOT / "tests" / "contract" / "previous-sdk").glob("*craft_sdk-*.whl"),
-        *ROOT.glob("apps/*/vendor/*craft_sdk-*-py3-none-any.whl"),
+        *ROOT.glob("templates/app/vendor/*craft_sdk-*-py3-none-any.whl"),
     ]
     for wheel in wheels:
         match = WHEEL.match(wheel.name)

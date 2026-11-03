@@ -8,7 +8,7 @@
 // the hashed names of a new build never collide with the old ones), and Plotly, already built,
 // is loaded as it is instead of being bundled again on every change. Its pages reload by
 // themselves when a new build lands. With --ui, @plantcraft/ui comes from the shared package's
-// source instead of the vendored file, so a change to the suite frame shows in every app at once.
+// source instead of its built dist/, so a change to the suite frame shows in every app at once.
 // Never used for a release: `make image` builds the interface the normal way.
 import { createRequire } from "node:module";
 import { existsSync, readFileSync } from "node:fs";

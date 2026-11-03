@@ -2,9 +2,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { sharedVendor } from "./sharedVendor.mjs";
+import { sharedWithUi } from "@plantcraft/ui/vite";
 
 export default defineConfig({
   plugins: [react(), sharedVendor()],
+  // @plantcraft/ui is linked from this repository's ui/ (file:../ui): one copy of each
+  // library both use, this folder's.
+  resolve: { dedupe: sharedWithUi(new URL(".", import.meta.url)) },
   build: {
     outDir: "dist",
     // Built files live under /static/; /assets/<id> is the asset deep link (docs/app-standard.md).

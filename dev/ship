@@ -17,14 +17,17 @@ if [ "$#" -eq 0 ]; then
     [ -n "$changed" ] || { echo "ship: nothing differs from main"; exit 0; }
     for dir in "$root"/apps/*/ "$root/simulator/"; do
         rel="${dir#"$root"/}"
-        grep -q "^$rel" <<<"$changed" && set -- "$@" "${dir%/}"
+        # The apps build against the tree's SDK and ui: a change to either runs every app's ci.
+        if grep -q "^$rel" <<<"$changed" || { [ "$rel" != simulator/ ] \
+            && grep -q '^\(sdk/python\|ui\)/' <<<"$changed"; }; then
+            set -- "$@" "${dir%/}"
+        fi
     done
     # Anything outside apps/ and simulator/ is the platform's, the SDK's or the shared ui's.
     grep -qv '^\(apps\|simulator\)/' <<<"$changed" && set -- "$root" "$@"
 fi
 
-# A branch that changes sdk/python or ui/ needs versions above main's (dev/sdk-version).
-git -C "$root" fetch -q origin main 2>/dev/null || true
+# Every app's pin equals the tree's SDK and ui versions (they move at a release: dev/sdk-version).
 "$root/dev/sdk-version" --check
 
 for dir in "$@"; do

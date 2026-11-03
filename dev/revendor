@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Vendor this checkout's plantcraft-sdk wheel and @plantcraft/ui package into the apps (apps/).
+"""Vendor this checkout's plantcraft-sdk wheel and @plantcraft/ui package into an app's vendor/.
 
     make sdk-wheel ui-package                  # build both from this checkout
-    dev/revendor apps/link apps/historian      # or: dev/revendor --all (apps/ and templates/app)
-    make sdk-wheel && dev/revendor --sdk-only apps/historian   # the SDK alone; the app keeps its ui
+    dev/revendor templates/app ../my-app       # or: dev/revendor --all (templates/app)
+    make sdk-wheel && dev/revendor --sdk-only ../my-app   # the SDK alone; the app keeps its ui
+
+For an app outside this repository and for the template, which stands for one. The apps under
+apps/ have no vendor/: they link this tree's sdk/python and ui/ (docs/app-standard.md, section
+3), and dev/sdk-version moves their pins at a release.
 
 For each app: copies ``dist/plantcraft_sdk-<v>.whl`` and ``dist/plantcraft-ui-<v>.tgz`` to
 ``vendor/`` (removing the old files), moves every pin to the new versions (``pyproject.toml``,
@@ -149,12 +153,21 @@ def revendor(app: Path, wheel: Path, tgz: Path | None) -> list[str]:
         packages.pop("node_modules/@plantcraft/ui", None)
         lock.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         subprocess.run(
-            ["npm", "install", "--package-lock-only", "--no-audit", "--no-fund", "--ignore-scripts"],
+            [
+                "npm",
+                "install",
+                "--package-lock-only",
+                "--no-audit",
+                "--no-fund",
+                "--ignore-scripts",
+            ],
             cwd=lock.parent,
             check=True,
             stdout=subprocess.DEVNULL,
         )
-        entry = json.loads(lock.read_text(encoding="utf-8"))["packages"].get("node_modules/@plantcraft/ui", {})
+        entry = json.loads(lock.read_text(encoding="utf-8"))["packages"].get(
+            "node_modules/@plantcraft/ui", {}
+        )
         if entry.get("integrity") != integrity:
             sys.exit(f"dev/revendor: {app.name}: npm wrote another integrity for {tgz.name}")
         changed.append("frontend/package-lock.json")
@@ -184,17 +197,14 @@ def _readme(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("apps", nargs="*", type=Path, help="app folders (apps/<app>)")
-    parser.add_argument(
-        "--all", action="store_true", help="every app in apps/, and the app template"
-    )
+    parser.add_argument("apps", nargs="*", type=Path, help="app folders with a vendor/")
+    parser.add_argument("--all", action="store_true", help="the app template (templates/app)")
     parser.add_argument(
         "--sdk-only", action="store_true", help="vendor the SDK wheel alone; each app keeps its ui"
     )
     args = parser.parse_args()
     apps = list(args.apps)
     if args.all:
-        apps += sorted(path for path in APPS.iterdir() if (path / "app.toml").is_file())
         apps.append(HERE / "templates" / "app")
     if not apps:
         parser.error("name the app folders, or --all")
@@ -203,6 +213,8 @@ def main() -> int:
     for app in apps:
         if not (app / "app.toml").is_file():
             sys.exit(f"dev/revendor: {app} has no app.toml")
+        if app.resolve().parent == APPS:
+            sys.exit(f"dev/revendor: {app} links this tree's sdk/python and ui/; no vendor/")
         print(f"{app.name}: " + ", ".join(revendor(app.resolve(), wheel, tgz)))
     return 0
 

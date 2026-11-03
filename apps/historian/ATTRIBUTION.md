@@ -2,7 +2,7 @@
 
 Every third-party asset (font, icon, image, dataset) and every direct dependency
 has a row here (AGENTS.md, "Clean room"). The PlantCraft Historian mark (`docs/images/logo.svg`,
-`frontend/public/favicon.svg`), the suite frame `@plantcraft/ui` (vendored
+`frontend/public/favicon.svg`), the suite frame `@plantcraft/ui` (this repository's
 package: tokens, fonts, sidebar, help browser, brand marks, chart colours) is original work of
 the PlantCraft authors (Apache-2.0).
 
@@ -17,7 +17,7 @@ the PlantCraft authors (Apache-2.0).
 
 | Library | License |
 |---|---|
-| `@plantcraft/ui` (vendored, PlantCraft authors) | Apache-2.0 |
+| `@plantcraft/ui` (this repository's ui/, PlantCraft authors) | Apache-2.0 |
 | React, React DOM | MIT |
 | Plotly.js (`plotly.js-cartesian-dist-min`), `react-plotly.js` | MIT |
 | Vite, Vitest, TypeScript, jsdom (build and test only) | MIT |
@@ -26,7 +26,7 @@ the PlantCraft authors (Apache-2.0).
 
 | Library | License |
 |---|---|
-| plantcraft-sdk (vendored wheel, PlantCraft authors) | Apache-2.0 |
+| plantcraft-sdk (this repository's sdk/python, PlantCraft authors) | Apache-2.0 |
 | NumPy, pandas | BSD-3-Clause |
 | requests, requests-kerberos (PI Web API source; Kerberos only with the `kerberos` extra) | Apache-2.0 / ISC |
 | openpyxl, et-xmlfile (Excel imports) | MIT |

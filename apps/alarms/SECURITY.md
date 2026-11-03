@@ -47,4 +47,4 @@ release.
   state lives only in `/data`, scratch in the `/tmp` tmpfs. It holds no build
   tools and no compiler, not even pip. Dependencies are installed offline from
   a hash-checked wheelhouse (`deploy/requirements.lock`); `plantcraft-sdk`
-  comes from `vendor/` with its SHA-256 in `vendor/README.md`.
+  is built from this repository's `sdk/python` in the same image build.

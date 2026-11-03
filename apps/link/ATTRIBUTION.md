@@ -2,7 +2,7 @@
 
 Every third-party asset (font, icon, image, dataset) and every direct dependency
 has a row here (AGENTS.md, "Clean room"). The PlantCraft Analytics mark (`docs/images/logo.svg`,
-`frontend/public/favicon.svg`) and the suite frame `@plantcraft/ui` (vendored package: tokens,
+`frontend/public/favicon.svg`) and the suite frame `@plantcraft/ui` (this repository's ui/: tokens,
 fonts setup, sidebar, help browser, brand marks, chart colours) are original work of the
 PlantCraft authors (Apache-2.0).
 
@@ -27,7 +27,7 @@ PlantCraft authors (Apache-2.0).
 
 | Library | License |
 |---|---|
-| plantcraft-sdk (vendored wheel, PlantCraft authors) | Apache-2.0 |
+| plantcraft-sdk (this repository's sdk/python, PlantCraft authors) | Apache-2.0 |
 | NumPy, pandas | BSD-3-Clause |
 | pydantic | MIT |
 | httpx | BSD-3-Clause |

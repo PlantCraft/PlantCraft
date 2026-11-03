@@ -39,7 +39,7 @@ Its metadata is in [app.toml](app.toml) (the suite's app standard).
 
 ```sh
 python -m venv .venv && . .venv/bin/activate
-make deps                                  # plantcraft-sdk from vendor/, then PlantCraft Historian
+make deps                                  # plantcraft-sdk from ../../sdk/python, then PlantCraft Historian
 (cd frontend && npm ci && npm run build)   # the interface, served under /hist/
 
 # In PlantCraft: PLANTCRAFT_APPS=histcraft=/hist/ plantcraft --port 8060
