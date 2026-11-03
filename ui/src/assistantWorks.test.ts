@@ -29,7 +29,7 @@ function server() {
     if (url.endsWith("/api/assistant")) return json({ available: true, allowed: true, reason: "", chats: [] });
     if (url.includes("/api/assistant/works?")) return json({ page: "processcraft:actions", works: [NEW_ACTION, ABOUT] });
     if (url.endsWith("/api/assistant/chats") && method === "POST") return json({ chat: { chat_id: 9 }, messages: [{ message_id: 1, role: "user", text: "Create an action", state: "done", steps: [], charts: [], meta: {} }, answer] }, 201);
-    if (url.endsWith("/api/assistant/chats/9") && method === "GET") return json({ messages: [{ ...answer, state: "done", text: "Here is the action.", meta: { proposals: [proposal] } }] });
+    if (/\/api\/assistant\/chats\/9(\?after=\d+)?$/.test(url) && method === "GET") return json({ messages: [{ ...answer, state: "done", text: "Here is the action.", meta: { proposals: [proposal] } }] });
     if (url.endsWith("/api/actions") && method === "POST") return json({ action_id: 41, title: "Check FV-101 stiction" }, 201);
     if (url.endsWith("/api/assistant/chats/9/proposals")) return json({ proposal: { state: "created" } });
     return json({ detail: "no" }, 404);
