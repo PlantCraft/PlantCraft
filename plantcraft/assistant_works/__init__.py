@@ -226,6 +226,8 @@ class WorkRegistry:
             routes = "".join(route or "" for route in (spec.create, spec.open, spec.form))
             if spec.kind != "create" or "{subject}" in routes or not work.offered_to(level):
                 continue
+            if work.app == PLATFORM_APP and list(spec.pages) == [GUIDE_PAGE]:
+                continue  # the setup guide's steps are done from the guide, not any chat
             if apps is not None and work.app != PLATFORM_APP and work.app not in apps:
                 continue
             found.append(work)
@@ -233,6 +235,7 @@ class WorkRegistry:
 
 
 CREATE = "propose_create"
+GUIDE_PAGE = "setup-guide"
 
 
 def create_tool_name(work: Work) -> str:

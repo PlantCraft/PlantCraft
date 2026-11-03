@@ -157,3 +157,9 @@ def test_the_guides_works_read_in_the_persons_language(monkeypatch):
     assert kind["labels"]["csv"] == "Arquivo CSV" and kind["options"][0] == "opcua"
     # Sent values stay the options; English stays English.
     assert work.public()["object"] == "source"
+
+
+def test_a_free_chat_does_not_carry_the_guides_create_tools():
+    creatable = {work.spec.id for work in WorkRegistry().creatable("admin")}
+    assert not {"guide-basics", "guide-connection", "guide-people"} & creatable
+    assert "new-action" in creatable
