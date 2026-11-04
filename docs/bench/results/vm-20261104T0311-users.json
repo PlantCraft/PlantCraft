@@ -1,0 +1,590 @@
+{
+ "started": "2026-11-04 03:11 UTC",
+ "machine": {
+  "host": "vm",
+  "system": "Linux 6.18.44-fc-v233 x86_64",
+  "cpus": 4,
+  "memory_gib": 15.7,
+  "docker": "4 CPUs 16872804352 x86_64"
+ },
+ "think_s": [
+  5.0,
+  15.0
+ ],
+ "visitor": true,
+ "heavy": 0.3,
+ "pages_known": 119,
+ "calls_left_out": 69,
+ "calls_per_page": 18.6,
+ "seeded": null,
+ "steps": [
+  {
+   "users": 10,
+   "seconds": 203,
+   "pages": 136,
+   "pages_per_s": 0.67,
+   "calls_per_s": 13.7,
+   "page_p50_s": 0.099,
+   "page_p95_s": 0.234,
+   "page_max_s": 0.529,
+   "call_p50_s": 0.023,
+   "call_p95_s": 0.113,
+   "failed_share": 0.0,
+   "failures": {},
+   "queries": {
+    "dashboard 30d": {
+     "n": 4,
+     "p50_s": 0.239,
+     "p95_s": 3.84,
+     "max_s": 3.84
+    },
+    "dashboard 7d": {
+     "n": 3,
+     "p50_s": 2.796,
+     "p95_s": 3.875,
+     "max_s": 3.875
+    },
+    "history 1d raw": {
+     "n": 5,
+     "p50_s": 0.019,
+     "p95_s": 0.02,
+     "max_s": 0.02
+    },
+    "history 30d": {
+     "n": 3,
+     "p50_s": 0.025,
+     "p95_s": 0.034,
+     "max_s": 0.034
+    },
+    "history 90d": {
+     "n": 5,
+     "p50_s": 0.049,
+     "p95_s": 0.053,
+     "max_s": 0.053
+    },
+    "report 30d": {
+     "n": 11,
+     "p50_s": 0.536,
+     "p95_s": 1.669,
+     "max_s": 1.669
+    },
+    "trend 30d": {
+     "n": 6,
+     "p50_s": 0.313,
+     "p95_s": 0.508,
+     "max_s": 0.508
+    },
+    "trend 7d": {
+     "n": 1,
+     "p50_s": 0.298,
+     "p95_s": 0.298,
+     "max_s": 0.298
+    },
+    "trend 90d": {
+     "n": 2,
+     "p50_s": 0.403,
+     "p95_s": 0.478,
+     "max_s": 0.478
+    }
+   },
+   "slowest_routes": [
+    {
+     "route": "GET /dash/api/dashboards/<id>/cards/table-restarts",
+     "calls": 3,
+     "total_s": 9.5,
+     "p95_s": 3.505
+    },
+    {
+     "route": "GET /dash/api/dashboards/<id>/cards/table-up",
+     "calls": 3,
+     "total_s": 8.1,
+     "p95_s": 2.791
+    },
+    {
+     "route": "GET /dash/api/reports/<id>/sections/column-table",
+     "calls": 4,
+     "total_s": 6.0,
+     "p95_s": 1.633
+    },
+    {
+     "route": "GET /api/home",
+     "calls": 126,
+     "total_s": 5.5,
+     "p95_s": 0.079
+    },
+    {
+     "route": "GET /api/notebooks",
+     "calls": 126,
+     "total_s": 4.8,
+     "p95_s": 0.087
+    },
+    {
+     "route": "GET /api/<id>/inbox",
+     "calls": 136,
+     "total_s": 4.7,
+     "p95_s": 0.064
+    },
+    {
+     "route": "GET /link/api/queue",
+     "calls": 137,
+     "total_s": 4.5,
+     "p95_s": 0.092
+    },
+    {
+     "route": "GET /hist/api/queue",
+     "calls": 136,
+     "total_s": 4.2,
+     "p95_s": 0.061
+    },
+    {
+     "route": "GET /api/session",
+     "calls": 126,
+     "total_s": 3.6,
+     "p95_s": 0.053
+    },
+    {
+     "route": "GET /api/assistant",
+     "calls": 136,
+     "total_s": 3.3,
+     "p95_s": 0.053
+    },
+    {
+     "route": "GET /dash/api/dashboards/<id>/cards/<id>",
+     "calls": 38,
+     "total_s": 3.3,
+     "p95_s": 0.205
+    },
+    {
+     "route": "GET /doc/api/queue",
+     "calls": 139,
+     "total_s": 3.3,
+     "p95_s": 0.043
+    }
+   ]
+  },
+  {
+   "users": 50,
+   "seconds": 199,
+   "pages": 669,
+   "pages_per_s": 3.36,
+   "calls_per_s": 68.9,
+   "page_p50_s": 0.123,
+   "page_p95_s": 0.331,
+   "page_max_s": 0.828,
+   "call_p50_s": 0.027,
+   "call_p95_s": 0.121,
+   "failed_share": 0.0,
+   "failures": {},
+   "queries": {
+    "dashboard 30d": {
+     "n": 19,
+     "p50_s": 0.145,
+     "p95_s": 3.188,
+     "max_s": 3.188
+    },
+    "dashboard 7d": {
+     "n": 28,
+     "p50_s": 0.207,
+     "p95_s": 4.034,
+     "max_s": 4.593
+    },
+    "history 1d raw": {
+     "n": 13,
+     "p50_s": 0.025,
+     "p95_s": 0.128,
+     "max_s": 0.128
+    },
+    "history 30d": {
+     "n": 12,
+     "p50_s": 0.029,
+     "p95_s": 0.087,
+     "max_s": 0.087
+    },
+    "history 90d": {
+     "n": 21,
+     "p50_s": 0.05,
+     "p95_s": 0.161,
+     "max_s": 0.208
+    },
+    "report 30d": {
+     "n": 43,
+     "p50_s": 0.166,
+     "p95_s": 1.743,
+     "max_s": 1.816
+    },
+    "trend 30d": {
+     "n": 16,
+     "p50_s": 0.346,
+     "p95_s": 0.609,
+     "max_s": 0.609
+    },
+    "trend 7d": {
+     "n": 14,
+     "p50_s": 0.25,
+     "p95_s": 0.724,
+     "max_s": 0.724
+    },
+    "trend 90d": {
+     "n": 10,
+     "p50_s": 0.514,
+     "p95_s": 1.127,
+     "max_s": 1.127
+    }
+   },
+   "slowest_routes": [
+    {
+     "route": "GET /dash/api/dashboards/<id>/cards/table-restarts",
+     "calls": 17,
+     "total_s": 43.6,
+     "p95_s": 3.976
+    },
+    {
+     "route": "GET /api/home",
+     "calls": 627,
+     "total_s": 40.2,
+     "p95_s": 0.127
+    },
+    {
+     "route": "GET /dash/api/dashboards/<id>/cards/table-up",
+     "calls": 17,
+     "total_s": 39.9,
+     "p95_s": 3.233
+    },
+    {
+     "route": "GET /api/<id>/inbox",
+     "calls": 669,
+     "total_s": 32.5,
+     "p95_s": 0.115
+    },
+    {
+     "route": "GET /api/notebooks",
+     "calls": 627,
+     "total_s": 32.0,
+     "p95_s": 0.114
+    },
+    {
+     "route": "GET /api/session",
+     "calls": 627,
+     "total_s": 26.5,
+     "p95_s": 0.09
+    },
+    {
+     "route": "GET /api/assistant",
+     "calls": 669,
+     "total_s": 24.0,
+     "p95_s": 0.09
+    },
+    {
+     "route": "GET /hist/api/queue",
+     "calls": 669,
+     "total_s": 23.6,
+     "p95_s": 0.077
+    },
+    {
+     "route": "GET /api/desk/team-page",
+     "calls": 627,
+     "total_s": 23.4,
+     "p95_s": 0.083
+    },
+    {
+     "route": "GET /api/me/preferences",
+     "calls": 627,
+     "total_s": 22.8,
+     "p95_s": 0.085
+    },
+    {
+     "route": "GET /api/<id>/queue",
+     "calls": 669,
+     "total_s": 20.9,
+     "p95_s": 0.071
+    },
+    {
+     "route": "GET /api/queue",
+     "calls": 669,
+     "total_s": 20.9,
+     "p95_s": 0.072
+    }
+   ]
+  },
+  {
+   "users": 100,
+   "seconds": 204,
+   "pages": 1305,
+   "pages_per_s": 6.39,
+   "calls_per_s": 133.2,
+   "page_p50_s": 0.169,
+   "page_p95_s": 0.534,
+   "page_max_s": 1.045,
+   "call_p50_s": 0.037,
+   "call_p95_s": 0.182,
+   "failed_share": 0.0,
+   "failures": {},
+   "queries": {
+    "dashboard 30d": {
+     "n": 55,
+     "p50_s": 0.19,
+     "p95_s": 4.609,
+     "max_s": 4.815
+    },
+    "dashboard 7d": {
+     "n": 61,
+     "p50_s": 0.182,
+     "p95_s": 3.649,
+     "max_s": 4.225
+    },
+    "history 1d raw": {
+     "n": 35,
+     "p50_s": 0.045,
+     "p95_s": 0.147,
+     "max_s": 0.189
+    },
+    "history 30d": {
+     "n": 28,
+     "p50_s": 0.038,
+     "p95_s": 0.132,
+     "max_s": 0.291
+    },
+    "history 90d": {
+     "n": 28,
+     "p50_s": 0.064,
+     "p95_s": 0.198,
+     "max_s": 0.336
+    },
+    "report 30d": {
+     "n": 88,
+     "p50_s": 0.246,
+     "p95_s": 1.782,
+     "max_s": 1.988
+    },
+    "trend 30d": {
+     "n": 43,
+     "p50_s": 0.395,
+     "p95_s": 0.635,
+     "max_s": 0.831
+    },
+    "trend 7d": {
+     "n": 23,
+     "p50_s": 0.35,
+     "p95_s": 0.534,
+     "max_s": 0.732
+    },
+    "trend 90d": {
+     "n": 21,
+     "p50_s": 0.54,
+     "p95_s": 0.984,
+     "max_s": 1.123
+    }
+   },
+   "slowest_routes": [
+    {
+     "route": "GET /api/home",
+     "calls": 1219,
+     "total_s": 109.7,
+     "p95_s": 0.22
+    },
+    {
+     "route": "GET /api/<id>/inbox",
+     "calls": 1305,
+     "total_s": 92.2,
+     "p95_s": 0.189
+    },
+    {
+     "route": "GET /api/notebooks",
+     "calls": 1219,
+     "total_s": 88.4,
+     "p95_s": 0.195
+    },
+    {
+     "route": "GET /dash/api/dashboards/<id>/cards/table-restarts",
+     "calls": 39,
+     "total_s": 81.2,
+     "p95_s": 4.382
+    },
+    {
+     "route": "GET /dash/api/dashboards/<id>/cards/table-up",
+     "calls": 39,
+     "total_s": 79.3,
+     "p95_s": 4.116
+    },
+    {
+     "route": "GET /api/session",
+     "calls": 1219,
+     "total_s": 74.4,
+     "p95_s": 0.153
+    },
+    {
+     "route": "GET /api/assistant",
+     "calls": 1305,
+     "total_s": 71.7,
+     "p95_s": 0.153
+    },
+    {
+     "route": "GET /api/desk/team-page",
+     "calls": 1219,
+     "total_s": 70.1,
+     "p95_s": 0.16
+    },
+    {
+     "route": "GET /api/me/preferences",
+     "calls": 1219,
+     "total_s": 70.1,
+     "p95_s": 0.169
+    },
+    {
+     "route": "GET /api/<id>/queue",
+     "calls": 1305,
+     "total_s": 66.3,
+     "p95_s": 0.145
+    },
+    {
+     "route": "GET /hist/api/queue",
+     "calls": 1305,
+     "total_s": 65.9,
+     "p95_s": 0.13
+    },
+    {
+     "route": "GET /api/queue",
+     "calls": 1305,
+     "total_s": 61.6,
+     "p95_s": 0.131
+    }
+   ]
+  }
+ ],
+ "peak": {
+  "processcraft": {
+   "cpu_percent": 90.1,
+   "mem_mib": 613.3
+  },
+  "histcraft": {
+   "cpu_percent": 69.86,
+   "mem_mib": 757.5
+  },
+  "alarmcraft": {
+   "cpu_percent": 69.24,
+   "mem_mib": 179.6
+  },
+  "modelcraft": {
+   "cpu_percent": 33.14,
+   "mem_mib": 196.4
+  },
+  "doccraft": {
+   "cpu_percent": 23.52,
+   "mem_mib": 154.2
+  },
+  "linkcraft": {
+   "cpu_percent": 90.75,
+   "mem_mib": 591.4
+  },
+  "histcraft-gateway": {
+   "cpu_percent": 2.39,
+   "mem_mib": 35.0
+  },
+  "dashcraft": {
+   "cpu_percent": 34.48,
+   "mem_mib": 173.8
+  },
+  "compute-gateway": {
+   "cpu_percent": 11.68,
+   "mem_mib": 61.8
+  },
+  "proxy": {
+   "cpu_percent": 27.47,
+   "mem_mib": 25.7
+  },
+  "histcraft-collector": {
+   "cpu_percent": 95.56,
+   "mem_mib": 162.8
+  },
+  "simcraft": {
+   "cpu_percent": 86.34,
+   "mem_mib": 298.2
+  },
+  "llm-egress": {
+   "cpu_percent": 0.01,
+   "mem_mib": 17.7
+  },
+  "histcraft-db": {
+   "cpu_percent": 83.61,
+   "mem_mib": 657.8
+  },
+  "installer": {
+   "cpu_percent": 34.51,
+   "mem_mib": 93.0
+  },
+  "alarmcraft-sandbox": {
+   "cpu_percent": 8.51,
+   "mem_mib": 127.7
+  },
+  "modelcraft-executor": {
+   "cpu_percent": 4.13,
+   "mem_mib": 20.6
+  },
+  "linkcraft-executor": {
+   "cpu_percent": 127.75,
+   "mem_mib": 350.3
+  }
+ },
+ "cpu_by_step": {
+  "10 people": {
+   "processcraft": 26.12,
+   "histcraft": 64.6,
+   "alarmcraft": 33.91,
+   "modelcraft": 24.05,
+   "doccraft": 23.52,
+   "linkcraft": 23.45,
+   "histcraft-gateway": 2.16,
+   "dashcraft": 32.08,
+   "compute-gateway": 0.44,
+   "proxy": 7.93,
+   "histcraft-collector": 95.56,
+   "simcraft": 82.61,
+   "llm-egress": 0.01,
+   "histcraft-db": 83.61,
+   "installer": 34.51,
+   "alarmcraft-sandbox": 8.51,
+   "modelcraft-executor": 3.89,
+   "linkcraft-executor": 9.44
+  },
+  "50 people": {
+   "processcraft": 70.05,
+   "histcraft": 57.22,
+   "alarmcraft": 69.24,
+   "modelcraft": 15.08,
+   "doccraft": 9.77,
+   "linkcraft": 68.2,
+   "histcraft-gateway": 2.39,
+   "dashcraft": 21.49,
+   "compute-gateway": 9.02,
+   "proxy": 27.01,
+   "histcraft-collector": 86.06,
+   "simcraft": 86.34,
+   "llm-egress": 0.01,
+   "histcraft-db": 22.15,
+   "installer": 31.38,
+   "alarmcraft-sandbox": 8.36,
+   "modelcraft-executor": 3.8,
+   "linkcraft-executor": 99.59
+  },
+  "100 people": {
+   "processcraft": 90.1,
+   "histcraft": 69.86,
+   "alarmcraft": 41.54,
+   "modelcraft": 33.14,
+   "doccraft": 11.21,
+   "linkcraft": 90.75,
+   "histcraft-gateway": 2.23,
+   "dashcraft": 34.48,
+   "compute-gateway": 11.68,
+   "proxy": 27.47,
+   "histcraft-collector": 92.89,
+   "simcraft": 80.84,
+   "llm-egress": 0.01,
+   "histcraft-db": 71.55,
+   "installer": 3.29,
+   "alarmcraft-sandbox": 8.42,
+   "modelcraft-executor": 4.13,
+   "linkcraft-executor": 127.75
+  }
+ }
+}
