@@ -85,6 +85,11 @@
    drawn by the platform, Messages) keeps clear of it (recording, 2026-11-03). */
 body:has(.demo-visit-bar) .asst-composer { margin-bottom: 64px; }
 body:has(.demo-visit-bar) :is(.pc-drawer-composer, .msg-composer) { padding-bottom: 62px; }
+/* The clock covered the end of every page: the app beside the sidebar stops above it, and
+   PlantCraft's own pages end with room for it. */
+body:has(.demo-visit-bar) .pcs-frames { height: calc(100dvh - 60px); }
+@media (max-width: 820px) { body:has(.demo-visit-bar) .pcs-frames { height: calc(100dvh - 116px); } }
+body:has(.demo-visit-bar) .pcs-content { padding-bottom: 72px; }
 .demo-visit-clock { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
 .demo-visit-note { overflow: hidden; text-overflow: ellipsis; }
 .demo-visit-leave { padding: calc(3px * var(--pc-space-scale, 1)) calc(10px * var(--pc-space-scale, 1)); border: 0; border-radius: 999px; background: var(--pc-primary-soft); color: var(--pc-primary-text); display: inline-flex; align-items: center; gap: var(--pc-space-1); font: inherit; font-weight: 600; cursor: pointer; }
