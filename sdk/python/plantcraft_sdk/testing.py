@@ -35,22 +35,35 @@ Two ways in, one implementation (``fake.handle``):
   with uvicorn or ``fake.http_client(transport="asgi")`` (Starlette's TestClient).
 """
 
+# ruff: noqa: F401 (every name this module imported before its split stays importable from it)
+
 import copy
+import hmac
+import json
 import math
 import re
 import time
-from collections.abc import Mapping
-from datetime import datetime, timezone
+import zlib
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from functools import cached_property
 from typing import Any
-from urllib.parse import parse_qsl
+from urllib.parse import parse_qsl, unquote
 
 import httpx
 import numpy as np
 import pandas as pd
+from pydantic import ValidationError
 
+from plantcraft_sdk import contributes as _contributes
 from plantcraft_sdk import derived as _derived
+from plantcraft_sdk import desk as _desk
+from plantcraft_sdk import events as _events
+from plantcraft_sdk import explore as _explore
 from plantcraft_sdk import jwt
+from plantcraft_sdk import links as _links
+from plantcraft_sdk import llm as _llm
 from plantcraft_sdk import scopes as _scopes
 from plantcraft_sdk._fake.assets import (  # noqa: F401 (the names this module has always had)
     _AssetRoutes,
@@ -89,22 +102,38 @@ from plantcraft_sdk._fake.wire import (  # noqa: F401 (the names this module has
     _Request,
 )
 from plantcraft_sdk.assets import (
+    MAX_RESULT_ASSETS,
+    RESULT_TYPE,
     STARTER_TYPES,
+    parse_result_assets,
+    resolve_types,
     type_path,
 )
 from plantcraft_sdk.contract import (
+    AGGREGATIONS,
     CENTRAL_AUDIENCE,
     ISSUER,
     MAX_BATCH_POINTS,
+    MAX_BATCH_SIGNALS,
     MAX_POINTS,
+    SERVICE_TOKEN_SECONDS,
     TOKEN_COOKIE,
     USER_TOKEN_SECONDS,
+    BatchBuilder,
     ContractError,
+    aggregate,
     iso,
     iso_many,
     kind_of,
+    parse_time,
+    parse_times,
+    parse_window,
+    series_range,
     shape_values,
+    subject_digest,
+    unique_signals,
 )
+from plantcraft_sdk.people import check_notification, check_resolution
 from plantcraft_sdk.refs import split_signal_id
 
 _ROUTES: list[tuple[str, re.Pattern[str], str]] = [
