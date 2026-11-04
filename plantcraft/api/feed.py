@@ -112,9 +112,15 @@ def _action_changes(rt: Any, user: str, since: str) -> list[dict[str, Any]]:
                 actions[action["action_id"]] = action
     items = []
     for action in sorted(actions.values(), key=lambda item: item["updated_at"], reverse=True)[:60]:
-        for entry in rt.workspace.actions.history(action["action_id"]):
-            if entry["actor"] == user or str(entry["created_at"]) < since:
-                continue
+        entries = [
+            entry
+            for entry in rt.workspace.actions.history(action["action_id"])
+            if entry["actor"] != user and str(entry["created_at"]) >= since
+        ]
+        for entry, more in _bursts(entries):
+            detail = entry["text"][:500]
+            if more:
+                detail = t("{change} (and {n} more)", change=detail, n=more)
             items.append(
                 {
                     "key": f"action:{action['action_id']}:{entry['created_at']}:{entry['kind']}",
@@ -124,7 +130,7 @@ def _action_changes(rt: Any, user: str, since: str) -> list[dict[str, Any]]:
                     "app": "processcraft",
                     "from": entry["actor_name"],
                     "title": action["title"],
-                    "detail": entry["text"][:500],
+                    "detail": detail,
                     "at": entry["created_at"],
                     "href": f"/actions/{action['action_id']}",
                     "actions": [],
@@ -134,6 +140,37 @@ def _action_changes(rt: Any, user: str, since: str) -> list[dict[str, Any]]:
                 }
             )
     return items
+
+
+# Changes one person makes to an action in a row (a checklist of five items, then a status) are
+# one notification, not one each: the last change, and how many came before it.
+BURST_MINUTES = 10
+
+
+def _bursts(entries: list[dict[str, Any]]) -> list[tuple[dict[str, Any], int]]:
+    """``entries`` (oldest first) as (the last of each run by one person, how many before it)."""
+
+    runs: list[list[dict[str, Any]]] = []
+    for entry in entries:
+        last = runs[-1][-1] if runs else None
+        if (
+            last is not None
+            and last["actor"] == entry["actor"]
+            and _minutes_between(last["created_at"], entry["created_at"]) <= BURST_MINUTES
+        ):
+            runs[-1].append(entry)
+        else:
+            runs.append([entry])
+    return [(run[-1], len(run) - 1) for run in runs]
+
+
+def _minutes_between(first: str, then: str) -> float:
+    try:
+        start = datetime.fromisoformat(str(first).replace("Z", "+00:00"))
+        end = datetime.fromisoformat(str(then).replace("Z", "+00:00"))
+    except ValueError:
+        return float("inf")
+    return abs((end - start).total_seconds()) / 60
 
 
 def _followed_alarms(rt: Any, user: str, since: str) -> list[dict[str, Any]]:
