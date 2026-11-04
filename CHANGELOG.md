@@ -56,6 +56,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- A reference to an assistant chat or a Messages conversation (in an action, a note, a message) shows its title to the people who may open it; anyone else still reads only "Assistant chat 2". It was "Assistant chat #2" for everyone, so an action's About list said nothing.
 - Public demo: Documents opens inside the suite's frame like every other app, so its pages keep the visit's clock and Leave button and say "Visitor (read-only)" (the proxy framed every app but `/doc/`).
 - On a phone, an action's long references ("Action: AC-9 · Retune PIC-1202: ...") wrap instead of widening the page.
 - Public demo: the visit's clock no longer covers the end of a page; an app stops above it and PlantCraft's own pages leave room for it.

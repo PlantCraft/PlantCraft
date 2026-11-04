@@ -179,6 +179,15 @@ class ChatStore(Store):
             ).fetchone()
         return row is not None
 
+    def kept_title(self, chat_id: int) -> str | None:
+        """A kept chat's title ("" when it has none), or None when there is no such chat."""
+
+        with self._lock, self._connect() as connection:
+            row = connection.execute(
+                "SELECT title FROM assistant_chats WHERE chat_id = ? AND kept = 1", (chat_id,)
+            ).fetchone()
+        return None if row is None else str(row[0] or "")
+
     def readable(self, chat_id: int, username: str, grants: set[str]) -> dict[str, Any] | None:
         """The chat for its owner (a side panel's chat not kept too), or a kept chat for someone
         it is shared with (``grants`` as above)."""

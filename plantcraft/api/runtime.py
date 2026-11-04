@@ -150,13 +150,15 @@ class ApiRuntime:
         # app:<id>: a whole app, for the assistant an app opens on its own page ("which loops
         # are worst?"): the specialists who read that app answer from all it published.
         self.platform.refs.register("app", self._app_ref, owner="platform")
-        # chat:<id>: one of the assistant's chats, in an action or a message.
-        # Like a note, the link says only its kind and number; opening it shows the chat to its
-        # owner and to the people it is shared with.
+        # chat:<id>: one of the assistant's chats, in an action or a message. Its title is for
+        # the people who may open it (its owner, those it is shared with); anyone else reads
+        # only its kind and number, like a note (2026-11-04: "Assistant chat #2" for everyone).
         self.platform.refs.register("chat", self._chat_ref, owner="platform")
-        # conversation:<id>: a conversation of Messages, in an action or a note (2026-10-27). Like
-        # a chat, the link says only its kind and number; Messages opens it to its members.
+        self.platform.refs.guard("chat", self.chat_reader)
+        # conversation:<id>: a conversation of Messages, in an action or a note (2026-10-27). Its
+        # title is for its members; anyone else reads its kind and number.
         self.platform.refs.register("conversation", self._conversation_ref, owner="platform")
+        self.platform.refs.guard("conversation", self.conversation_reader)
         # An action's title and state are for the people who see it (its owner, its group and
         # those above, admins): anyone else reads "Action 42" (security review, 2026-10-26).
         self.platform.refs.guard("action", self.action_reader)
@@ -433,22 +435,43 @@ class ApiRuntime:
         return known - apps
 
     def _chat_ref(self, item_id: str) -> dict[str, Any] | None:
-        if not item_id.isdigit() or not self.assistant.store.exists(int(item_id)):
+        title = self.assistant.store.kept_title(int(item_id)) if item_id.isdigit() else None
+        if title is None:
             return None
         return {
-            "title": t("Assistant chat #{id}", id=item_id),
+            "title": title or t("Assistant chat #{id}", id=item_id),
             "href": f"/assistant/{item_id}",
             "status": None,
         }
 
+    def chat_reader(self, username: str) -> Callable[[str], bool]:
+        """Whether ``username`` reads a chat, by its id: its owner and those it is shared with."""
+
+        grants = {
+            "everyone",
+            f"user:{username}",
+            *(f"group:{group['group_id']}" for group in self.workspace.groups.of(username)),
+        }
+        store = self.assistant.store
+        return lambda chat_id: (
+            chat_id.isdigit() and store.readable(int(chat_id), username, grants) is not None
+        )
+
     def _conversation_ref(self, item_id: str) -> dict[str, Any] | None:
-        if not item_id.isdigit() or self.workspace.messages.get(int(item_id)) is None:
+        found = self.workspace.messages.get(int(item_id)) if item_id.isdigit() else None
+        if found is None:
             return None
         return {
-            "title": t("Conversation #{id}", id=item_id),
+            "title": found.get("title") or t("Conversation #{id}", id=item_id),
             "href": f"/messages/{item_id}",
             "status": None,
         }
+
+    def conversation_reader(self, username: str) -> Callable[[str], bool]:
+        """Whether ``username`` reads a conversation, by its id: its members."""
+
+        messages = self.workspace.messages
+        return lambda item_id: item_id.isdigit() and messages.is_member(int(item_id), username)
 
     def _signal_ref(self, signal_id: str) -> dict[str, Any] | None:
         """A signal opens a new trend of it in the app that declares the ``trend`` kind (View's
