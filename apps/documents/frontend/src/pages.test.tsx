@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { issuedDay } from "./dates";
 import { NAV } from "./pages";
 import { splitName } from "./send";
 
@@ -20,5 +21,13 @@ describe("a file's name", () => {
     expect(splitName("DOC-U200-OM-001 Hydrotreating unit operating manual.pdf")).toEqual({ number: "DOC-U200-OM-001", title: "Hydrotreating unit operating manual" });
     expect(splitName("INC-2026-007 PIC-1002 separator pressure oscillation.pdf")).toEqual({ number: "INC-2026-007", title: "PIC-1002 separator pressure oscillation" });
     expect(splitName("notes from the field.docx")).toEqual({ number: "", title: "notes from the field" });
+  });
+});
+
+describe("a revision's issue day", () => {
+  it("is the day itself, with no time and no shift into another zone", () => {
+    expect(issuedDay("2026-03-02", "en-US")).toBe("Mar 2, 2026");
+    expect(issuedDay("2026-03-02T00:00:00", "en-US")).toBe("Mar 2, 2026");
+    expect(issuedDay("Rev. C")).toBe("Rev. C");
   });
 });

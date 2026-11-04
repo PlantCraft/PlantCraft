@@ -7,6 +7,8 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 ### Fixed
 
 - A public demo's visitor opens "Links to check" and sees the queue of the folders they see; it was a page that only said the part was locked. Approving or rejecting is still refused.
+- A revision's Issued date reads as the day ("Mar 2, 2026"), not as midnight UTC, which a plant
+  west of Greenwich saw as the day before.
 
 ### Removed
 
