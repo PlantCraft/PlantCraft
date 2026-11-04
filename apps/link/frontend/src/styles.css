@@ -189,6 +189,9 @@ td small + small { margin-top: calc(3px * var(--pc-space-scale, 1)); }
 /* Algorithms on assets: timing, the assets they run on. */
 .asset-timing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pc-space-2); }
 .asset-timing small { grid-column: 1 / -1; }
+/* A number field keeps its own width otherwise, and pushed the page past a phone's screen. */
+.asset-timing label { min-width: 0; }
+.asset-timing input, .asset-timing select { width: 100%; min-width: 0; }
 .asset-picker ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(6px * var(--pc-space-scale, 1)); }
 .asset-picker li { display: flex; align-items: center; justify-content: space-between; gap: var(--pc-space-2); padding: calc(6px * var(--pc-space-scale, 1)) var(--pc-space-2); border: 1px solid var(--pc-border); border-radius: var(--pc-radius-sm, 6px); background: var(--pc-surface-2, transparent); }
 .asset-picker li span { display: flex; flex-direction: column; min-width: 0; }
@@ -429,9 +432,9 @@ td small + small { margin-top: calc(3px * var(--pc-space-scale, 1)); }
   .blkf-port-main, .blkf-param-main { grid-template-columns: 1fr 1fr; }
   .blkf-remove { justify-self: end; grid-column: 1 / -1; }
 }
-.blkt-step { display: grid; gap: var(--pc-space-2); }
+.blkt-step { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--pc-space-2); }
 .blkt-step h3 { display: flex; align-items: center; gap: var(--pc-space-2); margin: 0; font-size: var(--pc-fs-md, 15px); }
-.blkt-step > select { max-width: 520px; }
+.blkt-step > select { max-width: min(520px, 100%); }
 .blkt-points select, .blkt-points input { width: 100%; min-width: 0; }
 .blkt-points td:first-child { white-space: nowrap; }
 
