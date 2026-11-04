@@ -147,15 +147,21 @@ def test_strangers_cannot_read_a_conversation(signed):
     assert signed.get("/api/messages/conversations/999999").status_code == 404
 
 
-def test_a_conversation_reference_says_only_its_number_and_opens_messages(signed):
+def test_a_conversation_reference_names_it_only_to_its_members(signed):
     ana = _person(signed, "ana")
     _person(signed, "bia")
     started = ana.post("/api/messages/conversations", json={"members": ["bia"], "text": "oi"})
     conversation_id = started.json()["conversation"]["conversation_id"]
-    refs = signed.app.state.runtime.platform.refs
-    found = refs.resolve(f"conversation:{conversation_id}")
+    runtime = signed.app.state.runtime
+    titled = runtime.workspace.messages.start("ana", ["bia"], title="Valve test")
+    refs = runtime.platform.refs
+    found = refs.resolve(f"conversation:{conversation_id}", viewer="ana")
     assert found["exists"] and found["href"] == f"/messages/{conversation_id}"
-    assert found["title"] == f"Conversation #{conversation_id}"
+    assert found["title"] == f"Conversation #{conversation_id}"  # no title: its number
+    member = refs.resolve(f"conversation:{titled['conversation_id']}", viewer="bia")
+    assert member["title"] == "Valve test" and not member.get("hidden")
+    stranger = refs.resolve(f"conversation:{titled['conversation_id']}", viewer="admin")
+    assert stranger["hidden"] and "Valve test" not in stranger["title"]
     assert refs.resolve("conversation:999999")["exists"] is False
 
 
