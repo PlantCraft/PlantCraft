@@ -6,5 +6,5 @@ export function issuedDay(value: string, language: string = locale): string {
   const day = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
   if (!day) return value;
   const noon = Date.UTC(Number(day[1]), Number(day[2]) - 1, Number(day[3]), 12);
-  return new Date(noon).toLocaleDateString(language, { dateStyle: "medium", timeZone: "UTC" });
+  return new Date(noon).toLocaleDateString(language, { dateStyle: "medium", timeZone: "UTC" }); // utc-day
 }
