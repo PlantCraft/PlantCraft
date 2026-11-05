@@ -181,8 +181,15 @@ def test_a_document_is_linked_to_assets_by_a_person_and_found_by_them(client, ru
     )
 
 
-def test_search_mixes_words_and_meaning_and_ranks_the_asset_asked_about(client, runtime):
+def test_search_mixes_words_and_meaning_and_ranks_the_asset_asked_about(
+    client, runtime, monkeypatch
+):
     guide(client, runtime)
+    # Without the meaning model (the hashed stand-in) every passage is found by words only, as
+    # the search page says; with it, by words and meaning.
+    alone = client.post("/api/search", json={"query": "saw-tooth output"}).json()["passages"]
+    assert alone and all(hit["found_by"] == ["words"] for hit in alone)
+    monkeypatch.setattr(runtime.library.embedder, "name", "multilingual-e5-small")
     answer = client.post(
         "/api/search", json={"query": "why does FIC-1001 cycle with a saw-tooth output?"}
     ).json()

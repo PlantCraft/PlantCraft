@@ -6,6 +6,11 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Fixed
+
+- A signal's compression reads "exception ± 0.1 %, compression ± 0.2 % of the value": the second figure had no name.
+- The overview cards and the Customize list show their titles and descriptions in Portuguese and Spanish; they were in English in every language.
+
 ### Added
 
 - **Data lake feed.** A saved export can be sent to the data lake every hour or every day (Exports › *Send to the data lake*, administrators only, audited as `histcraft.export.lake`). The collector writes each period that ended as one long CSV (`time`, `signal`, `tag`, `value`, `unit`) under `<export>/date=YYYY-MM-DD/` in `HISTCRAFT_LAKE_DIR` (an installation's `data/lake-export/`, left out of the backups), with `signals.csv` beside it. Files appear whole, a period written again keeps its name, a stop is caught up, and files older than `HISTCRAFT_LAKE_KEEP_DAYS` (7) are deleted.

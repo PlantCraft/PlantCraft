@@ -503,8 +503,12 @@ def signal_value(
     values = [
         value for _, value in series if isinstance(value, (int, float)) and not pd.isna(value)
     ]
-    value = None
-    if values:
+    value: Any = None
+    # A text signal (a mode: AUTO, MAN) has a last and a first value, never a mean.
+    texts = [value for _, value in series if isinstance(value, str) and value]
+    if agg in ("last", "first") and texts and not values:
+        value = texts[-1] if agg == "last" else texts[0]
+    elif values:
         if agg == "last":
             value = values[-1]
         elif agg == "first":
@@ -521,8 +525,8 @@ def signal_value(
         "tag": tag,
         "agg": agg,
         "window": window,
-        "value": None if value is None else float(value),
-        "samples": len(values),
+        "value": value if value is None or isinstance(value, str) else float(value),
+        "samples": len(values) or (len(texts) if isinstance(value, str) else 0),
         "at": series[-1][0] if series else None,
         "start": start.isoformat(),
         "end": end.isoformat(),

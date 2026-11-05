@@ -176,7 +176,11 @@ class RuleDraft(BaseModel):
         if self.editor == "python" and not nodes(self.diagram, PYTHON_BLOCK):
             raise ValueError(t("a Python rule has a Python block"))
         if relative(self.diagram) and self.where.empty:
-            raise ValueError(t("this asset's values and events need a rule over assets"))
+            raise ValueError(
+                t(
+                    "say where it applies (Where: the assets, or a monitor): pv, sp and op are the values of each asset it covers"
+                )
+            )
         return self
 
     @property

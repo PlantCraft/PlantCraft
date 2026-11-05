@@ -21,7 +21,7 @@ describe("settings levels", () => {
     expect(override("30")).toBe(30);
   });
   it("says the exception first and picks the profile a point shows", () => {
-    expect(compression({ kind: "number", deviation: 0.4, deviation_percent: null, exception: 0.2, exception_percent: null, unit: "bar" })).toBe("exception ± 0.2 bar, ± 0.4 bar");
+    expect(compression({ kind: "number", deviation: 0.4, deviation_percent: null, exception: 0.2, exception_percent: null, unit: "bar" })).toBe("exception ± 0.2 bar, compression ± 0.4 bar");
     expect(profileOf({ profile: "fine", own: { deviation: null, exception: null } })).toBe("fine");
     expect(profileOf({ profile: "", own: { deviation: 1, exception: null } })).toBe("custom");
     expect(profileOf({ profile: "", own: { deviation: null, exception: null } })).toBe("");
