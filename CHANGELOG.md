@@ -56,6 +56,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- An asset's Signals table shows a text signal's last value (a loop's mode: AUTO, MAN); it showed "—", because the last value counted numbers only.
 - SDK: `plantcraft_sdk.i18n_check` also reads the widget titles, descriptions and picks of an app's `app.toml` into its server catalog, so `make standard` fails when one is not translated (five apps had none).
 - Notifications: changes one person makes to an action in a row (a checklist of five items, then a status) arrive as one notification, "the last change (and 4 more)", not one each.
 - A reference to an assistant chat or a Messages conversation (in an action, a note, a message) shows its title to the people who may open it; anyone else still reads only "Assistant chat 2". It was "Assistant chat #2" for everyone, so an action's About list said nothing.
