@@ -44,13 +44,13 @@ export function effective(value: number, unit: string, origin: Origin): string {
 }
 
 /** How a point is compressed: "± 0.2 bar", "± 0.1 % of the value" (no known range) or "every change",
- * with its exception first when it has one ("exception ± 0.1 bar, ± 0.2 bar"). */
+ * with its exception first when it has one ("exception ± 0.1 bar, compression ± 0.2 bar"). */
 export function compression(point: { kind: string; deviation: number; deviation_percent?: number | null; exception?: number; exception_percent?: number | null; unit: string }): string {
   if (point.kind !== "number") return t("every change");
   const share = (value: number | null | undefined, fixed: number | undefined) => (value ? t("± {percent} % of the value", { percent: formatNumber(value, 4) }) : fixed ? `± ${formatValue(fixed, point.unit)}` : "");
   const main = share(point.deviation_percent, point.deviation) || t("every change");
   const exception = share(point.exception_percent, point.exception);
-  return exception ? t("exception {exception}, {compression}", { exception, compression: main }) : main;
+  return exception ? t("exception {exception}, compression {compression}", { exception, compression: main }) : main;
 }
 
 /** A form field of an optional override: empty inherits (null); anything else is a number. */
