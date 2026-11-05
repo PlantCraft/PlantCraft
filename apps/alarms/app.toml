@@ -307,7 +307,7 @@ sizes = [{ w = 4, h = 3 }, { w = 6, h = 3 }, { w = 12, h = 2 }]
 
 [[contributes.widgets]]
 id = "bad-actors"
-title = "Alarms: most frequent"
+title = "Alarms: most frequent, 7 days"
 description = "The 10 alarms raised most often in the last 7 days, most raised first, with their share of all alarms: the bad actors to fix first."
 size = "m"
 kind = "bars"

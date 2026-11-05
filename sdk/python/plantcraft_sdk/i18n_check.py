@@ -10,6 +10,9 @@ its code passes to ``t()``:
   ``ui/src``, ``src/<app package>``).
 - TypeScript (``.ts``, ``.tsx``) and Python (``.py``) are read; tests, ``node_modules`` and
   builds are not.
+- An app's server catalog (``src/<package>/locales``) also covers the texts of its ``app.toml``
+  that the app translates when it answers: each widget's title, description and pick
+  (``plantcraft_sdk.widgets.catalog``).
 
 It always fails on a broken catalog: not a flat object of non-empty strings, or a translation
 whose ``{name}`` fields differ from the English. With ``--strict`` it also fails when a text is
@@ -24,6 +27,7 @@ import ast
 import json
 import re
 import sys
+import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -96,6 +100,29 @@ def texts_in(path: Path) -> set[str]:
     return {text for text in found if text.strip()}
 
 
+def manifest_texts(covered: Path) -> set[str]:
+    """The ``app.toml`` texts an app's server package translates: its widgets' title,
+    description and pick. Only for a package under ``src/`` beside the ``app.toml``."""
+
+    manifest = covered.parent.parent / "app.toml"
+    if covered.parent.name != "src" or not (covered / "__init__.py").is_file():
+        return set()
+    if not manifest.is_file():
+        return set()
+    try:
+        data = tomllib.loads(manifest.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError:
+        return set()
+    widgets = (data.get("contributes") or {}).get("widgets") or []
+    return {
+        str(item[key])
+        for item in widgets
+        if isinstance(item, dict)
+        for key in ("title", "description", "pick")
+        if isinstance(item.get(key), str) and item[key].strip()
+    }
+
+
 def covered_folder(locales: Path) -> Path:
     parent = locales.parent
     return parent.parent if parent.name == "i18n" else parent
@@ -115,6 +142,7 @@ def check(locales: Path, language: str) -> Coverage:
     covered = covered_folder(locales)
     for path in _sources(covered):
         coverage.used |= texts_in(path)
+    coverage.used |= manifest_texts(covered)
     if not coverage.catalog.is_file():
         return coverage
     try:
