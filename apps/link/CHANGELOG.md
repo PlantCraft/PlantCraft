@@ -8,6 +8,7 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ### Fixed
 
+- On a phone, an algorithm's "What it reads and gives" table keeps its words whole ("Signal", "TIC1104_OP") and scrolls sideways when it must; it broke them in the middle.
 - On a phone, a block's or algorithm's Test tab and an algorithm's Inputs and outputs tab fit the
   screen: a long asset name in the picker and the run timing fields widened the page.
 

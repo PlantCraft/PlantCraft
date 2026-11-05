@@ -238,6 +238,12 @@ td small + small { margin-top: calc(3px * var(--pc-space-scale, 1)); }
 .blk-contract td { vertical-align: top; overflow-wrap: anywhere; }
 .blk-contract td small { display: block; color: var(--pc-text-3); }
 .blk-contract .blk-group th { background: var(--pc-surface-2); color: var(--pc-text-2); font-size: var(--pc-fs-xs); text-align: left; }
+/* A phone has no room for fixed columns: the words keep whole ("Signal", "TIC1104_OP") and the
+   table scrolls sideways inside its frame when it must. */
+@media (max-width: 640px) {
+  .blk-contract { table-layout: auto; }
+  .blk-contract td { overflow-wrap: normal; word-break: normal; }
+}
 .blkf { display: grid; gap: var(--pc-space-4); }
 .blkf-set { border: 1px solid var(--pc-border); border-radius: var(--pc-radius-lg); padding: var(--pc-space-4); margin: 0; min-width: 0; display: grid; gap: var(--pc-space-3); background: var(--pc-surface); }
 .blkf-set > legend { padding: 0 calc(6px * var(--pc-space-scale, 1)); font-weight: var(--pc-fw-semibold); }
