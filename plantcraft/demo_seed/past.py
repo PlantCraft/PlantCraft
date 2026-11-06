@@ -19,6 +19,20 @@ from .links import Links, _named
 # or a status (in_progress, blocked, done, cancelled).
 PAST_ACTIONS: list[dict[str, Any]] = [
     {
+        # Open and late, but opened nine days ago: an action seeded today and already overdue
+        # read "Open for 20 min" next to its late due date (owner, 2026-11-06).
+        "title": "Renew the historian server certificate",
+        "description": (
+            "The historian's TLS certificate expires at the end of the month; renew it and "
+            "restart the OPC UA gateway in the Sunday window."
+        ),
+        "priority": "high",
+        "owner": "tiago.ramos",
+        "group_id": "it-automation",
+        "refs": [],
+        "steps": [(9, 10, "camila.duarte", "create")],
+    },
+    {
         "title": "Give the averaging levels the surge-level protocol",
         "description": (
             "Six drum levels only have to stay in their band and dampen the feed; Analytics judged "
@@ -465,6 +479,7 @@ def past(
                         description=action["description"],
                         priority=action["priority"],
                         owner=action["owner"],
+                        group_id=action.get("group_id"),
                         due_at=_past(days - 7, 12, now=now).date().isoformat(),
                         refs=[*action["refs"], *links.of(*action.get("links", ()))],
                     )

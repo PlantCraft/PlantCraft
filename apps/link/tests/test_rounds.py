@@ -126,7 +126,7 @@ def test_the_first_round_leaves_one_completed_baseline_job_per_loop(analysed):
 
 
 def test_each_known_fault_gets_its_likely_cause_first(analysed):
-    from linkcraft.report.causes import likely_causes
+    from linkcraft.engine.causes import likely_causes
 
     def first(loop_id):
         results = analysed.monitor.loop_payload(loop_id)["results"]

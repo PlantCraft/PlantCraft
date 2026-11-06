@@ -2163,5 +2163,6 @@
   "{source} is a {quantity}, {target} a {other}.": "{source} é uma grandeza de {quantity}, {target} de {other}.",
   "{sp} and {mode} in the window, equivalent to {window} every {hours} h.": "{sp} e {mode} na janela, equivalente a {window} a cada {hours} h.",
   "{subject} is {status} in {schedule}": "{subject} está {status} em {schedule}",
-  "{times} and {last}": "{times} e {last}"
+  "{times} and {last}": "{times} e {last}",
+  "Likely cause: {cause}. {finding}": "Causa provável: {cause}. {finding}"
 }

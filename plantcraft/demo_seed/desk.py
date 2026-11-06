@@ -306,15 +306,14 @@ def start_here(store: Any, admin: str, links: Links | None = None) -> None:
     store.update_note(made["note_id"], {"pinned": True}, admin)
 
 
-# Desk's Team on a demo day (round 8): someone away, someone busy, and the IT team's work, one
-# action late, so that every group shows how its people are doing.
+# Desk's Team on a demo day (round 8): someone away, someone busy, and the IT team's work. Its
+# late action (the certificate) is seeded in ``past`` so it is not born overdue (owner, 2026-11-06).
 TEAM_DAY = (
     ("camila.duarte", "Vendor training", True),
     ("juliana.rocha", "Day off", True),
     ("tiago.ramos", "Firewall change window", False),
 )
 IT_ACTIONS = (
-    ("Renew the historian server certificate", "tiago.ramos", -2, "high"),
     ("Add the U-200 analyzers to the OPC UA gateway", "camila.duarte", 3, "medium"),
     ("Test the nightly backup restore", "tiago.ramos", 5, "medium"),
 )

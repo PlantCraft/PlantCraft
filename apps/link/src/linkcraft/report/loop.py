@@ -4,7 +4,7 @@ every finding.
 Built from the loop's latest analysis (summary and method results) and the
 samples of that window. Every number and sentence comes from the methods
 (``describe(metrics)`` wording); the likely causes are a fixed rule table over those findings
-(``report.causes``).
+(``engine.causes``).
 """
 
 from __future__ import annotations
@@ -25,8 +25,8 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from linkcraft.catalog.labels import METHOD_LABELS
+from linkcraft.engine.causes import likely_causes
 from linkcraft.i18n import t
-from linkcraft.report.causes import likely_causes
 from linkcraft.report.weekly import (
     MUTED,
     PALE,
