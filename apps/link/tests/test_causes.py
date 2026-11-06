@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from linkcraft.report.causes import CAUSES, likely_causes
+from linkcraft.engine.causes import CAUSES, likely_causes
 from linkcraft.report.loop import loop_report_pdf
 
 

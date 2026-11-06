@@ -45,6 +45,7 @@ from linkcraft.config import LoopConfig
 from linkcraft.data.frames import loop_signal_ids
 from linkcraft.data.suite import SuiteClient, summary_text
 from linkcraft.db import Database, Store
+from linkcraft.engine.causes import likely_causes
 from linkcraft.engine.recurrence import Recurrence, describe
 from linkcraft.i18n import t
 
@@ -193,11 +194,20 @@ def suite_status(summary: dict[str, Any] | None) -> str:
     return SUITE_STATUS.get(str(summary.get("status")), "unknown")
 
 
-def health_summary(summary: dict[str, Any] | None) -> str:
-    """One line people read: the limiting finding, else why there is no health."""
+def health_summary(summary: dict[str, Any] | None, cause: dict[str, Any] | None = None) -> str:
+    """One line people read: the likely cause the findings point to (the strongest conclusion,
+    ``engine.causes``), else the limiting finding, else why there is no health. A loop whose
+    valve sticks says so first, not its PV-SP error (owner, 2026-11-06)."""
 
     summary = summary or {}
     limiting = summary.get("limiting") or {}
+    evidence = (cause or {}).get("evidence") or []
+    if summary.get("health") is not None and evidence and evidence[0].get("finding"):
+        return t(
+            "Likely cause: {cause}. {finding}",
+            cause=str(cause["cause"]).lower(),
+            finding=str(evidence[0]["finding"]),
+        )
     if limiting.get("finding"):
         return str(limiting["finding"])
     if summary.get("health") is None:
@@ -346,6 +356,8 @@ class SuitePublisher:
         for loop_id in assets:
             summary = payloads[loop_id].get("summary") or {}
             limiting = summary.get("limiting") or {}
+            causes = likely_causes(payloads[loop_id].get("results") or [], limit=1)
+            cause = causes[0] if causes else None
             rows.append(
                 {
                     "subject": asset_ref(loop_id),
@@ -354,10 +366,11 @@ class SuitePublisher:
                     "score": summary.get("health"),
                     "usable": None,
                     "value": summary.get("health"),
-                    "summary": summary_text(health_summary(summary)),
+                    "summary": summary_text(health_summary(summary, cause)),
                     "detail": {
                         "loop_status": summary.get("status"),
                         "limiting_method": limiting.get("method_id"),
+                        "likely_cause": cause["cause_id"] if cause else None,
                         "operating_state": summary.get("operating_state"),
                         "url": self.asset_url(loop_id),
                     },

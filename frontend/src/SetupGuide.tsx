@@ -27,6 +27,14 @@ const TALKING_MS = 15 * 60_000;
 let talkingSince = 0;
 const CHEER_MS = 4000;
 
+/** The bubble sits over the page's corner: it speaks on the Overview only (and to cheer a step
+ * just done), so it never covers a field, a button or a chart on the other pages (owner,
+ * 2026-11-06). The robot itself stays in the corner of every page. */
+function onHome(): boolean {
+  const path = window.location.pathname.replace(/\/+$/, "");
+  return path === "" || path === "/desk";
+}
+
 /** Open the assistant beside the page with a mission's work. */
 function talkMission(guide: Guide, mission: GuideMission) {
   talkingSince = Date.now();
@@ -175,7 +183,7 @@ export function SetupGuide({ navigate, onGuiding }: { navigate: (to: string) => 
         <button type="button" className="guide-link" onClick={() => void act("hide", async () => { const found = await guideApi.hide(true); onGuiding?.(false); return found; })}>{t("Hide the guide")}</button>
       </footer>
     </section>}
-    {!open && bubble && line && <div className="guide-bubble" role="status">
+    {!open && bubble && line && (cheer || onHome()) && <div className="guide-bubble" role="status">
       <button type="button" className="guide-bubble-text" onClick={() => setOpen(true)}>{line}</button>
       <button type="button" className="guide-icon-button" onClick={() => setBubble(false)} title={t("Close")} aria-label={t("Close")}><X size={13} /></button>
     </div>}
