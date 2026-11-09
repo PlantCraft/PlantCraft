@@ -151,7 +151,8 @@ a.ty-row:hover { background: var(--pc-surface-2); }
 .ty-editor > .form-error, .ty-note, .ty-saved { margin: var(--pc-space-3) calc(22px * var(--pc-space-scale, 1)) 0; }
 .ty-note { color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
 .ty-saved { color: var(--pc-good-text); font-size: var(--pc-fs-sm); font-weight: 600; }
-.as-record .ty-saved, .as-record .ty-note { margin: 0; }
+.as-record .ty-saved { margin: 0; }
+.as-record > .ty-note { margin: var(--pc-space-4) 0 0; padding-top: var(--pc-space-3); border-top: 1px solid var(--pc-border-subtle); }
 .ty-fields { border: 0; margin: 0; padding: 0 calc(22px * var(--pc-space-scale, 1)) calc(22px * var(--pc-space-scale, 1)); min-width: 0; }
 .ty-grid { padding: var(--pc-space-4) 0 var(--pc-space-1); }
 .form-grid.ty-grid { padding: var(--pc-space-4) 0 var(--pc-space-1); }

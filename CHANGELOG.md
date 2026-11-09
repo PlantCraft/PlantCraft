@@ -56,6 +56,9 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- Public demo (sweep of 2026-11-09): opening or reloading a page counts as use of the visit, so moving on by whole page loads no longer ends it after 5 minutes; the assistant's off page in the demo points to the team's chats in Shared with me and to Settings › Language models (it said "below" and "Setup"), without the second line for administrators; long chat titles in the assistant's list end in "…" instead of being cut.
+- An asset's Record card: "Your access is read-only" sits under a line of its own, not under the last field as if it were its hint.
+- An app's Overview with a notice above its cards (Models while the Modelica runner is down, Historian's collector, Alarms without an app key): Customize sits on its own line under the notice instead of over it (ui).
 - Public demo: scrolling a page (or a box inside it, in any app) and moving the pointer while reading now count as use of the visit, so it no longer ends after 5 minutes while someone reads without clicking.
 - An asset's Signals table shows a text signal's last value (a loop's mode: AUTO, MAN); it showed "—", because the last value counted numbers only.
 - SDK: `plantcraft_sdk.i18n_check` also reads the widget titles, descriptions and picks of an app's `app.toml` into its server catalog, so `make standard` fails when one is not translated (five apps had none).

@@ -418,9 +418,10 @@ a.pc-journey-card:hover { border-color: var(--pc-primary-border, var(--pc-primar
 /* Overview widgets --------------------------------------------------------------------- */
 .pc-wg-head { display: flex; align-items: center; justify-content: flex-end; gap: var(--pc-space-2); margin-bottom: calc(10px * var(--pc-space-scale, 1)); min-height: 28px; flex-wrap: wrap; }
 /* An Overview without buttons of its own: Customize sits on the title's line, at the right, so
-   the cards start right under the title (2026-11-01). */
-:is(.pc-overview-heading:not(:has(.heading-actions > *)) ~ .pc-wg, .pc-overview-heading:not(:has(.heading-actions > *)) ~ * .pc-wg) > .pc-wg-head:not(.pc-wg-head-editing) { margin-top: calc(-1 * var(--pc-space-4) - var(--pc-heading-height, 40px)); margin-bottom: var(--pc-space-4); min-height: var(--pc-heading-height, 40px); pointer-events: none; }
-:is(.pc-overview-heading:not(:has(.heading-actions > *)) ~ .pc-wg, .pc-overview-heading:not(:has(.heading-actions > *)) ~ * .pc-wg) > .pc-wg-head:not(.pc-wg-head-editing) > * { pointer-events: auto; }
+   the cards start right under the title (2026-11-01). Only when the board comes right after the
+   title: under an app's notice (Models' runner down) it stays on its own line, off the notice. */
+:is(.pc-overview-heading:not(:has(.heading-actions > *)) + .pc-wg, .pc-overview-heading:not(:has(.heading-actions > *)) + * .pc-wg) > .pc-wg-head:not(.pc-wg-head-editing) { margin-top: calc(-1 * var(--pc-space-4) - var(--pc-heading-height, 40px)); margin-bottom: var(--pc-space-4); min-height: var(--pc-heading-height, 40px); pointer-events: none; }
+:is(.pc-overview-heading:not(:has(.heading-actions > *)) + .pc-wg, .pc-overview-heading:not(:has(.heading-actions > *)) + * .pc-wg) > .pc-wg-head:not(.pc-wg-head-editing) > * { pointer-events: auto; }
 .pc-wg-hint { margin: 0 auto 0 0; color: var(--pc-text-3); font-size: var(--pc-fs-sm); }
 /* Customize is seldom used: a quiet text button, not a primary action. */
 .pc-wg-customize { display: inline-flex; align-items: center; gap: calc(6px * var(--pc-space-scale, 1)); padding: var(--pc-space-1) var(--pc-space-2); border: 0; border-radius: var(--pc-radius-md); background: transparent; color: var(--pc-text-3); font: inherit; font-size: var(--pc-fs-sm); cursor: pointer; }

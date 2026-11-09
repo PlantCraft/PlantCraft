@@ -762,7 +762,7 @@
   "The assistant answered all the questions it takes today in this demo. Try again tomorrow.": "El asistente respondió todas las preguntas que acepta hoy en esta demo. Inténtelo de nuevo mañana.",
   "The assistant cannot answer right now. Try again later; the rest of the demo works as usual.": "El asistente no puede responder en este momento. Inténtelo de nuevo más tarde; el resto de la demo funciona como siempre.",
   "The assistant could not answer: {error}": "El asistente no pudo responder: {error}",
-  "The assistant does not answer in this public demo. Open the team's chats below to see what it does; in your own installation, an administrator connects a model in Setup › Language models.": "El asistente no responde en esta demo pública. Abra abajo las conversaciones del equipo para ver lo que hace; en su propia instalación, un administrador conecta un modelo en Configuración › Modelos de lenguaje.",
+  "The assistant does not answer in this public demo. Open the team's chats in Shared with me to see what it does; in your own installation, an administrator connects a model in Settings › Language models.": "El asistente no responde en esta demo pública. Abra las conversaciones del equipo en Compartido conmigo para ver lo que hace; en su propia instalación, un administrador conecta un modelo en Configuración › Modelos de lenguaje.",
   "The assistant talks to people.": "El asistente habla con las personas.",
   "The authenticated user has no permission for this read in PI Web API.": "El usuario autenticado no tiene permiso para esta lectura en PI Web API.",
   "The calendar has an event without a start.": "La agenda tiene un evento sin inicio.",

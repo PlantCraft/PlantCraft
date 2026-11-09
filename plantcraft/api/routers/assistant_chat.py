@@ -362,9 +362,9 @@ def status(request: Request, user: CurrentUser, rt: Runtime) -> dict[str, Any]:
             "available": False,
             "allowed": False,
             "reason": t(
-                "The assistant does not answer in this public demo. Open the team's chats below to "
-                "see what it does; in your own installation, an administrator connects a model in "
-                "Setup › Language models."
+                "The assistant does not answer in this public demo. Open the team's chats in Shared "
+                "with me to see what it does; in your own installation, an administrator connects a "
+                "model in Settings › Language models."
             ),
             # The pages still show what it would do there.
             "demo": True,
