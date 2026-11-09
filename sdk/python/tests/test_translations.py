@@ -131,3 +131,20 @@ def test_a_document_is_read_in_the_current_language_when_translated(app_catalog,
         assert i18n.localized(other) == other
     finally:
         i18n.reset_language(token)
+
+
+def test_check_reads_the_widget_texts_of_app_toml_into_the_server_catalog(tmp_path, capsys):
+    # The widgets' titles and descriptions are translated by the app when it answers
+    # GET api/widgets: a server catalog without them fails the strict check.
+    pkg = tmp_path / "app" / "src" / "appcraft"
+    (pkg / "locales").mkdir(parents=True)
+    (pkg / "__init__.py").write_text("")
+    (pkg / "locales" / "pt-BR.json").write_text(json.dumps({"App: alarms": "App: alarmes"}))
+    (tmp_path / "app" / "app.toml").write_text(
+        '[[contributes.widgets]]\nid = "alarms"\ntitle = "App: alarms"\n'
+        'description = "How many alarms are active."\n'
+    )
+    assert i18n_check.main([str(tmp_path / "app"), "--language", "pt-BR", "--missing"]) == 0
+    out = capsys.readouterr().out
+    assert "1/2 translated" in out and "missing: How many alarms are active." in out
+    assert i18n_check.main([str(tmp_path / "app"), "--language", "pt-BR", "--strict"]) == 1

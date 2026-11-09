@@ -9,7 +9,6 @@ import asyncio
 import logging
 import os
 import threading
-from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Protocol
@@ -18,23 +17,11 @@ import pandas as pd
 
 from plantcraft.config import DataSourceConfig, LoopConfig
 from plantcraft.i18n import t
-
-# Start of a per-tag error that only says the tag had nothing new (quiet in the logs).
-NO_VALUE = "no value"
+from plantcraft_sdk.sources import NO_VALUE, SignalInfo, asset_from_tag
 
 logger = logging.getLogger(__name__)
 # History reads in flight at once on one OPC UA session.
 OPCUA_CONCURRENT_READS = int(os.environ.get("PLANTCRAFT_OPCUA_CONCURRENT_READS", "16"))
-
-
-@dataclass(frozen=True)
-class SignalInfo:
-    tag: str
-    name: str
-    asset: str
-    unit: str = ""
-    description: str = ""
-    data_type: str = "number"
 
 
 class DataSource(Protocol):
@@ -96,12 +83,26 @@ class CsvRecordedSource:
                 parse_dates=True,
                 low_memory=False,
             )
-            frame.index = pd.to_datetime(frame.index, errors="coerce")
+            frame.index = self._local_times(frame.index)
             frame = frame.loc[~frame.index.isna()]
             frame = frame.loc[~frame.index.duplicated(keep="last")].sort_index()
             self._frame = frame
             self._signature = signature
             return self._frame
+
+    def _local_times(self, index: pd.Index) -> pd.DatetimeIndex:
+        """The file's times as the plant's local clock without a zone, as the reads expect.
+
+        A file written with offsets (``2026-11-09T10:00:00Z``, ``...+00:00``, an export of
+        another system) is turned to the source's zone; one without offsets is read as is."""
+
+        parsed = pd.to_datetime(index, errors="coerce")
+        if not isinstance(parsed, pd.DatetimeIndex):
+            # Several offsets in one file: each time is read to UTC first.
+            parsed = pd.to_datetime(index, errors="coerce", utc=True)
+        if parsed.tz is not None:
+            parsed = parsed.tz_convert(self.config.timezone or "UTC").tz_localize(None)
+        return parsed
 
     def last_time(self) -> pd.Timestamp | None:
         """The file's last sample time, without copying the file's values."""
@@ -399,15 +400,6 @@ async def _is_property(node) -> bool:
 
     type_definition = await node.read_type_definition()
     return type_definition == ua.NodeId(ua.ObjectIds.PropertyType)
-
-
-def asset_from_tag(tag: str) -> str:
-    """Group tags like ``FIC-101.PV`` or ``FIC101_PV`` under ``FIC-101``."""
-
-    for separator in (".", ":", "/"):
-        if separator in tag:
-            return tag.rsplit(separator, 1)[0]
-    return tag
 
 
 def build_source(config: DataSourceConfig) -> DataSource:

@@ -15,6 +15,8 @@
 .asst-list li:hover, .asst-list li.active { background: var(--pc-primary-soft); }
 .asst-list li a { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding: calc(7px * var(--pc-space-scale, 1)) var(--pc-space-2); color: inherit; text-decoration: none; }
 .asst-list li strong { display: flex; align-items: center; gap: calc(5px * var(--pc-space-scale, 1)); overflow: hidden; font-size: var(--pc-fs-sm); font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.asst-list li strong > svg { flex: none; }
+.asst-list-title { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .asst-list li small { overflow: hidden; color: var(--pc-text-3); font-size: var(--pc-fs-xs); white-space: nowrap; text-overflow: ellipsis; }
 .asst-list li .asst-tool { opacity: 0; }
 .asst-list li:hover .asst-tool, .asst-list li:focus-within .asst-tool, .asst-list li .asst-tool.asst-keep { opacity: 1; }

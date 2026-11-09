@@ -762,7 +762,7 @@
   "The assistant answered all the questions it takes today in this demo. Try again tomorrow.": "O assistente já respondeu todas as perguntas que aceita hoje nesta demonstração. Tente de novo amanhã.",
   "The assistant cannot answer right now. Try again later; the rest of the demo works as usual.": "O assistente não pode responder agora. Tente mais tarde; o resto da demonstração funciona normalmente.",
   "The assistant could not answer: {error}": "O assistente não conseguiu responder: {error}",
-  "The assistant does not answer in this public demo. Open the team's chats below to see what it does; in your own installation, an administrator connects a model in Setup › Language models.": "O assistente não responde nesta demonstração pública. Abra abaixo as conversas da equipe para ver o que ele faz; na sua instalação, um administrador conecta um modelo em Configuração › Modelos de linguagem.",
+  "The assistant does not answer in this public demo. Open the team's chats in Shared with me to see what it does; in your own installation, an administrator connects a model in Settings › Language models.": "O assistente não responde nesta demonstração pública. Abra as conversas da equipe em Compartilhado comigo para ver o que ele faz; na sua instalação, um administrador conecta um modelo em Configurações › Modelos de linguagem.",
   "The assistant talks to people.": "O assistente conversa com pessoas.",
   "The authenticated user has no permission for this read in PI Web API.": "O usuário autenticado não tem permissão para esta leitura no PI Web API.",
   "The calendar has an event without a start.": "O calendário tem um evento sem início.",
@@ -1344,5 +1344,8 @@
   "Português (Brasil)": "Português (Brasil)",
   "Español": "Español",
   "OPC UA": "OPC UA",
-  "Administrator": "Administrador"
+  "Administrator": "Administrador",
+  "{change} (and {n} more)": "{change} (e mais {n})",
+  "Grouped by the first part of its tags' names.": "Agrupado pela primeira parte do nome dos seus tags.",
+  "{count} equipment come from the first part of tag names that are not ISA-5.1 (Pump1_Speed is Pump1's speed); check them before applying.": "{count} equipamentos vêm da primeira parte de nomes de tags que não seguem a ISA-5.1 (Pump1_Speed é o speed de Pump1); confira antes de aplicar."
 }

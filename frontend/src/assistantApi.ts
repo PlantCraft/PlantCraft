@@ -25,7 +25,7 @@ export type ChatMessage = {
 };
 /** `visit`: a public demo visit that may ask (questions it has, characters a question, left). */
 export type AssistantVisit = { questions: number; max_text: number; left: number };
-export type AssistantStatus = { available: boolean; reason: string; profiles: AssistantProfile[]; daily_limit: number; chats: Chat[]; archived?: Chat[]; shared?: Chat[]; visit?: AssistantVisit };
+export type AssistantStatus = { available: boolean; reason: string; profiles: AssistantProfile[]; daily_limit: number; chats: Chat[]; archived?: Chat[]; shared?: Chat[]; visit?: AssistantVisit; demo?: boolean };
 export type ChatView = { chat: Chat; messages: ChatMessage[]; working: boolean };
 export type EvalResult = { id: string; title: string; question: string; golden: string; answer: string; passed: boolean; why: string; error: string; tools: string[]; charts: number; seconds: number;
   /** A work's case (Evaluate works): the work, its page and subject, the context sent and the card proposed. */

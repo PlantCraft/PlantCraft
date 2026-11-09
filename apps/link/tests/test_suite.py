@@ -90,7 +90,9 @@ def test_each_round_publishes_loop_health_on_the_asset(rt, suite_fake):
     assert lifetime == pd.Timedelta(minutes=20)
     saturated = rows["asset:pic-103"]
     assert saturated["status"] == "alarm"
-    assert saturated["summary"] == latest["pic-103"]["summary"]["limiting"]["finding"]
+    # The strongest conclusion leads: the likely cause, with its main finding.
+    assert saturated["summary"].startswith("Likely cause: valve at its limit. ")
+    assert saturated["detail"]["likely_cause"] == "saturation"
     frozen = rows["asset:tic-104"]  # rejected by the gate: no health, so unknown
     assert frozen["status"] == "unknown" and frozen["score"] is None
     assert "asset:fic-106" not in rows  # an incomplete record is never judged

@@ -167,6 +167,19 @@ def _sign_in(context) -> None:
     assert response.ok, response.text()
 
 
+def _without_setup_guide(context) -> None:
+    """The welcome tour waits while the setup guide walks an administrator through a new
+    installation (#197); the tour's own tests hide the guide (a preference of this person) and
+    the fixture shows it again afterwards."""
+
+    response = context.request.post("/api/setup-guide/hide", data={"hidden": True})
+    assert response.ok, response.text()
+
+
+def _with_setup_guide(context) -> None:
+    context.request.post("/api/setup-guide/hide", data={"hidden": False})
+
+
 @pytest.fixture()
 def runtime(server):
     """The server's runtime, for a test that drives it (the suite watch's tick)."""
@@ -203,7 +216,9 @@ def first_visit_page(browser, server):
 
     context, page, errors, outside = _open_page(browser, server, "en-US", tours=True)
     _sign_in(context)
+    _without_setup_guide(context)
     yield page
+    _with_setup_guide(context)
     context.close()
     assert not errors, f"JavaScript errors on the page: {errors}"
     assert not outside, f"Requests outside the server: {outside}"
@@ -215,7 +230,9 @@ def first_visit_phone(browser, server):
 
     context, page, errors, outside = _open_page(browser, server, "en-US", tours=True, phone=True)
     _sign_in(context)
+    _without_setup_guide(context)
     yield page
+    _with_setup_guide(context)
     context.close()
     assert not errors, f"JavaScript errors on the page: {errors}"
     assert not outside, f"Requests outside the server: {outside}"

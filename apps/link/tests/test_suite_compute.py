@@ -205,13 +205,13 @@ def test_block_code_runs_on_a_worker_with_its_errors(fake_compute):
     bad = sandbox.Call(key="k2", code="import os\n", inputs={}, params={})
     try:
         with priority("interactive"):
-            given, state = code.run(good)
+            given, state = code.run(sandbox.execute, good)
         pd.testing.assert_series_equal(given["y"], pd.Series([3.0, 6.0]))
         assert state == {}
         assert fake_compute.sent[-1]["priority"] == "interactive"
         assert fake_compute.sent[-1]["kind"] == "code"
         with pytest.raises(sandbox.BlockCodeError):
-            code.run(bad)
+            code.run(sandbox.execute, bad)
     finally:
         pool.shutdown()
 

@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataTable, Dialog, confirmAction, useAssistantPage } from "@plantcraft/ui";
 import { ArrowLeft, BookOpen, Download, ExternalLink, RefreshCw } from "lucide-react";
 import { api } from "./api";
-import { formatAgo, formatDate, t } from "./i18n";
+import { issuedDay } from "./dates";
+import { formatAgo, t } from "./i18n";
 import { StatusPill } from "./LibraryPage";
 import { Marked, searchWords } from "./mark";
 import { navigate } from "./nav";
@@ -136,7 +137,7 @@ export function DocumentPage({ me, docId }: { me: Me; docId: string }) {
   const reindex = () => api.reindex(doc.doc_id).then(() => load()).catch((err) => setError(message(err)));
   const facts: Array<[string, string]> = [
     [t("Kind"), t(doc.kind)], [t("Unit"), doc.unit || "–"], [t("Folder"), folder?.name ?? t("General")],
-    [t("Revision"), current?.revision || "–"], [t("Issued"), current?.issued ? formatDate(current.issued) : "–"],
+    [t("Revision"), current?.revision || "–"], [t("Issued"), current?.issued ? issuedDay(current.issued) : "–"],
     [t("Pages"), current?.pages ? String(current.pages) : "–"], [t("File"), current?.filename ?? "–"],
     [t("The assistant"), doc.assistant && (folder?.assistant ?? true) ? t("May read it") : t("Does not read it")],
   ];

@@ -6,6 +6,10 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Fixed
+
+- The overview cards and the Customize list show their titles and descriptions in Portuguese and Spanish; they were in English in every language.
+
 ## [0.6.0] - 2026-11-02
 
 ### Added

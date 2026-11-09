@@ -33,6 +33,7 @@ import csv
 import io
 import json
 import re
+import unicodedata
 from collections import Counter, defaultdict
 from collections.abc import Callable
 from typing import Any
@@ -63,11 +64,13 @@ TEXT_TAG = re.compile(r"(?<![A-Za-z0-9])([A-Z]{1,5})[-_]?\s?(\d{2,5}[A-Z]?)(?![0
 # ISA-5.1 first letters this draft knows, and what each loop or instrument measures.
 MEASURED = {"F": "flow", "P": "pressure", "L": "level", "T": "temperature", "A": "composition"}
 # The word after the loop's tag that names the signal's role in the loop.
+# Portuguese and Spanish names too (VP, Valor, Medida; Saída, Salida; Modo), as plants in
+# Brazil and Latin America name them; accents are dropped before the match (Saída is SAIDA).
 ROLE_WORDS = {
-    "pv": {"PV", "MEAS", "PVAL", "VALUE", "IN"},
-    "sp": {"SP", "SV", "SETPOINT", "SPT"},
-    "op": {"OP", "OUT", "OUTPUT", "MV"},
-    "mode": {"MODE", "MD", "AM", "AUTOMAN"},
+    "pv": {"PV", "MEAS", "PVAL", "VALUE", "IN", "VP", "VALOR", "MEDIDA", "MEDICAO", "MEDICION"},
+    "sp": {"SP", "SV", "SETPOINT", "SPT", "REFERENCIA", "CONSIGNA", "SETP"},
+    "op": {"OP", "OUT", "OUTPUT", "MV", "SAIDA", "SALIDA", "VM"},
+    "mode": {"MODE", "MD", "AM", "AUTOMAN", "MODO"},
     "secondary": {"SECONDARY", "SEC", "PV2"},
 }
 # Columns of a tag spreadsheet, in the words such lists use.
@@ -244,7 +247,8 @@ def _is_indicator(letters: str) -> bool:
 def _role_of(raw: str, tag_number: str) -> str:
     """The role the words after the tag give the signal (PV, SP, OP, MODE), or ""."""
 
-    upper = raw.upper()
+    plain = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii")
+    upper = plain.upper()
     after = upper[upper.rfind(tag_number) + len(tag_number) :]
     for word in reversed(re.split(r"[^A-Z0-9]+", after)):
         for role, words in ROLE_WORDS.items():
@@ -952,6 +956,14 @@ def draft(
     if ask is not None and work.loops:
         placed_by_model = work.ask_model(ask, passages)
     document = work.document()
+    # Tags with no ISA-5.1 tag at all (a skid's "Pump1_Speed", "Tank_Level"): each name's
+    # first part becomes an equipment with its signals, so they are not left out.
+    plain = [raw for raw in work.unplaced if _tag_of(raw) is None]
+    sources = {_text(item.get("tag")): _text(item.get("source_id")) for item in tags}
+    grouped = _group_by_name(document, plain, sources) if plain else 0
+    if grouped:
+        placed = {item["tag"] for row in document["assets"] for item in row["signals"]}
+        work.unplaced = [raw for raw in work.unplaced if raw not in placed]
     loops = list(work.loops.values())
     summary = {
         "tags": len(tags),
@@ -966,6 +978,7 @@ def draft(
         "unsure": len(work.unsure()),
         "unrecognised": len(work.unplaced),
         "unrecognised_examples": work.unplaced[:10],
+        "grouped_by_name": grouped,
         **work.summary,
     }
     return document, summary
@@ -1236,6 +1249,48 @@ def _meta(confidence: str, why: str, sources: list[dict[str, Any]]) -> dict[str,
         if key not in kept or len(source["excerpt"]) > len(kept[key]["excerpt"]):
             kept[key] = source
     return {"confidence": confidence, "why": why, "sources": list(kept.values())[:4]}
+
+
+# At most this many equipment from names alone: past it, a list is not a skid but a plant
+# that needs its tag convention (or a spreadsheet of assets) first.
+MAX_NAME_GROUPS = 200
+NAME_SPLIT = re.compile(r"[._:/\\-]")
+
+
+def _group_by_name(document: dict[str, Any], tags: list[str], sources: dict[str, str]) -> int:
+    """Equipment from the first part of each tag's name (``Pump1_Speed`` is ``Pump1``'s
+    ``speed``); a one-word tag is left out. Returns how many were made."""
+
+    groups: dict[str, list[tuple[str, str]]] = {}
+    for raw in tags:
+        parts = [part for part in NAME_SPLIT.split(raw) if part]
+        if len(parts) < 2:
+            continue  # one word ("pv", "Flow") names no equipment: left to bind by hand
+        head, role = parts[0], "_".join(parts[1:])
+        groups.setdefault(head, []).append((role, raw))
+    if not groups or len(groups) > MAX_NAME_GROUPS:
+        return 0
+    for head, signals in sorted(groups.items()):
+        seen: set[str] = set()
+        bound = []
+        for role, raw in signals:
+            key = re.sub(r"[^a-z0-9]+", "_", role.lower()).strip("_") or "value"
+            if key in seen:
+                continue
+            seen.add(key)
+            bound.append({"role": key, "tag": raw, "source_id": sources.get(raw, "")})
+        document["assets"].append(
+            _row(
+                head,
+                head.replace("_", " "),
+                "equipment",
+                "",
+                {},
+                bound,
+                _meta("low", t("Grouped by the first part of its tags' names."), []),
+            )
+        )
+    return len(groups)
 
 
 def _row(

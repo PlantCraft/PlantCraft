@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from plantcraft_sdk.server.picker import signal_choices
+from plantcraft_sdk.server.picker import asset_choices, signal_choices
 
 from alarmcraft.api.deps import CurrentUser, EditorView, RuntimeDep, guarded
 from alarmcraft.api.routers.alarms import rule_names, summary
@@ -26,26 +26,7 @@ def list_assets(
 ) -> list[dict[str, Any]]:
     client = rt.user_client(user)
     everything = guarded(lambda: client.assets(), service=False)
-    names = {item.get("id"): item.get("name") or item.get("id") for item in everything}
-    query = q.strip().lower()
-    found = []
-    for item in everything:
-        if kind and item.get("kind") != kind:
-            continue
-        text = f"{item.get('id')} {item.get('name')} {names.get(item.get('parent_id')) or ''}"
-        if query and query not in text.lower():
-            continue
-        found.append(
-            {
-                "id": item.get("id"),
-                "name": item.get("name") or item.get("id"),
-                "kind": item.get("kind"),
-                "parent": names.get(item.get("parent_id")) if item.get("parent_id") else None,
-                "signals": item.get("signals") or {},
-            }
-        )
-    found.sort(key=lambda item: (str(item["parent"] or ""), str(item["name"])))
-    return found[:MAX_ASSETS]
+    return asset_choices(everything, q, kind=kind, limit=MAX_ASSETS)
 
 
 @router.get("/signals")

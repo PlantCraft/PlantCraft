@@ -6,6 +6,7 @@ import json
 import tempfile
 from pathlib import Path
 
+import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
@@ -239,6 +240,24 @@ def test_assets_api_links_loops_and_signals(client):
     series = client.get("/api/signals/pv/series", params={"window": "1h", "points": 50}).json()
     assert 0 < len(series["series"]) <= 51
     assert client.get("/api/signals/pv/value", params={"window": "90d"}).status_code == 422
+
+
+def test_a_text_signal_has_a_last_value(client, monkeypatch):
+    # A loop's mode (AUTO, MAN) is text: its last value showed "—" on the asset's page.
+    from plantcraft.api.routers import assets as routes
+
+    def read(rt, tag, window, points):
+        start = pd.Timestamp("2026-11-05T10:00:00")
+        return (
+            start,
+            start + pd.Timedelta(hours=1),
+            [["2026-11-05T10:10:00", "MAN"], ["2026-11-05T10:20:00", "AUTO"]],
+        )
+
+    monkeypatch.setattr(routes, "_read", read)
+    value = client.get("/api/signals/pv/value").json()
+    assert value["value"] == "AUTO" and value["samples"] == 2
+    assert client.get("/api/signals/pv/value", params={"agg": "mean"}).json()["value"] is None
 
 
 def test_hand_made_assets_and_references(client):

@@ -4,6 +4,14 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Fixed
+
+- Search without the meaning model says each passage was "found by words": it said "by words and meaning" under the note that the search matches words only.
+- The overview cards and the Customize list show their titles and descriptions in Portuguese and Spanish; they were in English in every language.
+- A public demo's visitor opens "Links to check" and sees the queue of the folders they see; it was a page that only said the part was locked. Approving or rejecting is still refused.
+- A revision's Issued date reads as the day ("Mar 2, 2026"), not as midnight UTC, which a plant
+  west of Greenwich saw as the day before.
+
 ### Removed
 
 - **The plant map and the P&ID reader moved to PlantCraft PID** (a closed app with a

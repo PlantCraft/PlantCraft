@@ -596,7 +596,7 @@
   "default for this type": "predeterminado de este tipo",
   "every change": "cada cambio",
   "every signal: tag, name, unit, limits and the asset and role it serves": "cada señal: tag, nombre, unidad, límites y el activo y el rol que cumple",
-  "exception {exception}, {compression}": "excepción {exception}, {compression}",
+  "exception {exception}, compression {compression}": "excepción {exception}, compresión {compression}",
   "forever": "para siempre",
   "from general settings": "de la configuración general",
   "from the profile": "del perfil",

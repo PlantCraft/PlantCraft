@@ -23,7 +23,8 @@ def test_the_installation_zone_is_picked_from_a_list(page):
     try:
         picker.select_option("America/Sao_Paulo")
         page.get_by_role("button", name="Save").click()
-        expect(page.get_by_role("status")).to_contain_text("Saved")
+        # The setup guide's bubble is a status too (#197): the form's own one says Saved.
+        expect(page.get_by_role("status").filter(has_text="Saved")).to_be_visible()
         expect(page.get_by_text("Now at the plant")).to_contain_text("UTC−3")
         _shot(page, "setup-installation.png")
         assert page.request.get("/api/v1/installation").json()["time_zone"] == "America/Sao_Paulo"

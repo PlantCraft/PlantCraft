@@ -6,6 +6,11 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+### Fixed
+
+- Saving a Simple rule on pv, sp or op without saying where it applies tells what to do ("say where it applies (Where: the assets, or a monitor)"); it said "this asset's values and events need a rule over assets".
+- The overview cards and the Customize list show their titles and descriptions in Portuguese and Spanish; they were in English in every language. The "Most frequent" card says it counts 7 days ("Most frequent, 7 days"), beside cards that count 24 hours.
+
 ## [0.6.0] - 2026-11-02
 
 ### Added

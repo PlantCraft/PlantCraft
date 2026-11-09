@@ -19,6 +19,7 @@ from linkcraft.api.scope import Scope, sees_job, sees_loop
 from linkcraft.catalog.loop_types import known_loop_type
 from linkcraft.catalog.registry import METHOD_SPECS
 from linkcraft.config import LoopConfig, LoopSignals
+from linkcraft.engine.causes import likely_causes
 from linkcraft.engine.references import compare
 from linkcraft.engine.step_response import step_responses
 from linkcraft.engine.tuning import suggest
@@ -26,7 +27,6 @@ from linkcraft.i18n import t
 from linkcraft.loops.defaults import record_defaults, setting_sources
 from linkcraft.loops.monitor import APPLICATION_ID, SUBJECT_KIND, incomplete_reason, missing_roles
 from linkcraft.loops.suite import suite_status
-from linkcraft.report.causes import likely_causes
 from linkcraft.report.loop import loop_report_pdf
 from linkcraft.report.weekly import weekly_report_pdf
 

@@ -18,7 +18,7 @@ import numpy as np
 from plantcraft_sdk.asset_scope import EVERYTHING, AssetScope
 
 from doccraft.library.access import about
-from doccraft.library.embed import Embedder
+from doccraft.library.embed import Embedder, HashEmbedder
 from doccraft.library.store import DocumentStore
 from doccraft.library.tags import TAG
 
@@ -77,6 +77,9 @@ class Searcher:
             ranked[passage_id] = ranked.get(passage_id, 0.0) + 1.0 / (RRF_K + rank + 1)
             by.setdefault(passage_id, []).append("words")
 
+        # Without the meaning model the vectors are hashed words: what they find is found by
+        # words, and the search page says the search matches words only.
+        how = "words" if self.embedder.name == HashEmbedder.name else "meaning"
         ids, matrix = self._vectors()
         if len(ids) and matrix.shape[1]:
             vector = self.embedder.query(query)
@@ -84,7 +87,9 @@ class Searcher:
                 scores = matrix @ vector
                 for rank, passage_id in enumerate(self._best(ids, scores, folders, assistant)):
                     ranked[passage_id] = ranked.get(passage_id, 0.0) + 1.0 / (RRF_K + rank + 1)
-                    by.setdefault(passage_id, []).append("meaning")
+                    found = by.setdefault(passage_id, [])
+                    if how not in found:
+                        found.append(how)
 
         rows = {row["passage_id"]: row for row in self.store.passage_rows(list(ranked))}
         if not scope.everything:

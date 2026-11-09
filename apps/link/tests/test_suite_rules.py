@@ -54,14 +54,10 @@ LAYERS = {
 
 
 def test_offline_by_default():
-    # bench.py measures against its own in-process fake on 127.0.0.1; blocks/sandbox.py imports
-    # socket only to switch it off in the block workers.
+    # bench.py measures against its own in-process fake on 127.0.0.1.
     network = ("api/runtime.py", "bench.py")
     assert not apptest.offline_problems(
-        ROOT,
-        "linkcraft",
-        network_modules=(*network, "blocks/sandbox.py"),
-        client_builders=network,
+        ROOT, "linkcraft", network_modules=network, client_builders=network
     )
 
 

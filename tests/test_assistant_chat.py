@@ -210,9 +210,14 @@ def test_a_person_groups_archives_and_shares_a_chat_and_others_continue_it_in_a_
     signed.put(f"/api/assistant/chats/{chat_id}/sharing", json={"grants": ["everyone"]})
     bruno = _person(signed, "bruno", level="viewer")
     assert bruno.get(f"/api/assistant/chats/{chat_id}").status_code == 200
-    ref = signed.app.state.runtime.platform.refs.resolve(f"chat:{chat_id}")
+    refs = signed.app.state.runtime.platform.refs
+    ref = refs.resolve(f"chat:{chat_id}", viewer="bruno")
     assert ref["href"] == f"/assistant/{chat_id}" and ref["exists"] is True
+    title = signed.app.state.runtime.assistant.store.kept_title(chat_id)
+    assert ref["title"] == (title or f"Assistant chat #{chat_id}") and not ref.get("hidden")
     signed.put(f"/api/assistant/chats/{chat_id}/sharing", json={"grants": []})
+    # Not shared any more: bruno reads only its kind and number.
+    assert refs.resolve(f"chat:{chat_id}", viewer="bruno")["hidden"] is True
     assert bruno.get(f"/api/assistant/chats/{chat_id}").status_code == 404
     audit = [item["action"] for item in signed.app.state.runtime.workspace.audit.list()]
     assert "assistant.chat_shared" in audit

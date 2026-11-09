@@ -762,7 +762,7 @@
   "The assistant answered all the questions it takes today in this demo. Try again tomorrow.": "El asistente respondió todas las preguntas que acepta hoy en esta demo. Inténtelo de nuevo mañana.",
   "The assistant cannot answer right now. Try again later; the rest of the demo works as usual.": "El asistente no puede responder en este momento. Inténtelo de nuevo más tarde; el resto de la demo funciona como siempre.",
   "The assistant could not answer: {error}": "El asistente no pudo responder: {error}",
-  "The assistant does not answer in this public demo. Open the team's chats below to see what it does; in your own installation, an administrator connects a model in Setup › Language models.": "El asistente no responde en esta demo pública. Abra abajo las conversaciones del equipo para ver lo que hace; en su propia instalación, un administrador conecta un modelo en Configuración › Modelos de lenguaje.",
+  "The assistant does not answer in this public demo. Open the team's chats in Shared with me to see what it does; in your own installation, an administrator connects a model in Settings › Language models.": "El asistente no responde en esta demo pública. Abra las conversaciones del equipo en Compartido conmigo para ver lo que hace; en su propia instalación, un administrador conecta un modelo en Configuración › Modelos de lenguaje.",
   "The assistant talks to people.": "El asistente habla con las personas.",
   "The authenticated user has no permission for this read in PI Web API.": "El usuario autenticado no tiene permiso para esta lectura en PI Web API.",
   "The calendar has an event without a start.": "La agenda tiene un evento sin inicio.",
@@ -1344,5 +1344,8 @@
   "Português (Brasil)": "Português (Brasil)",
   "Español": "Español",
   "OPC UA": "OPC UA",
-  "Administrator": "Administrador"
+  "Administrator": "Administrador",
+  "{change} (and {n} more)": "{change} (y {n} más)",
+  "Grouped by the first part of its tags' names.": "Agrupado por la primera parte del nombre de sus tags.",
+  "{count} equipment come from the first part of tag names that are not ISA-5.1 (Pump1_Speed is Pump1's speed); check them before applying.": "{count} equipos vienen de la primera parte de nombres de tags que no siguen la ISA-5.1 (Pump1_Speed es el speed de Pump1); revísalos antes de aplicar."
 }

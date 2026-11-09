@@ -96,17 +96,22 @@ export function DemoVisitBar({ visit, updatingUrl, onEnded, onLeave }: { visit: 
   }), [updating]);
   useEffect(() => {
     // Any use of the page, the apps' frames included (same origin: listened to as they appear).
+    // Scrolling and moving the pointer while reading count too; scroll does not bubble, so it is
+    // caught on the way down (capture) for every scrolled box of the page.
     const mark = () => { used.current = true; };
-    const events = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
+    const events = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "touchmove", "scroll"] as const;
     const listened = new WeakSet<EventTarget>();
     const listen = (target: EventTarget | null) => {
       if (!target || listened.has(target)) return;
       try {
-        events.forEach((name) => target.addEventListener(name, mark, { passive: true }));
+        events.forEach((name) => target.addEventListener(name, mark, { passive: true, capture: true }));
         listened.add(target);
       } catch { /* another origin */ }
     };
     listen(window);
+    // Opening or reloading a page is use too: a visitor who moves on by whole page loads (a link
+    // opened in the same tab, a reload) never stays 30 s on one page to send the timed beat.
+    void beat(true, [window.location.pathname]);
     const tick = window.setInterval(() => {
       if (document.visibilityState === "visible") pages.current.add(window.location.pathname);
       document.querySelectorAll("iframe").forEach((frame) => {
@@ -131,7 +136,7 @@ export function DemoVisitBar({ visit, updatingUrl, onEnded, onLeave }: { visit: 
       void beat(active, seen);
     }, HEARTBEAT_MS);
     return () => {
-      events.forEach((name) => window.removeEventListener(name, mark));
+      events.forEach((name) => window.removeEventListener(name, mark, { capture: true }));
       window.clearInterval(tick);
       window.clearInterval(timer);
     };
