@@ -38,6 +38,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- SDK: `plantcraft_sdk.sources.pi_web_api`, the PI Web API client PlantCraft and Historian both read PI through (it was copied in each and the copies had drifted): PlantCraft's PI source gains Historian's point search and step flag, Historian's gains the read-only session; a failed read of the value before a window is now the read's failure, not a silently missing first value. `plantcraft_sdk.sources` holds `SignalInfo`, `NO_VALUE` and `asset_from_tag`; the `pi` extra installs `requests`.
 - The command line every app has (`serve`, `check`, their logs and uvicorn's options) is written once in the SDK, `plantcraft_sdk.server.cli`, and the six official apps use it; an app's `i18n.py` calls `plantcraft_sdk.i18n.use_app_catalogs(__file__)`. No change in behavior.
 
 - **The apps build against the repository's own SDK and ui.** Every app under `apps/` installs

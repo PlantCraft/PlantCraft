@@ -11,6 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from plantcraft_sdk.sources import NO_VALUE, SignalInfo, asset_from_tag
+
 from histcraft.config import data_folder
 from histcraft.i18n import t
 
@@ -133,28 +135,12 @@ def from_source(source: dict[str, Any], password: str) -> SourceConfig:
     )
 
 
-# --- Shared by the adapters -------------------------------------------------------------
-
-# Start of a per-tag error that only says the tag had nothing new (quiet in the logs).
-NO_VALUE = "no value"
-
-
-@dataclass(frozen=True)
-class SignalInfo:
-    tag: str
-    name: str
-    asset: str
-    unit: str = ""
-    description: str = ""
-    data_type: str = "number"
-    step: bool = False
-    path: str = ""
-
-
-def asset_from_tag(tag: str) -> str:
-    """Group tags like ``FIC-101.PV`` or ``FIC101_PV`` under ``FIC-101``."""
-
-    for separator in (".", ":", "/"):
-        if separator in tag:
-            return tag.rsplit(separator, 1)[0]
-    return tag
+# Shared by the adapters, written once in the SDK (plantcraft_sdk.sources).
+__all__ = [
+    "NO_VALUE",
+    "SOURCE_KINDS",
+    "SignalInfo",
+    "SourceConfig",
+    "asset_from_tag",
+    "from_source",
+]
