@@ -7,6 +7,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-09
+
 ### Added
 
 - Setup guide: a small robot in the corner of every screen walks an administrator through a new installation, one step at a time: connect a language model, the basics (the plant's time zone, the person's language), connect the plant's data (OPC UA, PI Web API or a file), add the documents (when Documents is installed), build the asset tree, let the apps take their first steps, invite the team and, optionally, email. Each step knows by itself when it is done, from the installation's own state, so the guide moves on (and cheers) however the step was done. "Do it with me" opens the assistant beside the page with that step's work: it asks one question at a time and proposes the change as a card the person applies with one click (`POST /api/setup-guide/basics`, `/connection`, `/api/users`); the model never writes. The welcome tour waits until the plant is set up; Settings › Getting started brings the robot back after it is hidden; a public demo never shows it. `dev/fake_llm.py` is a scripted OpenAI-compatible model to try it without a real one ([docs/setup-guide.md](docs/setup-guide.md); ui 0.113.0 exports `forgetAssistantStatus`).
@@ -38,6 +40,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Changed
 
+- Released with `plantcraft-sdk` 0.107.0 and `@plantcraft/ui` 0.114.0 (`dev/sdk-version`); the app template vendors both. `dev/sdk-version` no longer stops halfway on its compiled pin pattern.
 - SDK: `plantcraft_sdk.sources.pi_web_api`, the PI Web API client PlantCraft and Historian both read PI through (it was copied in each and the copies had drifted): PlantCraft's PI source gains Historian's point search and step flag, Historian's gains the read-only session; a failed read of the value before a window is now the read's failure, not a silently missing first value. `plantcraft_sdk.sources` holds `SignalInfo`, `NO_VALUE` and `asset_from_tag`; the `pi` extra installs `requests`.
 - The command line every app has (`serve`, `check`, their logs and uvicorn's options) is written once in the SDK, `plantcraft_sdk.server.cli`, and the six official apps use it; an app's `i18n.py` calls `plantcraft_sdk.i18n.use_app_catalogs(__file__)`. No change in behavior.
 

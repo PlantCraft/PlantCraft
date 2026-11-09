@@ -4,6 +4,8 @@ All notable changes to this app are recorded here ([Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-09
+
 ### Fixed
 
 - Search without the meaning model says each passage was "found by words": it said "by words and meaning" under the note that the search matches words only.

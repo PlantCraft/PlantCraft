@@ -300,7 +300,7 @@ def end(h, t, b1, b2):
 TIERS0 = """<div class="tiers">
 <div class="tier"><span class="tag">Free</span><div class="amt">Free forever</div><p>The whole suite on your own servers, every app, no limits.</p>
 <ol class="steps"><li>Check the <a href="install.html#req">requirements</a>: Docker on Linux, macOS or Windows</li><li>Download the signed bundle</li><li>Run the installer and sign in, about 10 minutes</li></ol>
-<div class="tb"><a class="btn p" href="%%GH%%/releases/latest">Download 0.6.0</a><a class="btn" href="install.html">How to install</a></div></div>
+<div class="tb"><a class="btn p" href="%%GH%%/releases/latest">Download 0.6.1</a><a class="btn" href="install.html">How to install</a></div></div>
 <div class="tier hl"><span class="tag">Founding plants <em>3 places</em></span><div class="amt">30 days of free help</div><p>We install and set it up with you. The software stays free after the 30 days.</p>
 <ul class="check"><li>We install and configure it with you</li><li>Connection to your PI, OPC UA or CSV</li><li>First findings and suggested actions, reviewed together</li></ul>
 <div class="tb"><a class="btn p" href="pricing.html#pilot">Apply for a pilot</a></div></div>
@@ -532,8 +532,8 @@ REQ = [
 ]
 install = f'''<header class="phero"><p class="eyebrow">Install</p><h1>Running in about 10 minutes.</h1>
 <p class="lead">One signed bundle with the whole suite. It works offline, checks itself before installing, and comes with a demo plant so you can try everything.</p></header>
-<section class="tight"><div class="dl"><div class="dlm"><img src="{svg("logo-mark.svg")}" alt=""><div><b>PlantCraft 0.6.0</b><span>All 8 apps · demo plant · signed · Apache-2.0</span></div></div>
-<div class="dlb"><a class="btn p big" href="%%GH%%/releases/latest">Download 0.6.0</a><a class="btn" href="%%DOCS%%/docs/install.md">Install guide on GitHub</a></div></div></section>
+<section class="tight"><div class="dl"><div class="dlm"><img src="{svg("logo-mark.svg")}" alt=""><div><b>PlantCraft 0.6.1</b><span>All 8 apps · demo plant · signed · Apache-2.0</span></div></div>
+<div class="dlb"><a class="btn p big" href="%%GH%%/releases/latest">Download 0.6.1</a><a class="btn" href="%%DOCS%%/docs/install.md">Install guide on GitHub</a></div></div></section>
 <section id="req"><div class="shead"><p class="eyebrow">Step 1</p><h2>Check the requirements.</h2></div>
 <div class="reql">{"".join(f"<div>{ico(a, 'fi')}<b>{b}</b><span>{c}</span></div>" for a, b, c in REQ)}</div></section>
 <section><div class="shead"><p class="eyebrow">Step 2</p><h2>Install on your system.</h2></div>
