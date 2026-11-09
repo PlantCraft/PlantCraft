@@ -6,6 +6,8 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-09
+
 ### Fixed
 
 - A signal's compression reads "exception ± 0.1 %, compression ± 0.2 % of the value": the second figure had no name.

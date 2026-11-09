@@ -23,8 +23,10 @@ data, as an engineer digging into a problem does: a trend of 2 to 8 signals over
 days (View), a signal's 30 or 90 days in the Historian, a dashboard's every panel over 7 or 30
 days, a report's sections over 30 days. The signals are the bench's (``suite_bench.py`` and
 ``--seed-days``, so months of history exist) when there are, else the plant's. Each kind of
-question has its own p50/p95 in the report. ``--visitor`` signs everyone in as the public
-demo's read-only visitor (``PLANTCRAFT_PUBLIC_DEMO_USER``) instead of the administrator.
+question has its own p50/p95 in the report. ``--visitor`` makes everyone a visit of the public
+demo ("Enter the demo", read-only) instead of the administrator; raise the installation's
+``PLANTCRAFT_PUBLIC_DEMO_SEATS`` (30) above the most people of a step for the run (each step's
+visits sign out at its end).
 
 For each step the report gives the pages and calls per second, the p50/p95/max of a page and
 of a call, the failures, and each container's peak CPU and memory (``docker stats``, as
@@ -277,17 +279,21 @@ def sign_in(suite: Suite, visitor: bool) -> None:
     if not visitor:
         suite.login()
         return
-    user = suite.env.get("PLANTCRAFT_PUBLIC_DEMO_USER") or "demo"
-    # install.sh keeps the visitor's password in data/public-demo-password, not in .env.
-    secret = suite.prefix / "data" / "public-demo-password"
-    password = (
-        suite.env.get("PLANTCRAFT_PUBLIC_DEMO_PASSWORD")
-        or (secret.read_text(encoding="utf-8").strip() if secret.is_file() else "")
-        or "plantcraft-demo"
-    )
-    suite.call("POST", "/api/login", {"username": user, "password": password})
+
+    # A public demo lets its visitor in only as a visit ("Enter the demo", api/routers/demo.py):
+    # through the proxy, the visitor's password is refused. Each person here is one visit, so
+    # PLANTCRAFT_PUBLIC_DEMO_SEATS must cover the most people of a step.
+    def enter() -> None:
+        answer = suite.call("POST", "/api/demo/enter", {"guide": "engineer"})[0] or {}
+        if not answer.get("entered"):
+            raise SystemExit(
+                f"the demo's places are full (seats {answer.get('seats')}): raise "
+                "PLANTCRAFT_PUBLIC_DEMO_SEATS in the installation's .env for this run"
+            )
+
+    enter()
     # The Suite signs in again on a 401 as the administrator: keep the visitor instead.
-    suite.login = lambda: suite.call("POST", "/api/login", {"username": user, "password": password})
+    suite.login = enter
 
 
 def known_here(suite: Suite, pages: dict) -> tuple[dict, int]:
@@ -338,7 +344,15 @@ def run_step(
     for thread, pool in threads:
         thread.join()
         pool.shutdown()
-    return step.summary(time.time() - began)
+    summary = step.summary(time.time() - began)
+    if args.visitor:
+        # Each visit gives its place back, or the next step finds the demo full.
+        for suite in sessions:
+            try:
+                suite.call("POST", "/api/logout", retry=False)
+            except (RuntimeError, OSError):
+                pass
+    return summary
 
 
 def report_md(report: dict) -> str:
@@ -422,23 +436,23 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=RESULTS)
     args = parser.parse_args()
 
+    # Absolute: docker compose runs in the installation's folder (seeding names its .env).
+    args.prefix = args.prefix.expanduser().resolve()
     pages = json.loads(args.pages.read_text())
+    # The administrator seeds and samples; the pages and their questions are found as the
+    # people will open them (a visitor's Suite signs in again as a visitor, never as admin).
     probe = Suite(args.prefix, args.url)
     probe.login()
-    sign_in(probe, args.visitor)
-    pages, dropped = known_here(probe, pages)
+    person_probe = Suite(args.prefix, args.url)
+    sign_in(person_probe, args.visitor)
+    pages, dropped = known_here(person_probe, pages)
     log(f"{len(pages)} pages; {dropped} recorded calls left out (404 or 403 here)")
-    probe.login()
     if args.seed_days:
         seeded: dict = {}
         log(f"seeding {SEED_LOOPS * 3 + SEED_EXTRA} bench signals with {args.seed_days} days")
         seed_histcraft(probe, SEED_LOOPS, SEED_EXTRA, args.seed_days * 24, seeded)
         import_map(probe, SEED_LOOPS, SEED_EXTRA, seeded)
-    catalog = None
-    if args.heavy:
-        sign_in(probe, args.visitor)
-        catalog = Catalog(probe)
-        probe.login()
+    catalog = Catalog(person_probe) if args.heavy else None
     started = datetime.now(timezone.utc)
     sampler = Sampler(probe.env.get("COMPOSE_PROJECT_NAME", "processcraft"))
     sampler.start()

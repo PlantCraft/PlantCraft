@@ -8,6 +8,10 @@
   well-tuned flow, pressure, temperature, level and composition loops beside the 50 of the
   PlantCraft demo story, so the portfolio is 100 loops and 405 tags, 41 with a known problem.
 
+## [0.6.1] - 2026-11-09
+
+No change of its own; released with the suite.
+
 ## [0.6.0] - 2026-11-02
 
 ### Added

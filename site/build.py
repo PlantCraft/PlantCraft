@@ -1,6 +1,6 @@
 """Builds PlantCraft's site into dist/: its pages, their assets and fonts, and the chat's knowledge.
 
-    python build.py [--owner PlantCraft] [--bundle plantcraft-0.6.0-linux-amd64-bundle] [--draft]
+    python build.py [--owner PlantCraft] [--bundle plantcraft-0.6.1-linux-amd64-bundle] [--draft]
                     [--demo-url https://demo.example] [--contact team@example] [--security sec@example] [--noindex]
 
 Each page (index, pricing, partners, install; pages.py) and privacy.html is put in
@@ -214,7 +214,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path, default=HERE / "dist")
     parser.add_argument("--owner", default="PlantCraft", help="the GitHub organization")
-    parser.add_argument("--bundle", default="plantcraft-0.6.0-linux-amd64-bundle")
+    parser.add_argument("--bundle", default="plantcraft-0.6.1-linux-amd64-bundle")
     parser.add_argument("--draft", action="store_true", help="show a 'not published' banner")
     parser.add_argument(
         "--demo-url", default="https://demo.plantcraft.io", help="the public demo, for its button"

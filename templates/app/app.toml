@@ -34,7 +34,7 @@ image = "starter"
 [requires]
 platform = ">=0.6,<0.8"             # PlantCraft versions it installs on (docs/app-package.md §7)
 processcraft_api = ">=1.0,<2"
-sdk = "0.106.0"
+sdk = "0.107.0"
 asset_types = []
 roles = {}
 

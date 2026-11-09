@@ -4,7 +4,7 @@
 [app]
 id = "modelcraft"
 name = "PlantCraft Models"
-version = "0.6.0"
+version = "0.6.1"
 category = "Modelling and simulation"
 summary = "A Modelica workbench: write and draw models, simulate them on plant data and export FMUs."
 description = """\
@@ -30,7 +30,7 @@ image = "modelcraft"
 
 [requires]
 processcraft_api = ">=1.0"
-sdk = "0.106.0"
+sdk = "0.107.0"
 asset_types = []        # any signal can feed a simulation
 roles = {}
 
