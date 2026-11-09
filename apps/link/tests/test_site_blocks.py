@@ -71,7 +71,7 @@ def test_a_block_file_says_what_is_wrong(change, problem):
         ("import numpy as np\ndef run(i, p, c):\n    np.save('x', 1)\n", "save is not allowed"),
         ("def run(i, p, c):\n    return '{0.x}'.format(i)\n", "format is not allowed"),
         ("def go(i, p, c):\n    return {}\n", "no run(inputs, params, ctx)"),
-        ("def run(i):\n    return {}\n", "exactly three arguments"),
+        ("def run(i):\n    return {}\n", "exactly 3 arguments"),
         ("def run(i, p, c)\n    return {}\n", "Line 1"),
         ("import pandas as pd\ndef run(i, p, c):\n    pd.read_csv('/etc/x')\n", "read_csv"),
         ("from pandas import read_pickle\ndef run(i, p, c):\n    return {}\n", "read_pickle"),
@@ -437,7 +437,9 @@ def test_block_workers_stop_slow_code_and_refuse_files_and_network():
         def call(code: str) -> sandbox.Call:
             return sandbox.Call(key=str(hash(code)), code=code, inputs={}, params={})
 
-        assert pool.run(call("def run(i, p, c):\n    return {'y': 2.0}\n"))[0] == {"y": 2.0}
+        assert pool.run(sandbox.execute, call("def run(i, p, c):\n    return {'y': 2.0}\n"))[0] == {
+            "y": 2.0
+        }
         # Passes the checks, but the worker may not write a file.
         writes = (
             "import pandas as pd\n"
@@ -447,12 +449,14 @@ def test_block_workers_stop_slow_code_and_refuse_files_and_network():
         )
         assert sandbox.check_code(writes) == []
         with pytest.raises((OSError, sandbox.BlockCodeError)):
-            pool.run(call(writes))
+            pool.run(sandbox.execute, call(writes))
         with pytest.raises(sandbox.BlockCodeError, match="did not finish"):
-            pool.run(call("def run(i, p, c):\n    while True:\n        pass\n"))
+            pool.run(sandbox.execute, call("def run(i, p, c):\n    while True:\n        pass\n"))
         assert any("socket" in item for item in sandbox.check_code("import socket\n"))
         with pytest.raises(sandbox.BlockCodeError, match="not allowed"):
-            pool.run(call("import urllib.request\ndef run(i, p, c):\n    return {}\n"))
+            pool.run(
+                sandbox.execute, call("import urllib.request\ndef run(i, p, c):\n    return {}\n")
+            )
     finally:
         pool.shutdown()
 

@@ -56,6 +56,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- SDK sandbox: the kind of code in its messages ("a block", "a rule") is translated too; a Portuguese page read "os não é permitido em a rule".
 - Public demo: scrolling a page (or a box inside it, in any app) and moving the pointer while reading now count as use of the visit, so it no longer ends after 5 minutes while someone reads without clicking.
 - An asset's Signals table shows a text signal's last value (a loop's mode: AUTO, MAN); it showed "—", because the last value counted numbers only.
 - SDK: `plantcraft_sdk.i18n_check` also reads the widget titles, descriptions and picks of an app's `app.toml` into its server catalog, so `make standard` fails when one is not translated (five apps had none).
