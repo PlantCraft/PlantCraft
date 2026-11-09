@@ -47,6 +47,8 @@ def list_assets(
                 "id": item.get("id"),
                 "name": item.get("name") or item.get("id"),
                 "kind": item.get("kind"),
+                # The type's name as PlantCraft shows it ("Control valve"), not its id.
+                "kind_label": (item.get("attributes") or {}).get("kind_label") or item.get("kind"),
                 "parent": names.get(item.get("parent_id")) if item.get("parent_id") else None,
                 "signals": item.get("signals") or {},
             }

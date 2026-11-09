@@ -271,7 +271,7 @@ function ItemRow({ item, index, variables, kinds, assets, results, onChange, onR
         onChange(item.result ? { ...item, asset_id: event.target.value } : { ...item, asset_id: event.target.value, role: keep });
       }}>
         {!asset && <option value={item.asset_id ?? ""}>{item.asset_id || t("Choose an asset")}</option>}
-        {assets.filter((option) => Object.keys(option.signals).length).map((option) => <option key={option.id} value={option.id}>{option.parent ? `${option.parent} / ` : ""}{option.name} ({option.kind})</option>)}
+        {assets.filter((option) => Object.keys(option.signals).length).map((option) => <option key={option.id} value={option.id}>{option.parent ? `${option.parent} / ` : ""}{option.name} ({option.kind_label || option.kind})</option>)}
       </select></label>}
       {mode !== "signal" && <label>{t("Shows")}<select value={item.result ? `result:${item.result}` : `role:${item.role ?? ""}`} onChange={(event) => {
         const at = event.target.value.indexOf(":");
