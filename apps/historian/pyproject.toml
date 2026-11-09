@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "histcraft"
-version = "0.6.0"
+version = "0.6.1"
 description = "PlantCraft Historian: the historian of the PlantCraft suite"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -12,7 +12,7 @@ requires-python = ">=3.11"
 dependencies = [
     # Not on any index: `make deps` installs it from this repository's sdk/python first;
     # the pin moves only at a release (docs/app-standard.md, section 3).
-    "plantcraft-sdk==0.106.0",
+    "plantcraft-sdk==0.107.0",
     "asyncua>=1.1.8,<2",
     # Source passwords encrypted at rest (histcraft.vault).
     "cryptography>=43,<51",

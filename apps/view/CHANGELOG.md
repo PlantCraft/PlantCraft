@@ -6,6 +6,8 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-09
+
 ### Fixed
 
 - The asset picker of a panel names each asset's type as PlantCraft does ("Control valve"), not by its id ("control_valve").

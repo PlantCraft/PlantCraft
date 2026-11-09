@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-09
+
+No change of its own; released with the suite.
+
 ## [0.6.0] - 2026-11-02
 
 ### Added

@@ -6,6 +6,8 @@ joins it into the bundle's release notes.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-09
+
 ### Fixed
 
 - Saving a Simple rule on pv, sp or op without saying where it applies tells what to do ("say where it applies (Where: the assets, or a monitor)"); it said "this asset's values and events need a rule over assets".

@@ -6,6 +6,8 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-09
+
 ### Changed
 
 - A block's code runs in the suite's one sandbox (`plantcraft_sdk.sandbox`, the one Alarms and
