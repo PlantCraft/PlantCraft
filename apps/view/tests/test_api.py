@@ -152,6 +152,10 @@ def test_preview_and_pickers_use_the_editors_token(client, fake):
     assert kinds["loop"]["count"] == 3 and "pv" in kinds["loop"]["roles"]
     pumps = client.get("/dash/api/assets", params={"kind": "pump"}).json()
     assert [item["id"] for item in pumps] == ["p-201"] and pumps[0]["signals"]["flow"]
+    # The picker names the type as PlantCraft does ("Pump"), else by its id.
+    assert pumps[0]["kind_label"] == "Pump"
+    loops = client.get("/dash/api/assets", params={"kind": "loop"}).json()
+    assert all(item["kind_label"] for item in loops)
     assert [item["id"] for item in client.get("/dash/api/assets", params={"q": "lic"}).json()] == [
         "lic-102"
     ]

@@ -6,6 +6,13 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+### Changed
+
+- A block's code runs in the suite's one sandbox (`plantcraft_sdk.sandbox`, the one Alarms and
+  Documents use) instead of Link's own copy of it: the same checks, limits and settings
+  (`LINKCRAFT_BLOCK_WORKERS`, `_TIMEOUT_SECONDS`, `_MEMORY_MB`, `_SANDBOX`); a few messages now
+  read like the other apps' ("run takes exactly 3 arguments: inputs, params, ctx.").
+
 ### Fixed
 
 - On a phone, an algorithm's "What it reads and gives" table keeps its words whole ("Signal", "TIC1104_OP") and scrolls sideways when it must; it broke them in the middle.

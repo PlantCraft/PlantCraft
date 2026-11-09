@@ -15,6 +15,13 @@ describe("Desk's coming days", () => {
     expect(groups[0].events.map((item) => item.id)).toEqual(["a"]);
   });
 
+  it("leaves out today's timed runs that already happened, but keeps late actions and all-day events", () => {
+    const run = (id: string, start: string): CalendarEvent => ({ ...event(id, start), kind: "schedule" });
+    const now = new Date("2026-10-23T10:46:00Z");
+    const groups = upcoming([run("past", "2026-10-23T10:37:00Z"), run("next", "2026-10-23T11:37:00Z"), event("late", "2026-10-23T08:00:00Z"), event("day", "2026-10-23")], "2026-10-23", 3, now);
+    expect(groups[0].events.map((item) => item.id)).toEqual(["next", "late", "day"]);
+  });
+
   it("shows a several-day event that began before today on today", () => {
     const groups = upcoming([event("trip", "2026-10-21", "2026-10-25")], "2026-10-23", 3);
     expect(groups).toEqual([{ day: "2026-10-23", events: [expect.objectContaining({ id: "trip" })] }]);

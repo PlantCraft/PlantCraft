@@ -312,7 +312,7 @@ class _Module:
         module = object.__getattribute__(self, "_module")
         policy: Policy = object.__getattribute__(self, "_policy")
         full = f"{module.__name__}.{name}"
-        refused = t("{name} is not allowed in {what}.", name=full, what=policy.what)
+        refused = t("{name} is not allowed in {what}.", name=full, what=t(policy.what))
         if name.startswith("_") or _attribute_denied(name):
             raise AttributeError(refused)
         if object.__getattribute__(self, "_path_only") and not (
@@ -343,7 +343,7 @@ def _guard(value: Any, name: str, policy: Policy) -> Any:  # noqa: ANN401
             return _Module(value, policy)
         if policy.leads_to_allowed(value.__name__):
             return _Module(value, policy, path_only=True)
-        raise AttributeError(t("{name} is not allowed in {what}.", name=name, what=policy.what))
+        raise AttributeError(t("{name} is not allowed in {what}.", name=name, what=t(policy.what)))
     return value
 
 
@@ -355,7 +355,7 @@ def check_code(code: str, policy: Policy = Policy()) -> list[str]:  # noqa: B008
     except SyntaxError as exc:
         return [t("Line {line}: {error}.", line=exc.lineno or "?", error=exc.msg)]
     problems: list[str] = []
-    what = policy.what
+    what = t(policy.what)  # "a block", "a rule": translated like any sentence
 
     def problem(node: ast.AST, text: str) -> None:
         if len(problems) < 20:

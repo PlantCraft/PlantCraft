@@ -13,6 +13,9 @@ signals in the same order::
         found = guarded(lambda: rt.user_client(user).signals(q.strip() or None), service=False)
         return signal_choices(found, q, limit=limit, numbers_only=True)
 
+``asset_choices`` is the same for an app's ``/api/assets`` (the asset picker): the assets of a
+kind whose id, name or parent's name holds the text, by parent and name.
+
 Plant signals come before the series apps derived (``app-<app id>:...``), then the exact, the
 prefix and the other matches of the tag or name; PlantCraft's order is kept within each group.
 """
@@ -24,7 +27,7 @@ from typing import Any
 
 from plantcraft_sdk.derived import SOURCE_PREFIX
 
-__all__ = ["CHOICE_FIELDS", "is_derived", "rank_signals", "signal_choices"]
+__all__ = ["CHOICE_FIELDS", "asset_choices", "is_derived", "rank_signals", "signal_choices"]
 
 #: What a picker shows of a signal.
 CHOICE_FIELDS = ("id", "name", "unit", "description", "kind", "source", "low", "high")
@@ -87,3 +90,37 @@ def signal_choices(
                 row[key] = item.get(key) or ""
         answer.append(row)
     return answer
+
+
+def asset_choices(
+    everything: Iterable[Mapping[str, Any]],
+    query: str = "",
+    *,
+    kind: str | None = None,
+    limit: int = 500,
+) -> list[dict[str, Any]]:
+    """The first ``limit`` assets of ``everything`` (PlantCraft's ``/assets``) of ``kind`` whose
+    id, name or parent's name holds ``query``, sorted by parent then name: ``id``, ``name``
+    (the id when unnamed), ``kind``, ``parent`` (its name, or None) and ``signals``."""
+
+    items = list(everything)
+    names = {item.get("id"): item.get("name") or item.get("id") for item in items}
+    text = query.strip().lower()
+    found = []
+    for item in items:
+        if kind and item.get("kind") != kind:
+            continue
+        parent = names.get(item.get("parent_id")) if item.get("parent_id") else None
+        if text and text not in f"{item.get('id')} {item.get('name')} {parent or ''}".lower():
+            continue
+        found.append(
+            {
+                "id": item.get("id"),
+                "name": item.get("name") or item.get("id"),
+                "kind": item.get("kind"),
+                "parent": parent,
+                "signals": item.get("signals") or {},
+            }
+        )
+    found.sort(key=lambda item: (str(item["parent"] or ""), str(item["name"])))
+    return found[:limit]
