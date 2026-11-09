@@ -59,6 +59,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- Public demo (sweep of 2026-11-09): opening or reloading a page counts as use of the visit, so moving on by whole page loads no longer ends it after 5 minutes; the assistant's off page in the demo points to the team's chats in Shared with me and to Settings › Language models (it said "below" and "Setup"), without the second line for administrators; long chat titles in the assistant's list end in "…" instead of being cut.
+- An asset's Record card: "Your access is read-only" sits under a line of its own, not under the last field as if it were its hint.
 - ui: an app's Overview with a notice above its cards (Models' runner down, Historian's collector stopped, Documents reading files) shows Customize under the notice instead of on top of it.
 - Desk: Coming days leaves out today's scheduled runs and meetings that already happened; a late action or to-do still shows.
 - SDK sandbox: the kind of code in its messages ("a block", "a rule") is translated too; a Portuguese page read "os não é permitido em a rule".

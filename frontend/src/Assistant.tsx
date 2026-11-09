@@ -308,7 +308,7 @@ function NewChat({ status, onStarted }: { status: AssistantStatus; onStarted: ()
     <div className="asst-center asst-off"><Bot size={34} /><h2>{t("The assistant is off")}</h2><p>{status.reason}</p>
       {admin
         ? <p><a className="button button-secondary" href="/setup/language-model" onClick={(event) => { event.preventDefault(); navigate("/setup/language-model"); }}>{t("Set up the language model")}</a></p>
-        : <p className="muted small">{t("An administrator turns it on in Settings › Language models.")}</p>}
+        : !status.demo && <p className="muted small">{t("An administrator turns it on in Settings › Language models.")}</p>}
     </div>
   </section>;
   return <section className="asst-chat asst-new">
@@ -369,7 +369,7 @@ export default function AssistantPage({ chatId }: { chatId: number | "new" | nul
           {renaming?.id === chat.chat_id
             ? <input className="asst-rename" autoFocus value={renaming.title} maxLength={120} onChange={(event) => setRenaming({ id: chat.chat_id, title: event.target.value })} onBlur={() => void saveTitle()} onKeyDown={(event) => { if (event.key === "Enter") void saveTitle(); if (event.key === "Escape") setRenaming(null); }} aria-label={t("Chat title")} />
             : <a href={`/assistant/${chat.chat_id}`} onClick={(event) => { event.preventDefault(); navigate(`/assistant/${chat.chat_id}`); }}>
-            <strong>{chat.working && <LoaderCircle className="spin" size={12} />}{chat.title}{chat.shared?.length ? <Share2 size={11} aria-label={t("Shared")} /> : null}</strong>
+            <strong>{chat.working && <LoaderCircle className="spin" size={12} />}<span className="asst-list-title">{chat.title}</span>{chat.shared?.length ? <Share2 size={11} aria-label={t("Shared")} /> : null}</strong>
             <small>{chat.mine === false ? t("Shared by {name}", { name: chat.owner_name ?? chat.owner ?? "" }) : chat.profile_name} · {formatAgo(chat.updated_at)}</small>
           </a>}
           <StarButton starred={Boolean(chat.starred)} className={`asst-tool${chat.starred ? " asst-keep" : ""}`} onToggle={() => { collabApi.mark(`chat:${chat.chat_id}`, "star", !chat.starred).then(load).catch((err) => setError(errorText(err))); }} />
