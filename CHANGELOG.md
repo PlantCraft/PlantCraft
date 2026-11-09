@@ -34,8 +34,11 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   `preview-shots` (screenshots of the main pages) go with them (docs/development.md).
 - Answers from OpenAI-compatible servers (Ollama, vLLM) now keep the tokens they spent: a streamed chat completion asks for them (`stream_options.include_usage`); before, `meta.usage` stayed at zero.
 
+- SDK: `plantcraft_sdk.server.picker.asset_choices`, the asset picker's answer (by kind and text, sorted by parent then name), written once for the `/api/assets` of Alarms and View, which each had a copy.
+
 ### Changed
 
+- SDK: `plantcraft_sdk.sources.pi_web_api`, the PI Web API client PlantCraft and Historian both read PI through (it was copied in each and the copies had drifted): PlantCraft's PI source gains Historian's point search and step flag, Historian's gains the read-only session; a failed read of the value before a window is now the read's failure, not a silently missing first value. `plantcraft_sdk.sources` holds `SignalInfo`, `NO_VALUE` and `asset_from_tag`; the `pi` extra installs `requests`.
 - The command line every app has (`serve`, `check`, their logs and uvicorn's options) is written once in the SDK, `plantcraft_sdk.server.cli`, and the six official apps use it; an app's `i18n.py` calls `plantcraft_sdk.i18n.use_app_catalogs(__file__)`. No change in behavior.
 
 - **The apps build against the repository's own SDK and ui.** Every app under `apps/` installs
@@ -58,6 +61,7 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - ui: an app's Overview with a notice above its cards (Models' runner down, Historian's collector stopped, Documents reading files) shows Customize under the notice instead of on top of it.
 - Desk: Coming days leaves out today's scheduled runs and meetings that already happened; a late action or to-do still shows.
+- SDK sandbox: the kind of code in its messages ("a block", "a rule") is translated too; a Portuguese page read "os não é permitido em a rule".
 - Public demo: scrolling a page (or a box inside it, in any app) and moving the pointer while reading now count as use of the visit, so it no longer ends after 5 minutes while someone reads without clicking.
 - An asset's Signals table shows a text signal's last value (a loop's mode: AUTO, MAN); it showed "—", because the last value counted numbers only.
 - SDK: `plantcraft_sdk.i18n_check` also reads the widget titles, descriptions and picks of an app's `app.toml` into its server catalog, so `make standard` fails when one is not translated (five apps had none).

@@ -11,7 +11,7 @@ from typing import Any
 from fastapi import APIRouter, Query
 from plantcraft_sdk.links import MAX_SUBJECTS
 from plantcraft_sdk.refs import asset_ref
-from plantcraft_sdk.server.picker import signal_choices
+from plantcraft_sdk.server.picker import asset_choices, signal_choices
 
 from dashcraft.api.deps import CurrentUser, EditorView, RuntimeDep, guarded
 from dashcraft.query.cards import derived_signals
@@ -33,28 +33,15 @@ def list_assets(
     q: str = Query(default="", max_length=120),
 ) -> list[dict[str, Any]]:
     everything = _assets(rt, user)
-    names = {item.get("id"): item.get("name") or item.get("id") for item in everything}
-    query = q.strip().lower()
-    found = []
-    for item in everything:
-        if kind and item.get("kind") != kind:
-            continue
-        text = f"{item.get('id')} {item.get('name')} {names.get(item.get('parent_id')) or ''}"
-        if query and query not in text.lower():
-            continue
-        found.append(
-            {
-                "id": item.get("id"),
-                "name": item.get("name") or item.get("id"),
-                "kind": item.get("kind"),
-                # The type's name as PlantCraft shows it ("Control valve"), not its id.
-                "kind_label": (item.get("attributes") or {}).get("kind_label") or item.get("kind"),
-                "parent": names.get(item.get("parent_id")) if item.get("parent_id") else None,
-                "signals": item.get("signals") or {},
-            }
-        )
-    found.sort(key=lambda item: (str(item["parent"] or ""), str(item["name"])))
-    return found[:MAX_ASSETS]
+    found = asset_choices(everything, q, kind=kind, limit=MAX_ASSETS)
+    # The type's name as PlantCraft shows it ("Control valve"), not its id.
+    labels = {
+        item.get("id"): (item.get("attributes") or {}).get("kind_label") or item.get("kind")
+        for item in everything
+    }
+    for item in found:
+        item["kind_label"] = labels.get(item["id"]) or item["kind"]
+    return found
 
 
 @router.get("/asset-kinds")

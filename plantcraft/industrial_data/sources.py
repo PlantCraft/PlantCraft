@@ -9,7 +9,6 @@ import asyncio
 import logging
 import os
 import threading
-from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Protocol
@@ -18,23 +17,11 @@ import pandas as pd
 
 from plantcraft.config import DataSourceConfig, LoopConfig
 from plantcraft.i18n import t
-
-# Start of a per-tag error that only says the tag had nothing new (quiet in the logs).
-NO_VALUE = "no value"
+from plantcraft_sdk.sources import NO_VALUE, SignalInfo, asset_from_tag
 
 logger = logging.getLogger(__name__)
 # History reads in flight at once on one OPC UA session.
 OPCUA_CONCURRENT_READS = int(os.environ.get("PLANTCRAFT_OPCUA_CONCURRENT_READS", "16"))
-
-
-@dataclass(frozen=True)
-class SignalInfo:
-    tag: str
-    name: str
-    asset: str
-    unit: str = ""
-    description: str = ""
-    data_type: str = "number"
 
 
 class DataSource(Protocol):
@@ -399,15 +386,6 @@ async def _is_property(node) -> bool:
 
     type_definition = await node.read_type_definition()
     return type_definition == ua.NodeId(ua.ObjectIds.PropertyType)
-
-
-def asset_from_tag(tag: str) -> str:
-    """Group tags like ``FIC-101.PV`` or ``FIC101_PV`` under ``FIC-101``."""
-
-    for separator in (".", ":", "/"):
-        if separator in tag:
-            return tag.rsplit(separator, 1)[0]
-    return tag
 
 
 def build_source(config: DataSourceConfig) -> DataSource:
