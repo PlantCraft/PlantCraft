@@ -1211,5 +1211,6 @@
   "{used} of {runs} runs used; {skipped} left out: {reason}": "{used} de {runs} ejecuciones usadas; {skipped} quedaron fuera: {reason}",
   "{used} results corrected it{pending}{rejected}.": "{used} resultados la corrigieron{pending}{rejected}.",
   "{value} from PlantCraft": "{value} de PlantCraft",
-  "λ (s)": "λ (s)"
+  "λ (s)": "λ (s)",
+  "Output drift": "Deriva de la salida"
 }

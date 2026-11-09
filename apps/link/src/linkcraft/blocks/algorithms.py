@@ -166,7 +166,10 @@ def _flow_loop() -> dict[str, Any]:
     stiction = _method(d, "stiction_screening", ("pv", "op"))
     oscillation = _method(d, "oscillation_autocorrelation", ("pv", "sp"))
     noise = _method(d, "sensor_noise_ratio", ("pv",))
-    _health(d, [error, saturation, travel, sampling], context, [stiction, oscillation, noise])
+    drift = _method(d, "output_drift", ("op", "sp"))
+    _health(
+        d, [error, saturation, travel, sampling], context, [stiction, oscillation, noise, drift]
+    )
     return d.done()
 
 
@@ -188,6 +191,8 @@ def _level_loop() -> dict[str, Any]:
     diagnostics = [
         _method(d, "oscillation_autocorrelation", ("pv", "sp")),
         _method(d, "stiction_screening", ("pv", "op")),
+        _method(d, "sensor_noise_ratio", ("pv",)),
+        _method(d, "output_drift", ("op", "sp")),
     ]
     _health(d, scored, context, diagnostics)
     return d.done()
@@ -213,6 +218,8 @@ def _slow_loop() -> dict[str, Any]:
     diagnostics = [
         _method(d, "oscillation_autocorrelation", ("pv", "sp")),
         _method(d, "stiction_screening", ("pv", "op")),
+        _method(d, "sensor_noise_ratio", ("pv",)),
+        _method(d, "output_drift", ("op", "sp")),
     ]
     _health(d, scored, context, diagnostics)
     return d.done()
@@ -239,7 +246,7 @@ def _surge_level() -> dict[str, Any]:
             parameters={"lower_limit": 20, "upper_limit": 80, "assume_surge_level": True},
         ),
         _method(d, "op_saturation_fraction", ("op",)),
-        _method(d, "op_travel_reversal", ("op",), parameters={"reversal_epsilon": 0.1}),
+        _method(d, "op_travel_reversal", ("op",)),
         _method(d, "sampling_quality", ("x",), parameters={"recommended_sample_seconds": 20}),
     ]
     context = [
@@ -373,7 +380,7 @@ SYSTEM: tuple[dict[str, Any], ...] = (
         "name": "Level loop",
         "tags": [CONTROL_LOOP],
         "description": "A level held tight at its setpoint: error, output and valve travel "
-        "make the health; oscillation and stiction flagged beside it.",
+        "make the health; oscillation, stiction and noise flagged beside it.",
         "subject_kind": "loop",
         "diagram": _level_loop(),
         "docs": AlgorithmDocs(
@@ -385,7 +392,7 @@ SYSTEM: tuple[dict[str, Any], ...] = (
             "instead: there a moving level is the job.",
             reading="The health is the product of the PV-SP error, output saturation, valve "
             "travel and sampling. The level loop type allows the valve less travel than a "
-            "flow. Oscillation and stiction are flagged without changing the score.",
+            "flow. Oscillation, stiction and noise are flagged without changing the score.",
             assistant="A level that cycles slowly with a sticky valve is common: say so when "
             "both are flagged. Do not recommend tightening a level that is meant to average "
             "its inflow; ask whether it is a surge level first.",
@@ -419,7 +426,8 @@ SYSTEM: tuple[dict[str, Any], ...] = (
         "name": "Temperature or pressure loop",
         "tags": [CONTROL_LOOP],
         "description": "A slow loop with dead time: its variance against minimum-variance "
-        "control (Harris index), the error and the output; oscillation and stiction flagged.",
+        "control (Harris index), the error and the output; oscillation, stiction and noise "
+        "flagged.",
         "subject_kind": "loop",
         "diagram": _slow_loop(),
         "docs": AlgorithmDocs(
@@ -433,7 +441,8 @@ SYSTEM: tuple[dict[str, Any], ...] = (
             reading="The Harris index compares the error's variance with what minimum-variance "
             "control would leave given the dead time: 1 is the bound, 0.3 to 0.6 is usual for "
             "a well-tuned industrial loop (a copy can record its score in the historian). Error, "
-            "saturation and sampling score with it; oscillation and stiction are diagnostics.",
+            "saturation and sampling score with it; oscillation, stiction and noise are "
+            "diagnostics.",
             assistant="Say the dead time used and whether it was estimated: a wrong dead time "
             "moves the index. A low index with an oscillation points at tuning or the valve; "
             "a low index alone, at disturbances the loop cannot reject. Do not judge it in a "

@@ -76,7 +76,7 @@ export const RESULT_COLUMNS: DataColumn<ResultRow>[] = [
   { key: "type", label: t("Type"), className: "hide-narrow", sort: (row) => row.asset_type_label, render: (row) => row.asset_type_label },
   { key: "algorithm", label: t("Algorithm"), sort: (row) => row.algorithm.name, render: (row) => (row.algorithm.name ? <><Link to={`/algorithms/${encodeURIComponent(row.algorithm.id)}`}>{row.algorithm.name}</Link>{row.algorithm.version ? <small>{t("version {number}", { number: row.algorithm.version })}</small> : null}</> : <span className="muted">—</span>) },
   { key: "measure", label: t("Result"), numeric: true, sort: (row) => row.measure.value, render: (row) => <span className="pc-num nowrap">{row.measure.label} <b>{formatMeasure(row.measure)}</b></span> },
-  { key: "finding", label: t("Finding"), sort: (row) => limitingName(row.limiting) || row.finding, render: (row) => (row.limiting ? <><b>{limitingName(row.limiting)}</b><small className="clamp">{row.finding}</small></> : <small className="clamp">{row.finding || "—"}</small>) },
+  { key: "finding", label: t("Finding"), sort: (row) => row.cause || limitingName(row.limiting) || row.finding, render: (row) => (row.cause || row.limiting ? <><b>{row.cause || limitingName(row.limiting)}</b><small className="clamp">{row.finding}</small></> : <small className="clamp">{row.finding || "—"}</small>) },
   { key: "tags", label: t("Labels"), className: "hide-narrow", sort: (row) => row.tags.join(", "), render: (row) => (row.tags.length ? <span className="alg-tags">{row.tags.map((tag) => <span key={tag} className="tag">{tag}</span>)}</span> : <span className="muted">—</span>) },
   { key: "at", label: t("When"), className: "hide-narrow", sort: (row) => row.at, render: (row) => <span title={formatDate(row.at)}>{row.at ? formatAgo(row.at) : "—"}</span> },
 ];
@@ -105,7 +105,7 @@ export function ResultsPage({ me: _me }: { me: Me }) {
   // (app.toml) with the rows shown, and one task that reads them too.
   useAssistantPage({
     page: "linkcraft:results",
-    view: { query, filters, rows: (data?.items ?? []).slice(0, 25).map((item) => `${item.name} (${item.kind} ${item.id}): ${item.status}, ${item.measure.label} ${item.measure.value ?? "—"}; ${item.finding || item.limiting || ""}`) },
+    view: { query, filters, rows: (data?.items ?? []).slice(0, 25).map((item) => `${item.name} (${item.kind} ${item.id}): ${item.status}, ${item.measure.label} ${item.measure.value ?? "—"}; ${item.cause ? `${item.cause}: ` : ""}${item.finding || item.limiting || ""}`) },
     subject: "app:linkcraft", title: t("Results"), place: t("Analytics › Results"),
     context: data ? `Link's results: ${data.total} subjects shown${filtered ? " (filtered)" : ""}; by status ${Object.entries(data.counts.status).map(([key, count]) => `${key} ${count}`).join(", ")}.` : "",
   });

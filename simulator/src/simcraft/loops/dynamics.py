@@ -202,7 +202,9 @@ LOOP_DEFINITIONS: tuple[LoopDefinition, ...] = (
         time_constant_seconds=125.0,
         dead_time_seconds=10.0,
         controller_gain=1.25,
-        integral_gain=0.18,
+        # Tuned crisp: the PV reaches each new setpoint in about five minutes, so the
+        # loop shows frequent setpoint changes, not a slow answer to them.
+        integral_gain=0.9,
         process_noise=0.025,
         measurement_noise=0.06,
     ),
@@ -414,6 +416,9 @@ LOOP_DEFINITIONS = (
         seed=122,
         base_sp=56.0,
         base_pv=56.0,
+        # Tuned crisp: the PV reaches each new setpoint in about five minutes, so the
+        # loop shows frequent setpoint changes, not a slow answer to them.
+        integral_gain=0.9,
     ),
     LoopDefinition(
         loop_id="LIC-1113",
@@ -569,6 +574,9 @@ LOOP_DEFINITIONS = (
         seed=134,
         base_sp=57.0,
         base_pv=57.0,
+        # Tuned crisp: the PV reaches each new setpoint in about five minutes, so the
+        # loop shows frequent setpoint changes, not a slow answer to them.
+        integral_gain=0.9,
     ),
     LoopDefinition(
         loop_id="LIC-1211",
@@ -722,6 +730,9 @@ LOOP_DEFINITIONS = (
         seed=146,
         base_sp=49.0,
         base_pv=49.0,
+        # Tuned crisp: the PV reaches each new setpoint in about five minutes, so the
+        # loop shows frequent setpoint changes, not a slow answer to them.
+        integral_gain=0.9,
     ),
     LoopDefinition(
         loop_id="LIC-1223",
@@ -856,6 +867,18 @@ def _disturbance(
     return 0.0
 
 
+# A drifting transmitter: it reads high by a bias that grows steadily and is calibrated back to zero
+# every two days (each loop at its own point of the cycle), so a day of history always shows it
+# drifting, the controller holding the wrong reading and its output walking away with it.
+DRIFT_PERIOD_SECONDS = 2 * 86400.0
+DRIFT_SPAN = 9.0
+
+
+def _sensor_drift(definition: LoopDefinition, timestamp: float) -> float:
+    phase = (timestamp / DRIFT_PERIOD_SECONDS + 0.37 * definition.seed) % 1.0
+    return DRIFT_SPAN * phase
+
+
 def _delayed_output(
     state: LoopState,
     timestamp: float,
@@ -953,7 +976,7 @@ def simulate_step(
     state.true_pv += alpha * (process_target - state.true_pv) + process_noise
 
     if definition.behavior == "sensor_drift":
-        state.sensor_bias = min(9.0, state.sensor_bias + dt * 7.0 / 86400.0)
+        state.sensor_bias = _sensor_drift(definition, epoch)
     measurement_noise = definition.measurement_noise * _fractional_noise(definition.seed, epoch, 2)
     state.measured_pv = state.true_pv + state.sensor_bias + measurement_noise
     if "sensor_bias" in active:

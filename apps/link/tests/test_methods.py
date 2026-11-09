@@ -77,6 +77,7 @@ def test_registry_exposes_all_expected_methodology_blocks():
         "sensor_noise_ratio",
         "op_travel_reversal",
         "stiction_screening",
+        "output_drift",
         "interaction_cross_correlation",
         "harris_index",
     }

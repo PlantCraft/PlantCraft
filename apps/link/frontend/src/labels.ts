@@ -10,6 +10,7 @@ const METHOD_NAMES: Record<string, string> = {
   oscillation_autocorrelation: "Oscillation",
   sensor_noise_ratio: "Sensor noise",
   stiction_screening: "Stiction screening",
+  output_drift: "Output drift",
   manual_mode_fraction: "Manual mode",
   setpoint_activity: "SP activity",
   operational_interventions: "Operator interventions",

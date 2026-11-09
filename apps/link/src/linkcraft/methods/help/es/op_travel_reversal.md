@@ -20,8 +20,9 @@ empaquetadura y los actuadores y a menudo viene del ruido o de una sintonía agr
   según su tipo de lazo.
 - `max_reversals_per_hour` (por defecto 60): el número de cambios de dirección por hora que puntúa
   100.
-- `reversal_epsilon` (por defecto 0.05): el menor movimiento de la salida, en %, contado al buscar
-  un cambio de dirección.
+- `reversal_epsilon` (por defecto 0.5): cuánto, en %, la salida debe volver desde su último
+  extremo para contar como inversión (una histéresis, como la ve la zona muerta de la válvula):
+  vaivenes menores que eso nunca mueven el vástago, sea cual sea la tasa de muestreo.
 
 ## Cómo leer el hallazgo
 

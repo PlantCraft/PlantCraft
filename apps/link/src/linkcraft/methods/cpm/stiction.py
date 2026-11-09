@@ -94,6 +94,8 @@ class StictionParameters(BaseModel):
     # Horch (1999): what the OP records, and the lag-0 cross-correlation ratio that reads as even.
     op_is: Literal["valve_command", "controller_output"] = "valve_command"
     horch_even: float = Field(default=0.8, gt=0.0, le=1.0)
+    # A limit cycle repeats like a clock; setpoint steps and recurring upsets do not.
+    shape_min_regularity: float = Field(default=5.0, gt=0.0)
 
 
 METHOD_METADATA = MethodMetadata(
@@ -118,7 +120,8 @@ METHOD_METADATA = MethodMetadata(
         "clip((index-0.5)/(shape_index_high-0.5), 0, 1) and index = max over OP and PV of "
         "sine SSE / (sine SSE + triangle SSE) fitted per half cycle (He et al. 2007). "
         "horch = |r(0)| / max |r(tau)| of the OP-PV cross-correlation for |tau| <= period/2 "
-        "(Horch 1999); with op_is = controller_output, horch >= horch_even sets shape to 0."
+        "(Horch 1999); shape = 0 when horch >= horch_even (controller_output) or, on a "
+        "valve_command, PV regularity < shape_min_regularity with stick-slip < 0.5."
     ),
     assumptions=["The OP represents the valve command and routine data are representative."],
     limitations=[
@@ -244,7 +247,15 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
         and horch is not None
         and horch >= parameters.horch_even
     )
-    if in_phase:
+    # Triangles without a limit cycle's regularity: the PV answering steps.
+    regularity = _regularity(pv) if cycling else None
+    stepped = (
+        parameters.op_is == "valve_command"
+        and regularity is not None
+        and regularity < parameters.shape_min_regularity
+        and op_pattern_factor < 0.5
+    )
+    if in_phase or stepped:
         shape_factor = 0.0
     # Too few moves off the limits to read a pattern: stiction cannot be judged here.
     screenable = screened >= 3
@@ -276,6 +287,7 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
             "shape_factor": shape_factor,
             "horch_index": horch,
             "horch_in_phase": in_phase,
+            "pv_regularity": regularity,
             "stiction_screening_score": float(score),
             "valid_samples": int(len(frame)),
         },
@@ -286,6 +298,18 @@ def run(input_data: StictionInput, parameters: StictionParameters) -> MethodResu
             )
         ],
     )
+
+
+def _regularity(pv: np.ndarray) -> float | None:
+    """The PV's ACF regularity (Thornhill, Huang and Zhang 2003)."""
+
+    from linkcraft.methods.cpm.oscillation import acf_regularity
+
+    centred = pv[np.isfinite(pv)]
+    if centred.size < 8:
+        return None
+    regularity, _period, _count = acf_regularity(centred - centred.mean())
+    return float(regularity)
 
 
 def horch_index(op: np.ndarray, pv: np.ndarray, period: int) -> float | None:

@@ -30,6 +30,11 @@ o setpoint.
 - `relative_band_percent` (padrão 1): a faixa no alvo, em percentual da escala da malha.
 - `pv_span` (padrão none): a amplitude de engenharia da PV. Quando informada, é a escala da malha;
   vazia, a escala é o tamanho do setpoint (mediana de |SP|) ao longo da janela.
+- `setpoint_settle_minutes` (padrão 20): depois de uma troca de setpoint, o caminho da PV até o
+  novo setpoint fica de fora até a PV chegar nele pela primeira vez (cruzar ou entrar na banda),
+  por no máximo estes minutos. Responder a uma troca de setpoint é o trabalho da malha, não erro;
+  um sobressinal ou uma aproximação lenta além desse tempo continuam contando. 0 conta todas as
+  amostras.
 
 ## Como ler o achado
 

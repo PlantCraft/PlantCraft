@@ -39,6 +39,7 @@ METHOD_LABELS = TranslatedLabels(
         "oscillation_autocorrelation": "Oscillation",
         "sensor_noise_ratio": "Sensor noise",
         "stiction_screening": "Stiction screening",
+        "output_drift": "Output drift",
         "harris_index": "Minimum-variance index",
         "manual_mode_fraction": "Manual mode",
         "setpoint_activity": "SP activity",
@@ -56,6 +57,45 @@ METHOD_LABELS = TranslatedLabels(
 # Name and help for each method parameter, shown wherever a parameter is edited.
 # A Field's own ``title``/``description`` (methods written with @method) wins.
 PARAMETER_LABELS = {
+    "setpoint_settle_minutes": (
+        "Setpoint settle time (min)",
+        "After a setpoint change, the PV's travel to the new setpoint is left out for at most "
+        "these minutes; 0 keeps every sample.",
+    ),
+    "relative_noise_percent": (
+        "Noise tolerance (% of scale)",
+        "Sample-to-sample noise, in percent of the loop's scale, that scores 100.",
+    ),
+    "min_amplitude_percent": (
+        "Smallest cycle judged (% of scale)",
+        "Spread of the signal, in percent of the loop's scale, below which a cycle is too small "
+        "to flag.",
+    ),
+    "block_minutes": (
+        "Block length (min)",
+        "Length of the blocks whose median output is compared from one to the next.",
+    ),
+    "drift_per_day": (
+        "Drift that scores 100 (%/day)",
+        "Output drift, in percent of OP per day, at which the score is full.",
+    ),
+    "min_consistency": (
+        "Minimum consistency",
+        "Share of block-to-block changes in the drift's direction from which a drift counts.",
+    ),
+    "full_consistency": (
+        "Full consistency",
+        "Share of block-to-block changes in the drift's direction at which a drift counts fully.",
+    ),
+    "min_blocks": (
+        "Minimum blocks",
+        "Fewest blocks with a steady setpoint needed to judge a drift.",
+    ),
+    "shape_min_regularity": (
+        "Limit-cycle regularity",
+        "Regularity of the PV's cycle below which, on a recorded valve command, the shape alone "
+        "does not read as stiction: setpoint steps and recurring upsets repeat less regularly.",
+    ),
     "error_tolerance": (
         "Error tolerance",
         "Mean absolute error, in the PV's unit, that scores zero. Empty: a share of the loop's "
@@ -155,11 +195,11 @@ PARAMETER_LABELS = {
     ),
     "noise_ratio_threshold": (
         "Noise ratio threshold",
-        "Share of PV variation attributed to noise from which the method warns.",
+        "Share of the PV's variation explained by noise at which the noise weighs fully.",
     ),
     "noise_abs_tolerance": (
         "Tolerated absolute noise",
-        "Noise amplitude accepted without penalizing the score.",
+        "Noise, in the PV's unit, that scores 100; empty uses a share of the loop's scale.",
     ),
     "max_travel_per_hour": (
         "Acceptable travel per hour (%)",
@@ -171,7 +211,7 @@ PARAMETER_LABELS = {
     ),
     "reversal_epsilon": (
         "Minimum reversal movement",
-        "Smallest output movement counted as a direction change.",
+        "Smallest turn back of the output from its last extreme counted as a direction change.",
     ),
     "jump_threshold": (
         "Minimum OP jump",

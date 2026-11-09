@@ -366,7 +366,7 @@ export function LoopPage({ loopId, me }: { loopId: string; me: Me }) {
     context: [`Control loop ${detail.loop.loop_id}${detail.loop.service ? ` (${detail.loop.service})` : ""}, area ${detail.loop.area || "—"}.`,
       detail.incomplete ? "Its record is incomplete: not analysed." : `Health ${loopSummary?.health ?? "—"}, status ${loopSummary?.status ?? "pending"}; limiting criterion ${loopSummary?.limiting ? `${loopSummary.limiting.method_id}: ${loopSummary.limiting.finding}` : "none"}.`,
       loopSummary?.operating_state ? `Operation: ${loopSummary.operating_state} ${loopSummary.operating_state_reason ?? ""}.` : "",
-      (detail.likely_causes ?? []).length ? `Likely causes: ${(detail.likely_causes ?? []).slice(0, 4).map((item) => `${item.cause} (${Math.round(100 * item.strength)} %)`).join("; ")}.` : "",
+      (detail.likely_causes ?? []).length ? `Likely causes: ${(detail.likely_causes ?? []).slice(0, 4).map((item) => `${item.cause} (support ${item.strength})`).join("; ")}.` : "",
       detail.source_end ? `Window ${detail.source_start} to ${detail.source_end}.` : ""].filter(Boolean).join("\n"),
   });
   if (error && !detail) return <ErrorBox text={error} />;

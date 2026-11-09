@@ -51,6 +51,8 @@ shifts them by about a quarter cycle, tuning or a disturbance keeps them in or a
 - `horch_even` (default 0.8): with `op_is` = `controller_output`, a cross-correlation at lag 0 of
   at least this share of its largest value (an in-phase or anti-phase cycle) leaves the shape
   evidence out. The ratio is always reported as `horch_index`.
+- `shape_min_regularity` (default 5): on a `valve_command`, a PV cycle less regular than this
+  leaves the shape out (unless stick-slip is 0.5 or more): steps, not a limit cycle.
 
 ## How to read the finding
 

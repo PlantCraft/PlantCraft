@@ -9,6 +9,7 @@ from linkcraft.methods.cpm import (
     manual_mode,
     operating_band,
     oscillation,
+    output_drift,
     sampling_quality,
     saturation,
     sensor_noise,
@@ -32,6 +33,7 @@ METHOD_MODULES = [
     sensor_noise,
     valve_travel,
     stiction,
+    output_drift,
     interaction_correlation,
     harris.harris_index,
 ]
