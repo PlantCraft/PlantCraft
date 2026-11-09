@@ -1345,5 +1345,7 @@
   "Español": "Español",
   "OPC UA": "OPC UA",
   "Administrator": "Administrador",
-  "{change} (and {n} more)": "{change} (e mais {n})"
+  "{change} (and {n} more)": "{change} (e mais {n})",
+  "Grouped by the first part of its tags' names.": "Agrupado pela primeira parte do nome dos seus tags.",
+  "{count} equipment come from the first part of tag names that are not ISA-5.1 (Pump1_Speed is Pump1's speed); check them before applying.": "{count} equipamentos vêm da primeira parte de nomes de tags que não seguem a ISA-5.1 (Pump1_Speed é o speed de Pump1); confira antes de aplicar."
 }

@@ -490,3 +490,22 @@ def test_an_imported_tree_routes_the_signals_of_an_added_source(client, second_c
     assert registry.source_of("B201.Vazao") == source
     assert client.post("/api/asset-file/undo").status_code == 200
     assert "B201.Vazao" not in registry.routes()
+
+
+def test_a_csv_with_offsets_in_its_times_is_read(client, tmp_path):
+    """An export written with offsets ("...Z", "+00:00") reads like one without them."""
+
+    demo = pd.read_csv(ROOT / "demo" / "data" / "FIC-101.csv", index_col=0, parse_dates=True)
+    frame = pd.DataFrame({"Zoned.PV": demo["pv"].to_numpy()}, index=demo.index.tz_localize("UTC"))
+    frame.index.name = "timestamp"
+    path = tmp_path / "zoned.csv"
+    frame.to_csv(path)
+    assert "+00:00" in path.read_text().splitlines()[1]
+    source = _add_csv(client, path, name="Zoned")["source_id"]
+    registry = client.app.state.runtime.platform.sources
+    registry.use(source, [{"tag": "Zoned.PV"}], monitored=True)
+    # Read on the plant's clock (the source's zone), as the platform asks.
+    zone = registry.data(source).config.timezone
+    local = demo.index.tz_localize("UTC").tz_convert(zone).tz_localize(None)
+    read = registry.data(source).source.read_range(local[0], local[-1], 60, tags=["Zoned.PV"])
+    assert len(read) == len(demo) and read["Zoned.PV"].iloc[0] == demo["pv"].iloc[0]
