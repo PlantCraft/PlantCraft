@@ -59,6 +59,12 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- The public demo's limits (`PLANTCRAFT_PUBLIC_DEMO_SEATS`, `_MINUTES`, `_IDLE_MINUTES`, `_QUERIES`,
+  `_QUERIES_TOTAL`, docs/public-demo.md) now reach PlantCraft from the installation's `.env`: the
+  compose file left them out, so a changed value had no effect. Defaults are unchanged.
+- `ci/bench/load_users.py --visitor` enters the public demo as visits (the visitor's password is
+  refused from outside since visits), gives the places back at the end of each step and seeds as
+  the administrator.
 - Asset tree drafted from a source, tried on fictional plants of other conventions (DeltaV paths, Experion names, area prefixes, Portuguese words, skids without ISA tags, 700 tags): a CSV whose times carry an offset (`...Z`, `+00:00`) now reads (no value was read before); Portuguese and Spanish role words (Valor, Medida, Saída, Salida, Referência, Consigna, Modo) place PV, SP and OP right (Saída was taken for the PV); tags with no ISA tag (`Pump1_Speed`, `Tank_Level`) become equipment by the first part of their names, so such a plant is not left with an empty tree and the setup guide does not stop at its asset step.
 - Public demo (sweep of 2026-11-09): opening or reloading a page counts as use of the visit, so moving on by whole page loads no longer ends it after 5 minutes; the assistant's off page in the demo points to the team's chats in Shared with me and to Settings › Language models (it said "below" and "Setup"), without the second line for administrators; long chat titles in the assistant's list end in "…" instead of being cut.
 - An asset's Record card: "Your access is read-only" sits under a line of its own, not under the last field as if it were its hint.

@@ -97,3 +97,20 @@ def test_plantcraft_and_the_seed_read_the_secret_file(tmp_path, monkeypatch):
     monkeypatch.delenv("PLANTCRAFT_PUBLIC_DEMO_PASSWORD")
     monkeypatch.setenv("PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE", str(tmp_path / "missing"))
     assert visitor_password() == "" and demo_seed._visitor_password() == ""
+
+
+def test_compose_passes_every_public_demo_setting_through():
+    """Each PLANTCRAFT_PUBLIC_DEMO_* PlantCraft reads reaches its container from .env (a
+    setting the compose file leaves out keeps its default whatever .env says)."""
+
+    import re
+
+    source = (ROOT / "plantcraft/auth/public_demo.py").read_text(encoding="utf-8")
+    compose = (DEPLOY / "compose.yaml").read_text(encoding="utf-8")
+    read = set(re.findall(r'"(PLANTCRAFT_PUBLIC_DEMO_[A-Z_]+)"', source))
+    # The secret's path is fixed in the file; the visitor's name stays "demo" in a Docker
+    # install (the demo story seeds that account).
+    read -= {"PLANTCRAFT_PUBLIC_DEMO_PASSWORD_FILE", "PLANTCRAFT_PUBLIC_DEMO_USER"}
+    assert read, "no setting found in public_demo.py"
+    missing = sorted(name for name in read if f'{name}: "${{{name}:-' not in compose)
+    assert not missing, missing
