@@ -89,7 +89,7 @@ EXTRA_ASSETS = [
         "name": "P-201",
         "kind": "pump",
         "parent_id": "unit-100",
-        "attributes": {"description": "Feed pump"},
+        "attributes": {"description": "Feed pump", "kind_label": "Pump"},
         "signals": {"flow": "fake:P-201.FLOW", "state": "fake:P-201.STATE"},
     },
     {

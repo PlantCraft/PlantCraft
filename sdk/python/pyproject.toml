@@ -27,6 +27,11 @@ server = [
 dev = [
     "fastapi>=0.116,<1",
     "pytest>=8",
+    "requests>=2.31,<3",
+]
+# The PI Web API client (plantcraft_sdk.sources.pi_web_api): PlantCraft's PI source and Historian's.
+pi = [
+    "requests>=2.31,<3",
 ]
 
 [project.scripts]

@@ -1,6 +1,6 @@
 """The blocks' side of the suite's compute workers, and the executor's handler (docs/compute.md).
 
-``RemoteCodePool`` takes the place of the block workers (``blocks.sandbox.CodePool``) for the
+``RemoteCodePool`` takes the place of the block workers (``plantcraft_sdk.sandbox.CodePool``) for the
 diagrams that run in this container: the editor's Test and the runs on assets. Each call of a
 block's code goes to a worker through the ``SuitePool``. ``site_blocks`` gives each task the
 files of the site's block versions its diagrams use, since a worker has no blocks folder.
@@ -37,7 +37,7 @@ QUEUE_MARGIN_SECONDS = 120.0
 
 
 class RemoteCodePool:
-    """``blocks.sandbox.CodePool``'s interface: each call of a block's code runs on a worker."""
+    """``plantcraft_sdk.sandbox.CodePool``'s interface: each call of a block's code runs on a worker."""
 
     crashes = 0
 
@@ -45,7 +45,12 @@ class RemoteCodePool:
         self.pool = pool
         self.timeout = float(timeout)
 
-    def run(self, call: sandbox.Call) -> tuple[dict[str, Any], dict[str, Any]]:
+    def run(
+        self,
+        fn: Callable[[sandbox.Call], Any],  # noqa: ARG002 - always sandbox.execute
+        call: sandbox.Call,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        # ``fn`` is ``sandbox.execute``; on a worker that is ``run_block_code``.
         future = self.pool.submit(run_block_code, dataclasses.asdict(call))
         try:
             given, state = future.result(timeout=self.timeout + QUEUE_MARGIN_SECONDS)

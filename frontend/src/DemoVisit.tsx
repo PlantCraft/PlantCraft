@@ -109,6 +109,9 @@ export function DemoVisitBar({ visit, updatingUrl, onEnded, onLeave }: { visit: 
       } catch { /* another origin */ }
     };
     listen(window);
+    // Opening or reloading a page is use too: a visitor who moves on by whole page loads (a link
+    // opened in the same tab, a reload) never stays 30 s on one page to send the timed beat.
+    void beat(true, [window.location.pathname]);
     const tick = window.setInterval(() => {
       if (document.visibilityState === "visible") pages.current.add(window.location.pathname);
       document.querySelectorAll("iframe").forEach((frame) => {
