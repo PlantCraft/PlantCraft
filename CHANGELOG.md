@@ -59,6 +59,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- ui: an app's Overview with a notice above its cards (Models' runner down, Historian's collector stopped, Documents reading files) shows Customize under the notice instead of on top of it.
+- Desk: Coming days leaves out today's scheduled runs and meetings that already happened; a late action or to-do still shows.
 - SDK sandbox: the kind of code in its messages ("a block", "a rule") is translated too; a Portuguese page read "os não é permitido em a rule".
 - Public demo: scrolling a page (or a box inside it, in any app) and moving the pointer while reading now count as use of the visit, so it no longer ends after 5 minutes while someone reads without clicking.
 - An asset's Signals table shows a text signal's last value (a loop's mode: AUTO, MAN); it showed "—", because the last value counted numbers only.

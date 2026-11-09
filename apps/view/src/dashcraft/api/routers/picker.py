@@ -33,7 +33,15 @@ def list_assets(
     q: str = Query(default="", max_length=120),
 ) -> list[dict[str, Any]]:
     everything = _assets(rt, user)
-    return asset_choices(everything, q, kind=kind, limit=MAX_ASSETS)
+    found = asset_choices(everything, q, kind=kind, limit=MAX_ASSETS)
+    # The type's name as PlantCraft shows it ("Control valve"), not its id.
+    labels = {
+        item.get("id"): (item.get("attributes") or {}).get("kind_label") or item.get("kind")
+        for item in everything
+    }
+    for item in found:
+        item["kind_label"] = labels.get(item["id"]) or item["kind"]
+    return found
 
 
 @router.get("/asset-kinds")

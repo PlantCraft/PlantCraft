@@ -96,11 +96,21 @@ export function addDays(day: Date, count: number): Date {
   return next;
 }
 
+/** Whether a timed scheduled run, event or feed item already ended at `now`. */
+function over(event: CalendarEvent, now: Date): boolean {
+  if (event.all_day || event.start.length <= 10 || event.kind === "action" || event.kind === "todo") return false;
+  const end = new Date(event.end ?? event.start);
+  return !Number.isNaN(end.getTime()) && end.getTime() < now.getTime();
+}
+
 /** Events grouped by day for the coming-days list (a phone's calendar widget): today first. */
-export function upcoming(events: CalendarEvent[], today: string, days: number): Array<{ day: string; events: CalendarEvent[] }> {
+export function upcoming(events: CalendarEvent[], today: string, days: number, now: Date = new Date()): Array<{ day: string; events: CalendarEvent[] }> {
   const last = isoDay(addDays(new Date(`${today}T12:00:00`), days - 1));
   const groups = new Map<string, CalendarEvent[]>();
   for (const event of events) {
+    // What is coming: a timed run or meeting that already ended today is left out. Actions and
+    // to-dos stay (a late one is still to do), and so do all-day events.
+    if (over(event, now)) continue;
     const start = event.start.slice(0, 10);
     const end = (event.end ?? event.start).slice(0, 10);
     // A several-day event shows on today when it began before and still runs.

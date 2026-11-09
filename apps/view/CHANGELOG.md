@@ -8,6 +8,7 @@ joins it into the bundle's release notes.
 
 ### Fixed
 
+- The asset picker of a panel names each asset's type as PlantCraft does ("Control valve"), not by its id ("control_valve").
 - The overview cards and the Customize list show their titles and descriptions in Portuguese and Spanish; they were in English in every language.
 - A gauge's name sits below its end labels (0 and 100) instead of over them on a narrow card
   (the Control room's "Furnaces against the model").

@@ -142,7 +142,7 @@ export interface ApcData {
 /** A diagram as a public link and a dashboard card draw it (no authors or stamps). */
 export type PublicDiagram = Omit<DiagramDraft, "folder_id" | "tags"> & { diagram_id: string; symbols: SymbolDef[] };
 
-export interface AssetOption { id: string; name: string; kind: string; parent: string | null; signals: Record<string, string> }
+export interface AssetOption { id: string; name: string; kind: string; kind_label?: string; parent: string | null; signals: Record<string, string> }
 export interface AssetKind { kind: string; count: number; roles: string[] }
 export interface SignalOption { id: string; name: string; unit: string; description: string; kind: string }
 
