@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-09
+
 ### Added
 
 - **50 healthy loops in the loop portfolio** (`simcraft.loops.fleet`): `FIC-1301` to `LIC-1350`,
@@ -13,10 +15,6 @@
 - The setpoint-activity loops are tuned crisp enough to reach each new setpoint before the next
   move (they never got there in 30 minutes), and a sensor drift is a slow sawtooth (two days) that
   is recalibrated back, instead of a bias that grew until it stuck.
-
-## [0.6.1] - 2026-11-09
-
-No change of its own; released with the suite.
 
 ## [0.6.0] - 2026-11-02
 
