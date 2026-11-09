@@ -102,7 +102,7 @@ def code_block(file: BlockFile, block_id: str) -> Block:
             state=dict(ctx.state),
             node_id=ctx.node_id,
         )
-        given, state = sandbox.pool().run(call)
+        given, state = sandbox.run(call)
         ctx.state.clear()
         ctx.state.update(state or {})
         unknown = sorted(set(given) - set(types))
