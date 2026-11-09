@@ -34,6 +34,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
   `preview-shots` (screenshots of the main pages) go with them (docs/development.md).
 - Answers from OpenAI-compatible servers (Ollama, vLLM) now keep the tokens they spent: a streamed chat completion asks for them (`stream_options.include_usage`); before, `meta.usage` stayed at zero.
 
+- SDK: `plantcraft_sdk.server.picker.asset_choices`, the asset picker's answer (by kind and text, sorted by parent then name), written once for the `/api/assets` of Alarms and View, which each had a copy.
+
 ### Changed
 
 - The command line every app has (`serve`, `check`, their logs and uvicorn's options) is written once in the SDK, `plantcraft_sdk.server.cli`, and the six official apps use it; an app's `i18n.py` calls `plantcraft_sdk.i18n.use_app_catalogs(__file__)`. No change in behavior.
