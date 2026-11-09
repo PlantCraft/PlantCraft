@@ -6,6 +6,8 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-09
+
 ### Added
 
 - **Output drift** (`output_drift`): the output walking steadily one way, hour after hour, while
@@ -32,11 +34,6 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
   - Likely causes: "Sluggish tuning" needs a slow error (not a Harris warning alone) and no
     oscillation; a cycle reads as "Aggressive tuning or a cycling disturbance", irregular upsets
     as a recurring disturbance; manual mode is "Operation in manual".
-
-## [0.6.1] - 2026-11-09
-
-### Changed
-
 - A block's code runs in the suite's one sandbox (`plantcraft_sdk.sandbox`, the one Alarms and
   Documents use) instead of Link's own copy of it: the same checks, limits and settings
   (`LINKCRAFT_BLOCK_WORKERS`, `_TIMEOUT_SECONDS`, `_MEMORY_MB`, `_SANDBOX`); a few messages now
