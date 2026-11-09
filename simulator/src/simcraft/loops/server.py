@@ -1,4 +1,4 @@
-"""OPC UA server for the 50-loop portfolio that the PlantCraft demo reads.
+"""OPC UA server for the 100-loop portfolio that the PlantCraft demo reads.
 
 Tags are `CPM.Loops.<LOOP_ID>.<SIGNAL>` string NodeIds in the PlantCraft Simulator namespace
 (`simcraft.contracts.NAMESPACE_URI`). Values are historized (OPC UA Historical Access) and the
@@ -408,7 +408,7 @@ def build_parser(prog: str | None = None) -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog=prog,
-        description="Serve the 50-loop portfolio (PlantCraft demo) through OPC UA.",
+        description="Serve the 100-loop portfolio (PlantCraft demo) through OPC UA.",
     )
     parser.add_argument(
         "--endpoint",

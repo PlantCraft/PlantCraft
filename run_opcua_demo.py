@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Start the Simulator and PlantCraft together, and Analytics when it is installed.
 
-PlantCraft reads the simulated plant over OPC UA from the Simulator's 50-loop portfolio
+PlantCraft reads the simulated plant over OPC UA from the Simulator's 100-loop portfolio
 (``simcraft loops serve``, from simulator/). When something already listens on
 port 4840 the demo uses it; otherwise it starts the Simulator from the installed ``simcraft``
 package. When the ``linkcraft`` command is on PATH (installed from apps/link:

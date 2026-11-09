@@ -1,7 +1,7 @@
 # OPC UA interface
 
 PlantCraft Simulator has two servers, `simcraft serve` (the benchmark) and `simcraft loops serve`
-(the 50-loop portfolio of the PlantCraft demo). Both register the same namespace URI and are
+(the 100-loop portfolio of the PlantCraft demo). Both register the same namespace URI and are
 never served from one process; their NodeIds do not overlap.
 
 ## Namespace

@@ -8,7 +8,7 @@ senha do administrador.
 
 ## A planta e a história
 
-A planta de demonstração é o **Simulator**: um servidor OPC UA de 50 malhas de controle em duas
+A planta de demonstração é o **Simulator**: um servidor OPC UA de 100 malhas de controle em duas
 unidades, U-100 e U-200, com falhas que ele simula de propósito. Quatro válvulas agarram
 (FIC-1003, FIC-1102, FIC-1206, FIC-1214), algumas malhas de pressão e temperatura oscilam
 (PIC-1002, PIC-1202), a temperatura de saída do forno TIC-1209 deriva, e a TIC-1104 sofre uma

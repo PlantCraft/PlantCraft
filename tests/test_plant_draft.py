@@ -2,7 +2,7 @@
 """Assets › Import › Draft a plant: a new plant's first tree drafted
 from its tags by rules, the plant's documents and, for what stays unsure, a language model, then
 reviewed on the import's own page. The demo plant's map is the answer key: the draft is built
-from its 205 tags alone, as an OPC UA browse lists them, with the passages a real Documents finds
+from its 405 tags alone (the 205 of the story loops here), as an OPC UA browse lists them, with the passages a real Documents finds
 in the twelve demo documents (``tests/fixtures/demo-documents-tags.json.gz``, written by
 ``apps/documents/tests/write_demo_tags.py``)."""
 
@@ -28,7 +28,25 @@ from tests.test_assistant_chat import LOCAL
 from tests.test_collaboration import _scenario
 
 ROOT = Path(__file__).resolve().parents[1]
-MAP = json.loads((ROOT / "deploy" / "demo" / "plantcraft-50-loops-map.json").read_text())
+_SHIPPED = json.loads((ROOT / "deploy" / "demo" / "plantcraft-50-loops-map.json").read_text())
+
+
+def _story(asset_id: str) -> bool:
+    """The 50 loops of the demo story, which the twelve demo documents describe; the healthy
+    fleet (13xx, 2026-11-09) has no documents, so it is not part of the answer key."""
+
+    number = asset_id.rsplit("-", 1)[-1]
+    return not (number.isdigit() and len(number) == 4 and int(number) >= 1300)
+
+
+MAP = {
+    "assets": [item for item in _SHIPPED["assets"] if _story(item["asset_id"])],
+    "loops": [item for item in _SHIPPED["loops"] if _story(item["loop_id"])],
+    "signals": [item for item in _SHIPPED["signals"] if _story(item["tag"].split(".")[2])],
+    "relations": [
+        item for item in _SHIPPED["relations"] if _story(item["from_id"]) and _story(item["to_id"])
+    ],
+}
 PASSAGES = json.loads(
     gzip.decompress((ROOT / "tests" / "fixtures" / "demo-documents-tags.json.gz").read_bytes())
 )

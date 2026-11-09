@@ -1,4 +1,4 @@
-"""The OPC UA demo reads the Simulator's 50-loop portfolio (``simcraft loops serve``).
+"""The OPC UA demo reads the Simulator's 100-loop portfolio (``simcraft loops serve``).
 
 The Simulator is its own product (``simulator/``). The platform's CI does not install it, so the
 round trip runs against the test server in ``tests/opcua_plant.py``; when the Simulator is
@@ -64,9 +64,9 @@ def test_demo_scenario_lists_the_plantcraft_portfolio():
     assert scenario.source.type == "opcua"
     assert scenario.source.namespace_uri == NAMESPACE_URI
     assert scenario.source.endpoint_url.endswith(":4840/plantcraft/")
-    assert len(scenario.loops) == 50
-    assert len(scenario.source.tags) == 205
-    assert len(set(scenario.source.tags)) == 205
+    assert len(scenario.loops) == 100
+    assert len(scenario.source.tags) == 405
+    assert len(set(scenario.source.tags)) == 405
     assert sum(loop.signals.secondary is not None for loop in scenario.loops) == 5
     assert len({loop.area for loop in scenario.loops}) > 1
     for loop in scenario.loops:
@@ -81,7 +81,7 @@ def test_every_demo_loop_carries_its_loop_type():
     types = {loop.loop_id: loop.metadata.get("loop_type") for loop in scenario.loops}
     assert all(kind == ISA_LOOP_TYPES[loop_id[0]] for loop_id, kind in types.items()), types
     counts = {kind: list(types.values()).count(kind) for kind in set(types.values())}
-    assert counts == {"flow": 13, "level": 13, "pressure": 9, "temperature": 10, "composition": 5}
+    assert counts == {"flow": 31, "level": 19, "pressure": 21, "temperature": 21, "composition": 8}
     listed = next(loop for loop in scenario.loops if loop.loop_id == "FIC-1001")
     assert listed.metadata["impact"], "the ten reference loops keep their own metadata"
 

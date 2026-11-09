@@ -132,7 +132,7 @@ that already has the interface, the tests and the rules. At 8,000 signals and 2,
 
 ## See it on a plant that misbehaves
 
-The suite ships with the **Simulator**, an OPC UA plant of 50 control loops with faults on
+The suite ships with the **Simulator**, an OPC UA plant of 100 control loops with faults on
 purpose: four sticky valves, oscillating pressure loops, a drifting furnace temperature. The demo
 fills every app as if a team had used it for three weeks. Follow one sticky valve from the
 signal to the alarm, the dashboard, the model and the notebook in an hour.

@@ -21,7 +21,7 @@ def plant_map(admin: Http, suite: Suite) -> None:
 # The demo plant, as the asset tree's root shows it (the installation calls it "Plant").
 PLANT = {
     "name": "Riverbend Refinery",
-    "description": "A demonstration refinery simulated by PlantCraft Simulator: four units and 50 "
+    "description": "A demonstration refinery simulated by PlantCraft Simulator: four units and 100 "
     "control loops, with their equipment, transmitters and valves.",
 }
 PLANT_RECORD = {"location": "Simulated site", "operator": "PlantCraft demo"}

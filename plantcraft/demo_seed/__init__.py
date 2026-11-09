@@ -3,7 +3,7 @@
 ``plantcraft demo seed`` (run by ``install.sh --demo`` inside the PlantCraft container) signs
 in as the administrator and goes through every app's own HTTP API, exactly as a person would in
 the browser, so the story only uses what the apps already offer. One plant, Riverbend Refinery
-(the Simulator: four units, 50 loops), and one week of a team that looks after it:
+(the Simulator: four units, 100 loops), and one week of a team that looks after it:
 
 1. PlantCraft: the plant map (the OPC UA source, units, areas and loops), ten people in their
    groups, the read-only visitor ``demo``, a valve specialist, conversations and actions, and

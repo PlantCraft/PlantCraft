@@ -1,4 +1,4 @@
-"""Small, deterministic closed-loop models of the 50-loop portfolio (PlantCraft demo)."""
+"""Small, deterministic closed-loop models of the 100-loop portfolio (PlantCraft demo)."""
 
 from __future__ import annotations
 
@@ -777,6 +777,12 @@ LOOP_DEFINITIONS = (
         time_constant_seconds=315.0,
     ),
 )
+
+# The healthy majority of the plant (2026-11-09): imported here because it builds on
+# LoopDefinition above.
+from .fleet import healthy_fleet  # noqa: E402
+
+LOOP_DEFINITIONS = (*LOOP_DEFINITIONS, *healthy_fleet())
 
 
 def loop_catalog() -> list[dict[str, Any]]:

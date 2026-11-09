@@ -19,6 +19,6 @@ PlantCraft's `docs/images/apps/simcraft.svg`) is original work of the PlantCraft
 ## Data
 
 No third-party dataset is committed. The benchmark catalog (`src/simcraft/catalog/*.csv`) and
-the 50-loop portfolio (`src/simcraft/loops/dynamics.py`) are synthetic and original to this
+the 100-loop portfolio (`src/simcraft/loops/dynamics.py`) are synthetic and original to this
 repository. The published works that motivate the benchmark design are cited in `README.md`
 and `SPEC.md`; no code, process data or model implementation from them is included.

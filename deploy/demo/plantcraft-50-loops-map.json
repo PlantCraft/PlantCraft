@@ -1498,6 +1498,1106 @@
         "characteristic": "equal percentage",
         "actuator": "pneumatic"
       }
+    },
+    {
+      "asset_id": "FT-1301",
+      "name": "Feed preheat bypass flow transmitter",
+      "kind": "instrument",
+      "parent_id": "P-1001",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1301",
+      "name": "Feed preheat bypass flow valve",
+      "kind": "control_valve",
+      "parent_id": "P-1001",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1302",
+      "name": "Charge pump discharge pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "P-1001",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1302",
+      "name": "Charge pump discharge pressure valve",
+      "kind": "control_valve",
+      "parent_id": "P-1001",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1303",
+      "name": "Feed preheat temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "P-1001",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1303",
+      "name": "Feed preheat temperature valve",
+      "kind": "control_valve",
+      "parent_id": "P-1001",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1304",
+      "name": "Crude preheat outlet temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "E-1009",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1304",
+      "name": "Crude preheat outlet temperature valve",
+      "kind": "control_valve",
+      "parent_id": "E-1009",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1305",
+      "name": "Exchanger bypass flow transmitter",
+      "kind": "instrument",
+      "parent_id": "E-1009",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1305",
+      "name": "Exchanger bypass flow valve",
+      "kind": "control_valve",
+      "parent_id": "E-1009",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1306",
+      "name": "Product cooler outlet temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "E-1009",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1306",
+      "name": "Product cooler outlet temperature valve",
+      "kind": "control_valve",
+      "parent_id": "E-1009",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1307",
+      "name": "Cooling water return pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "E-1009",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1307",
+      "name": "Cooling water return pressure valve",
+      "kind": "control_valve",
+      "parent_id": "E-1009",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1308",
+      "name": "Furnace pass A flow transmitter",
+      "kind": "instrument",
+      "parent_id": "F-1104",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1308",
+      "name": "Furnace pass A flow valve",
+      "kind": "control_valve",
+      "parent_id": "F-1104",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1309",
+      "name": "Furnace pass B flow transmitter",
+      "kind": "instrument",
+      "parent_id": "F-1104",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1309",
+      "name": "Furnace pass B flow valve",
+      "kind": "control_valve",
+      "parent_id": "F-1104",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1310",
+      "name": "Furnace draft pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "F-1104",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1310",
+      "name": "Furnace draft pressure valve",
+      "kind": "control_valve",
+      "parent_id": "F-1104",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1311",
+      "name": "Combustion air flow transmitter",
+      "kind": "instrument",
+      "parent_id": "F-1104",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1311",
+      "name": "Combustion air flow valve",
+      "kind": "control_valve",
+      "parent_id": "F-1104",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1312",
+      "name": "Top reflux flow transmitter",
+      "kind": "instrument",
+      "parent_id": "C-1101",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1312",
+      "name": "Top reflux flow valve",
+      "kind": "control_valve",
+      "parent_id": "C-1101",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1313",
+      "name": "Column top pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "C-1101",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1313",
+      "name": "Column top pressure valve",
+      "kind": "control_valve",
+      "parent_id": "C-1101",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1314",
+      "name": "Bottom temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "C-1101",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1314",
+      "name": "Bottom temperature valve",
+      "kind": "control_valve",
+      "parent_id": "C-1101",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "LT-1315",
+      "name": "Column bottom level transmitter",
+      "kind": "instrument",
+      "parent_id": "C-1101",
+      "attributes": {
+        "measured_variable": "level",
+        "range_min": 0,
+        "range_max": 100,
+        "range_unit": "%"
+      }
+    },
+    {
+      "asset_id": "LV-1315",
+      "name": "Column bottom level valve",
+      "kind": "control_valve",
+      "parent_id": "C-1101",
+      "attributes": {
+        "characteristic": "linear",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1316",
+      "name": "Naphtha product flow transmitter",
+      "kind": "instrument",
+      "parent_id": "D-1106",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1316",
+      "name": "Naphtha product flow valve",
+      "kind": "control_valve",
+      "parent_id": "D-1106",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1317",
+      "name": "Kerosene stripper steam flow transmitter",
+      "kind": "instrument",
+      "parent_id": "P-1102",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1317",
+      "name": "Kerosene stripper steam flow valve",
+      "kind": "control_valve",
+      "parent_id": "P-1102",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1318",
+      "name": "Hydrogen feed flow transmitter",
+      "kind": "instrument",
+      "parent_id": "R-1005",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1318",
+      "name": "Hydrogen feed flow valve",
+      "kind": "control_valve",
+      "parent_id": "R-1005",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1319",
+      "name": "Reactor pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "R-1005",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1319",
+      "name": "Reactor pressure valve",
+      "kind": "control_valve",
+      "parent_id": "R-1005",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1320",
+      "name": "Quench temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "R-1005",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1320",
+      "name": "Quench temperature valve",
+      "kind": "control_valve",
+      "parent_id": "R-1005",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1321",
+      "name": "Make-up hydrogen flow transmitter",
+      "kind": "instrument",
+      "parent_id": "P-1003",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1321",
+      "name": "Make-up hydrogen flow valve",
+      "kind": "control_valve",
+      "parent_id": "P-1003",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1322",
+      "name": "Recycle pump suction pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "P-1003",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1322",
+      "name": "Recycle pump suction pressure valve",
+      "kind": "control_valve",
+      "parent_id": "P-1003",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "LT-1323",
+      "name": "Water boot level transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1004",
+      "attributes": {
+        "measured_variable": "level",
+        "range_min": 0,
+        "range_max": 100,
+        "range_unit": "%"
+      }
+    },
+    {
+      "asset_id": "LV-1323",
+      "name": "Water boot level valve",
+      "kind": "control_valve",
+      "parent_id": "V-1004",
+      "attributes": {
+        "characteristic": "linear",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1324",
+      "name": "Sour water flow transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1004",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1324",
+      "name": "Sour water flow valve",
+      "kind": "control_valve",
+      "parent_id": "V-1004",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1325",
+      "name": "Flash drum pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1105",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1325",
+      "name": "Flash drum pressure valve",
+      "kind": "control_valve",
+      "parent_id": "V-1105",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1326",
+      "name": "Separator feed temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1105",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1326",
+      "name": "Separator feed temperature valve",
+      "kind": "control_valve",
+      "parent_id": "V-1105",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1327",
+      "name": "Compressor spillback flow transmitter",
+      "kind": "instrument",
+      "parent_id": "K-1103",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1327",
+      "name": "Compressor spillback flow valve",
+      "kind": "control_valve",
+      "parent_id": "K-1103",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1328",
+      "name": "Interstage cooler temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "K-1103",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1328",
+      "name": "Interstage cooler temperature valve",
+      "kind": "control_valve",
+      "parent_id": "K-1103",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1329",
+      "name": "Seal gas pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "K-1103",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1329",
+      "name": "Seal gas pressure valve",
+      "kind": "control_valve",
+      "parent_id": "K-1103",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "LT-1330",
+      "name": "Knock-out drum level transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1208",
+      "attributes": {
+        "measured_variable": "level",
+        "range_min": 0,
+        "range_max": 100,
+        "range_unit": "%"
+      }
+    },
+    {
+      "asset_id": "LV-1330",
+      "name": "Knock-out drum level valve",
+      "kind": "control_valve",
+      "parent_id": "V-1208",
+      "attributes": {
+        "characteristic": "linear",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1331",
+      "name": "Wash water flow transmitter",
+      "kind": "instrument",
+      "parent_id": "R-1203",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1331",
+      "name": "Wash water flow valve",
+      "kind": "control_valve",
+      "parent_id": "R-1203",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1332",
+      "name": "Reactor bed 2 temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "R-1203",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1332",
+      "name": "Reactor bed 2 temperature valve",
+      "kind": "control_valve",
+      "parent_id": "R-1203",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1333",
+      "name": "Low-pressure separator pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1204",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1333",
+      "name": "Low-pressure separator pressure valve",
+      "kind": "control_valve",
+      "parent_id": "V-1204",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1334",
+      "name": "Stripper bottoms flow transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1204",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1334",
+      "name": "Stripper bottoms flow valve",
+      "kind": "control_valve",
+      "parent_id": "V-1204",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "AT-1335",
+      "name": "Recycle gas hydrogen purity transmitter",
+      "kind": "instrument",
+      "parent_id": "u-200-quality",
+      "attributes": {
+        "measured_variable": "composition",
+        "range_min": 0,
+        "range_max": 100,
+        "range_unit": "%"
+      }
+    },
+    {
+      "asset_id": "AV-1335",
+      "name": "Recycle gas hydrogen purity valve",
+      "kind": "control_valve",
+      "parent_id": "u-200-quality",
+      "attributes": {
+        "characteristic": "linear",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "AT-1336",
+      "name": "Product aromatics content transmitter",
+      "kind": "instrument",
+      "parent_id": "u-200-quality",
+      "attributes": {
+        "measured_variable": "composition",
+        "range_min": 0,
+        "range_max": 100,
+        "range_unit": "%"
+      }
+    },
+    {
+      "asset_id": "AV-1336",
+      "name": "Product aromatics content valve",
+      "kind": "control_valve",
+      "parent_id": "u-200-quality",
+      "attributes": {
+        "characteristic": "linear",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1337",
+      "name": "Lean amine flow transmitter",
+      "kind": "instrument",
+      "parent_id": "C-1216",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1337",
+      "name": "Lean amine flow valve",
+      "kind": "control_valve",
+      "parent_id": "C-1216",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1338",
+      "name": "Lean amine temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "C-1216",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1338",
+      "name": "Lean amine temperature valve",
+      "kind": "control_valve",
+      "parent_id": "C-1216",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1339",
+      "name": "Absorber pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "C-1216",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1339",
+      "name": "Absorber pressure valve",
+      "kind": "control_valve",
+      "parent_id": "C-1216",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1340",
+      "name": "Acid gas flow transmitter",
+      "kind": "instrument",
+      "parent_id": "R-1226",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1340",
+      "name": "Acid gas flow valve",
+      "kind": "control_valve",
+      "parent_id": "R-1226",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1341",
+      "name": "Reaction furnace temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "R-1226",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1341",
+      "name": "Reaction furnace temperature valve",
+      "kind": "control_valve",
+      "parent_id": "R-1226",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "LT-1342",
+      "name": "Sulfur pit level transmitter",
+      "kind": "instrument",
+      "parent_id": "R-1226",
+      "attributes": {
+        "measured_variable": "level",
+        "range_min": 0,
+        "range_max": 100,
+        "range_unit": "%"
+      }
+    },
+    {
+      "asset_id": "LV-1342",
+      "name": "Sulfur pit level valve",
+      "kind": "control_valve",
+      "parent_id": "R-1226",
+      "attributes": {
+        "characteristic": "linear",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1343",
+      "name": "Steam header pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1218",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1343",
+      "name": "Steam header pressure valve",
+      "kind": "control_valve",
+      "parent_id": "V-1218",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1344",
+      "name": "Boiler feed water flow transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1218",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1344",
+      "name": "Boiler feed water flow valve",
+      "kind": "control_valve",
+      "parent_id": "V-1218",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "TT-1345",
+      "name": "Cooling tower return temperature transmitter",
+      "kind": "instrument",
+      "parent_id": "P-1219",
+      "attributes": {
+        "measured_variable": "temperature",
+        "range_min": 0,
+        "range_max": 450,
+        "range_unit": "°C"
+      }
+    },
+    {
+      "asset_id": "TV-1345",
+      "name": "Cooling tower return temperature valve",
+      "kind": "control_valve",
+      "parent_id": "P-1219",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "PT-1346",
+      "name": "Instrument air pressure transmitter",
+      "kind": "instrument",
+      "parent_id": "u-900-utilities",
+      "attributes": {
+        "measured_variable": "pressure",
+        "range_min": 0,
+        "range_max": 20,
+        "range_unit": "bar g"
+      }
+    },
+    {
+      "asset_id": "PV-1346",
+      "name": "Instrument air pressure valve",
+      "kind": "control_valve",
+      "parent_id": "u-900-utilities",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "LT-1347",
+      "name": "Deaerator level transmitter",
+      "kind": "instrument",
+      "parent_id": "V-1218",
+      "attributes": {
+        "measured_variable": "level",
+        "range_min": 0,
+        "range_max": 100,
+        "range_unit": "%"
+      }
+    },
+    {
+      "asset_id": "LV-1347",
+      "name": "Deaerator level valve",
+      "kind": "control_valve",
+      "parent_id": "V-1218",
+      "attributes": {
+        "characteristic": "linear",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "FT-1348",
+      "name": "Clarifier feed flow transmitter",
+      "kind": "instrument",
+      "parent_id": "TK-1223",
+      "attributes": {
+        "measured_variable": "flow",
+        "range_min": 0,
+        "range_max": 200,
+        "range_unit": "m³/h"
+      }
+    },
+    {
+      "asset_id": "FV-1348",
+      "name": "Clarifier feed flow valve",
+      "kind": "control_valve",
+      "parent_id": "TK-1223",
+      "attributes": {
+        "characteristic": "equal percentage",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "AT-1349",
+      "name": "Effluent hydrocarbon content transmitter",
+      "kind": "instrument",
+      "parent_id": "TK-1223",
+      "attributes": {
+        "measured_variable": "composition",
+        "range_min": 0,
+        "range_max": 100,
+        "range_unit": "%"
+      }
+    },
+    {
+      "asset_id": "AV-1349",
+      "name": "Effluent hydrocarbon content valve",
+      "kind": "control_valve",
+      "parent_id": "TK-1223",
+      "attributes": {
+        "characteristic": "linear",
+        "actuator": "pneumatic"
+      }
+    },
+    {
+      "asset_id": "LT-1350",
+      "name": "Sludge tank level transmitter",
+      "kind": "instrument",
+      "parent_id": "TK-1225",
+      "attributes": {
+        "measured_variable": "level",
+        "range_min": 0,
+        "range_max": 100,
+        "range_unit": "%"
+      }
+    },
+    {
+      "asset_id": "LV-1350",
+      "name": "Sludge tank level valve",
+      "kind": "control_valve",
+      "parent_id": "TK-1225",
+      "attributes": {
+        "characteristic": "linear",
+        "actuator": "pneumatic"
+      }
     }
   ],
   "signals": [
@@ -2725,6 +3825,1206 @@
       "tag": "CPM.Loops.TIC-1226.MODE",
       "source_id": "plantcraft",
       "name": "TIC-1226 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1301.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1301 PV",
+      "asset_id": "FT-1301",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1301.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1301 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1301.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1301 OP",
+      "asset_id": "FV-1301",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1301.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1301 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1302.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1302 PV",
+      "asset_id": "PT-1302",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1302.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1302 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1302.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1302 OP",
+      "asset_id": "PV-1302",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1302.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1302 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1303.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1303 PV",
+      "asset_id": "TT-1303",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1303.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1303 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1303.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1303 OP",
+      "asset_id": "TV-1303",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1303.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1303 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1304.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1304 PV",
+      "asset_id": "TT-1304",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1304.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1304 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1304.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1304 OP",
+      "asset_id": "TV-1304",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1304.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1304 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1305.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1305 PV",
+      "asset_id": "FT-1305",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1305.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1305 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1305.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1305 OP",
+      "asset_id": "FV-1305",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1305.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1305 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1306.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1306 PV",
+      "asset_id": "TT-1306",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1306.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1306 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1306.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1306 OP",
+      "asset_id": "TV-1306",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1306.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1306 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1307.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1307 PV",
+      "asset_id": "PT-1307",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1307.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1307 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1307.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1307 OP",
+      "asset_id": "PV-1307",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1307.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1307 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1308.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1308 PV",
+      "asset_id": "FT-1308",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1308.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1308 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1308.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1308 OP",
+      "asset_id": "FV-1308",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1308.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1308 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1309.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1309 PV",
+      "asset_id": "FT-1309",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1309.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1309 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1309.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1309 OP",
+      "asset_id": "FV-1309",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1309.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1309 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1310.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1310 PV",
+      "asset_id": "PT-1310",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1310.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1310 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1310.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1310 OP",
+      "asset_id": "PV-1310",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1310.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1310 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1311.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1311 PV",
+      "asset_id": "FT-1311",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1311.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1311 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1311.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1311 OP",
+      "asset_id": "FV-1311",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1311.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1311 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1312.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1312 PV",
+      "asset_id": "FT-1312",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1312.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1312 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1312.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1312 OP",
+      "asset_id": "FV-1312",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1312.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1312 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1313.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1313 PV",
+      "asset_id": "PT-1313",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1313.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1313 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1313.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1313 OP",
+      "asset_id": "PV-1313",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1313.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1313 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1314.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1314 PV",
+      "asset_id": "TT-1314",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1314.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1314 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1314.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1314 OP",
+      "asset_id": "TV-1314",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1314.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1314 MODE"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1315.PV",
+      "source_id": "plantcraft",
+      "name": "LIC-1315 PV",
+      "asset_id": "LT-1315",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1315.SP",
+      "source_id": "plantcraft",
+      "name": "LIC-1315 SP"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1315.OP",
+      "source_id": "plantcraft",
+      "name": "LIC-1315 OP",
+      "asset_id": "LV-1315",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1315.MODE",
+      "source_id": "plantcraft",
+      "name": "LIC-1315 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1316.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1316 PV",
+      "asset_id": "FT-1316",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1316.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1316 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1316.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1316 OP",
+      "asset_id": "FV-1316",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1316.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1316 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1317.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1317 PV",
+      "asset_id": "FT-1317",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1317.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1317 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1317.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1317 OP",
+      "asset_id": "FV-1317",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1317.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1317 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1318.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1318 PV",
+      "asset_id": "FT-1318",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1318.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1318 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1318.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1318 OP",
+      "asset_id": "FV-1318",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1318.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1318 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1319.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1319 PV",
+      "asset_id": "PT-1319",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1319.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1319 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1319.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1319 OP",
+      "asset_id": "PV-1319",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1319.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1319 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1320.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1320 PV",
+      "asset_id": "TT-1320",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1320.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1320 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1320.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1320 OP",
+      "asset_id": "TV-1320",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1320.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1320 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1321.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1321 PV",
+      "asset_id": "FT-1321",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1321.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1321 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1321.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1321 OP",
+      "asset_id": "FV-1321",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1321.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1321 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1322.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1322 PV",
+      "asset_id": "PT-1322",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1322.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1322 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1322.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1322 OP",
+      "asset_id": "PV-1322",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1322.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1322 MODE"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1323.PV",
+      "source_id": "plantcraft",
+      "name": "LIC-1323 PV",
+      "asset_id": "LT-1323",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1323.SP",
+      "source_id": "plantcraft",
+      "name": "LIC-1323 SP"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1323.OP",
+      "source_id": "plantcraft",
+      "name": "LIC-1323 OP",
+      "asset_id": "LV-1323",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1323.MODE",
+      "source_id": "plantcraft",
+      "name": "LIC-1323 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1324.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1324 PV",
+      "asset_id": "FT-1324",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1324.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1324 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1324.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1324 OP",
+      "asset_id": "FV-1324",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1324.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1324 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1325.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1325 PV",
+      "asset_id": "PT-1325",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1325.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1325 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1325.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1325 OP",
+      "asset_id": "PV-1325",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1325.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1325 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1326.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1326 PV",
+      "asset_id": "TT-1326",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1326.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1326 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1326.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1326 OP",
+      "asset_id": "TV-1326",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1326.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1326 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1327.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1327 PV",
+      "asset_id": "FT-1327",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1327.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1327 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1327.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1327 OP",
+      "asset_id": "FV-1327",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1327.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1327 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1328.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1328 PV",
+      "asset_id": "TT-1328",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1328.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1328 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1328.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1328 OP",
+      "asset_id": "TV-1328",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1328.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1328 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1329.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1329 PV",
+      "asset_id": "PT-1329",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1329.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1329 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1329.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1329 OP",
+      "asset_id": "PV-1329",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1329.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1329 MODE"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1330.PV",
+      "source_id": "plantcraft",
+      "name": "LIC-1330 PV",
+      "asset_id": "LT-1330",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1330.SP",
+      "source_id": "plantcraft",
+      "name": "LIC-1330 SP"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1330.OP",
+      "source_id": "plantcraft",
+      "name": "LIC-1330 OP",
+      "asset_id": "LV-1330",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1330.MODE",
+      "source_id": "plantcraft",
+      "name": "LIC-1330 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1331.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1331 PV",
+      "asset_id": "FT-1331",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1331.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1331 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1331.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1331 OP",
+      "asset_id": "FV-1331",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1331.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1331 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1332.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1332 PV",
+      "asset_id": "TT-1332",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1332.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1332 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1332.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1332 OP",
+      "asset_id": "TV-1332",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1332.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1332 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1333.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1333 PV",
+      "asset_id": "PT-1333",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1333.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1333 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1333.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1333 OP",
+      "asset_id": "PV-1333",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1333.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1333 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1334.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1334 PV",
+      "asset_id": "FT-1334",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1334.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1334 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1334.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1334 OP",
+      "asset_id": "FV-1334",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1334.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1334 MODE"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1335.PV",
+      "source_id": "plantcraft",
+      "name": "AIC-1335 PV",
+      "asset_id": "AT-1335",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1335.SP",
+      "source_id": "plantcraft",
+      "name": "AIC-1335 SP"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1335.OP",
+      "source_id": "plantcraft",
+      "name": "AIC-1335 OP",
+      "asset_id": "AV-1335",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1335.MODE",
+      "source_id": "plantcraft",
+      "name": "AIC-1335 MODE"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1336.PV",
+      "source_id": "plantcraft",
+      "name": "AIC-1336 PV",
+      "asset_id": "AT-1336",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1336.SP",
+      "source_id": "plantcraft",
+      "name": "AIC-1336 SP"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1336.OP",
+      "source_id": "plantcraft",
+      "name": "AIC-1336 OP",
+      "asset_id": "AV-1336",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1336.MODE",
+      "source_id": "plantcraft",
+      "name": "AIC-1336 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1337.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1337 PV",
+      "asset_id": "FT-1337",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1337.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1337 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1337.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1337 OP",
+      "asset_id": "FV-1337",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1337.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1337 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1338.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1338 PV",
+      "asset_id": "TT-1338",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1338.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1338 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1338.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1338 OP",
+      "asset_id": "TV-1338",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1338.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1338 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1339.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1339 PV",
+      "asset_id": "PT-1339",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1339.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1339 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1339.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1339 OP",
+      "asset_id": "PV-1339",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1339.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1339 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1340.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1340 PV",
+      "asset_id": "FT-1340",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1340.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1340 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1340.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1340 OP",
+      "asset_id": "FV-1340",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1340.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1340 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1341.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1341 PV",
+      "asset_id": "TT-1341",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1341.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1341 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1341.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1341 OP",
+      "asset_id": "TV-1341",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1341.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1341 MODE"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1342.PV",
+      "source_id": "plantcraft",
+      "name": "LIC-1342 PV",
+      "asset_id": "LT-1342",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1342.SP",
+      "source_id": "plantcraft",
+      "name": "LIC-1342 SP"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1342.OP",
+      "source_id": "plantcraft",
+      "name": "LIC-1342 OP",
+      "asset_id": "LV-1342",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1342.MODE",
+      "source_id": "plantcraft",
+      "name": "LIC-1342 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1343.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1343 PV",
+      "asset_id": "PT-1343",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1343.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1343 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1343.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1343 OP",
+      "asset_id": "PV-1343",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1343.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1343 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1344.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1344 PV",
+      "asset_id": "FT-1344",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1344.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1344 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1344.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1344 OP",
+      "asset_id": "FV-1344",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1344.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1344 MODE"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1345.PV",
+      "source_id": "plantcraft",
+      "name": "TIC-1345 PV",
+      "asset_id": "TT-1345",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1345.SP",
+      "source_id": "plantcraft",
+      "name": "TIC-1345 SP"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1345.OP",
+      "source_id": "plantcraft",
+      "name": "TIC-1345 OP",
+      "asset_id": "TV-1345",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.TIC-1345.MODE",
+      "source_id": "plantcraft",
+      "name": "TIC-1345 MODE"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1346.PV",
+      "source_id": "plantcraft",
+      "name": "PIC-1346 PV",
+      "asset_id": "PT-1346",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1346.SP",
+      "source_id": "plantcraft",
+      "name": "PIC-1346 SP"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1346.OP",
+      "source_id": "plantcraft",
+      "name": "PIC-1346 OP",
+      "asset_id": "PV-1346",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.PIC-1346.MODE",
+      "source_id": "plantcraft",
+      "name": "PIC-1346 MODE"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1347.PV",
+      "source_id": "plantcraft",
+      "name": "LIC-1347 PV",
+      "asset_id": "LT-1347",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1347.SP",
+      "source_id": "plantcraft",
+      "name": "LIC-1347 SP"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1347.OP",
+      "source_id": "plantcraft",
+      "name": "LIC-1347 OP",
+      "asset_id": "LV-1347",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1347.MODE",
+      "source_id": "plantcraft",
+      "name": "LIC-1347 MODE"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1348.PV",
+      "source_id": "plantcraft",
+      "name": "FIC-1348 PV",
+      "asset_id": "FT-1348",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1348.SP",
+      "source_id": "plantcraft",
+      "name": "FIC-1348 SP"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1348.OP",
+      "source_id": "plantcraft",
+      "name": "FIC-1348 OP",
+      "asset_id": "FV-1348",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.FIC-1348.MODE",
+      "source_id": "plantcraft",
+      "name": "FIC-1348 MODE"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1349.PV",
+      "source_id": "plantcraft",
+      "name": "AIC-1349 PV",
+      "asset_id": "AT-1349",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1349.SP",
+      "source_id": "plantcraft",
+      "name": "AIC-1349 SP"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1349.OP",
+      "source_id": "plantcraft",
+      "name": "AIC-1349 OP",
+      "asset_id": "AV-1349",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.AIC-1349.MODE",
+      "source_id": "plantcraft",
+      "name": "AIC-1349 MODE"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1350.PV",
+      "source_id": "plantcraft",
+      "name": "LIC-1350 PV",
+      "asset_id": "LT-1350",
+      "role": "measurement"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1350.SP",
+      "source_id": "plantcraft",
+      "name": "LIC-1350 SP"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1350.OP",
+      "source_id": "plantcraft",
+      "name": "LIC-1350 OP",
+      "asset_id": "LV-1350",
+      "role": "command"
+    },
+    {
+      "tag": "CPM.Loops.LIC-1350.MODE",
+      "source_id": "plantcraft",
+      "name": "LIC-1350 MODE"
     }
   ],
   "loops": [
@@ -3482,6 +5782,756 @@
       "criticality": "medium",
       "action": "reverse",
       "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1301",
+      "name": "Feed preheat bypass flow",
+      "area": "Feed",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1301.PV",
+      "sp": "CPM.Loops.FIC-1301.SP",
+      "op": "CPM.Loops.FIC-1301.OP",
+      "mode": "CPM.Loops.FIC-1301.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1302",
+      "name": "Charge pump discharge pressure",
+      "area": "Feed",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1302.PV",
+      "sp": "CPM.Loops.PIC-1302.SP",
+      "op": "CPM.Loops.PIC-1302.OP",
+      "mode": "CPM.Loops.PIC-1302.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1303",
+      "name": "Feed preheat temperature",
+      "area": "Feed",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1303.PV",
+      "sp": "CPM.Loops.TIC-1303.SP",
+      "op": "CPM.Loops.TIC-1303.OP",
+      "mode": "CPM.Loops.TIC-1303.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1304",
+      "name": "Crude preheat outlet temperature",
+      "area": "Heat exchange",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1304.PV",
+      "sp": "CPM.Loops.TIC-1304.SP",
+      "op": "CPM.Loops.TIC-1304.OP",
+      "mode": "CPM.Loops.TIC-1304.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1305",
+      "name": "Exchanger bypass flow",
+      "area": "Heat exchange",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1305.PV",
+      "sp": "CPM.Loops.FIC-1305.SP",
+      "op": "CPM.Loops.FIC-1305.OP",
+      "mode": "CPM.Loops.FIC-1305.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1306",
+      "name": "Product cooler outlet temperature",
+      "area": "Heat exchange",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1306.PV",
+      "sp": "CPM.Loops.TIC-1306.SP",
+      "op": "CPM.Loops.TIC-1306.OP",
+      "mode": "CPM.Loops.TIC-1306.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1307",
+      "name": "Cooling water return pressure",
+      "area": "Heat exchange",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1307.PV",
+      "sp": "CPM.Loops.PIC-1307.SP",
+      "op": "CPM.Loops.PIC-1307.OP",
+      "mode": "CPM.Loops.PIC-1307.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1308",
+      "name": "Furnace pass A flow",
+      "area": "Furnaces",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1308.PV",
+      "sp": "CPM.Loops.FIC-1308.SP",
+      "op": "CPM.Loops.FIC-1308.OP",
+      "mode": "CPM.Loops.FIC-1308.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1309",
+      "name": "Furnace pass B flow",
+      "area": "Furnaces",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1309.PV",
+      "sp": "CPM.Loops.FIC-1309.SP",
+      "op": "CPM.Loops.FIC-1309.OP",
+      "mode": "CPM.Loops.FIC-1309.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1310",
+      "name": "Furnace draft pressure",
+      "area": "Furnaces",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1310.PV",
+      "sp": "CPM.Loops.PIC-1310.SP",
+      "op": "CPM.Loops.PIC-1310.OP",
+      "mode": "CPM.Loops.PIC-1310.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1311",
+      "name": "Combustion air flow",
+      "area": "Furnaces",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1311.PV",
+      "sp": "CPM.Loops.FIC-1311.SP",
+      "op": "CPM.Loops.FIC-1311.OP",
+      "mode": "CPM.Loops.FIC-1311.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1312",
+      "name": "Top reflux flow",
+      "area": "Distillation",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1312.PV",
+      "sp": "CPM.Loops.FIC-1312.SP",
+      "op": "CPM.Loops.FIC-1312.OP",
+      "mode": "CPM.Loops.FIC-1312.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1313",
+      "name": "Column top pressure",
+      "area": "Distillation",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1313.PV",
+      "sp": "CPM.Loops.PIC-1313.SP",
+      "op": "CPM.Loops.PIC-1313.OP",
+      "mode": "CPM.Loops.PIC-1313.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1314",
+      "name": "Bottom temperature",
+      "area": "Distillation",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1314.PV",
+      "sp": "CPM.Loops.TIC-1314.SP",
+      "op": "CPM.Loops.TIC-1314.OP",
+      "mode": "CPM.Loops.TIC-1314.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "LIC-1315",
+      "name": "Column bottom level",
+      "area": "Distillation",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.LIC-1315.PV",
+      "sp": "CPM.Loops.LIC-1315.SP",
+      "op": "CPM.Loops.LIC-1315.OP",
+      "mode": "CPM.Loops.LIC-1315.MODE",
+      "loop_type": "level",
+      "criticality": "medium",
+      "action": "direct",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1316",
+      "name": "Naphtha product flow",
+      "area": "Distillation",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1316.PV",
+      "sp": "CPM.Loops.FIC-1316.SP",
+      "op": "CPM.Loops.FIC-1316.OP",
+      "mode": "CPM.Loops.FIC-1316.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1317",
+      "name": "Kerosene stripper steam flow",
+      "area": "Distillation",
+      "unit": "U-100",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1317.PV",
+      "sp": "CPM.Loops.FIC-1317.SP",
+      "op": "CPM.Loops.FIC-1317.OP",
+      "mode": "CPM.Loops.FIC-1317.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1318",
+      "name": "Hydrogen feed flow",
+      "area": "Reaction",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1318.PV",
+      "sp": "CPM.Loops.FIC-1318.SP",
+      "op": "CPM.Loops.FIC-1318.OP",
+      "mode": "CPM.Loops.FIC-1318.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1319",
+      "name": "Reactor pressure",
+      "area": "Reaction",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1319.PV",
+      "sp": "CPM.Loops.PIC-1319.SP",
+      "op": "CPM.Loops.PIC-1319.OP",
+      "mode": "CPM.Loops.PIC-1319.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1320",
+      "name": "Quench temperature",
+      "area": "Reaction",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1320.PV",
+      "sp": "CPM.Loops.TIC-1320.SP",
+      "op": "CPM.Loops.TIC-1320.OP",
+      "mode": "CPM.Loops.TIC-1320.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1321",
+      "name": "Make-up hydrogen flow",
+      "area": "Recycle",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1321.PV",
+      "sp": "CPM.Loops.FIC-1321.SP",
+      "op": "CPM.Loops.FIC-1321.OP",
+      "mode": "CPM.Loops.FIC-1321.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1322",
+      "name": "Recycle pump suction pressure",
+      "area": "Recycle",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1322.PV",
+      "sp": "CPM.Loops.PIC-1322.SP",
+      "op": "CPM.Loops.PIC-1322.OP",
+      "mode": "CPM.Loops.PIC-1322.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "LIC-1323",
+      "name": "Water boot level",
+      "area": "Separation",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.LIC-1323.PV",
+      "sp": "CPM.Loops.LIC-1323.SP",
+      "op": "CPM.Loops.LIC-1323.OP",
+      "mode": "CPM.Loops.LIC-1323.MODE",
+      "loop_type": "level",
+      "criticality": "medium",
+      "action": "direct",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1324",
+      "name": "Sour water flow",
+      "area": "Separation",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1324.PV",
+      "sp": "CPM.Loops.FIC-1324.SP",
+      "op": "CPM.Loops.FIC-1324.OP",
+      "mode": "CPM.Loops.FIC-1324.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1325",
+      "name": "Flash drum pressure",
+      "area": "Separation",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1325.PV",
+      "sp": "CPM.Loops.PIC-1325.SP",
+      "op": "CPM.Loops.PIC-1325.OP",
+      "mode": "CPM.Loops.PIC-1325.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1326",
+      "name": "Separator feed temperature",
+      "area": "Separation",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1326.PV",
+      "sp": "CPM.Loops.TIC-1326.SP",
+      "op": "CPM.Loops.TIC-1326.OP",
+      "mode": "CPM.Loops.TIC-1326.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1327",
+      "name": "Compressor spillback flow",
+      "area": "Compression",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1327.PV",
+      "sp": "CPM.Loops.FIC-1327.SP",
+      "op": "CPM.Loops.FIC-1327.OP",
+      "mode": "CPM.Loops.FIC-1327.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1328",
+      "name": "Interstage cooler temperature",
+      "area": "Compression",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1328.PV",
+      "sp": "CPM.Loops.TIC-1328.SP",
+      "op": "CPM.Loops.TIC-1328.OP",
+      "mode": "CPM.Loops.TIC-1328.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1329",
+      "name": "Seal gas pressure",
+      "area": "Compression",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1329.PV",
+      "sp": "CPM.Loops.PIC-1329.SP",
+      "op": "CPM.Loops.PIC-1329.OP",
+      "mode": "CPM.Loops.PIC-1329.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "LIC-1330",
+      "name": "Knock-out drum level",
+      "area": "Compression",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.LIC-1330.PV",
+      "sp": "CPM.Loops.LIC-1330.SP",
+      "op": "CPM.Loops.LIC-1330.OP",
+      "mode": "CPM.Loops.LIC-1330.MODE",
+      "loop_type": "level",
+      "criticality": "medium",
+      "action": "direct",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1331",
+      "name": "Wash water flow",
+      "area": "Hydrotreating",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1331.PV",
+      "sp": "CPM.Loops.FIC-1331.SP",
+      "op": "CPM.Loops.FIC-1331.OP",
+      "mode": "CPM.Loops.FIC-1331.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1332",
+      "name": "Reactor bed 2 temperature",
+      "area": "Hydrotreating",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1332.PV",
+      "sp": "CPM.Loops.TIC-1332.SP",
+      "op": "CPM.Loops.TIC-1332.OP",
+      "mode": "CPM.Loops.TIC-1332.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1333",
+      "name": "Low-pressure separator pressure",
+      "area": "Hydrotreating",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1333.PV",
+      "sp": "CPM.Loops.PIC-1333.SP",
+      "op": "CPM.Loops.PIC-1333.OP",
+      "mode": "CPM.Loops.PIC-1333.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1334",
+      "name": "Stripper bottoms flow",
+      "area": "Hydrotreating",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1334.PV",
+      "sp": "CPM.Loops.FIC-1334.SP",
+      "op": "CPM.Loops.FIC-1334.OP",
+      "mode": "CPM.Loops.FIC-1334.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "AIC-1335",
+      "name": "Recycle gas hydrogen purity",
+      "area": "Quality",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.AIC-1335.PV",
+      "sp": "CPM.Loops.AIC-1335.SP",
+      "op": "CPM.Loops.AIC-1335.OP",
+      "mode": "CPM.Loops.AIC-1335.MODE",
+      "loop_type": "composition",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "AIC-1336",
+      "name": "Product aromatics content",
+      "area": "Quality",
+      "unit": "U-200",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.AIC-1336.PV",
+      "sp": "CPM.Loops.AIC-1336.SP",
+      "op": "CPM.Loops.AIC-1336.OP",
+      "mode": "CPM.Loops.AIC-1336.MODE",
+      "loop_type": "composition",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1337",
+      "name": "Lean amine flow",
+      "area": "Treating",
+      "unit": "U-300",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1337.PV",
+      "sp": "CPM.Loops.FIC-1337.SP",
+      "op": "CPM.Loops.FIC-1337.OP",
+      "mode": "CPM.Loops.FIC-1337.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1338",
+      "name": "Lean amine temperature",
+      "area": "Treating",
+      "unit": "U-300",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1338.PV",
+      "sp": "CPM.Loops.TIC-1338.SP",
+      "op": "CPM.Loops.TIC-1338.OP",
+      "mode": "CPM.Loops.TIC-1338.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1339",
+      "name": "Absorber pressure",
+      "area": "Treating",
+      "unit": "U-300",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1339.PV",
+      "sp": "CPM.Loops.PIC-1339.SP",
+      "op": "CPM.Loops.PIC-1339.OP",
+      "mode": "CPM.Loops.PIC-1339.MODE",
+      "loop_type": "pressure",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1340",
+      "name": "Acid gas flow",
+      "area": "Sulfur recovery",
+      "unit": "U-300",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1340.PV",
+      "sp": "CPM.Loops.FIC-1340.SP",
+      "op": "CPM.Loops.FIC-1340.OP",
+      "mode": "CPM.Loops.FIC-1340.MODE",
+      "loop_type": "flow",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1341",
+      "name": "Reaction furnace temperature",
+      "area": "Sulfur recovery",
+      "unit": "U-300",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1341.PV",
+      "sp": "CPM.Loops.TIC-1341.SP",
+      "op": "CPM.Loops.TIC-1341.OP",
+      "mode": "CPM.Loops.TIC-1341.MODE",
+      "loop_type": "temperature",
+      "criticality": "medium",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "LIC-1342",
+      "name": "Sulfur pit level",
+      "area": "Sulfur recovery",
+      "unit": "U-300",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.LIC-1342.PV",
+      "sp": "CPM.Loops.LIC-1342.SP",
+      "op": "CPM.Loops.LIC-1342.OP",
+      "mode": "CPM.Loops.LIC-1342.MODE",
+      "loop_type": "level",
+      "criticality": "medium",
+      "action": "direct",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1343",
+      "name": "Steam header pressure",
+      "area": "Utilities",
+      "unit": "U-900",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1343.PV",
+      "sp": "CPM.Loops.PIC-1343.SP",
+      "op": "CPM.Loops.PIC-1343.OP",
+      "mode": "CPM.Loops.PIC-1343.MODE",
+      "loop_type": "pressure",
+      "criticality": "low",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1344",
+      "name": "Boiler feed water flow",
+      "area": "Utilities",
+      "unit": "U-900",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1344.PV",
+      "sp": "CPM.Loops.FIC-1344.SP",
+      "op": "CPM.Loops.FIC-1344.OP",
+      "mode": "CPM.Loops.FIC-1344.MODE",
+      "loop_type": "flow",
+      "criticality": "low",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "TIC-1345",
+      "name": "Cooling tower return temperature",
+      "area": "Utilities",
+      "unit": "U-900",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.TIC-1345.PV",
+      "sp": "CPM.Loops.TIC-1345.SP",
+      "op": "CPM.Loops.TIC-1345.OP",
+      "mode": "CPM.Loops.TIC-1345.MODE",
+      "loop_type": "temperature",
+      "criticality": "low",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "PIC-1346",
+      "name": "Instrument air pressure",
+      "area": "Utilities",
+      "unit": "U-900",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.PIC-1346.PV",
+      "sp": "CPM.Loops.PIC-1346.SP",
+      "op": "CPM.Loops.PIC-1346.OP",
+      "mode": "CPM.Loops.PIC-1346.MODE",
+      "loop_type": "pressure",
+      "criticality": "low",
+      "action": "reverse",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "LIC-1347",
+      "name": "Deaerator level",
+      "area": "Utilities",
+      "unit": "U-900",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.LIC-1347.PV",
+      "sp": "CPM.Loops.LIC-1347.SP",
+      "op": "CPM.Loops.LIC-1347.OP",
+      "mode": "CPM.Loops.LIC-1347.MODE",
+      "loop_type": "level",
+      "criticality": "low",
+      "action": "direct",
+      "controller": "DCS"
+    },
+    {
+      "loop_id": "FIC-1348",
+      "name": "Clarifier feed flow",
+      "area": "Water treatment",
+      "unit": "U-900",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.FIC-1348.PV",
+      "sp": "CPM.Loops.FIC-1348.SP",
+      "op": "CPM.Loops.FIC-1348.OP",
+      "mode": "CPM.Loops.FIC-1348.MODE",
+      "loop_type": "flow",
+      "criticality": "low",
+      "action": "reverse",
+      "controller": "SLC"
+    },
+    {
+      "loop_id": "AIC-1349",
+      "name": "Effluent hydrocarbon content",
+      "area": "Water treatment",
+      "unit": "U-900",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.AIC-1349.PV",
+      "sp": "CPM.Loops.AIC-1349.SP",
+      "op": "CPM.Loops.AIC-1349.OP",
+      "mode": "CPM.Loops.AIC-1349.MODE",
+      "loop_type": "composition",
+      "criticality": "low",
+      "action": "reverse",
+      "controller": "SLC"
+    },
+    {
+      "loop_id": "LIC-1350",
+      "name": "Sludge tank level",
+      "area": "Water treatment",
+      "unit": "U-900",
+      "service": "Healthy, well-tuned loop",
+      "pv": "CPM.Loops.LIC-1350.PV",
+      "sp": "CPM.Loops.LIC-1350.SP",
+      "op": "CPM.Loops.LIC-1350.OP",
+      "mode": "CPM.Loops.LIC-1350.MODE",
+      "loop_type": "level",
+      "criticality": "low",
+      "action": "direct",
+      "controller": "SLC"
     }
   ],
   "relations": [
@@ -3949,6 +6999,491 @@
       "from_id": "TT-1226",
       "type": "measures",
       "to_id": "R-1226"
+    },
+    {
+      "from_id": "FIC-1301",
+      "type": "controls",
+      "to_id": "FV-1301"
+    },
+    {
+      "from_id": "FT-1301",
+      "type": "measures",
+      "to_id": "P-1001"
+    },
+    {
+      "from_id": "PIC-1302",
+      "type": "controls",
+      "to_id": "PV-1302"
+    },
+    {
+      "from_id": "PT-1302",
+      "type": "measures",
+      "to_id": "P-1001"
+    },
+    {
+      "from_id": "TIC-1303",
+      "type": "controls",
+      "to_id": "TV-1303"
+    },
+    {
+      "from_id": "TT-1303",
+      "type": "measures",
+      "to_id": "P-1001"
+    },
+    {
+      "from_id": "TIC-1304",
+      "type": "controls",
+      "to_id": "TV-1304"
+    },
+    {
+      "from_id": "TT-1304",
+      "type": "measures",
+      "to_id": "E-1009"
+    },
+    {
+      "from_id": "FIC-1305",
+      "type": "controls",
+      "to_id": "FV-1305"
+    },
+    {
+      "from_id": "FT-1305",
+      "type": "measures",
+      "to_id": "E-1009"
+    },
+    {
+      "from_id": "TIC-1306",
+      "type": "controls",
+      "to_id": "TV-1306"
+    },
+    {
+      "from_id": "TT-1306",
+      "type": "measures",
+      "to_id": "E-1009"
+    },
+    {
+      "from_id": "PIC-1307",
+      "type": "controls",
+      "to_id": "PV-1307"
+    },
+    {
+      "from_id": "PT-1307",
+      "type": "measures",
+      "to_id": "E-1009"
+    },
+    {
+      "from_id": "FIC-1308",
+      "type": "controls",
+      "to_id": "FV-1308"
+    },
+    {
+      "from_id": "FT-1308",
+      "type": "measures",
+      "to_id": "F-1104"
+    },
+    {
+      "from_id": "FIC-1309",
+      "type": "controls",
+      "to_id": "FV-1309"
+    },
+    {
+      "from_id": "FT-1309",
+      "type": "measures",
+      "to_id": "F-1104"
+    },
+    {
+      "from_id": "PIC-1310",
+      "type": "controls",
+      "to_id": "PV-1310"
+    },
+    {
+      "from_id": "PT-1310",
+      "type": "measures",
+      "to_id": "F-1104"
+    },
+    {
+      "from_id": "FIC-1311",
+      "type": "controls",
+      "to_id": "FV-1311"
+    },
+    {
+      "from_id": "FT-1311",
+      "type": "measures",
+      "to_id": "F-1104"
+    },
+    {
+      "from_id": "FIC-1312",
+      "type": "controls",
+      "to_id": "FV-1312"
+    },
+    {
+      "from_id": "FT-1312",
+      "type": "measures",
+      "to_id": "C-1101"
+    },
+    {
+      "from_id": "PIC-1313",
+      "type": "controls",
+      "to_id": "PV-1313"
+    },
+    {
+      "from_id": "PT-1313",
+      "type": "measures",
+      "to_id": "C-1101"
+    },
+    {
+      "from_id": "TIC-1314",
+      "type": "controls",
+      "to_id": "TV-1314"
+    },
+    {
+      "from_id": "TT-1314",
+      "type": "measures",
+      "to_id": "C-1101"
+    },
+    {
+      "from_id": "LIC-1315",
+      "type": "controls",
+      "to_id": "LV-1315"
+    },
+    {
+      "from_id": "LT-1315",
+      "type": "measures",
+      "to_id": "C-1101"
+    },
+    {
+      "from_id": "FIC-1316",
+      "type": "controls",
+      "to_id": "FV-1316"
+    },
+    {
+      "from_id": "FT-1316",
+      "type": "measures",
+      "to_id": "D-1106"
+    },
+    {
+      "from_id": "FIC-1317",
+      "type": "controls",
+      "to_id": "FV-1317"
+    },
+    {
+      "from_id": "FT-1317",
+      "type": "measures",
+      "to_id": "P-1102"
+    },
+    {
+      "from_id": "FIC-1318",
+      "type": "controls",
+      "to_id": "FV-1318"
+    },
+    {
+      "from_id": "FT-1318",
+      "type": "measures",
+      "to_id": "R-1005"
+    },
+    {
+      "from_id": "PIC-1319",
+      "type": "controls",
+      "to_id": "PV-1319"
+    },
+    {
+      "from_id": "PT-1319",
+      "type": "measures",
+      "to_id": "R-1005"
+    },
+    {
+      "from_id": "TIC-1320",
+      "type": "controls",
+      "to_id": "TV-1320"
+    },
+    {
+      "from_id": "TT-1320",
+      "type": "measures",
+      "to_id": "R-1005"
+    },
+    {
+      "from_id": "FIC-1321",
+      "type": "controls",
+      "to_id": "FV-1321"
+    },
+    {
+      "from_id": "FT-1321",
+      "type": "measures",
+      "to_id": "P-1003"
+    },
+    {
+      "from_id": "PIC-1322",
+      "type": "controls",
+      "to_id": "PV-1322"
+    },
+    {
+      "from_id": "PT-1322",
+      "type": "measures",
+      "to_id": "P-1003"
+    },
+    {
+      "from_id": "LIC-1323",
+      "type": "controls",
+      "to_id": "LV-1323"
+    },
+    {
+      "from_id": "LT-1323",
+      "type": "measures",
+      "to_id": "V-1004"
+    },
+    {
+      "from_id": "FIC-1324",
+      "type": "controls",
+      "to_id": "FV-1324"
+    },
+    {
+      "from_id": "FT-1324",
+      "type": "measures",
+      "to_id": "V-1004"
+    },
+    {
+      "from_id": "PIC-1325",
+      "type": "controls",
+      "to_id": "PV-1325"
+    },
+    {
+      "from_id": "PT-1325",
+      "type": "measures",
+      "to_id": "V-1105"
+    },
+    {
+      "from_id": "TIC-1326",
+      "type": "controls",
+      "to_id": "TV-1326"
+    },
+    {
+      "from_id": "TT-1326",
+      "type": "measures",
+      "to_id": "V-1105"
+    },
+    {
+      "from_id": "FIC-1327",
+      "type": "controls",
+      "to_id": "FV-1327"
+    },
+    {
+      "from_id": "FT-1327",
+      "type": "measures",
+      "to_id": "K-1103"
+    },
+    {
+      "from_id": "TIC-1328",
+      "type": "controls",
+      "to_id": "TV-1328"
+    },
+    {
+      "from_id": "TT-1328",
+      "type": "measures",
+      "to_id": "K-1103"
+    },
+    {
+      "from_id": "PIC-1329",
+      "type": "controls",
+      "to_id": "PV-1329"
+    },
+    {
+      "from_id": "PT-1329",
+      "type": "measures",
+      "to_id": "K-1103"
+    },
+    {
+      "from_id": "LIC-1330",
+      "type": "controls",
+      "to_id": "LV-1330"
+    },
+    {
+      "from_id": "LT-1330",
+      "type": "measures",
+      "to_id": "V-1208"
+    },
+    {
+      "from_id": "FIC-1331",
+      "type": "controls",
+      "to_id": "FV-1331"
+    },
+    {
+      "from_id": "FT-1331",
+      "type": "measures",
+      "to_id": "R-1203"
+    },
+    {
+      "from_id": "TIC-1332",
+      "type": "controls",
+      "to_id": "TV-1332"
+    },
+    {
+      "from_id": "TT-1332",
+      "type": "measures",
+      "to_id": "R-1203"
+    },
+    {
+      "from_id": "PIC-1333",
+      "type": "controls",
+      "to_id": "PV-1333"
+    },
+    {
+      "from_id": "PT-1333",
+      "type": "measures",
+      "to_id": "V-1204"
+    },
+    {
+      "from_id": "FIC-1334",
+      "type": "controls",
+      "to_id": "FV-1334"
+    },
+    {
+      "from_id": "FT-1334",
+      "type": "measures",
+      "to_id": "V-1204"
+    },
+    {
+      "from_id": "AIC-1335",
+      "type": "controls",
+      "to_id": "AV-1335"
+    },
+    {
+      "from_id": "AIC-1336",
+      "type": "controls",
+      "to_id": "AV-1336"
+    },
+    {
+      "from_id": "FIC-1337",
+      "type": "controls",
+      "to_id": "FV-1337"
+    },
+    {
+      "from_id": "FT-1337",
+      "type": "measures",
+      "to_id": "C-1216"
+    },
+    {
+      "from_id": "TIC-1338",
+      "type": "controls",
+      "to_id": "TV-1338"
+    },
+    {
+      "from_id": "TT-1338",
+      "type": "measures",
+      "to_id": "C-1216"
+    },
+    {
+      "from_id": "PIC-1339",
+      "type": "controls",
+      "to_id": "PV-1339"
+    },
+    {
+      "from_id": "PT-1339",
+      "type": "measures",
+      "to_id": "C-1216"
+    },
+    {
+      "from_id": "FIC-1340",
+      "type": "controls",
+      "to_id": "FV-1340"
+    },
+    {
+      "from_id": "FT-1340",
+      "type": "measures",
+      "to_id": "R-1226"
+    },
+    {
+      "from_id": "TIC-1341",
+      "type": "controls",
+      "to_id": "TV-1341"
+    },
+    {
+      "from_id": "TT-1341",
+      "type": "measures",
+      "to_id": "R-1226"
+    },
+    {
+      "from_id": "LIC-1342",
+      "type": "controls",
+      "to_id": "LV-1342"
+    },
+    {
+      "from_id": "LT-1342",
+      "type": "measures",
+      "to_id": "R-1226"
+    },
+    {
+      "from_id": "PIC-1343",
+      "type": "controls",
+      "to_id": "PV-1343"
+    },
+    {
+      "from_id": "PT-1343",
+      "type": "measures",
+      "to_id": "V-1218"
+    },
+    {
+      "from_id": "FIC-1344",
+      "type": "controls",
+      "to_id": "FV-1344"
+    },
+    {
+      "from_id": "FT-1344",
+      "type": "measures",
+      "to_id": "V-1218"
+    },
+    {
+      "from_id": "TIC-1345",
+      "type": "controls",
+      "to_id": "TV-1345"
+    },
+    {
+      "from_id": "TT-1345",
+      "type": "measures",
+      "to_id": "P-1219"
+    },
+    {
+      "from_id": "PIC-1346",
+      "type": "controls",
+      "to_id": "PV-1346"
+    },
+    {
+      "from_id": "LIC-1347",
+      "type": "controls",
+      "to_id": "LV-1347"
+    },
+    {
+      "from_id": "LT-1347",
+      "type": "measures",
+      "to_id": "V-1218"
+    },
+    {
+      "from_id": "FIC-1348",
+      "type": "controls",
+      "to_id": "FV-1348"
+    },
+    {
+      "from_id": "FT-1348",
+      "type": "measures",
+      "to_id": "TK-1223"
+    },
+    {
+      "from_id": "AIC-1349",
+      "type": "controls",
+      "to_id": "AV-1349"
+    },
+    {
+      "from_id": "AT-1349",
+      "type": "measures",
+      "to_id": "TK-1223"
+    },
+    {
+      "from_id": "LIC-1350",
+      "type": "controls",
+      "to_id": "LV-1350"
+    },
+    {
+      "from_id": "LT-1350",
+      "type": "measures",
+      "to_id": "TK-1225"
     },
     {
       "from_id": "TK-1001",

@@ -17,8 +17,8 @@ It ships two simulators behind one command and one OPC UA namespace:
 
 | | `simcraft loops serve` | `simcraft serve` |
 |---|---|---|
-| What | The 50-loop portfolio the PlantCraft demo reads | The plant-wide research benchmark |
-| Size | 50 loops, 205 tags (`CPM.Loops.<LOOP>.PV/SP/OP/MODE`) | 50 loops, 500 signals, 20 scenarios (`Plant.*`) |
+| What | The 100-loop portfolio the PlantCraft demo reads | The plant-wide research benchmark |
+| Size | 100 loops (41 with a known behaviour, 59 healthy), 405 tags (`CPM.Loops.<LOOP>.PV/SP/OP/MODE`) | 50 loops, 500 signals, 20 scenarios (`Plant.*`) |
 | Behaviour | One known behaviour per loop: healthy, oscillation, stiction, saturation, manual, noise, setpoint activity, sensor drift, disturbance, interaction | Coupled grey-box plant with controller, actuator, sensor, process and communication faults, hidden ground truth, offline datasets |
 | History | 48 hours backfilled, then live every second | Per runtime profile (`smoke`, `development`, `paper`, `stress`) |
 | Used by | PlantCraft demo, PlantCraft Analytics and Historian tests | Research, method evaluation, integration tests |

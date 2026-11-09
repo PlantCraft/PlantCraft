@@ -71,7 +71,7 @@ The bundle holds:
 | `notebook-kits/` | Optional: the Notebooks kits for people's computers (Windows, macOS, Linux; `kits.json` lists them), offered in Notebooks while Notebooks are on (an administrator may take them away) |
 | `trusted-publishers/` | The publisher keys of the release (`processcraft.pub`, and `processcraft.allowed_signers` for `ssh-keygen`), trusted by the installation from then on |
 | `docs/` | This guide and the security guide |
-| `demo/plantcraft-50-loops-map.json` | With the Simulator only: the plant map of its 50 loops (section 4) |
+| `demo/plantcraft-50-loops-map.json` | With the Simulator only: the plant map of its 100 loops (section 4) |
 
 ## 3. Install (3 to 6 minutes)
 
@@ -163,11 +163,11 @@ the images. If the suite does not become healthy,
 1. Open the printed address and sign in as `admin` with the printed password.
 2. Add the data sources in **Sources and signals** (PI Web API or OPC UA); with `--demo`, the
    simulator is at `opc.tcp://plantcraft:4840/plantcraft/`, namespace
-   `urn:processcraft:plantcraft`, anonymous, 50 loops under `CPM/Loops`.
+   `urn:processcraft:plantcraft`, anonymous, 100 loops under `CPM/Loops`.
 3. Import the asset tree (**Assets › Import**: Excel, JSON, CSV, ISA-95 or PI AF; the last
    import can be undone there) and create the people who will use the suite. With `--demo`
    the map of the simulator (the bundle's `demo/plantcraft-50-loops-map.json`: the Simulator
-   source, the unit, the 50 loops with their signals by role and each loop's type) is already
+   source, the units, the 100 loops with their signals by role and each loop's type) is already
    imported by `plantcraft demo seed`. A whole map can still be applied by script
    ([configuration file](en/configuration-file.md)).
 4. Open the apps from the launcher; they use the same sign-in. Analytics analyses the loops of

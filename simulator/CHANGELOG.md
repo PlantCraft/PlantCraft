@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- **50 healthy loops in the loop portfolio** (`simcraft.loops.fleet`): `FIC-1301` to `LIC-1350`,
+  well-tuned flow, pressure, temperature, level and composition loops beside the 50 of the
+  PlantCraft demo story, so the portfolio is 100 loops and 405 tags, 41 with a known problem.
+
 ## [0.6.0] - 2026-11-02
 
 ### Added

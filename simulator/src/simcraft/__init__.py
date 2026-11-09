@@ -1,4 +1,4 @@
-"""PlantCraft Simulator: the benchmark API here; the 50-loop portfolio is `simcraft.loops`."""
+"""PlantCraft Simulator: the benchmark API here; the 100-loop portfolio is `simcraft.loops`."""
 
 from importlib.metadata import version
 

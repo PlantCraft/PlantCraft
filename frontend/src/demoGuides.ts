@@ -126,7 +126,7 @@ export function demoGuides(): Guide[] {
       pitch: t("Every loop watched, every finding explained, and the methods open to you."),
       stops: [
         {
-          title: t("Fifty loops, watched for you"),
+          title: t("A hundred loops, watched for you"),
           body: t("Monitors run the analyses on every loop on a schedule: what runs, the queue and the latest runs. Nobody has to remember to look."),
           to: "/link/",
         },

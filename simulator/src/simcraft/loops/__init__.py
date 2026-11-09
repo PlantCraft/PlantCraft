@@ -1,4 +1,4 @@
-"""The 50-loop portfolio: small deterministic closed loops for the PlantCraft demo.
+"""The 100-loop portfolio: small deterministic closed loops for the PlantCraft demo.
 
 Each loop is a discrete PI controller on a first-order process with dead time and one
 known behaviour (healthy, oscillation, stiction, saturation, manual, noise, setpoint activity,

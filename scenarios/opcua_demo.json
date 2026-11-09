@@ -1,7 +1,7 @@
 {
   "name": "opcua_control_loops_demo",
   "display_name": "Simulated refinery",
-  "description": "Live demo with the Simulator's 50 loops, 48 hours of OPC UA history and real-time continuity.",
+  "description": "Live demo with the Simulator's 100 loops, 48 hours of OPC UA history and real-time continuity.",
   "source": {
     "type": "opcua",
     "endpoint_url": "opc.tcp://127.0.0.1:4840/plantcraft/",
@@ -832,6 +832,856 @@
       },
       "metadata": {
         "loop_type": "temperature"
+      }
+    },
+    {
+      "loop_id": "FIC-1301",
+      "name": "Feed preheat bypass flow",
+      "area": "Feed",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1301.PV",
+        "sp": "CPM.Loops.FIC-1301.SP",
+        "op": "CPM.Loops.FIC-1301.OP",
+        "mode": "CPM.Loops.FIC-1301.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "PIC-1302",
+      "name": "Charge pump discharge pressure",
+      "area": "Feed",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1302.PV",
+        "sp": "CPM.Loops.PIC-1302.SP",
+        "op": "CPM.Loops.PIC-1302.OP",
+        "mode": "CPM.Loops.PIC-1302.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "TIC-1303",
+      "name": "Feed preheat temperature",
+      "area": "Feed",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1303.PV",
+        "sp": "CPM.Loops.TIC-1303.SP",
+        "op": "CPM.Loops.TIC-1303.OP",
+        "mode": "CPM.Loops.TIC-1303.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "TIC-1304",
+      "name": "Crude preheat outlet temperature",
+      "area": "Heat exchange",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1304.PV",
+        "sp": "CPM.Loops.TIC-1304.SP",
+        "op": "CPM.Loops.TIC-1304.OP",
+        "mode": "CPM.Loops.TIC-1304.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "FIC-1305",
+      "name": "Exchanger bypass flow",
+      "area": "Heat exchange",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1305.PV",
+        "sp": "CPM.Loops.FIC-1305.SP",
+        "op": "CPM.Loops.FIC-1305.OP",
+        "mode": "CPM.Loops.FIC-1305.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "TIC-1306",
+      "name": "Product cooler outlet temperature",
+      "area": "Heat exchange",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1306.PV",
+        "sp": "CPM.Loops.TIC-1306.SP",
+        "op": "CPM.Loops.TIC-1306.OP",
+        "mode": "CPM.Loops.TIC-1306.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "PIC-1307",
+      "name": "Cooling water return pressure",
+      "area": "Heat exchange",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1307.PV",
+        "sp": "CPM.Loops.PIC-1307.SP",
+        "op": "CPM.Loops.PIC-1307.OP",
+        "mode": "CPM.Loops.PIC-1307.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "FIC-1308",
+      "name": "Furnace pass A flow",
+      "area": "Furnaces",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1308.PV",
+        "sp": "CPM.Loops.FIC-1308.SP",
+        "op": "CPM.Loops.FIC-1308.OP",
+        "mode": "CPM.Loops.FIC-1308.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "FIC-1309",
+      "name": "Furnace pass B flow",
+      "area": "Furnaces",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1309.PV",
+        "sp": "CPM.Loops.FIC-1309.SP",
+        "op": "CPM.Loops.FIC-1309.OP",
+        "mode": "CPM.Loops.FIC-1309.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "PIC-1310",
+      "name": "Furnace draft pressure",
+      "area": "Furnaces",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1310.PV",
+        "sp": "CPM.Loops.PIC-1310.SP",
+        "op": "CPM.Loops.PIC-1310.OP",
+        "mode": "CPM.Loops.PIC-1310.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "FIC-1311",
+      "name": "Combustion air flow",
+      "area": "Furnaces",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1311.PV",
+        "sp": "CPM.Loops.FIC-1311.SP",
+        "op": "CPM.Loops.FIC-1311.OP",
+        "mode": "CPM.Loops.FIC-1311.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "FIC-1312",
+      "name": "Top reflux flow",
+      "area": "Distillation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1312.PV",
+        "sp": "CPM.Loops.FIC-1312.SP",
+        "op": "CPM.Loops.FIC-1312.OP",
+        "mode": "CPM.Loops.FIC-1312.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "PIC-1313",
+      "name": "Column top pressure",
+      "area": "Distillation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1313.PV",
+        "sp": "CPM.Loops.PIC-1313.SP",
+        "op": "CPM.Loops.PIC-1313.OP",
+        "mode": "CPM.Loops.PIC-1313.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "TIC-1314",
+      "name": "Bottom temperature",
+      "area": "Distillation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1314.PV",
+        "sp": "CPM.Loops.TIC-1314.SP",
+        "op": "CPM.Loops.TIC-1314.OP",
+        "mode": "CPM.Loops.TIC-1314.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "LIC-1315",
+      "name": "Column bottom level",
+      "area": "Distillation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1315.PV",
+        "sp": "CPM.Loops.LIC-1315.SP",
+        "op": "CPM.Loops.LIC-1315.OP",
+        "mode": "CPM.Loops.LIC-1315.MODE"
+      },
+      "metadata": {
+        "loop_type": "level",
+        "impact": "Inventory within the operating range"
+      }
+    },
+    {
+      "loop_id": "FIC-1316",
+      "name": "Naphtha product flow",
+      "area": "Distillation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1316.PV",
+        "sp": "CPM.Loops.FIC-1316.SP",
+        "op": "CPM.Loops.FIC-1316.OP",
+        "mode": "CPM.Loops.FIC-1316.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "FIC-1317",
+      "name": "Kerosene stripper steam flow",
+      "area": "Distillation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1317.PV",
+        "sp": "CPM.Loops.FIC-1317.SP",
+        "op": "CPM.Loops.FIC-1317.OP",
+        "mode": "CPM.Loops.FIC-1317.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "FIC-1318",
+      "name": "Hydrogen feed flow",
+      "area": "Reaction",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1318.PV",
+        "sp": "CPM.Loops.FIC-1318.SP",
+        "op": "CPM.Loops.FIC-1318.OP",
+        "mode": "CPM.Loops.FIC-1318.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "PIC-1319",
+      "name": "Reactor pressure",
+      "area": "Reaction",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1319.PV",
+        "sp": "CPM.Loops.PIC-1319.SP",
+        "op": "CPM.Loops.PIC-1319.OP",
+        "mode": "CPM.Loops.PIC-1319.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "TIC-1320",
+      "name": "Quench temperature",
+      "area": "Reaction",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1320.PV",
+        "sp": "CPM.Loops.TIC-1320.SP",
+        "op": "CPM.Loops.TIC-1320.OP",
+        "mode": "CPM.Loops.TIC-1320.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "FIC-1321",
+      "name": "Make-up hydrogen flow",
+      "area": "Recycle",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1321.PV",
+        "sp": "CPM.Loops.FIC-1321.SP",
+        "op": "CPM.Loops.FIC-1321.OP",
+        "mode": "CPM.Loops.FIC-1321.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "PIC-1322",
+      "name": "Recycle pump suction pressure",
+      "area": "Recycle",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1322.PV",
+        "sp": "CPM.Loops.PIC-1322.SP",
+        "op": "CPM.Loops.PIC-1322.OP",
+        "mode": "CPM.Loops.PIC-1322.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "LIC-1323",
+      "name": "Water boot level",
+      "area": "Separation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1323.PV",
+        "sp": "CPM.Loops.LIC-1323.SP",
+        "op": "CPM.Loops.LIC-1323.OP",
+        "mode": "CPM.Loops.LIC-1323.MODE"
+      },
+      "metadata": {
+        "loop_type": "level",
+        "impact": "Inventory within the operating range"
+      }
+    },
+    {
+      "loop_id": "FIC-1324",
+      "name": "Sour water flow",
+      "area": "Separation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1324.PV",
+        "sp": "CPM.Loops.FIC-1324.SP",
+        "op": "CPM.Loops.FIC-1324.OP",
+        "mode": "CPM.Loops.FIC-1324.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "PIC-1325",
+      "name": "Flash drum pressure",
+      "area": "Separation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1325.PV",
+        "sp": "CPM.Loops.PIC-1325.SP",
+        "op": "CPM.Loops.PIC-1325.OP",
+        "mode": "CPM.Loops.PIC-1325.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "TIC-1326",
+      "name": "Separator feed temperature",
+      "area": "Separation",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1326.PV",
+        "sp": "CPM.Loops.TIC-1326.SP",
+        "op": "CPM.Loops.TIC-1326.OP",
+        "mode": "CPM.Loops.TIC-1326.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "FIC-1327",
+      "name": "Compressor spillback flow",
+      "area": "Compression",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1327.PV",
+        "sp": "CPM.Loops.FIC-1327.SP",
+        "op": "CPM.Loops.FIC-1327.OP",
+        "mode": "CPM.Loops.FIC-1327.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "TIC-1328",
+      "name": "Interstage cooler temperature",
+      "area": "Compression",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1328.PV",
+        "sp": "CPM.Loops.TIC-1328.SP",
+        "op": "CPM.Loops.TIC-1328.OP",
+        "mode": "CPM.Loops.TIC-1328.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "PIC-1329",
+      "name": "Seal gas pressure",
+      "area": "Compression",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1329.PV",
+        "sp": "CPM.Loops.PIC-1329.SP",
+        "op": "CPM.Loops.PIC-1329.OP",
+        "mode": "CPM.Loops.PIC-1329.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "LIC-1330",
+      "name": "Knock-out drum level",
+      "area": "Compression",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1330.PV",
+        "sp": "CPM.Loops.LIC-1330.SP",
+        "op": "CPM.Loops.LIC-1330.OP",
+        "mode": "CPM.Loops.LIC-1330.MODE"
+      },
+      "metadata": {
+        "loop_type": "level",
+        "impact": "Inventory within the operating range"
+      }
+    },
+    {
+      "loop_id": "FIC-1331",
+      "name": "Wash water flow",
+      "area": "Hydrotreating",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1331.PV",
+        "sp": "CPM.Loops.FIC-1331.SP",
+        "op": "CPM.Loops.FIC-1331.OP",
+        "mode": "CPM.Loops.FIC-1331.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "TIC-1332",
+      "name": "Reactor bed 2 temperature",
+      "area": "Hydrotreating",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1332.PV",
+        "sp": "CPM.Loops.TIC-1332.SP",
+        "op": "CPM.Loops.TIC-1332.OP",
+        "mode": "CPM.Loops.TIC-1332.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "PIC-1333",
+      "name": "Low-pressure separator pressure",
+      "area": "Hydrotreating",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1333.PV",
+        "sp": "CPM.Loops.PIC-1333.SP",
+        "op": "CPM.Loops.PIC-1333.OP",
+        "mode": "CPM.Loops.PIC-1333.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "FIC-1334",
+      "name": "Stripper bottoms flow",
+      "area": "Hydrotreating",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1334.PV",
+        "sp": "CPM.Loops.FIC-1334.SP",
+        "op": "CPM.Loops.FIC-1334.OP",
+        "mode": "CPM.Loops.FIC-1334.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "AIC-1335",
+      "name": "Recycle gas hydrogen purity",
+      "area": "Quality",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.AIC-1335.PV",
+        "sp": "CPM.Loops.AIC-1335.SP",
+        "op": "CPM.Loops.AIC-1335.OP",
+        "mode": "CPM.Loops.AIC-1335.MODE"
+      },
+      "metadata": {
+        "loop_type": "composition",
+        "impact": "Product within the specification"
+      }
+    },
+    {
+      "loop_id": "AIC-1336",
+      "name": "Product aromatics content",
+      "area": "Quality",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.AIC-1336.PV",
+        "sp": "CPM.Loops.AIC-1336.SP",
+        "op": "CPM.Loops.AIC-1336.OP",
+        "mode": "CPM.Loops.AIC-1336.MODE"
+      },
+      "metadata": {
+        "loop_type": "composition",
+        "impact": "Product within the specification"
+      }
+    },
+    {
+      "loop_id": "FIC-1337",
+      "name": "Lean amine flow",
+      "area": "Treating",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1337.PV",
+        "sp": "CPM.Loops.FIC-1337.SP",
+        "op": "CPM.Loops.FIC-1337.OP",
+        "mode": "CPM.Loops.FIC-1337.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "TIC-1338",
+      "name": "Lean amine temperature",
+      "area": "Treating",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1338.PV",
+        "sp": "CPM.Loops.TIC-1338.SP",
+        "op": "CPM.Loops.TIC-1338.OP",
+        "mode": "CPM.Loops.TIC-1338.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "PIC-1339",
+      "name": "Absorber pressure",
+      "area": "Treating",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1339.PV",
+        "sp": "CPM.Loops.PIC-1339.SP",
+        "op": "CPM.Loops.PIC-1339.OP",
+        "mode": "CPM.Loops.PIC-1339.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "FIC-1340",
+      "name": "Acid gas flow",
+      "area": "Sulfur recovery",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1340.PV",
+        "sp": "CPM.Loops.FIC-1340.SP",
+        "op": "CPM.Loops.FIC-1340.OP",
+        "mode": "CPM.Loops.FIC-1340.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "TIC-1341",
+      "name": "Reaction furnace temperature",
+      "area": "Sulfur recovery",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1341.PV",
+        "sp": "CPM.Loops.TIC-1341.SP",
+        "op": "CPM.Loops.TIC-1341.OP",
+        "mode": "CPM.Loops.TIC-1341.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "LIC-1342",
+      "name": "Sulfur pit level",
+      "area": "Sulfur recovery",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1342.PV",
+        "sp": "CPM.Loops.LIC-1342.SP",
+        "op": "CPM.Loops.LIC-1342.OP",
+        "mode": "CPM.Loops.LIC-1342.MODE"
+      },
+      "metadata": {
+        "loop_type": "level",
+        "impact": "Inventory within the operating range"
+      }
+    },
+    {
+      "loop_id": "PIC-1343",
+      "name": "Steam header pressure",
+      "area": "Utilities",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1343.PV",
+        "sp": "CPM.Loops.PIC-1343.SP",
+        "op": "CPM.Loops.PIC-1343.OP",
+        "mode": "CPM.Loops.PIC-1343.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "FIC-1344",
+      "name": "Boiler feed water flow",
+      "area": "Utilities",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1344.PV",
+        "sp": "CPM.Loops.FIC-1344.SP",
+        "op": "CPM.Loops.FIC-1344.OP",
+        "mode": "CPM.Loops.FIC-1344.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "TIC-1345",
+      "name": "Cooling tower return temperature",
+      "area": "Utilities",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.TIC-1345.PV",
+        "sp": "CPM.Loops.TIC-1345.SP",
+        "op": "CPM.Loops.TIC-1345.OP",
+        "mode": "CPM.Loops.TIC-1345.MODE"
+      },
+      "metadata": {
+        "loop_type": "temperature",
+        "impact": "Temperature held at the specification"
+      }
+    },
+    {
+      "loop_id": "PIC-1346",
+      "name": "Instrument air pressure",
+      "area": "Utilities",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.PIC-1346.PV",
+        "sp": "CPM.Loops.PIC-1346.SP",
+        "op": "CPM.Loops.PIC-1346.OP",
+        "mode": "CPM.Loops.PIC-1346.MODE"
+      },
+      "metadata": {
+        "loop_type": "pressure",
+        "impact": "Equipment pressure within its design range"
+      }
+    },
+    {
+      "loop_id": "LIC-1347",
+      "name": "Deaerator level",
+      "area": "Utilities",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1347.PV",
+        "sp": "CPM.Loops.LIC-1347.SP",
+        "op": "CPM.Loops.LIC-1347.OP",
+        "mode": "CPM.Loops.LIC-1347.MODE"
+      },
+      "metadata": {
+        "loop_type": "level",
+        "impact": "Inventory within the operating range"
+      }
+    },
+    {
+      "loop_id": "FIC-1348",
+      "name": "Clarifier feed flow",
+      "area": "Water treatment",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.FIC-1348.PV",
+        "sp": "CPM.Loops.FIC-1348.SP",
+        "op": "CPM.Loops.FIC-1348.OP",
+        "mode": "CPM.Loops.FIC-1348.MODE"
+      },
+      "metadata": {
+        "loop_type": "flow",
+        "impact": "Stable flow to the next step"
+      }
+    },
+    {
+      "loop_id": "AIC-1349",
+      "name": "Effluent hydrocarbon content",
+      "area": "Water treatment",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.AIC-1349.PV",
+        "sp": "CPM.Loops.AIC-1349.SP",
+        "op": "CPM.Loops.AIC-1349.OP",
+        "mode": "CPM.Loops.AIC-1349.MODE"
+      },
+      "metadata": {
+        "loop_type": "composition",
+        "impact": "Product within the specification"
+      }
+    },
+    {
+      "loop_id": "LIC-1350",
+      "name": "Sludge tank level",
+      "area": "Water treatment",
+      "service": "Healthy, well-tuned loop",
+      "unit": "U-SIM",
+      "signals": {
+        "pv": "CPM.Loops.LIC-1350.PV",
+        "sp": "CPM.Loops.LIC-1350.SP",
+        "op": "CPM.Loops.LIC-1350.OP",
+        "mode": "CPM.Loops.LIC-1350.MODE"
+      },
+      "metadata": {
+        "loop_type": "level",
+        "impact": "Inventory within the operating range"
       }
     }
   ]

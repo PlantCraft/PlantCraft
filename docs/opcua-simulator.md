@@ -1,6 +1,6 @@
 # OPC UA demo plant (the Simulator)
 
-The demo reads a simulated plant over OPC UA: the Simulator's 50-loop portfolio
+The demo reads a simulated plant over OPC UA: the Simulator's 100-loop portfolio
 (`simcraft loops serve`). The Simulator is its own product (`simcraft`, in `simulator/`); until 0.4.0 the same simulator lived here as
 `processcraft/simulator` (gap G31, closed 2026-10-19). PlantCraft reads it
 like any other OPC UA server, through OPC UA Historical Access, and never
@@ -74,8 +74,9 @@ The loops cover ten conditions. The first ten are the reference cases:
 
 The other forty (`FIC-1101` and onwards) repeat these behaviours across
 distillation, utilities and other areas, with different seeds, units and
-dynamics. `scenarios/opcua_demo.json` lists all fifty with their signals by
-role; PlantCraft shows each one as a loop asset and Analytics picks the
+dynamics. Fifty more (`FIC-1301` to `LIC-1350`, 2026-11-09) are healthy, well-tuned loops
+spread over every area, so the demo reads as a plant where most loops work and 41 of 100 need a
+look. `scenarios/opcua_demo.json` lists all hundred with their signals by role; PlantCraft shows each one as a loop asset and Analytics picks the
 methods that suit it. `simcraft loops catalog` prints the Simulator's list, and
 `tests/test_opcua_demo.py` checks the scenario against it whenever the Simulator
 is installed.
@@ -95,7 +96,7 @@ confirmation.
 ## Tags and namespace
 
 The namespace is `urn:processcraft:plantcraft` (the default of every OPC UA
-source). Variables use string NodeIds, 205 in all:
+source). Variables use string NodeIds, 405 in all:
 
 ```text
 CPM.Loops.<LOOP_ID>.PV
@@ -153,5 +154,5 @@ space (namespace, `CPM/Loops/<loop>` objects, NodeIds, `Name` and
 `EngineeringUnit` properties) for the scenario's loops with a few minutes of
 synthetic history. It reproduces the interface, not the dynamics. With
 The Simulator installed, the same file also checks the scenario against
-`simcraft loops catalog` and reads all 205 tags from a real
+`simcraft loops catalog` and reads all 405 tags from a real
 `simcraft loops serve`.

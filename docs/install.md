@@ -326,7 +326,7 @@ administrator and no Docker, installed in about two minutes ([Notebooks](en/note
 
 ## Try it with the demo plant
 
-`--demo` adds the Simulator, an OPC UA plant of 50 control loops with known faults, and fills the
+`--demo` adds the Simulator, an OPC UA plant of 100 control loops with known faults, and fills the
 suite with a story that explains it by itself: the plant map, three weeks of history, monitors
 already running, dashboards, alarm rules, model examples, a team with its conversations and a
 specialist. The tutorial [Getting started](en/getting-started.md) walks through it.
