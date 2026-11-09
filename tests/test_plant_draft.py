@@ -322,10 +322,11 @@ def test_route_reads_a_tag_spreadsheet(admin, eng):
 
 def test_route_drafts_from_a_source(admin):
     review = admin.post("/api/asset-file/draft", json={"source_id": "scenario"}).json()
-    # The demo's CSV columns (pv, sp, op…) are not ISA tags: read, listed, nothing to place.
+    # The demo's CSV columns (pv, sp, op…) are not ISA tags: one-word names stay to bind by
+    # hand; "neighbor_pv" becomes the equipment "neighbor" (its first part).
     assert review["draft"]["tags"] >= 5 and review["draft"]["loops"] == 0
-    assert review["draft"]["unrecognised"] == review["draft"]["tags"]
-    assert not review["can_apply"]
+    assert review["draft"]["unrecognised"] == review["draft"]["tags"] - 1
+    assert [row["asset_id"] for row in review["assets"]] == ["neighbor"]
     assert admin.post("/api/asset-file/draft", json={"source_id": "nope"}).status_code == 404
 
 
@@ -433,3 +434,43 @@ def test_route_asks_the_plant_draft_model_only_when_chosen(suite, monkeypatch):
     assert "admin-secret" not in DraftModel.calls[0]
     audit = [entry["action"] for entry in rt.workspace.audit.list(limit=50)]
     assert "assets.draft_model" in audit and "assets.drafted" in audit
+
+
+def test_tags_of_other_conventions_are_placed(admin):
+    """DeltaV paths, Experion names, area prefixes and Portuguese words read as ISA loops;
+    tags with no ISA tag become equipment by the first part of their names."""
+
+    tags = [
+        {"tag": tag}
+        for tag in [
+            "FIC-2001/PID1/PV.CV",
+            "FIC-2001/PID1/SP.CV",
+            "FIC-2001/PID1/OUT.CV",
+            "TIC303.PV",
+            "TIC303.OP",
+            "U200_AIC_2203_PV",
+            "U200_AIC_2203_SP",
+            "Planta.Area1.LIC_301.Valor",
+            "Planta.Area1.LIC_301.Saída",
+            "Pump1_Speed",
+            "Pump1_Current",
+            "Flow",
+        ]
+    ]
+    review = admin.post("/api/asset-file/draft", json={"tags": tags, "documents": False}).json()
+    rows = {row["asset_id"]: row for row in review["assets"]}
+    roles = {key: {s["role"]: s["tag"] for s in rows[key]["signals"]} for key in rows}
+    assert roles["FIC-2001"] == {
+        "pv": "FIC-2001/PID1/PV.CV",
+        "sp": "FIC-2001/PID1/SP.CV",
+        "op": "FIC-2001/PID1/OUT.CV",
+    }
+    assert roles["TIC-303"]["op"] == "TIC303.OP" and roles["AIC-2203"]["sp"] == "U200_AIC_2203_SP"
+    assert roles["LIC-301"] == {
+        "pv": "Planta.Area1.LIC_301.Valor",
+        "op": "Planta.Area1.LIC_301.Saída",
+    }
+    assert rows["Pump1"]["type"] == "equipment" and set(roles["Pump1"]) == {"speed", "current"}
+    # A one-word name names no equipment: left to bind by hand.
+    assert review["draft"]["unrecognised"] == 1 and review["draft"]["grouped_by_name"] == 1
+    assert any("Pump1_Speed" in note for note in review["notes"])

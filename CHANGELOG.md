@@ -56,6 +56,8 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ### Fixed
 
+- Asset tree drafted from a source, tried on fictional plants of other conventions (DeltaV paths, Experion names, area prefixes, Portuguese words, skids without ISA tags, 700 tags): a CSV whose times carry an offset (`...Z`, `+00:00`) now reads (no value was read before); Portuguese and Spanish role words (Valor, Medida, Saída, Salida, Referência, Consigna, Modo) place PV, SP and OP right (Saída was taken for the PV); tags with no ISA tag (`Pump1_Speed`, `Tank_Level`) become equipment by the first part of their names, so such a plant is not left with an empty tree and the setup guide does not stop at its asset step.
+
 - Public demo: scrolling a page (or a box inside it, in any app) and moving the pointer while reading now count as use of the visit, so it no longer ends after 5 minutes while someone reads without clicking.
 - An asset's Signals table shows a text signal's last value (a loop's mode: AUTO, MAN); it showed "—", because the last value counted numbers only.
 - SDK: `plantcraft_sdk.i18n_check` also reads the widget titles, descriptions and picks of an app's `app.toml` into its server catalog, so `make standard` fails when one is not translated (five apps had none).

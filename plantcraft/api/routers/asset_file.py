@@ -259,6 +259,13 @@ async def draft(
                 count=summary["dropped"],
             )
         )
+    if summary.get("grouped_by_name"):
+        notes.append(
+            t(
+                "{count} equipment come from the first part of tag names that are not ISA-5.1 (Pump1_Speed is Pump1's speed); check them before applying.",
+                count=summary["grouped_by_name"],
+            )
+        )
     if summary["unrecognised"]:
         notes.append(
             t(

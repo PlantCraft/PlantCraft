@@ -96,12 +96,26 @@ class CsvRecordedSource:
                 parse_dates=True,
                 low_memory=False,
             )
-            frame.index = pd.to_datetime(frame.index, errors="coerce")
+            frame.index = self._local_times(frame.index)
             frame = frame.loc[~frame.index.isna()]
             frame = frame.loc[~frame.index.duplicated(keep="last")].sort_index()
             self._frame = frame
             self._signature = signature
             return self._frame
+
+    def _local_times(self, index: pd.Index) -> pd.DatetimeIndex:
+        """The file's times as the plant's local clock without a zone, as the reads expect.
+
+        A file written with offsets (``2026-11-09T10:00:00Z``, ``...+00:00``, an export of
+        another system) is turned to the source's zone; one without offsets is read as is."""
+
+        parsed = pd.to_datetime(index, errors="coerce")
+        if not isinstance(parsed, pd.DatetimeIndex):
+            # Several offsets in one file: each time is read to UTC first.
+            parsed = pd.to_datetime(index, errors="coerce", utc=True)
+        if parsed.tz is not None:
+            parsed = parsed.tz_convert(self.config.timezone or "UTC").tz_localize(None)
+        return parsed
 
     def last_time(self) -> pd.Timestamp | None:
         """The file's last sample time, without copying the file's values."""
