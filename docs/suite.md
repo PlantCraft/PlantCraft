@@ -27,7 +27,7 @@ breaks when names change.
 | PlantCraft Alarms | [`apps/alarms`](../apps/alarms) | `alarmcraft` | `/alarm/` | 8110 | 10009 | Alarm limits on plant signals, the alarm summary and alarm performance against ISA-18.2 |
 | PlantCraft Models | [`apps/models`](../apps/models) | `modelcraft` | `/model/` | 8130 | 10011 | A Modelica workbench: write and draw models, simulate them on plant data and export FMUs |
 | PlantCraft Documents | [`apps/documents`](../apps/documents) | `doccraft` | `/doc/` | 8150 | 10015 | The plant's manuals, control narratives, datasheets and guides: read into passages, searched by words and by meaning offline, linked to the assets, and cited by the assistant |
-| PlantCraft Simulator | [`simulator`](../simulator) | `simcraft` | OPC UA `:4840` | 4840 | 10004 | The simulated plant behind the demo and the benchmarks (50 loops with known faults) |
+| PlantCraft Simulator | [`simulator`](../simulator) | `simcraft` | OPC UA `:4840` | 4840 | 10004 | The simulated plant behind the demo and the benchmarks (100 loops, 41 with known faults) |
 
 Retired ids, kept reserved so no new app takes them: `cpmcraft` and `datacraft` merged into
 Analytics (D9); `twincraft` (PlantCraft Twin) merged into Analytics on 2026-10-22: its twins are

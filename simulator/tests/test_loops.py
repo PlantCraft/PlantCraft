@@ -1,4 +1,4 @@
-"""The 50-loop portfolio (from PlantCraft's demo simulator) and its OPC UA server."""
+"""The 100-loop portfolio (from PlantCraft's demo simulator) and its OPC UA server."""
 
 from __future__ import annotations
 
@@ -21,11 +21,14 @@ from simcraft.loops.storage import SimulatorStateStore
 FIRST_LOOP_PV = "CPM.Loops.FIC-1001.PV"
 
 
-def test_portfolio_has_fifty_loops_with_ten_distinct_behaviours() -> None:
-    assert len(LOOP_DEFINITIONS) == 50
-    assert len({item.loop_id for item in LOOP_DEFINITIONS}) == 50
+def test_portfolio_has_a_hundred_loops_with_ten_distinct_behaviours() -> None:
+    # The 50 loops of the story (41 with a known problem) and 50 healthy ones: a plant where
+    # most loops work, as in a real one.
+    assert len(LOOP_DEFINITIONS) == 100
+    assert len({item.loop_id for item in LOOP_DEFINITIONS}) == 100
     assert len({item.behavior for item in LOOP_DEFINITIONS}) == 10
-    assert sum(len(item.signal_names) for item in LOOP_DEFINITIONS) == 205
+    assert sum(item.behavior != "healthy" for item in LOOP_DEFINITIONS) == 41
+    assert sum(len(item.signal_names) for item in LOOP_DEFINITIONS) == 405
     assert sum(item.has_secondary for item in LOOP_DEFINITIONS) == 5
 
 
@@ -62,8 +65,8 @@ REFERENCE_PIC_1002_AFTER_ONE_HOUR: dict[str, float | str] = {
 def test_catalog_lists_every_tag_once(capsys: pytest.CaptureFixture[str]) -> None:
     catalog = loop_catalog()
     tags = [tag for loop in catalog for tag in loop["signals"].values()]
-    assert len(catalog) == 50
-    assert len(tags) == len(set(tags)) == 205
+    assert len(catalog) == 100
+    assert len(tags) == len(set(tags)) == 405
     assert catalog[0]["signals"]["pv"] == FIRST_LOOP_PV
 
     assert main(["loops", "catalog"]) == 0

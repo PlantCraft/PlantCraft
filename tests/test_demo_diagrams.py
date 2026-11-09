@@ -40,7 +40,9 @@ def test_every_loop_is_drawn_exactly_once_on_one_page() -> None:
     assert not display.get("pages")
     assert display["width"] <= 8000 and display["height"] <= 8000
     seen = [e["asset_id"] for e in display["elements"] if e.get("symbol") == "instrument.bubble"]
-    assert sorted(seen) == sorted(loop["loop_id"] for loop in plant["loops"])
+    # The drawing holds the 50 loops of the story; the healthy fleet (13xx, 2026-11-09) is not on it.
+    story = [loop["loop_id"] for loop in plant["loops"] if int(loop["loop_id"][-4:]) < 1300]
+    assert len(story) == 50 and sorted(seen) == sorted(story)
     for e in display["elements"]:
         for x, y in [(e["x"], e["y"])] if "x" in e else e.get("points", []):
             assert 0 <= x <= display["width"] and 0 <= y <= display["height"], e["id"]

@@ -220,7 +220,7 @@ para ele, ou só por roteiro.
 ## Demonstração
 
 Uma instalação feita com `install.sh --demo` (ou `--public-demo`, que também abre uma conta
-`demo` somente leitura na página de entrada) roda o Simulator, uma planta simulada de 50 malhas
+`demo` somente leitura na página de entrada) roda o Simulator, uma planta simulada de 100 malhas
 lida por OPC UA, e uma história de demonstração em todos os apps: malhas com uma válvula com
 agarramento, uma oscilação e um sensor com deriva no Analytics, alarmes, dashboards, gêmeos,
 modelos, ações e conversas. Para gravar a história de novo (ela nunca duplica nada), rode na

@@ -35,7 +35,7 @@ This folder:
 
 ```text
 src/simcraft/          the package (layers below); catalog/ profiles/ schemas/ are data
-src/simcraft/loops/    the 50-loop portfolio the PlantCraft demo reads (`simcraft loops`)
+src/simcraft/loops/    the 100-loop portfolio the PlantCraft demo reads (`simcraft loops`)
 tests/                   pytest; both servers are exercised through a real asyncua client
 deploy/                  requirements.in/.lock: hashed dependencies of the Docker image (`make lock`)
 docs/                    interface, contracts, scientific model, validation, release, tracking

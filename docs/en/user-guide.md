@@ -221,7 +221,7 @@ chosen for it, or from scripts only.
 
 An installation made with `install.sh --demo` (or `--public-demo`, which also
 opens a read-only `demo` account on the sign-in page) runs the Simulator, a
-simulated plant of 50 loops read over OPC UA, and a demo story across the apps:
+simulated plant of 100 loops read over OPC UA, and a demo story across the apps:
 loops with a sticky valve, an oscillation and a drifting sensor in Analytics, alarms,
 dashboards, twins, models, actions and conversations. To write the story again
 (it never duplicates anything), run in the installation folder:

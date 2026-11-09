@@ -8,7 +8,7 @@ administrador.
 
 ## La planta y la historia
 
-La planta de demostración es el **Simulator**: un servidor OPC UA de 50 lazos de control en dos
+La planta de demostración es el **Simulator**: un servidor OPC UA de 100 lazos de control en dos
 unidades, U-100 y U-200, con fallas que simula a propósito. Cuatro válvulas tienen fricción estática
 (FIC-1003, FIC-1102, FIC-1206, FIC-1214), algunos lazos de presión y temperatura oscilan (PIC-1002,
 PIC-1202), la temperatura de salida del horno TIC-1209 deriva, y TIC-1104 sufre una perturbación

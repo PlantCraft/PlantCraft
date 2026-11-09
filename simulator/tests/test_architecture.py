@@ -23,6 +23,7 @@ LAYERS: dict[str, int] = {
     "server": 4,
     "loops.faults": 1,
     "loops.dynamics": 1,
+    "loops.fleet": 1,
     "loops.storage": 2,
     "loops.server": 4,
     "loops.control": 4,

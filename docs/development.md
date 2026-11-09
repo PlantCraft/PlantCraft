@@ -23,7 +23,7 @@ The script starts the Simulator's OPC UA server (`simcraft loops serve`, unless
 something already listens on port 4840; without the Simulator it says how to
 install it), builds the interface when
 `frontend/dist` is missing or out of date (`--skip-build` turns this off) and
-opens PlantCraft at http://127.0.0.1:8060 with the simulated plant's 50 loops
+opens PlantCraft at http://127.0.0.1:8060 with the simulated plant's 100 loops
 in the asset tree. When the `linkcraft` command is on `PATH` (install it from
 [`apps/link`](../apps/link)) the script also starts PlantCraft Analytics on port
 8140 with an app key and lists it in the launcher; `--no-linkcraft` leaves it

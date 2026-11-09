@@ -33,7 +33,7 @@ simulation servers and process training simulators; their public pages are still
 | History | Restart continues without gaps or duplicates | category | done | `tests/test_server.py`, `make smoke` |
 | Signals | Configurable tag simulators (sine, ramp, random, step) | category | missing: models are fixed in code (G6) | |
 | Signals | Status codes and timestamps per value (good, uncertain, bad, no communication) | Part 4, Part 8 | done (benchmark); loops publish `Good` only | `tests/test_server.py` |
-| Process | Dynamic closed loops (PID, process, dead time, valve) | Downs and Vogel 1993 | done: 50-loop portfolio and 50-loop coupled benchmark | `tests/test_loops.py`, `tests/test_model.py` |
+| Process | Dynamic closed loops (PID, process, dead time, valve) | Downs and Vogel 1993 | done: 100-loop portfolio and 50-loop coupled benchmark | `tests/test_loops.py`, `tests/test_model.py` |
 | Process | Injected faults (stiction, oscillation, saturation, sensor, communication) | DAMADICS, Choudhury 2005 | done | `tests/test_engine.py`, `tests/test_experiments.py` |
 | Process | Plant-wide coupling between units | Downs and Vogel 1993 | done (benchmark) | `tests/test_model.py` |
 | Process | Ground truth of every injected fault, kept apart from the data | category | done (benchmark truth artifact) | `tests/test_dataset.py` |

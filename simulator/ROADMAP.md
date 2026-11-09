@@ -9,7 +9,7 @@ tests and oracles; "estimated" ones are judgement. The ranked work list is `docs
 |---|---:|---|---|
 | OPC UA read and browse | ~80% | estimated | Both servers through asyncua; Part 8 EU types missing (G5) |
 | Historical Access | ~80% | estimated | Raw reads, continuation, backfill, restart continuity |
-| Process models and faults | ~75% | estimated | 50-loop portfolio (10 behaviours) and 500-signal benchmark (20 scenarios) |
+| Process models and faults | ~75% | estimated | 100-loop portfolio (10 behaviours) and 500-signal benchmark (20 scenarios) |
 | Configurable signals | ~10% | estimated | Fixed models only; no user-defined tags (G6) |
 | Writes and control | 0% | estimated | Read-only (G4, maintainer decision) |
 | Alarms, NodeSet, replay | 0% | estimated | G8, G9, G10 |

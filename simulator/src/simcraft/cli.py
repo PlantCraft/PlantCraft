@@ -28,14 +28,14 @@ def _parser() -> argparse.ArgumentParser:
         prog="simcraft",
         description=(
             "PlantCraft Simulator: OPC UA process plant simulator. The benchmark (500 signals, "
-            "20 scenarios) and, under `simcraft loops`, the 50-loop portfolio of the "
+            "20 scenarios) and, under `simcraft loops`, the 100-loop portfolio of the "
             "PlantCraft demo."
         ),
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser(
         "loops",
-        help="the 50-loop portfolio: `simcraft loops serve|catalog` (see `loops --help`)",
+        help="the 100-loop portfolio: `simcraft loops serve|catalog` (see `loops --help`)",
         add_help=False,
     )
     subparsers.add_parser("healthcheck", help="exit 0 when the local OPC UA server is healthy")
@@ -155,7 +155,7 @@ async def _serve(args: argparse.Namespace) -> None:
 def _loops_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="simcraft loops",
-        description="The 50-loop portfolio that the PlantCraft demo reads through OPC UA.",
+        description="The 100-loop portfolio that the PlantCraft demo reads through OPC UA.",
     )
     commands = parser.add_subparsers(dest="loops_command", required=True)
     commands.add_parser("serve", help="serve the loops through OPC UA (see `serve --help`)")

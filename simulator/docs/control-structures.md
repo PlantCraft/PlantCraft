@@ -7,7 +7,7 @@ actuator limits, and failure bands without importing Python internals.
 
 ## Common loop model
 
-All 50 loops use a deterministic fixed-step, normalized FOPDT approximation
+All 100 loops use a deterministic fixed-step, normalized FOPDT approximation
 with a reverse-acting PI controller: when measured PV falls below SP, controller
 output increases, and the declared positive process gain raises PV. Conditional
 integration prevents windup at output limits. The integral state is bounded and

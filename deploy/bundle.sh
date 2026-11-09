@@ -7,7 +7,7 @@
 #     compose.yaml compose-worker.yaml certs/ .env.example bundle.env
 #     install.sh firewall.sh docs/ LICENSE NOTICE
 #     trusted-publishers/   public keys of the app publishers this server accepts
-#     demo/                 plant map of the Simulator's 50 loops (with the Simulator only)
+#     demo/                 plant map of the Simulator's 100 loops (with the Simulator only)
 #     notebook-kits/        optional: Python and JupyterLab for people's own computers (Notebooks ›
 #                           Run on your computer), when NOTEBOOK_KITS (default notebooks/kit/dist,
 #                           make notebook-kits) holds kits.json; NOTEBOOK_KITS=none leaves them out
@@ -182,7 +182,7 @@ if [ "${DOCKER_KIT:-}" != none ]; then
     "$ROOT/deploy/docker-engine.sh" fetch "$OUT/docker-engine" "$ARCH"
 fi
 if [ -n "$bundle_plant" ]; then
-    # The demo's plant map: the Simulator source, its 50 loops and their loop types.
+    # The demo's plant map: the Simulator source, its 100 loops and their loop types.
     mkdir -p "$OUT/demo"
     cp "$ROOT/deploy/demo/plantcraft-50-loops-map.json" "$OUT/demo/"
 fi

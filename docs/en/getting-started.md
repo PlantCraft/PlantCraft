@@ -7,7 +7,7 @@ hand it to each other. You need an installation with the demo story (`./install.
 
 ## The plant and the story
 
-The demo plant is the **Simulator**: an OPC UA server of 50 control loops in two units, U-100 and
+The demo plant is the **Simulator**: an OPC UA server of 100 control loops in two units, U-100 and
 U-200, with faults it simulates on purpose. Four valves stick (FIC-1003, FIC-1102, FIC-1206,
 FIC-1214), some pressure and temperature loops oscillate (PIC-1002, PIC-1202), the furnace outlet
 temperature TIC-1209 drifts, and TIC-1104 sees a cyclic disturbance.

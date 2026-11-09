@@ -1,4 +1,4 @@
-"""The plant map shipped with the demo: the Simulator's 50 loops, as the offline install imports it.
+"""The plant map shipped with the demo: the Simulator's 100 loops, as the offline install imports it.
 
 ``deploy/demo/plantcraft-50-loops-map.json`` is written from the demo scenario
 (``scenarios/opcua_demo.json``): the Simulator source as the ``demo`` profile serves it, the
@@ -61,7 +61,7 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "pump",
             "Charge pump",
             {"pump_type": "centrifugal", "rated_flow": 520, "power": 450},
-            ["FIC-1001", "FIC-1007", "FIC-1112"],
+            ["FIC-1001", "FIC-1007", "FIC-1112", "FIC-1301", "PIC-1302", "TIC-1303"],
         ),
     ],
     "Heat exchange": [
@@ -70,7 +70,7 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "heat_exchanger",
             "Feed/product exchanger",
             {"exchanger_type": "shell and tube", "duty": 18.5, "area": 640},
-            ["TIC-1009", "TIC-1111"],
+            ["TIC-1009", "TIC-1111", "TIC-1304", "FIC-1305", "TIC-1306", "PIC-1307"],
         ),
     ],
     "Furnaces": [
@@ -79,7 +79,7 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "furnace",
             "Atmospheric furnace",
             {"duty": 42, "burners": 12, "fuel": "fuel gas"},
-            ["TIC-1104", "TIC-1209", "FIC-1210"],
+            ["TIC-1104", "TIC-1209", "FIC-1210", "FIC-1308", "FIC-1309", "PIC-1310", "FIC-1311"],
         ),
     ],
     "Distillation": [
@@ -88,21 +88,21 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "column",
             "Atmospheric column",
             {"trays": 48, "diameter": 6.2, "height": 52},
-            ["FIC-1101", "TIC-1213", "FIC-1214"],
+            ["FIC-1101", "TIC-1213", "FIC-1214", "FIC-1312", "PIC-1313", "TIC-1314", "LIC-1315"],
         ),
         (
             "D-1106",
             "vessel",
             "Overhead accumulator",
             {"volume": 85, "design_pressure": 3.5, "design_temperature": 120},
-            ["LIC-1106", "LIC-1113", "LIC-1211"],
+            ["LIC-1106", "LIC-1113", "LIC-1211", "FIC-1316"],
         ),
         (
             "P-1102",
             "pump",
             "Reflux pump",
             {"pump_type": "centrifugal", "rated_flow": 310, "power": 160},
-            ["FIC-1102"],
+            ["FIC-1102", "FIC-1317"],
         ),
     ],
     "Reaction": [
@@ -111,7 +111,7 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "vessel",
             "Reactor",
             {"volume": 120, "design_pressure": 95, "design_temperature": 420},
-            ["TIC-1005"],
+            ["TIC-1005", "FIC-1318", "PIC-1319", "TIC-1320"],
         ),
     ],
     "Recycle": [
@@ -120,7 +120,7 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "pump",
             "Recycle pump",
             {"pump_type": "centrifugal", "rated_flow": 140, "power": 75},
-            ["FIC-1003"],
+            ["FIC-1003", "FIC-1321", "PIC-1322"],
         ),
     ],
     "Separation": [
@@ -129,14 +129,14 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "vessel",
             "Product separator",
             {"volume": 60, "design_pressure": 12, "design_temperature": 180},
-            ["PIC-1002", "LIC-1004", "LIC-1010"],
+            ["PIC-1002", "LIC-1004", "LIC-1010", "LIC-1323", "FIC-1324"],
         ),
         (
             "V-1105",
             "vessel",
             "Surge drum",
             {"volume": 45, "design_pressure": 8, "design_temperature": 150},
-            ["LIC-1105"],
+            ["LIC-1105", "PIC-1325", "TIC-1326"],
         ),
     ],
     "Compression": [
@@ -145,14 +145,14 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "compressor",
             "Recycle gas compressor",
             {"compressor_type": "centrifugal", "power": 2800},
-            ["PIC-1103", "PIC-1207"],
+            ["PIC-1103", "PIC-1207", "FIC-1327", "TIC-1328", "PIC-1329"],
         ),
         (
             "V-1208",
             "vessel",
             "Compressor suction drum",
             {"volume": 18, "design_pressure": 40, "design_temperature": 80},
-            ["LIC-1208"],
+            ["LIC-1208", "LIC-1330"],
         ),
     ],
     "Hydrotreating": [
@@ -161,14 +161,14 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "vessel",
             "Hydrotreating reactor",
             {"volume": 95, "design_pressure": 110, "design_temperature": 430},
-            ["PIC-1202", "TIC-1203", "FIC-1206", "FIC-1201"],
+            ["PIC-1202", "TIC-1203", "FIC-1206", "FIC-1201", "FIC-1331", "TIC-1332"],
         ),
         (
             "V-1204",
             "vessel",
             "High-pressure separator",
             {"volume": 70, "design_pressure": 105, "design_temperature": 90},
-            ["LIC-1204", "AIC-1205"],
+            ["LIC-1204", "AIC-1205", "PIC-1333", "FIC-1334"],
         ),
     ],
     "Treating": [
@@ -177,7 +177,7 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "column",
             "Amine absorber",
             {"trays": 20, "diameter": 1.8, "height": 24},
-            ["LIC-1216", "TIC-1114", "LIC-1107"],
+            ["LIC-1216", "TIC-1114", "LIC-1107", "FIC-1337", "TIC-1338", "PIC-1339"],
         ),
     ],
     "Sulfur recovery": [
@@ -186,7 +186,7 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "vessel",
             "Claus reactor",
             {"volume": 35, "design_pressure": 1.5, "design_temperature": 350},
-            ["TIC-1226"],
+            ["TIC-1226", "FIC-1340", "TIC-1341", "LIC-1342"],
         ),
     ],
     "Utilities": [
@@ -195,14 +195,14 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "pump",
             "Cooling water pump",
             {"pump_type": "centrifugal", "rated_flow": 1800, "power": 630},
-            ["FIC-1219", "TIC-1220"],
+            ["FIC-1219", "TIC-1220", "TIC-1345"],
         ),
         (
             "V-1218",
             "vessel",
             "Condensate drum",
             {"volume": 25, "design_pressure": 6, "design_temperature": 165},
-            ["LIC-1218", "FIC-1109", "PIC-1217"],
+            ["LIC-1218", "FIC-1109", "PIC-1217", "PIC-1343", "FIC-1344", "LIC-1347"],
         ),
     ],
     "Water treatment": [
@@ -211,9 +211,15 @@ EQUIPMENT: dict[str, list[tuple[str, str, str, dict[str, Any], list[str]]]] = {
             "tank",
             "Equalization tank",
             {"capacity": 3500, "product": "Process water"},
-            ["LIC-1223", "FIC-1222", "AIC-1224"],
+            ["LIC-1223", "FIC-1222", "AIC-1224", "FIC-1348", "AIC-1349"],
         ),
-        ("TK-1225", "tank", "Slop tank", {"capacity": 1200, "product": "Slop oil"}, ["LIC-1225"]),
+        (
+            "TK-1225",
+            "tank",
+            "Slop tank",
+            {"capacity": 1200, "product": "Slop oil"},
+            ["LIC-1225", "LIC-1350"],
+        ),
     ],
 }
 # Where the equipment of one area feeds the next (the "feeds" relations of the demo).
@@ -399,7 +405,7 @@ def test_the_shipped_map_is_the_demo_scenario():
         "deploy/demo/plantcraft-50-loops-map.json is out of date: python -m tests.test_demo_map"
     )
     shipped = json.loads(MAP.read_text(encoding="utf-8"))
-    assert len(shipped["loops"]) == 50
+    assert len(shipped["loops"]) == 100
     assert all(row["loop_type"] for row in shipped["loops"])
 
 
@@ -432,7 +438,7 @@ def test_the_shipped_map_imports_cleanly_against_the_demo_plant(tmp_path, monkey
         assert again["issues"] == [] and again["changes"] == []
         assets = client.app.state.runtime.platform.workspace.assets
         loops = [item for item in assets.list() if item["kind"] == "loop"]
-        assert len(loops) == 50
+        assert len(loops) == 100
         # The loops' units are the ones the assets sheet names, each holding its areas.
         units = [item for item in assets.list() if item["kind"] == "unit"]
         assert sorted(item["asset_id"] for item in units) == sorted(UNITS)
@@ -447,7 +453,7 @@ def test_the_shipped_map_imports_cleanly_against_the_demo_plant(tmp_path, monkey
         assert all(
             record.get("criticality") and record.get("action") for record in records.values()
         )
-        assert assets.counts()["instrument"] == 50 and assets.counts()["control_valve"] == 50
+        assert assets.counts()["instrument"] == 100 and assets.counts()["control_valve"] == 100
         # One signal, several assets: the PV is the loop's and its transmitter's.
         users = assets.signal_assets(["CPM.Loops.FIC-1003.PV"])["CPM.Loops.FIC-1003.PV"]
         assert {item["asset_id"] for item in users} == {"FIC-1003", "FT-1003"}

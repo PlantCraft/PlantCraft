@@ -7,6 +7,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 ## [Unreleased]
 
+### Added
+
+- **The demo plant has 100 loops, most of them healthy.** Beside the 50 loops of the demo story (41 with a known problem), the Simulator now serves 50 healthy, well-tuned loops (`FIC-1301` to `LIC-1350`) spread over every unit and area, so the demo reads as a real plant where a minority of loops needs a look instead of a plant where almost every loop is in trouble. The plant map (`deploy/demo/plantcraft-50-loops-map.json`, same file name) places them on the plant's equipment with their transmitters and valves; the process display keeps the 50 loops of the story.
+
 ## [0.6.1] - 2026-11-09
 
 ### Added

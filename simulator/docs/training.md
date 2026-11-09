@@ -1,6 +1,6 @@
 # Training on the loop portfolio
 
-An instructor can make the 50-loop portfolio misbehave on a schedule, keep the answer key apart
+An instructor can make the 100-loop portfolio misbehave on a schedule, keep the answer key apart
 from what trainees see, and save, restore, freeze or speed up the plant. Every command acts on
 the server's state file (`--state-db`, `SIMCRAFT_STATE_DB`). None of them needs the network or a
 writable OPC UA node.
