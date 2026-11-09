@@ -33,6 +33,11 @@ mantener o seguir su setpoint.
   lazo.
 - `pv_span` (por defecto none): el span de ingeniería de la PV. Cuando se da, es la escala del
   lazo; vacío, la escala es el tamaño del setpoint (mediana de |SP|) en la ventana.
+- `setpoint_settle_minutes` (por defecto 20): después de un cambio de setpoint, el camino de la PV
+  hasta el nuevo setpoint queda fuera hasta que la PV lo alcanza por primera vez (lo cruza o entra
+  en la banda), como máximo estos minutos. Responder a un cambio de setpoint es el trabajo del
+  lazo, no un error; un sobreimpulso o una aproximación lenta más allá de ese tiempo siguen
+  contando. 0 cuenta todas las muestras.
 
 ## Cómo leer el hallazgo
 

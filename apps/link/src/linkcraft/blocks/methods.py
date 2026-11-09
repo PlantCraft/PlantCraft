@@ -50,6 +50,7 @@ GROUPS = {
     "op_saturation_fraction": "Valve and output",
     "op_travel_reversal": "Valve and output",
     "stiction_screening": "Valve and output",
+    "output_drift": "Valve and output",
     "oscillation_autocorrelation": "Oscillation and noise",
     "sensor_noise_ratio": "Oscillation and noise",
     "interaction_cross_correlation": "Oscillation and noise",

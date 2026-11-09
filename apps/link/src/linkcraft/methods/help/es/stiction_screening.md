@@ -61,6 +61,11 @@ perturbación las mantiene en fase o en contrafase.
 - `horch_even` (por defecto 0.8): con `op_is` = `controller_output`, una correlación cruzada en
   desfase 0 de al menos esta fracción de su mayor valor (un ciclo en fase o en contrafase) deja
   fuera la evidencia de forma. La relación siempre se informa como `horch_index`.
+- `shape_min_regularity` (por defecto 5): con `op_is` = `valve_command`, una PV cuyo ciclo es
+  menos regular que esto (la regularidad de Thornhill, Huang y Zhang 2003) deja fuera la evidencia
+  de forma, salvo que la evidencia de pegado y salto sea de al menos 0.5: medios ciclos
+  triangulares que no se repiten como un ciclo límite son la PV respondiendo a escalones (un
+  cambio de setpoint, una carga que cambia cada cierto tiempo), no una válvula que se pega.
 
 ## Cómo leer el hallazgo
 

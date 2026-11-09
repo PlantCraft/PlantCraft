@@ -25,6 +25,16 @@ caused by aggressive tuning, a sticky valve or an oscillating disturbance from a
 - `min_autocorrelation` (default 0.3): the ACF peak from which a repeat counts as oscillation.
 - `min_regularity` (default 1): the regularity r from which the oscillation counts as sustained
   (Thornhill, Huang and Zhang use 1).
+- `min_amplitude_percent` (default 0.5): the smallest spread (standard deviation) of the signal,
+  in percent of the loop's scale (median |SP|, else |PV|), that is judged; a smaller cycle is too
+  small to act on and is not flagged.
+- `setpoint_settle_minutes` (default 20): on the control error, the PV's travel to each new
+  setpoint is set to zero (until it first reaches it, at most these minutes), so a series of
+  setpoint steps does not read as a cycle. 0 keeps it.
+
+A flagged repetition is named by its shape (the half-cycle fit of He et al. 2007): a sustained
+cycle close to a sine (tuning, a cycling disturbance), or recurring upsets that come back on a
+schedule without being a cycle (a feed or a consumer switching every few hours).
 
 ## How to read the finding
 

@@ -37,6 +37,7 @@ from linkcraft.blocks.run import recorded_ports as _recorded
 from linkcraft.catalog.registry import get_method_spec
 from linkcraft.config import AnalysisConfig, LoopConfig
 from linkcraft.data.frames import build_loop_frame, semantic_raw
+from linkcraft.engine.causes import likely_causes
 from linkcraft.i18n import t
 
 logger = logging.getLogger(__name__)
@@ -200,6 +201,17 @@ def analyze_loop(
             alerts=[],
             operating_state_reason=t("This algorithm gives no loop health; see its outputs."),
         )
+    # The likely cause the findings point to (``engine.causes``): what the loop list names.
+    causes = likely_causes(results, limit=1) if health else []
+    summary["cause"] = (
+        {
+            "cause_id": causes[0]["cause_id"],
+            "method_id": causes[0]["evidence"][0]["method_id"],
+            "finding": causes[0]["evidence"][0]["finding"],
+        }
+        if causes
+        else None
+    )
     summary["method_count"] = len(results)
     summary["blocks"] = _blocks(plan, values)
     summary["wires"] = wires(plan, values)

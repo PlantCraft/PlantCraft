@@ -18,8 +18,9 @@ and often come from noise or aggressive tuning.
   100. Fast loops (flow) are allowed more and slow or averaging ones less by their loop type.
 - `max_reversals_per_hour` (default 60): the number of direction changes per hour that scores
   100.
-- `reversal_epsilon` (default 0.05): the smallest output move, in %, counted when looking for a
-  direction change.
+- `reversal_epsilon` (default 0.5): how far, in %, the output must turn back from its last
+  extreme to count as a reversal (a hysteresis, as a valve's deadband sees it): chatter smaller
+  than that never moves the stem, whatever the sampling rate.
 
 ## How to read the finding
 

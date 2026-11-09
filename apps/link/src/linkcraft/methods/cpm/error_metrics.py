@@ -34,6 +34,7 @@ from plantcraft_sdk.methods.utils import (
 )
 from pydantic import BaseModel, Field
 
+from linkcraft.methods.cpm._transients import setpoint_transients
 from linkcraft.methods.references import BAUER_2016_CPM_SURVEY
 
 
@@ -66,6 +67,12 @@ class ErrorMetricsParameters(BaseModel):
     pv_span: float | None = Field(
         default=None, gt=0.0, description="PV span (engineering range); empty: median |SP|."
     )
+    setpoint_settle_minutes: float = Field(
+        default=20.0,
+        ge=0.0,
+        description="After a setpoint change, the PV's travel to the new setpoint is left out, "
+        "for at most these minutes (0: every sample counts).",
+    )
 
 
 METHOD_METADATA = MethodMetadata(
@@ -76,13 +83,17 @@ METHOD_METADATA = MethodMetadata(
     references=[BAUER_2016_CPM_SURVEY],
     required_signals=["pv", "sp"],
     implemented_formula=(
-        "error=pv-sp; IAE=sum(abs(error))*dt; ISE=sum(error^2)*dt; score=MAE/tolerance, "
+        "error=pv-sp outside setpoint transients (from a setpoint change until the PV first "
+        "reaches the new setpoint, at most setpoint_settle_minutes); IAE=sum(abs(error))*dt; "
+        "ISE=sum(error^2)*dt; score=MAE/tolerance, "
         "tolerance=error_tolerance or relative_tolerance_percent/100*scale, "
         "scale=pv_span or median(|SP|)."
     ),
     assumptions=[
         "PV and SP are expressed in the same engineering unit.",
         "SP movement is meaningful for the selected window.",
+        "The PV's travel to a new setpoint is the loop answering the operator, not an error to "
+        "hold against it; overshoot and a slow approach past the settle time still count.",
         "Without a span, the setpoint's size is the loop's scale (a PV far from zero).",
     ],
     limitations=[
@@ -134,8 +145,21 @@ def run(input_data: ErrorMetricsInput, parameters: ErrorMetricsParameters) -> Me
             METHOD_METADATA, dataset.loop_id, t("PV and SP do not contain aligned numeric data.")
         )
 
-    error = frame["pv"].to_numpy(dtype=float) - frame["sp"].to_numpy(dtype=float)
+    pv = frame["pv"].to_numpy(dtype=float)
+    sp = frame["sp"].to_numpy(dtype=float)
     dt = estimate_sample_seconds(dataset, frame.index)
+    tolerance, band, scale, basis = _tolerances(parameters, sp)
+    transient = setpoint_transients(
+        pv,
+        sp,
+        band=band,
+        max_samples=int(round(parameters.setpoint_settle_minutes * 60.0 / max(dt, 1e-9))),
+        scale=scale,
+    )
+    # Never judge a loop on a sliver of its window: with the setpoint always moving, all counts.
+    if (~transient).sum() < max(3, 0.25 * len(transient)):
+        transient = np.zeros_like(transient)
+    error = (pv - sp)[~transient]
     abs_error = np.abs(error)
     mae = float(np.mean(abs_error))
     rmse = float(np.sqrt(np.mean(error**2)))
@@ -143,7 +167,6 @@ def run(input_data: ErrorMetricsInput, parameters: ErrorMetricsParameters) -> Me
     ise = float(np.sum(error**2) * dt)
     elapsed = np.arange(len(error), dtype=float) * dt
     itae = float(np.sum(elapsed * abs_error) * dt)
-    tolerance, band, scale, basis = _tolerances(parameters, frame["sp"].to_numpy(dtype=float))
     within_band_fraction = float(np.mean(abs_error <= band))
     score = normalized_score(mae, tolerance)
 
@@ -171,6 +194,7 @@ def run(input_data: ErrorMetricsInput, parameters: ErrorMetricsParameters) -> Me
             "performance_component": 100.0 - score,
             "sample_seconds": dt,
             "valid_samples": int(len(frame)),
+            "setpoint_transient_fraction": float(np.mean(transient)) if transient.size else 0.0,
         },
     )
 

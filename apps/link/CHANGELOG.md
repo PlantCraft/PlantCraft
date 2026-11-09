@@ -6,6 +6,33 @@ What changed in each version of PlantCraft Analytics (`linkcraft`), newest first
 
 ## [Unreleased]
 
+### Added
+
+- **Output drift** (`output_drift`): the output walking steadily one way, hour after hour, while
+  the PV holds its setpoint (a drifting transmitter, fouling or a slow load change). A diagnostic
+  in the flow, level and slow-loop algorithms; it names the cause "Slow drift".
+- A loop's row in Results and Overview names its likely cause beside the health score.
+
+### Changed
+
+- Loop health and its diagnostics, checked against the Simulator's 100 loops with known faults
+  (50 faulty, 50 healthy): the likely cause now matches the known fault in all 100 at the live
+  sampling, 98 of 100 on the 30 s backfill (it was about 22 of 50).
+  - The PV-SP error leaves out the PV's travel to a new setpoint (`setpoint_settle_minutes`), so a
+    loop whose setpoint moves often no longer reads as a bad loop.
+  - Oscillation ignores the error while the PV travels to a new setpoint, needs an amplitude worth
+    acting on (`min_amplitude_percent`) and tells a steady cycle from recurring upsets.
+  - Stiction no longer reads a valve command's steps as a stick-slip shape when the PV does not
+    cycle (`shape_min_regularity`).
+  - Sensor noise is measured from the sample-to-sample jitter (robust to the loop's own moves) and
+    judged against the loop's scale (`relative_noise_percent`); it is a diagnostic in the level
+    and slow-loop algorithms too.
+  - Valve travel counts reversals with a hysteresis (`reversal_epsilon` 0.5 %), so a healthy
+    controller's small corrections no longer read as wear.
+  - Likely causes: "Sluggish tuning" needs a slow error (not a Harris warning alone) and no
+    oscillation; a cycle reads as "Aggressive tuning or a cycling disturbance", irregular upsets
+    as a recurring disturbance; manual mode is "Operation in manual".
+
 ## [0.6.1] - 2026-11-09
 
 ### Changed

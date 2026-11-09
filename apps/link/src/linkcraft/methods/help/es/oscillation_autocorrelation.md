@@ -27,6 +27,17 @@ oscilante de otro lazo.
   cuenta como oscilación.
 - `min_regularity` (por defecto 1): la regularidad r a partir de la cual la oscilación cuenta como
   sostenida (Thornhill, Huang y Zhang usan 1).
+- `min_amplitude_percent` (por defecto 0.5): la menor dispersión (desviación estándar) de la señal,
+  en porcentaje de la escala del lazo (mediana de |SP|, si no de |PV|), que se juzga; un ciclo
+  menor es demasiado pequeño para actuar y no se marca.
+- `setpoint_settle_minutes` (por defecto 20): en el error de control, el camino de la PV hasta cada
+  nuevo setpoint se pone en cero (hasta alcanzarlo por primera vez, como máximo estos minutos),
+  para que una serie de escalones de setpoint no parezca un ciclo. 0 lo mantiene.
+
+Una repetición marcada se nombra por su forma (el ajuste de medio ciclo de He et al. 2007): un
+ciclo sostenido cercano a una senoide (sintonía, una perturbación oscilante) o perturbaciones
+recurrentes que vuelven en un horario sin ser un ciclo (una carga o un consumidor que cambia cada
+pocas horas).
 
 ## Cómo leer el hallazgo
 

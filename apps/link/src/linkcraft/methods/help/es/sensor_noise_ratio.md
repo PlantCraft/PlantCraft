@@ -2,9 +2,11 @@
 
 ## Qué detecta
 
-Ruido de alta frecuencia en la medición: la dispersión de los cambios de muestra a muestra
-(dividida por √2, el nivel de ruido del ruido blanco) comparada con la dispersión total de la PV,
-y en términos absolutos. El ruido pasa por el controlador a la válvula y la desgasta.
+Ruido en la medición, juzgado en la escala del propio lazo: el ruido de una muestra a la
+siguiente, estimado con las segundas diferencias de la PV (con la desviación absoluta mediana, para
+que los escalones de setpoint y los cambios de carga no cuenten), como fracción del rango de la PV
+o, sin él, del tamaño del setpoint. El ruido pasa por el controlador hasta la válvula, la desgasta
+y oculta lo que hace el lazo.
 
 ## Referencia
 
@@ -14,19 +16,29 @@ y en términos absolutos. El ruido pasa por el controlador a la válvula y la de
 
 ## Parámetros
 
-- `noise_ratio_threshold` (por defecto 0.35): la fracción de la variación de la PV atribuida al
-  ruido en la que la parte de relación de la puntuación es completa (pesa 35%).
-- `noise_abs_tolerance` (por defecto 0.5): la amplitud del ruido, en la unidad de la PV, en la que
-  la parte absoluta de la puntuación llega a 100.
+- `relative_noise_percent` (por defecto 2): el ruido, en porcentaje de la escala del lazo, que
+  puntúa 100 (el peor); alerta desde un cuarto de eso.
+- `noise_ratio_threshold` (por defecto 0.35): la fracción de la variación de la PV explicada por el
+  ruido en la que el ruido pesa por completo. Una PV que oscila o se mueve mucho tiene la mayor
+  parte de su variación fuera del ruido, y sus movimientos de muestra a muestra son su ciclo más
+  que ruido: la puntuación baja.
+- `noise_abs_tolerance` (por defecto ninguno): un ruido absoluto, en la unidad de la PV, que
+  puntúa 100. Vacío: una fracción de la escala del lazo.
+- `pv_span` (por defecto ninguno): el rango de ingeniería de la PV; vacío, la escala es la mediana
+  de |SP| (o de |PV| sin setpoint).
 
 ## Cómo leer el hallazgo
 
-"El ruido de alta frecuencia es el 42% de la variación total de la medición." Un diagnóstico que
-se muestra como alerta. Un ruido alto sugiere revisar el transmisor, su filtrado y la acción
-derivativa; las mediciones de flujo son por naturaleza más ruidosas que las de temperatura.
+"Ruido de muestra a muestra de 1,3 (2,6 % de la escala del lazo), 95% de la variación de la
+medición." Un diagnóstico mostrado como alerta, fuera de la nota. Un ruido por encima de cerca del
+0,5 % de la escala en un lazo ajustado merece una mirada al transmisor, sus tomas de impulso, su
+filtrado y la acción derivativa; los analizadores son naturalmente más ruidosos que las
+temperaturas.
 
 ## Límites
 
-- Una dinámica rápida real del proceso parece ruido sin el contexto del proceso.
-- En una grilla gruesa el promediado oculta el ruido; la tolerancia absoluta está en la unidad de
-  la PV.
+- Un proceso más rápido que el muestreo (un caudal rápido muestreado una vez por minuto) parece
+  ruido.
+- En una grilla gruesa el promedio oculta el ruido.
+- Una PV mantenida cerca de cero deja la tolerancia relativa estrecha: dé al lazo su `pv_span` o un
+  `noise_abs_tolerance` absoluto.

@@ -8,6 +8,12 @@
   well-tuned flow, pressure, temperature, level and composition loops beside the 50 of the
   PlantCraft demo story, so the portfolio is 100 loops and 405 tags, 41 with a known problem.
 
+### Changed
+
+- The setpoint-activity loops are tuned crisp enough to reach each new setpoint before the next
+  move (they never got there in 30 minutes), and a sensor drift is a slow sawtooth (two days) that
+  is recalibrated back, instead of a bias that grew until it stuck.
+
 ## [0.6.1] - 2026-11-09
 
 No change of its own; released with the suite.

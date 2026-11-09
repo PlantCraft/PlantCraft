@@ -30,6 +30,10 @@ setpoint.
 - `relative_band_percent` (default 1): the on-target band, in percent of the loop's scale.
 - `pv_span` (default none): the PV's engineering span. When given it is the loop's scale; empty,
   the scale is the size of the setpoint (median |SP|) over the window.
+- `setpoint_settle_minutes` (default 20): after a setpoint change, the PV's travel to the new
+  setpoint is left out until the PV first reaches it (crosses it or enters the band), for at most
+  these minutes. Answering a setpoint move is the loop's job, not an error; an overshoot or a slow
+  approach past this time still counts. 0 keeps every sample.
 
 ## How to read the finding
 

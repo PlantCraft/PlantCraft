@@ -58,6 +58,11 @@ oposição de fase.
 - `horch_even` (padrão 0.8): com `op_is` = `controller_output`, uma correlação cruzada na
   defasagem 0 de pelo menos esta fração do seu maior valor (um ciclo em fase ou em oposição de
   fase) deixa de fora a evidência de forma. A razão é sempre informada como `horch_index`.
+- `shape_min_regularity` (padrão 5): com `op_is` = `valve_command`, uma PV cujo ciclo é menos
+  regular que isto (a regularidade de Thornhill, Huang e Zhang 2003) deixa a evidência de forma de
+  fora, a menos que a evidência de agarra-solta seja de pelo menos 0.5: meios ciclos triangulares
+  que não se repetem como um ciclo limite são a PV respondendo a degraus (uma troca de setpoint,
+  uma carga que muda de tempos em tempos), não uma válvula agarrando.
 
 ## Como ler o achado
 

@@ -27,6 +27,16 @@ outra malha.
   oscilação.
 - `min_regularity` (padrão 1): a regularidade r a partir da qual a oscilação conta como sustentada
   (Thornhill, Huang e Zhang usam 1).
+- `min_amplitude_percent` (padrão 0.5): a menor dispersão (desvio padrão) do sinal, em percentual
+  da escala da malha (mediana de |SP|, senão de |PV|), que é julgada; um ciclo menor é pequeno
+  demais para agir e não é sinalizado.
+- `setpoint_settle_minutes` (padrão 20): no erro de controle, o caminho da PV até cada novo
+  setpoint vira zero (até chegar nele pela primeira vez, no máximo estes minutos), para que uma
+  série de degraus de setpoint não pareça um ciclo. 0 mantém.
+
+Uma repetição sinalizada é nomeada pela forma (o ajuste de meio ciclo de He et al. 2007): um ciclo
+sustentado próximo de uma senoide (sintonia, um distúrbio oscilante) ou distúrbios recorrentes que
+voltam num horário sem ser um ciclo (uma carga ou um consumidor que muda a cada poucas horas).
 
 ## Como ler o achado
 

@@ -169,6 +169,7 @@ class AnalysisConfig(BaseModel):
             "stiction_screening",
             "oscillation_autocorrelation",
             "sensor_noise_ratio",
+            "output_drift",
         ]
     )
 

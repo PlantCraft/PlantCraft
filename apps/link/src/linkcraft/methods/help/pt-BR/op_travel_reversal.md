@@ -18,8 +18,9 @@ costumam vir de ruído ou de sintonia agressiva.
 - `max_travel_per_hour` (padrão 200): o curso acumulado da saída, em % por hora, que pontua 100.
   Malhas rápidas (vazão) recebem mais, e lentas ou de média recebem menos, pelo seu tipo de malha.
 - `max_reversals_per_hour` (padrão 60): o número de mudanças de sentido por hora que pontua 100.
-- `reversal_epsilon` (padrão 0.05): o menor movimento da saída, em %, contado ao procurar uma
-  mudança de sentido.
+- `reversal_epsilon` (padrão 0.5): quanto, em %, a saída precisa voltar do seu último extremo para
+  contar como reversão (uma histerese, como a zona morta da válvula vê): oscilações menores que
+  isso nunca movem a haste, qualquer que seja a taxa de amostragem.
 
 ## Como ler o achado
 

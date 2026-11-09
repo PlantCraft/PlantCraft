@@ -427,6 +427,8 @@ export type ResultRow = {
   /** The algorithm's tags and responsible group. */
   tags: string[]; group: { id: string; name: string } | null;
   limiting: string | null;
+  /** A loop's likely cause, named in the reader's language (it names the problem first). */
+  cause?: string | null;
   finding: string;
   at: string | null;
   path: string;

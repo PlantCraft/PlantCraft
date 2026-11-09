@@ -22,6 +22,7 @@ from linkcraft.api.routers.signals import _row as signal_row
 from linkcraft.api.scope import sees_loop
 from linkcraft.blocks.algorithms import SIGNAL_QUALITY
 from linkcraft.catalog.loop_types import algorithm_id
+from linkcraft.engine.causes import cause_name
 from linkcraft.i18n import t
 from linkcraft.loops.suite import SUITE_STATUS
 from linkcraft.signals.publish import STATUS as SIGNAL_STATUS
@@ -115,6 +116,7 @@ def _loop_rows(rt: Any) -> Iterable[dict[str, Any]]:
         health = row["health"]
         status = SUITE_STATUS.get(row["status"], "unknown") if health is not None else "unknown"
         limiting = row["limiting"] or {}
+        cause = row.get("cause") or {}
         yield {
             "kind": "loop",
             "asset_type": "loop",
@@ -128,7 +130,9 @@ def _loop_rows(rt: Any) -> Iterable[dict[str, Any]]:
             "algorithm": _algorithm(algorithms, algorithm_id(row["profile_id"])),
             **_meta(algorithms, algorithm_id(row["profile_id"])),
             "limiting": limiting.get("method_id"),
-            "finding": limiting.get("finding") or row["state_reason"] or "",
+            # The likely cause names the problem; the limiting method is what the score lost.
+            "cause": cause_name(cause.get("cause_id")) or None,
+            "finding": cause.get("finding") or limiting.get("finding") or row["state_reason"] or "",
             "at": row["analyzed_at"],
             "path": f"/loops/{quote(row['loop_id'], safe='')}",
         }

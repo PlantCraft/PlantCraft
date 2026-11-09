@@ -11,6 +11,10 @@ Every release of PlantCraft (ProcessCraft until 2026-10-27), `plantcraft-sdk` an
 
 - **The demo plant has 100 loops, most of them healthy.** Beside the 50 loops of the demo story (41 with a known problem), the Simulator now serves 50 healthy, well-tuned loops (`FIC-1301` to `LIC-1350`) spread over every unit and area, so the demo reads as a real plant where a minority of loops needs a look instead of a plant where almost every loop is in trouble. The plant map (`deploy/demo/plantcraft-50-loops-map.json`, same file name) places them on the plant's equipment with their transmitters and valves; the process display keeps the 50 loops of the story.
 
+### Fixed
+
+- Analytics: loop health and its likely cause, checked against the Simulator's 100 loops with known faults (50 faulty, 50 healthy), match in all 100 at live sampling and 98 on the 30 s backfill (about 22 of 50 before): the PV's travel to a new setpoint is no longer counted as error or oscillation, small or irregular cycles, valve-command steps, a controller's small corrections and a loop's own moves no longer read as oscillation, stiction, wear or noise, and a new diagnostic, Output drift, finds a drifting transmitter or slow fouling. Each loop's row names its likely cause. In the Simulator, the setpoint-activity loops reach their setpoints and a sensor drift is a slow, recalibrated sawtooth.
+
 ## [0.6.1] - 2026-11-09
 
 ### Added
