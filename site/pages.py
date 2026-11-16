@@ -268,7 +268,7 @@ apptabs = "".join(
 )
 apppanes = "".join(
     f'''<div class="apane{" on" if k == 0 else ""}" data-i="{k}"><div><h3 class="aname"><img src="{svg("apps/" + i + ".svg")}" alt="">{n}</h3><p class="adesc">{d}</p><ul class="check">{"".join(f"<li>{b}</li>" for b in bl)}</ul></div>
-<div class="ashot">{f'<img src="{jpg(c)}" alt="" class="zoom"><span class="zh">Click to enlarge</span>' if c else "<span>Screenshot to come</span>"}</div></div>'''
+<div class="ashot">{f'<img src="{jpg(c)}" alt="" class="zoom"><span class="zh">Click to enlarge</span>' if c else f'<img src="{svg("apps/" + i + ".svg")}" alt="" class="abig">'}</div></div>'''
     for k, (i, n, c, d, bl) in enumerate(APPS)
 )
 _cliptabs = "".join(
