@@ -35,7 +35,7 @@ backup. The one `preview` branch is shared by every session; the last push wins.
 ## On the Mac mini: switch it on (once)
 
 ```sh
-cd ~/processcraft-ci && git pull   # any clone of processcraft; first time: git clone https://github.com/PlantCraft/PlantCraft ~/processcraft-ci
+cd ~/processcraft-ci && git pull   # any clone of processcraft; first time: git clone https://github.com/jonathanwvd/PlantCraft ~/processcraft-ci
 dev/suite-dev on        # every app the suite runs; or name some: dev/suite-dev on linkcraft
 dev/suite-dev status    # what each app shows (branch, commit, time of the build)
 dev/suite-dev logs      # the builds, live

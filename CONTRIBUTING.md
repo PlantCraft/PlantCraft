@@ -56,7 +56,7 @@ same rules apply, and you should be able to explain every line.
 Requirements: Python 3.12 or 3.13, Node.js 22 and npm.
 
 ```bash
-git clone https://github.com/PlantCraft/PlantCraft.git plantcraft
+git clone https://github.com/jonathanwvd/PlantCraft.git plantcraft
 cd plantcraft
 python3 -m venv .venv && . .venv/bin/activate
 python -m pip install -e ".[server,opcua,dev]"

@@ -46,7 +46,7 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/PlantCraft/PlantCraft/tree/main/apps/historian"
+Repository = "https://github.com/jonathanwvd/PlantCraft/tree/main/apps/historian"
 
 [project.scripts]
 histcraft = "histcraft.cli:main"

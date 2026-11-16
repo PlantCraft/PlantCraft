@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        The guides in [docs/](https://github.com/PlantCraft/PlantCraft/tree/main/docs) answer most questions; [docs/install.md](https://github.com/PlantCraft/PlantCraft/blob/main/docs/install.md) covers installing. Leave out passwords, keys, host names and plant data that are not yours to share.
+        The guides in [docs/](https://github.com/jonathanwvd/PlantCraft/tree/main/docs) answer most questions; [docs/install.md](https://github.com/jonathanwvd/PlantCraft/blob/main/docs/install.md) covers installing. Leave out passwords, keys, host names and plant data that are not yours to share.
   - type: textarea
     id: question
     attributes:

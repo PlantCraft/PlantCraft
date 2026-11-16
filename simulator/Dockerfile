@@ -47,7 +47,7 @@ LABEL org.opencontainers.image.title="simcraft" \
       org.opencontainers.image.revision="${REVISION}" \
       org.opencontainers.image.created="${CREATED}" \
       org.opencontainers.image.licenses="Apache-2.0" \
-      org.opencontainers.image.source="https://github.com/PlantCraft/PlantCraft" \
+      org.opencontainers.image.source="https://github.com/jonathanwvd/PlantCraft" \
       org.opencontainers.image.base.name="python:3.13.16-slim-trixie"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

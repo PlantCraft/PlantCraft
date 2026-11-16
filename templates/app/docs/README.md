@@ -18,7 +18,7 @@ installation. Read them in this order the first time; afterwards, jump to the on
 | [recipes/](recipes/README.md) | Code to add one more thing: search, widgets, events, Desk, a language model, signals, results, background work |
 
 The rules every app follows are in [`../AGENTS.md`](../AGENTS.md); the full app standard is
-`docs/app-standard.md` in the [PlantCraft repository](https://github.com/PlantCraft/PlantCraft).
+`docs/app-standard.md` in the [PlantCraft repository](https://github.com/jonathanwvd/PlantCraft).
 When this documentation and the standard differ, the standard wins.
 
 The other files here belong to the app itself and you keep them up to date as you work:

@@ -1,7 +1,8 @@
 """Builds PlantCraft's site into dist/: its pages, their assets and fonts, and the chat's knowledge.
 
-    python build.py [--owner PlantCraft] [--bundle plantcraft-0.6.1-linux-amd64-bundle] [--draft]
+    python build.py [--owner jonathanwvd] [--bundle plantcraft-0.6.1-linux-amd64-bundle] [--draft]
                     [--demo-url https://demo.example] [--contact team@example] [--security sec@example] [--noindex]
+    python build.py --static        # plain files for a static host (no sitechat server)
 
 Each page (index, pricing, partners, install; pages.py) and privacy.html is put in
 page/template.html with the links filled in; the logo and app marks come from docs/images and the
@@ -10,6 +11,10 @@ passages, which the chat answers from. Nothing in dist/ is secret: it is all ser
 Beside the page: privacy.html (what the site and the demo keep), robots.txt and
 .well-known/security.txt (RFC 9116). --noindex keeps search engines away (a site online for tests
 before its launch); --demo-url adds the live demo's button.
+
+--static builds the site as plain files: the home page (its pillars, apps and clips) and a privacy
+page in page/static.html, with no chat, visit counting, forms, pricing or partner pages, so any
+static host serves it (Cloudflare Pages, GitHub Pages) with no sitechat server behind it.
 """
 
 from __future__ import annotations
@@ -33,6 +38,9 @@ from sitechat.knowledge import Knowledge  # noqa: E402
 IMAGES = ROOT / "docs/images"
 MARKS = IMAGES / "apps"
 FONTS = ROOT / "ui/src/fonts"
+YOUTUBE = "https://www.youtube.com/@plantcraft_io"
+# What the static site leaves out of page/assets: the chat, the visit beacon and the stats page.
+SERVER_ONLY = ("chat.js", "visit.js", "stats.css")
 
 # The clips at the top of the page (page/assets/clips/<name>.webm, .mp4 and .jpg, recorded from
 # the demo by record_clips.py): name, tab label, what it shows.
@@ -133,8 +141,11 @@ def build(
     contact: str = "",
     noindex: bool = False,
     security: str = "",
+    static: bool = False,
 ) -> Path:
     gh = f"https://github.com/{owner}/PlantCraft"
+    if static:
+        return build_static(out, gh)
     banner = '<p class="draft">Draft: not published yet</p>' if draft else ""
     if contact:
         write = f'write to <a href="mailto:{escape(contact)}">{escape(contact)}</a>'
@@ -179,21 +190,9 @@ def build(
         built[fn] = _versioned(_fill(shell, values))
     if out.exists():
         shutil.rmtree(out)
-    shutil.copytree(HERE / "page/assets", out / "assets")
-    (out / "assets/fonts").mkdir()
-    for font in FONTS.glob("*.woff2"):
-        if "italic" not in font.name:
-            shutil.copy(font, out / "assets/fonts" / font.name)
-    for licence in FONTS.glob("OFL-*.txt"):
-        shutil.copy(licence, out / "assets/fonts" / licence.name)
-    (out / "assets/plantcraft.svg").write_text(mark("processcraft", 64))
+    _assets(out)
     for fn, html in built.items():
         (out / fn).write_text(html, encoding="utf-8")
-    (out / "assets/img/apps").mkdir(parents=True)
-    for name in ("logo.svg", "logo-mark.svg"):
-        shutil.copy(IMAGES / name, out / "assets/img" / name)
-    for svg in MARKS.glob("*.svg"):
-        shutil.copy(svg, out / "assets/img/apps" / svg.name)
     (out / "robots.txt").write_text(
         "User-agent: *\nDisallow: /\n" if noindex else "User-agent: *\nAllow: /\n"
     )
@@ -210,10 +209,64 @@ def build(
     return out
 
 
+def _assets(out: Path, skip: tuple[str, ...] = ()) -> None:
+    """The page's assets, the suite's fonts, its logo and the app marks."""
+    shutil.copytree(HERE / "page/assets", out / "assets", ignore=shutil.ignore_patterns(*skip))
+    (out / "assets/fonts").mkdir()
+    for font in FONTS.glob("*.woff2"):
+        if "italic" not in font.name:
+            shutil.copy(font, out / "assets/fonts" / font.name)
+    for licence in FONTS.glob("OFL-*.txt"):
+        shutil.copy(licence, out / "assets/fonts" / licence.name)
+    (out / "assets/plantcraft.svg").write_text(mark("processcraft", 64))
+    (out / "assets/img/apps").mkdir(parents=True)
+    for name in ("logo.svg", "logo-mark.svg"):
+        shutil.copy(IMAGES / name, out / "assets/img" / name)
+    for svg in MARKS.glob("*.svg"):
+        shutil.copy(svg, out / "assets/img/apps" / svg.name)
+
+
+def build_static(out: Path, gh: str) -> Path:
+    """The site as plain files, for a static host (see the module's docstring)."""
+    shell = (HERE / "page/static.html").read_text(encoding="utf-8")
+    built = {}
+    for fn, (title, body) in pages.STATIC.items():
+        scripts = (
+            '<script src="assets/showcase.js" defer></script>\n'
+            '<script src="assets/home.js" defer></script>\n'
+            if fn == "index.html"
+            else ""
+        )
+        values = {
+            "%%BODY%%": body.replace("%%SHOWCASE%%", showcase()),
+            "%%TITLE%%": title,
+            "%%DESCRIPTION%%": DESCRIPTIONS[fn],
+            "%%SCRIPTS%%": scripts,
+            "%%ROBOTS%%": "",
+            "%%GH%%": gh,
+            "%%DOCS%%": f"{gh}/blob/main",
+            "%%YOUTUBE%%": YOUTUBE,
+        }
+        built[fn] = _versioned(_fill(shell, values))
+    if out.exists():
+        shutil.rmtree(out)
+    _assets(out, SERVER_ONLY)
+    for fn, html in built.items():
+        (out / fn).write_text(html, encoding="utf-8")
+    (out / "robots.txt").write_text("User-agent: *\nAllow: /\n")
+    (out / ".well-known").mkdir()
+    expires = (datetime.now(timezone.utc) + timedelta(days=365)).strftime("%Y-%m-%dT00:00:00Z")
+    (out / ".well-known/security.txt").write_text(
+        f"Contact: {gh}/security/advisories/new\nExpires: {expires}\n"
+        f"Policy: {gh}/blob/main/SECURITY.md\n"
+    )
+    return out
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path, default=HERE / "dist")
-    parser.add_argument("--owner", default="PlantCraft", help="the GitHub organization")
+    parser.add_argument("--owner", default="jonathanwvd", help="the GitHub account")
     parser.add_argument("--bundle", default="plantcraft-0.6.1-linux-amd64-bundle")
     parser.add_argument("--draft", action="store_true", help="show a 'not published' banner")
     parser.add_argument(
@@ -224,6 +277,9 @@ def main() -> None:
         "--security", default="security@plantcraft.io", help="where security reports go"
     )
     parser.add_argument("--noindex", action="store_true", help="ask search engines to stay away")
+    parser.add_argument(
+        "--static", action="store_true", help="plain files for a static host, no server"
+    )
     args = parser.parse_args()
     out = build(
         args.out,
@@ -234,6 +290,7 @@ def main() -> None:
         args.contact,
         args.noindex,
         args.security,
+        args.static,
     )
     print(f"built {out}")
 

@@ -9,10 +9,10 @@ pieces fit: [architecture.md](architecture.md).
 ## Run it from source
 
 Requirements: Python 3.12 or 3.13 (asyncua, the OPC UA library, fails on 3.15:
-[#10](https://github.com/PlantCraft/PlantCraft/issues/10)), and Node.js 22 to build the interface.
+[#10](https://github.com/jonathanwvd/PlantCraft/issues/10)), and Node.js 22 to build the interface.
 
 ```bash
-git clone https://github.com/PlantCraft/PlantCraft.git plantcraft
+git clone https://github.com/jonathanwvd/PlantCraft.git plantcraft
 cd plantcraft
 python3 -m pip install -e sdk/python -e ".[server,opcua]"
 python3 -m pip install -e simulator      # the Simulator, the demo plant

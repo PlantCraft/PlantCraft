@@ -55,7 +55,7 @@ Clone PlantCraft beside your app and install it in the same Python (once):
 
 ```sh
 cd ..
-git clone https://github.com/PlantCraft/PlantCraft.git
+git clone https://github.com/jonathanwvd/PlantCraft.git
 cd PlantCraft
 python3 -m pip install -e sdk/python -e ".[server,opcua]" && python3 -m pip install -e simulator
 cd ../<your-app>

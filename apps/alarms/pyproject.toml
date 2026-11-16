@@ -31,7 +31,7 @@ e2e = [
 ]
 
 [project.urls]
-Repository = "https://github.com/PlantCraft/PlantCraft/tree/main/apps/alarms"
+Repository = "https://github.com/jonathanwvd/PlantCraft/tree/main/apps/alarms"
 
 [project.scripts]
 alarmcraft = "alarmcraft.cli:main"

@@ -19,9 +19,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/PlantCraft/PlantCraft"
-Repository = "https://github.com/PlantCraft/PlantCraft"
-Issues = "https://github.com/PlantCraft/PlantCraft/issues"
+Homepage = "https://github.com/jonathanwvd/PlantCraft"
+Repository = "https://github.com/jonathanwvd/PlantCraft"
+Issues = "https://github.com/jonathanwvd/PlantCraft/issues"
 
 [project.optional-dependencies]
 pi = [

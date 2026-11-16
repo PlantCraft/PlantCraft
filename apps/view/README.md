@@ -3,7 +3,7 @@
 # PlantCraft View
 
 Plant dashboards, trends and reports, as an app of the
-[PlantCraft](https://github.com/PlantCraft/PlantCraft) suite. In the suite's menu it is
+[PlantCraft](https://github.com/jonathanwvd/PlantCraft) suite. In the suite's menu it is
 called **View** (the formal module name stays PlantCraft View).
 
 PlantCraft View puts the signals and assets of PlantCraft on screens anyone in the
@@ -120,7 +120,7 @@ never get a licence for it, and it is why the rules are strict: one standard for
 tests that fail on network access, junk input, upward imports and slow tests, oracles on public
 data, and a security audit per stage ([AGENTS.md](AGENTS.md)). The suite is also meant to be
 used with AI. More in PlantCraft's
-[How we build](https://github.com/PlantCraft/PlantCraft/blob/main/docs/how-we-build.md).
+[How we build](https://github.com/jonathanwvd/PlantCraft/blob/main/docs/how-we-build.md).
 
 ## License
 

@@ -272,7 +272,7 @@ def test_contact_honeypot_and_limit(tmp_path, knowledge):
 
 @pytest.fixture(scope="module")
 def dist(tmp_path_factory) -> Path:
-    return build.build(tmp_path_factory.mktemp("site") / "dist", "PlantCraft", "b-1", draft=False)
+    return build.build(tmp_path_factory.mktemp("site") / "dist", "jonathanwvd", "b-1", draft=False)
 
 
 def test_page_is_served_with_its_chat(tmp_path, knowledge, dist):
@@ -314,7 +314,7 @@ def test_privacy_robots_and_security_txt(dist):
     assert 'href="privacy.html"' in (dist / "index.html").read_text()
     assert (dist / "robots.txt").read_text() == "User-agent: *\nAllow: /\n"
     security = (dist / ".well-known/security.txt").read_text()
-    assert "Contact: https://github.com/PlantCraft/PlantCraft/security/advisories/new" in security
+    assert "Contact: https://github.com/jonathanwvd/PlantCraft/security/advisories/new" in security
     assert "Expires: " in security
     assert "noindex" not in (dist / "index.html").read_text()
 
@@ -336,6 +336,37 @@ def test_a_site_online_before_its_launch(tmp_path):
     assert "noindex" in (out / "privacy.html").read_text()
     assert "mailto:team@plant.example" in (out / "privacy.html").read_text()
     assert "Contact: mailto:team@plant.example" in (out / ".well-known/security.txt").read_text()
+
+
+def test_the_static_site_needs_no_server(tmp_path):
+    """The site as plain files: home and privacy, no server behind them."""
+    out = build.build(tmp_path / "dist", "jonathanwvd", "b", False, static=True)
+    assert sorted(p.name for p in out.glob("*.html")) == ["index.html", "privacy.html"]
+    assert not (out / "knowledge.json").exists()
+    for gone in build.SERVER_ONLY:
+        assert not (out / "assets" / gone).exists()
+    for page in ("index.html", "privacy.html"):
+        html = (out / page).read_text()
+        assert "%%" not in html and "<script>" not in html and "style=" not in html
+        for left_out in (
+            "data-chat",
+            "/api/",
+            "demo.plantcraft.io",
+            "pricing.html",
+            "partners.html",
+            "linkedin.com",
+            "x.com/",
+            "mailto:",
+        ):
+            assert left_out not in html, (page, left_out)
+    home = (out / "index.html").read_text()
+    assert 'href="https://github.com/jonathanwvd/PlantCraft"' in home
+    assert 'href="https://www.youtube.com/@plantcraft_io"' in home
+    assert re.search(r'src="assets/showcase\.js\?v=[0-9a-f]{10}"', home)
+    assert (
+        "Contact: https://github.com/jonathanwvd/PlantCraft/security/advisories/new"
+        in (out / ".well-known/security.txt").read_text()
+    )
 
 
 def test_stylesheets_and_scripts_carry_their_hash(tmp_path):

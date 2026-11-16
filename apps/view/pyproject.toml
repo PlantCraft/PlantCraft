@@ -34,7 +34,7 @@ e2e = [
 ]
 
 [project.urls]
-Repository = "https://github.com/PlantCraft/PlantCraft/tree/main/apps/view"
+Repository = "https://github.com/jonathanwvd/PlantCraft/tree/main/apps/view"
 
 [project.scripts]
 dashcraft = "dashcraft.cli:main"

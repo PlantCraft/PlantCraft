@@ -7,7 +7,7 @@
 
 **Industrial software for process engineers. Spend your time on the plant, not on building the tools.**
 
-[Website](https://plantcraft.io) · [Live demo](https://demo.plantcraft.io) · [Install](docs/install.md) ·
+[Website](https://plantcraft.io) · [Videos](https://www.youtube.com/@plantcraft_io) · [Install](docs/install.md) ·
 [Getting started](docs/en/getting-started.md) · [Security guide](docs/security-guide.md)
 
 PlantCraft is a complete, open suite: historian, analytics, alarms, dashboards and diagrams,
@@ -51,7 +51,7 @@ plant assets, signals and look; an installation picks the apps it needs.
 | PlantCraft Models | [`apps/models`](apps/models) | Block-diagram models (Modelica underneath): draw or write them, simulate them on plant data, run studies and export FMUs |
 | PlantCraft Documents | [`apps/documents`](apps/documents) | The plant's documents in one library (manuals, P&IDs, procedures, maintenance records), linked to the assets and searched by words and meaning; the assistant cites document, revision and page |
 | PlantCraft Simulator | [`simulator`](simulator) | The simulated plant (OPC UA) behind the demo and the benchmarks |
-| App template | [`templates/app`](templates/app), published as [plantcraft-app-template](https://github.com/PlantCraft/plantcraft-app-template) | StarterCraft, the starting point for an app of your own: only the basics, full guides and recipes, tests and prompts for Claude Code, tried inside PlantCraft with `make dev` |
+| App template | [`templates/app`](templates/app), published as [plantcraft-app-template](https://github.com/jonathanwvd/plantcraft-app-template) | StarterCraft, the starting point for an app of your own: only the basics, full guides and recipes, tests and prompts for Claude Code, tried inside PlantCraft with `make dev` |
 
 Desk (each person's day) and Notebooks (JupyterLab with the plant's data) are part of the
 platform itself, at the root of this repository with the SDK ([`sdk/python`](sdk/python)) and the
@@ -80,13 +80,12 @@ without touching the rest. The full picture, with how the apps find one sticky v
 
 ## Try it
 
-- **In your browser:** the [live demo](https://demo.plantcraft.io) runs the whole suite on a
-  simulated plant.
+- **Watch it:** short videos of every app on [plantcraft.io](https://plantcraft.io) and
+  [YouTube](https://www.youtube.com/@plantcraft_io), recorded on the demo plant.
 - **On your own server:** [install PlantCraft](docs/install.md) from the offline bundle on Linux,
   macOS or Windows (`./install.sh --demo` adds the demo plant), then take the
   [Getting started](docs/en/getting-started.md) tour.
-- **Questions:** ask the chat on [plantcraft.io](https://plantcraft.io), or write to
-  [info@plantcraft.io](mailto:info@plantcraft.io).
+- **Questions:** open an [issue](https://github.com/jonathanwvd/PlantCraft/issues).
 
 ## Run locally
 
@@ -136,7 +135,7 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md). Everyone in the proje
 
 PlantCraft is in alpha. If it helps you, ⭐ **star the repository** and tell us what you run it on.
 
-News and release notes: [LinkedIn](https://www.linkedin.com/company/plantcraft_io) · [X](https://x.com/plantcraft_io) · [YouTube](https://www.youtube.com/@plantcraft_io) · [plantcraft.io](https://plantcraft.io).
+Release notes: [CHANGELOG.md](CHANGELOG.md) · Videos: [YouTube](https://www.youtube.com/@plantcraft_io) · [plantcraft.io](https://plantcraft.io).
 
 
 ## License
