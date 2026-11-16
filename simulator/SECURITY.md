@@ -8,7 +8,7 @@ in one.
 
 Use GitHub's private vulnerability reporting: go to the repository's
 **Security** tab and choose **Report a vulnerability**
-(https://github.com/PlantCraft/PlantCraft/security/advisories/new). Include the
+(https://github.com/jonathanwvd/PlantCraft/security/advisories/new). Include the
 affected version or commit, how to reproduce it, the impact you expect, and the
 smallest safe proof of concept. We will acknowledge the report, keep you
 informed while we work on a fix and credit you in the advisory unless you prefer

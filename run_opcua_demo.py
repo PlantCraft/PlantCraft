@@ -186,7 +186,7 @@ NEWEST_TESTED_PYTHON = (3, 13)
 PYTHON_UNTESTED = (
     "Python {version} is newer than the demo is tested on (3.12 and 3.13). The OPC UA library\n"
     "asyncua fails on 3.15, so signals may show no values. Use Python 3.12 or 3.13:\n"
-    "https://github.com/PlantCraft/PlantCraft/issues/10"
+    "https://github.com/jonathanwvd/PlantCraft/issues/10"
 )
 
 

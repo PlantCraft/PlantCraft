@@ -53,7 +53,7 @@ You need Docker Desktop running and the GitHub CLI, signed in as the repositorie
 
 ```bash
 brew install gh && gh auth login
-git clone https://github.com/PlantCraft/PlantCraft ~/plantcraft-ci   # any clone of the repository
+git clone https://github.com/jonathanwvd/PlantCraft ~/plantcraft-ci   # any clone of the repository
 cd ~/plantcraft-ci
 ci/macmini/setup.sh
 ```

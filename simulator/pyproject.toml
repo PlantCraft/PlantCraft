@@ -28,9 +28,9 @@ testkit = ["amqtt==0.12.1", "pymodbus==3.8.6", "psycopg[binary]>=3.2,<4"]
 simcraft = "simcraft.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/PlantCraft/PlantCraft/tree/main/simulator"
-Repository = "https://github.com/PlantCraft/PlantCraft/tree/main/simulator"
-Issues = "https://github.com/PlantCraft/PlantCraft/issues"
+Homepage = "https://github.com/jonathanwvd/PlantCraft/tree/main/simulator"
+Repository = "https://github.com/jonathanwvd/PlantCraft/tree/main/simulator"
+Issues = "https://github.com/jonathanwvd/PlantCraft/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

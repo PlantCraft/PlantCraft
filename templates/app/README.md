@@ -2,7 +2,7 @@
 
 # StarterCraft: the app template of PlantCraft
 
-The smallest complete app of the [PlantCraft](https://github.com/PlantCraft/PlantCraft)
+The smallest complete app of the [PlantCraft](https://github.com/jonathanwvd/PlantCraft)
 suite, made to be copied. It keeps a note on any asset of the plant, listed, audited and kept in
 the app's own database. Around that one object it has only the parts every app needs: the
 manifest, the server on the SDK, the interface on the suite's frame, a help page, tests that hold
@@ -66,7 +66,7 @@ the gate) and points to the full standard in PlantCraft (`docs/app-standard.md`)
 
 This template lives in `templates/app/` of the PlantCraft repository, where CI tests it against
 every change to the SDK and the interface, and is published to
-[PlantCraft/plantcraft-app-template](https://github.com/PlantCraft/plantcraft-app-template) at
+[PlantCraft/plantcraft-app-template](https://github.com/jonathanwvd/plantcraft-app-template) at
 each PlantCraft release. Issues and changes to the template go to the PlantCraft repository.
 
 ## License

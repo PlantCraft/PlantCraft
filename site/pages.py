@@ -327,6 +327,30 @@ home = f"""<header class="hero"><h1>The open suite for industrial plants.</h1>
 {end("Tell us about your plant.", "A pilot on your unit, help to install it, training for your team, an app for your process, or a question the documentation does not answer: write to us and we answer personally.", "Talk to us", "Ask the assistant")}"""
 page("index.html", "PlantCraft", home + '<div class="lb" id="lb"><img id="lbimg" alt=""></div>')
 
+# ---------------- STATIC (build.py --static): the site as plain files, with no server behind it
+STATUS = """<section id="start" class="end"><p class="eyebrow">Get started</p><h2>Free to use, open to change.</h2>
+<p class="hint narrow">The whole suite, every app, on your own servers: one signed offline bundle installs it in about ten minutes, with a demo plant to explore. The code is Apache-2.0; questions and ideas go to the issues on GitHub.</p>
+<div class="ctas"><a class="btn p" href="%%GH%%/releases/latest">Download</a><a class="btn" href="%%DOCS%%/docs/install.md">How to install</a><a class="btn" href="%%YOUTUBE%%">Watch the videos</a></div></section>"""
+_start = home.index('<section id="start">')
+STATIC_HOME = (
+    home[:_start].replace(
+        '<a class="btn p sm" href="%%DEMO_URL%%">Try it in the live demo</a>',
+        '<a class="btn p sm" href="%%YOUTUBE%%">Watch it on YouTube</a>',
+    )
+    + STATUS
+    + '<div class="lb" id="lb"><img id="lbimg" alt=""></div>'
+)
+STATIC_PRIVACY = """<div class="doc"><section aria-labelledby="privacy-h"><p class="eyebrow">Privacy</p>
+<h2 id="privacy-h">This site keeps nothing about you.</h2>
+<p class="sec-lead">It is a set of static pages: no cookies, no visit counting, no chat, no forms and nothing loaded from other sites. It is delivered through Cloudflare, which sees your network address and the pages you ask for, as any web host does.</p>
+<h3>PlantCraft at your plant</h3>
+<p>An installation runs on your own servers and sends nothing out: no telemetry, no usage data, no updates check. A language model is off until your administrator turns it on and chooses which provider, or a model on your own network.</p>
+</section></div>"""
+STATIC = {
+    "index.html": ("PlantCraft", STATIC_HOME),
+    "privacy.html": ("Privacy · PlantCraft", STATIC_PRIVACY),
+}
+
 # ---------------- shared form
 NAMES = {
     "Name": "name",
@@ -468,7 +492,7 @@ PROG = [
 ]
 partners = f'''<header class="phero"><p class="eyebrow">Partners</p><h1>Go straight to the plant.</h1>
 <p class="lead">No vendor in the middle and no licences to resell. Install, connect and build on an open platform, and deliver directly to your clients.</p>
-<div class="ctas"><a class="btn p" href="#join">Become a partner</a><a class="btn" href="https://github.com/PlantCraft/plantcraft-app-template">App template on GitHub</a></div></header>
+<div class="ctas"><a class="btn p" href="#join">Become a partner</a><a class="btn" href="https://github.com/jonathanwvd/plantcraft-app-template">App template on GitHub</a></div></header>
 <section class="tight"><div class="wgrid">{who}</div></section>
 <section><div class="split"><div><p class="eyebrow">Open platform, your choice</p><h2>Open where it counts. Closed where you need it.</h2>
 <p class="hint">Everything PlantCraft publishes is open. The apps, models and settings you create are yours, and you choose the licence.</p>

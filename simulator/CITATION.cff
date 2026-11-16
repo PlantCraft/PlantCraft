@@ -7,8 +7,8 @@ authors:
     given-names: Jonathan
 version: 0.4.0
 date-released: 2026-10-19
-url: "https://github.com/PlantCraft/PlantCraft/tree/main/simulator"
-repository-code: "https://github.com/PlantCraft/PlantCraft/tree/main/simulator"
+url: "https://github.com/jonathanwvd/PlantCraft/tree/main/simulator"
+repository-code: "https://github.com/jonathanwvd/PlantCraft/tree/main/simulator"
 license: Apache-2.0
 keywords:
   - process control

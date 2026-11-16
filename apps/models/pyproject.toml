@@ -33,7 +33,7 @@ e2e = [
 ]
 
 [project.urls]
-Repository = "https://github.com/PlantCraft/PlantCraft/tree/main/apps/models"
+Repository = "https://github.com/jonathanwvd/PlantCraft/tree/main/apps/models"
 
 [project.scripts]
 modelcraft = "modelcraft.cli:main"

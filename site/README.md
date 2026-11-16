@@ -1,7 +1,12 @@
 # PlantCraft's site and its chat
 
 The public site (one page) and the chat on it: a language model that answers visitors' questions
-from PlantCraft's public documentation and takes contact requests. Not published yet.
+from PlantCraft's public documentation and takes contact requests.
+
+**plantcraft.io is the static build:** `python build.py --static` writes `dist/` with the home
+page (pillars, apps, clips) and a privacy page from [page/static.html](page/static.html), with no
+chat, visit counting, forms, pricing or partner pages, so any static host serves it (Cloudflare
+Pages, GitHub Pages). The rest of this page describes the full site and its chat server.
 
 ```bash
 cd site
@@ -46,7 +51,7 @@ commercial question goes to **Talk to us**. The text follows
 | `SITE_CONTACT_WEBHOOK` | | told of each contact request |
 | `SITE_LOG_QUESTIONS` | `1` | keep visitors' questions (no address, no name) to see what they ask |
 | `SITE_TRUST_PROXY` | `0` | `1` behind a reverse proxy that sets `X-Forwarded-For` |
-| `SITE_DOCS_URL` | `https://github.com/PlantCraft/PlantCraft/blob/main` | where cited pages live |
+| `SITE_DOCS_URL` | `https://github.com/jonathanwvd/PlantCraft/blob/main` | where cited pages live |
 | `SITE_STATS_PASSWORD` / `SITE_STATS_PASSWORD_FILE` | | the password of `/stats`; unset, `/stats` is a 404 |
 | `SITE_STATS_TIMEZONE` | `UTC` | the time zone `/stats` counts days in |
 | `SITE_DEMO_STATS_URL` + `SITE_DEMO_STATS_KEY_FILE` | | the public demo's `/api/demo/stats` and its key, shown on `/stats` |

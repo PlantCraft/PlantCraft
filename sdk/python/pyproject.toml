@@ -43,8 +43,8 @@ plantcraft-app = "plantcraft_sdk.app_cli:main"
 plantcraft-budget = "plantcraft_sdk.pytest_budget"
 
 [project.urls]
-Homepage = "https://github.com/PlantCraft/PlantCraft"
-Repository = "https://github.com/PlantCraft/PlantCraft"
+Homepage = "https://github.com/jonathanwvd/PlantCraft"
+Repository = "https://github.com/jonathanwvd/PlantCraft"
 
 [tool.setuptools.packages.find]
 include = ["plantcraft_sdk*", "processcraft_sdk*"]  # the former import

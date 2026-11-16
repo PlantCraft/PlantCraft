@@ -52,7 +52,7 @@ from .llm import Model, make_model
 from .stats import DAYS, DemoSource, events_csv, journeys, render, summary
 from .visits import Visits
 
-DOCS_URL = "https://github.com/PlantCraft/PlantCraft/blob/main"
+DOCS_URL = "https://github.com/jonathanwvd/PlantCraft/blob/main"
 MAX_BODY = 64 * 1024
 
 CSP = (

@@ -341,10 +341,10 @@ sign-in page and the language models off ([install-offline.md](install-offline.m
 ## From source (developers)
 
 Requirements: Python 3.12 or 3.13 (asyncua, the OPC UA library, fails on 3.15:
-[#10](https://github.com/PlantCraft/PlantCraft/issues/10)), Node.js 22 and Docker.
+[#10](https://github.com/jonathanwvd/PlantCraft/issues/10)), Node.js 22 and Docker.
 
 ```bash
-git clone https://github.com/PlantCraft/PlantCraft.git plantcraft && cd plantcraft
+git clone https://github.com/jonathanwvd/PlantCraft.git plantcraft && cd plantcraft
 make image simcraft-image       # build the images here
 deploy/install.sh --dev --demo     # the same hardened stack as the bundle
 ```

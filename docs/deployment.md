@@ -24,7 +24,7 @@ or CSV files). Users reach the server on the chosen port (8060 in this guide).
 
 ```bash
 sudo apt install -y python3 python3-venv git nodejs npm   # Ubuntu
-git clone https://github.com/PlantCraft/PlantCraft.git plantcraft
+git clone https://github.com/jonathanwvd/PlantCraft.git plantcraft
 cd plantcraft
 python3 -m venv .venv
 . .venv/bin/activate

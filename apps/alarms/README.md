@@ -3,7 +3,7 @@
 # PlantCraft Alarms
 
 Alarm management for the plant, as an app of the
-[PlantCraft](https://github.com/PlantCraft/PlantCraft) suite.
+[PlantCraft](https://github.com/jonathanwvd/PlantCraft) suite.
 
 PlantCraft Alarms turns plant values and what the other apps report into alarms, by rules, and
 tells the right person once. It is built around the public alarm management lifecycle of ISA-18.2
@@ -107,7 +107,7 @@ never get a licence for it, and it is why the rules are strict: one standard for
 tests that fail on network access, junk input, upward imports and slow tests, oracles on public
 data, and a security audit per stage ([AGENTS.md](AGENTS.md)). The suite is also meant to be
 used with AI. More in PlantCraft's
-[How we build](https://github.com/PlantCraft/PlantCraft/blob/main/docs/how-we-build.md).
+[How we build](https://github.com/jonathanwvd/PlantCraft/blob/main/docs/how-we-build.md).
 
 ## License
 

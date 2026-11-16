@@ -3,9 +3,9 @@
 # PlantCraft Simulator
 
 An OPC UA process plant simulator, as an app of the
-[PlantCraft](https://github.com/PlantCraft/PlantCraft) suite.
+[PlantCraft](https://github.com/jonathanwvd/PlantCraft) suite.
 
-[![CI](https://github.com/PlantCraft/PlantCraft/actions/workflows/simulator.yml/badge.svg)](https://github.com/PlantCraft/PlantCraft/actions/workflows/simulator.yml)
+[![CI](https://github.com/jonathanwvd/PlantCraft/actions/workflows/simulator.yml/badge.svg)](https://github.com/jonathanwvd/PlantCraft/actions/workflows/simulator.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 PlantCraft Simulator gives the suite, and anyone testing industrial software, a plant to read from
@@ -356,7 +356,7 @@ never get a licence for it, and it is why the rules are strict: one standard for
 tests that fail on network access, junk input, upward imports and slow tests, oracles on public
 data, and a security audit per stage ([AGENTS.md](AGENTS.md)). The suite is also meant to be
 used with AI. More in PlantCraft's
-[How we build](https://github.com/PlantCraft/PlantCraft/blob/main/docs/how-we-build.md).
+[How we build](https://github.com/jonathanwvd/PlantCraft/blob/main/docs/how-we-build.md).
 
 ## Citation and license
 

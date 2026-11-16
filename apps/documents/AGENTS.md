@@ -7,7 +7,7 @@ StarterCraft (`templates/app`) on 2026-10-26; `SPEC.md` says what it does and wh
 ## Where the rules come from
 
 The suite's rules are in the PlantCraft repository
-(https://github.com/PlantCraft/PlantCraft): its root `AGENTS.md`, `docs/app-standard.md` (the
+(https://github.com/jonathanwvd/PlantCraft): its root `AGENTS.md`, `docs/app-standard.md` (the
 app standard: manifest, layout, endpoints, image, suite table) and `docs/testing.md`. This file
 repeats the ones an app must follow; when the two differ, PlantCraft's wins and this file is
 fixed.

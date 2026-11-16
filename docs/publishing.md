@@ -16,14 +16,14 @@ decision (AGENTS.md, section 9).
 
 ## The app template repository
 
-[`PlantCraft/plantcraft-app-template`](https://github.com/PlantCraft/plantcraft-app-template)
+[`PlantCraft/plantcraft-app-template`](https://github.com/jonathanwvd/plantcraft-app-template)
 (created 2026-11-01, a GitHub template repository) is a copy of `templates/app`, which stays the
 source: the template workflow tests it here against every change to the SDK and the interface.
 At each release, after `templates/app` was revendored and is green, the template repository gets
 the same files in one pull request:
 
 ```sh
-git clone https://github.com/PlantCraft/plantcraft-app-template ../plantcraft-app-template
+git clone https://github.com/jonathanwvd/plantcraft-app-template ../plantcraft-app-template
 cd ../plantcraft-app-template && git switch -c release-<version>
 rsync -a --delete --exclude .git ../PlantCraft/templates/app/ ./
 make ci && git add -A && git commit -m "Template of PlantCraft <version>"
@@ -102,7 +102,7 @@ This is done by a maintainer, once the new repository exists and is still privat
 
 ```sh
 git clone PlantCraft.bundle PlantCraft && cd PlantCraft
-git remote set-url origin https://github.com/PlantCraft/PlantCraft.git
+git remote set-url origin https://github.com/jonathanwvd/PlantCraft.git
 git push -u origin main
 ```
 

@@ -5,7 +5,7 @@
 set -euo pipefail
 BRANCH=${BRANCH:-claude/project-thread-08h2no}
 W=~/a-leitura; mkdir -p $W/results $W/var; cd $W
-[ -d plantcraft ] || git clone -q --depth 1 -b "$BRANCH" https://github.com/PlantCraft/PlantCraft.git plantcraft
+[ -d plantcraft ] || git clone -q --depth 1 -b "$BRANCH" https://github.com/jonathanwvd/PlantCraft.git plantcraft
 (cd plantcraft && git fetch -q --depth 1 origin "$BRANCH" && git checkout -q FETCH_HEAD)
 sudo apt-get install -y -q python3-venv python3-dev build-essential >/dev/null
 [ -d venv ] || python3 -m venv venv

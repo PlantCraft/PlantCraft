@@ -6,7 +6,7 @@ Please report vulnerabilities privately. Do not open a public issue.
 
 Use GitHub's private vulnerability reporting: go to the repository's
 **Security** tab and choose **Report a vulnerability**
-(https://github.com/PlantCraft/PlantCraft/security/advisories/new),
+(https://github.com/jonathanwvd/PlantCraft/security/advisories/new),
 or write to [security@plantcraft.io](mailto:security@plantcraft.io).
 
 Include what you found, how to reproduce it, the affected version or commit

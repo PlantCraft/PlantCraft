@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   sync:
-    if: github.repository == 'PlantCraft/PlantCraft'
+    if: github.repository == 'jonathanwvd/PlantCraft'
     runs-on: ubuntu-latest
     # The one write a workflow has: labels, from a push to main or a maintainer's run, never from
     # a pull request (tests/test_contributing_safety.py holds it to that).
